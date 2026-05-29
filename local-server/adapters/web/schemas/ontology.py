@@ -24,6 +24,7 @@ Response schemas (for GET/returns):
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
 
+import re
 from datetime import datetime
 from typing import Any, Generic, Literal, Optional, TypeVar
 
@@ -32,21 +33,74 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 T = TypeVar("T")
 
 
+_IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+_HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-f]{6}$")
+
+
+def _validate_identifier(value: str) -> str:
+    candidate = value.strip().lower()
+    if not _IDENTIFIER_PATTERN.match(candidate):
+        raise ValueError(
+            "identifier must start with a lowercase letter and contain only "
+            "lowercase letters, digits, and underscores (2-64 chars)"
+        )
+    return candidate
+
+
+def _validate_color(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    candidate = value.strip().lower()
+    if not candidate:
+        return None
+    if not _HEX_COLOR_PATTERN.match(candidate):
+        raise ValueError("color must be a 7-char hex string like '#a3f2e4'")
+    return candidate
+
+
 # ==================== Taxonomy Schemas ====================
 
 
 class TaxonomyCreateRequest(BaseModel):
     """Request to create a new taxonomy."""
 
+    identifier: str = Field(
+        ...,
+        description=(
+            "Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters,"
+            " digits, and underscores; must start with a letter; 2-64 chars."
+        ),
+        min_length=2,
+        max_length=64,
+    )
     title: str = Field(..., description="Display name for the taxonomy", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+    color: Optional[str] = Field(
+        None, description="Optional hex color '#rrggbb' for the taxonomy swatch"
+    )
+
+    @field_validator("identifier")
+    @classmethod
+    def _validate_identifier_field(cls, value: str) -> str:
+        return _validate_identifier(value)
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
 
 
 class TaxonomyUpdateRequest(BaseModel):
-    """Request to update a taxonomy."""
+    """Request to update a taxonomy. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title for the taxonomy", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+    color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
 
 
 class TaxonomyPublishRequest(BaseModel):
@@ -68,9 +122,11 @@ class TaxonomyResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(..., description="Unique identifier")
+    id: str = Field(..., description="Unique identifier (UUID)")
+    identifier: str = Field(..., description="Slug-style identifier (e.g. 'tax_life')")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
+    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
@@ -85,15 +141,41 @@ class TaxonomyResponse(BaseModel):
 class ConceptSchemeCreateRequest(BaseModel):
     """Request to create a new concept scheme."""
 
+    identifier: str = Field(
+        ...,
+        description=(
+            "Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars,"
+            " lowercase letters/digits/underscores, must start with a letter."
+        ),
+        min_length=2,
+        max_length=64,
+    )
     title: str = Field(..., description="Display name for the concept scheme", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
+
+    @field_validator("identifier")
+    @classmethod
+    def _validate_identifier_field(cls, value: str) -> str:
+        return _validate_identifier(value)
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
 
 
 class ConceptSchemeUpdateRequest(BaseModel):
-    """Request to update a concept scheme."""
+    """Request to update a concept scheme. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+    color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
 
 
 class ConceptSchemeResponse(BaseModel):
@@ -101,10 +183,12 @@ class ConceptSchemeResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(..., description="Unique identifier")
+    id: str = Field(..., description="Unique identifier (UUID)")
     taxonomy_id: str = Field(..., description="Parent taxonomy ID")
+    identifier: str = Field(..., description="Slug-style identifier (e.g. 'scheme_ecology')")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
+    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
@@ -146,18 +230,44 @@ class DataPropertyValueRequest(BaseModel):
 class ClassCreateRequest(BaseModel):
     """Request to create a new class."""
 
+    identifier: str = Field(
+        ...,
+        description=(
+            "Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars,"
+            " lowercase letters/digits/underscores, must start with a letter."
+        ),
+        min_length=2,
+        max_length=64,
+    )
     title: str = Field(..., description="Display name for the class", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     parent_class_id: Optional[str] = Field(
         None, description="Optional ID of parent class for hierarchy"
     )
 
+    @field_validator("identifier")
+    @classmethod
+    def _validate_identifier_field(cls, value: str) -> str:
+        return _validate_identifier(value)
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
+
 
 class ClassUpdateRequest(BaseModel):
-    """Request to update a class."""
+    """Request to update a class. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+    color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
+
+    @field_validator("color")
+    @classmethod
+    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_color(value)
 
 
 class ClassMoveRequest(BaseModel):
@@ -196,11 +306,13 @@ class ClassResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(..., description="Unique identifier")
+    id: str = Field(..., description="Unique identifier (UUID)")
     concept_scheme_id: str = Field(..., description="Parent concept scheme ID")
     taxonomy_id: str = Field(..., description="Parent taxonomy ID")
+    identifier: str = Field(..., description="Slug-style identifier (e.g. 'cls_organism')")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
+    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     parent_class_id: Optional[str] = Field(None, description="Optional parent class ID")
     structural_property_id: Optional[str] = Field(
         None, description="Optional structural property ID"

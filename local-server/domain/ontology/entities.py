@@ -18,6 +18,8 @@ from .value_objects import (
     LexicalSense,
     OntologyMapping,
     Status,
+    validate_hex_color,
+    validate_identifier,
 )
 
 
@@ -28,8 +30,10 @@ class Taxonomy:
 
     Attributes:
         id: Unique identifier (UUID as string)
+        identifier: Slug-style identifier (globally unique, immutable post-create)
         title: Display name for the taxonomy
         description: Optional longer description
+        color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -37,12 +41,18 @@ class Taxonomy:
     """
 
     id: str
+    identifier: str
     title: str
     description: str | None = None
+    color: str | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+
+    def __post_init__(self) -> None:
+        self.identifier = validate_identifier(self.identifier)
+        self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
         """
@@ -68,8 +78,10 @@ class ConceptScheme:
     Attributes:
         id: Unique identifier (UUID as string)
         taxonomy_id: ID of the parent taxonomy
+        identifier: Slug-style identifier (globally unique, immutable post-create)
         title: Display name for the scheme
         description: Optional longer description
+        color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -78,12 +90,18 @@ class ConceptScheme:
 
     id: str
     taxonomy_id: str
+    identifier: str
     title: str
     description: str | None = None
+    color: str | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+
+    def __post_init__(self) -> None:
+        self.identifier = validate_identifier(self.identifier)
+        self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
         """
@@ -110,8 +128,10 @@ class Class:
         id: Unique identifier (UUID as string)
         concept_scheme_id: ID of the parent concept scheme
         taxonomy_id: ID of the parent taxonomy
+        identifier: Slug-style identifier (globally unique, immutable post-create)
         title: Display name for the class
         description: Optional longer description
+        color: Optional hex color string (e.g. '#a3f2e4')
         parent_class_id: Optional ID of the parent class for hierarchy
         structural_property_id: Optional ID of the primary structural relationship property
         definition
@@ -128,8 +148,10 @@ class Class:
     id: str
     concept_scheme_id: str
     taxonomy_id: str
+    identifier: str
     title: str
     description: str | None = None
+    color: str | None = None
     parent_class_id: str | None = None
     structural_property_id: str | None = None
     external_references: list[ExternalReference] = field(default_factory=list)
@@ -141,6 +163,10 @@ class Class:
     version: int = 1
     status: Status = Status.DRAFT
     source_run_id: str | None = None
+
+    def __post_init__(self) -> None:
+        self.identifier = validate_identifier(self.identifier)
+        self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
         """

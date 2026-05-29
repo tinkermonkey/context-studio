@@ -184,12 +184,25 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         doc="ID of the pipeline run that created or last modified this entity",
     )
 
-    # Property definition fields (only used when node_type='property_definition')
+    # Slug identifier — used by property_definition, taxonomy, concept_scheme, class.
+    # Unique across all entities in the workspace; populated for the four kinds above
+    # and NULL for individuals.
     identifier = Column(
         String(255),
         nullable=True,
         unique=True,
-        doc="Machine-readable identifier (unique, for property_definition)",
+        doc=(
+            "Machine-readable slug identifier (unique). Required for property_definition,"
+            " taxonomy, concept_scheme, and class entities."
+        ),
+    )
+    color = Column(
+        String(7),
+        nullable=True,
+        doc=(
+            "Optional hex color string (#rrggbb) for taxonomy, concept_scheme, and class"
+            " entities. Used by the UI for swatches."
+        ),
     )
     ontology_mapping = Column(
         JSON,

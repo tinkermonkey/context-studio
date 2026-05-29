@@ -38,3 +38,14 @@ class DuplicateEntityError(OntologyError):
     """Raised when attempting to create a duplicate entity."""
 
     pass
+
+
+class IdentifierConflictError(OntologyError):
+    """
+    Raised when attempting to create an entity whose `identifier` slug
+    is already in use by another ontology entity in the workspace.
+    """
+
+    def __init__(self, identifier: str):
+        self.identifier = identifier
+        super().__init__(f"Identifier '{identifier}' is already in use")

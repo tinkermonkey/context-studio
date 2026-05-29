@@ -7,10 +7,66 @@ without identity. They are used as components within domain entities.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
 from typing import Any
+
+
+# Slug format: lowercase alpha leading, then alphanumeric and underscore.
+# 2-64 chars. Examples: tax_life, cls_organism, scheme_ecology
+_IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+
+# 7-char hex color: '#' + 6 lowercase hex digits.
+_HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-f]{6}$")
+
+
+def validate_identifier(identifier: str) -> str:
+    """
+    Validate and normalize a slug-style identifier.
+
+    Args:
+        identifier: Candidate identifier string
+
+    Returns:
+        The validated identifier (stripped, lowercased)
+
+    Raises:
+        ValueError: If the identifier is empty or does not match the slug pattern
+    """
+    if identifier is None or not str(identifier).strip():
+        raise ValueError("Identifier cannot be empty")
+    candidate = str(identifier).strip().lower()
+    if not _IDENTIFIER_PATTERN.match(candidate):
+        raise ValueError(
+            "Identifier must start with a lowercase letter and contain only "
+            "lowercase letters, digits, and underscores (2-64 chars)"
+        )
+    return candidate
+
+
+def validate_hex_color(color: str | None) -> str | None:
+    """
+    Validate and normalize an optional hex color string.
+
+    Args:
+        color: Candidate color string (e.g. '#a3f2e4') or None
+
+    Returns:
+        The validated lowercase color, or None if input was None/empty
+
+    Raises:
+        ValueError: If the color is non-empty but does not match the #rrggbb pattern
+    """
+    if color is None:
+        return None
+    candidate = str(color).strip().lower()
+    if not candidate:
+        return None
+    if not _HEX_COLOR_PATTERN.match(candidate):
+        raise ValueError("Color must be a 7-char hex string like '#a3f2e4'")
+    return candidate
 
 
 class NodeType(str, Enum):

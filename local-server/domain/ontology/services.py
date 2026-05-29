@@ -50,6 +50,7 @@ from .exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
     EntityNotFoundError,
+    IdentifierConflictError,
     OntologyError,
 )
 from .ports import EmbeddingService, OntologyRepository
@@ -87,25 +88,39 @@ class OntologyService:
 
     # Taxonomy operations
 
-    def create_taxonomy(self, title: str, description: str | None = None) -> Taxonomy:
+    def create_taxonomy(
+        self,
+        identifier: str,
+        title: str,
+        description: str | None = None,
+        color: str | None = None,
+    ) -> Taxonomy:
         """
         Create a new taxonomy.
 
-        Validates that the title is unique across all taxonomies.
+        Validates that the identifier is unique across all schema-tier entities
+        and that the title is unique across taxonomies.
 
         Args:
+            identifier: Globally-unique slug identifier (e.g. 'tax_life')
             title: Display name for the taxonomy
             description: Optional longer description
+            color: Optional hex color string for the swatch
 
         Returns:
             The created Taxonomy
 
         Raises:
+            IdentifierConflictError: If the identifier is already in use
             DuplicateEntityError: If a taxonomy with this title already exists
-            ValueError: If title is empty or whitespace
+            ValueError: If title is empty or identifier/color are invalid
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
+
+        # Check identifier uniqueness against existing taxonomy/scheme/class entities.
+        if self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         # Check for duplicate title
         existing = self._repository.list_taxonomies(limit=None)
@@ -116,8 +131,10 @@ class OntologyService:
         now = datetime.now(timezone.utc)
         taxonomy = Taxonomy(
             id=taxonomy_id,
+            identifier=identifier,
             title=title,
             description=description,
+            color=color,
             created_at=now,
             last_modified=now,
         )
@@ -204,14 +221,18 @@ class OntologyService:
         taxonomy_id: str,
         title: str | None = None,
         description: str | None = None,
+        color: str | None = None,
     ) -> Taxonomy:
         """
-        Update a taxonomy's title and/or description.
+        Update a taxonomy's title, description, and/or color.
+
+        Identifier is immutable post-create and cannot be updated.
 
         Args:
             taxonomy_id: The taxonomy ID
             title: New title (optional)
             description: New description (optional)
+            color: New hex color string (optional, '' or None clears)
 
         Returns:
             The updated Taxonomy
@@ -219,7 +240,7 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the taxonomy does not exist
             DuplicateEntityError: If the title already exists
-            ValueError: If the title is empty
+            ValueError: If the title is empty or color is invalid
         """
         taxonomy = self._repository.get_taxonomy(taxonomy_id)
         if taxonomy is None:
@@ -228,6 +249,7 @@ class OntologyService:
         # Capture old values before modification
         old_title = taxonomy.title
         old_description = taxonomy.description
+        old_color = taxonomy.color
 
         # Check if new title is unique
         if title is not None and title != taxonomy.title:
@@ -241,11 +263,17 @@ class OntologyService:
         if description is not None:
             taxonomy.description = description
 
+        if color is not None:
+            # Re-validate via the entity's helper by reassigning + post-init equivalent.
+            from .value_objects import validate_hex_color as _vc
+            taxonomy.color = _vc(color)
+
         # Guard against no-op updates
         title_changed = title is not None and title != old_title
         desc_changed = description is not None and description != old_description
+        color_changed = color is not None and taxonomy.color != old_color
 
-        if not (title_changed or desc_changed):
+        if not (title_changed or desc_changed or color_changed):
             return taxonomy
 
         taxonomy.last_modified = datetime.now(timezone.utc)
@@ -257,6 +285,7 @@ class OntologyService:
             for f, was_changed in [
                 ("title", title_changed),
                 ("description", desc_changed),
+                ("color", color_changed),
             ]
             if was_changed
         )
@@ -269,6 +298,9 @@ class OntologyService:
         if desc_changed:
             old_values["description"] = old_description
             new_values["description"] = description
+        if color_changed:
+            old_values["color"] = old_color
+            new_values["color"] = taxonomy.color
 
         failures = self._event_publisher.publish(
             TaxonomyUpdated(
@@ -470,27 +502,36 @@ class OntologyService:
     # ConceptScheme operations
 
     def create_scheme(
-        self, taxonomy_id: str, title: str, description: str | None = None
+        self,
+        taxonomy_id: str,
+        identifier: str,
+        title: str,
+        description: str | None = None,
+        color: str | None = None,
     ) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
 
         Validates that:
         - The parent taxonomy exists
+        - The identifier is globally unique
         - The title is unique within the taxonomy
 
         Args:
             taxonomy_id: ID of the parent taxonomy
+            identifier: Globally-unique slug identifier (e.g. 'scheme_ecology')
             title: Display name for the scheme
             description: Optional longer description
+            color: Optional hex color string for the swatch
 
         Returns:
             The created ConceptScheme
 
         Raises:
             EntityNotFoundError: If the parent taxonomy does not exist
+            IdentifierConflictError: If the identifier is already in use
             DuplicateEntityError: If a scheme with this title already exists in this taxonomy
-            ValueError: If title is empty
+            ValueError: If title is empty or identifier/color are invalid
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
@@ -499,6 +540,10 @@ class OntologyService:
         taxonomy = self._repository.get_taxonomy(taxonomy_id)
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # Check identifier uniqueness across schema-tier entities
+        if self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         # Check for duplicate title within this taxonomy
         existing_schemes = self._repository.list_concept_schemes(
@@ -514,8 +559,10 @@ class OntologyService:
         scheme = ConceptScheme(
             id=scheme_id,
             taxonomy_id=taxonomy_id,
+            identifier=identifier,
             title=title,
             description=description,
+            color=color,
             created_at=now,
             last_modified=now,
         )
@@ -716,8 +763,10 @@ class OntologyService:
     def create_class(
         self,
         concept_scheme_id: str,
+        identifier: str,
         title: str,
         description: str | None = None,
+        color: str | None = None,
         parent_class_id: str | None = None,
     ) -> Class:
         """
@@ -725,14 +774,17 @@ class OntologyService:
 
         Validates that:
         - The parent scheme exists
+        - The identifier is globally unique
         - The title is unique within the scheme
         - If a parent class is provided, it exists and is in the same scheme
         - The parent class ID is not the class ID (prevented in create, but checked)
 
         Args:
             concept_scheme_id: ID of the parent concept scheme
+            identifier: Globally-unique slug identifier (e.g. 'cls_organism')
             title: Display name for the class
             description: Optional longer description
+            color: Optional hex color string for the swatch
             parent_class_id: Optional ID of the parent class for hierarchy
 
         Returns:
@@ -740,8 +792,9 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If scheme or parent class does not exist
+            IdentifierConflictError: If the identifier is already in use
             DuplicateEntityError: If a class with this title already exists in this scheme
-            ValueError: If title is empty
+            ValueError: If title is empty or identifier/color are invalid
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
@@ -750,6 +803,10 @@ class OntologyService:
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
+
+        # Check identifier uniqueness across schema-tier entities
+        if self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         # Check for duplicate title within this scheme
         existing_classes = self._repository.list_classes(
@@ -778,8 +835,10 @@ class OntologyService:
             id=class_id,
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
+            identifier=identifier,
             title=title,
             description=description,
+            color=color,
             parent_class_id=parent_class_id,
             embedding=embedding,
             created_at=now,
@@ -855,21 +914,25 @@ class OntologyService:
         class_id: str,
         title: str | None = None,
         description: str | None = None,
+        color: str | None = None,
     ) -> Class:
         """
-        Update a class's title and/or description.
+        Update a class's title, description, and/or color.
+
+        Identifier is immutable post-create and cannot be updated.
 
         Validates that:
         - The class exists
         - If a new title is provided, it is unique within the scheme (excluding the current class)
 
         If either title or description changed, regenerates the embedding.
-        If neither changed, skips embedding regeneration.
+        If only color changed, the embedding is left unchanged.
 
         Args:
             class_id: The ID of the class to update
             title: New title (optional)
             description: New description (optional)
+            color: New hex color string (optional)
 
         Returns:
             The updated Class
@@ -877,6 +940,7 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the class does not exist
             DuplicateEntityError: If a class with the new title already exists in this scheme
+            ValueError: If the color is invalid
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -885,6 +949,7 @@ class OntologyService:
         # Capture old values before modification
         old_title = cls.title
         old_description = cls.description
+        old_color = cls.color
 
         title_changed = title is not None and title != cls.title
         desc_changed = description is not None and description != cls.description
@@ -905,6 +970,12 @@ class OntologyService:
         if desc_changed:
             cls.description = description
 
+        if color is not None:
+            from .value_objects import validate_hex_color as _vc
+            cls.color = _vc(color)
+
+        color_changed = color is not None and cls.color != old_color
+
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
@@ -912,7 +983,7 @@ class OntologyService:
             cls.embedding = embedding
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed):
+        if not (title_changed or desc_changed or color_changed):
             return cls
 
         cls.last_modified = datetime.now(timezone.utc)
@@ -1791,14 +1862,18 @@ class OntologyService:
         concept_scheme_id: str,
         title: str | None = None,
         description: str | None = None,
+        color: str | None = None,
     ) -> ConceptScheme:
         """
-        Update a concept scheme's title and/or description.
+        Update a concept scheme's title, description, and/or color.
+
+        Identifier is immutable post-create and cannot be updated.
 
         Args:
             concept_scheme_id: The concept scheme ID
             title: New title (optional)
             description: New description (optional)
+            color: New hex color string (optional)
 
         Returns:
             The updated ConceptScheme
@@ -1806,7 +1881,7 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the concept scheme does not exist
             DuplicateEntityError: If the title already exists
-            ValueError: If the title is empty
+            ValueError: If the title is empty or color is invalid
         """
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
@@ -1827,6 +1902,10 @@ class OntologyService:
 
         if description is not None:
             scheme.description = description
+
+        if color is not None:
+            from .value_objects import validate_hex_color as _vc
+            scheme.color = _vc(color)
 
         scheme.last_modified = datetime.now(timezone.utc)
         scheme = self._repository.save_concept_scheme(scheme)

@@ -6365,6 +6365,13 @@
       },
       "ClassCreateRequest": {
         "properties": {
+          "identifier": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Identifier",
+            "description": "Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
+          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6383,6 +6390,18 @@
             "title": "Description",
             "description": "Optional longer description"
           },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
+          },
           "parent_class_id": {
             "anyOf": [
               {
@@ -6398,6 +6417,7 @@
         },
         "type": "object",
         "required": [
+          "identifier",
           "title"
         ],
         "title": "ClassCreateRequest",
@@ -6423,7 +6443,7 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier"
+            "description": "Unique identifier (UUID)"
           },
           "concept_scheme_id": {
             "type": "string",
@@ -6434,6 +6454,11 @@
             "type": "string",
             "title": "Taxonomy Id",
             "description": "Parent taxonomy ID"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Slug-style identifier (e.g. 'cls_organism')"
           },
           "title": {
             "type": "string",
@@ -6451,6 +6476,18 @@
             ],
             "title": "Description",
             "description": "Optional description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
           },
           "parent_class_id": {
             "anyOf": [
@@ -6560,6 +6597,7 @@
           "id",
           "concept_scheme_id",
           "taxonomy_id",
+          "identifier",
           "title"
         ],
         "title": "ClassResponse",
@@ -6591,11 +6629,23 @@
             ],
             "title": "Description",
             "description": "New description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "New hex color '#rrggbb' or null to clear"
           }
         },
         "type": "object",
         "title": "ClassUpdateRequest",
-        "description": "Request to update a class."
+        "description": "Request to update a class. Identifier is immutable post-create."
       },
       "CommunitiesResponse": {
         "properties": {
@@ -6647,6 +6697,13 @@
       },
       "ConceptSchemeCreateRequest": {
         "properties": {
+          "identifier": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Identifier",
+            "description": "Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
+          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6664,10 +6721,23 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
           }
         },
         "type": "object",
         "required": [
+          "identifier",
           "title"
         ],
         "title": "ConceptSchemeCreateRequest",
@@ -6678,12 +6748,17 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier"
+            "description": "Unique identifier (UUID)"
           },
           "taxonomy_id": {
             "type": "string",
             "title": "Taxonomy Id",
             "description": "Parent taxonomy ID"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Slug-style identifier (e.g. 'scheme_ecology')"
           },
           "title": {
             "type": "string",
@@ -6701,6 +6776,18 @@
             ],
             "title": "Description",
             "description": "Optional description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
           },
           "created_at": {
             "anyOf": [
@@ -6749,6 +6836,7 @@
         "required": [
           "id",
           "taxonomy_id",
+          "identifier",
           "title"
         ],
         "title": "ConceptSchemeResponse",
@@ -6780,11 +6868,23 @@
             ],
             "title": "Description",
             "description": "New description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "New hex color '#rrggbb' or null to clear"
           }
         },
         "type": "object",
         "title": "ConceptSchemeUpdateRequest",
-        "description": "Request to update a concept scheme."
+        "description": "Request to update a concept scheme. Identifier is immutable post-create."
       },
       "ConfigSectionUpdateRequest": {
         "properties": {
@@ -11135,6 +11235,13 @@
       },
       "TaxonomyCreateRequest": {
         "properties": {
+          "identifier": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Identifier",
+            "description": "Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars."
+          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -11152,10 +11259,23 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb' for the taxonomy swatch"
           }
         },
         "type": "object",
         "required": [
+          "identifier",
           "title"
         ],
         "title": "TaxonomyCreateRequest",
@@ -11182,7 +11302,12 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier"
+            "description": "Unique identifier (UUID)"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Slug-style identifier (e.g. 'tax_life')"
           },
           "title": {
             "type": "string",
@@ -11200,6 +11325,18 @@
             ],
             "title": "Description",
             "description": "Optional description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
           },
           "created_at": {
             "anyOf": [
@@ -11247,6 +11384,7 @@
         "type": "object",
         "required": [
           "id",
+          "identifier",
           "title"
         ],
         "title": "TaxonomyResponse",
@@ -11278,11 +11416,23 @@
             ],
             "title": "Description",
             "description": "New description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "New hex color '#rrggbb' or null to clear"
           }
         },
         "type": "object",
         "title": "TaxonomyUpdateRequest",
-        "description": "Request to update a taxonomy."
+        "description": "Request to update a taxonomy. Identifier is immutable post-create."
       },
       "TripleCountResponse": {
         "properties": {

@@ -1532,3 +1532,13 @@ selectors:
   - selector: topbar-docs
     component: src/routes/app.tsx
     description: Topbar documentation/help icon button
+
+  - selector: taxonomy-identifier-input
+    component: src/components/schema/TaxonomyForm.tsx
+    description: Slug-style identifier input for a new taxonomy (auto-derived from title, editable)
+  - selector: taxonomy-color-picker
+    component: src/components/schema/TaxonomyForm.tsx
+    description: Native color picker for the new taxonomy's swatch color
+  - selector: taxonomy-color-input
+    component: src/components/schema/TaxonomyForm.tsx
+    description: Hex color text input paired with the color picker on the taxonomy form

@@ -32,6 +32,25 @@ class OntologyRepository(Protocol):
     and PropertyDefinition entities flow through this repository.
     """
 
+    # Identifier lookup across schema-tier entities
+    def get_by_identifier(self, identifier: str) -> Taxonomy | ConceptScheme | Class | None:
+        """
+        Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique
+        slug identifier.
+
+        Used for pre-save uniqueness checks and identifier-based lookups.
+        Property definitions are addressed via
+        `get_property_definition_by_identifier` and intentionally NOT covered
+        by this method.
+
+        Args:
+            identifier: The slug-style identifier (e.g. 'tax_life')
+
+        Returns:
+            The matching domain entity, or None if no entity owns this identifier
+        """
+        ...
+
     # Taxonomy operations
     def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
         """

@@ -3725,6 +3725,11 @@ export interface components {
      */
     ClassCreateRequest: {
       /**
+       * Identifier
+       * @description Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
+       */
+      identifier: string;
+      /**
        * Title
        * @description Display name for the class
        */
@@ -3734,6 +3739,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
       /**
        * Parent Class Id
        * @description Optional ID of parent class for hierarchy
@@ -3758,7 +3768,7 @@ export interface components {
     ClassResponse: {
       /**
        * Id
-       * @description Unique identifier
+       * @description Unique identifier (UUID)
        */
       id: string;
       /**
@@ -3772,6 +3782,11 @@ export interface components {
        */
       taxonomy_id: string;
       /**
+       * Identifier
+       * @description Slug-style identifier (e.g. 'cls_organism')
+       */
+      identifier: string;
+      /**
        * Title
        * @description Display name
        */
@@ -3781,6 +3796,11 @@ export interface components {
        * @description Optional description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
       /**
        * Parent Class Id
        * @description Optional parent class ID
@@ -3828,7 +3848,7 @@ export interface components {
     };
     /**
      * ClassUpdateRequest
-     * @description Request to update a class.
+     * @description Request to update a class. Identifier is immutable post-create.
      */
     ClassUpdateRequest: {
       /**
@@ -3841,6 +3861,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description New hex color '#rrggbb' or null to clear
+       */
+      color?: string | null;
     };
     /**
      * CommunitiesResponse
@@ -3881,6 +3906,11 @@ export interface components {
      */
     ConceptSchemeCreateRequest: {
       /**
+       * Identifier
+       * @description Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
+       */
+      identifier: string;
+      /**
        * Title
        * @description Display name for the concept scheme
        */
@@ -3890,6 +3920,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
     };
     /**
      * ConceptSchemeResponse
@@ -3898,7 +3933,7 @@ export interface components {
     ConceptSchemeResponse: {
       /**
        * Id
-       * @description Unique identifier
+       * @description Unique identifier (UUID)
        */
       id: string;
       /**
@@ -3906,6 +3941,11 @@ export interface components {
        * @description Parent taxonomy ID
        */
       taxonomy_id: string;
+      /**
+       * Identifier
+       * @description Slug-style identifier (e.g. 'scheme_ecology')
+       */
+      identifier: string;
       /**
        * Title
        * @description Display name
@@ -3916,6 +3956,11 @@ export interface components {
        * @description Optional description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
       /**
        * Created At
        * @description Creation timestamp
@@ -3942,7 +3987,7 @@ export interface components {
     };
     /**
      * ConceptSchemeUpdateRequest
-     * @description Request to update a concept scheme.
+     * @description Request to update a concept scheme. Identifier is immutable post-create.
      */
     ConceptSchemeUpdateRequest: {
       /**
@@ -3955,6 +4000,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description New hex color '#rrggbb' or null to clear
+       */
+      color?: string | null;
     };
     /**
      * ConfigSectionUpdateRequest
@@ -6740,6 +6790,11 @@ export interface components {
      */
     TaxonomyCreateRequest: {
       /**
+       * Identifier
+       * @description Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars.
+       */
+      identifier: string;
+      /**
        * Title
        * @description Display name for the taxonomy
        */
@@ -6749,6 +6804,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb' for the taxonomy swatch
+       */
+      color?: string | null;
     };
     /**
      * TaxonomyPublishRequest
@@ -6768,9 +6828,14 @@ export interface components {
     TaxonomyResponse: {
       /**
        * Id
-       * @description Unique identifier
+       * @description Unique identifier (UUID)
        */
       id: string;
+      /**
+       * Identifier
+       * @description Slug-style identifier (e.g. 'tax_life')
+       */
+      identifier: string;
       /**
        * Title
        * @description Display name
@@ -6781,6 +6846,11 @@ export interface components {
        * @description Optional description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
       /**
        * Created At
        * @description Creation timestamp
@@ -6807,7 +6877,7 @@ export interface components {
     };
     /**
      * TaxonomyUpdateRequest
-     * @description Request to update a taxonomy.
+     * @description Request to update a taxonomy. Identifier is immutable post-create.
      */
     TaxonomyUpdateRequest: {
       /**
@@ -6820,6 +6890,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description New hex color '#rrggbb' or null to clear
+       */
+      color?: string | null;
     };
     /**
      * TripleCountResponse

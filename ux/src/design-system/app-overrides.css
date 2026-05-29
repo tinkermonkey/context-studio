@@ -292,3 +292,30 @@ body.dark-canvas {
   font-size: 11.5px;
   color: rgb(var(--canvas-fg-3));
 }
+
+/* Taxonomy form — color picker + hex input row */
+.taxonomy-form-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.taxonomy-form-color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(var(--canvas-border));
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.taxonomy-form-color-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.taxonomy-form-color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-md) - 1px);
+}

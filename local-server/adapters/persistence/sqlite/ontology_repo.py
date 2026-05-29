@@ -211,17 +211,20 @@ class SQLiteOntologyRepository:
                 orm_entity = OntologyEntity(
                     id=taxonomy.id,
                     node_type=NodeType.TAXONOMY,
+                    identifier=taxonomy.identifier,
                     title=taxonomy.title,
                     description=taxonomy.description,
+                    color=taxonomy.color,
                     created_at=datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
                 )
                 session.add(orm_entity)
             else:
-                # Update existing
+                # Update existing — identifier is immutable post-create
                 orm_entity.title = taxonomy.title  # type: ignore[assignment]
                 orm_entity.description = taxonomy.description  # type: ignore[assignment]
+                orm_entity.color = taxonomy.color  # type: ignore[assignment]
                 orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
@@ -414,17 +417,20 @@ class SQLiteOntologyRepository:
                     id=scheme.id,
                     node_type=NodeType.CONCEPT_SCHEME,
                     taxonomy_id=scheme.taxonomy_id,
+                    identifier=scheme.identifier,
                     title=scheme.title,
                     description=scheme.description,
+                    color=scheme.color,
                     created_at=datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
                 )
                 session.add(orm_entity)
             else:
-                # Update existing
+                # Update existing — identifier is immutable post-create
                 orm_entity.title = scheme.title  # type: ignore[assignment]
                 orm_entity.description = scheme.description  # type: ignore[assignment]
+                orm_entity.color = scheme.color  # type: ignore[assignment]
                 orm_entity.status = scheme.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
@@ -628,10 +634,11 @@ class SQLiteOntologyRepository:
                 orm_entity.version = 1  # type: ignore[assignment]
                 session.add(orm_entity)
             else:
-                # Update existing
+                # Update existing — identifier is immutable post-create
                 mapped_orm = map_domain_to_orm(cls)
                 orm_entity.title = cls.title  # type: ignore[assignment]
                 orm_entity.description = cls.description  # type: ignore[assignment]
+                orm_entity.color = cls.color  # type: ignore[assignment]
                 orm_entity.parent_class_id = cls.parent_class_id  # type: ignore[assignment]
                 orm_entity.concept_scheme_id = cls.concept_scheme_id  # type: ignore[assignment]
                 structural_property_id = cls.structural_property_id
@@ -1050,6 +1057,41 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             return q.count()
+
+    def get_by_identifier(
+        self, identifier: str
+    ) -> Optional[Taxonomy | ConceptScheme | Class]:
+        """
+        Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique slug.
+
+        Property definitions are intentionally excluded; use
+        ``get_property_definition_by_identifier`` for those.
+
+        Args:
+            identifier: The slug-style identifier (e.g. 'tax_life')
+
+        Returns:
+            The matching domain entity, or None if no taxonomy/scheme/class owns it.
+        """
+        with self.session_factory() as session:
+            orm_entity = (
+                session.query(OntologyEntity)
+                .filter(
+                    and_(
+                        OntologyEntity.identifier == identifier,
+                        OntologyEntity.node_type.in_(
+                            (NodeType.TAXONOMY, NodeType.CONCEPT_SCHEME, NodeType.CLASS)
+                        ),
+                    )
+                )
+                .first()
+            )
+            if orm_entity is None:
+                return None
+            return cast(
+                Optional[Taxonomy | ConceptScheme | Class],
+                map_orm_to_domain(orm_entity),
+            )
 
     def get_property_definition_by_identifier(
         self, identifier: str

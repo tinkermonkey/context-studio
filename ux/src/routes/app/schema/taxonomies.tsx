@@ -114,19 +114,19 @@ function TaxonomiesPageContent({
 
   const taxonomyColumns: Column<TaxonomyResponse>[] = [
     {
-      key: "id",
+      key: "identifier",
       label: "Identifier",
       width: "180px",
-      render: (value) => {
-        const id = value as string;
+      render: (_, row) => {
+        const swatch = row.color || swatchColor(row.id);
         return (
           <span className="taxonomy-id-cell">
             <span
               className="taxonomy-id-cell__swatch"
-              style={{ background: swatchColor(id) }}
+              style={{ background: swatch }}
               aria-hidden="true"
             />
-            <span className="taxonomy-id-cell__text">{id.slice(0, 8)}</span>
+            <span className="taxonomy-id-cell__text">{row.identifier}</span>
           </span>
         );
       },

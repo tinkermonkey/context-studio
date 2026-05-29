@@ -243,11 +243,17 @@ def map_orm_to_domain(
     entity_last_modified = cast(datetime | None, orm_entity.last_modified)
     entity_version = cast(int, orm_entity.version)
 
+    entity_identifier = cast(str | None, orm_entity.identifier)
+    entity_color = cast(str | None, orm_entity.color)
+    fallback_id_slug = "x_" + entity_id.replace("-", "")[:8]
+
     if orm_entity.node_type == NodeType.TAXONOMY:
         return Taxonomy(
             id=entity_id,
+            identifier=entity_identifier or fallback_id_slug,
             title=entity_title,
             description=entity_description,
+            color=entity_color,
             created_at=entity_created_at,
             last_modified=entity_last_modified,
             version=entity_version,
@@ -257,8 +263,10 @@ def map_orm_to_domain(
     elif orm_entity.node_type == NodeType.CONCEPT_SCHEME:
         return ConceptScheme(
             id=entity_id,
+            identifier=entity_identifier or fallback_id_slug,
             title=entity_title,
             description=entity_description,
+            color=entity_color,
             created_at=entity_created_at,
             last_modified=entity_last_modified,
             version=entity_version,
@@ -269,8 +277,10 @@ def map_orm_to_domain(
     elif orm_entity.node_type == NodeType.CLASS:
         return Class(
             id=entity_id,
+            identifier=entity_identifier or fallback_id_slug,
             title=entity_title,
             description=entity_description,
+            color=entity_color,
             created_at=entity_created_at,
             last_modified=entity_last_modified,
             version=entity_version,
@@ -349,6 +359,8 @@ def map_domain_to_orm(
         return OntologyEntity(
             **common_args,
             node_type=NodeType.TAXONOMY,
+            identifier=entity.identifier,
+            color=entity.color,
         )
 
     elif isinstance(entity, ConceptScheme):
@@ -356,6 +368,8 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.CONCEPT_SCHEME,
             taxonomy_id=entity.taxonomy_id,
+            identifier=entity.identifier,
+            color=entity.color,
         )
 
     elif isinstance(entity, Class):
@@ -371,6 +385,8 @@ def map_domain_to_orm(
             data_properties=serialize_data_properties(entity.data_properties),
             embedding=_serialize_embedding(entity.embedding),
             source_run_id=entity.source_run_id,
+            identifier=entity.identifier,
+            color=entity.color,
         )
 
     elif isinstance(entity, Individual):

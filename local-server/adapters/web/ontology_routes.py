@@ -54,6 +54,7 @@ from domain.ontology.exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
     EntityNotFoundError,
+    IdentifierConflictError,
     OntologyError,
 )
 from domain.ontology.services import OntologyService
@@ -83,6 +84,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, CircularReferenceError):
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     elif isinstance(exc, DuplicateEntityError):
+        return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, IdentifierConflictError):
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, OntologyError):
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
@@ -118,8 +121,10 @@ async def create_taxonomy(
     try:
         taxonomy = await run_sync_in_executor(
             service.create_taxonomy,
+            request.identifier,
             request.title,
             request.description,
+            request.color,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
@@ -227,6 +232,7 @@ async def update_taxonomy(
             taxonomy_id=taxonomy_id,
             title=request.title,
             description=request.description,
+            color=request.color,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
@@ -343,8 +349,10 @@ async def create_concept_scheme(
         scheme = await run_sync_in_executor(
             service.create_scheme,
             taxonomy_id=taxonomy_id,
+            identifier=request.identifier,
             title=request.title,
             description=request.description,
+            color=request.color,
         )
         return ConceptSchemeResponse.model_validate(scheme)
     except Exception as exc:
@@ -456,6 +464,7 @@ async def update_concept_scheme(
             concept_scheme_id=scheme_id,
             title=request.title,
             description=request.description,
+            color=request.color,
         )
         return ConceptSchemeResponse.model_validate(scheme)
     except Exception as exc:
@@ -515,8 +524,10 @@ async def create_class(
     try:
         cls = service.create_class(
             concept_scheme_id=scheme_id,
+            identifier=request.identifier,
             title=request.title,
             description=request.description,
+            color=request.color,
             parent_class_id=request.parent_class_id,
         )
         return ClassResponse.model_validate(cls)
@@ -620,6 +631,7 @@ async def update_class(
             class_id=class_id,
             title=request.title,
             description=request.description,
+            color=request.color,
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
