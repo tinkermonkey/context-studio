@@ -11,39 +11,44 @@ type ExecutionResponse = components["schemas"]["ExecutionResponse"];
 
 type PipelineStatus = "running" | "success" | "idle" | "failed";
 
+// Heimdall v0.4.0 reads each FlowNode's `color` and applies it as
+// `data-color="..."` on .pipeline-card__node, tinting the icon-tile background
+// and the node border. Map node role → Heimdall StatusColor so the flow strip
+// reads as cyan→violet→amber→emerald (input/extract/resolve/write) instead of
+// the all-amber fallback.
 const PIPELINE_FLOW: Record<string, FlowNode[]> = {
   individual_extraction: [
-    { id: "source", name: "Input", label: "text", icon: "data" },
-    { id: "extract", name: "Extract", label: "llm", icon: "pipeline" },
-    { id: "write", name: "Store", label: "graph", icon: "schema" },
+    { id: "source", name: "Input", label: "text", icon: "data", color: "cyan" },
+    { id: "extract", name: "Extract", label: "llm", icon: "pipeline", color: "violet" },
+    { id: "write", name: "Store", label: "graph", icon: "schema", color: "emerald" },
   ],
   schema_extraction: [
-    { id: "source", name: "Schema", label: "nodes", icon: "schema" },
-    { id: "extract", name: "Analyze", label: "llm", icon: "pipeline" },
-    { id: "resolve", name: "Ground", label: "refs", icon: "link" },
-    { id: "write", name: "Store", label: "graph", icon: "data" },
+    { id: "source", name: "Schema", label: "nodes", icon: "schema", color: "cyan" },
+    { id: "extract", name: "Analyze", label: "llm", icon: "pipeline", color: "violet" },
+    { id: "resolve", name: "Ground", label: "refs", icon: "link", color: "amber" },
+    { id: "write", name: "Store", label: "graph", icon: "data", color: "emerald" },
   ],
   schema_node_grounding: [
-    { id: "source", name: "Nodes", label: "schema", icon: "schema" },
-    { id: "resolve", name: "Ground", label: "llm", icon: "link" },
-    { id: "write", name: "Apply", label: "graph", icon: "data" },
+    { id: "source", name: "Nodes", label: "schema", icon: "schema", color: "cyan" },
+    { id: "resolve", name: "Ground", label: "llm", icon: "link", color: "amber" },
+    { id: "write", name: "Apply", label: "graph", icon: "data", color: "emerald" },
   ],
   schema_node_definition_refinement: [
-    { id: "source", name: "Nodes", label: "schema", icon: "schema" },
-    { id: "extract", name: "Refine", label: "llm", icon: "pipeline" },
-    { id: "write", name: "Apply", label: "graph", icon: "data" },
+    { id: "source", name: "Nodes", label: "schema", icon: "schema", color: "cyan" },
+    { id: "extract", name: "Refine", label: "llm", icon: "pipeline", color: "violet" },
+    { id: "write", name: "Apply", label: "graph", icon: "data", color: "emerald" },
   ],
   schema_node_connection_refinement: [
-    { id: "source", name: "Edges", label: "schema", icon: "schema" },
-    { id: "resolve", name: "Connect", label: "llm", icon: "link" },
-    { id: "write", name: "Apply", label: "graph", icon: "data" },
+    { id: "source", name: "Edges", label: "schema", icon: "schema", color: "cyan" },
+    { id: "resolve", name: "Connect", label: "llm", icon: "link", color: "amber" },
+    { id: "write", name: "Apply", label: "graph", icon: "data", color: "emerald" },
   ],
 };
 
 function getDefaultFlow(pipeline: PipelineConfigurationResponse): FlowNode[] {
   return [
-    { id: "provider", name: pipeline.provider, label: "provider", icon: "settings" },
-    { id: "model", name: pipeline.model, label: "model", icon: "pipeline" },
+    { id: "provider", name: pipeline.provider, label: "provider", icon: "settings", color: "neutral" },
+    { id: "model", name: pipeline.model, label: "model", icon: "pipeline", color: "violet" },
   ];
 }
 
@@ -99,13 +104,11 @@ export function PipelineCard({ pipeline, selected, compact, onClick }: PipelineC
 
   const errors = lastExecution?.status === "error" || lastExecution?.status === "timeout" ? 1 : 0;
 
-  const footerContent = (
-    <div className="pipeline-card-foot">
-      {lastExecution
-        ? `${lastRunTime} · ${lastExecution.tokens_in} → ${lastExecution.tokens_out} tokens · ${duration}`
-        : COPY.NO_PIPELINE_RUNS}
-    </div>
-  );
+  // Heimdall already wraps footerContent in its own .pipeline-card__foot, so
+  // we pass raw text — no inner wrapper class needed.
+  const footerContent = lastExecution
+    ? `${lastRunTime} · ${lastExecution.tokens_in} → ${lastExecution.tokens_out} tokens · ${duration}`
+    : COPY.NO_PIPELINE_RUNS;
 
   return (
     <HeimdallPipelineCard
