@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Panel } from "@tinkermonkey/heimdall-ui";
 
 interface SchemaPageLayoutProps<T extends { id: string }> {
   data: T[];
@@ -22,7 +21,7 @@ export function SchemaPageLayout<T extends { id: string }>({
         data-testid="schema-page-layout"
         style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14, alignItems: "start" }}
       >
-        <Panel noPadding>{children}</Panel>
+        <div>{children}</div>
         <div data-testid="schema-inspector-container">
           {renderInspectorContent(selectedEntity)}
         </div>
@@ -31,8 +30,6 @@ export function SchemaPageLayout<T extends { id: string }>({
   }
 
   return (
-    <div data-testid="schema-page-layout">
-      <Panel noPadding>{children}</Panel>
-    </div>
+    <div data-testid="schema-page-layout">{children}</div>
   );
 }

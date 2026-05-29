@@ -66,7 +66,8 @@ body.dark-canvas {
    that contains a table, since overflow:hidden on an ancestor would
    clip the sticky header once it scrolls above that ancestor's box. */
 .panel:has(.table),
-.panel:has(.table) .panel__body {
+.panel:has(.table) .panel__body,
+.schema-table-wrap {
   overflow: visible;
 }
 .table {
@@ -79,6 +80,51 @@ body.dark-canvas {
   background-color: rgb(var(--canvas-bg-2));
   box-shadow: inset 0 -1px 0 rgb(var(--canvas-border));
   border-bottom: none;
+}
+
+/* Schema-page table chrome — the wrapper owns the 1px border + radius
+   so the Heimdall Table inside doesn't double-up its own. The pagination
+   footer sits flush inside the same chrome with a single border-top. */
+.schema-table-wrap {
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-lg);
+  background: rgb(var(--canvas-card));
+}
+.schema-table-wrap > .table {
+  border: none;
+  border-radius: 0;
+}
+.schema-table-wrap > .table .table__header:first-child {
+  border-top-left-radius: var(--radius-lg);
+}
+.schema-table-wrap > .table .table__header:last-child {
+  border-top-right-radius: var(--radius-lg);
+}
+.schema-table-wrap > .table .table__row:last-child .table__cell:first-child {
+  border-bottom-left-radius: var(--radius-lg);
+}
+.schema-table-wrap > .table .table__row:last-child .table__cell:last-child {
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+.schema-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid rgb(var(--canvas-border));
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-3));
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+.schema-table-wrap:has(.schema-table-footer) > .table .table__row:last-child .table__cell {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.schema-table-footer__actions {
+  display: flex;
+  gap: 6px;
 }
 
 /* Sidebar user identity footer (Heimdall Sidebar `footer` slot) */

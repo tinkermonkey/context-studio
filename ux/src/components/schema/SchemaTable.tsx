@@ -54,7 +54,7 @@ export function SchemaTable<T extends { id: string }>({
   }
 
   return (
-    <div data-testid={tableTestId || "schema-table"}>
+    <div className="schema-table-wrap" data-testid={tableTestId || "schema-table"}>
       <Table<T>
         columns={columns}
         data={pagedData}
@@ -64,21 +64,11 @@ export function SchemaTable<T extends { id: string }>({
       />
 
       {pageCount > 1 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 14px",
-            borderTop: "1px solid rgb(var(--canvas-border))",
-            fontSize: 12.5,
-            color: "rgb(var(--canvas-fg-3))",
-          }}
-        >
+        <div className="schema-table-footer">
           <span>
             Page {pageIndex + 1} of {pageCount}
           </span>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="schema-table-footer__actions">
             <Button
               variant="ghost"
               size="sm"
