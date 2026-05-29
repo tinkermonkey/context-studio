@@ -719,6 +719,29 @@ selectors:
     component: components/ontology/HierarchyTree.tsx
     description: Hierarchy tree node with dynamic ID suffix
 
+  # Demo Dataset Picker
+  - selector: demo-dataset-picker
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Root container of the demo dataset picker drawer
+  - selector: demo-dataset-card-*
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Card for an individual demo dataset, suffixed by dataset name
+  - selector: demo-dataset-load-*
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Load button on a demo dataset card, suffixed by dataset name
+  - selector: demo-dataset-meta-*
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Metadata line on a demo dataset card, suffixed by dataset name
+  - selector: demo-dataset-error-*
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Inline error shown on a demo dataset card when load fails (e.g. 409)
+  - selector: demo-dataset-loading
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Loading placeholder shown while available datasets are fetched
+  - selector: demo-dataset-error
+    component: components/demo/DemoDatasetPicker.tsx
+    description: Error state shown when the demo datasets list fails to load
+
   # Contact Sheet
   - selector: contact-sheet-buttons
     component: routes/app/contact-sheet.tsx

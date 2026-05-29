@@ -1,0 +1,52 @@
+{
+  "name": "lamport_paxos_made_simple",
+  "description": "Excerpt from Lamport's 'Paxos Made Simple'. Exercises consensus_protocols scheme with the Paxos two-phase structure and proposer/acceptor/learner roles as Individuals.",
+  "source": {
+    "title": "Paxos Made Simple",
+    "authors": ["Leslie Lamport"],
+    "year": 2001,
+    "venue": "ACM SIGACT News, 32(4), 51-58",
+    "url": "https://lamport.azurewebsites.net/pubs/paxos-simple.pdf"
+  },
+  "citation": "Lamport, L. (2001). Paxos made simple. ACM SIGACT News, 32(4), 51-58.",
+  "source_text": "The Paxos algorithm enables a collection of processes to choose a single value despite asynchronous communication and process failures. Three classes of agents participate in the algorithm: proposers, which submit values for consideration; acceptors, which form a quorum and vote on proposals; and learners, which observe the chosen value once consensus is reached. A single process can fill multiple roles.\n\nThe algorithm proceeds in two phases. In Phase 1, a proposer selects a proposal number n higher than any it has previously used and sends a prepare request with number n to a majority of acceptors. An acceptor that has not already responded to a prepare request with a number greater than n promises not to accept any further proposals numbered less than n, and returns the highest-numbered proposal, if any, that it has already accepted. In Phase 2, if the proposer received responses from a majority, it sends an accept request with proposal number n and a value v. The value v is the value of the highest-numbered proposal returned by any acceptor in Phase 1, or any value of the proposer's choice if no acceptor reported any prior accepted proposal. An acceptor that has not promised against proposals numbered less than n accepts the value.\n\nOnce a value has been accepted by a majority of acceptors, it has been chosen. Learners discover the chosen value either by being notified directly by acceptors or by querying the acceptor majority. The safety property — at most one value is ever chosen — follows from the requirement that a majority of acceptors must accept a proposal, combined with the rule that a proposer must adopt the value of the highest-numbered prior proposal it learns of in Phase 1. Liveness is not guaranteed: in the presence of duelling proposers, the algorithm can in principle make no progress. The customary remedy is to elect a distinguished proposer, the leader, and route all proposals through it. This optimisation is the foundation of Multi-Paxos, which amortises the cost of leader election across a series of consensus instances and is the basis of most production deployments.",
+  "expected_entities": [
+    { "id": "paxos", "label": "Paxos", "type": "ConsensusProtocol", "context": "consensus algorithm for asynchronous systems with crash failures" },
+    { "id": "proposer", "label": "proposer", "type": "Role", "context": "submits values for consideration" },
+    { "id": "acceptor", "label": "acceptor", "type": "Role", "context": "votes on proposals" },
+    { "id": "learner", "label": "learner", "type": "Role", "context": "observes the chosen value" },
+    { "id": "prepare_request", "label": "prepare request", "type": "Message", "context": "Phase 1 message with proposal number" },
+    { "id": "accept_request", "label": "accept request", "type": "Message", "context": "Phase 2 message with proposal number and value" },
+    { "id": "proposal_number", "label": "proposal number", "type": "Concept", "context": "monotonically increasing identifier per proposer" },
+    { "id": "majority_quorum", "label": "majority quorum", "type": "Concept", "context": "set of acceptors required to accept a proposal" },
+    { "id": "multi_paxos", "label": "Multi-Paxos", "type": "ConsensusProtocol", "context": "amortizes leader election across consensus instances" },
+    { "id": "leader_paxos", "label": "leader", "type": "Role", "context": "distinguished proposer routing all proposals" }
+  ],
+  "expected_relationships": [
+    { "subject": "paxos", "predicate": "uses_role", "object": "proposer" },
+    { "subject": "paxos", "predicate": "uses_role", "object": "acceptor" },
+    { "subject": "paxos", "predicate": "uses_role", "object": "learner" },
+    { "subject": "multi_paxos", "predicate": "extends", "object": "paxos" },
+    { "subject": "multi_paxos", "predicate": "uses_role", "object": "leader_paxos" },
+    { "subject": "proposer", "predicate": "sends", "object": "prepare_request" },
+    { "subject": "proposer", "predicate": "sends", "object": "accept_request" }
+  ],
+  "expected_classes": [
+    { "identifier": "paxos", "title": "Paxos", "parent_class_identifier": "consensus_protocol", "concept_scheme_identifier": "consensus_protocols" },
+    { "identifier": "multi_paxos", "title": "Multi-Paxos", "parent_class_identifier": "paxos", "concept_scheme_identifier": "consensus_protocols" }
+  ],
+  "expected_individuals": [
+    { "title": "Proposer Role", "class_identifiers": ["paxos"], "data_properties": [{ "property_identifier": "description", "value": "Submits values for consideration; selects monotonically increasing proposal numbers.", "datatype": "xsd:string" }] },
+    { "title": "Acceptor Role", "class_identifiers": ["paxos"], "data_properties": [{ "property_identifier": "description", "value": "Votes on proposals; forms a quorum and promises not to accept proposals below a seen number.", "datatype": "xsd:string" }] },
+    { "title": "Learner Role", "class_identifiers": ["paxos"], "data_properties": [{ "property_identifier": "description", "value": "Observes the chosen value once consensus is reached.", "datatype": "xsd:string" }] }
+  ],
+  "expected_property_defs": [],
+  "expected_external_refs": [
+    { "class_identifier": "paxos", "source": "dbpedia", "identifier": "Paxos_(computer_science)", "uri": "http://dbpedia.org/resource/Paxos_(computer_science)" },
+    { "class_identifier": "paxos", "source": "wikidata", "identifier": "Q2046154", "uri": "https://www.wikidata.org/wiki/Q2046154" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "consensus_protocols", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["leader"]
+}

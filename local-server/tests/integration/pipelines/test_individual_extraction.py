@@ -46,13 +46,28 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from tests.fakes.canon_aware_fake_llm import CanonAwareFakeLLMProvider
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.utils.canon_assertions import (
+    assert_triples_match,
+    load_canon,
+    score_triples,
+)
 
 # Fixture loading utilities
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_extraction"
+
+# Canon (software-architecture gold corpus) shared between the test cycle and
+# the demo dataset loader.
+CANON_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "datafiles"
+    / "canon"
+    / "software_architecture"
+)
 
 
 def load_fixture(fixture_name: str) -> dict:
@@ -97,25 +112,28 @@ def ontology_repo(session_factory):
     """Create a real SQLiteOntologyRepository with test data."""
     repo = SQLiteOntologyRepository(session_factory)
 
-    # Create ontology with classes for testing
+    # Create ontology with classes for testing. Post-migration f319bb8dc961
+    # requires identifier slugs on taxonomy / concept_scheme / class.
     tax = Taxonomy(
         id=str(uuid4()),
+        identifier="test_ontology",
         title="Test Ontology",
-        description="Test ontology for extraction"
+        description="Test ontology for extraction",
     )
     repo.save_taxonomy(tax)
 
     scheme = ConceptScheme(
         id=str(uuid4()),
+        identifier="test_scheme",
         taxonomy_id=tax.id,
         title="Test Scheme",
         description="Test scheme",
     )
     repo.save_concept_scheme(scheme)
 
-    # Create some test classes
     person_class = Class(
         id=str(uuid4()),
+        identifier="person",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Person",
@@ -123,6 +141,7 @@ def ontology_repo(session_factory):
     )
     company_class = Class(
         id=str(uuid4()),
+        identifier="company",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Company",
@@ -805,3 +824,229 @@ class TestIndividualExtractionRunPersistence:
             assert run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
             assert run.source_text_hash != ""
             assert f"paper-{i+1}.txt" in run.source_document_uri
+
+
+# ---------------------------------------------------------------------------- #
+# Canon-driven assertions                                                      #
+# ---------------------------------------------------------------------------- #
+#
+# Where the smoke tests above check structural plumbing (the orchestrator runs
+# without error, the legacy endpoint returns the right shape, runs persist),
+# the tests below check what actually matters: when the pipeline is fed a
+# software-architecture research paper from the canon, does it extract the
+# triples that the canon's gold-standard ontology slice says it should?
+#
+# The CanonAwareFakeLLMProvider replaces the canned "John Doe works for ACME
+# Corp" fake with a paper-aware fake that returns the gold-standard triples for
+# the paper whose source_text is embedded in the user_prompt. This means the
+# assertions exercise the full orchestrator → triple-parsing → state-population
+# code path with realistic data, and a regression in any of those steps will
+# fail the recall threshold rather than silently disappear.
+
+
+@pytest.fixture(scope="module")
+def canon_bundle():
+    """Parsed canon directory (master slice + paper fixtures)."""
+    assert CANON_DIR.is_dir(), f"Canon directory missing: {CANON_DIR}"
+    return load_canon(CANON_DIR)
+
+
+@pytest.fixture
+def canon_extraction_service(ontology_repo, session_factory):
+    """ExtractionService backed by the CanonAwareFakeLLMProvider."""
+    embedding_service = FakeEmbeddingService()
+    event_publisher = InProcessEventPublisher()
+    extraction_repo = SQLiteExtractionRepository(session_factory)
+    extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+
+    return ExtractionService(
+        ontology_repo=ontology_repo,
+        embedding_service=embedding_service,
+        llm=CanonAwareFakeLLMProvider(CANON_DIR),
+        nlp=FakeNLPProcessor(),
+        reference_sources=[FakeReferenceSource()],
+        event_publisher=event_publisher,
+        extraction_repo=extraction_repo,
+        extraction_run_repo=extraction_run_repo,
+    )
+
+
+@pytest.fixture
+def canon_orchestrator(canon_extraction_service):
+    """IndividualExtractionOrchestrator wired with the canon-aware service."""
+    return IndividualExtractionOrchestrator(
+        llm_provider=CanonAwareFakeLLMProvider(CANON_DIR),
+        extraction_service=canon_extraction_service,
+    )
+
+
+def _run_paper(orchestrator, ontology_id: str, paper: dict) -> dict:
+    """Drive a single canon paper through the orchestrator and return the state."""
+    state = IndividualExtractionState(
+        run_id=str(uuid4()),
+        pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+        input_data={
+            "text": paper["source_text"],
+            "ontology_id": ontology_id,
+            "model": "claude-opus-4-7",
+            "temperature": 0.0,
+        },
+    )
+    return asyncio.run(orchestrator.execute(state))
+
+
+class TestIndividualExtractionAgainstCanon:
+    """Substantive extraction assertions against the software-architecture canon."""
+
+    def test_canon_corpus_loads_with_minimum_papers(self, canon_bundle):
+        """At least the seminal 5 papers must be present; 15 is the full Phase 1 target."""
+        assert len(canon_bundle.papers) >= 5, (
+            f"Canon corpus underpopulated: found {len(canon_bundle.papers)} papers, "
+            f"expected ≥5"
+        )
+        # Sanity check on master slice integrity.
+        assert len(canon_bundle.canon["taxonomies"]) >= 1
+        assert len(canon_bundle.canon["concept_schemes"]) >= 5
+        assert len(canon_bundle.canon["class_hierarchy"]) >= 20
+
+    def test_fake_llm_loaded_every_paper(self, canon_bundle):
+        """Every paper fixture must be loadable by the canon-aware fake."""
+        fake = CanonAwareFakeLLMProvider(CANON_DIR)
+        loaded = set(fake.loaded_paper_names)
+        expected = set(canon_bundle.papers.keys())
+        assert loaded == expected, (
+            f"Fake loaded {len(loaded)} papers, canon has {len(expected)}. "
+            f"Missing from fake: {expected - loaded}"
+        )
+
+    # Note on assertion strictness
+    # ----------------------------
+    # The CanonAwareFakeLLMProvider returns the canon's gold-standard triples
+    # verbatim. There is no LLM nondeterminism to absorb, so an extractor that
+    # is functioning correctly must achieve precision == recall == F1 == 1.0
+    # on every paper. The tests below assert exact equality. Any drop signals
+    # a real orchestrator / parsing / state-population regression — there's
+    # no acceptable "headroom for the fake to underperform" because the fake
+    # is the gold. The quality floors (recall ≥ 0.5 etc.) belong on the
+    # `@pytest.mark.real_llm` suite that hits Anthropic via prompt_cache, not
+    # on the structural-plumbing canon-fake tests.
+
+    def test_fielding_rest_extraction_perfect_against_canon_fake(
+        self, canon_orchestrator, canon_bundle, ontology_repo
+    ):
+        """Fielding REST paper: canon-fake must yield perfect precision/recall/F1."""
+        paper = canon_bundle.papers["fielding_rest_dissertation_ch5"]
+        ontology_id = ontology_repo.list_taxonomies()[0].id
+
+        result_state = _run_paper(canon_orchestrator, ontology_id, paper)
+        assert result_state.current_status == "completed"
+
+        metrics = score_triples(
+            produced=result_state.extracted_triples or [],
+            expected=paper["expected_relationships"],
+        )
+        assert metrics.recall == 1.0, (
+            f"Canon-fake recall={metrics.recall:.4f} expected 1.0 — "
+            f"orchestrator dropped triples. Missing: {metrics.missing_expected[:5]}"
+        )
+        assert metrics.precision == 1.0, (
+            f"Canon-fake precision={metrics.precision:.4f} expected 1.0 — "
+            f"orchestrator emitted extras. Extra: {metrics.extra_produced[:5]}"
+        )
+
+    def test_crdt_extraction_perfect_against_canon_fake(
+        self, canon_orchestrator, canon_bundle, ontology_repo
+    ):
+        """Shapiro CRDT paper: hierarchical classes + ordered individuals; perfect against fake."""
+        paper = canon_bundle.papers["shapiro_crdt_survey"]
+        ontology_id = ontology_repo.list_taxonomies()[0].id
+
+        result_state = _run_paper(canon_orchestrator, ontology_id, paper)
+        assert result_state.current_status == "completed"
+
+        metrics = score_triples(
+            produced=result_state.extracted_triples or [],
+            expected=paper["expected_relationships"],
+        )
+        assert metrics.f1 == 1.0, (
+            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 (p={metrics.precision}, r={metrics.recall})"
+        )
+
+    def test_microservices_extraction_perfect_against_canon_fake(
+        self, canon_orchestrator, canon_bundle, ontology_repo
+    ):
+        """Fowler microservices article: perfect against fake; multi-sense 'service' present in source."""
+        paper = canon_bundle.papers["fowler_microservices_article"]
+        ontology_id = ontology_repo.list_taxonomies()[0].id
+
+        result_state = _run_paper(canon_orchestrator, ontology_id, paper)
+        assert result_state.current_status == "completed"
+
+        metrics = score_triples(
+            produced=result_state.extracted_triples or [],
+            expected=paper["expected_relationships"],
+        )
+        assert metrics.f1 == 1.0, (
+            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 (p={metrics.precision}, r={metrics.recall})"
+        )
+
+    def test_all_canon_papers_perfect_against_canon_fake(
+        self, canon_orchestrator, canon_bundle, ontology_repo
+    ):
+        """
+        Rollup: every canon paper must score exact 1.0 under the canon-fake.
+
+        Any regression in any one paper localises here. Catches partial
+        breakage (e.g. one extraction layer mishandling a specific paper)
+        that an averaged-over-corpus assertion would silently hide.
+        """
+        ontology_id = ontology_repo.list_taxonomies()[0].id
+        per_paper_metrics: list[tuple[str, float, float, float]] = []
+        regressions: list[str] = []
+
+        for name, paper in canon_bundle.papers.items():
+            if not paper.get("expected_relationships"):
+                # A few canon papers (e.g., lamport_time_clocks) carry only
+                # property-definition expectations, not triple expectations.
+                continue
+            result_state = _run_paper(canon_orchestrator, ontology_id, paper)
+            assert result_state.current_status == "completed", f"{name} failed"
+
+            metrics = score_triples(
+                produced=result_state.extracted_triples or [],
+                expected=paper["expected_relationships"],
+            )
+            per_paper_metrics.append(
+                (name, metrics.precision, metrics.recall, metrics.f1)
+            )
+            if metrics.f1 != 1.0:
+                regressions.append(
+                    f"{name}: p={metrics.precision:.4f} r={metrics.recall:.4f} f1={metrics.f1:.4f} "
+                    f"missing={metrics.missing_expected[:3]} extra={metrics.extra_produced[:3]}"
+                )
+
+        # Print a summary; useful when running with `-s` for iteration work.
+        print("\nCanon recall summary:")
+        for name, prec, rec, f1 in sorted(per_paper_metrics):
+            print(f"  {name}: precision={prec:.2f} recall={rec:.2f} f1={f1:.2f}")
+
+        assert not regressions, (
+            "Canon-fake rollup expects F1=1.0 on every paper. Regressions:\n  "
+            + "\n  ".join(regressions)
+        )
+
+    def test_cross_paper_term_service_appears_across_corpus(self, canon_bundle):
+        """
+        Multi-sense check: the 'service' term must be present in at least two
+        canon papers (Fielding REST and Fowler microservices). This is a
+        sanity check on the corpus itself — if the term collapses out of the
+        gold, the multi-sense disambiguation tests in later phases will silently
+        pass.
+        """
+        appearances = [
+            name for name, paper in canon_bundle.papers.items()
+            if "service" in paper.get("multi_sense_terms_present", [])
+        ]
+        assert len(appearances) >= 2, (
+            f"'service' multi-sense token expected in ≥2 papers, found in {appearances}"
+        )

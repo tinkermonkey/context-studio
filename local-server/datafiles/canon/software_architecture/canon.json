@@ -1,0 +1,305 @@
+{
+  "name": "software_architecture",
+  "version": "1.0",
+  "description": "Vetted gold-standard ontology slice for software architecture terminology. Built from canonical, peer-reviewed sources. Used as both (a) the gold-standard target for the pipeline test cycle and (b) the dataset materialized by the demo loader so users see exactly what the test sees.",
+  "license_note": "Excerpts in paper_*.json files are paraphrased summaries of the canonical sources, structured for terminology density rather than reproduction. Each paper file carries a full citation pointing back to the original work.",
+  "taxonomies": [
+    {
+      "identifier": "software_architecture",
+      "title": "Software Architecture",
+      "description": "Top-level taxonomy covering architectural styles, distributed-systems primitives, and the trade-offs that shape system design.",
+      "color": "#2b6cb0",
+      "status": "published"
+    }
+  ],
+  "concept_schemes": [
+    {
+      "identifier": "architectural_styles",
+      "title": "Architectural Styles",
+      "description": "Named, recurring shapes for organizing software components and their interactions. Each style imposes a coordinated set of constraints that yields specific runtime properties.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#3182ce",
+      "status": "published"
+    },
+    {
+      "identifier": "architectural_constraints",
+      "title": "Architectural Constraints",
+      "description": "Individual design constraints from which architectural styles are composed. The REST style, for example, is defined by its six constraints.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#d53f8c",
+      "status": "published"
+    },
+    {
+      "identifier": "consistency_models",
+      "title": "Consistency Models",
+      "description": "Guarantees a distributed system makes about the ordering and visibility of updates across replicas.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#805ad5",
+      "status": "published"
+    },
+    {
+      "identifier": "consensus_protocols",
+      "title": "Consensus Protocols",
+      "description": "Algorithms by which a group of distributed processes agree on a single value, despite failures.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#dd6b20",
+      "status": "published"
+    },
+    {
+      "identifier": "replication_strategies",
+      "title": "Replication Strategies",
+      "description": "Approaches to keeping multiple copies of data in agreement, including conflict-free replicated data types.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#38a169",
+      "status": "published"
+    },
+    {
+      "identifier": "system_tradeoffs",
+      "title": "System Trade-offs",
+      "description": "Fundamental properties that a distributed system can offer, and the tensions between them (e.g., the CAP trio).",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#e53e3e",
+      "status": "published"
+    },
+    {
+      "identifier": "design_patterns",
+      "title": "Design Patterns",
+      "description": "Named, reusable solutions to recurring design problems. Includes both code-level patterns and architectural patterns such as CQRS and Event Sourcing.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#319795",
+      "status": "published"
+    },
+    {
+      "identifier": "ddd_concepts",
+      "title": "Domain-Driven Design Concepts",
+      "description": "Strategic and tactical concepts from Domain-Driven Design: bounded contexts, ubiquitous language, aggregates, context maps, and domain events.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#9f7aea",
+      "status": "published"
+    },
+    {
+      "identifier": "integration_patterns",
+      "title": "Enterprise Integration Patterns",
+      "description": "Messaging-oriented patterns for connecting distributed applications, as catalogued by Hohpe and Woolf.",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#ed8936",
+      "status": "published"
+    },
+    {
+      "identifier": "quality_attributes",
+      "title": "Quality Attributes",
+      "description": "Non-functional properties an architecture is expected to deliver: modifiability, performance, availability, scalability, security, testability. Used in trade-off analysis (e.g., ATAM).",
+      "taxonomy_identifier": "software_architecture",
+      "color": "#48bb78",
+      "status": "published"
+    }
+  ],
+  "class_hierarchy": [
+    { "identifier": "architectural_style", "title": "Architectural Style", "parent_class_identifier": null, "concept_scheme_identifier": "architectural_styles", "description": "A named, coordinated set of architectural constraints that yields a specific set of runtime properties." },
+    { "identifier": "rest", "title": "REST", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "Representational State Transfer: an architectural style for distributed hypermedia systems, defined by six constraints." },
+    { "identifier": "client_server_architecture", "title": "Client-Server Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "An architectural style separating user-interface concerns from data-storage concerns by partitioning components into clients and servers." },
+    { "identifier": "layered_architecture", "title": "Layered Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "An architectural style in which components are organized into layers; each layer uses only the services of the layer immediately below it." },
+    { "identifier": "microservices_architecture", "title": "Microservices Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "An architectural style that structures an application as a suite of small, independently deployable services, each running in its own process and communicating via lightweight mechanisms." },
+
+    { "identifier": "architectural_constraint", "title": "Architectural Constraint", "parent_class_identifier": null, "concept_scheme_identifier": "architectural_constraints", "description": "A design rule imposed on the elements and relationships of an architecture; styles are composed of constraints." },
+    { "identifier": "client_server_constraint", "title": "Client-Server Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "Separation of concerns between data storage (server) and user interface (client)." },
+    { "identifier": "stateless_constraint", "title": "Stateless Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "Each request from client to server must contain all information necessary to understand it; the server retains no client context between requests." },
+    { "identifier": "cacheable_constraint", "title": "Cacheable Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "Responses must be implicitly or explicitly marked as cacheable or non-cacheable, allowing clients and intermediaries to reuse them." },
+    { "identifier": "uniform_interface_constraint", "title": "Uniform Interface Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "A small set of generic interaction primitives applied uniformly across components, decoupling implementations." },
+    { "identifier": "layered_system_constraint", "title": "Layered System Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "Components see only the layer with which they directly interact; intermediaries can be inserted transparently." },
+    { "identifier": "code_on_demand_constraint", "title": "Code-on-Demand Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints", "description": "Client functionality may be extended at runtime by transferring executable code from the server. The only optional REST constraint." },
+
+    { "identifier": "replicated_data_type", "title": "Replicated Data Type", "parent_class_identifier": null, "concept_scheme_identifier": "replication_strategies", "description": "A data type whose instances are maintained as replicas across multiple nodes." },
+    { "identifier": "crdt", "title": "Conflict-free Replicated Data Type", "parent_class_identifier": "replicated_data_type", "concept_scheme_identifier": "replication_strategies", "description": "A replicated data type whose replicas can be updated independently and concurrently without coordination, and which provably converge to a consistent state." },
+    { "identifier": "state_based_crdt", "title": "State-based CRDT", "parent_class_identifier": "crdt", "concept_scheme_identifier": "replication_strategies", "description": "A CRDT where replicas exchange full state and merge by a commutative, associative, idempotent join function over a join-semilattice. Also called CvRDT." },
+    { "identifier": "operation_based_crdt", "title": "Operation-based CRDT", "parent_class_identifier": "crdt", "concept_scheme_identifier": "replication_strategies", "description": "A CRDT where replicas exchange operations, requiring the underlying delivery channel to provide exactly-once causal delivery. Also called CmRDT." },
+
+    { "identifier": "consistency_model", "title": "Consistency Model", "parent_class_identifier": null, "concept_scheme_identifier": "consistency_models", "description": "A contract between a system and its clients about how concurrent reads and writes are ordered." },
+    { "identifier": "strong_consistency", "title": "Strong Consistency", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models", "description": "All clients observe the same most-recent successful write at any point in time." },
+    { "identifier": "eventual_consistency", "title": "Eventual Consistency", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models", "description": "Replicas may diverge briefly but, given enough time without new updates, all replicas converge to the same state." },
+    { "identifier": "causal_consistency", "title": "Causal Consistency", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models", "description": "Operations that are causally related are observed in the same order by every process; concurrent operations may be observed in any order." },
+    { "identifier": "linearizable_consistency", "title": "Linearizability", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models", "description": "The strongest single-object consistency: every operation appears to take effect instantaneously at some point between its invocation and response." },
+
+    { "identifier": "consensus_protocol", "title": "Consensus Protocol", "parent_class_identifier": null, "concept_scheme_identifier": "consensus_protocols", "description": "An algorithm by which a distributed set of processes agrees on a single value in the presence of failures." },
+    { "identifier": "paxos", "title": "Paxos", "parent_class_identifier": "consensus_protocol", "concept_scheme_identifier": "consensus_protocols", "description": "A family of consensus protocols for asynchronous, crash-failure systems, comprising proposer, acceptor, and learner roles." },
+    { "identifier": "multi_paxos", "title": "Multi-Paxos", "parent_class_identifier": "paxos", "concept_scheme_identifier": "consensus_protocols", "description": "An extension of Paxos that amortizes the cost of leader election across a sequence of consensus instances." },
+    { "identifier": "raft", "title": "Raft", "parent_class_identifier": "consensus_protocol", "concept_scheme_identifier": "consensus_protocols", "description": "A consensus protocol designed for understandability, decomposing consensus into leader election, log replication, and safety." },
+
+    { "identifier": "system_property", "title": "System Property", "parent_class_identifier": null, "concept_scheme_identifier": "system_tradeoffs", "description": "A guarantee a distributed system can choose to offer." },
+    { "identifier": "consistency_property", "title": "Consistency (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs", "description": "In CAP: every read receives the most recent write or an error. Equivalent to linearizability in the CAP formulation." },
+    { "identifier": "availability_property", "title": "Availability (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs", "description": "In CAP: every request receives a non-error response, without guarantee that it contains the most recent write." },
+    { "identifier": "partition_tolerance_property", "title": "Partition Tolerance (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs", "description": "In CAP: the system continues to operate despite an arbitrary number of messages being dropped or delayed between nodes." },
+
+    { "identifier": "hexagonal_architecture", "title": "Hexagonal Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "Also called Ports and Adapters: the application core is shielded from external concerns by a ring of ports (interfaces it owns) and adapters that translate between ports and external technologies." },
+    { "identifier": "event_driven_architecture", "title": "Event-Driven Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles", "description": "An architectural style where components communicate by emitting and reacting to events; coupling is reduced because producers do not know consumers." },
+
+    { "identifier": "design_pattern", "title": "Design Pattern", "parent_class_identifier": null, "concept_scheme_identifier": "design_patterns", "description": "A named, reusable solution to a recurring design problem in a context." },
+    { "identifier": "cqrs", "title": "CQRS", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns", "description": "Command Query Responsibility Segregation: separates the model used to update information (commands) from the model used to read it (queries)." },
+    { "identifier": "event_sourcing", "title": "Event Sourcing", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns", "description": "Persisting the state of an entity as a sequence of immutable domain events rather than as the current state alone; current state is recovered by replaying events." },
+    { "identifier": "strangler_fig", "title": "Strangler Fig", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns", "description": "A migration pattern for incrementally replacing a legacy system by routing new functionality to a new implementation behind a façade, until the legacy code is fully strangled out." },
+    { "identifier": "saga_pattern", "title": "Saga", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns", "description": "A pattern for managing long-lived transactions across multiple services: each step has an explicit compensating action that undoes its effect if a later step fails." },
+
+    { "identifier": "ddd_concept", "title": "DDD Concept", "parent_class_identifier": null, "concept_scheme_identifier": "ddd_concepts", "description": "A concept from the Domain-Driven Design body of practice." },
+    { "identifier": "bounded_context", "title": "Bounded Context", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts", "description": "An explicit linguistic and modelling boundary inside which a particular domain model applies; the same word may mean different things in different bounded contexts." },
+    { "identifier": "ubiquitous_language", "title": "Ubiquitous Language", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts", "description": "A shared vocabulary used identically by domain experts, designers, and code, scoped to a single bounded context." },
+    { "identifier": "aggregate", "title": "Aggregate", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts", "description": "A cluster of associated domain objects treated as a unit for the purpose of data changes, accessed only through a root entity." },
+    { "identifier": "domain_event", "title": "Domain Event", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts", "description": "Something of importance to the domain that has happened. Immutable, named in the past tense, and a primary building block of event-driven and event-sourced systems." },
+    { "identifier": "context_map", "title": "Context Map", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts", "description": "A diagram or model showing all bounded contexts of a system and the integration relationships between them (shared kernel, customer-supplier, anti-corruption layer, conformist)." },
+
+    { "identifier": "integration_pattern", "title": "Integration Pattern", "parent_class_identifier": null, "concept_scheme_identifier": "integration_patterns", "description": "A reusable solution to a recurring problem in connecting distributed applications by exchanging messages." },
+    { "identifier": "message_channel", "title": "Message Channel", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns", "description": "A logical address through which one application sends messages and another receives them." },
+    { "identifier": "message_router", "title": "Message Router", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns", "description": "A component that consumes a message from one channel and republishes it to a different channel based on rules over the message." },
+    { "identifier": "message_translator", "title": "Message Translator", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns", "description": "A component that transforms messages from one format to another between two applications that expect different schemas." },
+    { "identifier": "publish_subscribe_channel", "title": "Publish-Subscribe Channel", "parent_class_identifier": "message_channel", "concept_scheme_identifier": "integration_patterns", "description": "A message channel that broadcasts each message to all interested subscribers." },
+    { "identifier": "point_to_point_channel", "title": "Point-to-Point Channel", "parent_class_identifier": "message_channel", "concept_scheme_identifier": "integration_patterns", "description": "A message channel that ensures each message is delivered to exactly one receiver." },
+    { "identifier": "request_reply", "title": "Request-Reply", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns", "description": "A two-message conversation in which a requester sends a request and a replier returns a correlated response on a reply channel." },
+
+    { "identifier": "quality_attribute", "title": "Quality Attribute", "parent_class_identifier": null, "concept_scheme_identifier": "quality_attributes", "description": "A measurable or testable property of a system that indicates how well the system satisfies its stakeholders' needs." },
+    { "identifier": "modifiability_quality", "title": "Modifiability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "The cost and risk of making changes to the system." },
+    { "identifier": "performance_quality", "title": "Performance", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "Response time, throughput, and resource utilization under given workloads." },
+    { "identifier": "availability_quality", "title": "Availability (Quality Attribute)", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "The probability that the system is operational and able to respond when needed. Distinct from the CAP-A formulation: this measures continuous operability, not partition behaviour." },
+    { "identifier": "scalability_quality", "title": "Scalability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "The system's ability to handle increased load by adding resources." },
+    { "identifier": "security_quality", "title": "Security", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "The system's ability to protect data and operations from unauthorized access while delivering authorized access." },
+    { "identifier": "testability_quality", "title": "Testability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes", "description": "The ease with which software can be made to demonstrate its faults." },
+
+    { "identifier": "replication_topology", "title": "Replication Topology", "parent_class_identifier": "replicated_data_type", "concept_scheme_identifier": "replication_strategies", "description": "An organising structure for how writes are accepted and propagated among replicas." },
+    { "identifier": "leader_follower_replication", "title": "Leader-Follower Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies", "description": "All writes go to a single leader; followers replicate the leader's change stream." },
+    { "identifier": "multi_leader_replication", "title": "Multi-Leader Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies", "description": "Multiple nodes accept writes and propagate changes to each other; resolves write conflicts at merge time." },
+    { "identifier": "leaderless_replication", "title": "Leaderless Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies", "description": "Any node may accept a write; clients send writes to multiple replicas directly and use read repair and anti-entropy to reconcile." }
+  ],
+  "property_definitions": [
+    {
+      "identifier": "satisfies_constraint",
+      "title": "satisfies constraint",
+      "description": "An architectural style satisfies an architectural constraint.",
+      "lexical_senses": [
+        { "label": "satisfies constraint", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "composed_of",
+      "title": "composed of",
+      "description": "An architectural style is composed of a set of constraints.",
+      "lexical_senses": [
+        { "label": "composed of", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "uses_protocol",
+      "title": "uses protocol",
+      "description": "An architecture uses a consensus protocol.",
+      "lexical_senses": [
+        { "label": "uses protocol", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "trades_off",
+      "title": "trades off",
+      "description": "A system property trades off against another system property under the CAP formulation.",
+      "lexical_senses": [
+        { "label": "trades off", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "converges_via",
+      "title": "converges via",
+      "description": "A replicated data type converges via a specific mechanism (a join function or causal delivery).",
+      "lexical_senses": [
+        { "label": "converges via", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "service",
+      "title": "service",
+      "description": "A multi-sense term used across software-architecture literature. Tracked here as a property-definition with explicit senses to exercise the lexical-sense disambiguation pipeline.",
+      "lexical_senses": [
+        { "label": "service (offering)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "service (microservice)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "service (RPC endpoint)", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "clock",
+      "title": "clock",
+      "description": "Multi-sense across distributed-systems literature: logical clocks (Lamport) versus physical (wall-clock) time.",
+      "lexical_senses": [
+        { "label": "clock (logical)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "clock (physical)", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "implements_pattern",
+      "title": "implements pattern",
+      "description": "An architectural style or system implements a design or integration pattern.",
+      "lexical_senses": [
+        { "label": "implements pattern", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "belongs_to_context",
+      "title": "belongs to context",
+      "description": "An aggregate, domain event, or model element belongs to a single bounded context.",
+      "lexical_senses": [
+        { "label": "belongs to context", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "affects_quality",
+      "title": "affects quality",
+      "description": "An architectural decision affects one or more quality attributes, positively or negatively.",
+      "lexical_senses": [
+        { "label": "affects quality", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    {
+      "identifier": "routes_via",
+      "title": "routes via",
+      "description": "A message flow routes via a specific integration pattern (channel, router, translator).",
+      "lexical_senses": [
+        { "label": "routes via", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    }
+  ],
+  "cross_paper_resolutions": {
+    "service": {
+      "description": "The term 'service' appears across multiple canon papers with distinct meanings. The pipeline must produce separate lexical_senses on the 'service' property-definition, not a single conflated sense.",
+      "expected_sense_count": 3,
+      "papers": ["fowler_microservices_article", "fielding_rest_dissertation_ch5"]
+    },
+    "consistency": {
+      "description": "'Consistency' has two distinct technical senses: the C in CAP (linearizability) and the broader family of consistency models (eventual, causal, strong). The pipeline should subclass both under ConsistencyModel without conflating them.",
+      "expected_sense_count": 2,
+      "papers": ["brewer_cap_theorem", "shapiro_crdt_survey"]
+    },
+    "replica": {
+      "description": "'Replica' is used consistently across all canon papers that mention it. The pipeline should NOT split this into multiple senses — a regression toward over-splitting is detectable here.",
+      "expected_sense_count": 1,
+      "papers": ["shapiro_crdt_survey", "kleppmann_replication_topologies"]
+    },
+    "availability": {
+      "description": "'Availability' has two distinct senses in this corpus: CAP-A (formally defined as 'every request to a non-failed node receives a non-error response') and the SEI quality attribute (probability of being operational over time). The pipeline must produce distinct lexical senses or distinct classes for these — it must NOT conflate them into one.",
+      "expected_sense_count": 2,
+      "papers": ["brewer_cap_theorem", "bass_clements_kazman_qualities"]
+    },
+    "pattern": {
+      "description": "'Pattern' is used consistently as a named reusable solution across CQRS, Event Sourcing, Strangler Fig, and EIP. Single sense expected; over-splitting (one sense per source) is a regression.",
+      "expected_sense_count": 1,
+      "papers": ["fowler_cqrs", "fowler_event_sourcing", "hohpe_woolf_eip"]
+    },
+    "context": {
+      "description": "'Context' is multi-sense across the corpus: bounded context (DDD), execution context, application context. The DDD usage in paper_evans_ddd_bounded_context is sufficiently distinct that it should be modeled as its own class (BoundedContext), not as a sense of a generic 'context' term.",
+      "expected_sense_count": 1,
+      "papers": ["evans_ddd_bounded_context"]
+    },
+    "leader": {
+      "description": "'Leader' has a single technical sense across consensus protocols and replication topologies: a node coordinating writes. Used in both Raft and leader-follower replication. Single sense.",
+      "expected_sense_count": 1,
+      "papers": ["ongaro_raft_consensus", "kleppmann_replication_topologies", "lamport_paxos_made_simple"]
+    },
+    "clock": {
+      "description": "'Clock' is multi-sense in distributed-systems literature: a logical clock measures causal precedence and has no relation to real time; a physical clock measures wall-clock time and is subject to drift and synchronization error. The pipeline must produce two distinct lexical_senses on the 'clock' property-definition.",
+      "expected_sense_count": 2,
+      "papers": ["lamport_time_clocks"]
+    }
+  }
+}

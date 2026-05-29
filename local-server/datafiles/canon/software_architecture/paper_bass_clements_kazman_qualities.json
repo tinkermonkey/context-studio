@@ -1,0 +1,56 @@
+{
+  "name": "bass_clements_kazman_qualities",
+  "description": "Excerpt from Bass, Clements, and Kazman's 'Software Architecture in Practice' (SEI). Introduces quality_attributes scheme. Cross-paper multi-sense check on 'availability' (vs CAP-A in Brewer).",
+  "source": {
+    "title": "Software Architecture in Practice",
+    "authors": ["Len Bass", "Paul Clements", "Rick Kazman"],
+    "year": 2012,
+    "venue": "Addison-Wesley (SEI Series in Software Engineering), 3rd ed.",
+    "url": "https://resources.sei.cmu.edu/library/asset-view.cfm?assetID=485629"
+  },
+  "citation": "Bass, L., Clements, P., & Kazman, R. (2012). Software Architecture in Practice (3rd ed.). Addison-Wesley Professional.",
+  "source_text": "Software architecture is the set of structures needed to reason about the system, comprising software elements, relations among them, and properties of both. Architecture is the bridge between requirements and implementation, and its primary role is to satisfy the quality-attribute requirements of the system: the non-functional properties that make a system fit for purpose. Functional requirements describe what the system does; quality attributes describe how well it does it.\n\nThe SEI catalogue identifies a small, recurring set of quality attributes. Modifiability is the cost and risk of changing the system in response to evolving requirements. Performance covers response time, throughput, and resource utilisation under given workloads. Availability is the probability that the system is operational and able to respond when needed; it is measured over time and is the quality-attribute analogue of, but distinct from, the CAP formulation of availability, which is a binary property defined per request during a partition. Scalability is the system's ability to handle increased load by adding resources, typically captured along both vertical and horizontal axes. Security is the ability to protect data and operations from unauthorised access while delivering authorised access. Testability is the ease with which the software can be made to demonstrate its faults.\n\nQuality attributes are made concrete by quality-attribute scenarios: structured statements with six parts — stimulus, source of stimulus, response, response measure, artifact, and environment. A modifiability scenario, for example, might read: 'A developer wishes to change a server-side business rule (stimulus, source); the change is made and deployed to production (response) within four working hours and without regression in latency or error budget (response measure), on the order-management service (artifact), during normal business operations (environment).' Scenarios make quality attributes testable, comparable, and tradeable.\n\nThe Architecture Tradeoff Analysis Method (ATAM) is the SEI's structured technique for evaluating the trade-offs an architecture makes across its quality-attribute portfolio. ATAM surfaces sensitivity points (decisions that affect one quality attribute strongly), trade-off points (decisions where improving one attribute degrades another), and risks (decisions whose consequences are uncertain). The output is not a verdict but a structured account of the architectural choices and their consequences.",
+  "expected_entities": [
+    { "id": "software_architecture", "label": "software architecture", "type": "Concept", "context": "structures, elements, relations, and properties" },
+    { "id": "quality_attribute", "label": "quality attribute", "type": "Concept", "context": "non-functional property; how well a system does what it does" },
+    { "id": "modifiability_quality", "label": "modifiability", "type": "QualityAttribute", "context": "cost and risk of change" },
+    { "id": "performance_quality", "label": "performance", "type": "QualityAttribute", "context": "response time, throughput, resource utilisation" },
+    { "id": "availability_quality", "label": "availability (quality attribute)", "type": "QualityAttribute", "context": "probability of being operational over time; distinct from CAP-A" },
+    { "id": "scalability_quality", "label": "scalability", "type": "QualityAttribute", "context": "handling increased load by adding resources" },
+    { "id": "security_quality", "label": "security", "type": "QualityAttribute", "context": "protection from unauthorised access" },
+    { "id": "testability_quality", "label": "testability", "type": "QualityAttribute", "context": "ease of demonstrating faults" },
+    { "id": "qa_scenario", "label": "quality-attribute scenario", "type": "Concept", "context": "six-part structured statement: stimulus, source, response, response measure, artifact, environment" },
+    { "id": "atam", "label": "Architecture Tradeoff Analysis Method", "type": "Method", "context": "SEI technique for evaluating architectural trade-offs" }
+  ],
+  "expected_relationships": [
+    { "subject": "modifiability_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "performance_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "availability_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "scalability_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "security_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "testability_quality", "predicate": "subclass_of", "object": "quality_attribute" },
+    { "subject": "qa_scenario", "predicate": "makes_concrete", "object": "quality_attribute" },
+    { "subject": "atam", "predicate": "evaluates", "object": "quality_attribute" },
+    { "subject": "availability_quality", "predicate": "distinct_from", "object": "availability_cap" }
+  ],
+  "expected_classes": [
+    { "identifier": "quality_attribute", "title": "Quality Attribute", "parent_class_identifier": null, "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "modifiability_quality", "title": "Modifiability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "performance_quality", "title": "Performance", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "availability_quality", "title": "Availability (Quality Attribute)", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "scalability_quality", "title": "Scalability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "security_quality", "title": "Security", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" },
+    { "identifier": "testability_quality", "title": "Testability", "parent_class_identifier": "quality_attribute", "concept_scheme_identifier": "quality_attributes" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "affects_quality", "lexical_senses": [{ "label": "affects quality", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "quality_attribute", "source": "wikidata", "identifier": "Q1322014", "uri": "https://www.wikidata.org/wiki/Q1322014" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "quality_attributes", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["availability"]
+}

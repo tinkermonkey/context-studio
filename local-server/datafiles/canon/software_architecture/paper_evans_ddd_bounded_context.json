@@ -1,0 +1,49 @@
+{
+  "name": "evans_ddd_bounded_context",
+  "description": "Excerpt from Evans' Domain-Driven Design on bounded contexts, ubiquitous language, aggregates, and context maps. Introduces ddd_concepts scheme.",
+  "source": {
+    "title": "Domain-Driven Design: Tackling Complexity in the Heart of Software",
+    "authors": ["Eric Evans"],
+    "year": 2003,
+    "venue": "Addison-Wesley",
+    "url": "https://www.dddcommunity.org/book/evans_2003/"
+  },
+  "citation": "Evans, E. (2003). Domain-Driven Design: Tackling Complexity in the Heart of Software. Addison-Wesley Professional.",
+  "source_text": "A bounded context defines the applicability of a particular model: an explicit boundary within which a model is unified and consistent, and outside of which different models may apply. The same word can mean different things in different bounded contexts; conversely, what looks like the same concept across the codebase may collapse to a single model when one bounded context is recognised as the canonical owner. Bounded contexts arise from the natural divisions of a large business: marketing, billing, fulfilment, and support each have their own vocabulary, their own concerns, and their own legitimate model of shared business entities such as Customer or Product.\n\nWithin a bounded context, the ubiquitous language is the precise shared vocabulary used identically by domain experts, designers, and code. Class names, method names, and table names trace directly back to nouns and verbs used at the daily standup. The discipline of the ubiquitous language is that any rephrasing — by a developer, by a stakeholder, in a meeting, in a class name — is treated as a defect, because divergence between speech and code is the leading cause of model drift.\n\nThe tactical building block at the heart of a bounded context is the aggregate. An aggregate is a cluster of associated domain objects treated as a unit for the purpose of data changes. It has a root entity, and all external references must address the aggregate through its root. Transactions never cross aggregate boundaries; consistency between aggregates is eventual. This rule is the source of many of DDD's downstream design decisions, including the close fit with Event Sourcing and CQRS.\n\nThe relationships between bounded contexts are captured in a context map. The map names each context and the integration pattern by which it connects to its neighbours: shared kernel, customer-supplier, conformist, anti-corruption layer, open host service, or published language. Context maps make the political and organisational reality of integration legible. They surface the fact that boundaries between systems are also boundaries between teams, and the choice of integration pattern reflects the relationship between those teams as much as it reflects the technology.",
+  "expected_entities": [
+    { "id": "bounded_context", "label": "bounded context", "type": "Concept", "context": "explicit boundary within which a model is unified" },
+    { "id": "ubiquitous_language", "label": "ubiquitous language", "type": "Concept", "context": "precise shared vocabulary scoped to a bounded context" },
+    { "id": "aggregate", "label": "aggregate", "type": "Concept", "context": "cluster of associated domain objects with a root entity" },
+    { "id": "aggregate_root", "label": "aggregate root", "type": "Concept", "context": "external entry point to an aggregate" },
+    { "id": "context_map", "label": "context map", "type": "Concept", "context": "diagram of bounded contexts and their integrations" },
+    { "id": "shared_kernel", "label": "shared kernel", "type": "Pattern", "context": "integration pattern between bounded contexts" },
+    { "id": "anti_corruption_layer", "label": "anti-corruption layer", "type": "Pattern", "context": "integration pattern shielding a context from foreign models" },
+    { "id": "domain_event", "label": "domain event", "type": "Concept", "context": "something of importance to the domain that has happened" }
+  ],
+  "expected_relationships": [
+    { "subject": "ubiquitous_language", "predicate": "scoped_to", "object": "bounded_context" },
+    { "subject": "aggregate", "predicate": "belongs_to_context", "object": "bounded_context" },
+    { "subject": "aggregate", "predicate": "accessed_through", "object": "aggregate_root" },
+    { "subject": "context_map", "predicate": "describes", "object": "bounded_context" },
+    { "subject": "context_map", "predicate": "uses_pattern", "object": "shared_kernel" },
+    { "subject": "context_map", "predicate": "uses_pattern", "object": "anti_corruption_layer" }
+  ],
+  "expected_classes": [
+    { "identifier": "bounded_context", "title": "Bounded Context", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts" },
+    { "identifier": "ubiquitous_language", "title": "Ubiquitous Language", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts" },
+    { "identifier": "aggregate", "title": "Aggregate", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts" },
+    { "identifier": "context_map", "title": "Context Map", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts" },
+    { "identifier": "domain_event", "title": "Domain Event", "parent_class_identifier": "ddd_concept", "concept_scheme_identifier": "ddd_concepts" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "belongs_to_context", "lexical_senses": [{ "label": "belongs to context", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "bounded_context", "source": "wikidata", "identifier": "Q5298657", "uri": "https://www.wikidata.org/wiki/Q5298657" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "ddd_concepts", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["context"]
+}

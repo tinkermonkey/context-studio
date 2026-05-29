@@ -322,6 +322,9 @@ def map_orm_to_domain(
                 cast(dict[str, str] | None, orm_entity.ontology_mapping)
             ),
             is_relevant=cast(bool | None, orm_entity.is_relevant),
+            lexical_senses=deserialize_lexical_senses(
+                cast(list[dict[str, str]], orm_entity.lexical_senses) or []
+            ),
             status=Status(cast(str, orm_entity.status)),
             source_run_id=cast(str | None, orm_entity.source_run_id),
         )
@@ -405,6 +408,7 @@ def map_domain_to_orm(
             identifier=entity.identifier,
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
             is_relevant=entity.is_relevant,
+            lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             source_run_id=entity.source_run_id,
         )
 

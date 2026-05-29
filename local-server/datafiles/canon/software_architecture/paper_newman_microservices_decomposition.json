@@ -1,0 +1,40 @@
+{
+  "name": "newman_microservices_decomposition",
+  "description": "Excerpt from Newman's 'Building Microservices' on decomposition strategies. Cross-paper consistency check with paper_fowler_microservices_article on 'service' (microservice sense) and paper_evans_ddd_bounded_context on 'bounded context'.",
+  "source": {
+    "title": "Building Microservices: Designing Fine-Grained Systems, Chapter 3 (How to Model Services)",
+    "authors": ["Sam Newman"],
+    "year": 2015,
+    "venue": "O'Reilly Media",
+    "url": "https://samnewman.io/books/building_microservices/"
+  },
+  "citation": "Newman, S. (2015). Building Microservices: Designing Fine-Grained Systems. O'Reilly Media.",
+  "source_text": "The question of how to decompose a system into microservices is the most consequential decision in adopting the style. Getting the boundaries right yields independently evolvable services and small, focused teams; getting them wrong yields a distributed monolith, in which services must be deployed together because their boundaries do not match the joints in the underlying domain.\n\nThe foundational guidance is to align service boundaries with bounded contexts in the sense of Domain-Driven Design. A bounded context defines a region of the domain inside which a particular model is consistent and ubiquitous, and outside which different models legitimately apply. When a microservice corresponds to a bounded context, the boundary of the service is also the boundary of a model: each service owns its own ubiquitous language, its own aggregates, and its own data, and exposes these to the outside world only through its public API. Cross-service communication happens in the language of an explicit context map.\n\nThis alignment yields several derived properties. First, services tend to be cohesive: the operations a service exposes correspond to the responsibilities of a single business capability. Second, services tend to be loosely coupled: changes to one service's internal model do not propagate to other services as long as its API contract holds. Third, ownership is unambiguous: a service has a single owning team that is responsible for the model, the implementation, the operational characteristics, and the API contract.\n\nNewman cautions against decomposition by technical layer. Splitting a system into a 'UI service', an 'API service', and a 'database service' produces tight coupling along the dominant change axis — most product changes touch all three. Splitting instead by business capability cuts orthogonally to that axis: a typical product change is confined to a single capability and therefore to a single service. The book also recommends caution about premature decomposition. When the domain is not yet well-understood, it is easier to evolve boundaries inside a single deployable than between separate ones; a common pattern is to begin as a monolith and extract microservices as the domain stabilises.",
+  "expected_entities": [
+    { "id": "microservices_decomposition", "label": "microservices decomposition", "type": "Concept", "context": "splitting a system into independently evolvable services" },
+    { "id": "service_boundary", "label": "service boundary", "type": "Concept", "context": "boundary of a microservice; ideally aligned to a bounded context" },
+    { "id": "bounded_context", "label": "bounded context", "type": "Concept", "context": "DDD region inside which a model is consistent" },
+    { "id": "distributed_monolith", "label": "distributed monolith", "type": "Antipattern", "context": "services that must be deployed together due to misaligned boundaries" },
+    { "id": "business_capability", "label": "business capability", "type": "Concept", "context": "organising principle for decomposition" },
+    { "id": "context_map", "label": "context map", "type": "Concept", "context": "describes integration between bounded contexts" },
+    { "id": "monolith_first", "label": "monolith first", "type": "Strategy", "context": "begin as a monolith and extract services as the domain stabilises" }
+  ],
+  "expected_relationships": [
+    { "subject": "service_boundary", "predicate": "aligns_with", "object": "bounded_context" },
+    { "subject": "service_boundary", "predicate": "aligns_with", "object": "business_capability" },
+    { "subject": "microservices_decomposition", "predicate": "anti_pattern", "object": "distributed_monolith" },
+    { "subject": "context_map", "predicate": "describes_integration_between", "object": "service_boundary" },
+    { "subject": "monolith_first", "predicate": "strategy_for", "object": "microservices_decomposition" }
+  ],
+  "expected_classes": [],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "belongs_to_context", "lexical_senses": [{ "label": "belongs to context", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [],
+  "expected_concept_schemes": [
+    { "identifier": "architectural_styles", "taxonomy_identifier": "software_architecture" },
+    { "identifier": "ddd_concepts", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["service", "context"]
+}

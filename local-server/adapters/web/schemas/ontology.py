@@ -279,6 +279,8 @@ class ClassMoveRequest(BaseModel):
 class ExternalReferenceResponse(BaseModel):
     """Response containing external reference data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     source: str = Field(..., description="Source of the reference")
     identifier: str = Field(..., description="External identifier")
     uri: Optional[str] = Field(None, description="External URI")
@@ -288,6 +290,8 @@ class ExternalReferenceResponse(BaseModel):
 class LexicalSenseResponse(BaseModel):
     """Response containing lexical sense data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     label: str = Field(..., description="The sense label or term")
     language_code: str = Field(..., description="ISO 639-1 language code")
     sense_type: str = Field(..., description="Type of sense")
@@ -295,6 +299,8 @@ class LexicalSenseResponse(BaseModel):
 
 class DataPropertyValueResponse(BaseModel):
     """Response containing data property value."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     property_identifier: str = Field(..., description="Property identifier")
     value: str | int | float | bool | None = Field(..., description="Value of the property")
@@ -387,6 +393,14 @@ class PropertyDefinitionResponse(BaseModel):
     is_relevant: Optional[bool] = Field(
         None,
         description=("Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"),
+    )
+    lexical_senses: list[LexicalSenseResponse] = Field(
+        default_factory=list,
+        description=(
+            "Word-sense disambiguation entries. A property whose label has "
+            "more than one distinct meaning across the corpus (e.g. 'service' "
+            "or 'clock') carries one LexicalSense per sense."
+        ),
     )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")

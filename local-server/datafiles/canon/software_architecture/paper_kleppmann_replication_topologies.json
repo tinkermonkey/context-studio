@@ -1,0 +1,48 @@
+{
+  "name": "kleppmann_replication_topologies",
+  "description": "Excerpt from Kleppmann's 'Designing Data-Intensive Applications', chapter 5: replication topologies. Extends replication_strategies scheme with leader-follower, multi-leader, and leaderless variants.",
+  "source": {
+    "title": "Designing Data-Intensive Applications, Chapter 5: Replication",
+    "authors": ["Martin Kleppmann"],
+    "year": 2017,
+    "venue": "O'Reilly Media",
+    "url": "https://dataintensive.net/"
+  },
+  "citation": "Kleppmann, M. (2017). Designing Data-Intensive Applications. O'Reilly Media. Chapter 5: Replication.",
+  "source_text": "Replication means keeping copies of the same data on multiple machines connected over a network. The reasons to replicate are well established: to reduce read latency by keeping data geographically near users, to increase availability by tolerating individual machine failures, and to scale read throughput by serving reads from multiple replicas. The hard part is not the copying itself but the handling of writes that arrive concurrently at different replicas.\n\nThree replication topologies recur across systems. In leader-follower replication, also called single-leader or primary-secondary replication, one replica is designated the leader; all writes are sent to the leader, which streams its change log to followers. Reads can be served by the leader or by followers, accepting that follower reads may be stale. Leader-follower is the simplest topology to reason about and the foundation of replication in most relational databases. The trade-off is that the leader is a coordination bottleneck and a single point of failure that demands explicit failover.\n\nMulti-leader replication accepts writes at more than one node and propagates them between leaders. It is common in multi-datacentre deployments where each datacentre operates a leader and replicates to the others asynchronously. It can also support clients with offline editing: each device acts as a leader for local changes and reconciles with others when connectivity returns. The cost is conflict resolution: when two leaders concurrently write to the same record, the system must define a deterministic merge, whether by last-writer-wins, by custom application logic, or by adopting a conflict-free replicated data type.\n\nLeaderless replication abandons the leader role altogether. The client sends each write to several replicas in parallel and considers the write successful once a configured quorum acknowledges. Reads similarly query multiple replicas and select the most recent value. Conflict resolution mechanisms include version vectors, last-writer-wins, and read repair, in which the read process notices stale replicas and writes the up-to-date value back. Cassandra and Dynamo-style systems are the canonical examples; the architecture trades operational simplicity at the cluster level for additional client-side complexity in reasoning about consistency.",
+  "expected_entities": [
+    { "id": "replication", "label": "replication", "type": "Concept", "context": "keeping copies of the same data on multiple machines" },
+    { "id": "leader_follower_replication", "label": "leader-follower replication", "type": "ReplicationTopology", "context": "single leader streams change log to followers" },
+    { "id": "multi_leader_replication", "label": "multi-leader replication", "type": "ReplicationTopology", "context": "multiple nodes accept writes and propagate" },
+    { "id": "leaderless_replication", "label": "leaderless replication", "type": "ReplicationTopology", "context": "client writes to several replicas in parallel; quorum-based" },
+    { "id": "quorum", "label": "quorum", "type": "Concept", "context": "minimum number of replicas that must acknowledge a write or contribute to a read" },
+    { "id": "read_repair", "label": "read repair", "type": "Algorithm", "context": "read process writes up-to-date value back to stale replicas" },
+    { "id": "version_vector", "label": "version vector", "type": "DataStructure", "context": "conflict-detection mechanism in leaderless replication" },
+    { "id": "conflict_resolution", "label": "conflict resolution", "type": "Concept", "context": "deterministic merge of concurrent writes" }
+  ],
+  "expected_relationships": [
+    { "subject": "leader_follower_replication", "predicate": "subclass_of", "object": "replication_topology" },
+    { "subject": "multi_leader_replication", "predicate": "subclass_of", "object": "replication_topology" },
+    { "subject": "leaderless_replication", "predicate": "subclass_of", "object": "replication_topology" },
+    { "subject": "leader_follower_replication", "predicate": "uses_role", "object": "raft_leader" },
+    { "subject": "multi_leader_replication", "predicate": "requires", "object": "conflict_resolution" },
+    { "subject": "leaderless_replication", "predicate": "requires", "object": "quorum" },
+    { "subject": "leaderless_replication", "predicate": "uses_algorithm", "object": "read_repair" },
+    { "subject": "multi_leader_replication", "predicate": "can_use", "object": "crdt" }
+  ],
+  "expected_classes": [
+    { "identifier": "replication_topology", "title": "Replication Topology", "parent_class_identifier": "replicated_data_type", "concept_scheme_identifier": "replication_strategies" },
+    { "identifier": "leader_follower_replication", "title": "Leader-Follower Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies" },
+    { "identifier": "multi_leader_replication", "title": "Multi-Leader Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies" },
+    { "identifier": "leaderless_replication", "title": "Leaderless Replication", "parent_class_identifier": "replication_topology", "concept_scheme_identifier": "replication_strategies" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [],
+  "expected_external_refs": [
+    { "class_identifier": "replication_topology", "source": "wikidata", "identifier": "Q1502491", "uri": "https://www.wikidata.org/wiki/Q1502491" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "replication_strategies", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["leader", "replica"]
+}

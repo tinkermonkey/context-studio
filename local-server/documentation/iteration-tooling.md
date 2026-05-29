@@ -62,9 +62,17 @@ This target:
 1. Validates the pipeline config exists
 2. Runs `run_benchmark.py` on **TekGen dataset** (text2kg-bench/wikidata-tekgen)
 3. Runs `run_benchmark.py` on **WebNLG dataset** (text2kg-bench/dbpedia-webnlg)
-4. Generates cross-dataset comparison report
-5. Auto-diffs current results against the baseline (`reports/baseline-comparison.json`)
-6. Prints human + agent-readable summary with decision guidance
+4. Runs `run_canon_benchmark.py` on the **canon-software-architecture** corpus
+5. Generates cross-dataset comparison report
+6. Auto-diffs current results against the baseline (`reports/baseline-comparison.json`)
+7. Prints human + agent-readable summary with decision guidance
+
+To run only the canon benchmark in isolation (useful when iterating on schema
+or loader changes that don't need a full TekGen/WebNLG run):
+
+```bash
+make benchmark-canon
+```
 
 ### 3. Interpreting Results
 
@@ -78,11 +86,50 @@ The diff summary shows:
 └─ Total Cost:    $0.00 → $5.43 (↓ +$5.43)
 ```
 
+The canon dataset adds a richer per-block:
+
+```
+📊 Dataset: canon-software-architecture
+├─ Avg F1, Precision, Recall, Conformance, Cost (as above)
+└─ Canon schema metrics:
+    ├─ Avg node-type F1: baseline → current
+    ├─ Hierarchy ratio  : baseline → current
+    ├─ Multi-sense ratio: baseline → current
+    ├─ Reference grnd.  : baseline → current
+    ├─ Slug validity    : baseline → current
+    ├─ Embedding present: baseline → current
+    └─ Per node-type F1: taxonomy, concept_scheme, class, individual, property_definition
+```
+
 **Interpretation:**
 - Green arrows (↑↓): Directional changes
-- **F1 improvement > +0.05:** Strong signal to promote
-- **F1 improvement 0-0.05:** Marginal, check for regressions
-- **F1 decline < -0.05:** Investigate before promoting
+- **TekGen/WebNLG F1 improvement > +0.05:** Strong signal to promote
+- **TekGen/WebNLG F1 improvement 0-0.05:** Marginal, check for regressions
+- **TekGen/WebNLG F1 decline < -0.05:** Investigate before promoting
+
+**Canon-specific guidance:**
+- **Slug validity must stay at 1.0.** Anything else means the migration
+  invariant (`f319bb8dc961_add_color_column_and_require_identifier_`) is
+  broken — that's a domain-purity bug, not an iteration result.
+- **Hierarchy ratio must stay at 1.0** when the canon is loaded via the demo
+  loader. Drops here indicate the loader regressed on `parent_class_id`
+  resolution.
+- **Multi-sense ratio movement is signal.** Today the demo loader doesn't
+  materialise `lexical_senses` on `property_definitions`, so the ratio is
+  near 0. A change that lifts it above zero is a real improvement; a change
+  that drops it from a non-zero baseline is a regression.
+- **Reference grounding rate** is bounded by the canon's `expected_external_refs`
+  coverage. Don't expect ≥0.9 — the canon documents only the references it
+  has high confidence in.
+- **Per-node-type F1** lines surface which specific node type regressed. A
+  drop in `class` F1 with everything else at 1.0 is a class-loader bug; a
+  drop in `property_definition` F1 means properties aren't being persisted
+  correctly.
+
+**Cross-dataset rule for promotion:** an extractor change should improve
+canon avg-F1 *and* maintain TekGen/WebNLG F1 within ±0.02 to be promoted.
+A canon improvement at the cost of a Text2KG regression is not net positive;
+both are valid baselines.
 
 ### 4. Promote to Default (if improved)
 
@@ -156,9 +203,15 @@ local-server/
 ├── configs/
 │   ├── extraction-default.json      (production config)
 │   └── extraction-experimental.json (created on-demand for iterations, not in git)
+├── datafiles/
+│   └── canon/
+│       └── software_architecture/   (canon corpus: canon.json + paper_*.json × 15)
+├── benchmark/
+│   └── canon_metrics.py             (canon-specific pure metric functions)
 ├── reports/                         (benchmark outputs, gitignored)
 │   ├── extraction-experimental-tekgen.json
 │   ├── extraction-experimental-webnlg.json
+│   ├── extraction-experimental-canon.json
 │   ├── extraction-experimental-comparison.json
 │   └── baseline-comparison.json     (reference baseline)
 ├── .benchmark-cache/               (LLM response cache, gitignored)
@@ -166,6 +219,24 @@ local-server/
 └── logs/
     └── extraction-iteration-log.md  (append-only iteration record)
 ```
+
+### Canon Iteration Lockstep
+
+The canon corpus at `datafiles/canon/software_architecture/` is the **single
+source of truth** for both:
+
+1. The pipeline test cycle (`tests/integration/pipelines/`,
+   `tests/integration/extraction_layers/`)
+2. The demo dataset loader (`adapters/demo/canon_loader.py`,
+   `POST /api/v1/admin/demo-datasets/software-architecture/load`)
+3. The canon benchmark (`scripts/run_canon_benchmark.py` → this iteration loop)
+
+When you discover that the canon gold itself needs to change (a paper was
+miscategorised, a class was named wrong, a relationship was missing), update
+the canon JSON and immediately re-run the canon benchmark and the pipeline
+tests. The same edit should fix both the demo and the benchmark — they share a
+directory and that lockstep is the point. If only one moves, something is
+wrong.
 
 ## Workflow for Agents
 

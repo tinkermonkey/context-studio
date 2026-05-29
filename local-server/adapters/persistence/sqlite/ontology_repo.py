@@ -1199,6 +1199,9 @@ class SQLiteOntologyRepository:
                     mapped_orm.ontology_mapping
                 )  # type: ignore[assignment]
                 orm_entity.is_relevant = prop.is_relevant  # type: ignore[assignment]
+                orm_entity.lexical_senses = (
+                    mapped_orm.lexical_senses
+                )  # type: ignore[assignment]
                 orm_entity.status = prop.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]

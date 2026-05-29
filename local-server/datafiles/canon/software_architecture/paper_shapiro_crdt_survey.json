@@ -1,0 +1,59 @@
+{
+  "name": "shapiro_crdt_survey",
+  "description": "Excerpt summarizing Shapiro et al.'s CRDT framework. Exercises the replication_strategies concept scheme and the converges_via property; pairs with paper_brewer_cap_theorem on the multi-sense 'consistency' axis.",
+  "source": {
+    "title": "Conflict-Free Replicated Data Types",
+    "authors": ["Marc Shapiro", "Nuno Preguiça", "Carlos Baquero", "Marek Zawirski"],
+    "year": 2011,
+    "venue": "Stabilization, Safety, and Security of Distributed Systems (SSS), LNCS 6976, 386-400",
+    "url": "https://hal.inria.fr/inria-00609399"
+  },
+  "citation": "Shapiro, M., Preguiça, N., Baquero, C., & Zawirski, M. (2011). Conflict-Free Replicated Data Types. In Proc. of the 13th International Symposium on Stabilization, Safety, and Security of Distributed Systems (SSS), 386-400.",
+  "source_text": "A Conflict-free Replicated Data Type (CRDT) is a replicated data type designed such that concurrent updates at different replicas can be reconciled without coordination, and replicas are guaranteed to converge to the same value once they have received the same set of updates. CRDTs provide a property called Strong Eventual Consistency (SEC): replicas that have delivered the same updates have equivalent state, regardless of the order in which the updates were delivered.\n\nCRDTs fall into two complementary families. A state-based CRDT, also called a Convergent Replicated Data Type or CvRDT, exposes a query, an update, and a merge function. The state space forms a join-semilattice and the merge function computes the least upper bound of two states. Update operations must be monotonically increasing in this lattice. Convergence follows because merge is commutative, associative, and idempotent, so any two replicas that have applied the same set of updates and merged them in any order arrive at the same lattice element. Anti-entropy protocols can be used to propagate state in the background without requiring delivery ordering.\n\nAn operation-based CRDT, or Commutative Replicated Data Type (CmRDT), instead disseminates operations rather than state. Concurrent operations must be commutative, and the underlying delivery channel must provide reliable causal broadcast: each operation must be delivered exactly once to each replica, and causally-ordered operations must be delivered in causal order. Given those guarantees, replicas converge because any pair of concurrent operations can be applied in either order with the same effect.\n\nCanonical CRDTs include the grow-only counter (G-Counter), the positive-negative counter (PN-Counter), the last-writer-wins register (LWW-Register), and the observed-remove set (OR-Set). Each can be expressed in either state-based or operation-based form. CRDTs are particularly useful in geo-distributed and offline-tolerant systems, where coordination is expensive or impossible, but a system designer accepts the weaker semantics of eventual or strong-eventual consistency in exchange for high availability and low latency. CRDTs are not a substitute for linearizable consistency; they trade some semantic constraints for coordination-free convergence.",
+  "expected_entities": [
+    { "id": "crdt", "label": "Conflict-free Replicated Data Type", "type": "DataStructure", "context": "replicated data type with coordination-free convergence" },
+    { "id": "strong_eventual_consistency", "label": "Strong Eventual Consistency", "type": "ConsistencyModel", "context": "replicas with same delivered updates have equivalent state" },
+    { "id": "state_based_crdt", "label": "state-based CRDT", "type": "DataStructure", "context": "merges via join-semilattice, also called CvRDT" },
+    { "id": "operation_based_crdt", "label": "operation-based CRDT", "type": "DataStructure", "context": "disseminates commutative operations, also called CmRDT" },
+    { "id": "join_semilattice", "label": "join-semilattice", "type": "Concept", "context": "state space for state-based CRDTs" },
+    { "id": "merge_function", "label": "merge function", "type": "Algorithm", "context": "computes least upper bound of two states" },
+    { "id": "anti_entropy", "label": "anti-entropy", "type": "Algorithm", "context": "background state-propagation protocol" },
+    { "id": "causal_broadcast", "label": "reliable causal broadcast", "type": "Algorithm", "context": "delivery requirement for operation-based CRDTs" },
+    { "id": "g_counter", "label": "G-Counter", "type": "DataStructure", "context": "grow-only counter CRDT" },
+    { "id": "pn_counter", "label": "PN-Counter", "type": "DataStructure", "context": "positive-negative counter CRDT" },
+    { "id": "lww_register", "label": "LWW-Register", "type": "DataStructure", "context": "last-writer-wins register CRDT" },
+    { "id": "or_set", "label": "OR-Set", "type": "DataStructure", "context": "observed-remove set CRDT" }
+  ],
+  "expected_relationships": [
+    { "subject": "state_based_crdt", "predicate": "subclass_of", "object": "crdt" },
+    { "subject": "operation_based_crdt", "predicate": "subclass_of", "object": "crdt" },
+    { "subject": "state_based_crdt", "predicate": "converges_via", "object": "merge_function" },
+    { "subject": "operation_based_crdt", "predicate": "converges_via", "object": "causal_broadcast" },
+    { "subject": "state_based_crdt", "predicate": "uses_structure", "object": "join_semilattice" },
+    { "subject": "crdt", "predicate": "provides", "object": "strong_eventual_consistency" },
+    { "subject": "anti_entropy", "predicate": "implements", "object": "state_based_crdt" }
+  ],
+  "expected_classes": [
+    { "identifier": "crdt", "title": "Conflict-free Replicated Data Type", "parent_class_identifier": "replicated_data_type", "concept_scheme_identifier": "replication_strategies" },
+    { "identifier": "state_based_crdt", "title": "State-based CRDT", "parent_class_identifier": "crdt", "concept_scheme_identifier": "replication_strategies" },
+    { "identifier": "operation_based_crdt", "title": "Operation-based CRDT", "parent_class_identifier": "crdt", "concept_scheme_identifier": "replication_strategies" }
+  ],
+  "expected_individuals": [
+    { "title": "G-Counter", "class_identifiers": ["state_based_crdt"], "data_properties": [{ "property_identifier": "description", "value": "Grow-only counter; converges via maximum over per-replica counts.", "datatype": "xsd:string" }] },
+    { "title": "PN-Counter", "class_identifiers": ["state_based_crdt"], "data_properties": [{ "property_identifier": "description", "value": "Positive-negative counter; composes two G-Counters for increments and decrements.", "datatype": "xsd:string" }] },
+    { "title": "LWW-Register", "class_identifiers": ["state_based_crdt"], "data_properties": [{ "property_identifier": "description", "value": "Last-writer-wins register; converges via timestamp comparison.", "datatype": "xsd:string" }] },
+    { "title": "OR-Set", "class_identifiers": ["state_based_crdt", "operation_based_crdt"], "data_properties": [{ "property_identifier": "description", "value": "Observed-remove set; tracks unique add tokens so concurrent add/remove resolves toward add.", "datatype": "xsd:string" }] }
+  ],
+  "expected_property_defs": [
+    { "identifier": "converges_via", "lexical_senses": [{ "label": "converges via", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "crdt", "source": "wikidata", "identifier": "Q17004988", "uri": "https://www.wikidata.org/wiki/Q17004988" },
+    { "class_identifier": "crdt", "source": "dbpedia", "identifier": "Conflict-free_replicated_data_type", "uri": "http://dbpedia.org/resource/Conflict-free_replicated_data_type" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "replication_strategies", "taxonomy_identifier": "software_architecture" },
+    { "identifier": "consistency_models", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["consistency", "replica"]
+}

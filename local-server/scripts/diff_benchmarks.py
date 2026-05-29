@@ -101,6 +101,76 @@ def print_metric_diff(
         )
 
 
+def _safe_get(d: Optional[dict[str, Any]], *keys: str, default: float = 0.0) -> float:
+    """Safely walk a nested dict, returning default if any key is missing."""
+    cur: Any = d
+    for k in keys:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(k)
+    return cur if isinstance(cur, (int, float)) else default
+
+
+def _print_canon_block(
+    current: dict[str, Any],
+    baseline: Optional[dict[str, Any]],
+) -> None:
+    """
+    Render the canon-specific schema metrics under a dataset's standard block.
+
+    Surfaces per-node-type F1, hierarchy correctness, multi-sense
+    disambiguation, reference grounding, slug validity, color presence, and
+    embedding presence. Each line shows the baseline → current delta when a
+    baseline is available, otherwise just the current value.
+    """
+    print("  Canon schema metrics:")
+
+    rows: list[tuple[str, tuple[str, ...]]] = [
+        ("  Avg node-type F1", ("avg_node_type_f1",)),
+        ("  Hierarchy ratio  ", ("hierarchy_correctness", "ratio")),
+        ("  Multi-sense ratio", ("multi_sense_disambiguation", "ratio")),
+        ("  Reference grnd.  ", ("reference_grounding_rate", "rate")),
+        ("  Slug validity    ", ("identifier_slug_validity", "rate")),
+        ("  Embedding present", ("embedding_presence_rate", "rate")),
+    ]
+    for label, path in rows:
+        cur_val = _safe_get(current, *path)
+        base_val = _safe_get(baseline, *path) if baseline else None
+        if base_val is None:
+            print(f"    {label}: {cur_val:.4f}")
+        else:
+            delta = cur_val - base_val
+            direction = "↑" if delta > 0 else ("↓" if delta < 0 else "→")
+            print(
+                f"    {label}: {base_val:.4f} → {cur_val:.4f} "
+                f"({direction} {delta:+.4f})"
+            )
+
+    # Per-node-type F1 line-by-line so regressions in a specific node type are
+    # visible at a glance.
+    per_type = current.get("per_node_type_f1", {}) or {}
+    if per_type:
+        print("    Per node-type F1:")
+        for node_type, metrics in per_type.items():
+            cur_f1 = metrics.get("f1", 0.0)
+            base_f1 = None
+            if baseline:
+                base_f1 = (
+                    baseline.get("per_node_type_f1", {})
+                    .get(node_type, {})
+                    .get("f1")
+                )
+            if base_f1 is None:
+                print(f"      {node_type:22s} {cur_f1:.4f}")
+            else:
+                delta = cur_f1 - base_f1
+                direction = "↑" if delta > 0 else ("↓" if delta < 0 else "→")
+                print(
+                    f"      {node_type:22s} {base_f1:.4f} → {cur_f1:.4f} "
+                    f"({direction} {delta:+.4f})"
+                )
+
+
 def print_summary_diff(
     current: dict[str, Any],
     baseline: Optional[dict[str, Any]],
@@ -178,6 +248,13 @@ def print_summary_diff(
                 current_stats.get("total_cost_usd", 0.0),
                 is_cost=True,
             )
+
+        # Canon-specific block — rendered only when the dataset carries the
+        # rich canon metrics (produced by run_canon_benchmark.py).
+        canon_current = current_stats.get("canon")
+        canon_baseline = baseline_stats.get("canon")
+        if canon_current:
+            _print_canon_block(canon_current, canon_baseline)
 
     print("\n" + "=" * 80)
     print("DECISION GUIDANCE")

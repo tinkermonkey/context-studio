@@ -34,6 +34,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from adapters.persistence.sqlite.connection import DatabaseManager
+from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.services import AdminService
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
@@ -215,6 +216,25 @@ async def get_versioning_service(request: Request) -> VersioningService:
     service = getattr(request.app.state, "versioning_service", None)
     if service is None:
         raise RuntimeError("VersioningService not initialized in app.state")
+    return service
+
+
+async def get_load_demo_dataset(request: Request) -> LoadDemoDataset:
+    """
+    Extract the LoadDemoDataset use case from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The LoadDemoDataset instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "load_demo_dataset", None)
+    if service is None:
+        raise RuntimeError("LoadDemoDataset not initialized in app.state")
     return service
 
 

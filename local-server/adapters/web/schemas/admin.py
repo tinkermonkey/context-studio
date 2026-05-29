@@ -267,3 +267,34 @@ class StatsTrendsResponse(BaseModel):
     classes: list[int] = Field(..., description="Daily create counts for classes")
     individuals: list[int] = Field(..., description="Daily create counts for individuals")
     pipelines: list[int] = Field(..., description="Daily create counts for pipeline configurations")
+
+
+class DemoDatasetDescriptorResponse(BaseModel):
+    """Metadata describing a demo dataset users can load into a fresh workspace."""
+
+    name: str = Field(..., description="Stable machine-readable name, e.g. 'software-architecture'")
+    title: str = Field(..., description="Human-readable title")
+    description: str = Field(..., description="One-paragraph description")
+    paper_count: int = Field(..., description="Number of source paper fixtures backing the canon")
+    taxonomy_count: int = Field(..., description="Number of taxonomies the dataset will create")
+    class_count: int = Field(..., description="Number of classes the dataset will materialize")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DemoDatasetLoadResponse(BaseModel):
+    """Counts of entities persisted by a demo dataset load."""
+
+    dataset_name: str = Field(..., description="Stable name of the dataset that was loaded")
+    source_run_id: str = Field(
+        ..., description="Synthetic provenance id stamped on every created entity"
+    )
+    taxonomies: int = Field(..., description="Number of taxonomies created")
+    concept_schemes: int = Field(..., description="Number of concept schemes created")
+    classes: int = Field(..., description="Number of classes created")
+    property_definitions: int = Field(..., description="Number of property definitions created")
+    individuals: int = Field(..., description="Number of individuals created")
+    relationships: int = Field(..., description="Number of relationships created")
+    external_references: int = Field(..., description="Number of external references attached")
+
+    model_config = ConfigDict(from_attributes=True)

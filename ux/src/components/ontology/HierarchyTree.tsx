@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { DemoDatasetPicker } from "@/components/demo/DemoDatasetPicker";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -56,6 +57,7 @@ export function HierarchyTree({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [seeded, setSeeded] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+  const [demoPickerOpen, setDemoPickerOpen] = useState(false);
 
   // Seed the first taxonomy and its first scheme open, matching the reference design.
   if (!seeded && sortedTaxonomies.length > 0) {
@@ -110,7 +112,20 @@ export function HierarchyTree({
   }
 
   if (sortedTaxonomies.length === 0) {
-    return <EmptyState title="No structure yet" variant="compact" />;
+    return (
+      <>
+        <EmptyState
+          title="No structure yet"
+          description="Load a curated demo dataset to explore the workspace with a real ontology."
+          action={{
+            label: "Load Demo Dataset",
+            onClick: () => setDemoPickerOpen(true),
+          }}
+          variant="compact"
+        />
+        <DemoDatasetPicker open={demoPickerOpen} onClose={() => setDemoPickerOpen(false)} />
+      </>
+    );
   }
 
   return (

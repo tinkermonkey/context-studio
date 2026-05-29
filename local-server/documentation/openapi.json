@@ -5568,6 +5568,75 @@
         }
       }
     },
+    "/api/v1/admin/demo-datasets": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Demo Datasets",
+        "description": "List demo datasets available to load.\n\nReturns:\n    List of DemoDatasetDescriptorResponse, one per available dataset.\n\nRaises:\n    HTTPException: 500 for internal errors.",
+        "operationId": "list_demo_datasets_api_v1_admin_demo_datasets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DemoDatasetDescriptorResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Demo Datasets Api V1 Admin Demo Datasets Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/demo-datasets/{name}/load": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Load Demo Dataset",
+        "description": "Load a demo dataset into the ontology repository.\n\nMaterializes the dataset's gold-standard ontology slice (taxonomies, concept\nschemes, classes with parent_class_id chains, property definitions, and\nexternal references) directly into the database. No LLM, no network.\n\nArgs:\n    name: Stable identifier of the dataset (e.g. 'software-architecture').\n\nReturns:\n    DemoDatasetLoadResponse with counts of each persisted entity type.\n\nRaises:\n    HTTPException 404: if `name` is not registered.\n    HTTPException 409: if the dataset's root taxonomy already exists.\n    HTTPException 500: for internal errors.",
+        "operationId": "load_demo_dataset_api_v1_admin_demo_datasets__name__load_post",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoDatasetLoadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/export": {
       "post": {
         "tags": [
@@ -7356,6 +7425,114 @@
         ],
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
+      },
+      "DemoDatasetDescriptorResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Stable machine-readable name, e.g. 'software-architecture'"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-readable title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "One-paragraph description"
+          },
+          "paper_count": {
+            "type": "integer",
+            "title": "Paper Count",
+            "description": "Number of source paper fixtures backing the canon"
+          },
+          "taxonomy_count": {
+            "type": "integer",
+            "title": "Taxonomy Count",
+            "description": "Number of taxonomies the dataset will create"
+          },
+          "class_count": {
+            "type": "integer",
+            "title": "Class Count",
+            "description": "Number of classes the dataset will materialize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "title",
+          "description",
+          "paper_count",
+          "taxonomy_count",
+          "class_count"
+        ],
+        "title": "DemoDatasetDescriptorResponse",
+        "description": "Metadata describing a demo dataset users can load into a fresh workspace."
+      },
+      "DemoDatasetLoadResponse": {
+        "properties": {
+          "dataset_name": {
+            "type": "string",
+            "title": "Dataset Name",
+            "description": "Stable name of the dataset that was loaded"
+          },
+          "source_run_id": {
+            "type": "string",
+            "title": "Source Run Id",
+            "description": "Synthetic provenance id stamped on every created entity"
+          },
+          "taxonomies": {
+            "type": "integer",
+            "title": "Taxonomies",
+            "description": "Number of taxonomies created"
+          },
+          "concept_schemes": {
+            "type": "integer",
+            "title": "Concept Schemes",
+            "description": "Number of concept schemes created"
+          },
+          "classes": {
+            "type": "integer",
+            "title": "Classes",
+            "description": "Number of classes created"
+          },
+          "property_definitions": {
+            "type": "integer",
+            "title": "Property Definitions",
+            "description": "Number of property definitions created"
+          },
+          "individuals": {
+            "type": "integer",
+            "title": "Individuals",
+            "description": "Number of individuals created"
+          },
+          "relationships": {
+            "type": "integer",
+            "title": "Relationships",
+            "description": "Number of relationships created"
+          },
+          "external_references": {
+            "type": "integer",
+            "title": "External References",
+            "description": "Number of external references attached"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_name",
+          "source_run_id",
+          "taxonomies",
+          "concept_schemes",
+          "classes",
+          "property_definitions",
+          "individuals",
+          "relationships",
+          "external_references"
+        ],
+        "title": "DemoDatasetLoadResponse",
+        "description": "Counts of entities persisted by a demo dataset load."
       },
       "EnrichFromReferencesRequest": {
         "properties": {

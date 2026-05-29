@@ -355,6 +355,9 @@ class PropertyDefinition:
         description: Optional longer description
         ontology_mapping: Optional mapping to an external ontology standard
         is_relevant: Optional relevance flag (None=not evaluated, True=relevant, False=irrelevant)
+        lexical_senses: Word-sense disambiguation entries. A property whose
+            label has more than one distinct meaning across the corpus
+            (e.g. "service" or "clock") carries one LexicalSense per sense.
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -367,6 +370,7 @@ class PropertyDefinition:
     description: str | None = None
     ontology_mapping: OntologyMapping | None = None
     is_relevant: bool | None = None
+    lexical_senses: list[LexicalSense] = field(default_factory=list)
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1

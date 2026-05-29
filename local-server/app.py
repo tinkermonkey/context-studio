@@ -15,6 +15,7 @@ Architecture:
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
@@ -22,6 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Import admin adapters and services
 from adapters.config.json_store import JSONFileConfigStore
+from adapters.demo import CanonDemoDatasetLoader
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
@@ -68,6 +70,7 @@ from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
+from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.exceptions import ConfigurationError
 from domain.admin.services import AdminService
 from domain.extraction.events import ExtractionCompleted
@@ -445,6 +448,15 @@ async def lifespan(app: FastAPI):
             "AdminService created and wired with metrics, config store, and dataset" " repository"
         )
 
+        # Demo dataset loader (canon-backed, offline)
+        canon_root = Path(__file__).resolve().parent / "datafiles" / "canon"
+        demo_loader = CanonDemoDatasetLoader(
+            canon_root=canon_root,
+            ontology_repo=ontology_repo,
+        )
+        load_demo_dataset = LoadDemoDataset(loader=demo_loader)
+        logger.info("CanonDemoDatasetLoader and LoadDemoDataset use case created")
+
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
@@ -574,6 +586,7 @@ async def lifespan(app: FastAPI):
         app.state.pipeline_service = pipeline_service
         app.state.versioning_service = versioning_service
         app.state.admin_service = admin_service
+        app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
         app.state.ontology_repo = ontology_repo

@@ -1,0 +1,57 @@
+{
+  "name": "fielding_rest_dissertation_ch5",
+  "description": "Excerpt from Fielding's dissertation, Chapter 5: deriving the REST architectural style from a set of six coordinated constraints.",
+  "source": {
+    "title": "Architectural Styles and the Design of Network-based Software Architectures",
+    "authors": ["Roy Thomas Fielding"],
+    "year": 2000,
+    "venue": "Ph.D. Dissertation, University of California, Irvine",
+    "url": "https://ics.uci.edu/~fielding/pubs/dissertation/top.htm"
+  },
+  "citation": "Fielding, R. T. (2000). Architectural Styles and the Design of Network-based Software Architectures (Ph.D. Dissertation, University of California, Irvine).",
+  "source_text": "Representational State Transfer (REST) is an architectural style for distributed hypermedia systems, derived by applying a set of constraints to elements within the architecture. Each constraint induces specific architectural properties such as scalability, simplicity, modifiability, visibility, portability, and reliability. REST is not derived from any single existing style; instead, it is the result of applying six constraints in succession to the null architectural style.\n\nThe first constraint is client-server, which separates user-interface concerns from data-storage concerns and improves the portability of the user interface across multiple platforms while simplifying server components. The second constraint, statelessness, requires that each request from client to server contain all information necessary to understand the request; the server retains no session state between requests, which improves visibility, reliability, and scalability at the cost of decreased network performance for repeated similar requests. The third constraint, cacheability, requires that data within a response be implicitly or explicitly labeled as cacheable or non-cacheable, allowing clients and intermediaries to reuse response data and improving network efficiency at the cost of potential staleness.\n\nThe fourth constraint, the uniform interface, distinguishes REST from other network-based architectural styles. It comprises four sub-constraints: identification of resources by URIs, manipulation of resources through representations, self-descriptive messages, and hypermedia as the engine of application state (HATEOAS). By generalizing the component interface, implementations are decoupled from the services they provide, which permits independent evolvability. The fifth constraint is layered system, which allows an architecture to be composed of hierarchical layers where each component cannot see beyond the immediate layer with which it interacts. This permits intermediaries such as proxies, gateways, and caches to be inserted transparently. The sixth and only optional constraint is code-on-demand, which allows client functionality to be extended at runtime by transferring executable code from the server.\n\nA key abstraction in REST is the resource: any information that can be named, including documents, services, collections, and even concepts. A resource is identified by a uniform resource identifier and accessed through representations that capture its current or intended state. The interaction model is uniform across resources, which gives REST its characteristic decoupling and supports the architectural property that defines the web: independent evolvability of clients and servers.",
+  "expected_entities": [
+    { "id": "rest", "label": "Representational State Transfer", "type": "ArchitecturalStyle", "context": "architectural style for distributed hypermedia systems" },
+    { "id": "client_server", "label": "client-server", "type": "ArchitecturalConstraint", "context": "first constraint, separates UI and data-storage concerns" },
+    { "id": "statelessness", "label": "statelessness", "type": "ArchitecturalConstraint", "context": "second constraint, request contains all necessary information" },
+    { "id": "cacheability", "label": "cacheability", "type": "ArchitecturalConstraint", "context": "third constraint, responses labeled cacheable or not" },
+    { "id": "uniform_interface", "label": "uniform interface", "type": "ArchitecturalConstraint", "context": "fourth constraint, distinguishes REST" },
+    { "id": "layered_system", "label": "layered system", "type": "ArchitecturalConstraint", "context": "fifth constraint, hierarchical composition" },
+    { "id": "code_on_demand", "label": "code-on-demand", "type": "ArchitecturalConstraint", "context": "sixth and optional constraint" },
+    { "id": "resource", "label": "resource", "type": "Concept", "context": "key abstraction in REST" },
+    { "id": "representation", "label": "representation", "type": "Concept", "context": "captures current or intended state of a resource" },
+    { "id": "hateoas", "label": "Hypermedia as the Engine of Application State", "type": "Concept", "context": "sub-constraint of uniform interface" }
+  ],
+  "expected_relationships": [
+    { "subject": "rest", "predicate": "composed_of", "object": "client_server" },
+    { "subject": "rest", "predicate": "composed_of", "object": "statelessness" },
+    { "subject": "rest", "predicate": "composed_of", "object": "cacheability" },
+    { "subject": "rest", "predicate": "composed_of", "object": "uniform_interface" },
+    { "subject": "rest", "predicate": "composed_of", "object": "layered_system" },
+    { "subject": "rest", "predicate": "composed_of", "object": "code_on_demand" },
+    { "subject": "uniform_interface", "predicate": "composed_of", "object": "hateoas" }
+  ],
+  "expected_classes": [
+    { "identifier": "rest", "title": "REST", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles" },
+    { "identifier": "client_server_constraint", "title": "Client-Server Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" },
+    { "identifier": "stateless_constraint", "title": "Stateless Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" },
+    { "identifier": "cacheable_constraint", "title": "Cacheable Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" },
+    { "identifier": "uniform_interface_constraint", "title": "Uniform Interface Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" },
+    { "identifier": "layered_system_constraint", "title": "Layered System Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" },
+    { "identifier": "code_on_demand_constraint", "title": "Code-on-Demand Constraint", "parent_class_identifier": "architectural_constraint", "concept_scheme_identifier": "architectural_constraints" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "satisfies_constraint", "lexical_senses": [{ "label": "satisfies constraint", "language_code": "en", "sense_type": "word_sense" }] },
+    { "identifier": "composed_of", "lexical_senses": [{ "label": "composed of", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "rest", "source": "dbpedia", "identifier": "Representational_state_transfer", "uri": "http://dbpedia.org/resource/Representational_state_transfer" },
+    { "class_identifier": "rest", "source": "wikidata", "identifier": "Q749568", "uri": "https://www.wikidata.org/wiki/Q749568" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "architectural_styles", "taxonomy_identifier": "software_architecture" },
+    { "identifier": "architectural_constraints", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["service"]
+}

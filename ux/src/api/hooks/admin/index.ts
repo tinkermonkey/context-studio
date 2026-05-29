@@ -10,3 +10,4 @@ export {
   useDeleteDataset,
   useActivateDataset,
 } from "./useDatasets";
+export { useDemoDatasets, useLoadDemoDataset } from "./useDemoDataset";

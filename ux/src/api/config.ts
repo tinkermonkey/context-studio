@@ -7,6 +7,7 @@ export const QUERY_KEYS = {
   statsTrends: (days?: number) => ["stats-trends", days] as const,
   datasets: () => ["datasets"] as const,
   dataset: (id: string) => ["datasets", id] as const,
+  demoDatasets: ["demo-datasets"] as const,
   // Ontology
   taxonomies: ["taxonomies"] as const,
   taxonomy: (id: string) => ["taxonomies", id] as const,

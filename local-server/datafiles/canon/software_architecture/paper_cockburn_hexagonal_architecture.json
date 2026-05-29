@@ -1,0 +1,47 @@
+{
+  "name": "cockburn_hexagonal_architecture",
+  "description": "Excerpt from Cockburn's 'Hexagonal Architecture' (also called Ports and Adapters). Extends architectural_styles. Cross-paper with Fielding REST on 'interface' (single sense).",
+  "source": {
+    "title": "Hexagonal Architecture",
+    "authors": ["Alistair Cockburn"],
+    "year": 2005,
+    "venue": "alistair.cockburn.us",
+    "url": "https://alistair.cockburn.us/hexagonal-architecture/"
+  },
+  "citation": "Cockburn, A. (2005). Hexagonal Architecture. Retrieved from https://alistair.cockburn.us/hexagonal-architecture/.",
+  "source_text": "The Hexagonal Architecture, also known as Ports and Adapters, structures an application so that its core logic is shielded from the technologies through which it communicates with the outside world. The application is symmetric: it exposes a small number of ports — interfaces it owns and defines — and the world connects to those ports through adapters. There is no privileged direction of dependency: a user-interface adapter on the left and a database adapter on the right are structurally equivalent from the perspective of the application core.\n\nA port is a technology-agnostic, intention-revealing interface. It expresses a need or capability of the application in the application's own vocabulary, with no reference to specific drivers, frameworks, or transport protocols. Ports come in two kinds: driving ports, through which the outside world invokes the application; and driven ports, through which the application invokes the outside world. The application core depends only on its ports. It does not import any infrastructure.\n\nAn adapter is the translation layer between a port and a specific external technology. For a driving port, a REST adapter or a CLI adapter translates incoming HTTP requests or command-line invocations into calls on the port. For a driven port, an SQLite adapter or an SMTP adapter translates calls on the port into the wire protocol of the underlying technology. Adapters are interchangeable: swapping SQLite for PostgreSQL is a matter of writing a new driven adapter, with no change to the application core.\n\nThe primary benefit of the style is testability. The application core can be exercised by substituting in-memory fake adapters for production adapters, allowing fast, hermetic tests of business logic. The secondary benefit is technology resilience. When a port is well-named in the application's vocabulary and free of foreign concepts, the application accumulates resistance to the churn of external technologies. Hexagonal Architecture is closely related to the Onion Architecture and the Clean Architecture: all three are variations on the same dependency-inversion principle at the architectural scale, in which the inner layers know nothing of the outer.",
+  "expected_entities": [
+    { "id": "hexagonal_architecture", "label": "Hexagonal Architecture", "type": "ArchitecturalStyle", "context": "ports and adapters; core isolated from external technologies" },
+    { "id": "port", "label": "port", "type": "Concept", "context": "technology-agnostic interface owned by the application" },
+    { "id": "driving_port", "label": "driving port", "type": "Concept", "context": "outside world invokes the application through this port" },
+    { "id": "driven_port", "label": "driven port", "type": "Concept", "context": "application invokes the outside world through this port" },
+    { "id": "adapter", "label": "adapter", "type": "Concept", "context": "translation layer between a port and a specific external technology" },
+    { "id": "application_core", "label": "application core", "type": "Concept", "context": "depends only on ports, not on infrastructure" },
+    { "id": "onion_architecture", "label": "Onion Architecture", "type": "ArchitecturalStyle", "context": "related variation; dependency inversion at architectural scale" },
+    { "id": "clean_architecture", "label": "Clean Architecture", "type": "ArchitecturalStyle", "context": "related variation; inner layers know nothing of outer" }
+  ],
+  "expected_relationships": [
+    { "subject": "hexagonal_architecture", "predicate": "composed_of", "object": "port" },
+    { "subject": "hexagonal_architecture", "predicate": "composed_of", "object": "adapter" },
+    { "subject": "driving_port", "predicate": "subclass_of", "object": "port" },
+    { "subject": "driven_port", "predicate": "subclass_of", "object": "port" },
+    { "subject": "adapter", "predicate": "translates", "object": "port" },
+    { "subject": "application_core", "predicate": "depends_on", "object": "port" },
+    { "subject": "hexagonal_architecture", "predicate": "related_to", "object": "onion_architecture" },
+    { "subject": "hexagonal_architecture", "predicate": "related_to", "object": "clean_architecture" }
+  ],
+  "expected_classes": [
+    { "identifier": "hexagonal_architecture", "title": "Hexagonal Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "composed_of", "lexical_senses": [{ "label": "composed of", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "hexagonal_architecture", "source": "wikidata", "identifier": "Q113453472", "uri": "https://www.wikidata.org/wiki/Q113453472" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "architectural_styles", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": []
+}

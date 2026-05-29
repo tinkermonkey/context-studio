@@ -1,19 +1,22 @@
-.PHONY: benchmark-experiment help
+.PHONY: benchmark-experiment benchmark-canon help
 
 # Default pipeline config if not specified
 PIPELINE ?= configs/extraction-default.json
 CACHE_DIR := .benchmark-cache
 REPORTS_DIR := reports
 DATE := $(shell date +%Y%m%d)
+CANON_DIR ?= datafiles/canon/software_architecture
 
 help:
 	@echo "Context Studio Benchmarking Makefile"
 	@echo ""
 	@echo "Targets:"
-	@echo "  benchmark-experiment PIPELINE=<path>  Run benchmark against both datasets"
+	@echo "  benchmark-experiment PIPELINE=<path>  Run benchmark against TekGen, WebNLG, and the canon"
+	@echo "  benchmark-canon                       Run only the canon benchmark"
 	@echo ""
 	@echo "Example:"
 	@echo "  make benchmark-experiment PIPELINE=configs/extraction-experimental.json"
+	@echo "  make benchmark-canon"
 
 benchmark-experiment: check-pipeline validate-cache create-reports
 	@echo "=== Extracting config slug from $(PIPELINE) ==="
@@ -35,9 +38,17 @@ benchmark-experiment: check-pipeline validate-cache create-reports
 		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-webnlg.json
 
 	@echo ""
+	@echo "=== Running canon-software-architecture benchmark ==="
+	python scripts/run_canon_benchmark.py \
+		--canon-dir $(CANON_DIR) \
+		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-canon.json
+
+	@echo ""
 	@echo "=== Generating cross-dataset comparison ==="
 	python scripts/compare_benchmarks.py \
-		--results $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-tekgen.json $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-webnlg.json \
+		--results $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-tekgen.json \
+		$(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-webnlg.json \
+		$(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-canon.json \
 		--out $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-comparison
 
 	@echo ""
@@ -45,6 +56,12 @@ benchmark-experiment: check-pipeline validate-cache create-reports
 	@python scripts/diff_benchmarks.py \
 		--current $(REPORTS_DIR)/$(DATE)-$(CONFIG_SLUG)-comparison.json \
 		--baseline reports/baseline-comparison.json
+
+benchmark-canon: create-reports
+	@echo "=== Running canon-software-architecture benchmark (standalone) ==="
+	python scripts/run_canon_benchmark.py \
+		--canon-dir $(CANON_DIR) \
+		--out $(REPORTS_DIR)/$(DATE)-canon.json
 
 check-pipeline:
 	@if [ ! -f "$(PIPELINE)" ]; then \

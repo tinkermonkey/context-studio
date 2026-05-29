@@ -26,7 +26,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from adapters.web.dependencies import get_admin_service, get_local_db_session, get_operations_db_session
+from adapters.web.dependencies import (
+    get_admin_service,
+    get_load_demo_dataset,
+    get_local_db_session,
+    get_operations_db_session,
+)
 from adapters.web.schemas.admin import (
     AppConfigurationResponse,
     BackgroundTaskResponse,
@@ -37,15 +42,21 @@ from adapters.web.schemas.admin import (
     DatasetCreateRequest,
     DatasetResponse,
     DatasetUpdateRequest,
+    DemoDatasetDescriptorResponse,
+    DemoDatasetLoadResponse,
     ServiceMetricsResponse,
     StatsTrendsResponse,
     SystemHealthResponse,
 )
+from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.exceptions import (
     ActiveDatasetError,
     AdminError,
     ConfigurationError,
     DatasetNotFoundError,
+    DemoDatasetAlreadyLoadedError,
+    DemoDatasetMalformedError,
+    DemoDatasetNotFoundError,
     TaskNotFoundError,
 )
 from domain.admin.services import AdminService
@@ -70,6 +81,15 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
     if isinstance(exc, DatasetNotFoundError):
         logger.warning(f"Dataset not found: {exc}")
         return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, DemoDatasetNotFoundError):
+        logger.warning(f"Demo dataset not found: {exc}")
+        return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, DemoDatasetAlreadyLoadedError):
+        logger.warning(f"Demo dataset already loaded: {exc}")
+        return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, DemoDatasetMalformedError):
+        logger.warning(f"Demo dataset malformed: {exc}")
+        return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     elif isinstance(exc, ActiveDatasetError):
         logger.warning(f"Active dataset error: {exc}")
         return (status.HTTP_409_CONFLICT, str(exc))
@@ -611,3 +631,62 @@ async def get_stats_trends(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve stats trends",
         )
+
+
+# ==================== Demo datasets ====================
+
+
+@router.get("/demo-datasets", response_model=list[DemoDatasetDescriptorResponse])
+async def list_demo_datasets(
+    service: LoadDemoDataset = Depends(get_load_demo_dataset),
+) -> list[DemoDatasetDescriptorResponse]:
+    """
+    List demo datasets available to load.
+
+    Returns:
+        List of DemoDatasetDescriptorResponse, one per available dataset.
+
+    Raises:
+        HTTPException: 500 for internal errors.
+    """
+    try:
+        descriptors = await run_sync_in_executor(service.list_available)
+        return [DemoDatasetDescriptorResponse.model_validate(d) for d in descriptors]
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post(
+    "/demo-datasets/{name}/load",
+    response_model=DemoDatasetLoadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def load_demo_dataset(
+    name: str,
+    service: LoadDemoDataset = Depends(get_load_demo_dataset),
+) -> DemoDatasetLoadResponse:
+    """
+    Load a demo dataset into the ontology repository.
+
+    Materializes the dataset's gold-standard ontology slice (taxonomies, concept
+    schemes, classes with parent_class_id chains, property definitions, and
+    external references) directly into the database. No LLM, no network.
+
+    Args:
+        name: Stable identifier of the dataset (e.g. 'software-architecture').
+
+    Returns:
+        DemoDatasetLoadResponse with counts of each persisted entity type.
+
+    Raises:
+        HTTPException 404: if `name` is not registered.
+        HTTPException 409: if the dataset's root taxonomy already exists.
+        HTTPException 500: for internal errors.
+    """
+    try:
+        result = await run_sync_in_executor(service.execute, name)
+        return DemoDatasetLoadResponse.model_validate(result)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)

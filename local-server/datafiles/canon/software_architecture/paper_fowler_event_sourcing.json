@@ -1,0 +1,43 @@
+{
+  "name": "fowler_event_sourcing",
+  "description": "Excerpt from Fowler's Event Sourcing article. Pairs with paper_fowler_cqrs on design_patterns. Cross-paper consistency check for 'pattern' (single sense) and 'event' (single sense).",
+  "source": {
+    "title": "Event Sourcing",
+    "authors": ["Martin Fowler"],
+    "year": 2005,
+    "venue": "martinfowler.com",
+    "url": "https://martinfowler.com/eaaDev/EventSourcing.html"
+  },
+  "citation": "Fowler, M. (2005). Event Sourcing. martinfowler.com. Retrieved from https://martinfowler.com/eaaDev/EventSourcing.html.",
+  "source_text": "Event Sourcing ensures that all changes to application state are stored as a sequence of events. Instead of persisting the current state of the world, the system persists every domain event that contributed to that state, in order of occurrence. The current state of any entity is obtained by replaying its event stream from the beginning, applying each event to a fresh aggregate.\n\nThe central data structure is the event store: an append-only log keyed by aggregate identity. Writes are atomic appends of one or more events; reads typically load all events for an aggregate and fold them into a current state. Snapshots are an optimisation in which the system periodically materialises the current state and persists it, so that recovery does not have to replay the entire history. Events themselves are immutable: once persisted, they are not modified, deleted, or reordered, even when business semantics change. Schema evolution of events is therefore handled by upcasting or versioning event payloads.\n\nThe key benefits of Event Sourcing are completeness of audit, temporal querying (the state at any past time can be reconstructed), and decoupled projections (any number of read models can be derived from the same event stream). The pattern composes naturally with CQRS: the write side is the event store, and read models are projections subscribed to the event stream. When combined, an additional infrastructure component — the event bus or change-feed — propagates new events from the write side to all read projections.\n\nThe costs are significant. The application code must work with events as first-class artefacts, not as a synchronous side-effect of state changes. External systems that integrate by reading the database directly are not compatible with Event Sourcing without an explicit projection. Event versioning, while well-understood, demands discipline. Event Sourcing is therefore best suited to domains where audit is required, where complex temporal reasoning is core to the business, or where multiple consumers need substantially different views of the same data.",
+  "expected_entities": [
+    { "id": "event_sourcing", "label": "Event Sourcing", "type": "Pattern", "context": "all changes stored as a sequence of events" },
+    { "id": "domain_event", "label": "domain event", "type": "Concept", "context": "immutable record of something that happened" },
+    { "id": "event_store", "label": "event store", "type": "Architecture", "context": "append-only log of events keyed by aggregate" },
+    { "id": "aggregate", "label": "aggregate", "type": "Concept", "context": "entity reconstructed by replaying its event stream" },
+    { "id": "projection", "label": "projection", "type": "Concept", "context": "read model derived from an event stream" },
+    { "id": "snapshot", "label": "snapshot", "type": "Concept", "context": "periodically materialised current state for replay optimisation" },
+    { "id": "event_bus", "label": "event bus", "type": "Architecture", "context": "propagates new events to projections" },
+    { "id": "cqrs", "label": "CQRS", "type": "Pattern", "context": "naturally composed with Event Sourcing" }
+  ],
+  "expected_relationships": [
+    { "subject": "event_sourcing", "predicate": "persists", "object": "domain_event" },
+    { "subject": "event_sourcing", "predicate": "uses", "object": "event_store" },
+    { "subject": "aggregate", "predicate": "reconstructed_from", "object": "domain_event" },
+    { "subject": "projection", "predicate": "derived_from", "object": "domain_event" },
+    { "subject": "snapshot", "predicate": "optimises", "object": "event_sourcing" },
+    { "subject": "event_sourcing", "predicate": "combined_with", "object": "cqrs" }
+  ],
+  "expected_classes": [
+    { "identifier": "event_sourcing", "title": "Event Sourcing", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "implements_pattern", "lexical_senses": [{ "label": "implements pattern", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [],
+  "expected_concept_schemes": [
+    { "identifier": "design_patterns", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["pattern"]
+}

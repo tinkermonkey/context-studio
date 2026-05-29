@@ -1,0 +1,52 @@
+{
+  "name": "ongaro_raft_consensus",
+  "description": "Excerpt from Ongaro and Ousterhout's 'In Search of an Understandable Consensus Algorithm'. Exercises consensus_protocols scheme with Raft's decomposition into leader election, log replication, and safety.",
+  "source": {
+    "title": "In Search of an Understandable Consensus Algorithm",
+    "authors": ["Diego Ongaro", "John Ousterhout"],
+    "year": 2014,
+    "venue": "USENIX Annual Technical Conference (USENIX ATC '14), 305-319",
+    "url": "https://raft.github.io/raft.pdf"
+  },
+  "citation": "Ongaro, D., & Ousterhout, J. (2014). In search of an understandable consensus algorithm. In Proc. of the 2014 USENIX Annual Technical Conference, 305-319.",
+  "source_text": "Raft is a consensus algorithm for managing a replicated log. It produces a result equivalent to Multi-Paxos but is structured for understandability by decomposing consensus into three relatively independent sub-problems: leader election, log replication, and safety. Raft maintains stronger invariants than Paxos to simplify reasoning, at the cost of a marginally more constrained design space.\n\nA Raft cluster contains several servers, typically five, each in one of three states: leader, follower, or candidate. At any time, at most one server is the leader; the others are followers. Leaders accept log entries from clients, replicate them to followers, and tell followers when it is safe to apply log entries to their state machines. Time in Raft is divided into terms of arbitrary length, identified by consecutive integers. Each term begins with an election in which one or more candidates request votes from the other servers. A candidate becomes leader on receiving votes from a majority of the cluster. If no candidate wins a term, the term ends without a leader and a new election begins.\n\nOnce a leader is elected, log replication proceeds via AppendEntries RPCs. The leader assigns each new log entry a monotonically increasing index in its log and sends an AppendEntries to each follower. A log entry is committed when it has been safely replicated on a majority of servers and all preceding entries are also committed. Committed entries are durable and will eventually be executed by all available state machines. The leader's log is authoritative; if a follower's log diverges, it is overwritten on conflict to match the leader's. Safety is guaranteed by a Log Matching Property and a Leader Completeness Property: any leader for a given term contains all entries committed in previous terms.\n\nRaft also defines a membership-change protocol that allows the cluster's configuration to evolve safely while serving client requests, by transitioning through a joint configuration that requires majorities in both old and new memberships. Raft is widely adopted in production systems including etcd, Consul, and CockroachDB.",
+  "expected_entities": [
+    { "id": "raft", "label": "Raft", "type": "ConsensusProtocol", "context": "consensus algorithm structured for understandability" },
+    { "id": "leader_election", "label": "leader election", "type": "Subproblem", "context": "first of Raft's three sub-problems" },
+    { "id": "log_replication", "label": "log replication", "type": "Subproblem", "context": "leader replicates entries via AppendEntries" },
+    { "id": "safety_property", "label": "safety property", "type": "Subproblem", "context": "log-matching and leader-completeness invariants" },
+    { "id": "raft_leader", "label": "leader", "type": "Role", "context": "accepts entries from clients" },
+    { "id": "raft_follower", "label": "follower", "type": "Role", "context": "replicates leader's entries" },
+    { "id": "raft_candidate", "label": "candidate", "type": "Role", "context": "requests votes during election" },
+    { "id": "raft_term", "label": "term", "type": "Concept", "context": "Raft's monotonically increasing election epoch" },
+    { "id": "append_entries", "label": "AppendEntries", "type": "Message", "context": "RPC carrying log replication payload" },
+    { "id": "commit_index", "label": "commit index", "type": "Concept", "context": "highest log entry known to be committed" }
+  ],
+  "expected_relationships": [
+    { "subject": "raft", "predicate": "decomposed_into", "object": "leader_election" },
+    { "subject": "raft", "predicate": "decomposed_into", "object": "log_replication" },
+    { "subject": "raft", "predicate": "decomposed_into", "object": "safety_property" },
+    { "subject": "raft", "predicate": "equivalent_to", "object": "multi_paxos" },
+    { "subject": "raft", "predicate": "uses_role", "object": "raft_leader" },
+    { "subject": "raft", "predicate": "uses_role", "object": "raft_follower" },
+    { "subject": "raft", "predicate": "uses_role", "object": "raft_candidate" },
+    { "subject": "log_replication", "predicate": "uses_message", "object": "append_entries" }
+  ],
+  "expected_classes": [
+    { "identifier": "raft", "title": "Raft", "parent_class_identifier": "consensus_protocol", "concept_scheme_identifier": "consensus_protocols" }
+  ],
+  "expected_individuals": [
+    { "title": "Raft Leader", "class_identifiers": ["raft"], "data_properties": [{ "property_identifier": "description", "value": "Single leader per term; accepts log entries from clients and replicates them.", "datatype": "xsd:string" }] },
+    { "title": "Raft Follower", "class_identifiers": ["raft"], "data_properties": [{ "property_identifier": "description", "value": "Passively replicates the leader's log; transitions to candidate on election timeout.", "datatype": "xsd:string" }] },
+    { "title": "Raft Candidate", "class_identifiers": ["raft"], "data_properties": [{ "property_identifier": "description", "value": "Solicits votes from peers; becomes leader on receiving a majority.", "datatype": "xsd:string" }] }
+  ],
+  "expected_property_defs": [],
+  "expected_external_refs": [
+    { "class_identifier": "raft", "source": "wikidata", "identifier": "Q22971723", "uri": "https://www.wikidata.org/wiki/Q22971723" },
+    { "class_identifier": "raft", "source": "dbpedia", "identifier": "Raft_(computer_science)", "uri": "http://dbpedia.org/resource/Raft_(computer_science)" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "consensus_protocols", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["leader"]
+}

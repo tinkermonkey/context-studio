@@ -15,6 +15,8 @@ from .value_objects import (
     BackgroundTaskSummary,
     ComponentStatus,
     DatabaseHealth,
+    DemoDatasetDescriptor,
+    LoadResult,
     ServiceMetrics,
 )
 
@@ -259,5 +261,41 @@ class DatasetRepository(Protocol):
 
         Returns:
             DatasetMetrics with current entity counts
+        """
+        ...
+
+
+class DemoDatasetLoader(Protocol):
+    """
+    Port for discovering and loading pre-curated demo datasets.
+
+    Implementations read a canonical ontology slice from disk and materialize it
+    into the ontology repository so users can explore a non-trivial knowledge
+    graph immediately after a fresh install.
+    """
+
+    def list_available(self) -> tuple[DemoDatasetDescriptor, ...]:
+        """
+        List demo datasets available to load.
+
+        Returns:
+            Tuple of descriptors, one per available dataset.
+        """
+        ...
+
+    def load(self, name: str, run_id: str) -> LoadResult:
+        """
+        Materialize a demo dataset into the ontology repository.
+
+        Args:
+            name: Stable identifier of the dataset (matching DemoDatasetDescriptor.name).
+            run_id: Synthetic provenance id to stamp on every persisted entity.
+
+        Returns:
+            LoadResult describing how many of each entity type were created.
+
+        Raises:
+            DemoDatasetNotFoundError: if `name` does not match a registered dataset.
+            DemoDatasetAlreadyLoadedError: if the dataset's root taxonomy already exists.
         """
         ...

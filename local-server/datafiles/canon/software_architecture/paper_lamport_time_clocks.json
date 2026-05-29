@@ -1,0 +1,46 @@
+{
+  "name": "lamport_time_clocks",
+  "description": "Excerpt from Lamport's 'Time, Clocks, and the Ordering of Events in a Distributed System'. Introduces the happens-before relation and logical clocks; exercises multi-sense disambiguation of 'clock' (logical vs physical).",
+  "source": {
+    "title": "Time, Clocks, and the Ordering of Events in a Distributed System",
+    "authors": ["Leslie Lamport"],
+    "year": 1978,
+    "venue": "Communications of the ACM, 21(7), 558-565",
+    "url": "https://lamport.azurewebsites.net/pubs/time-clocks.pdf"
+  },
+  "citation": "Lamport, L. (1978). Time, clocks, and the ordering of events in a distributed system. Communications of the ACM, 21(7), 558-565.",
+  "source_text": "A distributed system consists of a collection of distinct processes which are spatially separated and communicate with one another by exchanging messages. In such a system, the concept of time is fundamental but also problematic: there is no natural way to determine the order in which two events at different processes occurred, because there is no global clock.\n\nWe define a happens-before relation, denoted by an arrow, on the set of events in the system. The relation is the smallest relation satisfying: (1) if events a and b occur at the same process and a occurs before b, then a happens-before b; (2) if a is the sending of a message by one process and b is the receipt of that message by another, then a happens-before b; and (3) the relation is transitive. Two distinct events are concurrent if neither happens-before the other. Happens-before is a partial ordering of events, not a total ordering.\n\nA logical clock is a way of assigning a number to an event, such that if event a happens-before event b, then the number assigned to a is less than the number assigned to b. Each process maintains its own logical clock as a monotonically increasing counter. The clock condition is enforced by two implementation rules: a process increments its clock between any two successive events; and on receiving a message, a process sets its clock to the maximum of its current value and the timestamp on the received message, then increments. These rules give logical clocks the property that the timestamps they assign are consistent with the happens-before relation.\n\nLogical clocks are distinct from physical clocks. A physical clock measures the passage of real time and is subject to drift and bounded synchronization error; a logical clock measures only causal precedence and need not relate to real time at all. The choice between logical and physical clocks depends on whether the system requires causal consistency or wall-clock guarantees. Using logical timestamps, we can construct a total ordering of events that is consistent with the partial ordering, by breaking ties using any arbitrary total ordering on the processes themselves. This total ordering is sufficient to implement distributed mutual exclusion and other coordination protocols where any agreed-upon ordering suffices.",
+  "expected_entities": [
+    { "id": "distributed_system", "label": "distributed system", "type": "Architecture", "context": "collection of distinct processes communicating by messages" },
+    { "id": "happens_before", "label": "happens-before relation", "type": "Concept", "context": "partial ordering on events" },
+    { "id": "concurrent_events", "label": "concurrent events", "type": "Concept", "context": "neither event happens-before the other" },
+    { "id": "logical_clock", "label": "logical clock", "type": "Concept", "context": "assigns numbers consistent with happens-before" },
+    { "id": "physical_clock", "label": "physical clock", "type": "Concept", "context": "measures real time, subject to drift" },
+    { "id": "clock_condition", "label": "clock condition", "type": "Algorithm", "context": "two implementation rules enforcing logical-clock consistency" },
+    { "id": "partial_ordering", "label": "partial ordering", "type": "Concept", "context": "induced by happens-before" },
+    { "id": "total_ordering", "label": "total ordering", "type": "Concept", "context": "constructed from logical timestamps plus process tie-break" }
+  ],
+  "expected_relationships": [
+    { "subject": "logical_clock", "predicate": "consistent_with", "object": "happens_before" },
+    { "subject": "happens_before", "predicate": "induces", "object": "partial_ordering" },
+    { "subject": "total_ordering", "predicate": "extends", "object": "partial_ordering" },
+    { "subject": "logical_clock", "predicate": "distinct_from", "object": "physical_clock" }
+  ],
+  "expected_classes": [],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    {
+      "identifier": "clock",
+      "lexical_senses": [
+        { "label": "clock (logical)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "clock (physical)", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "happens_before", "source": "wikidata", "identifier": "Q1393885", "uri": "https://www.wikidata.org/wiki/Q1393885" },
+    { "class_identifier": "logical_clock", "source": "dbpedia", "identifier": "Logical_clock", "uri": "http://dbpedia.org/resource/Logical_clock" }
+  ],
+  "expected_concept_schemes": [],
+  "multi_sense_terms_present": ["clock"]
+}

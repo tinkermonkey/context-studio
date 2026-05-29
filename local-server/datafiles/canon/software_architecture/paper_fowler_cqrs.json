@@ -1,0 +1,44 @@
+{
+  "name": "fowler_cqrs",
+  "description": "Excerpt from Fowler's CQRS article. Introduces design_patterns concept scheme; pairs with paper_fowler_event_sourcing on the architectural-pattern axis.",
+  "source": {
+    "title": "CQRS",
+    "authors": ["Martin Fowler"],
+    "year": 2011,
+    "venue": "martinfowler.com",
+    "url": "https://martinfowler.com/bliki/CQRS.html"
+  },
+  "citation": "Fowler, M. (2011). CQRS. martinfowler.com. Retrieved from https://martinfowler.com/bliki/CQRS.html. Original concept attributed to Greg Young.",
+  "source_text": "CQRS — Command Query Responsibility Segregation — is a pattern in which the model used to update information is separated from the model used to read information. In a conventional design, the same domain model serves both queries (operations that return a value but do not mutate state) and commands (operations that change state but, ideally, return nothing). CQRS splits these into two models: a write model that handles commands and produces events, and a read model that handles queries and is shaped specifically for presentation.\n\nThe motivation for splitting is that the requirements of the two paths diverge. The read side benefits from denormalised, query-specific projections that are cheap to fetch and can be tailored per consumer. The write side benefits from a normalised, behaviour-rich model that enforces invariants and emits domain events when state changes. Once separated, the read model can be a different database, a different schema, even a different programming language. Updates to the read model are driven by events emitted from the write model; this introduces eventual consistency between writing and reading.\n\nCQRS is frequently combined with Event Sourcing, but the two are independent: Event Sourcing can exist without CQRS, and CQRS can exist with a traditional state-stored write model. When combined, the event store becomes the source of truth for the write side and read projections are rebuilt by replaying events. The combination is powerful for audit and temporal-query use cases.\n\nFowler cautions that CQRS adds significant complexity: two models to maintain, eventual consistency to reason about, and infrastructure to keep the read side caught up. It should be applied selectively, to subsystems where the asymmetry between read and write paths is large enough to justify the cost. Common indicators include heavily-collaborative domains with complex business rules, performance asymmetries that favour denormalised reads, and integration scenarios where multiple consumers need differently-shaped views of the same underlying data.",
+  "expected_entities": [
+    { "id": "cqrs", "label": "CQRS", "type": "Pattern", "context": "Command Query Responsibility Segregation" },
+    { "id": "command", "label": "command", "type": "Concept", "context": "operation that changes state" },
+    { "id": "query", "label": "query", "type": "Concept", "context": "operation that returns a value without mutating state" },
+    { "id": "write_model", "label": "write model", "type": "Concept", "context": "handles commands, emits events" },
+    { "id": "read_model", "label": "read model", "type": "Concept", "context": "handles queries, shaped for presentation" },
+    { "id": "projection", "label": "projection", "type": "Concept", "context": "denormalised view materialized from events" },
+    { "id": "event_sourcing", "label": "Event Sourcing", "type": "Pattern", "context": "frequently combined with CQRS" }
+  ],
+  "expected_relationships": [
+    { "subject": "cqrs", "predicate": "separates", "object": "write_model" },
+    { "subject": "cqrs", "predicate": "separates", "object": "read_model" },
+    { "subject": "write_model", "predicate": "handles", "object": "command" },
+    { "subject": "read_model", "predicate": "handles", "object": "query" },
+    { "subject": "read_model", "predicate": "materialized_as", "object": "projection" },
+    { "subject": "cqrs", "predicate": "combined_with", "object": "event_sourcing" }
+  ],
+  "expected_classes": [
+    { "identifier": "cqrs", "title": "CQRS", "parent_class_identifier": "design_pattern", "concept_scheme_identifier": "design_patterns" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "implements_pattern", "lexical_senses": [{ "label": "implements pattern", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "cqrs", "source": "wikidata", "identifier": "Q5012558", "uri": "https://www.wikidata.org/wiki/Q5012558" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "design_patterns", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["pattern"]
+}

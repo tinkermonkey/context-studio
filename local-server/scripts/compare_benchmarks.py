@@ -129,7 +129,7 @@ def build_comparison_matrix(
         f1s = [r["f1"] for r in dataset_results if r["f1"] is not None]
         conformances = [r["conformance"] for r in dataset_results if r["conformance"] is not None]
 
-        aggregate_stats["by_dataset"][dataset_name] = {
+        ds_stats: dict[str, Any] = {
             "avg_precision": sum(precisions) / len(precisions) if precisions else 0.0,
             "avg_recall": sum(recalls) / len(recalls) if recalls else 0.0,
             "avg_f1": sum(f1s) / len(f1s) if f1s else 0.0,
@@ -138,6 +138,16 @@ def build_comparison_matrix(
             "total_cost_usd": results.get("total_cost_usd", 0.0),
             "ontologies_count": results.get("ontologies_count", 0),
         }
+
+        # Carry forward canon-specific metric blocks if present. The canon
+        # benchmark report puts a rich `canon` block on each result; we collect
+        # them so diff_benchmarks.py can render them in the human summary.
+        canon_blocks = [r.get("canon") for r in dataset_results if r.get("canon")]
+        if canon_blocks:
+            # For now there is one canon ontology per run, so take the first.
+            ds_stats["canon"] = canon_blocks[0]
+
+        aggregate_stats["by_dataset"][dataset_name] = ds_stats
 
     comparison["aggregate_stats"] = aggregate_stats
 

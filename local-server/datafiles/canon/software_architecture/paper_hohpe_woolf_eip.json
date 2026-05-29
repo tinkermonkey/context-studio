@@ -1,0 +1,56 @@
+{
+  "name": "hohpe_woolf_eip",
+  "description": "Excerpt from Hohpe and Woolf's 'Enterprise Integration Patterns'. Introduces integration_patterns scheme with message channels, routers, translators, and publish-subscribe.",
+  "source": {
+    "title": "Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions",
+    "authors": ["Gregor Hohpe", "Bobby Woolf"],
+    "year": 2003,
+    "venue": "Addison-Wesley",
+    "url": "https://www.enterpriseintegrationpatterns.com/"
+  },
+  "citation": "Hohpe, G., & Woolf, B. (2003). Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions. Addison-Wesley Professional.",
+  "source_text": "Integrating heterogeneous applications by exchanging messages is a recurring problem with a stable vocabulary of solutions. The core building block is the message channel: a logical conduit through which one application sends messages and another receives them. A channel decouples sender and receiver in time and identity; the sender does not need to know which receivers exist, and a receiver does not need to be available when the sender publishes.\n\nMessage channels come in two principal varieties. A point-to-point channel ensures that each message is delivered to exactly one receiver from a pool of competing consumers; this is the right primitive when message ordering and exactly-once processing per item are required. A publish-subscribe channel broadcasts each message to every interested subscriber; this is the right primitive when a single event must trigger multiple, independent reactions, such as updating projections, sending notifications, and writing to an audit log.\n\nWhen the structure of messages differs between applications, a message translator interposes between sender and receiver and rewrites the payload. When the recipient of a message depends on its content, a message router consumes from one channel and republishes to a different channel according to rules over the message; common variants include the content-based router, the recipient list, the splitter, the aggregator, and the resequencer. When applications must communicate in a request-reply pattern, a correlated reply channel is supplied with each request, and the response is correlated back to the requester by an identifier carried in the message header.\n\nThe value of cataloguing these patterns is that integration designs can be discussed and reviewed at the level of the catalogue, without descending into vendor-specific transport details. Two architects describing a system as 'a publish-subscribe channel, fed by a content-based router, with a message translator on each subscriber' can coordinate without prior agreement on the underlying broker technology. The patterns are intentionally transport-neutral: the same vocabulary describes JMS, AMQP, Kafka, and HTTP-based integrations.",
+  "expected_entities": [
+    { "id": "message_channel", "label": "message channel", "type": "Pattern", "context": "logical conduit between applications" },
+    { "id": "point_to_point_channel", "label": "point-to-point channel", "type": "Pattern", "context": "each message delivered to exactly one receiver" },
+    { "id": "publish_subscribe_channel", "label": "publish-subscribe channel", "type": "Pattern", "context": "each message broadcast to every subscriber" },
+    { "id": "message_router", "label": "message router", "type": "Pattern", "context": "republishes to a different channel based on message content" },
+    { "id": "message_translator", "label": "message translator", "type": "Pattern", "context": "rewrites message payload between schemas" },
+    { "id": "content_based_router", "label": "content-based router", "type": "Pattern", "context": "router variant that switches by message content" },
+    { "id": "splitter", "label": "splitter", "type": "Pattern", "context": "router variant that decomposes a composite message" },
+    { "id": "aggregator", "label": "aggregator", "type": "Pattern", "context": "router variant that combines correlated messages" },
+    { "id": "request_reply", "label": "request-reply", "type": "Pattern", "context": "correlated reply channel returns response" }
+  ],
+  "expected_relationships": [
+    { "subject": "point_to_point_channel", "predicate": "subclass_of", "object": "message_channel" },
+    { "subject": "publish_subscribe_channel", "predicate": "subclass_of", "object": "message_channel" },
+    { "subject": "content_based_router", "predicate": "subclass_of", "object": "message_router" },
+    { "subject": "splitter", "predicate": "subclass_of", "object": "message_router" },
+    { "subject": "aggregator", "predicate": "subclass_of", "object": "message_router" },
+    { "subject": "message_router", "predicate": "routes_via", "object": "message_channel" },
+    { "subject": "message_translator", "predicate": "translates_between", "object": "message_channel" }
+  ],
+  "expected_classes": [
+    { "identifier": "message_channel", "title": "Message Channel", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns" },
+    { "identifier": "point_to_point_channel", "title": "Point-to-Point Channel", "parent_class_identifier": "message_channel", "concept_scheme_identifier": "integration_patterns" },
+    { "identifier": "publish_subscribe_channel", "title": "Publish-Subscribe Channel", "parent_class_identifier": "message_channel", "concept_scheme_identifier": "integration_patterns" },
+    { "identifier": "message_router", "title": "Message Router", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns" },
+    { "identifier": "message_translator", "title": "Message Translator", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns" },
+    { "identifier": "request_reply", "title": "Request-Reply", "parent_class_identifier": "integration_pattern", "concept_scheme_identifier": "integration_patterns" }
+  ],
+  "expected_individuals": [
+    { "title": "Content-Based Router", "class_identifiers": ["message_router"], "data_properties": [{ "property_identifier": "description", "value": "Switches based on message payload content.", "datatype": "xsd:string" }] },
+    { "title": "Splitter", "class_identifiers": ["message_router"], "data_properties": [{ "property_identifier": "description", "value": "Decomposes a composite message into smaller messages.", "datatype": "xsd:string" }] },
+    { "title": "Aggregator", "class_identifiers": ["message_router"], "data_properties": [{ "property_identifier": "description", "value": "Combines correlated messages into a single composite.", "datatype": "xsd:string" }] }
+  ],
+  "expected_property_defs": [
+    { "identifier": "routes_via", "lexical_senses": [{ "label": "routes via", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "message_channel", "source": "wikidata", "identifier": "Q116386929", "uri": "https://www.wikidata.org/wiki/Q116386929" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "integration_patterns", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["pattern"]
+}

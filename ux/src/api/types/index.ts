@@ -3206,6 +3206,67 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/demo-datasets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Demo Datasets
+     * @description List demo datasets available to load.
+     *
+     *     Returns:
+     *         List of DemoDatasetDescriptorResponse, one per available dataset.
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors.
+     */
+    get: operations["list_demo_datasets_api_v1_admin_demo_datasets_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/demo-datasets/{name}/load": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Load Demo Dataset
+     * @description Load a demo dataset into the ontology repository.
+     *
+     *     Materializes the dataset's gold-standard ontology slice (taxonomies, concept
+     *     schemes, classes with parent_class_id chains, property definitions, and
+     *     external references) directly into the database. No LLM, no network.
+     *
+     *     Args:
+     *         name: Stable identifier of the dataset (e.g. 'software-architecture').
+     *
+     *     Returns:
+     *         DemoDatasetLoadResponse with counts of each persisted entity type.
+     *
+     *     Raises:
+     *         HTTPException 404: if `name` is not registered.
+     *         HTTPException 409: if the dataset's root taxonomy already exists.
+     *         HTTPException 500: for internal errors.
+     */
+    post: operations["load_demo_dataset_api_v1_admin_demo_datasets__name__load_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/export": {
     parameters: {
       query?: never;
@@ -4315,6 +4376,93 @@ export interface components {
       out_degree: {
         [key: string]: number;
       };
+    };
+    /**
+     * DemoDatasetDescriptorResponse
+     * @description Metadata describing a demo dataset users can load into a fresh workspace.
+     */
+    DemoDatasetDescriptorResponse: {
+      /**
+       * Name
+       * @description Stable machine-readable name, e.g. 'software-architecture'
+       */
+      name: string;
+      /**
+       * Title
+       * @description Human-readable title
+       */
+      title: string;
+      /**
+       * Description
+       * @description One-paragraph description
+       */
+      description: string;
+      /**
+       * Paper Count
+       * @description Number of source paper fixtures backing the canon
+       */
+      paper_count: number;
+      /**
+       * Taxonomy Count
+       * @description Number of taxonomies the dataset will create
+       */
+      taxonomy_count: number;
+      /**
+       * Class Count
+       * @description Number of classes the dataset will materialize
+       */
+      class_count: number;
+    };
+    /**
+     * DemoDatasetLoadResponse
+     * @description Counts of entities persisted by a demo dataset load.
+     */
+    DemoDatasetLoadResponse: {
+      /**
+       * Dataset Name
+       * @description Stable name of the dataset that was loaded
+       */
+      dataset_name: string;
+      /**
+       * Source Run Id
+       * @description Synthetic provenance id stamped on every created entity
+       */
+      source_run_id: string;
+      /**
+       * Taxonomies
+       * @description Number of taxonomies created
+       */
+      taxonomies: number;
+      /**
+       * Concept Schemes
+       * @description Number of concept schemes created
+       */
+      concept_schemes: number;
+      /**
+       * Classes
+       * @description Number of classes created
+       */
+      classes: number;
+      /**
+       * Property Definitions
+       * @description Number of property definitions created
+       */
+      property_definitions: number;
+      /**
+       * Individuals
+       * @description Number of individuals created
+       */
+      individuals: number;
+      /**
+       * Relationships
+       * @description Number of relationships created
+       */
+      relationships: number;
+      /**
+       * External References
+       * @description Number of external references attached
+       */
+      external_references: number;
     };
     /**
      * EnrichFromReferencesRequest
@@ -10682,6 +10830,57 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["StatsTrendsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_demo_datasets_api_v1_admin_demo_datasets_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DemoDatasetDescriptorResponse"][];
+        };
+      };
+    };
+  };
+  load_demo_dataset_api_v1_admin_demo_datasets__name__load_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DemoDatasetLoadResponse"];
         };
       };
       /** @description Validation Error */

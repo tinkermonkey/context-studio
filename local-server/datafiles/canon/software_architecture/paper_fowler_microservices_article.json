@@ -1,0 +1,60 @@
+{
+  "name": "fowler_microservices_article",
+  "description": "Excerpt summarizing Lewis and Fowler's 'Microservices' article. Pairs with paper_fielding_rest_dissertation_ch5 to exercise multi-sense 'service' disambiguation: microservice (independently deployable unit) vs Fielding's resource/service vs SOA-style RPC endpoint.",
+  "source": {
+    "title": "Microservices",
+    "authors": ["James Lewis", "Martin Fowler"],
+    "year": 2014,
+    "venue": "martinfowler.com",
+    "url": "https://martinfowler.com/articles/microservices.html"
+  },
+  "citation": "Lewis, J., & Fowler, M. (2014). Microservices. martinfowler.com. Retrieved from https://martinfowler.com/articles/microservices.html",
+  "source_text": "The microservice architectural style is an approach to developing a single application as a suite of small services, each running in its own process and communicating with lightweight mechanisms, often an HTTP resource API. These services are built around business capabilities and are independently deployable by fully automated deployment machinery. There is a bare minimum of centralized management of these services, which may be written in different programming languages and use different data-storage technologies.\n\nMicroservices are organized around business capabilities rather than horizontal technical concerns. A microservice owns a coherent slice of business behavior and the data that supports it. Teams that build microservices are typically cross-functional, including the full range of skills required for the lifecycle of the service: user-experience, database, project management. This is in contrast to architectures organized around horizontal layers, where front-end, back-end, and database concerns are owned by separate teams.\n\nA core design principle is smart endpoints and dumb pipes. Microservices aim to be as decoupled and as cohesive as possible: they own their own domain logic and act as filters in a classical Unix sense, receiving a request, applying logic as appropriate, and producing a response. The infrastructure between services should be deliberately minimal, providing reliable transport but not business logic. This contrasts with the heavyweight enterprise service buses common in earlier service-oriented architectures.\n\nIndependent deployability is foundational. Each microservice can be developed, tested, deployed, and scaled independently. This requires investment in automation: continuous delivery pipelines, monitoring, and rapid rollback. It also requires designing for failure: any inter-service call may fail, so services must degrade gracefully and rate-limit, retry, and circuit-break appropriately. Decentralized data management is the corollary: each microservice manages its own database and exposes its data only through its public interface, rather than sharing a single database with other services.\n\nThe term 'service' is used here in a specific sense: an independently deployable unit of business capability with its own process boundary, its own data, and its own deployment lifecycle. This is narrower than the term's meaning in service-oriented architecture and broader than its meaning in the Fielding REST formulation, where a service is any offering accessible by URI.",
+  "expected_entities": [
+    { "id": "microservices_architecture", "label": "microservice architectural style", "type": "ArchitecturalStyle", "context": "suite of small services in own process, lightweight communication" },
+    { "id": "microservice", "label": "microservice", "type": "Concept", "context": "independently deployable unit of business capability" },
+    { "id": "business_capability", "label": "business capability", "type": "Concept", "context": "organizing principle for microservices" },
+    { "id": "smart_endpoints_dumb_pipes", "label": "smart endpoints and dumb pipes", "type": "DesignPrinciple", "context": "endpoints own logic, infrastructure is minimal" },
+    { "id": "independent_deployability", "label": "independent deployability", "type": "Concept", "context": "each service deployed independently" },
+    { "id": "decentralized_data_management", "label": "decentralized data management", "type": "Concept", "context": "each microservice owns its own database" },
+    { "id": "design_for_failure", "label": "design for failure", "type": "DesignPrinciple", "context": "services degrade gracefully, retry, circuit-break" },
+    { "id": "circuit_breaker", "label": "circuit breaker", "type": "Pattern", "context": "fault-tolerance pattern for inter-service calls" },
+    { "id": "continuous_delivery", "label": "continuous delivery", "type": "Practice", "context": "automated pipeline supporting independent deployment" },
+    { "id": "service_oriented_architecture", "label": "service-oriented architecture", "type": "ArchitecturalStyle", "context": "predecessor with heavyweight ESBs" },
+    { "id": "enterprise_service_bus", "label": "enterprise service bus", "type": "Architecture", "context": "heavyweight integration layer in classical SOA" }
+  ],
+  "expected_relationships": [
+    { "subject": "microservices_architecture", "predicate": "composed_of", "object": "microservice" },
+    { "subject": "microservices_architecture", "predicate": "satisfies_principle", "object": "smart_endpoints_dumb_pipes" },
+    { "subject": "microservices_architecture", "predicate": "satisfies_principle", "object": "design_for_failure" },
+    { "subject": "microservice", "predicate": "organized_around", "object": "business_capability" },
+    { "subject": "microservice", "predicate": "exhibits", "object": "independent_deployability" },
+    { "subject": "microservices_architecture", "predicate": "satisfies_principle", "object": "decentralized_data_management" },
+    { "subject": "design_for_failure", "predicate": "implemented_by", "object": "circuit_breaker" },
+    { "subject": "independent_deployability", "predicate": "requires", "object": "continuous_delivery" },
+    { "subject": "microservices_architecture", "predicate": "distinct_from", "object": "service_oriented_architecture" }
+  ],
+  "expected_classes": [
+    { "identifier": "microservices_architecture", "title": "Microservices Architecture", "parent_class_identifier": "architectural_style", "concept_scheme_identifier": "architectural_styles" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    {
+      "identifier": "service",
+      "lexical_senses": [
+        { "label": "service (offering)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "service (microservice)", "language_code": "en", "sense_type": "word_sense" },
+        { "label": "service (RPC endpoint)", "language_code": "en", "sense_type": "word_sense" }
+      ]
+    },
+    { "identifier": "composed_of", "lexical_senses": [{ "label": "composed of", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "microservices_architecture", "source": "dbpedia", "identifier": "Microservices", "uri": "http://dbpedia.org/resource/Microservices" },
+    { "class_identifier": "microservices_architecture", "source": "wikidata", "identifier": "Q19604128", "uri": "https://www.wikidata.org/wiki/Q19604128" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "architectural_styles", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["service"]
+}

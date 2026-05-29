@@ -1,0 +1,60 @@
+{
+  "name": "brewer_cap_theorem",
+  "description": "Excerpt summarizing Brewer's CAP conjecture and its Gilbert-Lynch formalization. Exercises the system_tradeoffs concept scheme and the trades_off property; introduces the narrow CAP-C sense of 'consistency' that must be disambiguated from the broader family of consistency models in paper_shapiro_crdt_survey.",
+  "source": {
+    "title": "CAP twelve years later: How the 'rules' have changed",
+    "authors": ["Eric Brewer"],
+    "year": 2012,
+    "venue": "Computer, 45(2), 23-29",
+    "url": "https://ieeexplore.ieee.org/document/6133253",
+    "supporting_works": [
+      {
+        "title": "Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services",
+        "authors": ["Seth Gilbert", "Nancy Lynch"],
+        "year": 2002,
+        "venue": "ACM SIGACT News, 33(2), 51-59"
+      }
+    ]
+  },
+  "citation": "Brewer, E. (2012). CAP twelve years later: How the 'rules' have changed. Computer, 45(2), 23-29. Formal proof: Gilbert, S., & Lynch, N. (2002). Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services. ACM SIGACT News, 33(2), 51-59.",
+  "source_text": "The CAP theorem asserts that a distributed data system can provide at most two of three desirable properties simultaneously: consistency, availability, and partition tolerance. The properties are defined narrowly in the CAP formulation. Consistency in this sense means linearizability over a single object: every read receives the most recent successful write, or an error. Availability means every request to a non-failed node receives a non-error response, with no guarantee that the response contains the most recent write. Partition tolerance means the system continues to operate despite an arbitrary number of messages being dropped or arbitrarily delayed by the network.\n\nThe original framing, presented as a conjecture at PODC 2000 and formally proved by Gilbert and Lynch in 2002, is sometimes summarized as 'choose two of three.' This summary is misleading in practice because network partitions are not a property the system designer can opt out of: in any real distributed system, partitions are a fact of the underlying network. Once partition tolerance is treated as non-negotiable, the operational choice reduces to a trade-off between consistency and availability during a partition. Systems are often classified as CP (preferring consistency at the cost of availability) or AP (preferring availability at the cost of consistency) accordingly.\n\nIt is important to distinguish CAP-style consistency from the broader family of consistency models in distributed systems. CAP's C is linearizability, a strong single-object guarantee. Weaker models, such as eventual consistency, causal consistency, and read-your-writes consistency, lie on a spectrum and are widely used by systems that classify as AP under CAP. A system can be 'consistent' in the eventual sense while being inconsistent under CAP's definition. This ambiguity in the term 'consistency' has been a recurring source of confusion in the literature.\n\nModern treatments of CAP acknowledge that the trade-off applies only during a partition. When the network is healthy, a system can provide both strong consistency and full availability. The design question is therefore not which two properties to choose statically, but how the system should behave during a partition: how it detects the partition, what guarantees it preserves, and how it recovers when the partition heals.",
+  "expected_entities": [
+    { "id": "cap_theorem", "label": "CAP theorem", "type": "Concept", "context": "at most two of three properties simultaneously" },
+    { "id": "consistency_cap", "label": "consistency (CAP)", "type": "SystemProperty", "context": "linearizability over a single object" },
+    { "id": "availability_cap", "label": "availability (CAP)", "type": "SystemProperty", "context": "every request receives a non-error response" },
+    { "id": "partition_tolerance", "label": "partition tolerance", "type": "SystemProperty", "context": "system continues despite dropped or delayed messages" },
+    { "id": "linearizability", "label": "linearizability", "type": "ConsistencyModel", "context": "strong single-object guarantee" },
+    { "id": "eventual_consistency", "label": "eventual consistency", "type": "ConsistencyModel", "context": "weaker model, on a spectrum" },
+    { "id": "cp_system", "label": "CP system", "type": "Architecture", "context": "prefers consistency at the cost of availability during a partition" },
+    { "id": "ap_system", "label": "AP system", "type": "Architecture", "context": "prefers availability at the cost of consistency during a partition" }
+  ],
+  "expected_relationships": [
+    { "subject": "consistency_cap", "predicate": "trades_off", "object": "availability_cap" },
+    { "subject": "consistency_cap", "predicate": "equivalent_to", "object": "linearizability" },
+    { "subject": "cp_system", "predicate": "satisfies", "object": "consistency_cap" },
+    { "subject": "ap_system", "predicate": "satisfies", "object": "availability_cap" },
+    { "subject": "cp_system", "predicate": "satisfies", "object": "partition_tolerance" },
+    { "subject": "ap_system", "predicate": "satisfies", "object": "partition_tolerance" }
+  ],
+  "expected_classes": [
+    { "identifier": "consistency_property", "title": "Consistency (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs" },
+    { "identifier": "availability_property", "title": "Availability (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs" },
+    { "identifier": "partition_tolerance_property", "title": "Partition Tolerance (CAP)", "parent_class_identifier": "system_property", "concept_scheme_identifier": "system_tradeoffs" },
+    { "identifier": "linearizable_consistency", "title": "Linearizability", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models" },
+    { "identifier": "eventual_consistency", "title": "Eventual Consistency", "parent_class_identifier": "consistency_model", "concept_scheme_identifier": "consistency_models" }
+  ],
+  "expected_individuals": [],
+  "expected_property_defs": [
+    { "identifier": "trades_off", "lexical_senses": [{ "label": "trades off", "language_code": "en", "sense_type": "word_sense" }] }
+  ],
+  "expected_external_refs": [
+    { "class_identifier": "consistency_property", "source": "wikidata", "identifier": "Q1124635", "uri": "https://www.wikidata.org/wiki/Q1124635" },
+    { "class_identifier": "linearizable_consistency", "source": "dbpedia", "identifier": "Linearizability", "uri": "http://dbpedia.org/resource/Linearizability" },
+    { "class_identifier": "eventual_consistency", "source": "dbpedia", "identifier": "Eventual_consistency", "uri": "http://dbpedia.org/resource/Eventual_consistency" }
+  ],
+  "expected_concept_schemes": [
+    { "identifier": "system_tradeoffs", "taxonomy_identifier": "software_architecture" },
+    { "identifier": "consistency_models", "taxonomy_identifier": "software_architecture" }
+  ],
+  "multi_sense_terms_present": ["consistency"]
+}
