@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-from .entities import PipelineRun, PipelineRunStatus, PipelineType
+from .entities import Batch, BatchStatus, PipelineRun, PipelineRunStatus, PipelineType
 
 # ============================================================================
 # LLM provider value types and port
@@ -235,5 +235,81 @@ class PipelineRunRepository(Protocol):
 
         Returns:
             List of change_event dicts
+        """
+        ...
+
+    def list_by_batch_id(self, batch_id: str) -> PipelineRunList:
+        """
+        List all pipeline runs in a specific batch.
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            List of domain entities
+        """
+        ...
+
+
+class BatchRepository(Protocol):
+    """
+    Port for persisting and retrieving batch entities.
+
+    Handles batch lifecycle management, including creation, status updates,
+    and retrieval of batch-level information.
+    """
+
+    def create(self) -> Batch:
+        """
+        Create a new batch and persist it.
+
+        Returns:
+            Domain entity with status=PENDING
+        """
+        ...
+
+    def get(self, batch_id: str) -> Batch | None:
+        """
+        Retrieve a batch by ID.
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            Domain entity if found, None otherwise
+        """
+        ...
+
+    def list(self) -> list[Batch]:
+        """
+        List all batches.
+
+        Returns:
+            List of all domain entities
+        """
+        ...
+
+    def list_by_status(self, status: BatchStatus) -> list[Batch]:
+        """
+        List all batches with a specific status.
+
+        Args:
+            status: BatchStatus to filter by
+
+        Returns:
+            List of domain entities
+        """
+        ...
+
+    def update_status(self, batch_id: str, status: BatchStatus) -> bool:
+        """
+        Update a batch's status.
+
+        Args:
+            batch_id: Batch ID
+            status: New status
+
+        Returns:
+            True if updated, False if not found
         """
         ...

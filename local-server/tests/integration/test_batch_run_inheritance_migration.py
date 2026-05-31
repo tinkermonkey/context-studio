@@ -787,8 +787,11 @@ class TestMigrationDataSurvival:
             assert pre_migration_count == 2
             session2.close()
 
-            # Run the migration
+            # Run the migration to the joined-table inheritance version
             upgrade(alembic_cfg, "7609a5828f1b")
+
+            # Then run the latest migration to add batch_id column
+            upgrade(alembic_cfg, "f79a82b425a2")
 
             # Verify data survived in the new schema
             engine3 = create_engine(f"sqlite:///{db_path}")

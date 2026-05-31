@@ -3405,6 +3405,265 @@
         }
       }
     },
+    "/api/pipelines/runs/{run_id}/revert": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Revert Pipeline Run",
+        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run_id in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 500 for revert errors",
+        "operationId": "revert_pipeline_run_api_pipelines_runs__run_id__revert_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevertRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Create Batch",
+        "description": "Create a new batch.\n\nArgs:\n    request: FastAPI request (for service access)\n\nReturns:\n    Batch info with id and status\n\nRaises:\n    HTTPException: 500 for creation errors",
+        "operationId": "create_batch_api_pipelines_batches_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Batch Api Pipelines Batches Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Batch",
+        "description": "Get batch info and aggregate status over child runs.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Batch info including aggregate status\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "get_batch_api_pipelines_batches__batch_id__get",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Batch Api Pipelines Batches  Batch Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/runs": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Enqueue Batch Runs",
+        "description": "Enqueue multiple runs in a batch.\n\nArgs:\n    batch_id: Batch ID\n    request_body: Contains 'runs' list with pipeline type and config\n    request: FastAPI request (for service access)\n\nReturns:\n    List of created run IDs\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors",
+        "operationId": "enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Request Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Enqueue Batch Runs Api Pipelines Batches  Batch Id  Runs Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/cancel": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Cancel Batch Runs",
+        "description": "Cancel all PENDING runs in a batch.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of cancelled runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Cancel Batch Runs Api Pipelines Batches  Batch Id  Cancel Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/resume": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Resume Batch Runs",
+        "description": "Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "resume_batch_runs_api_pipelines_batches__batch_id__resume_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Resume Batch Runs Api Pipelines Batches  Batch Id  Resume Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reference/status": {
       "get": {
         "tags": [
@@ -5623,6 +5882,12 @@
             "description": "Class entities created",
             "default": 0
           },
+          "classes_updated": {
+            "type": "integer",
+            "title": "Classes Updated",
+            "description": "Class entities updated",
+            "default": 0
+          },
           "classes_skipped": {
             "type": "integer",
             "title": "Classes Skipped",
@@ -5647,6 +5912,18 @@
             "description": "Relationship entities created",
             "default": 0
           },
+          "relationships_removed": {
+            "type": "integer",
+            "title": "Relationships Removed",
+            "description": "Relationship entities removed",
+            "default": 0
+          },
+          "relationships_modified": {
+            "type": "integer",
+            "title": "Relationships Modified",
+            "description": "Relationship entities modified",
+            "default": 0
+          },
           "relationships_skipped": {
             "type": "integer",
             "title": "Relationships Skipped",
@@ -5664,6 +5941,58 @@
             "title": "Individuals Skipped",
             "description": "Individual candidates skipped (already exist)",
             "default": 0
+          },
+          "external_references_created": {
+            "type": "integer",
+            "title": "External References Created",
+            "description": "External references added to classes",
+            "default": 0
+          },
+          "external_references_skipped": {
+            "type": "integer",
+            "title": "External References Skipped",
+            "description": "External references skipped (already exist)",
+            "default": 0
+          },
+          "created_class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Class Ids",
+            "description": "IDs of created classes"
+          },
+          "created_individual_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Individual Ids",
+            "description": "IDs of created individuals"
+          },
+          "created_relationship_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Relationship Ids",
+            "description": "IDs of created relationships"
+          },
+          "created_property_definition_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Property Definition Ids",
+            "description": "IDs of created property definitions"
+          },
+          "created_external_reference_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created External Reference Ids",
+            "description": "URIs of created external references"
           }
         },
         "type": "object",
@@ -8940,6 +9269,16 @@
             "title": "Configuration Ref",
             "description": "Configuration reference"
           },
+          "configuration_slug": {
+            "type": "string",
+            "title": "Configuration Slug",
+            "description": "Configuration slug"
+          },
+          "configuration_version": {
+            "type": "integer",
+            "title": "Configuration Version",
+            "description": "Configuration version"
+          },
           "input_summary": {
             "additionalProperties": true,
             "type": "object",
@@ -8988,6 +9327,31 @@
             ],
             "title": "Updated At",
             "description": "Last update timestamp (reserved for future use)"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "Timestamp when run transitioned to RUNNING"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason",
+            "description": "Failure reason if status=FAILED"
           }
         },
         "type": "object",
@@ -8997,6 +9361,8 @@
           "pipeline_type",
           "implementation_id",
           "configuration_ref",
+          "configuration_slug",
+          "configuration_version",
           "status"
         ],
         "title": "PipelineRunResponse",
@@ -9769,6 +10135,27 @@
         ],
         "title": "ResolveConflictsRequest",
         "description": "Request to resolve conflicts in a proposal"
+      },
+      "RevertRunResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "ID of the reverted pipeline run"
+          },
+          "events_reverted": {
+            "type": "integer",
+            "title": "Events Reverted",
+            "description": "Number of change events reverted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "events_reverted"
+        ],
+        "title": "RevertRunResponse",
+        "description": "Response from reverting a pipeline run."
       },
       "SPARQLRequest": {
         "properties": {

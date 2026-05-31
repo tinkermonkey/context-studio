@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
@@ -65,6 +66,12 @@ def pipeline_run_repo(local_session_factory):
 
 
 @pytest.fixture
+def batch_repo(local_session_factory):
+    """Create a real BatchRepository with actual persistence."""
+    return BatchRepository(session_factory=local_session_factory)
+
+
+@pytest.fixture
 def registries():
     """Create initialized registries."""
     impl_registry = PipelineImplementationRegistry()
@@ -77,7 +84,7 @@ def registries():
 
 
 @pytest.fixture
-def client(pipeline_run_repo, registries):
+def client(pipeline_run_repo, batch_repo, registries):
     """Create a TestClient with pipeline routes and registries."""
     app = FastAPI()
     app.include_router(router)
@@ -91,6 +98,7 @@ def client(pipeline_run_repo, registries):
 
     # Store in app.state for route handlers
     app.state.pipeline_run_repo = pipeline_run_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = registries["implementation_registry"]
     app.state.config_registry = registries["config_registry"]
     app.state.llm_router = mock_llm_router

@@ -18,6 +18,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
@@ -81,6 +82,12 @@ def pipeline_run_repo(local_session_factory):
 
 
 @pytest.fixture
+def batch_repo(local_session_factory):
+    """Create a real BatchRepository with actual persistence."""
+    return BatchRepository(session_factory=local_session_factory)
+
+
+@pytest.fixture
 def event_publisher():
     """Create an in-process event publisher for testing."""
     return InProcessEventPublisher()
@@ -126,13 +133,14 @@ def llm_provider():
 
 
 @pytest.fixture
-def client(pipeline_run_repo, impl_registry, config_registry, llm_provider):
+def client(pipeline_run_repo, batch_repo, impl_registry, config_registry, llm_provider):
     """Create a TestClient with pipeline routes and registries."""
     app = FastAPI()
     app.include_router(router)
 
     # Store in app.state for route handlers
     app.state.pipeline_run_repo = pipeline_run_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = impl_registry
     app.state.config_registry = config_registry
     app.state.llm_router = llm_provider

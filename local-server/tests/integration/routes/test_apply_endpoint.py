@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
@@ -57,6 +58,11 @@ def pipeline_repo(temp_db):
 
 
 @pytest.fixture()
+def batch_repo(temp_db):
+    return BatchRepository(session_factory=temp_db)
+
+
+@pytest.fixture()
 def ontology_repo():
     r = FakeOntologyRepository()
     r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Apply Test Taxonomy"))
@@ -72,11 +78,12 @@ def ontology_repo():
 
 
 @pytest.fixture()
-def client(pipeline_repo, ontology_repo):
+def client(pipeline_repo, batch_repo, ontology_repo):
     app = FastAPI()
     app.include_router(router)
 
     app.state.pipeline_run_repo = pipeline_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = MagicMock()
     app.state.config_registry = MagicMock()
     app.state.llm_router = MagicMock()
@@ -93,15 +100,16 @@ def client(pipeline_repo, ontology_repo):
 
 def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=None):
     """Create a completed schema extraction run with the given output."""
-    run_id = str(uuid4())
-    pipeline_repo.create(
-        batch_run_id=run_id,
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
         configuration_slug="extraction-default",
         configuration_version=1,
     )
+    run_id = run.id
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(
         run_id,
@@ -115,9 +123,9 @@ def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=
 
 def _create_and_complete_individual_run(pipeline_repo, triples=None):
     """Create a completed individual extraction run."""
-    run_id = str(uuid4())
-    pipeline_repo.create(
-        batch_run_id=run_id,
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -125,6 +133,7 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
         configuration_version=1,
         specific_data={"source_text_hash": "abc123"},
     )
+    run_id = run.id
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(run_id, output_summary={"triples": triples or []})
     return run_id
@@ -245,15 +254,16 @@ class TestApplyEndpointErrors:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_non_completed_run_returns_422(self, client, pipeline_repo):
-        run_id = str(uuid4())
-        pipeline_repo.create(
-            batch_run_id=run_id,
+        batch_id = str(uuid4())
+        run = pipeline_repo.create(
+            batch_run_id=batch_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default",
             configuration_slug="extraction-default",
             configuration_version=1,
         )
+        run_id = run.id
         # Do NOT complete the run — leave it in PENDING state
 
         response = client.post(
@@ -279,15 +289,16 @@ class TestApplyEndpointErrors:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_grounding_missing_node_id_returns_400(self, client, pipeline_repo):
-        run_id = str(uuid4())
-        pipeline_repo.create(
-            batch_run_id=run_id,
+        batch_id = str(uuid4())
+        run = pipeline_repo.create(
+            batch_run_id=batch_id,
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="default",
             configuration_ref="grounding-default",
             configuration_slug="grounding-default",
             configuration_version=1,
         )
+        run_id = run.id
         pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
         pipeline_repo.update_summaries(run_id, output_summary={"groundings": []})
 

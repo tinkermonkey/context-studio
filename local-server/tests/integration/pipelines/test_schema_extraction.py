@@ -104,7 +104,7 @@ class _SchemaExtractionMockLLM:
 
 
 @pytest.fixture
-def schema_client(pipeline_run_repo):
+def schema_client(pipeline_run_repo, batch_repo):
     """FastAPI test client wired with a schema-aware mock LLM."""
     impl_registry = PipelineImplementationRegistry()
     impl_registry.register_impl(PipelineType.NO_OP, "default", NoOpPipelineOrchestrator)
@@ -116,6 +116,7 @@ def schema_client(pipeline_run_repo):
     app = FastAPI()
     app.include_router(router)
     app.state.pipeline_run_repo = pipeline_run_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = impl_registry
     app.state.config_registry = config_registry
     app.state.llm_router = _SchemaExtractionMockLLM()

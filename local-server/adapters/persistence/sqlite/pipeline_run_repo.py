@@ -122,8 +122,11 @@ class PipelineRepository:
         SQLAlchemy creates the parent batch_runs row automatically when the subclass
         ORM object is added to the session — no separate batch_run insert is required.
 
+        The batch_run_id parameter now represents the batch's ID (not the run's ID).
+        The run gets its own UUID, and batch_id in the ORM points to the batch.
+
         Args:
-            batch_run_id: ID of the existing batch_run (becomes PipelineRun.id)
+            batch_run_id: ID of the batch this run belongs to
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
@@ -138,14 +141,17 @@ class PipelineRepository:
             ValueError: If pipeline_type is invalid
             PipelineStorageError: If database operation fails
         """
+        from uuid import uuid4
+
         orm_class = _PIPELINE_TYPE_TO_ORM.get(pipeline_type)
         if not orm_class:
             raise ValueError(f"Unknown pipeline type: {pipeline_type.value}")
 
+        run_id = str(uuid4())
         kwargs: dict[str, Any] = {
-            # In joined-table inheritance the subclass PK is also the FK to the parent
-            # table, so the subclass id and the batch_run_id are the same value by design.
-            "id": batch_run_id,
+            # Each run has its own UUID
+            "id": run_id,
+            "batch_id": batch_run_id,
             "pipeline_type": pipeline_type.value,
             "implementation_id": implementation_id,
             "configuration_ref": configuration_ref,
@@ -167,20 +173,20 @@ class PipelineRepository:
             session.flush()
             session.commit()
             result = self._orm_to_domain(orm_obj)
-            logger.info(f"Created pipeline run: {batch_run_id} ({pipeline_type.value})")
+            logger.info(f"Created pipeline run: {run_id} in batch {batch_run_id} ({pipeline_type.value})")
             return result
         except IntegrityError as e:
             session.rollback()
-            logger.error(f"Database integrity error when creating pipeline run {batch_run_id}: {e}")
+            logger.error(f"Database integrity error when creating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to create pipeline run") from e
         except OperationalError as e:
             session.rollback()
-            msg = f"Database operational error when creating pipeline run {batch_run_id}: {e}"
+            msg = f"Database operational error when creating pipeline run {run_id}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to create pipeline run") from e
         except SQLAlchemyError as e:
             session.rollback()
-            logger.error(f"Database error when creating pipeline run {batch_run_id}: {e}")
+            logger.error(f"Database error when creating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to create pipeline run") from e
         finally:
             if self._should_close_session():
@@ -303,6 +309,33 @@ class PipelineRepository:
             msg = "Database error when listing pipeline runs " f"by type {pipeline_type.value}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def list_by_batch_id(self, batch_id: str) -> "PipelineRunList":
+        """
+        List all pipeline runs in a specific batch.
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            List of domain entities
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_objs = session.query(PipelineRun).filter(PipelineRun.batch_id == batch_id).all()
+            return [self._orm_to_domain(obj) for obj in orm_objs]
+        except OperationalError as e:
+            logger.error(f"Database operational error when listing pipeline runs by batch {batch_id}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by batch") from e
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing pipeline runs by batch {batch_id}: {e}")
+            raise PipelineStorageError("Failed to list pipeline runs by batch") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -641,7 +674,7 @@ class PipelineRepository:
         Get all change_events correlated with a pipeline run via batch_run_id.
 
         Args:
-            run_id: Pipeline run ID (which is also the batch_run_id)
+            run_id: Pipeline run ID
 
         Returns:
             List of change_event dicts with entity_type, entity_id, operation, etc.
@@ -651,7 +684,13 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run_id).all()
+            # Get the run to retrieve its batch_run_id
+            run = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not run or not run.batch_id:
+                return []
+
+            # Query change_events by the batch_run_id
+            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run.batch_id).all()
 
             return [
                 {
@@ -691,7 +730,7 @@ class PipelineRepository:
         # Common attributes for all pipeline runs
         common: dict[str, Any] = {
             "id": orm_obj.id,
-            "batch_run_id": orm_obj.id,  # In joined-table inheritance, they're the same
+            "batch_run_id": orm_obj.batch_id,  # FK to the batch this run belongs to
             "implementation_id": orm_obj.implementation_id,
             "configuration_ref": orm_obj.configuration_ref,
             "configuration_slug": orm_obj.configuration_slug,

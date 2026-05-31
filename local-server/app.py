@@ -43,6 +43,7 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 )
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -206,7 +207,8 @@ async def lifespan(app: FastAPI):
 
         db_manager.get_operations_session_factory()
         pipeline_run_repo = PipelineRepository(local_session_factory)
-        logger.info("PipelineRunRepository created")
+        batch_repo = BatchRepository(local_session_factory)
+        logger.info("PipelineRunRepository and BatchRepository created")
 
         # Initialize pipeline registries (currently empty—implementations/configs added at startup)
         implementation_registry = PipelineImplementationRegistry()
@@ -591,6 +593,7 @@ async def lifespan(app: FastAPI):
 
         # Store pipeline run repo and registries for generic pipeline endpoints
         app.state.pipeline_run_repo = pipeline_run_repo
+        app.state.batch_repo = batch_repo
         app.state.implementation_registry = implementation_registry
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry

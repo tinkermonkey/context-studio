@@ -744,6 +744,49 @@ class ConflictResolution(Base):  # type: ignore[valid-type,misc]
         )
 
 
+class Batch(Base):  # type: ignore[valid-type,misc]
+    """
+    Aggregate root for a batch of pipeline runs.
+
+    A batch is a container for one or more pipeline runs, providing lifecycle
+    management and aggregated status. Each batch has its own UUID identity,
+    independent of any single run.
+
+    Attributes:
+        id: UUID as string, primary key
+        status: Current status (pending, running, completed, failed, cancelled)
+        created_at: UTC timestamp of batch creation
+    """
+
+    __tablename__ = "batches"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    status = Column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+        doc="Current status (pending, running, completed, failed, cancelled)",
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of batch creation",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'running', 'completed', 'failed', 'cancelled')",
+            name="check_valid_batch_status",
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Batch(id={self.id}, status={self.status})>"
+
+
 class BatchRun(Base):  # type: ignore[valid-type,misc]
     """
     Abstract base class for all batch run types using joined-table inheritance.
@@ -757,6 +800,7 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
 
     Attributes:
         id: UUID as string, primary key
+        batch_id: FK to batches.id for batch aggregation (the containing batch)
         created_at: UTC timestamp of run initiation
         created_by: Optional ID of the user who initiated the run
         status: Current status (pending, committed, failed, etc. depending on type)
@@ -767,6 +811,13 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
     __tablename__ = "batch_runs"
 
     id = Column(String(36), primary_key=True, nullable=False)
+    batch_id = Column(
+        String(36),
+        ForeignKey("batches.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="FK to batches.id for batch aggregation",
+    )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,

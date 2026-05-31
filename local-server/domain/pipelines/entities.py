@@ -31,6 +31,16 @@ class PipelineRunStatus(str, Enum):
     FAILED = "failed"
 
 
+class BatchStatus(str, Enum):
+    """Status of a batch."""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class PipelineType(str, Enum):
     """Enumeration of pipeline types."""
 
@@ -43,6 +53,36 @@ class PipelineType(str, Enum):
 
 
 @dataclass(frozen=True)
+class Batch:
+    """
+    Domain entity for a batch of pipeline runs.
+
+    A batch is a container for one or more pipeline runs, providing lifecycle
+    management and aggregated status. Each batch has its own UUID identity,
+    independent of any single run. A batch transitions through states as its
+    child runs complete, fail, or are cancelled.
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        status: Current batch status (pending | running | completed | failed | cancelled)
+        created_at: UTC timestamp of batch creation
+    """
+
+    id: str = field(default_factory=lambda: str(uuid4()))
+    status: BatchStatus = BatchStatus.PENDING
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @classmethod
+    def create(cls, created_at: datetime | None = None) -> "Batch":
+        """Create a new batch with status=PENDING."""
+        return cls(
+            id=str(uuid4()),
+            status=BatchStatus.PENDING,
+            created_at=created_at or datetime.now(timezone.utc),
+        )
+
+
+@dataclass(frozen=True)
 class PipelineRun:
     """
     Base domain entity for all pipeline runs.
@@ -51,9 +91,12 @@ class PipelineRun:
     recording the pipeline type, implementation, configuration,
     and LLM metadata. This entity is immutable once constructed.
 
+    A pipeline run belongs to a batch (identified by batch_id), which provides
+    lifecycle management and status aggregation across multiple runs.
+
     Attributes:
         id: Unique identifier (UUID as string)
-        batch_run_id: FK to batch_runs.id for change_events correlation
+        batch_run_id: Legacy field, now represents the batch ID (FK to batch_runs.id)
         pipeline_type: Discriminator (individual_extraction | schema_extraction | ...)
         implementation_id: Reference to registered implementation
         configuration_ref: Legacy reference field (kept for backwards compatibility; use

@@ -313,6 +313,7 @@ async def run_pipeline(
         )
 
     repo = request.app.state.pipeline_run_repo
+    batch_repo = request.app.state.batch_repo
     impl_registry = request.app.state.implementation_registry
     config_registry = request.app.state.config_registry
     llm_provider = request.app.state.llm_router
@@ -340,8 +341,13 @@ async def run_pipeline(
             detail=f"Configuration not found: {request_body.configuration_ref}",
         )
 
-    # Create pipeline run ID (but don't persist yet)
-    run_id = str(uuid4())
+    # Create a batch for this single-run submission
+    try:
+        batch = batch_repo.create()
+        batch_id = batch.id
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
 
     # Extract input data from request body (now includes type-specific fields)
     input_data = request_body.model_dump()
@@ -369,19 +375,11 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message) from e
 
-    # Create initial state for execution
-    state = create_pipeline_state(
-        run_id=run_id,
-        pipeline_type=ptype,
-        input_data=input_data,
-        llm_provider=llm_provider,
-    )
-
     # Persist pipeline run to database only after validation succeeds
     specific_data = build_run_specific_data(ptype, input_data)
     try:
-        repo.create(
-            batch_run_id=run_id,
+        run = repo.create(
+            batch_run_id=batch_id,
             pipeline_type=ptype,
             implementation_id=request_body.implementation_id,
             configuration_ref=request_body.configuration_ref,
@@ -389,6 +387,7 @@ async def run_pipeline(
             configuration_version=config_version.version,
             specific_data=specific_data or None,
         )
+        run_id = run.id  # Use the actual run ID returned by repo.create()
         # Mark this configuration version as referenced by this run
         config_registry.mark_version_referenced(
             ptype, request_body.implementation_id, config_version.config_ref, config_version.version
@@ -396,6 +395,14 @@ async def run_pipeline(
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
+
+    # Create initial state for execution with the actual run ID
+    state = create_pipeline_state(
+        run_id=run_id,
+        pipeline_type=ptype,
+        input_data=input_data,
+        llm_provider=llm_provider,
+    )
 
     # Write RUNNING status and started_at before invoking orchestrator
     try:
@@ -856,3 +863,243 @@ async def revert_pipeline_run(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to revert pipeline run: {str(exc)}",
         ) from exc
+
+
+# ==================== Batch Management ====================
+
+
+@router.post(
+    "/batches",
+    status_code=http_status.HTTP_201_CREATED,
+)
+async def create_batch(request: Request) -> dict[str, Any]:
+    """
+    Create a new batch.
+
+    Args:
+        request: FastAPI request (for service access)
+
+    Returns:
+        Batch info with id and status
+
+    Raises:
+        HTTPException: 500 for creation errors
+    """
+    batch_repo = request.app.state.batch_repo
+    try:
+        batch = batch_repo.create()
+        return {"id": batch.id, "status": batch.status.value, "created_at": batch.created_at}
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.get("/batches/{batch_id}")
+async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Get batch info and aggregate status over child runs.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Batch info including aggregate status
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+
+    try:
+        batch = batch_repo.get(batch_id)
+        if not batch:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=f"Batch not found: {batch_id}",
+            )
+
+        # Get all runs in this batch
+        runs = pipeline_run_repo.list_by_batch_id(batch_id)
+
+        # Calculate aggregate status
+        run_counts = {
+            "pending": sum(1 for r in runs if r.status == PipelineRunStatus.PENDING),
+            "running": sum(1 for r in runs if r.status == PipelineRunStatus.RUNNING),
+            "completed": sum(1 for r in runs if r.status == PipelineRunStatus.COMPLETED),
+            "failed": sum(1 for r in runs if r.status == PipelineRunStatus.FAILED),
+        }
+
+        return {
+            "id": batch.id,
+            "status": batch.status.value,
+            "created_at": batch.created_at,
+            "run_count": len(runs),
+            "run_counts": run_counts,
+        }
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post("/batches/{batch_id}/runs", status_code=http_status.HTTP_201_CREATED)
+async def enqueue_batch_runs(
+    batch_id: str,
+    request: Request,
+    request_body: dict[str, Any] = Body(...),
+) -> dict[str, Any]:
+    """
+    Enqueue multiple runs in a batch.
+
+    Args:
+        batch_id: Batch ID
+        request_body: Contains 'runs' list with pipeline type and config
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of created run IDs
+
+    Raises:
+        HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+    config_registry = request.app.state.config_registry
+
+    # Verify batch exists
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    runs_data = request_body.get("runs", [])
+    if not runs_data:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail="'runs' must be a non-empty list",
+        )
+
+    created_run_ids = []
+    try:
+        for run_data in runs_data:
+            pipeline_type_str = run_data.get("pipeline_type")
+            impl_id = run_data.get("implementation_id")
+            config_ref = run_data.get("configuration_ref")
+
+            try:
+                ptype = PipelineType(pipeline_type_str)
+            except ValueError:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid pipeline type: {pipeline_type_str}",
+                )
+
+            config_version = config_registry.get_latest(ptype, impl_id, config_ref)
+            if not config_version:
+                raise HTTPException(
+                    status_code=http_status.HTTP_404_NOT_FOUND,
+                    detail=f"Configuration not found: {config_ref}",
+                )
+
+            run = pipeline_run_repo.create(
+                batch_run_id=batch_id,
+                pipeline_type=ptype,
+                implementation_id=impl_id,
+                configuration_ref=config_ref,
+                configuration_slug=config_version.config_ref,
+                configuration_version=config_version.version,
+                specific_data=run_data.get("specific_data"),
+            )
+            created_run_ids.append(run.id)
+
+        return {"batch_id": batch_id, "created_run_ids": created_run_ids}
+    except HTTPException:
+        raise
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post("/batches/{batch_id}/cancel", status_code=http_status.HTTP_200_OK)
+async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Cancel all PENDING runs in a batch.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Count of cancelled runs
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    try:
+        runs = pipeline_run_repo.list_by_batch_id(batch_id)
+        cancelled_count = 0
+
+        for run in runs:
+            if run.status == PipelineRunStatus.PENDING:
+                pipeline_run_repo.update_status(run.id, PipelineRunStatus.FAILED)
+                cancelled_count += 1
+
+        return {"batch_id": batch_id, "cancelled_count": cancelled_count}
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post("/batches/{batch_id}/resume", status_code=http_status.HTTP_200_OK)
+async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Count of resumed runs
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    try:
+        runs = pipeline_run_repo.list_by_batch_id(batch_id)
+        resumed_count = 0
+
+        for run in runs:
+            if run.status in (PipelineRunStatus.FAILED,):
+                pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
+                resumed_count += 1
+
+        return {"batch_id": batch_id, "resumed_count": resumed_count}
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e

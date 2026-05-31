@@ -53,8 +53,8 @@ class TestPipelineRepositoryCreate:
             },
         )
 
-        assert run.id == batch_id
-        assert run.batch_run_id == batch_id
+        assert run.id != batch_id  # Run has its own ID, distinct from batch
+        assert run.batch_run_id == batch_id  # Run belongs to the batch
         assert run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
         assert run.status == PipelineRunStatus.PENDING
         assert run.source_text_hash == "abc123def456"
