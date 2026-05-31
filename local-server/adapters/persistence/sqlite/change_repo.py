@@ -127,7 +127,7 @@ class SQLiteChangeRepository:
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
-        limit: int = 100,
+        limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """
         Retrieve change events with optional filters.

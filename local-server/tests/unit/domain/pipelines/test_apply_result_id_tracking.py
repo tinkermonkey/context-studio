@@ -9,28 +9,32 @@ Tests that:
 
 import os
 import sys
+from unittest.mock import MagicMock
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )))
 )
 
-from unittest.mock import MagicMock
 import pytest
 
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
-from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
-from domain.pipelines.schema_node_definition_refinement.apply_service import (
-    SchemaDefinitionRefinementApplyService,
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
 )
+from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
+from domain.pipelines.schema_node_definition_refinement.apply_service import (
+    SchemaDefinitionRefinementApplyService,
+)
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-
 
 # ============================================================================
 # Fixtures
@@ -314,9 +318,27 @@ def test_schema_connection_refinement_separates_operations(repo):
     run.output_summary = {
         "scope_id": SCHEME_ID,
         "deltas": [
-            {"operation": "add", "subject": "Dog", "predicate": "knows", "object": "Animal", "confidence": 0.9},
-            {"operation": "remove", "subject": "Dog", "predicate": "is_a", "object": "Animal", "confidence": 0.9},
-            {"operation": "modify", "subject": "Dog", "predicate": "likes", "object": "Animal", "confidence": 0.9},
+            {
+                "operation": "add",
+                "subject": "Dog",
+                "predicate": "knows",
+                "object": "Animal",
+                "confidence": 0.9,
+            },
+            {
+                "operation": "remove",
+                "subject": "Dog",
+                "predicate": "is_a",
+                "object": "Animal",
+                "confidence": 0.9,
+            },
+            {
+                "operation": "modify",
+                "subject": "Dog",
+                "predicate": "likes",
+                "object": "Animal",
+                "confidence": 0.9,
+            },
         ]
     }
 

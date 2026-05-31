@@ -12,21 +12,25 @@ import os
 import sys
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )))
 )
 
-from datetime import datetime, timezone
 import pytest
-from unittest.mock import MagicMock
 
-from domain.ontology.entities import Class, ConceptScheme, Individual, Relationship, PropertyDefinition, Taxonomy
-from domain.ontology.value_objects import Status
-from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import ChangeOperation
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
+)
 from domain.versioning.revert_service import RevertService
-from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
-
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ============================================================================
 # Fixtures

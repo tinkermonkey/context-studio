@@ -75,7 +75,7 @@ class FakeChangeRepository:
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
-        limit: int = 100,
+        limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """Retrieve change events with optional filters and return total count."""
         events = list(self._change_events.values())

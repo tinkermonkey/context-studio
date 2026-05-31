@@ -137,8 +137,9 @@ class SchemaConnectionRefinementApplyService:
                     result.relationships_skipped += 1
                     continue
                 _logger.debug(
-                    f"Relationship modification tracked but not applied: {src_id} --{prop_identifier}--> {tgt_id} "
-                    "(delta structure does not specify mutation details)"
+                    f"Relationship modification tracked but not applied: {src_id} "
+                    f"--{prop_identifier}--> {tgt_id} (delta structure does not "
+                    f"specify mutation details)"
                 )
                 result.relationships_modified += 1
 
