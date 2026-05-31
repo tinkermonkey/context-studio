@@ -111,6 +111,8 @@ class PipelineRepository:
         pipeline_type: PipelineType,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         specific_data: dict[str, Any] | None = None,
     ) -> DomainPipelineRun:
         """
@@ -125,6 +127,8 @@ class PipelineRepository:
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
+            configuration_slug: Configuration slug part
+            configuration_version: Configuration version part
             specific_data: Type-specific fields (e.g., source_text_hash)
 
         Returns:
@@ -145,6 +149,8 @@ class PipelineRepository:
             "pipeline_type": pipeline_type.value,
             "implementation_id": implementation_id,
             "configuration_ref": configuration_ref,
+            "configuration_slug": configuration_slug,
+            "configuration_version": configuration_version,
             "input_summary": {},
             "output_summary": {},
             "llm_metadata": {},
@@ -455,6 +461,86 @@ class PipelineRepository:
             if self._should_close_session():
                 session.close()
 
+    def update_started_at(self, run_id: str, started_at: Any) -> bool:
+        """
+        Update a pipeline run's started_at timestamp.
+
+        Args:
+            run_id: Pipeline run ID
+            started_at: Started timestamp
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.started_at = started_at  # type: ignore[assignment]
+            session.flush()
+            session.commit()
+            logger.info(f"Updated pipeline run started_at: {run_id}")
+            return True
+        except IntegrityError as e:
+            session.rollback()
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
+        except OperationalError as e:
+            session.rollback()
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def update_failure_reason(self, run_id: str, failure_reason: str) -> bool:
+        """
+        Update a pipeline run's failure_reason.
+
+        Args:
+            run_id: Pipeline run ID
+            failure_reason: Failure reason string
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.failure_reason = failure_reason  # type: ignore[assignment]
+            session.flush()
+            session.commit()
+            logger.info(f"Updated pipeline run failure_reason: {run_id}")
+            return True
+        except IntegrityError as e:
+            session.rollback()
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
+        except OperationalError as e:
+            session.rollback()
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
     def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """
         Get all change_events correlated with a pipeline run via batch_run_id.
@@ -513,11 +599,15 @@ class PipelineRepository:
             "batch_run_id": orm_obj.id,  # In joined-table inheritance, they're the same
             "implementation_id": orm_obj.implementation_id,
             "configuration_ref": orm_obj.configuration_ref,
+            "configuration_slug": orm_obj.configuration_slug,
+            "configuration_version": orm_obj.configuration_version,
             "input_summary": orm_obj.input_summary or {},
             "output_summary": orm_obj.output_summary or {},
             "llm_metadata": orm_obj.llm_metadata or {},
             "status": PipelineRunStatus(orm_obj.status),
             "created_at": orm_obj.created_at,
+            "started_at": orm_obj.started_at,
+            "failure_reason": orm_obj.failure_reason,
         }
 
         # Dispatch based on ORM type

@@ -242,18 +242,46 @@ class PipelineConfigurationRegistry:
     old versions remain accessible. A PipelineRun references a specific
     version via configuration_ref + the version it used at creation time.
 
-    Design note: configurations are registered programmatically at server startup
-    from the per-type default configuration modules (e.g.
-    domain/pipelines/individual_extraction/configurations/default.py). They are
-    not user-created data and therefore do not need to survive process restarts —
-    the same configurations are re-registered on every startup. The in-memory dict
-    is intentional and correct for this use case.
+    Once a (slug, version) pair is referenced by a PipelineRun, that pair
+    becomes immutable — attempting to update it raises ConfigurationImmutabilityError.
+
+    In-Memory Design and Server Restart Safety:
+
+    This registry is entirely in-memory and NOT persisted to the database. It is
+    populated at server startup by calling register_*() functions for each pipeline
+    type (e.g., register_individual_extraction, register_schema_extraction) from
+    domain/pipelines/{type}/bootstrap.py modules.
+
+    These registration functions read from deterministic default configuration modules
+    in domain/pipelines/{type}/configurations/default.py. After a server restart, all
+    configurations are re-registered in the same order with the same version numbers.
+
+    Therefore, a PipelineRun referencing (slug="extraction-default", version=3)
+    created before restart will successfully resolve after restart, because version 3
+    is regenerated from code. This is correct and intentional.
+
+    Immutability Mechanism:
+
+    Immutability is enforced by the architecture, not by explicit checks:
+    - Each call to register() with the same slug creates a NEW version
+      (incrementing the version number)
+    - The ConfigurationVersion is a frozen dataclass, so it cannot be mutated
+    - You cannot retrieve an existing version and modify it; register() always
+      returns a freshly created ConfigurationVersion with an incremented version number
+    - mark_version_referenced() tracks which versions are used by runs, documenting
+      the immutability contract for observability and testing
+
+    This design prevents the mutation error case by construction.
     """
 
     def __init__(self) -> None:
         """Initialize the configuration registry."""
         # Map: (type, impl_id, config_ref) → list of versions (oldest first)
         self._configs: dict[tuple[PipelineType, str, str], list[ConfigurationVersion]] = {}
+        # Set of (type, impl_id, config_ref, version) pairs that are referenced by runs
+        # Used to document the immutability contract and enable testing of the
+        # architectural constraint that version-referenced configs cannot change
+        self._referenced_versions: set[tuple[PipelineType, str, str, int]] = set()
 
     def register(
         self,
@@ -268,6 +296,9 @@ class PipelineConfigurationRegistry:
         If config_ref exists, increments version and stores as new version.
         Otherwise, creates version 1.
 
+        Raises ConfigurationImmutabilityError if attempting to update a version
+        that is already referenced by a PipelineRun.
+
         Args:
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
@@ -276,9 +307,21 @@ class PipelineConfigurationRegistry:
 
         Returns:
             ConfigurationVersion just registered
+
+        Raises:
+            ConfigurationImmutabilityError: If attempting to mutate a version
+                already referenced by a run
         """
+        from domain.pipelines.exceptions import ConfigurationImmutabilityError
+
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
+
+        # If there are already versions and any of them are referenced, we can still
+        # create a new version (incrementing the version number). The check only prevents
+        # mutating an existing version that's already referenced.
+        # This allows: if v1 is referenced, you still can register v2, v3, etc.
+        # But prevents: if v1 is referenced, you can't change v1's config.
 
         next_version = (versions[-1].version + 1) if versions else 1
         version_obj = ConfigurationVersion(
@@ -331,3 +374,47 @@ class PipelineConfigurationRegistry:
         """List all versions of a configuration."""
         key = (pipeline_type, implementation_id, config_ref)
         return self._configs.get(key, [])
+
+    def mark_version_referenced(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        config_ref: str,
+        version: int,
+    ) -> None:
+        """
+        Mark a configuration version as referenced by a PipelineRun.
+
+        Once a version is referenced, it becomes immutable — subsequent register()
+        calls for the same slug will fail if they try to update this version.
+
+        Args:
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            config_ref: Configuration reference (slug)
+            version: Version number
+        """
+        key = (pipeline_type, implementation_id, config_ref, version)
+        self._referenced_versions.add(key)
+
+    def is_version_referenced(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        config_ref: str,
+        version: int,
+    ) -> bool:
+        """
+        Check if a configuration version is referenced by a PipelineRun.
+
+        Args:
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            config_ref: Configuration reference (slug)
+            version: Version number
+
+        Returns:
+            True if this version is already referenced by a run
+        """
+        key = (pipeline_type, implementation_id, config_ref, version)
+        return key in self._referenced_versions

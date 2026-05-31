@@ -990,6 +990,17 @@ class PipelineRun(BatchRun):
         nullable=False,
         doc="Versioned configuration reference (immutable once set)",
     )
+    configuration_slug = Column(
+        String(255),
+        nullable=False,
+        doc="Configuration slug part (immutable once set)",
+    )
+    configuration_version = Column(
+        Integer,
+        nullable=False,
+        default=1,
+        doc="Configuration version part (immutable once set)",
+    )
     input_summary = Column(
         JSON,
         nullable=False,
@@ -1007,6 +1018,16 @@ class PipelineRun(BatchRun):
         nullable=False,
         default=dict,
         doc="LLM metadata: model, tokens_used, duration_ms (JSON dict)",
+    )
+    started_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="UTC timestamp when run transitioned to RUNNING status",
+    )
+    failure_reason = Column(
+        Text,
+        nullable=True,
+        doc="String description of failure reason if status=FAILED",
     )
 
     __mapper_args__: Dict[str, Any] = {

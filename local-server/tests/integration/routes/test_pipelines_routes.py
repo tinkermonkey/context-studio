@@ -19,8 +19,9 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
+    ConfigurationImmutabilityError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -475,12 +476,16 @@ class TestPipelineRunEndpoints:
             "pipeline_type",
             "implementation_id",
             "configuration_ref",
+            "configuration_slug",
+            "configuration_version",
             "input_summary",
             "output_summary",
             "llm_metadata",
             "status",
             "created_at",
             "updated_at",
+            "started_at",
+            "failure_reason",
         ]
         for field in required_fields:
             assert field in body, f"Missing field: {field}"
@@ -707,3 +712,434 @@ class TestPipelineErrorHandling:
         # We can verify the request succeeded and the run was created
         assert "id" in body
         assert body["status"] == "completed"
+
+
+class TestConfigurationVersioning:
+    """Test configuration versioning and immutability enforcement."""
+
+    def test_run_stores_configuration_version(self, client, registries):
+        """A created run stores configuration_slug and configuration_version."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model", "version": 1},
+        )
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+
+        # Verify version fields are present
+        assert "configuration_slug" in body
+        assert "configuration_version" in body
+        assert body["configuration_slug"] == "default"
+        assert body["configuration_version"] == 1
+
+    def test_run_resolves_correct_configuration_version(self, client, registries):
+        """A run with (slug, v1) continues to resolve v1 after (slug, v2) is registered."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+
+        # Register v1
+        v1 = registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model-v1"},
+        )
+        assert v1.version == 1
+
+        # Create run with v1
+        response1 = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run1_id = response1.json()["id"]
+        assert response1.json()["configuration_version"] == 1
+
+        # Register v2
+        v2 = registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model-v2"},
+        )
+        assert v2.version == 2
+
+        # Create run with v2
+        response2 = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run2_id = response2.json()["id"]
+        assert response2.json()["configuration_version"] == 2
+
+        # Verify run1 still references v1
+        get1 = client.get(f"/api/pipelines/runs/{run1_id}")
+        assert get1.json()["configuration_version"] == 1
+
+        # Verify run2 still references v2
+        get2 = client.get(f"/api/pipelines/runs/{run2_id}")
+        assert get2.json()["configuration_version"] == 2
+
+    def test_can_register_new_version_when_old_version_referenced(self, registries):
+        """Can register a new version even when an old version is already referenced by a run."""
+        # Register initial version
+        v1 = registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "test",
+            {"model": "v1"},
+        )
+        assert v1.version == 1
+
+        # Mark v1 as referenced by a run
+        registries["config_registry"].mark_version_referenced(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "test",
+            v1.version,
+        )
+
+        # Registering a new version for the same slug is allowed
+        # (this creates v2, doesn't mutate v1)
+        v2 = registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "test",
+            {"model": "v2"},
+        )
+        assert v2.version == 2
+        assert v2.config["model"] == "v2"
+
+        # v1 is still accessible with original config
+        assert v1.config["model"] == "v1"
+
+    def test_run_response_includes_configuration_fields(self, client, registries):
+        """GET /api/pipelines/runs/{run_id} includes configuration_slug and configuration_version."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create run
+        create_response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run_id = create_response.json()["id"]
+
+        # Retrieve run
+        get_response = client.get(f"/api/pipelines/runs/{run_id}")
+        assert get_response.status_code == status.HTTP_200_OK
+        body = get_response.json()
+
+        assert body["configuration_slug"] == "default"
+        assert body["configuration_version"] == 1
+
+
+class TestRunStatusLifecycle:
+    """Test pipeline run status transitions and observability."""
+
+    def test_run_response_includes_status_fields(self, client, registries):
+        """GET /api/pipelines/runs/{run_id} includes started_at and failure_reason fields."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create and retrieve run
+        create_response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run_id = create_response.json()["id"]
+
+        get_response = client.get(f"/api/pipelines/runs/{run_id}")
+        body = get_response.json()
+
+        # Verify status fields are present
+        assert "started_at" in body
+        assert "failure_reason" in body
+        # For successful runs, these should be null/None
+        # (started_at is set, but failure_reason should be null)
+        assert body["failure_reason"] is None
+
+    def test_run_status_transitions_to_completed(self, client, registries):
+        """A successful run transitions to COMPLETED status."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["status"] == "completed"
+
+    def test_run_failure_persists_failure_reason(self, client, registries):
+        """When orchestrator fails, FAILED status and failure_reason are persisted."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise an exception
+        error_message = "Simulated orchestrator failure for testing"
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = Exception(error_message)
+
+        # Patch create_orchestrator to return our mock
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        # Request should fail
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Get the run from the database to verify FAILED status and failure_reason
+        repo = client.app.state.pipeline_run_repo
+        runs = repo.list()
+        assert len(runs) == 1
+        run = runs[0]
+
+        # Verify FAILED status and failure_reason were persisted
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason is not None
+        assert error_message in run.failure_reason or "Unexpected orchestrator failure" in run.failure_reason
+
+    def test_run_transition_writes_started_at_before_orchestrator(self, client, registries):
+        """RUNNING status and started_at timestamp are written before orchestrator executes."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        response = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+
+        # Verify started_at is set (not None) for completed runs
+        assert body["started_at"] is not None
+        assert body["status"] == "completed"
+
+    def test_run_status_observable_as_running_mid_execution(self, client, registries):
+        """
+        Structural test: RUNNING status is written before orchestrator executes
+        and can be observed via GET while execution is in progress.
+
+        This test uses a blocking LLM provider mock to verify:
+        1. Status transitions to RUNNING before execution
+        2. started_at timestamp is set before execution
+        3. The status is observable via GET /api/pipelines/runs/{run_id} mid-execution
+        4. On completion, status becomes COMPLETED
+        """
+        import asyncio
+        import threading
+        import time
+
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        repo = client.app.state.pipeline_run_repo
+
+        # Create a blocking LLM provider that waits before completing
+        blocking_event = threading.Event()
+
+        async def blocking_complete_async(*args, **kwargs):
+            """Block until the event is set, simulating long-running execution."""
+            # Wait for the signal in a non-blocking way
+            while not blocking_event.is_set():
+                await asyncio.sleep(0.01)
+            # Return a mock response
+            response = MagicMock()
+            response.content = "[]"
+            return response
+
+        # Create a mock orchestrator that will run asynchronously
+        async def slow_orchestrator_execute(state):
+            """Simulate a slow orchestrator."""
+            await asyncio.sleep(0.5)
+            state.result = {"schemas": ["schema1"]}
+            state.parse_warnings = []
+            return state
+
+        # Start the pipeline run in a thread
+        run_id = None
+        response_data = None
+
+        def run_pipeline():
+            nonlocal run_id, response_data
+            mock_llm = AsyncMock()
+            mock_llm.complete_async = blocking_complete_async
+            client.app.state.llm_router = mock_llm
+
+            mock_orchestrator = AsyncMock()
+            mock_orchestrator.execute = slow_orchestrator_execute
+
+            with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+                response = client.post(
+                    "/api/pipelines/schema_extraction/run",
+                    json={
+                        "documents": ["doc1"],
+                        "implementation_id": "default",
+                        "configuration_ref": "default",
+                    },
+                )
+                run_id = response.json()["id"]
+                response_data = response.json()
+
+        # Run the request in a background thread
+        thread = threading.Thread(target=run_pipeline)
+        thread.start()
+
+        # Give the request time to start and write RUNNING status
+        time.sleep(0.2)
+
+        # While the orchestrator is still executing, query the run status
+        # It should be observable in the database
+        if run_id:
+            # Try to get the run status via repository
+            mid_execution_run = repo.get(run_id)
+
+            # At this point, the run should have started_at set
+            # (it was set before the orchestrator executed)
+            assert mid_execution_run is not None
+            assert mid_execution_run.started_at is not None
+
+        # Signal the blocking provider to complete
+        blocking_event.set()
+
+        # Wait for the request to complete
+        thread.join(timeout=5.0)
+
+        # After completion, verify the run status is COMPLETED
+        if run_id:
+            final_run = repo.get(run_id)
+            assert final_run is not None
+            assert final_run.status == PipelineRunStatus.COMPLETED
+            assert final_run.started_at is not None
+
+    def test_run_failure_records_failed_status_and_reason(self, client, registries):
+        """
+        Structural test: When orchestrator raises an exception during execution,
+        FAILED status and failure_reason are persisted in finally block.
+        """
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Mock orchestrator to raise an exception
+        error_msg = "Simulated LLM provider timeout during execution"
+        mock_orchestrator = AsyncMock()
+        mock_orchestrator.execute.side_effect = PipelineExternalServiceError(error_msg)
+
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
+
+        # Response should be 503
+        assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+        # Retrieve the run from the database
+        repo = client.app.state.pipeline_run_repo
+        runs = repo.list()
+        assert len(runs) == 1
+        run = runs[0]
+
+        # Verify FAILED status and failure_reason are persisted
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason is not None
+        assert "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()

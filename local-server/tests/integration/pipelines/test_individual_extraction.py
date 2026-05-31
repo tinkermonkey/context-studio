@@ -741,6 +741,8 @@ class TestIndividualExtractionRunPersistence:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default:1",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": source_text_hash,
                 "source_document_uri": "test://paper-1.txt",
@@ -768,6 +770,8 @@ class TestIndividualExtractionRunPersistence:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-openrouter-default:1",
+            configuration_slug="extraction-openrouter-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": source_text_hash,
                 "source_document_uri": "test://paper-2.txt",
@@ -804,6 +808,8 @@ class TestIndividualExtractionRunPersistence:
                 pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                 implementation_id="default",
                 configuration_ref="extraction-default:1",
+                configuration_slug="extraction-default",
+                configuration_version=1,
                 specific_data={
                     "source_text_hash": text_hash,
                     "source_document_uri": f"test://paper-{i+1}.txt",

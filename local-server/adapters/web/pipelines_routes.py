@@ -140,12 +140,16 @@ def _to_response(run: PipelineRun) -> PipelineRunResponse:
             "pipeline_type": run.pipeline_type.value,
             "implementation_id": run.implementation_id,
             "configuration_ref": run.configuration_ref,
+            "configuration_slug": run.configuration_slug,
+            "configuration_version": run.configuration_version,
             "input_summary": run.input_summary,
             "output_summary": run.output_summary,
             "llm_metadata": run.llm_metadata,
             "status": run.status.value,
             "created_at": run.created_at,
             "updated_at": None,
+            "started_at": run.started_at,
+            "failure_reason": run.failure_reason,
         }
     )
 
@@ -320,7 +324,12 @@ async def run_pipeline(
             detail=f"Implementation not found: {ptype.value}:{request_body.implementation_id}",
         )
 
-    # Verify configuration exists
+    # Verify configuration exists. get_latest() retrieves the current version,
+    # which is stored in the database along with the run. After a server restart,
+    # get_version(slug, version) can re-resolve the same configuration because
+    # configs are deterministically re-registered from code at startup.
+    # This ensures that runs can always resolve their pinned (slug, version) pair
+    # even across server restarts.
     config_version = config_registry.get_latest(
         ptype, request_body.implementation_id, request_body.configuration_ref
     )
@@ -375,8 +384,22 @@ async def run_pipeline(
             pipeline_type=ptype,
             implementation_id=request_body.implementation_id,
             configuration_ref=request_body.configuration_ref,
+            configuration_slug=config_version.config_ref,
+            configuration_version=config_version.version,
             specific_data=specific_data or None,
         )
+        # Mark this configuration version as referenced by this run
+        config_registry.mark_version_referenced(
+            ptype, request_body.implementation_id, config_version.config_ref, config_version.version
+        )
+    except PipelineStorageError as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+    # Write RUNNING status and started_at before invoking orchestrator
+    try:
+        repo.update_status(run_id, PipelineRunStatus.RUNNING)
+        repo.update_started_at(run_id, datetime.now(timezone.utc))
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -392,6 +415,7 @@ async def run_pipeline(
     ) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
+            repo.update_failure_reason(run_id, str(exc))
             repo.update_status(run_id, PipelineRunStatus.FAILED)
             repo.update_summaries(run_id=run_id, output_summary={"error": message})
         except PipelineStorageError as db_err:
@@ -401,6 +425,7 @@ async def run_pipeline(
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
         try:
+            repo.update_failure_reason(run_id, str(exc))
             repo.update_status(run_id, PipelineRunStatus.FAILED)
             repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
         except PipelineStorageError as db_err:

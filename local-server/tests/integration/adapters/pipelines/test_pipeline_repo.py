@@ -45,6 +45,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": "abc123def456",
                 "source_document_uri": "s3://bucket/doc.txt",
@@ -68,6 +70,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-default",
+            configuration_slug="schema-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_EXTRACTION
@@ -83,6 +87,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-default",
+            configuration_slug="noop-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.NO_OP
@@ -98,6 +104,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
@@ -113,6 +121,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-default",
+            configuration_slug="def-refinement-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
@@ -128,6 +138,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-default",
+            configuration_slug="conn-refinement-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
@@ -147,6 +159,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "abc123"},
         )
 
@@ -164,6 +178,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
+            configuration_slug="config-1",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -172,6 +188,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
+            configuration_slug="config-2",
+            configuration_version=1,
         )
 
         # Both should be PENDING
@@ -190,6 +208,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="config-extraction",
+            configuration_slug="config-extraction",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -198,6 +218,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="config-schema",
+            configuration_slug="config-schema",
+            configuration_version=1,
         )
 
         # List individual extraction runs
@@ -219,6 +241,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
+            configuration_slug="config-1",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -227,6 +251,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
+            configuration_slug="config-2",
+            configuration_version=1,
         )
 
         # List all runs
@@ -250,6 +276,8 @@ class TestPipelineRepositoryUpdate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -269,6 +297,8 @@ class TestPipelineRepositoryUpdate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -308,6 +338,8 @@ class TestPipelineRepositoryChangeEvents:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -355,6 +387,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-config",
+            configuration_slug="noop-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -374,6 +408,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="extraction-config",
+            configuration_slug="extraction-config",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": "hash123",
                 "source_document_uri": "s3://bucket/file.txt",
@@ -397,6 +433,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-config",
+            configuration_slug="schema-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -415,6 +453,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-config",
+            configuration_slug="grounding-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -433,6 +473,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-config",
+            configuration_slug="def-refinement-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -451,6 +493,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-config",
+            configuration_slug="conn-refinement-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -477,6 +521,8 @@ class TestPipelineRepositoryErrorHandling:
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -494,6 +540,8 @@ class TestPipelineRepositoryErrorHandling:
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -510,6 +558,8 @@ class TestPipelineRepositoryErrorHandling:
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -524,6 +574,8 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -544,6 +596,8 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -568,6 +622,8 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -588,6 +644,8 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 

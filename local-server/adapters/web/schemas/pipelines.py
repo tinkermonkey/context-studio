@@ -129,6 +129,8 @@ class PipelineRunResponse(BaseModel):
     pipeline_type: str = Field(..., description="Pipeline type (discriminator)")
     implementation_id: str = Field(..., description="Implementation ID")
     configuration_ref: str = Field(..., description="Configuration reference")
+    configuration_slug: str = Field(..., description="Configuration slug")
+    configuration_version: int = Field(..., description="Configuration version")
     input_summary: dict[str, Any] = Field(default_factory=dict, description="Input metadata")
     output_summary: dict[str, Any] = Field(
         default_factory=dict, description="Output counts/metrics"
@@ -141,6 +143,10 @@ class PipelineRunResponse(BaseModel):
     updated_at: Optional[datetime] = Field(
         None, description="Last update timestamp (reserved for future use)"
     )
+    started_at: Optional[datetime] = Field(
+        None, description="Timestamp when run transitioned to RUNNING"
+    )
+    failure_reason: Optional[str] = Field(None, description="Failure reason if status=FAILED")
 
 
 class ApplyRunResponse(BaseModel):

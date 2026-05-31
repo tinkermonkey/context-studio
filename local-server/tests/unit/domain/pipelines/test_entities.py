@@ -68,6 +68,8 @@ class TestIndividualExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             source_text_hash="abc123",
             source_document_uri="s3://bucket/doc.txt",
         )
@@ -77,6 +79,8 @@ class TestIndividualExtractionRun:
         assert run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
         assert run.implementation_id == "impl-default"
         assert run.configuration_ref == "extraction-default"
+        assert run.configuration_slug == "extraction-default"
+        assert run.configuration_version == 1
         assert run.status == PipelineRunStatus.PENDING
         assert run.source_text_hash == "abc123"
         assert run.source_document_uri == "s3://bucket/doc.txt"
@@ -88,6 +92,8 @@ class TestIndividualExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             source_text_hash="abc123",
         )
 
@@ -105,11 +111,15 @@ class TestSchemaExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-schema",
             configuration_ref="schema-default",
+            configuration_slug="schema-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_EXTRACTION
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "schema-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaGroundingRun:
@@ -122,11 +132,15 @@ class TestSchemaGroundingRun:
             batch_run_id="batch-456",
             implementation_id="impl-grounding",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "grounding-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaDefinitionRefinementRun:
@@ -139,11 +153,15 @@ class TestSchemaDefinitionRefinementRun:
             batch_run_id="batch-456",
             implementation_id="impl-definition",
             configuration_ref="definition-default",
+            configuration_slug="definition-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "definition-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaConnectionRefinementRun:
@@ -156,11 +174,15 @@ class TestSchemaConnectionRefinementRun:
             batch_run_id="batch-456",
             implementation_id="impl-connection",
             configuration_ref="connection-default",
+            configuration_slug="connection-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "connection-default"
+        assert run.configuration_version == 1
 
 
 class TestPipelineRunStatus:

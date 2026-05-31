@@ -57,12 +57,16 @@ class PipelineRun:
         pipeline_type: Discriminator (individual_extraction | schema_extraction | ...)
         implementation_id: Reference to registered implementation
         configuration_ref: Versioned configuration reference (immutable once set)
+        configuration_slug: Configuration slug part (non-null, immutable)
+        configuration_version: Configuration version part (non-null, immutable)
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
         status: Current status (pending | running | completed | failed | reviewed |
             committed | abandoned)
         created_at: UTC timestamp of run creation
+        started_at: UTC timestamp when run actually started executing (RUNNING status)
+        failure_reason: String description of failure reason if status=FAILED
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -70,11 +74,15 @@ class PipelineRun:
     pipeline_type: PipelineType = PipelineType.INDIVIDUAL_EXTRACTION
     implementation_id: str = ""
     configuration_ref: str = ""
+    configuration_slug: str = ""
+    configuration_version: int = 1
     input_summary: dict = field(default_factory=dict)
     output_summary: dict = field(default_factory=dict)
     llm_metadata: dict = field(default_factory=dict)
     status: PipelineRunStatus = PipelineRunStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    failure_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -121,6 +129,8 @@ class IndividualExtractionRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         source_text_hash: str,
         source_document_uri: str | None = None,
         created_at: datetime | None = None,
@@ -133,6 +143,8 @@ class IndividualExtractionRun(PipelineRun):
             batch_run_id: FK to batch_runs.id
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
+            configuration_slug: Configuration slug part
+            configuration_version: Configuration version part
             source_text_hash: SHA256 hash of source text
             source_document_uri: Optional document URI
             created_at: UTC timestamp (defaults to now)
@@ -145,6 +157,8 @@ class IndividualExtractionRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -175,6 +189,8 @@ class SchemaExtractionRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaExtractionRun":
         """Create a new SchemaExtractionRun with status=PENDING."""
@@ -183,6 +199,8 @@ class SchemaExtractionRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -211,6 +229,8 @@ class SchemaGroundingRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaGroundingRun":
         """Create a new SchemaGroundingRun with status=PENDING."""
@@ -219,6 +239,8 @@ class SchemaGroundingRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -249,6 +271,8 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaDefinitionRefinementRun":
         """Create a new SchemaDefinitionRefinementRun with status=PENDING."""
@@ -257,6 +281,8 @@ class SchemaDefinitionRefinementRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -287,6 +313,8 @@ class SchemaConnectionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaConnectionRefinementRun":
         """Create a new SchemaConnectionRefinementRun with status=PENDING."""
@@ -295,6 +323,8 @@ class SchemaConnectionRefinementRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
