@@ -907,7 +907,7 @@ async def create_batch(request: Request) -> dict[str, Any]:
             "completed_at": batch.completed_at,
             "last_updated": batch.last_updated,
             "run_count": 0,
-            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0},
+            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0, "cancelled": 0},
         }
     except Exception as e:
         status_code, message = _handle_domain_error(e)

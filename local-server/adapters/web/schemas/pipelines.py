@@ -228,6 +228,7 @@ class RunCountsResponse(BaseModel):
     running: int = Field(..., ge=0, description="Number of running runs")
     completed: int = Field(..., ge=0, description="Number of completed runs")
     failed: int = Field(..., ge=0, description="Number of failed runs")
+    cancelled: int = Field(..., ge=0, description="Number of cancelled runs")
 
 
 class BatchResponse(BaseModel):

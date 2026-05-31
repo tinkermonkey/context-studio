@@ -319,6 +319,8 @@ class BatchRepository:
             if all_terminal:
                 if PipelineRunStatus.COMPLETED.value in statuses:
                     return BatchStatus.COMPLETED
+                elif PipelineRunStatus.CANCELLED.value in statuses:
+                    return BatchStatus.CANCELLED
                 else:
                     return BatchStatus.FAILED
 
