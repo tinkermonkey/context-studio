@@ -835,7 +835,7 @@ class TestConfigurationVersioning:
         assert v1.config["model"] == "v1"
 
     def test_run_response_includes_configuration_fields(self, client, registries):
-        """GET /api/pipelines/runs/{run_id} includes configuration_slug and configuration_version."""
+        """GET /api/pipelines/runs/{run_id} includes configuration_slug and version."""
         registries["implementation_registry"].register_impl(
             PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
         )
@@ -966,7 +966,10 @@ class TestRunStatusLifecycle:
         # Verify FAILED status and failure_reason were persisted
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason is not None
-        assert error_message in run.failure_reason or "Unexpected orchestrator failure" in run.failure_reason
+        assert (
+            error_message in run.failure_reason
+            or "Unexpected orchestrator failure" in run.failure_reason
+        )
 
     def test_run_transition_writes_started_at_before_orchestrator(self, client, registries):
         """RUNNING status and started_at timestamp are written before orchestrator executes."""
@@ -1133,4 +1136,7 @@ class TestRunStatusLifecycle:
         # Verify FAILED status and failure_reason are persisted
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason is not None
-        assert "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()
+        assert (
+            "timeout" in run.failure_reason.lower()
+            or "unavailable" in run.failure_reason.lower()
+        )

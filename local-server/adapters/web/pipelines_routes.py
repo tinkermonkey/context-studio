@@ -2,13 +2,13 @@
 FastAPI routes for the Pipeline Orchestration bounded context.
 
 This module implements HTTP endpoints for generic pipeline execution:
-- GET    /api/pipelines/types                                    → List pipeline types
-- GET    /api/pipelines/types/{type}/implementations             → List implementations for type
-- GET    /api/pipelines/types/{type}/implementations/{id}/configurations → List configs for impl
-- POST   /api/pipelines/{type}/run                               → Invoke a pipeline
-- GET    /api/pipelines/runs/{run_id}                            → Fetch a PipelineRun by ID
-- GET    /api/pipelines/runs                                     → List PipelineRuns with filters
-- POST   /api/pipelines/runs/{run_id}/apply                      → Materialize run output into ontology
+- GET /api/pipelines/types → List pipeline types
+- GET /api/pipelines/types/{type}/implementations → List implementations
+- GET /api/pipelines/types/{type}/implementations/{id}/configurations → Configs
+- POST /api/pipelines/{type}/run → Invoke a pipeline
+- GET /api/pipelines/runs/{run_id} → Fetch a PipelineRun by ID
+- GET /api/pipelines/runs → List PipelineRuns with filters
+- POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema

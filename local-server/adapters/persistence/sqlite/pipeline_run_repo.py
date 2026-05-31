@@ -482,8 +482,8 @@ class PipelineRepository:
             orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
-            orm_obj.status = PipelineRunStatus.RUNNING.value
-            orm_obj.started_at = started_at
+            orm_obj.status = PipelineRunStatus.RUNNING.value  # type: ignore[assignment]
+            orm_obj.started_at = started_at  # type: ignore[assignment]
             session.flush()
             session.commit()
             logger.info(f"Updated pipeline run to RUNNING: {run_id}")
@@ -511,7 +511,8 @@ class PipelineRepository:
         output_summary: dict[str, Any] | None = None,
     ) -> bool:
         """
-        Atomically update status to FAILED, set failure_reason, and optionally update output_summary.
+        Atomically update status to FAILED, set failure_reason, and optionally
+        update output_summary.
 
         Updates all fields in a single transaction to prevent partial updates.
 
@@ -531,10 +532,10 @@ class PipelineRepository:
             orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
-            orm_obj.status = PipelineRunStatus.FAILED.value
-            orm_obj.failure_reason = failure_reason
+            orm_obj.status = PipelineRunStatus.FAILED.value  # type: ignore[assignment]
+            orm_obj.failure_reason = failure_reason  # type: ignore[assignment]
             if output_summary is not None:
-                orm_obj.output_summary = output_summary
+                orm_obj.output_summary = output_summary  # type: ignore[assignment]
             session.flush()
             session.commit()
             logger.info(f"Updated pipeline run to FAILED: {run_id}")
