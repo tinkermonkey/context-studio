@@ -97,17 +97,29 @@ class SchemaGroundingRunRequest(PipelineRunRequest):
 class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_definition_refinement pipeline."""
 
-    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to refine")
-    context: Optional[str] = Field(None, description="Additional context (optional)")
+    node_id: str = Field(..., min_length=1, description="Schema node ID to refine")
+    current_definition: str = Field(..., description="Current definition to refine")
+    groundings: Optional[list[dict[str, Any]]] = Field(
+        None, description="External groundings (optional)"
+    )
+    extraction_usages: Optional[list[dict[str, Any]]] = Field(
+        None, description="Extraction usage examples (optional)"
+    )
 
 
 class SchemaConnectionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_connection_refinement pipeline."""
 
-    edges: list[dict[str, Any]] = Field(
-        ..., min_length=1, description="Edges (connections) to refine"
+    scope_id: str = Field(..., min_length=1, description="Schema node ID to refine connections for")
+    current_connections: list[dict[str, Any]] = Field(
+        ..., description="Current connections for the scope"
     )
-    strategy: Optional[str] = Field(None, description="Refinement strategy (optional)")
+    groundings: Optional[list[dict[str, Any]]] = Field(
+        None, description="External groundings (optional)"
+    )
+    extraction_usages: Optional[list[dict[str, Any]]] = Field(
+        None, description="Extraction usage examples (optional)"
+    )
 
 
 GenericPipelineRunRequest = Union[

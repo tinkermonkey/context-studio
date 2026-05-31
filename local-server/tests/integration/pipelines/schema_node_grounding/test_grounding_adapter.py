@@ -8,7 +8,7 @@ import pytest
 
 from adapters.reference.grounding import GroundingAdapter
 from domain.extraction.ports import ReferenceResult
-from domain.pipelines.exceptions import PipelineExternalServiceError
+from domain.pipelines.exceptions import PipelineExternalServiceError, PipelineInputError
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 
 _test_file = os.path.abspath(__file__)
@@ -96,15 +96,17 @@ class TestGroundingAdapter:
 
     @pytest.mark.asyncio
     async def test_query_sources_unknown_source(self, mock_dbpedia, mock_conceptnet):
-        """Test with unknown source name."""
+        """Test with unknown source name raises PipelineInputError."""
         adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)
 
-        candidates = await adapter.query_sources(
-            label="person",
-            sources=["UnknownSource"],
-        )
+        with pytest.raises(PipelineInputError) as exc_info:
+            await adapter.query_sources(
+                label="person",
+                sources=["UnknownSource"],
+            )
 
-        assert candidates == []
+        assert "Unknown grounding sources" in str(exc_info.value)
+        assert "UnknownSource" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_query_sources_single_source_exception(self, mock_dbpedia, mock_conceptnet):

@@ -295,8 +295,8 @@ async def run_pipeline(
     - individual_extraction: requires text and ontology_id
     - schema_extraction: requires documents, optional scope
     - schema_node_grounding: requires nodes and sources
-    - schema_node_definition_refinement: requires nodes, optional context
-    - schema_node_connection_refinement: requires edges, optional strategy
+    - schema_node_definition_refinement: requires node_id and current_definition, optional groundings and extraction_usages
+    - schema_node_connection_refinement: requires scope_id and current_connections, optional groundings and extraction_usages
 
     Creates a pipeline run, executes it with the registered implementation,
     and returns the run with execution results.

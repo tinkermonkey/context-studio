@@ -3006,7 +3006,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires nodes, optional context\n- schema_node_connection_refinement: requires edges, optional strategy\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires node_id and current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and current_connections, optional groundings and extraction_usages\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -3537,9 +3537,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Request Body"
+                "$ref": "#/components/schemas/EnqueueBatchRunsRequest"
               }
             }
           }
@@ -6129,7 +6127,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Batch status (pending|running|completed|failed|cancelled)"
+            "description": "Status: pending, running, completed, failed, or cancelled"
           },
           "created_at": {
             "type": "string",
@@ -7538,6 +7536,38 @@
         ],
         "title": "DemoDatasetLoadResponse",
         "description": "Counts of entities persisted by a demo dataset load."
+      },
+      "EnqueueBatchRunsRequest": {
+        "properties": {
+          "runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Runs",
+            "description": "Run specs to enqueue"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key",
+            "description": "Optional idempotency key for replay"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs"
+        ],
+        "title": "EnqueueBatchRunsRequest",
+        "description": "Request to enqueue multiple runs in a batch."
       },
       "EnqueueBatchRunsResponse": {
         "properties": {
@@ -10342,6 +10372,12 @@
             "minimum": 0.0,
             "title": "Failed",
             "description": "Number of failed runs"
+          },
+          "cancelled": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cancelled",
+            "description": "Number of cancelled runs"
           }
         },
         "type": "object",
@@ -10349,7 +10385,8 @@
           "pending",
           "running",
           "completed",
-          "failed"
+          "failed",
+          "cancelled"
         ],
         "title": "RunCountsResponse",
         "description": "Response containing run counts by status."
