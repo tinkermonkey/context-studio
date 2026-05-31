@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-
 # Slug pattern from domain/ontology/value_objects.py — enforced by the migration
 # f319bb8dc961_add_color_column_and_require_identifier_.py.
 _SLUG_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")

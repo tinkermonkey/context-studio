@@ -21,10 +21,10 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.ports import LLMProvider
 
 _MAX_CHUNK_CHARS = 8000
 
@@ -396,7 +396,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
         labels = state.candidate_concepts
-        label_list = ", ".join(f'"{l}"' for l in labels)
+        ", ".join(f'"{l}"' for l in labels)
         example = ", ".join(f'"{l}": "definition..."' for l in labels[:2])
 
         system_prompt = (

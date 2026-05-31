@@ -13,7 +13,6 @@ from typing import Any, Literal, Protocol
 
 from .entities import PipelineRun, PipelineRunStatus, PipelineType
 
-
 # ============================================================================
 # LLM provider value types and port
 # ============================================================================

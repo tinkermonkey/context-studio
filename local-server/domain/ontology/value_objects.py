@@ -13,7 +13,6 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Any
 
-
 # Slug format: lowercase alpha leading, then alphanumeric and underscore.
 # 2-64 chars. Examples: tax_life, cls_organism, scheme_ecology
 _IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")

@@ -44,7 +44,6 @@ from domain.pipelines.schema_node_connection_refinement.orchestrator import (
 )
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
-
 # ---------------------------------------------------------------------------- #
 # Fixtures                                                                     #
 # ---------------------------------------------------------------------------- #

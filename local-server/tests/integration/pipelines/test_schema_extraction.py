@@ -16,9 +16,9 @@ from fastapi.testclient import TestClient
 from starlette import status
 
 from adapters.web.pipelines_routes import router
-from domain.pipelines.ports import LLMResponse
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
+from domain.pipelines.ports import LLMResponse
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,

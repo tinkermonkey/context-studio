@@ -102,24 +102,28 @@ from domain.ontology.events import (
 # Import domain services
 from domain.ontology.services import OntologyService
 from domain.pipelines.individual_extraction import register_individual_extraction
+from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
-from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
-from domain.pipelines.schema_node_definition_refinement.apply_service import SchemaDefinitionRefinementApplyService
-from domain.pipelines.schema_node_connection_refinement.apply_service import SchemaConnectionRefinementApplyService
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
+)
+from domain.pipelines.schema_node_connection_refinement.apply_service import (
+    SchemaConnectionRefinementApplyService,
 )
 from domain.pipelines.schema_node_definition_refinement import (
     register_schema_node_definition_refinement,
 )
+from domain.pipelines.schema_node_definition_refinement.apply_service import (
+    SchemaDefinitionRefinementApplyService,
+)
 from domain.pipelines.schema_node_grounding import register_schema_node_grounding
+from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
@@ -200,7 +204,7 @@ async def lifespan(app: FastAPI):
             " InterchangeRepository created"
         )
 
-        operations_session_factory = db_manager.get_operations_session_factory()
+        db_manager.get_operations_session_factory()
         pipeline_run_repo = PipelineRepository(local_session_factory)
         logger.info("PipelineRunRepository created")
 

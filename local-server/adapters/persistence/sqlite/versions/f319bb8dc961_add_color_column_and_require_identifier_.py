@@ -14,9 +14,8 @@ keep their existing identifiers; the column's pre-existing UNIQUE constraint
 continues to enforce global uniqueness across all node types.
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'f319bb8dc961'

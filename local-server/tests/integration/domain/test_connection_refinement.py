@@ -11,8 +11,8 @@ from uuid import uuid4
 import pytest
 
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement.orchestrator import (

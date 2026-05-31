@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from benchmark.canon_metrics import (
-    F1Metrics,
     aggregate_canon_metrics,
     compute_color_presence_rate,
     compute_embedding_presence_rate,
@@ -15,7 +14,6 @@ from benchmark.canon_metrics import (
     compute_per_node_type_f1,
     compute_reference_grounding_rate,
 )
-
 
 # Minimal canon fixture matching the structure of datafiles/canon/.../canon.json
 _CANON_FIXTURE = {

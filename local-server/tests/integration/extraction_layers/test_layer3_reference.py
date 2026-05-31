@@ -11,13 +11,10 @@ Exercises `domain.extraction.layers.reference.execute`. Layer 3:
 
 from __future__ import annotations
 
-import pytest
-
 from unittest.mock import MagicMock
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.layers import reference as layer3
-from domain.extraction.ports import ReferenceRelation, ReferenceResult
 from domain.extraction.services import ExtractionService
 from domain.extraction.value_objects import LayerInput
 from tests.fakes.fake_embedding_service import FakeEmbeddingService

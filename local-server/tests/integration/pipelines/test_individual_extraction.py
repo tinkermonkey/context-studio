@@ -35,8 +35,8 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.extraction_routes import router as extraction_router
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.entities import IndividualExtractionRun, PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -52,7 +52,6 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.utils.canon_assertions import (
-    assert_triples_match,
     load_canon,
     score_triples,
 )

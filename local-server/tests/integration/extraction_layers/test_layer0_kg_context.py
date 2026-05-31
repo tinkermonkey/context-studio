@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.layers import kg_context
-from domain.ontology.entities import Class, ConceptScheme, Individual, Taxonomy
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 

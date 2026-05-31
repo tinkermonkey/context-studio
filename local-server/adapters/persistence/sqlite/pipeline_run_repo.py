@@ -23,7 +23,6 @@ from adapters.persistence.sqlite.models import (
     SchemaExtractionRun,
     SchemaGroundingRun,
 )
-from domain.pipelines.exceptions import PipelineStorageError
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
 )
@@ -49,6 +48,7 @@ from domain.pipelines.entities import (
 from domain.pipelines.entities import (
     SchemaGroundingRun as DomainSchemaGroundingRun,
 )
+from domain.pipelines.exceptions import PipelineStorageError
 from utils.logger import get_logger
 
 if TYPE_CHECKING:

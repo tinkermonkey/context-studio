@@ -19,13 +19,13 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
     PipelineStorageError,
 )
-from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,

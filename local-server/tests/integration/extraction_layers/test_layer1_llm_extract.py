@@ -14,14 +14,10 @@ Notes:
 from __future__ import annotations
 
 import json
-from typing import Literal
-
-import pytest
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.layers import llm_extract
 from domain.extraction.value_objects import LayerInput
-from domain.pipelines.ports import LLMResponse
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 

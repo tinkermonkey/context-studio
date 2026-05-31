@@ -32,7 +32,6 @@ from domain.pipelines.schema_node_grounding.scoring import (
     ScoredCandidate,
 )
 
-
 _CANON_DIR = (
     Path(__file__).parent.parent.parent.parent.parent
     / "datafiles"

@@ -4,20 +4,20 @@ Unit tests for IndividualExtractionApplyService.
 Uses FakeOntologyRepository for in-memory testing — no database, no I/O.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

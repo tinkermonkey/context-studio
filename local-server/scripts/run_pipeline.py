@@ -50,6 +50,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -62,7 +63,6 @@ from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
 from config import get_settings
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService

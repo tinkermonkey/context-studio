@@ -42,13 +42,13 @@ from adapters.web.schemas.pipelines import (
     PipelineRunResponse,
     PipelineTypeResponse,
 )
+from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
     PipelineStorageError,
 )
-from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,

@@ -37,7 +37,6 @@ from tests.utils.canon_assertions import (
     load_canon,
 )
 
-
 CANON_ROOT = Path(__file__).resolve().parents[3] / "datafiles" / "canon"
 
 

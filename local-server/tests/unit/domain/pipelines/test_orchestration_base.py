@@ -14,8 +14,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest
 
-from domain.pipelines.ports import LLMResponse
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.ports import LLMResponse
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 

@@ -32,7 +32,6 @@ from typing import Any, Literal
 
 from domain.pipelines.ports import LLMResponse
 
-
 _logger = logging.getLogger(__name__)
 
 
