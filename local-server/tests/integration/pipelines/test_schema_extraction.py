@@ -29,6 +29,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionState,
 )
 from tests.fixtures.schema_extraction_fixtures import get_microservices_text
+from typing import cast
 
 
 class _SchemaExtractionMockLLM:
@@ -73,8 +74,27 @@ class _SchemaExtractionMockLLM:
             model=model,
         )
 
-    async def complete_async(self, **kwargs) -> LLMResponse:
-        return self.complete(**kwargs)
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ) -> LLMResponse:
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
 
     def is_model_available(self, model: str) -> bool:
         return True
@@ -296,8 +316,27 @@ class _CanonSchemaLLM:
             model=model,
         )
 
-    async def complete_async(self, **kwargs) -> LLMResponse:
-        return self.complete(**kwargs)
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ) -> LLMResponse:
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
 
     def is_model_available(self, model: str) -> bool:
         return True
@@ -319,7 +358,8 @@ def _run_orchestrator(paper: dict) -> SchemaExtractionState:
             "model": "google/gemini-3-flash-preview",
         },
     )
-    return asyncio.run(orchestrator.execute(state))
+    result = asyncio.run(orchestrator.execute(state))
+    return cast(SchemaExtractionState, result)
 
 
 class TestSchemaExtractionAgainstCanon:

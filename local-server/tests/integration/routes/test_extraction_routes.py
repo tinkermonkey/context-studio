@@ -23,7 +23,6 @@ from uuid import uuid4
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
