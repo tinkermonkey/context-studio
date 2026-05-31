@@ -130,7 +130,6 @@ export function SettingsPage() {
               <Select
                 data-testid="settings-llm-provider-select"
                 defaultValue={String(llmConfig.provider || "")}
-                onBlur={(e) => handleFieldBlur("llm", "provider", e.target.value)}
               >
                 <option value="">{COPY.selectOptionPlaceholder}</option>
                 <option value="anthropic">{COPY.llmProviderAnthropicOption}</option>

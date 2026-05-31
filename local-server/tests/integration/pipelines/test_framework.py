@@ -496,9 +496,7 @@ class TestCandidatesEndpoint:
 class TestWaveARegression:
     """Test Wave A extraction pipeline regression: `POST /api/extraction/extract` still works."""
 
-    @pytest.mark.skip(
-        reason="Wave A extraction endpoint not yet wired into current test client"
-    )
+    @pytest.mark.skip(reason="Wave A extraction endpoint not yet wired into current test client")
     def test_extraction_extract_endpoint_works(self, client):
         """POST /api/extraction/extract returns well-formed response."""
         response = client.post(

@@ -18,7 +18,7 @@ Each endpoint is a thin adapter that:
 
 No business logic lives here—all validation and constraints are in the domain service.
 Error handling translates domain exceptions to appropriate HTTP responses.
-"""
+"""  # noqa: E501
 
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -106,11 +106,14 @@ def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
     """
     return {
         "top_n": config.get("top_n", 10),
-        "weights": config.get("weights", {
-            "source_score": 0.3,
-            "label_match": 0.3,
-            "semantic_similarity": 0.4,
-        }),
+        "weights": config.get(
+            "weights",
+            {
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+        ),
     }
 
 
@@ -378,7 +381,12 @@ async def run_pipeline(
     # Execute the pipeline
     try:
         result_state = await orchestrator.execute(state)
-    except (PipelineStorageError, PipelineInputError, PipelineExternalServiceError, PipelineExecutionError) as exc:
+    except (
+        PipelineStorageError,
+        PipelineInputError,
+        PipelineExternalServiceError,
+        PipelineExecutionError,
+    ) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_status(run_id, PipelineRunStatus.FAILED)
@@ -521,14 +529,16 @@ async def get_pipeline_candidates(
 
     # Convert candidate dicts to response schema
     return [
-        CandidateResponse.model_validate({
-            "uri": cand.get("uri") or cand.get("id") or "",
-            "label": cand.get("label") or cand.get("name") or "",
-            "description": cand.get("description") or "",
-            "source": cand.get("source") or cand.get("source_uri") or "",
-            "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
-            "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
-        })
+        CandidateResponse.model_validate(
+            {
+                "uri": cand.get("uri") or cand.get("id") or "",
+                "label": cand.get("label") or cand.get("name") or "",
+                "description": cand.get("description") or "",
+                "source": cand.get("source") or cand.get("source_uri") or "",
+                "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
+                "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
+            }
+        )
         for cand in candidates_data
     ]
 
@@ -634,10 +644,23 @@ async def list_pipeline_runs(
 async def apply_pipeline_run(
     run_id: str,
     request: Request,
-    concept_scheme_id: Optional[str] = Query(None, description="Target concept scheme (required for schema_extraction)"),
-    taxonomy_id: Optional[str] = Query(None, description="Parent taxonomy (required for schema_extraction)"),
-    node_id: Optional[str] = Query(None, description="Target class node ID (required for schema_node_grounding)"),
-    confidence_threshold: float = Query(0.0, ge=0.0, le=1.0, description="Minimum candidate confidence"),
+    concept_scheme_id: Optional[str] = Query(
+        None,
+        description="Target concept scheme (required for schema_extraction)",
+    ),
+    taxonomy_id: Optional[str] = Query(
+        None, description="Parent taxonomy (required for schema_extraction)"
+    ),
+    node_id: Optional[str] = Query(
+        None,
+        description="Target class node ID (required for schema_node_grounding)",
+    ),
+    confidence_threshold: float = Query(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Minimum candidate confidence",
+    ),
 ) -> ApplyRunResponse:
     """
     Apply a completed pipeline run's output to the ontology.
@@ -730,6 +753,7 @@ async def apply_pipeline_run(
         else:
             # NO_OP and any future types return empty result
             from domain.pipelines.apply_result import ApplyResult
+
             apply_result = ApplyResult()
 
     except ValueError as exc:

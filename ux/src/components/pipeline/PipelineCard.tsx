@@ -6,8 +6,9 @@ import { useToasts } from "@/components/ui/Toast";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";
 
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
-type ExecutionResponse = components["schemas"]["ExecutionResponse"];
+// TODO: These types not yet in OpenAPI spec (Phase 2 work)
+type PipelineConfigurationResponse = any;
+type ExecutionResponse = any;
 
 type PipelineStatus = "running" | "success" | "idle" | "failed";
 

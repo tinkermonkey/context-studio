@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Button, ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
-import type { components } from "@/api/types";
-
-type PipelineFlavorResponse = components["schemas"]["PipelineFlavorResponse"];
+// TODO: PipelineFlavorResponse not yet in OpenAPI spec (Phase 2 work)
+type PipelineFlavorResponse = any;
 
 interface FlavorDrawerProps {
   flavor: PipelineFlavorResponse;

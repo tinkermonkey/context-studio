@@ -5,7 +5,6 @@ Tests the SchemaNeighborhoodTraversal utility for extracting class and
 property neighborhoods with various levels of context.
 """
 
-
 import pytest
 
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository

@@ -192,9 +192,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             )
 
         if neighborhood.sibling_classes:
-            sibling_info = ", ".join(
-                [f"{s.title}" for s in neighborhood.sibling_classes[:3]]
-            )
+            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
             context_parts.append(f"Sibling classes: {sibling_info}")
 
         if neighborhood.property_definitions:
@@ -208,9 +206,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"External groundings:\n{groundings_text}")
 
         if extraction_usages:
-            usages_text = "\n".join(
-                [f"- {u.get('extracted_text')}" for u in extraction_usages[:2]]
-            )
+            usages_text = "\n".join([f"- {u.get('extracted_text')}" for u in extraction_usages[:2]])
             context_parts.append(f"Extraction usages:\n{usages_text}")
 
         context_str = "\n".join(context_parts)

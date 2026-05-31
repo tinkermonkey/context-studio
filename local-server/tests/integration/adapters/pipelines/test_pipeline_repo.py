@@ -470,7 +470,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise IntegrityError
         error = IntegrityError("constraint", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
@@ -487,7 +487,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
@@ -503,7 +503,7 @@ class TestPipelineRepositoryErrorHandling:
         batch_id = str(uuid4())
 
         # Mock session.commit to raise SQLAlchemyError
-        with patch.object(db_session, 'commit', side_effect=SQLAlchemyError("error")):
+        with patch.object(db_session, "commit", side_effect=SQLAlchemyError("error")):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
@@ -529,7 +529,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise IntegrityError
         error = IntegrityError("constraint", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to update pipeline run status"):
                 repo.update_status(run.id, PipelineRunStatus.RUNNING)
 
@@ -549,7 +549,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             expected_msg = "Failed to update pipeline run summaries"
             with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.update_summaries(
@@ -573,7 +573,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
                 repo.get(run.id)
 
@@ -593,7 +593,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
                 repo.get(run.id)
 
@@ -603,7 +603,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs"):
                 repo.list()
 
@@ -613,7 +613,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             expected_msg = "Failed to list pipeline runs by status"
             with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.list_by_status(PipelineRunStatus.PENDING)
@@ -624,7 +624,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs by type"):
                 repo.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
 
@@ -635,7 +635,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve change events"):
                 repo.get_change_events_for_run(batch_id)
 

@@ -73,12 +73,8 @@ class SchemaExtractionApplyService:
         connections = run.output_summary.get("connections", [])
 
         # --- Classes ---
-        existing_classes = self._repo.list_classes(
-            concept_scheme_id=concept_scheme_id, limit=None
-        )
-        existing_titles: dict[str, str] = {
-            c.title.lower(): c.id for c in existing_classes
-        }
+        existing_classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
+        existing_titles: dict[str, str] = {c.title.lower(): c.id for c in existing_classes}
         # Also collect newly created classes during this apply for relationship resolution
         all_class_title_to_id: dict[str, str] = dict(existing_titles)
 

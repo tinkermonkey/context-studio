@@ -76,9 +76,7 @@ def canon_adapter_for(request):
     """
 
     def _build(class_identifier: str):
-        candidates = _candidates_from_canon_refs(
-            _canon_external_refs_for(class_identifier)
-        )
+        candidates = _candidates_from_canon_refs(_canon_external_refs_for(class_identifier))
         mock = AsyncMock()
         mock.query_sources = AsyncMock(return_value=candidates)
         return mock
@@ -89,6 +87,7 @@ def canon_adapter_for(request):
 @pytest.fixture
 def passthrough_scorer():
     """Scorer that preserves source_score and computes a trivial match_confidence."""
+
     async def score_fn(candidates, node_label, node_type=None):
         return [
             ScoredCandidate(
@@ -141,9 +140,9 @@ class TestGroundingCanon:
 
         groundings = (result_state.result or {}).get("groundings", [])
         sources_seen = {g["source"] for g in groundings}
-        assert "Dbpedia" in sources_seen or "Wikidata" in sources_seen, (
-            f"Expected DBpedia and/or Wikidata grounding for REST; got sources={sources_seen}"
-        )
+        assert (
+            "Dbpedia" in sources_seen or "Wikidata" in sources_seen
+        ), f"Expected DBpedia and/or Wikidata grounding for REST; got sources={sources_seen}"
 
         # The DBpedia URI for REST (from canon paper_fielding_rest_dissertation_ch5)
         rest_uris = [g["uri"] for g in groundings]
@@ -166,9 +165,9 @@ class TestGroundingCanon:
 
         groundings = (result_state.result or {}).get("groundings", [])
         uris = [g["uri"] for g in groundings]
-        assert any("Q17004988" in u for u in uris), (
-            f"Expected Wikidata Q-id Q17004988 (CRDT) in groundings; got URIs={uris}"
-        )
+        assert any(
+            "Q17004988" in u for u in uris
+        ), f"Expected Wikidata Q-id Q17004988 (CRDT) in groundings; got URIs={uris}"
 
     def test_groundings_carry_match_confidence_and_rationale(
         self, canon_adapter_for, passthrough_scorer
@@ -179,21 +178,15 @@ class TestGroundingCanon:
             grounding_adapter=adapter,
             scorer=passthrough_scorer,
         )
-        result_state = asyncio.run(
-            orchestrator.execute(_state_for("REST", ["DBpedia"]))
-        )
+        result_state = asyncio.run(orchestrator.execute(_state_for("REST", ["DBpedia"])))
         groundings = (result_state.result or {}).get("groundings", [])
         assert groundings, "Expected at least one grounding for the REST canon class"
         for g in groundings:
             assert "match_confidence" in g
             assert 0.0 <= g["match_confidence"] <= 1.0
-            assert g.get("match_rationale"), (
-                f"Grounding missing rationale: {g}"
-            )
+            assert g.get("match_rationale"), f"Grounding missing rationale: {g}"
 
-    def test_empty_candidate_set_completes_with_empty_groundings(
-        self, passthrough_scorer
-    ):
+    def test_empty_candidate_set_completes_with_empty_groundings(self, passthrough_scorer):
         """If the adapter returns nothing, the pipeline completes cleanly with [] groundings."""
         empty_adapter = AsyncMock()
         empty_adapter.query_sources = AsyncMock(return_value=[])

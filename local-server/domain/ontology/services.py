@@ -266,6 +266,7 @@ class OntologyService:
         if color is not None:
             # Re-validate via the entity's helper by reassigning + post-init equivalent.
             from .value_objects import validate_hex_color as _vc
+
             taxonomy.color = _vc(color)
 
         # Guard against no-op updates
@@ -972,6 +973,7 @@ class OntologyService:
 
         if color is not None:
             from .value_objects import validate_hex_color as _vc
+
             cls.color = _vc(color)
 
         color_changed = color is not None and cls.color != old_color
@@ -1905,6 +1907,7 @@ class OntologyService:
 
         if color is not None:
             from .value_objects import validate_hex_color as _vc
+
             scheme.color = _vc(color)
 
         scheme.last_modified = datetime.now(timezone.utc)

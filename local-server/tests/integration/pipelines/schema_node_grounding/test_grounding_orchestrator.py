@@ -53,6 +53,7 @@ class TestSchemaGroundingOrchestrator:
     @pytest.fixture
     def mock_scorer(self):
         """Create mock scorer."""
+
         async def score_fn(candidates, node_label, node_type=None):
             return [
                 ScoredCandidate(
@@ -147,9 +148,7 @@ class TestSchemaGroundingOrchestrator:
             await orchestrator.execute(state)
 
     @pytest.mark.asyncio
-    async def test_execute_truncates_to_top_n(
-        self, mock_adapter, mock_scorer, mock_llm_provider
-    ):
+    async def test_execute_truncates_to_top_n(self, mock_adapter, mock_scorer, mock_llm_provider):
         """Test that results are truncated to top_n."""
         candidates = [
             GroundingCandidate(
@@ -199,9 +198,7 @@ class TestSchemaGroundingOrchestrator:
         assert len(result.groundings) == 5
 
     @pytest.mark.asyncio
-    async def test_build_graph_returns_none(
-        self, mock_adapter, mock_scorer, mock_llm_provider
-    ):
+    async def test_build_graph_returns_none(self, mock_adapter, mock_scorer, mock_llm_provider):
         """Test that build_graph returns None (single-node implementation)."""
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=mock_llm_provider,

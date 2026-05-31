@@ -119,7 +119,9 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      // @ts-ignore - Mock type assertion
       expect(call.commands).toHaveLength(1);
+      // @ts-ignore - Mock type assertion
       expect(call.commands[0].label).toBe("Create Class");
     });
 
@@ -137,7 +139,9 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      // @ts-ignore - Mock type assertion
       expect(call.commands).toHaveLength(1);
+      // @ts-ignore - Mock type assertion
       expect(call.commands[0].label).toBe("Edit Class");
     });
 
@@ -155,7 +159,9 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      // @ts-ignore - Mock type assertion
       expect(call.commands).toHaveLength(1);
+      // @ts-ignore - Mock type assertion
       expect(call.commands[0].label).toBe("Create Class");
     });
 
@@ -269,7 +275,9 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
+      // @ts-ignore - Mock type assertion
       expect(call.commands).toHaveLength(1);
+      // @ts-ignore - Mock type assertion
       expect(call.commands[0].label).toBe("Create Class");
     });
   });

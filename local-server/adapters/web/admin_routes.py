@@ -578,16 +578,14 @@ async def get_stats_trends(
 
         # --- Query change_events in local.db ---
         rows = local_db.execute(
-            text(
-                """
+            text("""
                 SELECT date(timestamp) AS day, entity_type, COUNT(*) AS cnt
                 FROM change_events
                 WHERE operation = 'create'
                   AND entity_type IN ('taxonomy', 'class', 'individual')
                   AND timestamp >= :cutoff
                 GROUP BY date(timestamp), entity_type
-                """
-            ),
+                """),
             {"cutoff": cutoff.isoformat()},
         ).fetchall()
 
@@ -598,14 +596,12 @@ async def get_stats_trends(
 
         # --- Query pipeline_configurations in operations.db ---
         pipeline_rows = ops_db.execute(
-            text(
-                """
+            text("""
                 SELECT date(created_at) AS day, COUNT(*) AS cnt
                 FROM pipeline_configurations
                 WHERE created_at >= :cutoff
                 GROUP BY date(created_at)
-                """
-            ),
+                """),
             {"cutoff": cutoff.isoformat()},
         ).fetchall()
 

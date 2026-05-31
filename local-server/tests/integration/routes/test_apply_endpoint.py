@@ -60,7 +60,9 @@ def pipeline_repo(temp_db):
 def ontology_repo():
     r = FakeOntologyRepository()
     r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, title="Apply Test Taxonomy"))
-    r.save_concept_scheme(ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Apply Test Scheme"))
+    r.save_concept_scheme(
+        ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Apply Test Scheme")
+    )
     return r
 
 
@@ -123,6 +125,7 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
 # Happy-path tests
 # ---------------------------------------------------------------------------
 
+
 class TestApplyEndpointHappyPath:
     def test_apply_schema_extraction_returns_200(self, client, pipeline_repo):
         run_id = _create_and_complete_schema_run(pipeline_repo)
@@ -136,7 +139,12 @@ class TestApplyEndpointHappyPath:
         run_id = _create_and_complete_schema_run(
             pipeline_repo,
             candidates=[
-                {"kind": "class", "label": "Service", "proposed_definition": "A service", "confidence": 0.9},
+                {
+                    "kind": "class",
+                    "label": "Service",
+                    "proposed_definition": "A service",
+                    "confidence": 0.9,
+                },
                 {"kind": "class", "label": "Client", "confidence": 0.8},
             ],
         )
@@ -166,6 +174,7 @@ class TestApplyEndpointHappyPath:
 # ---------------------------------------------------------------------------
 # Idempotency
 # ---------------------------------------------------------------------------
+
 
 class TestApplyIdempotency:
     def test_apply_twice_creates_no_duplicates(self, client, pipeline_repo, ontology_repo):
@@ -202,7 +211,11 @@ class TestApplyIdempotency:
         )
         response = client.post(
             f"/api/pipelines/runs/{run_id}/apply",
-            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID, "confidence_threshold": 0.5},
+            params={
+                "concept_scheme_id": SCHEME_ID,
+                "taxonomy_id": TAXONOMY_ID,
+                "confidence_threshold": 0.5,
+            },
         )
         body = response.json()
         assert body["classes_created"] == 1
@@ -212,6 +225,7 @@ class TestApplyIdempotency:
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
+
 
 class TestApplyEndpointErrors:
     def test_nonexistent_run_returns_404(self, client):
@@ -272,6 +286,7 @@ class TestApplyEndpointErrors:
 # Response structure
 # ---------------------------------------------------------------------------
 
+
 class TestApplyResponseStructure:
     def test_response_includes_all_count_fields(self, client, pipeline_repo):
         run_id = _create_and_complete_schema_run(pipeline_repo)
@@ -281,10 +296,15 @@ class TestApplyResponseStructure:
         )
         body = response.json()
         expected_fields = {
-            "run_id", "pipeline_type",
-            "classes_created", "classes_skipped",
-            "properties_created", "properties_skipped",
-            "relationships_created", "relationships_skipped",
-            "individuals_created", "individuals_skipped",
+            "run_id",
+            "pipeline_type",
+            "classes_created",
+            "classes_skipped",
+            "properties_created",
+            "properties_skipped",
+            "relationships_created",
+            "relationships_skipped",
+            "individuals_created",
+            "individuals_skipped",
         }
         assert expected_fields.issubset(set(body.keys()))

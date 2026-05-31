@@ -226,10 +226,7 @@ class TestSchemaExtractionHTTP:
 
 
 _CANON_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "datafiles"
-    / "canon"
-    / "software_architecture"
+    Path(__file__).parent.parent.parent.parent / "datafiles" / "canon" / "software_architecture"
 )
 
 
@@ -247,9 +244,7 @@ class _CanonSchemaLLM:
 
     def __init__(self, paper: dict) -> None:
         self._paper = paper
-        self._candidate_labels = [
-            e["label"] for e in paper.get("expected_entities", [])
-        ]
+        self._candidate_labels = [e["label"] for e in paper.get("expected_entities", [])]
         self._definitions = {
             e["label"]: e.get("context", f"Canon concept: {e['label']}")
             for e in paper.get("expected_entities", [])
@@ -337,9 +332,9 @@ class TestSchemaExtractionAgainstCanon:
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert result_state.result is not None
         candidate_count = result_state.result.get("candidate_count", 0)
-        assert candidate_count > 0, (
-            f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
-        )
+        assert (
+            candidate_count > 0
+        ), f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
 
     def test_canon_candidates_include_microservice_terminology(self):
         """At least one produced candidate must match a canon expected entity label."""
@@ -348,9 +343,7 @@ class TestSchemaExtractionAgainstCanon:
 
         candidates = result_state.result.get("candidates", [])
         produced_labels = {c.get("label", "").lower() for c in candidates}
-        expected_labels = {
-            e["label"].lower() for e in paper.get("expected_entities", [])
-        }
+        expected_labels = {e["label"].lower() for e in paper.get("expected_entities", [])}
         overlap = produced_labels & expected_labels
         assert overlap, (
             f"No produced candidate aligned with canon expected_entities. "
@@ -365,9 +358,10 @@ class TestSchemaExtractionAgainstCanon:
         candidates = result_state.result.get("candidates", [])
         assert candidates, "Expected at least one candidate"
         for cand in candidates:
-            assert cand.get("kind") in ("class", "property_definition"), (
-                f"Unexpected kind {cand.get('kind')!r} in {cand}"
-            )
+            assert cand.get("kind") in (
+                "class",
+                "property_definition",
+            ), f"Unexpected kind {cand.get('kind')!r} in {cand}"
             confidence = cand.get("confidence")
             assert confidence is None or 0.0 <= confidence <= 1.0
 

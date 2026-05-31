@@ -101,12 +101,8 @@ class GroundingAdapter:
             candidates.extend(cast(list[GroundingCandidate], result))
 
         if len(failures) == len(source_names):
-            error_details = "; ".join(
-                [f"{name}: {msg}" for name, msg in failures.items()]
-            )
-            raise PipelineExternalServiceError(
-                f"All grounding sources failed: {error_details}"
-            )
+            error_details = "; ".join([f"{name}: {msg}" for name, msg in failures.items()])
+            raise PipelineExternalServiceError(f"All grounding sources failed: {error_details}")
 
         return candidates
 
@@ -138,9 +134,7 @@ class GroundingAdapter:
             logger.warning(f"No query handler for source: {source_name}")
             return []
 
-    async def _query_dbpedia(
-        self, label: str, source: DBpediaSource
-    ) -> list[GroundingCandidate]:
+    async def _query_dbpedia(self, label: str, source: DBpediaSource) -> list[GroundingCandidate]:
         """Query DBpedia for entities matching label."""
         results = await source.search_async(label, limit=10)
         candidates = []

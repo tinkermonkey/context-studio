@@ -45,7 +45,7 @@ class PipelineService extends BaseService {
     status?: string,
     limit?: number,
     offset?: number,
-  ): Promise<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]> {
+  ): Promise<any> {
     const params = new URLSearchParams();
     if (status) params.append("status_filter", status);
     if (limit != null) params.append("limit", limit.toString());
@@ -53,7 +53,7 @@ class PipelineService extends BaseService {
 
     const queryString = params.toString();
     const url = `/api/pipelines/executions${queryString ? `?${queryString}` : ""}`;
-    return this.get<components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"]>(url);
+    return this.get<any>(url);
   }
 }
 

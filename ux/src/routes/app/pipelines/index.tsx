@@ -44,10 +44,10 @@ export function PipelinesContent() {
     const getRunStatus = (pipelineId: string): "running" | "success" | "idle" | "failed" => {
       if (!allExecutions?.items) return "idle";
       const pipelineExecutions = allExecutions.items.filter(
-        (e) => e.pipeline_config_id === pipelineId,
+        (e: any) => e.pipeline_config_id === pipelineId,
       );
       if (pipelineExecutions.length === 0) return "idle";
-      const latestExecution = pipelineExecutions.reduce((latest, current) =>
+      const latestExecution = pipelineExecutions.reduce((latest: any, current: any) =>
         new Date(current.timestamp).getTime() > new Date(latest.timestamp).getTime()
           ? current
           : latest,

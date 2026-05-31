@@ -54,7 +54,12 @@ def downgrade() -> None:
         sa.Column("seed", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_pipeline_configurations_pipeline", "pipeline_configurations", ["pipeline"], unique=False)
+    op.create_index(
+        "ix_pipeline_configurations_pipeline",
+        "pipeline_configurations",
+        ["pipeline"],
+        unique=False,
+    )
     op.create_table(
         "pipeline_executions",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -71,4 +76,9 @@ def downgrade() -> None:
         sa.Column("timestamp", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_executions_config_timestamp", "pipeline_executions", ["pipeline_config_id", "timestamp"], unique=False)
+    op.create_index(
+        "ix_executions_config_timestamp",
+        "pipeline_executions",
+        ["pipeline_config_id", "timestamp"],
+        unique=False,
+    )

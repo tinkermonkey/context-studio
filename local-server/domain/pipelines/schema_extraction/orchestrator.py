@@ -256,9 +256,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         term_freq = len(re.findall(re.escape(label), source_text, re.IGNORECASE))
         return min(
             1.0,
-            0.2
-            + (0.4 if provenance_found else 0.0)
-            + min(0.4, term_freq * 0.1),
+            0.2 + (0.4 if provenance_found else 0.0) + min(0.4, term_freq * 0.1),
         )
 
     # ------------------------------------------------------------------
@@ -298,7 +296,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         system_prompt = (
             "You are an expert in ontology design and schema extraction. "
-            "Extract candidate classes and key terms from the text. Return a JSON array of candidate labels. "
+            "Extract candidate classes and key terms from the text. "
+            "Return a JSON array of candidate labels. "
             "Be precise and extract technical/domain terms, not generic words."
         )
 
@@ -308,7 +307,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         for chunk in state.text_chunks:
             user_prompt = (
                 f"Extract candidate classes and technical terms from this text:\n\n{chunk}\n\n"
-                'Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue", "API Gateway"]'
+                "Return a JSON array of strings (labels only). "
+                'Example: ["Microservice", "Message Queue", "API Gateway"]'
             )
 
             response = await self._call_llm(
@@ -331,9 +331,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     "fallback_action": "regex extraction",
                 }
                 state = replace(state, parse_warnings=state.parse_warnings + [warning])
-                chunk_candidates = re.findall(
-                    r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk
-                )
+                chunk_candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk)
 
             # Merge with global dedup (case-insensitive, keep first occurrence)
             for candidate in chunk_candidates:
@@ -365,16 +363,18 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             except Exception as e:
                 state = replace(
                     state,
-                    parse_warnings=state.parse_warnings + [{
-                        "stage": "classification",
-                        "error": f"ontology lookup failed: {e}",
-                        "fallback_action": "all candidates marked as new",
-                    }],
+                    parse_warnings=state.parse_warnings
+                    + [
+                        {
+                            "stage": "classification",
+                            "error": f"ontology lookup failed: {e}",
+                            "fallback_action": "all candidates marked as new",
+                        }
+                    ],
                 )
 
         classified = {
-            concept: concept.lower() in existing_labels
-            for concept in state.candidate_concepts
+            concept: concept.lower() in existing_labels for concept in state.candidate_concepts
         }
 
         return replace(
@@ -396,8 +396,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
         labels = state.candidate_concepts
-        ", ".join(f'"{l}"' for l in labels)
-        example = ", ".join(f'"{l}": "definition..."' for l in labels[:2])
+        ", ".join(f'"{label}"' for label in labels)
+        example = ", ".join(f'"{label}": "definition..."' for label in labels[:2])
 
         system_prompt = (
             "You are an expert in ontology definition writing. "
@@ -439,12 +439,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         if missing_keys:
             state = replace(
                 state,
-                parse_warnings=state.parse_warnings + [{
-                    "stage": "definition_synthesis",
-                    "error": f"LLM response missing {len(missing_keys)} label(s)",
-                    "missing_labels": missing_keys,
-                    "fallback_action": "generic definition per missing candidate",
-                }],
+                parse_warnings=state.parse_warnings
+                + [
+                    {
+                        "stage": "definition_synthesis",
+                        "error": f"LLM response missing {len(missing_keys)} label(s)",
+                        "missing_labels": missing_keys,
+                        "fallback_action": "generic definition per missing candidate",
+                    }
+                ],
             )
 
         candidates: list[CandidateClass] = []
@@ -496,11 +499,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             "Return JSON:\n"
             "{\n"
             '  "relationships": [\n'
-            '    {"subject": "Class1", "predicate": "subclass_of", "object": "Class2", "confidence": 0.8},\n'
+            '    {"subject": "Class1", "predicate": "subclass_of", '
+            '"object": "Class2", "confidence": 0.8},\n'
             "    ...\n"
             "  ],\n"
             '  "properties": [\n'
-            '    {"name": "Property1", "domain": "Class1", "range": "Class2", "confidence": 0.7},\n'
+            '    {"name": "Property1", "domain": "Class1", '
+            '"range": "Class2", "confidence": 0.7},\n'
             "    ...\n"
             "  ]\n"
             "}"
@@ -608,9 +613,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 senses = ambig.get("senses", [])
                 rationale = ambig.get("rationale", "")
 
-                original_idx = next(
-                    (i for i, c in enumerate(disambiguated) if c.label == term), -1
-                )
+                original_idx = next((i for i, c in enumerate(disambiguated) if c.label == term), -1)
                 if original_idx >= 0 and len(senses) > 1:
                     original = disambiguated[original_idx]
                     disambiguated_candidates = []

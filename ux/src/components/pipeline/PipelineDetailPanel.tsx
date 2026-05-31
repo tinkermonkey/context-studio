@@ -15,8 +15,9 @@ import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";
 import type { components } from "@/api/types";
 
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
-type ExecutionResponse = components["schemas"]["ExecutionResponse"];
+// TODO: These types not yet in OpenAPI spec (Phase 2 work)
+type PipelineConfigurationResponse = any;
+type ExecutionResponse = any;
 
 type Tab = "prompts" | "config" | "test" | "history";
 
@@ -276,7 +277,7 @@ export function PipelineDetailPanel({ pipeline }: PipelineDetailPanelProps) {
               <label className="form-group-label">{COPY.PROVIDER_LABEL}</label>
               <Select
                 value={provider}
-                onChange={(e) => setProvider(e.target.value)}
+                onChange={(value) => setProvider(value)}
                 data-testid="pipeline-provider-select"
               >
                 {PROVIDERS.map((p) => (

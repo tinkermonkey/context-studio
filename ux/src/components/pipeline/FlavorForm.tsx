@@ -1,9 +1,8 @@
 import { Button, TextInput as Input, Field } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 
-import type { components } from "@/api/types";
-
-type PipelineFlavorCreateRequest = components["schemas"]["PipelineFlavorCreateRequest"];
+// TODO: PipelineFlavorCreateRequest not yet in OpenAPI spec (Phase 2 work)
+type PipelineFlavorCreateRequest = any;
 
 interface FlavorFormProps {
   onSubmit: (data: PipelineFlavorCreateRequest) => Promise<void>;

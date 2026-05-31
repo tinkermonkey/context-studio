@@ -40,6 +40,7 @@ class TestPipelineOrchestratorCallLLM:
 
         with pytest.raises(RuntimeError) as exc_info:
             import asyncio
+
             asyncio.run(
                 orchestrator._call_llm(
                     system_prompt="sys",

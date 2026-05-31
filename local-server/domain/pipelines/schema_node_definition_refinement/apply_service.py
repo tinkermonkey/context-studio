@@ -55,9 +55,7 @@ class SchemaDefinitionRefinementApplyService:
             raise ValueError(f"Class {node_id} not found")
 
         candidates = run.output_summary.get("candidates", [])
-        qualifying = [
-            c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold
-        ]
+        qualifying = [c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold]
         if not qualifying:
             result.classes_skipped += 1
             return result

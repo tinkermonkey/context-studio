@@ -11,9 +11,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FlavorForm } from "@/components/pipeline/FlavorForm";
 import { FlavorDrawer } from "@/components/pipeline/FlavorDrawer";
 import { COPY } from "./-copy";
-import type { components } from "@/api/types";
-
-type PipelineFlavorResponse = components["schemas"]["PipelineFlavorResponse"];
+// TODO: PipelineFlavorResponse not yet in OpenAPI spec (Phase 2 work)
+type PipelineFlavorResponse = any;
 
 function FlavorsContent() {
   const { data: flavors = [], isLoading, error, refetch } = useFlavors();

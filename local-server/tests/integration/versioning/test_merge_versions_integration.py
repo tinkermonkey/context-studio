@@ -5,8 +5,6 @@ This test verifies that when a changeset is merged, entity versions are created
 and can be queried via the API endpoints.
 """
 
-
-
 from fastapi import status
 
 from domain.versioning.value_objects import ChangeOperation

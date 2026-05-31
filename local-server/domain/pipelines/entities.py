@@ -77,7 +77,6 @@ class PipelineRun:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
-
 @dataclass(frozen=True)
 class NoOpPipelineRun(PipelineRun):
     """

@@ -109,15 +109,9 @@ def get_fixtures() -> dict[str, str]:
 
     # Add corpus-derived fixtures
     try:
-        fixtures["consensus_distributed"] = _load_corpus_fixture(
-            "fixture_consensus_distributed"
-        )
-        fixtures["microservices_api"] = _load_corpus_fixture(
-            "fixture_microservices_api"
-        )
-        fixtures["service_multisense"] = _load_corpus_fixture(
-            "fixture_service_multisense"
-        )
+        fixtures["consensus_distributed"] = _load_corpus_fixture("fixture_consensus_distributed")
+        fixtures["microservices_api"] = _load_corpus_fixture("fixture_microservices_api")
+        fixtures["service_multisense"] = _load_corpus_fixture("fixture_service_multisense")
     except FileNotFoundError:
         # If corpus fixtures don't exist yet, continue with just hand-authored ones
         pass

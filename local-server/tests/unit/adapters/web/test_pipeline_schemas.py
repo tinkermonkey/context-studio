@@ -5,7 +5,6 @@ Tests verify that type-specific fields survive Pydantic's model_dump() method
 due to the extra="allow" configuration in PipelineRunRequest.
 """
 
-
 from adapters.web.schemas.pipelines import (
     IndividualExtractionRunRequest,
     SchemaConnectionRefinementRunRequest,
@@ -188,4 +187,3 @@ class TestPipelineRunRequestExtraFieldPreservation:
         # Verify values match
         assert dumped["documents"] == documents
         assert dumped["scope"] == scope
-

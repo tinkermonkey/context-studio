@@ -118,8 +118,17 @@ def test_duplicate_against_prior_entity_is_filtered():
     )
     processor = _PaperNLPProcessor(
         entities=[
-            NLPEntity(text="crdt", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None),
-            NLPEntity(text="anti-entropy", label="Algorithm", start=10, end=22, confidence=0.85, linked_uri=None),
+            NLPEntity(
+                text="crdt", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None
+            ),
+            NLPEntity(
+                text="anti-entropy",
+                label="Algorithm",
+                start=10,
+                end=22,
+                confidence=0.85,
+                linked_uri=None,
+            ),
         ]
     )
     out = nlp_gap.execute(_input(text="text with crdt and anti-entropy", prior=prior), processor)
@@ -135,7 +144,9 @@ def test_metadata_reports_skipped_duplicates():
     )
     processor = _PaperNLPProcessor(
         entities=[
-            NLPEntity(text="CRDT", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None),
+            NLPEntity(
+                text="CRDT", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None
+            ),
         ]
     )
     out = nlp_gap.execute(_input(prior=prior), processor)

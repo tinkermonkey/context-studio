@@ -245,7 +245,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
               <label className="form-group-label">Domain</label>
               <Select
                 value={domainId}
-                onChange={(e) => handleSchemeChange(e.target.value)}
+                onChange={(value) => handleSchemeChange(value)}
                 disabled={moveMutation.isPending}
                 data-testid="class-drawer-domain-select"
               >

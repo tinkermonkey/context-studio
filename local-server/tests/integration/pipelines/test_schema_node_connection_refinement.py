@@ -109,9 +109,7 @@ class TestConnectionRefinementRegistration:
     def test_orchestrator_registered_with_implementation_registry(self):
         impl_registry = PipelineImplementationRegistry()
         register_schema_node_connection_refinement(impl_registry, None)
-        impl_class = impl_registry.get(
-            PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default"
-        )
+        impl_class = impl_registry.get(PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default")
         assert impl_class is ConnectionRefinementOrchestrator
 
     def test_default_configuration_registered(self):
@@ -180,7 +178,9 @@ class TestConnectionRefinementExecution:
                 "scope_id": ms_cls.id,
                 "current_connections": [],
                 "groundings": [{"label": "Microservice"}],
-                "extraction_usages": [{"extracted_text": "Microservices communicate via API Gateway"}],
+                "extraction_usages": [
+                    {"extracted_text": "Microservices communicate via API Gateway"}
+                ],
             },
         )
         result_state = asyncio.run(orchestrator.execute(state))

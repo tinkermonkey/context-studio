@@ -33,7 +33,6 @@ class TestExtractionServiceEventHandlerFailures:
         assert isinstance(failures[0][1], ValueError)
 
 
-
 class TestInProcessEventPublisherFailureReporting:
     """Test InProcessEventPublisher correctly reports failures."""
 

@@ -204,9 +204,7 @@ class TestE2ESchemaNodeGrounding:
         fixture = grounding_fixtures["class_person"]
 
         mock_adapter = AsyncMock()
-        candidates = [
-            GroundingCandidate(**c) for c in fixture["dbpedia_candidates"][:1]
-        ]
+        candidates = [GroundingCandidate(**c) for c in fixture["dbpedia_candidates"][:1]]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 
         scorer = GroundingScorer()

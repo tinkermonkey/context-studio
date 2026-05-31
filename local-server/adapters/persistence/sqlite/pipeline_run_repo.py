@@ -258,10 +258,7 @@ class PipelineRepository:
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when listing pipeline runs "
-                f"by status {status.value}: {e}"
-            )
+            msg = "Database error when listing pipeline runs " f"by status {status.value}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         finally:
@@ -297,10 +294,7 @@ class PipelineRepository:
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when listing pipeline runs "
-                f"by type {pipeline_type.value}: {e}"
-            )
+            msg = "Database error when listing pipeline runs " f"by type {pipeline_type.value}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         finally:
@@ -491,16 +485,12 @@ class PipelineRepository:
             ]
         except OperationalError as e:
             msg = (
-                "Database operational error when retrieving change events "
-                f"for run {run_id}: {e}"
+                "Database operational error when retrieving change events " f"for run {run_id}: {e}"
             )
             logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when retrieving change events "
-                f"for run {run_id}: {e}"
-            )
+            msg = "Database error when retrieving change events " f"for run {run_id}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         finally:

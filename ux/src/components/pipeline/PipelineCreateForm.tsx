@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Button, TextInput as Input, TextArea as Textarea, Select, TriState } from "@tinkermonkey/heimdall-ui";
 import { COPY } from "@/routes/app/pipelines/-copy";
-import type { components } from "@/api/types";
-
-type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
+// TODO: PipelineConfigurationCreate not yet in OpenAPI spec (Phase 2 work)
+type PipelineConfigurationCreate = any;
 
 const PROVIDERS = ["anthropic", "openai", "openrouter"] as const;
 
@@ -50,10 +49,9 @@ export function PipelineCreateForm({ onSubmit, onCancel, isLoading }: PipelineCr
     return Object.keys(next).length === 0;
   };
 
-  const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const next = e.target.value;
-    setProvider(next);
-    setModel(MODEL_SUGGESTIONS[next]?.[0] ?? "");
+  const handleProviderChange = (value: string) => {
+    setProvider(value);
+    setModel(MODEL_SUGGESTIONS[value]?.[0] ?? "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +85,7 @@ export function PipelineCreateForm({ onSubmit, onCancel, isLoading }: PipelineCr
         <label className="form-group-label">{COPY.CREATE_FORM_PIPELINE_TYPE_LABEL}</label>
         <Select
           value={pipeline}
-          onChange={(e) => setPipeline(e.target.value)}
+          onChange={(value) => setPipeline(value)}
           data-testid="pipeline-create-type"
         >
           {PIPELINE_TYPES.map((t) => (

@@ -139,7 +139,7 @@ export function EditConfigModal({
             {field.options ? (
               <Select
                 value={String(formState[field.key] || "")}
-                onChange={(e) => handleChange(field.key, e.target.value)}
+                onChange={(value) => handleChange(field.key, value)}
                 disabled={field.readOnly || isSaving}
                 data-testid={`${section.toLowerCase()}-${field.key}-select`}
                 aria-label={field.label}

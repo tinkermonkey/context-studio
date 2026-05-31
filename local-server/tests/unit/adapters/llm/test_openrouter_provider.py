@@ -954,9 +954,7 @@ class TestOpenRouterValidation:
 
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "usage": {"prompt_tokens": 10, "completion_tokens": 20}
-        }
+        mock_response.json.return_value = {"usage": {"prompt_tokens": 10, "completion_tokens": 20}}
         provider._client.post.return_value = mock_response
 
         with pytest.raises(RuntimeError) as exc_info:

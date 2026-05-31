@@ -7,7 +7,9 @@ Uses FakeOntologyRepository for in-memory testing — no database, no I/O.
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+)
 
 from unittest.mock import MagicMock
 
@@ -57,12 +59,25 @@ def _make_run(candidates=None, connections=None, run_id="run-abc"):
 # Class creation
 # ---------------------------------------------------------------------------
 
+
 class TestClassCreation:
     def test_creates_classes_with_draft_status(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "Microservice", "proposed_definition": "A small service", "confidence": 0.9},
-            {"kind": "class", "label": "Gateway", "proposed_definition": "An API gateway", "confidence": 0.8},
-        ])
+        run = _make_run(
+            candidates=[
+                {
+                    "kind": "class",
+                    "label": "Microservice",
+                    "proposed_definition": "A small service",
+                    "confidence": 0.9,
+                },
+                {
+                    "kind": "class",
+                    "label": "Gateway",
+                    "proposed_definition": "An API gateway",
+                    "confidence": 0.8,
+                },
+            ]
+        )
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
         assert result.classes_created == 2
@@ -76,9 +91,16 @@ class TestClassCreation:
             assert cls.taxonomy_id == TAXONOMY_ID
 
     def test_sets_description_from_proposed_definition(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "Cache", "proposed_definition": "Stores data temporarily", "confidence": 0.8},
-        ])
+        run = _make_run(
+            candidates=[
+                {
+                    "kind": "class",
+                    "label": "Cache",
+                    "proposed_definition": "Stores data temporarily",
+                    "confidence": 0.8,
+                },
+            ]
+        )
         svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         classes = repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)
         assert classes[0].description == "Stores data temporarily"
@@ -88,11 +110,14 @@ class TestClassCreation:
 # Idempotency
 # ---------------------------------------------------------------------------
 
+
 class TestIdempotency:
     def test_second_apply_creates_no_duplicates(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "Service", "confidence": 0.9},
-        ])
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Service", "confidence": 0.9},
+            ]
+        )
         svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         result2 = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
@@ -115,24 +140,33 @@ class TestIdempotency:
 # Confidence threshold
 # ---------------------------------------------------------------------------
 
+
 class TestConfidenceThreshold:
     def test_skips_candidates_below_threshold(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "HighConf", "confidence": 0.9},
-            {"kind": "class", "label": "LowConf", "confidence": 0.3},
-        ])
-        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.5)
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "HighConf", "confidence": 0.9},
+                {"kind": "class", "label": "LowConf", "confidence": 0.3},
+            ]
+        )
+        result = svc.apply(
+            run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.5
+        )
 
         assert result.classes_created == 1
         assert result.classes_skipped == 1
         assert repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)[0].title == "HighConf"
 
     def test_zero_threshold_includes_all(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "A", "confidence": 0.0},
-            {"kind": "class", "label": "B", "confidence": 0.01},
-        ])
-        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.0)
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "A", "confidence": 0.0},
+                {"kind": "class", "label": "B", "confidence": 0.01},
+            ]
+        )
+        result = svc.apply(
+            run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.0
+        )
         assert result.classes_created == 2
 
 
@@ -140,11 +174,19 @@ class TestConfidenceThreshold:
 # Property Definitions
 # ---------------------------------------------------------------------------
 
+
 class TestPropertyDefinitions:
     def test_creates_property_definitions_with_slugified_identifier(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "property_definition", "label": "Is Part Of", "proposed_definition": "Membership", "confidence": 0.8},
-        ])
+        run = _make_run(
+            candidates=[
+                {
+                    "kind": "property_definition",
+                    "label": "Is Part Of",
+                    "proposed_definition": "Membership",
+                    "confidence": 0.8,
+                },
+            ]
+        )
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
         assert result.properties_created == 1
@@ -155,9 +197,11 @@ class TestPropertyDefinitions:
         assert prop.title == "Is Part Of"
 
     def test_skips_existing_property_definitions(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "property_definition", "label": "Has Component", "confidence": 0.9},
-        ])
+        run = _make_run(
+            candidates=[
+                {"kind": "property_definition", "label": "Has Component", "confidence": 0.9},
+            ]
+        )
         svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         result2 = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
@@ -169,19 +213,31 @@ class TestPropertyDefinitions:
 # Relationships
 # ---------------------------------------------------------------------------
 
+
 class TestRelationships:
     def test_creates_relationship_when_subject_object_and_property_resolve(self, svc, repo):
         # Pre-create classes and property so relationship can be resolved
-        cls_a = Class(id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha")
-        cls_b = Class(id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta")
+        cls_a = Class(
+            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+        )
+        cls_b = Class(
+            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+        )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
         prop = PropertyDefinition(id="prop-1", identifier="sub_class_of", title="Sub Class Of")
         repo.save_property_definition(prop)
 
-        run = _make_run(connections=[
-            {"subject_ref": "Alpha", "predicate": "Sub Class Of", "object_ref": "Beta", "confidence": 0.9},
-        ])
+        run = _make_run(
+            connections=[
+                {
+                    "subject_ref": "Alpha",
+                    "predicate": "Sub Class Of",
+                    "object_ref": "Beta",
+                    "confidence": 0.9,
+                },
+            ]
+        )
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
         assert result.relationships_created == 1
@@ -190,30 +246,52 @@ class TestRelationships:
         assert rels[0].source_run_id == "run-abc"
 
     def test_skips_relationship_when_predicate_unresolvable(self, svc, repo):
-        cls_a = Class(id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha")
-        cls_b = Class(id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta")
+        cls_a = Class(
+            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+        )
+        cls_b = Class(
+            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+        )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
 
-        run = _make_run(connections=[
-            {"subject_ref": "Alpha", "predicate": "Unknown Predicate", "object_ref": "Beta", "confidence": 0.9},
-        ])
+        run = _make_run(
+            connections=[
+                {
+                    "subject_ref": "Alpha",
+                    "predicate": "Unknown Predicate",
+                    "object_ref": "Beta",
+                    "confidence": 0.9,
+                },
+            ]
+        )
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
 
     def test_relationship_dedup_on_second_apply(self, svc, repo):
-        cls_a = Class(id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha")
-        cls_b = Class(id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta")
+        cls_a = Class(
+            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+        )
+        cls_b = Class(
+            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+        )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
         prop = PropertyDefinition(id="prop-1", identifier="related_to", title="Related To")
         repo.save_property_definition(prop)
 
-        run = _make_run(connections=[
-            {"subject_ref": "Alpha", "predicate": "Related To", "object_ref": "Beta", "confidence": 0.9},
-        ])
+        run = _make_run(
+            connections=[
+                {
+                    "subject_ref": "Alpha",
+                    "predicate": "Related To",
+                    "object_ref": "Beta",
+                    "confidence": 0.9,
+                },
+            ]
+        )
         svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         result2 = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
@@ -231,7 +309,12 @@ class TestRelationships:
                 {"kind": "class", "label": "Server", "confidence": 0.9},
             ],
             connections=[
-                {"subject_ref": "Client", "predicate": "Uses", "object_ref": "Server", "confidence": 0.9},
+                {
+                    "subject_ref": "Client",
+                    "predicate": "Uses",
+                    "object_ref": "Server",
+                    "confidence": 0.9,
+                },
             ],
         )
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
@@ -243,6 +326,7 @@ class TestRelationships:
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
+
 
 class TestValidation:
     def test_raises_when_concept_scheme_id_empty(self, svc):
@@ -256,11 +340,13 @@ class TestValidation:
             svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id="")
 
     def test_returns_accurate_counts(self, svc, repo):
-        run = _make_run(candidates=[
-            {"kind": "class", "label": "A", "confidence": 0.9},
-            {"kind": "class", "label": "B", "confidence": 0.2},  # below threshold
-            {"kind": "property_definition", "label": "Has Role", "confidence": 0.8},
-        ])
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "A", "confidence": 0.9},
+                {"kind": "class", "label": "B", "confidence": 0.2},  # below threshold
+                {"kind": "property_definition", "label": "Has Role", "confidence": 0.8},
+            ]
+        )
         result = svc.apply(
             run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.5
         )

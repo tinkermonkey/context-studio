@@ -120,9 +120,8 @@ export function ClassEditor({ schemeId, initialData, onSubmit, isLoading }: Clas
             <label className="form-group-label">Domain</label>
             <Select
               value={domain}
-              onChange={(e) => setDomain(e.target.value)}
+              onChange={(value) => setDomain(value)}
               data-testid="class-editor-domain-select"
-              required
             >
               <option value="">Select a domain</option>
               {schemes.map((scheme) => (

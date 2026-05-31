@@ -11,8 +11,6 @@ Tests each mapping rule to ensure correct serialization and deserialization:
 - external_references ↔ dct:source + skos:exactMatch
 """
 
-
-
 from rdflib import OWL, RDF, Graph, Namespace
 
 from adapters.interchange.skos import SKOSSerializer

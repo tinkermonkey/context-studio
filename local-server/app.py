@@ -589,8 +589,12 @@ async def lifespan(app: FastAPI):
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
         app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
         app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
-        app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
-        app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)
+        app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
+            ontology_repo
+        )
+        app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(
+            ontology_repo
+        )
 
         # Store grounding dependencies for orchestrator factory
         app.state.grounding_adapter = grounding_adapter

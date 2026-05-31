@@ -17,7 +17,6 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from adapters.web.dependencies import get_extraction_service
@@ -241,4 +240,3 @@ async def enrich_from_references(
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
-

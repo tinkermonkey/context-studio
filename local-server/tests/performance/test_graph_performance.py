@@ -45,7 +45,9 @@ def _setup_graph_service(
 
     # Create taxonomy and concept scheme
     taxonomy = Taxonomy(id=str(uuid4()), identifier="test_taxonomy", title="Test Taxonomy")
-    scheme = ConceptScheme(id=str(uuid4()), taxonomy_id=taxonomy.id, identifier="test_scheme", title="Test Scheme")
+    scheme = ConceptScheme(
+        id=str(uuid4()), taxonomy_id=taxonomy.id, identifier="test_scheme", title="Test Scheme"
+    )
     repository.save_taxonomy(taxonomy)
     repository.save_concept_scheme(scheme)
 

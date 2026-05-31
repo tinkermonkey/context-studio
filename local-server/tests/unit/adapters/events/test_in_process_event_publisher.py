@@ -8,8 +8,6 @@ Tests verify:
 - No handlers scenario (event published but no handlers registered)
 """
 
-
-
 from adapters.events.in_process import InProcessEventPublisher
 from domain.events import DomainEvent
 from domain.ontology.events import ClassCreated, ClassUpdated

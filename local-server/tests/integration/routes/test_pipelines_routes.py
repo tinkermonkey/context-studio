@@ -86,7 +86,7 @@ def client(pipeline_run_repo, registries):
     mock_llm_router = AsyncMock()
     # Mock the complete_async method to return a response
     mock_response = MagicMock()
-    mock_response.content = '[]'  # Default to empty list for JSON responses
+    mock_response.content = "[]"  # Default to empty list for JSON responses
     mock_llm_router.complete_async.return_value = mock_response
 
     # Store in app.state for route handlers

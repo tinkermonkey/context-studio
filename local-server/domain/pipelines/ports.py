@@ -111,6 +111,7 @@ class ExtractionPort(Protocol):
         """Extract RDF triples from text scoped to a specific ontology."""
         ...
 
+
 PipelineRunList = list[PipelineRun]
 ChangeEventDictList = list[dict[str, Any]]
 

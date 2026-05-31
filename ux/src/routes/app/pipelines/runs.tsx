@@ -9,9 +9,8 @@ import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { COPY } from "./-copy";
-import type { components } from "@/api/types";
-
-type ExecutionWithPipeline = components["schemas"]["ExecutionWithPipelineResponse"];
+// TODO: ExecutionWithPipelineResponse not yet in OpenAPI spec (Phase 2 work)
+type ExecutionWithPipeline = any;
 
 type StatusFilter = "all" | "success" | "error" | "timeout";
 
@@ -52,7 +51,7 @@ function RunsPageContent() {
     if (!searchFilter) return executions;
     const query = searchFilter.toLowerCase();
     return executions.filter(
-      (exec) =>
+      (exec: any) =>
         exec.pipeline_title.toLowerCase().includes(query) || exec.id.toLowerCase().includes(query),
     );
   }, [executions, searchFilter]);

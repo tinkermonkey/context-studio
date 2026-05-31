@@ -134,9 +134,7 @@ def test_layer_stops_at_first_matching_source_per_entity():
     assert len(out.entities) == 1
     assert out.entities[0].properties.get("reference_source") == "primary"
     assert primary.call_count == 1
-    assert secondary.call_count == 0, (
-        "Secondary source must not be queried after the primary match"
-    )
+    assert secondary.call_count == 0, "Secondary source must not be queried after the primary match"
 
 
 def test_exception_in_source_recorded_in_metadata_and_falls_through():
@@ -226,12 +224,10 @@ def test_dedup_merges_layer_3_enriched_copy_with_layer_1_prior():
     assert entity.label == "REST"
     assert entity.entity_type == "ArchitecturalStyle"
     # Enrichment merged in
-    assert entity.uri == enriched_layer3.uri, (
-        "URI from Layer-3 enrichment was lost during dedup"
-    )
-    assert entity.description == enriched_layer3.description, (
-        "Description from Layer-3 enrichment was lost during dedup"
-    )
+    assert entity.uri == enriched_layer3.uri, "URI from Layer-3 enrichment was lost during dedup"
+    assert (
+        entity.description == enriched_layer3.description
+    ), "Description from Layer-3 enrichment was lost during dedup"
     assert entity.properties.get("reference_source") == "dbpedia"
 
 
