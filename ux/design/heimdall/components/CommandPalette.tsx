@@ -31,7 +31,7 @@ export const CommandPalette = React.forwardRef<HTMLDivElement, CommandPalettePro
 
     useImperativeHandle(ref, () => paletteRef.current as HTMLDivElement)
 
-    useFocusTrap(paletteRef, isOpen)
+    useFocusTrap(paletteRef as React.RefObject<HTMLElement>, isOpen)
     useBodyOverflow(isOpen)
 
     const filtered = useMemo(() => {

@@ -8,6 +8,7 @@ read endpoints through the FastAPI test client with a schema-aware mock LLM.
 import asyncio
 import json
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -29,7 +30,6 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionState,
 )
 from tests.fixtures.schema_extraction_fixtures import get_microservices_text
-from typing import cast
 
 
 class _SchemaExtractionMockLLM:
