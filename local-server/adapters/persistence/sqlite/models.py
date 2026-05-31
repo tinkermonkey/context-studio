@@ -756,6 +756,9 @@ class Batch(Base):  # type: ignore[valid-type,misc]
         id: UUID as string, primary key
         status: Current status (pending, running, completed, failed, cancelled)
         created_at: UTC timestamp of batch creation
+        started_at: UTC timestamp when batch transitioned to RUNNING (nullable)
+        completed_at: UTC timestamp when batch transitioned to terminal state (nullable)
+        last_updated: UTC timestamp of last status change or run update
     """
 
     __tablename__ = "batches"
@@ -775,12 +778,32 @@ class Batch(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="UTC timestamp of batch creation",
     )
+    started_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        doc="UTC timestamp when batch transitioned to RUNNING",
+    )
+    completed_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        doc="UTC timestamp when batch transitioned to terminal state",
+    )
+    last_updated = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of last status change or run update",
+    )
 
     __table_args__ = (
         CheckConstraint(
             "status IN ('pending', 'running', 'completed', 'failed', 'cancelled')",
             name="check_valid_batch_status",
         ),
+        Index("idx_batch_id_status", "id", "status"),
     )
 
     def __repr__(self) -> str:

@@ -217,3 +217,80 @@ class CandidateResponse(BaseModel):
     source: str = Field(default="", description="Source or database where candidate originates")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     provenance: str = Field(default="", description="Rationale or provenance for the candidate")
+
+
+class RunCountsResponse(BaseModel):
+    """Response containing run counts by status."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    pending: int = Field(..., ge=0, description="Number of pending runs")
+    running: int = Field(..., ge=0, description="Number of running runs")
+    completed: int = Field(..., ge=0, description="Number of completed runs")
+    failed: int = Field(..., ge=0, description="Number of failed runs")
+
+
+class BatchResponse(BaseModel):
+    """Response containing batch information."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Batch UUID")
+    status: str = Field(..., description="Batch status (pending|running|completed|failed|cancelled)")
+    created_at: datetime = Field(..., description="UTC timestamp of batch creation")
+    started_at: Optional[datetime] = Field(None, description="UTC timestamp when batch started")
+    completed_at: Optional[datetime] = Field(None, description="UTC timestamp when batch completed")
+    last_updated: datetime = Field(..., description="UTC timestamp of last update")
+    run_count: int = Field(..., ge=0, description="Total number of runs in batch")
+    run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
+
+
+class EnqueueBatchRunRequest(BaseModel):
+    """Single run spec for batch enqueue."""
+
+    model_config = ConfigDict(extra="allow")
+
+    pipeline_type: str = Field(..., description="Pipeline type (e.g., individual_extraction)")
+    implementation_id: str = Field(default="default", description="Implementation identifier")
+    configuration_ref: str = Field(default="default", description="Configuration reference")
+
+
+class EnqueueBatchRunsRequest(BaseModel):
+    """Request to enqueue multiple runs in a batch."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    runs: list[dict[str, Any]] = Field(..., min_length=1, description="List of run specs to enqueue")
+    idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for safe replay")
+
+
+class EnqueueBatchRunsResponse(BaseModel):
+    """Response from batch enqueue operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    run_ids: list[str] = Field(..., description="IDs of created runs")
+    run_count: int = Field(..., ge=0, description="Total runs now in batch")
+
+
+class CancelBatchResponse(BaseModel):
+    """Response from batch cancel operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    cancelled_count: int = Field(..., ge=0, description="Number of runs cancelled")
+    status: str = Field(..., description="Batch status after operation")
+    run_counts: RunCountsResponse = Field(..., description="Run counts after operation")
+
+
+class ResumeBatchResponse(BaseModel):
+    """Response from batch resume operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    resumed_count: int = Field(..., ge=0, description="Number of runs resumed")
+    status: str = Field(..., description="Batch status after operation")
+    run_counts: RunCountsResponse = Field(..., description="Run counts after operation")

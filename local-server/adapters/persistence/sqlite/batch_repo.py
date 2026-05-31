@@ -15,7 +15,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from adapters.persistence.sqlite.models import Batch as BatchORM
-from domain.pipelines.entities import Batch, BatchStatus
+from adapters.persistence.sqlite.models import BatchRun as BatchRunORM
+from domain.pipelines.entities import Batch, BatchStatus, PipelineRunStatus
 from domain.pipelines.exceptions import PipelineStorageError
 from utils.logger import get_logger
 
@@ -30,7 +31,7 @@ class BatchRepository:
     Repository for Batch persistence and retrieval.
 
     Handles all data access for batches, including creation, status updates,
-    and retrieval of batch information.
+    lifecycle management, and retrieval of batch information.
     """
 
     def __init__(self, session_factory: Callable[[], Session] | Session) -> None:
@@ -63,6 +64,25 @@ class BatchRepository:
         """
         return self._owns_session
 
+    def _orm_to_domain(self, orm_obj: BatchORM) -> Batch:
+        """
+        Convert ORM object to domain entity.
+
+        Args:
+            orm_obj: SQLAlchemy ORM object
+
+        Returns:
+            Domain entity
+        """
+        return Batch(
+            id=orm_obj.id,
+            status=BatchStatus(orm_obj.status),
+            created_at=orm_obj.created_at,
+            started_at=orm_obj.started_at,
+            completed_at=orm_obj.completed_at,
+            last_updated=orm_obj.last_updated,
+        )
+
     def create(self) -> Batch:
         """
         Create a new batch and persist it.
@@ -81,15 +101,12 @@ class BatchRepository:
                 id=batch_id,
                 status=BatchStatus.PENDING.value,
                 created_at=now,
+                last_updated=now,
             )
             session.add(orm_obj)
             session.commit()
 
-            return Batch(
-                id=orm_obj.id,
-                status=BatchStatus(orm_obj.status),
-                created_at=orm_obj.created_at,
-            )
+            return self._orm_to_domain(orm_obj)
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Failed to create batch: {e}", exc_info=e)
@@ -117,11 +134,7 @@ class BatchRepository:
             if not orm_obj:
                 return None
 
-            return Batch(
-                id=orm_obj.id,
-                status=BatchStatus(orm_obj.status),
-                created_at=orm_obj.created_at,
-            )
+            return self._orm_to_domain(orm_obj)
         except SQLAlchemyError as e:
             logger.error(f"Failed to get batch {batch_id}: {e}", exc_info=e)
             raise PipelineStorageError(f"Failed to get batch: {e}") from e
@@ -142,14 +155,7 @@ class BatchRepository:
         session = self._get_session()
         try:
             orm_objs = session.query(BatchORM).all()
-            return [
-                Batch(
-                    id=orm_obj.id,
-                    status=BatchStatus(orm_obj.status),
-                    created_at=orm_obj.created_at,
-                )
-                for orm_obj in orm_objs
-            ]
+            return [self._orm_to_domain(orm_obj) for orm_obj in orm_objs]
         except SQLAlchemyError as e:
             logger.error(f"Failed to list batches: {e}", exc_info=e)
             raise PipelineStorageError(f"Failed to list batches: {e}") from e
@@ -173,14 +179,7 @@ class BatchRepository:
         session = self._get_session()
         try:
             orm_objs = session.query(BatchORM).filter(BatchORM.status == status.value).all()
-            return [
-                Batch(
-                    id=orm_obj.id,
-                    status=BatchStatus(orm_obj.status),
-                    created_at=orm_obj.created_at,
-                )
-                for orm_obj in orm_objs
-            ]
+            return [self._orm_to_domain(orm_obj) for orm_obj in orm_objs]
         except SQLAlchemyError as e:
             logger.error(f"Failed to list batches by status {status}: {e}", exc_info=e)
             raise PipelineStorageError(f"Failed to list batches by status: {e}") from e
@@ -209,12 +208,169 @@ class BatchRepository:
                 return False
 
             orm_obj.status = status.value
+            orm_obj.last_updated = datetime.now(timezone.utc)
             session.commit()
             return True
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Failed to update batch {batch_id} status: {e}", exc_info=e)
             raise PipelineStorageError(f"Failed to update batch status: {e}") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def update_started_at(self, batch_id: str) -> bool:
+        """
+        Update a batch's started_at timestamp (PENDING -> RUNNING transition).
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(BatchORM).filter(BatchORM.id == batch_id).first()
+            if not orm_obj:
+                return False
+
+            if orm_obj.started_at is None:
+                orm_obj.started_at = datetime.now(timezone.utc)
+                orm_obj.last_updated = datetime.now(timezone.utc)
+                session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Failed to update batch {batch_id} started_at: {e}", exc_info=e)
+            raise PipelineStorageError(f"Failed to update batch started_at: {e}") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def update_completed_at(self, batch_id: str) -> bool:
+        """
+        Update a batch's completed_at timestamp (terminal state transition).
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(BatchORM).filter(BatchORM.id == batch_id).first()
+            if not orm_obj:
+                return False
+
+            if orm_obj.completed_at is None:
+                orm_obj.completed_at = datetime.now(timezone.utc)
+                orm_obj.last_updated = datetime.now(timezone.utc)
+                session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Failed to update batch {batch_id} completed_at: {e}", exc_info=e)
+            raise PipelineStorageError(f"Failed to update batch completed_at: {e}") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def compute_aggregate_status(self, batch_id: str) -> BatchStatus:
+        """
+        Compute batch status from child pipeline runs.
+
+        Batch status transitions:
+        - PENDING: No child runs started yet, or all runs still PENDING
+        - RUNNING: At least one run is RUNNING
+        - COMPLETED: All runs are terminal (COMPLETED or FAILED) and at least one COMPLETED
+        - FAILED: All runs are terminal and all FAILED
+        - CANCELLED: User issued cancel command explicitly (stored status)
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            Computed BatchStatus (does not update database)
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            runs = session.query(BatchRunORM).filter(BatchRunORM.batch_id == batch_id).all()
+            if not runs:
+                return BatchStatus.PENDING
+
+            statuses = [r.status for r in runs]
+
+            if PipelineRunStatus.RUNNING.value in statuses:
+                return BatchStatus.RUNNING
+
+            all_terminal = all(
+                s in (PipelineRunStatus.COMPLETED.value, PipelineRunStatus.FAILED.value)
+                for s in statuses
+            )
+
+            if all_terminal:
+                if PipelineRunStatus.COMPLETED.value in statuses:
+                    return BatchStatus.COMPLETED
+                else:
+                    return BatchStatus.FAILED
+
+            return BatchStatus.PENDING
+        except SQLAlchemyError as e:
+            logger.error(f"Failed to compute aggregate status for batch {batch_id}: {e}", exc_info=e)
+            raise PipelineStorageError(f"Failed to compute aggregate status: {e}") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def get_run_counts(self, batch_id: str) -> dict[str, int]:
+        """
+        Get count of runs in each status for a batch.
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            Dict with keys: pending, running, completed, failed
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            runs = session.query(BatchRunORM).filter(BatchRunORM.batch_id == batch_id).all()
+
+            counts = {
+                "pending": 0,
+                "running": 0,
+                "completed": 0,
+                "failed": 0,
+            }
+
+            for run in runs:
+                if run.status == PipelineRunStatus.PENDING.value:
+                    counts["pending"] += 1
+                elif run.status == PipelineRunStatus.RUNNING.value:
+                    counts["running"] += 1
+                elif run.status == PipelineRunStatus.COMPLETED.value:
+                    counts["completed"] += 1
+                elif run.status == PipelineRunStatus.FAILED.value:
+                    counts["failed"] += 1
+
+            return counts
+        except SQLAlchemyError as e:
+            logger.error(f"Failed to get run counts for batch {batch_id}: {e}", exc_info=e)
+            raise PipelineStorageError(f"Failed to get run counts: {e}") from e
         finally:
             if self._should_close_session():
                 session.close()

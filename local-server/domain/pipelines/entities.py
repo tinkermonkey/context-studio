@@ -66,19 +66,27 @@ class Batch:
         id: Unique identifier (UUID as string)
         status: Current batch status (pending | running | completed | failed | cancelled)
         created_at: UTC timestamp of batch creation
+        started_at: UTC timestamp when batch transitioned to RUNNING (None if not yet started)
+        completed_at: UTC timestamp when batch transitioned to terminal state (None if not completed)
+        last_updated: UTC timestamp of last status change or run update
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
     status: BatchStatus = BatchStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @classmethod
     def create(cls, created_at: datetime | None = None) -> "Batch":
         """Create a new batch with status=PENDING."""
+        now = created_at or datetime.now(timezone.utc)
         return cls(
             id=str(uuid4()),
             status=BatchStatus.PENDING,
-            created_at=created_at or datetime.now(timezone.utc),
+            created_at=now,
+            last_updated=now,
         )
 
 

@@ -3462,9 +3462,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Create Batch Api Pipelines Batches Post"
+                  "$ref": "#/components/schemas/BatchResponse"
                 }
               }
             }
@@ -3497,9 +3495,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get Batch Api Pipelines Batches  Batch Id  Get"
+                  "$ref": "#/components/schemas/BatchResponse"
                 }
               }
             }
@@ -3554,9 +3550,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Enqueue Batch Runs Api Pipelines Batches  Batch Id  Runs Post"
+                  "$ref": "#/components/schemas/EnqueueBatchRunsResponse"
                 }
               }
             }
@@ -3599,9 +3593,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Cancel Batch Runs Api Pipelines Batches  Batch Id  Cancel Post"
+                  "$ref": "#/components/schemas/CancelBatchResponse"
                 }
               }
             }
@@ -3644,9 +3636,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Resume Batch Runs Api Pipelines Batches  Batch Id  Resume Post"
+                  "$ref": "#/components/schemas/ResumeBatchResponse"
                 }
               }
             }
@@ -6129,6 +6119,79 @@
         "title": "BackgroundTaskSummaryResponse",
         "description": "Response containing summary of background task execution status."
       },
+      "BatchResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Batch UUID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Batch status (pending|running|completed|failed|cancelled)"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC timestamp of batch creation"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "UTC timestamp when batch started"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "UTC timestamp when batch completed"
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Updated",
+            "description": "UTC timestamp of last update"
+          },
+          "run_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Run Count",
+            "description": "Total number of runs in batch"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Breakdown of runs by status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "created_at",
+          "last_updated",
+          "run_count",
+          "run_counts"
+        ],
+        "title": "BatchResponse",
+        "description": "Response containing batch information."
+      },
       "Body_import_ontology_api_v1_interchange_import_post": {
         "properties": {
           "format": {
@@ -6167,6 +6230,39 @@
           "file"
         ],
         "title": "Body_import_ontology_api_v1_interchange_import_post"
+      },
+      "CancelBatchResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "cancelled_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cancelled Count",
+            "description": "Number of runs cancelled"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Batch status after operation"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Run counts after operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "cancelled_count",
+          "status",
+          "run_counts"
+        ],
+        "title": "CancelBatchResponse",
+        "description": "Response from batch cancel operation."
       },
       "CandidateResponse": {
         "properties": {
@@ -7442,6 +7538,37 @@
         ],
         "title": "DemoDatasetLoadResponse",
         "description": "Counts of entities persisted by a demo dataset load."
+      },
+      "EnqueueBatchRunsResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Run Ids",
+            "description": "IDs of created runs"
+          },
+          "run_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Run Count",
+            "description": "Total runs now in batch"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "run_ids",
+          "run_count"
+        ],
+        "title": "EnqueueBatchRunsResponse",
+        "description": "Response from batch enqueue operation."
       },
       "EnrichFromReferencesRequest": {
         "properties": {
@@ -10136,6 +10263,39 @@
         "title": "ResolveConflictsRequest",
         "description": "Request to resolve conflicts in a proposal"
       },
+      "ResumeBatchResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "resumed_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Resumed Count",
+            "description": "Number of runs resumed"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Batch status after operation"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Run counts after operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "resumed_count",
+          "status",
+          "run_counts"
+        ],
+        "title": "ResumeBatchResponse",
+        "description": "Response from batch resume operation."
+      },
       "RevertRunResponse": {
         "properties": {
           "run_id": {
@@ -10156,6 +10316,43 @@
         ],
         "title": "RevertRunResponse",
         "description": "Response from reverting a pipeline run."
+      },
+      "RunCountsResponse": {
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pending",
+            "description": "Number of pending runs"
+          },
+          "running": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Running",
+            "description": "Number of running runs"
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Completed",
+            "description": "Number of completed runs"
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Failed",
+            "description": "Number of failed runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "RunCountsResponse",
+        "description": "Response containing run counts by status."
       },
       "SPARQLRequest": {
         "properties": {

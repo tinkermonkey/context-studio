@@ -35,15 +35,25 @@ from adapters.factories.orchestrator_factory import (
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
+    BatchResponse,
     CandidateResponse,
+    CancelBatchResponse,
     ConfigurationResponse,
+    EnqueueBatchRunsResponse,
     ImplementationResponse,
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
+    ResumeBatchResponse,
     RevertRunResponse,
+    RunCountsResponse,
 )
-from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
+from domain.pipelines.entities import (
+    BatchStatus,
+    PipelineRun,
+    PipelineRunStatus,
+    PipelineType,
+)
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
@@ -871,6 +881,7 @@ async def revert_pipeline_run(
 @router.post(
     "/batches",
     status_code=http_status.HTTP_201_CREATED,
+    response_model=BatchResponse,
 )
 async def create_batch(request: Request) -> dict[str, Any]:
     """
@@ -888,13 +899,22 @@ async def create_batch(request: Request) -> dict[str, Any]:
     batch_repo = request.app.state.batch_repo
     try:
         batch = batch_repo.create()
-        return {"id": batch.id, "status": batch.status.value, "created_at": batch.created_at}
+        return {
+            "id": batch.id,
+            "status": batch.status.value,
+            "created_at": batch.created_at,
+            "started_at": batch.started_at,
+            "completed_at": batch.completed_at,
+            "last_updated": batch.last_updated,
+            "run_count": 0,
+            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0},
+        }
     except Exception as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
 
-@router.get("/batches/{batch_id}")
+@router.get("/batches/{batch_id}", response_model=BatchResponse)
 async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
     """
     Get batch info and aggregate status over child runs.
@@ -910,7 +930,6 @@ async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
         HTTPException: 404 if batch not found
     """
     batch_repo = request.app.state.batch_repo
-    pipeline_run_repo = request.app.state.pipeline_run_repo
 
     try:
         batch = batch_repo.get(batch_id)
@@ -920,22 +939,17 @@ async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
                 detail=f"Batch not found: {batch_id}",
             )
 
-        # Get all runs in this batch
-        runs = pipeline_run_repo.list_by_batch_id(batch_id)
-
-        # Calculate aggregate status
-        run_counts = {
-            "pending": sum(1 for r in runs if r.status == PipelineRunStatus.PENDING),
-            "running": sum(1 for r in runs if r.status == PipelineRunStatus.RUNNING),
-            "completed": sum(1 for r in runs if r.status == PipelineRunStatus.COMPLETED),
-            "failed": sum(1 for r in runs if r.status == PipelineRunStatus.FAILED),
-        }
+        run_counts = batch_repo.get_run_counts(batch_id)
+        total_runs = sum(run_counts.values())
 
         return {
             "id": batch.id,
             "status": batch.status.value,
             "created_at": batch.created_at,
-            "run_count": len(runs),
+            "started_at": batch.started_at,
+            "completed_at": batch.completed_at,
+            "last_updated": batch.last_updated,
+            "run_count": total_runs,
             "run_counts": run_counts,
         }
     except Exception as e:
@@ -945,7 +959,11 @@ async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
         raise HTTPException(status_code=status_code, detail=message) from e
 
 
-@router.post("/batches/{batch_id}/runs", status_code=http_status.HTTP_201_CREATED)
+@router.post(
+    "/batches/{batch_id}/runs",
+    status_code=http_status.HTTP_201_CREATED,
+    response_model=EnqueueBatchRunsResponse,
+)
 async def enqueue_batch_runs(
     batch_id: str,
     request: Request,
@@ -988,8 +1006,8 @@ async def enqueue_batch_runs(
     try:
         for run_data in runs_data:
             pipeline_type_str = run_data.get("pipeline_type")
-            impl_id = run_data.get("implementation_id")
-            config_ref = run_data.get("configuration_ref")
+            impl_id = run_data.get("implementation_id", "default")
+            config_ref = run_data.get("configuration_ref", "default")
 
             try:
                 ptype = PipelineType(pipeline_type_str)
@@ -1017,7 +1035,18 @@ async def enqueue_batch_runs(
             )
             created_run_ids.append(run.id)
 
-        return {"batch_id": batch_id, "created_run_ids": created_run_ids}
+        # Update batch started_at timestamp if this is the first run
+        if created_run_ids:
+            batch_repo.update_started_at(batch_id)
+
+        run_counts = batch_repo.get_run_counts(batch_id)
+        total_runs = sum(run_counts.values())
+
+        return {
+            "batch_id": batch_id,
+            "run_ids": created_run_ids,
+            "run_count": total_runs,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -1025,7 +1054,11 @@ async def enqueue_batch_runs(
         raise HTTPException(status_code=status_code, detail=message) from e
 
 
-@router.post("/batches/{batch_id}/cancel", status_code=http_status.HTTP_200_OK)
+@router.post(
+    "/batches/{batch_id}/cancel",
+    status_code=http_status.HTTP_200_OK,
+    response_model=CancelBatchResponse,
+)
 async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
     Cancel all PENDING runs in a batch.
@@ -1059,13 +1092,30 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
                 pipeline_run_repo.update_status(run.id, PipelineRunStatus.FAILED)
                 cancelled_count += 1
 
-        return {"batch_id": batch_id, "cancelled_count": cancelled_count}
+        # Update batch last_updated and check if all runs are terminal
+        if cancelled_count > 0:
+            batch_repo.update_status(batch_id, batch.status)
+            batch_repo.update_completed_at(batch_id)
+
+        run_counts = batch_repo.get_run_counts(batch_id)
+        updated_batch = batch_repo.get(batch_id)
+
+        return {
+            "batch_id": batch_id,
+            "cancelled_count": cancelled_count,
+            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "run_counts": run_counts,
+        }
     except Exception as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
 
-@router.post("/batches/{batch_id}/resume", status_code=http_status.HTTP_200_OK)
+@router.post(
+    "/batches/{batch_id}/resume",
+    status_code=http_status.HTTP_200_OK,
+    response_model=ResumeBatchResponse,
+)
 async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
     Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
@@ -1099,7 +1149,15 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
                 pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
                 resumed_count += 1
 
-        return {"batch_id": batch_id, "resumed_count": resumed_count}
+        run_counts = batch_repo.get_run_counts(batch_id)
+        updated_batch = batch_repo.get(batch_id)
+
+        return {
+            "batch_id": batch_id,
+            "resumed_count": resumed_count,
+            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "run_counts": run_counts,
+        }
     except Exception as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
