@@ -43,7 +43,6 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 )
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -65,7 +64,6 @@ from adapters.web.interchange_routes import router as interchange_router
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
-from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
@@ -103,8 +101,6 @@ from domain.ontology.events import (
 
 # Import domain services
 from domain.ontology.services import OntologyService
-from domain.pipelines.events import PipelineExecuted
-from domain.pipelines.services import PipelineService
 from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -205,9 +201,8 @@ async def lifespan(app: FastAPI):
         )
 
         operations_session_factory = db_manager.get_operations_session_factory()
-        pipeline_repo = SQLitePipelineRepository(operations_session_factory)
         pipeline_run_repo = PipelineRepository(local_session_factory)
-        logger.info("PipelineRepository and PipelineRunRepository created")
+        logger.info("PipelineRunRepository created")
 
         # Initialize pipeline registries (currently empty—implementations/configs added at startup)
         implementation_registry = PipelineImplementationRegistry()
@@ -337,13 +332,6 @@ async def lifespan(app: FastAPI):
         )
         logger.info("Schema node connection refinement pipeline registered")
 
-        pipeline_service = PipelineService(
-            pipeline_repo=pipeline_repo,
-            llm=llm_router,
-            event_publisher=event_publisher,
-        )
-        logger.info("PipelineService created and wired with adapters")
-
         # Versioning service with sync adapter
         sync_config = settings.sync
         sync_target: SyncTarget
@@ -470,11 +458,6 @@ async def lifespan(app: FastAPI):
             " ChangeEventRecorder.on_extraction_completed"
         )
 
-        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
-        logger.info(
-            "Event subscription: PipelineExecuted ->" " ChangeEventRecorder.on_pipeline_executed"
-        )
-
         event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
         logger.info(
             "Event subscription: ChangesetMerged ->" " VersioningService.on_changeset_merged"
@@ -583,7 +566,6 @@ async def lifespan(app: FastAPI):
         app.state.ontology_service = ontology_service
         app.state.graph_service = graph_service
         app.state.extraction_service = extraction_service
-        app.state.pipeline_service = pipeline_service
         app.state.versioning_service = versioning_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
@@ -663,7 +645,6 @@ app.add_middleware(
 app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
-app.include_router(pipeline_router)
 app.include_router(pipelines_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)

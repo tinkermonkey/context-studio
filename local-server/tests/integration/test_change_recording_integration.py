@@ -38,7 +38,6 @@ from domain.ontology.events import (
     TaxonomyUpdated,
 )
 from domain.ontology.services import OntologyService
-from domain.pipelines.events import PipelineExecuted
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
@@ -113,7 +112,6 @@ def change_recorder(change_repo, event_publisher):
     event_publisher.subscribe(SchemeDeleted, recorder.on_scheme_deleted)
     event_publisher.subscribe(ConceptSchemeUpdated, recorder.on_concept_scheme_updated)
     event_publisher.subscribe(ExtractionCompleted, recorder.on_extraction_completed)
-    event_publisher.subscribe(PipelineExecuted, recorder.on_pipeline_executed)
 
     return recorder
 

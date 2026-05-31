@@ -43,7 +43,6 @@ from adapters.web.schemas.pipelines import (
     PipelineTypeResponse,
 )
 from domain.pipelines.exceptions import (
-    PipelineError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -87,9 +86,6 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
-    elif isinstance(exc, PipelineError):
-        _logger.error(f"Unexpected pipeline error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Pipeline execution failed")
     elif isinstance(exc, ValueError):
         _logger.warning(f"Invalid pipeline input: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))
@@ -382,7 +378,7 @@ async def run_pipeline(
     # Execute the pipeline
     try:
         result_state = await orchestrator.execute(state)
-    except PipelineError as exc:
+    except (PipelineStorageError, PipelineInputError, PipelineExternalServiceError, PipelineExecutionError) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_status(run_id, PipelineRunStatus.FAILED)

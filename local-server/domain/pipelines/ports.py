@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-from .entities import Execution, PipelineConfiguration, PipelineRun, PipelineRunStatus, PipelineType
+from .entities import PipelineRun, PipelineRunStatus, PipelineType
 
 
 # ============================================================================
@@ -82,46 +82,6 @@ class LLMProvider(Protocol):
 
 
 # ============================================================================
-# Config-management port value type
-# ============================================================================
-
-
-@dataclass(frozen=True)
-class ExecutionWithTitle:
-    """Pairs an execution with its pipeline title."""
-
-    execution: Execution
-    pipeline_title: str
-
-
-class PipelineConfigRepository(Protocol):
-    """Port for persisting and retrieving pipeline configurations and executions."""
-
-    def get_config(self, config_id: str) -> PipelineConfiguration | None:
-        ...
-
-    def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
-        ...
-
-    def save_config(self, config: PipelineConfiguration) -> PipelineConfiguration:
-        ...
-
-    def delete_config(self, config_id: str) -> bool:
-        ...
-
-    def record_execution(self, execution: Execution) -> Execution:
-        ...
-
-    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> list[Execution]:
-        ...
-
-    def get_all_executions(
-        self,
-        status: str | None = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> tuple[list[ExecutionWithTitle], int]:
-        ...
 
 
 class TripleExtractionResult(Protocol):

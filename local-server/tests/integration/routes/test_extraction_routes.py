@@ -34,7 +34,6 @@ from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeReposi
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.extraction_routes import router
-from adapters.web.schemas.extraction import ExtractTripleResponse
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -462,9 +461,6 @@ class TestExtractionRoutes:
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert len(body["extracted_entities"]) == 0
-
-
-# ==================== Triple Extraction Tests ====================
 
 
 class TestTripleExtraction:

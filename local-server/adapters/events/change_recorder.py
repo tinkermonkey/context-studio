@@ -35,7 +35,6 @@ from domain.ontology.events import (
     TaxonomyDeleted,
     TaxonomyUpdated,
 )
-from domain.pipelines.events import PipelineExecuted
 from domain.ports import ChangeRecordPort
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
@@ -93,43 +92,6 @@ class ChangeEventRecorder:
         )
         logger.debug(
             f"Recorded extraction completion: result_id={event.result_id}, "
-            f"change_event_id={change_id}"
-            + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
-        )
-
-    def on_pipeline_executed(self, event: PipelineExecuted) -> None:
-        """
-        Handle PipelineExecuted events.
-
-        Records pipeline execution completion to the audit trail, capturing
-        the execution ID, pipeline ID, and status.
-
-        Exceptions are allowed to propagate to the event publisher so they
-        can be reported to the caller for visibility and recovery.
-
-        Args:
-            event: The PipelineExecuted event to record
-
-        Raises:
-            Any exception from the change repository is propagated to allow
-            the event publisher to include it in the failures list.
-        """
-        batch_run_id = get_current_batch_run_id()
-        change_id = self.change_repo.record_change(
-            entity_id=event.execution_id,
-            entity_type="pipeline_execution",
-            operation=ChangeOperation.CREATE,
-            new_state={
-                "execution_id": event.execution_id,
-                "pipeline_id": event.pipeline_id,
-                "status": event.status,
-            },
-            change_reason="Pipeline execution completed",
-            batch_run_id=batch_run_id,
-        )
-        logger.debug(
-            f"Recorded pipeline execution: execution_id={event.execution_id}, "
-            f"pipeline_id={event.pipeline_id}, status={event.status}, "
             f"change_event_id={change_id}"
             + (f", batch_run_id={batch_run_id}" if batch_run_id else "")
         )

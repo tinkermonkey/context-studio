@@ -20,7 +20,6 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
 from domain.pipelines.exceptions import (
-    PipelineError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -628,7 +627,7 @@ class TestPipelineErrorHandling:
         assert "Internal logic failed" in body["detail"]
 
     def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
-        """Test that generic PipelineError from orchestrator returns 500."""
+        """Test that generic PipelineExecutionError from orchestrator returns 500."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
             PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
@@ -640,9 +639,9 @@ class TestPipelineErrorHandling:
             {"model": "test-model"},
         )
 
-        # Mock orchestrator to raise generic PipelineError
+        # Mock orchestrator to raise generic PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineError("Generic pipeline error")
+        mock_orchestrator.execute.side_effect = PipelineExecutionError("Generic pipeline error")
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):

@@ -3,43 +3,25 @@ Exceptions for the Pipeline Management bounded context.
 """
 
 
-class PipelineError(Exception):
-    """Base exception for pipeline domain errors."""
-
-    pass
-
-
-class PipelineNotFoundError(PipelineError):
-    """Raised when a pipeline configuration is not found."""
-
-    pass
-
-
-class LayerExecutionError(PipelineError):
-    """Raised when a pipeline layer execution fails."""
-
-    pass
-
-
-class PipelineStorageError(PipelineError):
+class PipelineStorageError(Exception):
     """Raised when a database operation for pipeline runs fails."""
 
     pass
 
 
-class PipelineInputError(PipelineError):
+class PipelineInputError(Exception):
     """Raised when pipeline input is invalid or malformed."""
 
     pass
 
 
-class PipelineExternalServiceError(PipelineError):
+class PipelineExternalServiceError(Exception):
     """Raised when an external service fails (timeouts, connection errors)."""
 
     pass
 
 
-class PipelineExecutionError(PipelineError):
+class PipelineExecutionError(Exception):
     """Raised when internal orchestrator logic fails unexpectedly."""
 
     pass
