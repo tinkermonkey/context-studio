@@ -208,7 +208,7 @@ class GroundingAdapter:
                     label=result.label,
                     description=result.description,
                     source="Wikidata",
-                    source_score=0.5,
+                    source_score=result.confidence,
                     types=None,
                 )
             )
@@ -229,7 +229,7 @@ class GroundingAdapter:
                     label=result.label,
                     description=result.description,
                     source="schema.org",
-                    source_score=0.5,
+                    source_score=result.confidence,
                     types=None,
                 )
             )

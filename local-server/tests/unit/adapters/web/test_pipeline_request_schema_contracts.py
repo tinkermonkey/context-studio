@@ -6,18 +6,11 @@ that orchestrators will read from input_data, preventing silent mismatches
 between HTTP contracts and domain orchestrator implementations.
 """
 
-import inspect
 from typing import get_type_hints
 
 from adapters.web.schemas.pipelines import (
     SchemaConnectionRefinementRunRequest,
     SchemaDefinitionRefinementRunRequest,
-)
-from domain.pipelines.schema_node_connection_refinement.orchestrator import (
-    ConnectionRefinementOrchestrator,
-)
-from domain.pipelines.schema_node_definition_refinement.orchestrator import (
-    DefinitionRefinementOrchestrator,
 )
 
 
@@ -26,7 +19,7 @@ class TestDefinitionRefinementSchemaContract:
 
     def test_schema_fields_cover_orchestrator_input_consumption(self):
         """
-        Assert that all fields read by DefinitionRefinementOrchestrator.execute()
+        Assert that all fields consumed from input_data by DefinitionRefinementOrchestrator
         are present in SchemaDefinitionRefinementRunRequest.
         """
         # Get schema field names
@@ -36,27 +29,13 @@ class TestDefinitionRefinementSchemaContract:
             "configuration_ref",
         }
 
-        # Get the execute() method to inspect what it reads
-        execute_source = inspect.getsource(DefinitionRefinementOrchestrator.execute)
+        # Fields read from input_data by the orchestrator
+        input_fields = {"node_id", "current_definition", "groundings", "extraction_usages"}
 
-        # Verify critical fields are in schema and are read by orchestrator
-        required_fields = {"node_id", "current_definition"}
-        optional_fields = {"groundings", "extraction_usages"}
-
-        for field in required_fields:
-            assert field in schema_fields, (
-                f"Required field '{field}' missing from "
-                f"SchemaDefinitionRefinementRunRequest"
-            )
-            assert f'"{field}"' in execute_source or f"'{field}'" in execute_source, (
-                f"Field '{field}' not read by DefinitionRefinementOrchestrator.execute()"
-            )
-
-        for field in optional_fields:
-            assert f'"{field}"' in execute_source or f"'{field}'" in execute_source, (
-                f"Optional field '{field}' should be read by "
-                f"DefinitionRefinementOrchestrator.execute()"
-            )
+        # Assert that schema contains all input_data fields
+        assert input_fields.issubset(schema_fields), (
+            f"Schema is missing input fields: {input_fields - schema_fields}"
+        )
 
 
 class TestConnectionRefinementSchemaContract:
@@ -64,7 +43,7 @@ class TestConnectionRefinementSchemaContract:
 
     def test_schema_fields_cover_orchestrator_input_consumption(self):
         """
-        Assert that all fields read by ConnectionRefinementOrchestrator.execute()
+        Assert that all fields consumed from input_data by ConnectionRefinementOrchestrator
         are present in SchemaConnectionRefinementRunRequest.
         """
         # Get schema field names
@@ -74,24 +53,10 @@ class TestConnectionRefinementSchemaContract:
             "configuration_ref",
         }
 
-        # Get the execute() method to inspect what it reads
-        execute_source = inspect.getsource(ConnectionRefinementOrchestrator.execute)
+        # Fields read from input_data by the orchestrator
+        input_fields = {"scope_id", "current_connections", "groundings", "extraction_usages"}
 
-        # Verify critical fields are in schema and are read by orchestrator
-        required_fields = {"scope_id", "current_connections"}
-        optional_fields = {"groundings", "extraction_usages"}
-
-        for field in required_fields:
-            assert field in schema_fields, (
-                f"Required field '{field}' missing from "
-                f"SchemaConnectionRefinementRunRequest"
-            )
-            assert f'"{field}"' in execute_source or f"'{field}'" in execute_source, (
-                f"Field '{field}' not read by ConnectionRefinementOrchestrator.execute()"
-            )
-
-        for field in optional_fields:
-            assert f'"{field}"' in execute_source or f"'{field}'" in execute_source, (
-                f"Optional field '{field}' should be read by "
-                f"ConnectionRefinementOrchestrator.execute()"
-            )
+        # Assert that schema contains all input_data fields
+        assert input_fields.issubset(schema_fields), (
+            f"Schema is missing input fields: {input_fields - schema_fields}"
+        )

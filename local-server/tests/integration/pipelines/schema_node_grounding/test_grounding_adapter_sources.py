@@ -7,8 +7,6 @@ These tests ensure:
 3. Source results conform to GroundingCandidate shape
 """
 
-import asyncio
-
 import pytest
 
 from adapters.reference.conceptnet import ConceptNetSource
