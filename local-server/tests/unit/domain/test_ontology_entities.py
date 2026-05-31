@@ -160,7 +160,12 @@ class TestTaxonomy:
 
     def test_taxonomy_creation_with_description(self):
         """Create a taxonomy with description."""
-        tax = Taxonomy(id="tax-1", identifier="tax_test", title="Biology", description="Life science taxonomy")
+        tax = Taxonomy(
+            id="tax-1",
+            identifier="tax_test",
+            title="Biology",
+            description="Life science taxonomy",
+        )
         assert tax.description == "Life science taxonomy"
 
     def test_taxonomy_rename(self):
@@ -188,7 +193,12 @@ class TestConceptScheme:
 
     def test_concept_scheme_creation(self):
         """Create a concept scheme."""
-        scheme = ConceptScheme(id="scheme-1", taxonomy_id="tax-1", identifier="scheme_test", title="Animal Classification")
+        scheme = ConceptScheme(
+            id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="scheme_test",
+            title="Animal Classification",
+        )
         assert scheme.id == "scheme-1"
         assert scheme.taxonomy_id == "tax-1"
         assert scheme.title == "Animal Classification"
@@ -207,13 +217,23 @@ class TestConceptScheme:
 
     def test_concept_scheme_rename(self):
         """Rename a concept scheme."""
-        scheme = ConceptScheme(id="scheme-1", taxonomy_id="tax-1", identifier="scheme_test", title="Animals")
+        scheme = ConceptScheme(
+            id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="scheme_test",
+            title="Animals",
+        )
         scheme.rename("Animalia")
         assert scheme.title == "Animalia"
 
     def test_concept_scheme_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        scheme = ConceptScheme(id="scheme-1", taxonomy_id="tax-1", identifier="scheme_test", title="Animals")
+        scheme = ConceptScheme(
+            id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="scheme_test",
+            title="Animals",
+        )
         with pytest.raises(ValueError, match="Title cannot be empty"):
             scheme.rename("")
 
@@ -223,7 +243,13 @@ class TestClass:
 
     def test_class_creation(self):
         """Create a class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", identifier="cls_test", title="Dog")
+        cls = Class(
+            id="class-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="cls_test",
+            title="Dog",
+        )
         assert cls.id == "class-1"
         assert cls.concept_scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
@@ -273,26 +299,50 @@ class TestClass:
 
     def test_class_rename(self):
         """Rename a class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", identifier="cls_test", title="Dog")
+        cls = Class(
+            id="class-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="cls_test",
+            title="Dog",
+        )
         cls.rename("Canine")
         assert cls.title == "Canine"
 
     def test_class_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", identifier="cls_test", title="Dog")
+        cls = Class(
+            id="class-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="cls_test",
+            title="Dog",
+        )
         with pytest.raises(ValueError, match="Title cannot be empty"):
             cls.rename("")
 
     def test_class_add_subclass_of(self):
         """Add a parent class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", identifier="cls_test", title="Dog")
+        cls = Class(
+            id="class-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="cls_test",
+            title="Dog",
+        )
         assert cls.parent_class_id is None
         cls.add_subclass_of("class-0")
         assert cls.parent_class_id == "class-0"
 
     def test_class_add_subclass_of_self_raises(self):
         """Add self as parent raises ValueError."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", identifier="cls_test", title="Dog")
+        cls = Class(
+            id="class-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            identifier="cls_test",
+            title="Dog",
+        )
         with pytest.raises(ValueError, match="A class cannot be its own parent"):
             cls.add_subclass_of("class-1")
 

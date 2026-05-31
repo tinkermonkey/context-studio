@@ -33,7 +33,14 @@ SCHEME_ID = "cs-1"
 def repo():
     r = FakeOntologyRepository()
     r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
-    r.save_concept_scheme(ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, identifier="test_scheme", title="Test Scheme"))
+    r.save_concept_scheme(
+        ConceptScheme(
+            id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="test_scheme",
+            title="Test Scheme",
+        )
+    )
     return r
 
 

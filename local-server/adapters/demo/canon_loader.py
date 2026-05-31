@@ -187,6 +187,7 @@ class CanonDemoDatasetLoader:
                 status=self._coerce_status(tax.get("status")),
             )
             saved = self._repo.save_taxonomy(domain_tax)
+            assert saved.identifier is not None
             taxonomy_slug_to_id[saved.identifier] = saved.id
 
         # ---- Step 2: Concept schemes --------------------------------------- #
@@ -210,6 +211,7 @@ class CanonDemoDatasetLoader:
                 status=self._coerce_status(scheme.get("status")),
             )
             saved_scheme = self._repo.save_concept_scheme(domain_scheme)
+            assert saved_scheme.identifier is not None
             scheme_slug_to_id[saved_scheme.identifier] = saved_scheme.id
             scheme_slug_to_taxonomy_id[saved_scheme.identifier] = tax_id
 
@@ -272,6 +274,7 @@ class CanonDemoDatasetLoader:
                 source_run_id=run_id,
             )
             saved_cls = self._repo.save_class(domain_cls)
+            assert saved_cls.identifier is not None
             class_slug_to_id[saved_cls.identifier] = saved_cls.id
 
         return LoadResult(

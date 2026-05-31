@@ -85,7 +85,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (http_status.HTTP_503_SERVICE_UNAVAILABLE, "External service unavailable")
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, f"Pipeline execution failed: {str(exc)}")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            f"Pipeline execution failed: {str(exc)}",
+        )
     elif isinstance(exc, ValueError):
         _logger.warning(f"Invalid pipeline input: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))

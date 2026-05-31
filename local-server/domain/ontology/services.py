@@ -105,7 +105,8 @@ class OntologyService:
             title: Display name for the taxonomy
             description: Optional longer description
             color: Optional hex color string for the swatch
-            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created Taxonomy
@@ -523,7 +524,8 @@ class OntologyService:
             title: Display name for the scheme
             description: Optional longer description
             color: Optional hex color string for the swatch
-            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created ConceptScheme
@@ -786,7 +788,8 @@ class OntologyService:
             description: Optional longer description
             color: Optional hex color string for the swatch
             parent_class_id: Optional ID of the parent class for hierarchy
-            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created Class with generated embedding

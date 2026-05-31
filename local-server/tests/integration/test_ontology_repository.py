@@ -192,8 +192,18 @@ class TestConceptSchemeCRUD:
 
     def test_list_concept_schemes(self, repo, sample_taxonomy):
         """Test listing concept schemes."""
-        scheme1 = ConceptScheme(id="s1", taxonomy_id=sample_taxonomy.id, identifier="s1_test", title="S1")
-        scheme2 = ConceptScheme(id="s2", taxonomy_id=sample_taxonomy.id, identifier="s2_test", title="S2")
+        scheme1 = ConceptScheme(
+            id="s1",
+            taxonomy_id=sample_taxonomy.id,
+            identifier="s1_test",
+            title="S1",
+        )
+        scheme2 = ConceptScheme(
+            id="s2",
+            taxonomy_id=sample_taxonomy.id,
+            identifier="s2_test",
+            title="S2",
+        )
         repo.save_concept_scheme(scheme1)
         repo.save_concept_scheme(scheme2)
 

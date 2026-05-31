@@ -61,7 +61,12 @@ def ontology_repo():
     r = FakeOntologyRepository()
     r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Apply Test Taxonomy"))
     r.save_concept_scheme(
-        ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, identifier="test_scheme", title="Apply Test Scheme")
+        ConceptScheme(
+            id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="test_scheme",
+            title="Apply Test Scheme",
+        )
     )
     return r
 

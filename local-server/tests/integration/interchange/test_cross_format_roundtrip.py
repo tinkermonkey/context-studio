@@ -71,7 +71,9 @@ def persist_incoming_entities(
         if entity_dict.get("type") == "taxonomy":
             tax = Taxonomy(
                 id=entity_dict["id"],
-                identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
+                identifier=entity_dict.get(
+                    "identifier", _generate_valid_identifier(entity_dict["id"])
+                ),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -85,7 +87,9 @@ def persist_incoming_entities(
             scheme = ConceptScheme(
                 id=entity_dict["id"],
                 taxonomy_id=entity_dict["taxonomy_id"],
-                identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
+                identifier=entity_dict.get(
+                    "identifier", _generate_valid_identifier(entity_dict["id"])
+                ),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -127,7 +131,9 @@ def persist_incoming_entities(
                     taxonomy_id=_find_taxonomy_id_for_scheme(
                         repo, entity_dict["concept_scheme_id"]
                     ),
-                    identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
+                    identifier=entity_dict.get(
+                        "identifier", _generate_valid_identifier(entity_dict["id"])
+                    ),
                     title=entity_dict["title"],
                     description=entity_dict.get("description"),
                     parent_class_id=parent_class_id,

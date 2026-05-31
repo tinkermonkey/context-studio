@@ -303,6 +303,8 @@ async def extract_triples(
                     kind=t["subject"]["kind"],
                     id=t["subject"].get("id"),
                     label=t["subject"].get("label"),
+                    value=t["subject"].get("value"),
+                    datatype=t["subject"].get("datatype"),
                 ),
                 predicate=TriplePredicate(
                     property_definition_id=t["predicate"].get("property_definition_id"),
