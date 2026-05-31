@@ -127,6 +127,7 @@ export function EntityReviewPanel({
       await createClassMutation.mutateAsync({
         schemeId: defaultScheme.id,
         data: {
+          identifier: entity.label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
           title: entity.label,
           description: entity.description || null,
         },
@@ -165,6 +166,7 @@ export function EntityReviewPanel({
           createClassMutation.mutateAsync({
             schemeId: defaultScheme.id,
             data: {
+              identifier: entity.label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
               title: entity.label,
               description: entity.description || null,
             },

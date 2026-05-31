@@ -3,8 +3,9 @@ import { QUERY_KEYS } from "@/api/config";
 import { pipelineService } from "@/api/services/pipeline";
 import type { components } from "@/api/types";
 
-type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
-type PipelineConfigurationUpdate = components["schemas"]["PipelineConfigurationUpdate"];
+// TODO: These types are not yet in the OpenAPI spec (Phase 2 work)
+type PipelineConfigurationCreate = any; // components["schemas"]["PipelineConfigurationCreate"];
+type PipelineConfigurationUpdate = any; // components["schemas"]["PipelineConfigurationUpdate"];
 
 export function usePipelines(refetchInterval?: number | false) {
   return useQuery({

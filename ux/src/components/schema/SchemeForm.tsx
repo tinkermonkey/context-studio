@@ -39,6 +39,7 @@ export function SchemeForm({ onSubmit, isLoading }: SchemeFormProps) {
 
     try {
       await onSubmit({
+        identifier: title.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
         title,
         description: description || null,
       });

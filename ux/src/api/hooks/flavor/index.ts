@@ -3,8 +3,9 @@ import { QUERY_KEYS } from "@/api/config";
 import { flavorService } from "@/api/services/flavor";
 import type { components } from "@/api/types";
 
-type PipelineFlavorCreateRequest = components["schemas"]["PipelineFlavorCreateRequest"];
-type PipelineFlavorUpdateRequest = components["schemas"]["PipelineFlavorUpdateRequest"];
+// TODO: These types are not yet in the OpenAPI spec (Phase 2 work)
+type PipelineFlavorCreateRequest = any; // components["schemas"]["PipelineFlavorCreateRequest"];
+type PipelineFlavorUpdateRequest = any; // components["schemas"]["PipelineFlavorUpdateRequest"];
 
 export function useFlavors() {
   return useQuery({

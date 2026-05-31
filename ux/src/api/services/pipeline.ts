@@ -1,11 +1,12 @@
 import { BaseService } from "./base";
 import type { components } from "@/api/types";
 
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
-type PipelineConfigurationCreate = components["schemas"]["PipelineConfigurationCreate"];
-type PipelineConfigurationUpdate = components["schemas"]["PipelineConfigurationUpdate"];
-type ExecutionResponse = components["schemas"]["ExecutionResponse"];
-type PipelineExecuteRequest = components["schemas"]["PipelineExecuteRequest"];
+// TODO: These types are not yet in the OpenAPI spec (Phase 2 work)
+type PipelineConfigurationResponse = any; // components["schemas"]["PipelineConfigurationResponse"];
+type PipelineConfigurationCreate = any; // components["schemas"]["PipelineConfigurationCreate"];
+type PipelineConfigurationUpdate = any; // components["schemas"]["PipelineConfigurationUpdate"];
+type ExecutionResponse = any; // components["schemas"]["ExecutionResponse"];
+type PipelineExecuteRequest = any; // components["schemas"]["PipelineExecuteRequest"];
 
 class PipelineService extends BaseService {
   async listPipelines(): Promise<PipelineConfigurationResponse[]> {

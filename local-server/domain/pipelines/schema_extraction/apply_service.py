@@ -96,6 +96,7 @@ class SchemaExtractionApplyService:
                 id=str(uuid4()),
                 concept_scheme_id=concept_scheme_id,
                 taxonomy_id=taxonomy_id,
+                identifier=_slugify(label),
                 title=label,
                 description=candidate.get("proposed_definition"),
                 status=Status.DRAFT,

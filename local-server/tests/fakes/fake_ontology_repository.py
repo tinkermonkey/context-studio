@@ -31,6 +31,21 @@ class FakeOntologyRepository:
         self._property_definitions: dict[str, PropertyDefinition] = {}
         self._individuals: dict[str, Individual] = {}
 
+    # Lookup operations
+
+    def get_by_identifier(self, identifier: str) -> Taxonomy | ConceptScheme | Class | None:
+        """Retrieve a Taxonomy, ConceptScheme, or Class by its identifier."""
+        for tax in self._taxonomies.values():
+            if tax.identifier == identifier:
+                return tax
+        for scheme in self._schemes.values():
+            if scheme.identifier == identifier:
+                return scheme
+        for cls in self._classes.values():
+            if cls.identifier == identifier:
+                return cls
+        return None
+
     # Taxonomy operations
 
     def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
@@ -430,6 +445,7 @@ class FakeOntologyRepository:
         # Create sample taxonomy
         taxonomy = Taxonomy(
             id=str(uuid4()),
+            identifier="technology_concepts",
             title="Technology Concepts",
             description="Sample taxonomy for tech-related extraction testing",
         )
@@ -438,30 +454,33 @@ class FakeOntologyRepository:
         # Create sample concept scheme
         scheme = ConceptScheme(
             id=str(uuid4()),
+            taxonomy_id=taxonomy.id,
+            identifier="tech_terms",
             title="Tech Terms",
             description="Common technology terminology",
-            taxonomy_id=taxonomy.id,
         )
         self.save_concept_scheme(scheme)
 
         # Create sample classes
         classes_data = [
-            ("Microsoft", "American multinational software corporation"),
+            ("Microsoft", "American multinational software corporation", "microsoft"),
             (
                 "Google",
                 "American technology company specializing in search and advertising",
+                "google",
             ),
-            ("Apple", "American technology company known for consumer electronics"),
-            ("Database", "Organized collection of structured data"),
-            ("SQL", "Structured Query Language for database management"),
+            ("Apple", "American technology company known for consumer electronics", "apple"),
+            ("Database", "Organized collection of structured data", "database"),
+            ("SQL", "Structured Query Language for database management", "sql"),
         ]
 
-        for title, description in classes_data:
+        for title, description, identifier in classes_data:
             cls = Class(
                 id=str(uuid4()),
-                title=title,
-                description=description,
                 concept_scheme_id=scheme.id,
                 taxonomy_id=taxonomy.id,
+                identifier=identifier,
+                title=title,
+                description=description,
             )
             self.save_class(cls)

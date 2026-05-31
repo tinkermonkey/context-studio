@@ -51,6 +51,7 @@ def persist_incoming_entities(
         if entity_dict.get("type") == "taxonomy":
             tax = Taxonomy(
                 id=entity_dict["id"],
+                identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -64,6 +65,7 @@ def persist_incoming_entities(
             scheme = ConceptScheme(
                 id=entity_dict["id"],
                 taxonomy_id=entity_dict["taxonomy_id"],
+                identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -105,6 +107,7 @@ def persist_incoming_entities(
                     taxonomy_id=_find_taxonomy_id_for_scheme(
                         repo, entity_dict["concept_scheme_id"]
                     ),
+                    identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
                     title=entity_dict["title"],
                     description=entity_dict.get("description"),
                     parent_class_id=parent_class_id,
@@ -234,6 +237,7 @@ def representative_graph(ontology_repo):
     # Taxonomy 1
     tax1 = Taxonomy(
         id=str(uuid.uuid4()),
+        identifier="biology",
         title="Biology",
         description="Biological classification",
         created_at=datetime.now(timezone.utc),
@@ -245,6 +249,7 @@ def representative_graph(ontology_repo):
     scheme1 = ConceptScheme(
         id=str(uuid.uuid4()),
         taxonomy_id=tax1.id,
+        identifier="organisms",
         title="Organisms",
         description="Classification of living organisms",
         created_at=datetime.now(timezone.utc),
@@ -257,6 +262,7 @@ def representative_graph(ontology_repo):
         id=str(uuid.uuid4()),
         concept_scheme_id=scheme1.id,
         taxonomy_id=tax1.id,
+        identifier="mammal",
         title="Mammal",
         description="A warm-blooded vertebrate",
         external_references=[
@@ -275,6 +281,7 @@ def representative_graph(ontology_repo):
         id=str(uuid.uuid4()),
         concept_scheme_id=scheme1.id,
         taxonomy_id=tax1.id,
+        identifier="carnivore",
         title="Carnivore",
         description="An organism that feeds on meat",
         created_at=datetime.now(timezone.utc),
@@ -286,6 +293,7 @@ def representative_graph(ontology_repo):
         id=str(uuid.uuid4()),
         concept_scheme_id=scheme1.id,
         taxonomy_id=tax1.id,
+        identifier="dog",
         title="Dog",
         description="A domesticated carnivorous mammal",
         parent_class_id=mammal.id,
@@ -310,6 +318,7 @@ def representative_graph(ontology_repo):
         id=str(uuid.uuid4()),
         concept_scheme_id=scheme1.id,
         taxonomy_id=tax1.id,
+        identifier="cat",
         title="Cat",
         description="A small domesticated carnivorous mammal",
         parent_class_id=mammal.id,

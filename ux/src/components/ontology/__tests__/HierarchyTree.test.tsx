@@ -10,20 +10,20 @@ type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 const taxonomies: TaxonomyResponse[] = [
-  { id: "tax-1", title: "Alpha Taxonomy", description: "Alpha root", version: 1, status: "draft" },
-  { id: "tax-2", title: "Beta Taxonomy", description: "Beta root", version: 1, status: "draft" },
+  { id: "tax-1", identifier: "alpha_taxonomy", title: "Alpha Taxonomy", description: "Alpha root", version: 1, status: "draft" },
+  { id: "tax-2", identifier: "beta_taxonomy", title: "Beta Taxonomy", description: "Beta root", version: 1, status: "draft" },
 ];
 
 const schemes: ConceptSchemeResponse[] = [
-  { id: "scheme-1", taxonomy_id: "tax-1", title: "Scheme One", description: "First scheme", version: 1, status: "draft" },
-  { id: "scheme-2", taxonomy_id: "tax-1", title: "Scheme Two", description: "Second scheme", version: 1, status: "draft" },
-  { id: "scheme-3", taxonomy_id: "tax-2", title: "Scheme Three", description: "Third scheme", version: 1, status: "draft" },
+  { id: "scheme-1", taxonomy_id: "tax-1", identifier: "scheme_one", title: "Scheme One", description: "First scheme", version: 1, status: "draft" },
+  { id: "scheme-2", taxonomy_id: "tax-1", identifier: "scheme_two", title: "Scheme Two", description: "Second scheme", version: 1, status: "draft" },
+  { id: "scheme-3", taxonomy_id: "tax-2", identifier: "scheme_three", title: "Scheme Three", description: "Third scheme", version: 1, status: "draft" },
 ];
 
 const classes: ClassResponse[] = [
-  { id: "class-1", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", title: "Class One", description: "First class", parent_class_id: null, version: 1, status: "draft" },
-  { id: "class-2", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", title: "Class Two", description: "Second class", parent_class_id: null, version: 1, status: "draft" },
-  { id: "class-3", concept_scheme_id: "scheme-2", taxonomy_id: "tax-1", title: "Class Three", description: "Third class", parent_class_id: null, version: 1, status: "draft" },
+  { id: "class-1", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", identifier: "class_one", title: "Class One", description: "First class", parent_class_id: null, version: 1, status: "draft" },
+  { id: "class-2", concept_scheme_id: "scheme-1", taxonomy_id: "tax-1", identifier: "class_two", title: "Class Two", description: "Second class", parent_class_id: null, version: 1, status: "draft" },
+  { id: "class-3", concept_scheme_id: "scheme-2", taxonomy_id: "tax-1", identifier: "class_three", title: "Class Three", description: "Third class", parent_class_id: null, version: 1, status: "draft" },
 ];
 
 function renderTree(overrides?: Partial<Parameters<typeof HierarchyTree>[0]>) {

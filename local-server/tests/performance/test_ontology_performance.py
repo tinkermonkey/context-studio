@@ -57,7 +57,7 @@ def test_bulk_insert_fake_embedding(num_classes: int, max_time: float) -> None:
 
     start = time.perf_counter()
     for i in range(num_classes):
-        service.create_class(scheme_id, f"Class_{i:04d}", f"Description for class {i}")
+        service.create_class(scheme_id, f"class_{i:04d}", f"Class_{i:04d}", f"Description for class {i}")
     elapsed = time.perf_counter() - start
 
     print(
@@ -83,7 +83,7 @@ def test_list_classes(num_classes: int, max_time: float) -> None:
 
     # Insert classes
     for i in range(num_classes):
-        service.create_class(scheme_id, f"Class_{i:04d}")
+        service.create_class(scheme_id, f"class_{i:04d}", f"Class_{i:04d}")
 
     start = time.perf_counter()
     classes = service.list_classes(concept_scheme_id=scheme_id, limit=num_classes + 100)
@@ -111,7 +111,7 @@ def test_update_classes(num_classes: int, max_time: float) -> None:
     # Insert classes
     class_ids = []
     for i in range(num_classes):
-        cls = service.create_class(scheme_id, f"Class_{i:04d}")
+        cls = service.create_class(scheme_id, f"class_{i:04d}", f"Class_{i:04d}")
         class_ids.append(cls.id)
 
     start = time.perf_counter()
@@ -151,7 +151,7 @@ def test_bulk_insert_100_classes_real_embedding() -> None:
 
     start = time.perf_counter()
     for i in range(100):
-        service.create_class(scheme_id, f"Class_{i:03d}", f"Description for class {i}")
+        service.create_class(scheme_id, f"class_{i:03d}", f"Class_{i:03d}", f"Description for class {i}")
     elapsed = time.perf_counter() - start
 
     print(

@@ -1,12 +1,13 @@
 /**
  * Test fixtures for PipelineService using OpenAPI-generated types.
+ * TODO: Pipeline types are not yet in the OpenAPI spec (Phase 2 work)
  */
 
 import type { components } from "@/api/types";
 
 export function createPipelineConfiguration(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationResponse"]>,
-): components["schemas"]["PipelineConfigurationResponse"] {
+  overrides?: Partial<any>,
+): any {
   return {
     id: "pipeline-1",
     pipeline: "text_analysis",
@@ -24,8 +25,8 @@ export function createPipelineConfiguration(
 }
 
 export function createPipelineConfigurationCreate(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationCreate"]>,
-): components["schemas"]["PipelineConfigurationCreate"] {
+  overrides?: Partial<any>,
+): any {
   return {
     pipeline: "new_pipeline",
     title: "New Pipeline",
@@ -39,8 +40,8 @@ export function createPipelineConfigurationCreate(
 }
 
 export function createPipelineConfigurationUpdate(
-  overrides?: Partial<components["schemas"]["PipelineConfigurationUpdate"]>,
-): components["schemas"]["PipelineConfigurationUpdate"] {
+  overrides?: Partial<any>,
+): any {
   return {
     title: "Updated Pipeline",
     provider: "openai",
@@ -53,8 +54,8 @@ export function createPipelineConfigurationUpdate(
 }
 
 export function createExecution(
-  overrides?: Partial<components["schemas"]["ExecutionResponse"]>,
-): components["schemas"]["ExecutionResponse"] {
+  overrides?: Partial<any>,
+): any {
   return {
     id: "exec-1",
     pipeline_config_id: "pipeline-1",
@@ -71,8 +72,8 @@ export function createExecution(
 }
 
 export function createPipelineExecuteRequest(
-  overrides?: Partial<components["schemas"]["PipelineExecuteRequest"]>,
-): components["schemas"]["PipelineExecuteRequest"] {
+  overrides?: Partial<any>,
+): any {
   return {
     input_text: "Sample text to process",
     ...overrides,
@@ -80,8 +81,8 @@ export function createPipelineExecuteRequest(
 }
 
 export function createExecutionWithPipeline(
-  overrides?: Partial<components["schemas"]["ExecutionWithPipelineResponse"]>,
-): components["schemas"]["ExecutionWithPipelineResponse"] {
+  overrides?: Partial<any>,
+): any {
   return {
     id: "exec-1",
     pipeline_config_id: "pipeline-1",
@@ -99,8 +100,8 @@ export function createExecutionWithPipeline(
 }
 
 export function createListExecutionsWithPipeline(
-  items?: components["schemas"]["ExecutionWithPipelineResponse"][],
-): components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"] {
+  items?: any[],
+): any {
   return {
     items: items || [createExecutionWithPipeline()],
     total: items?.length ?? 1,

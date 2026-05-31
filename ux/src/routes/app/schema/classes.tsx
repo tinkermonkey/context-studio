@@ -315,6 +315,7 @@ function ClassesPageWrapper() {
       await createMutation.mutateAsync({
         schemeId,
         data: {
+          identifier: data.title.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
           title: data.title,
           description: data.description,
           parent_class_id: data.parent_class_id,
