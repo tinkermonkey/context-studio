@@ -161,7 +161,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         _onOptions,
         footerContent,
         compact,
-        selected,
+        _selected,
         _headerAction,
         className = "",
         ...props
@@ -663,7 +663,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
-  Sidebar: ({ children, onCollapse, ...props }: any) =>
+  Sidebar: ({ children, onCollapse, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
       React.createElement(
         "button",
@@ -672,10 +672,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
       children,
     ]),
-  Topbar: ({ children, ...props }: any) => React.createElement("div", {}, children),
-  Titlebar: ({ children, ...props }: any) => React.createElement("div", {}, children),
-  Statusbar: ({ children, ...props }: any) => React.createElement("div", {}, children),
-  CommandPalette: ({ children, ...props }: any) =>
+  Topbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
+  Titlebar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
+  Statusbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
+  CommandPalette: ({ children, ..._props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
   Icon: ({ name, ...props }: any) =>
     React.createElement("span", { "data-icon": name, ...props }, name),
@@ -898,7 +898,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     ),
   ),
   RowMenu: React.forwardRef(
-    ({ actions = [], onAction, className = "", ...props }: any, ref: any) =>
+    ({ _actions = [], _onAction, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
@@ -931,7 +931,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         domain,
         kind,
         label,
-        description,
+        _description,
         meta,
         selected,
         onSelect,
@@ -1018,7 +1018,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     (
       {
         isOpen,
-        onClose,
+        _onClose,
         current,
         recent = [],
         onOpenFolder,
@@ -1074,7 +1074,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     },
   ),
   QuickAccessGrid: React.forwardRef(
-    ({ tiles = [], onAction, columns = 3, className = "", ...props }: any, ref: any) =>
+    ({ tiles = [], onAction, _columns = 3, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {

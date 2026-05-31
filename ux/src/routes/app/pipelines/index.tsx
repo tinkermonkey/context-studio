@@ -13,7 +13,7 @@ import { COPY } from "./-copy";
 type StatusFilter = "all" | "running" | "success" | "idle" | "failed";
 
 export function PipelinesContent() {
-  const navigate = useNavigate({ from: "/app/pipelines/" });
+  const _navigate = useNavigate({ from: "/app/pipelines/" });
   const { data: pipelines = [], isLoading, error, refetch } = usePipelines();
   const { data: allExecutions, error: executionsError } = useAllPipelineExecutions(undefined, 50);
   const createPipeline = useCreatePipeline();

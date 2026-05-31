@@ -160,7 +160,7 @@ function AppShell() {
 
   const classCount = classes?.total ?? 0;
   const individualCount = individuals?.total ?? 0;
-  const pipelineCount = pipelines?.length ?? 0;
+  const _pipelineCount = pipelines?.length ?? 0;
   const taxonomyCount = taxonomies?.total ?? 0;
   const schemeCount = schemes?.total ?? 0;
   const propertyCount = properties?.total ?? 0;

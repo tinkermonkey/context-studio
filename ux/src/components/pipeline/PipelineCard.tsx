@@ -1,6 +1,6 @@
 import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
-import { PipelineCard as HeimdallPipelineCard, Button, type FlowNode } from "@tinkermonkey/heimdall-ui";
+import { PipelineCard as HeimdallPipelineCard, type FlowNode } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";

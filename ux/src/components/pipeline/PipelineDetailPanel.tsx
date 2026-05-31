@@ -13,7 +13,7 @@ import { formatTimeAgo } from "@/utils/dateFormatting";
 import { getStatusColor } from "@/utils/statusColorUtils";
 import { useExecutionStore } from "@/stores/executionStore";
 import { COPY } from "@/routes/app/pipelines/-copy";
-import type { components } from "@/api/types";
+import type { components as _components } from "@/api/types";
 
 // TODO: These types not yet in OpenAPI spec (Phase 2 work)
 type PipelineConfigurationResponse = any;
