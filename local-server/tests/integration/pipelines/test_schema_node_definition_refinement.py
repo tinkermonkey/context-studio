@@ -43,7 +43,6 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementState,
 )
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
 
 # ---------------------------------------------------------------------------- #
 # Fixtures                                                                     #

@@ -51,7 +51,6 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
 from tests.utils.canon_assertions import (
     load_canon,
     score_triples,

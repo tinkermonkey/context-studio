@@ -132,19 +132,23 @@ class RevertService:
 
     def _inverse_create(self, entity_id: str, entity_type: str) -> None:
         """Inverse of CREATE: delete the entity."""
-        if entity_type == "Class":
+        if entity_type == "taxonomy":
+            tax = self._ontology_repo.get_taxonomy(entity_id)
+            if tax:
+                self._ontology_repo.delete_taxonomy(entity_id)
+        elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
                 self._ontology_repo.delete_class(entity_id)
-        elif entity_type == "Individual":
+        elif entity_type == "individual":
             ind = self._ontology_repo.get_individual(entity_id)
             if ind:
                 self._ontology_repo.delete_individual(entity_id)
-        elif entity_type == "Relationship":
+        elif entity_type == "relationship":
             rel = self._ontology_repo.get_relationship(entity_id)
             if rel:
                 self._ontology_repo.delete_relationship(entity_id)
-        elif entity_type == "PropertyDefinition":
+        elif entity_type == "property_definition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._ontology_repo.delete_property_definition(entity_id)
@@ -156,22 +160,27 @@ class RevertService:
         if not previous_state:
             return
 
-        if entity_type == "Class":
+        if entity_type == "taxonomy":
+            tax = self._ontology_repo.get_taxonomy(entity_id)
+            if tax:
+                self._restore_entity_state(tax, previous_state)
+                self._ontology_repo.save_taxonomy(tax)
+        elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
                 self._restore_entity_state(cls, previous_state)
                 self._ontology_repo.save_class(cls)
-        elif entity_type == "Individual":
+        elif entity_type == "individual":
             ind = self._ontology_repo.get_individual(entity_id)
             if ind:
                 self._restore_entity_state(ind, previous_state)
                 self._ontology_repo.save_individual(ind)
-        elif entity_type == "Relationship":
+        elif entity_type == "relationship":
             rel = self._ontology_repo.get_relationship(entity_id)
             if rel:
                 self._restore_entity_state(rel, previous_state)
                 self._ontology_repo.save_relationship(rel)
-        elif entity_type == "PropertyDefinition":
+        elif entity_type == "property_definition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._restore_entity_state(prop, previous_state)
@@ -184,11 +193,21 @@ class RevertService:
         if not new_state:
             return
 
-        from domain.ontology.entities import Class, Individual, PropertyDefinition, Relationship
+        from domain.ontology.entities import Class, Individual, PropertyDefinition, Relationship, Taxonomy
         from domain.ontology.value_objects import Status
 
         try:
-            if entity_type == "Class":
+            if entity_type == "taxonomy":
+                tax = Taxonomy(
+                    id=new_state.get("id", entity_id),
+                    title=new_state.get("title", ""),
+                    identifier=new_state.get("identifier"),
+                    description=new_state.get("description"),
+                    color=new_state.get("color"),
+                    status=Status(new_state.get("status", "draft")),
+                )
+                self._ontology_repo.save_taxonomy(tax)
+            elif entity_type == "class":
                 cls = Class(
                     id=new_state.get("id", entity_id),
                     taxonomy_id=new_state.get("taxonomy_id", ""),
@@ -198,7 +217,7 @@ class RevertService:
                     status=Status(new_state.get("status", "draft")),
                 )
                 self._ontology_repo.save_class(cls)
-            elif entity_type == "Individual":
+            elif entity_type == "individual":
                 ind = Individual(
                     id=new_state.get("id", entity_id),
                     class_ids=new_state.get("class_ids", []),
@@ -206,7 +225,7 @@ class RevertService:
                     status=Status(new_state.get("status", "draft")),
                 )
                 self._ontology_repo.save_individual(ind)
-            elif entity_type == "Relationship":
+            elif entity_type == "relationship":
                 rel = Relationship(
                     id=new_state.get("id", entity_id),
                     source_id=new_state.get("source_id", ""),
@@ -214,7 +233,7 @@ class RevertService:
                     property_definition_id=new_state.get("property_definition_id", ""),
                 )
                 self._ontology_repo.save_relationship(rel)
-            elif entity_type == "PropertyDefinition":
+            elif entity_type == "property_definition":
                 prop = PropertyDefinition(
                     id=new_state.get("id", entity_id),
                     identifier=new_state.get("identifier", ""),

@@ -19,10 +19,12 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import TaxonomyCreated
 from domain.ontology.services import OntologyService
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import NoOpPipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop_apply_service import NoOpApplyService
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
@@ -158,92 +160,133 @@ class TestNoOpLLMCalling:
 
 
 class TestNoOpChangeEvents:
-    """Test that NoOp runs in a framework with change event recording."""
+    """Test that NoOp apply path emits sentinel change events."""
 
     @pytest.mark.asyncio
-    async def test_noop_execution_with_change_event_framework(
+    async def test_noop_apply_emits_change_events(
         self, noop_orchestrator, ontology_service, change_repo, session_factory
     ):
-        """Running NoOp should complete successfully in a framework with change event recording."""
-        # Create a taxonomy to establish the framework is working
-        taxonomy = ontology_service.create_taxonomy(
-            title="Test Taxonomy for NoOp",
-            description="Created before NoOp execution",
-        )
-
+        """NoOp apply should emit at least one sentinel change_event."""
         run_id = str(uuid4())
 
-        # Run NoOp pipeline
-        state = NoOpPipelineState(
-            run_id=run_id,
-            pipeline_type=PipelineType.NO_OP,
-            input_data={"text": "test input"},
-        )
-        result_state = await noop_orchestrator.execute(state)
-
-        # Verify NoOp executed successfully
-        assert result_state.current_status == "completed"
-        assert result_state.result is not None
-
-        # Verify change event was recorded from the taxonomy creation
-        session = session_factory()
-        try:
-            change_events = session.query(ChangeEvent).filter_by(entity_id=taxonomy.id).all()
-            assert len(change_events) >= 1, "Should have at least one change_event from taxonomy creation"
-        finally:
-            session.close()
-
-
-class TestNoOpRevert:
-    """Test that NoOp changes are revertable via RevertService."""
-
-    @pytest.mark.asyncio
-    async def test_noop_changes_revert_framework_integrated(
-        self,
-        noop_orchestrator,
-        ontology_service,
-        change_repo,
-        ontology_repo,
-        session_factory,
-    ):
-        """NoOp changes are revertable via RevertService framework."""
-        from domain.interchange.services import set_batch_run_context
-
-        # Create a batch run ID for correlation
-        run_id = str(uuid4())
-
-        # Set the batch run context for the duration of this operation
+        # Set batch run context so change events are correlated with this run
         set_batch_run_context(run_id)
 
         try:
-            # Create a taxonomy (will be associated with run_id via context)
-            taxonomy = ontology_service.create_taxonomy(
-                title="Test Taxonomy for Revert"
+            # Execute NoOp pipeline orchestrator
+            state = NoOpPipelineState(
+                run_id=run_id,
+                pipeline_type=PipelineType.NO_OP,
+                input_data={"text": "test input"},
             )
-            taxonomy_id = taxonomy.id
+            result_state = await noop_orchestrator.execute(state)
 
-            # Create RevertService
-            revert_service = RevertService(change_repo, ontology_repo)
+            # Verify NoOp executed successfully
+            assert result_state.current_status == PipelineRunStatus.COMPLETED
+            assert result_state.result is not None
 
-            # Verify taxonomy exists before revert
-            assert ontology_repo.get_taxonomy(taxonomy_id) is not None
+            # Create a PipelineRun entity for the apply phase
+            run = NoOpPipelineRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="noop",
+                configuration_slug="noop-v1",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=result_state.result,
+            )
+
+            # Apply the NoOp result (creates a sentinel individual)
+            apply_service = NoOpApplyService(ontology_service)
+            apply_result = apply_service.apply(run)
+
+            # Verify at least one entity was created
+            assert len(apply_result.created_individual_ids) >= 1, "Should have sentinel entity ID"
+
+            # Verify change events were recorded for the applied entity
+            session = session_factory()
+            try:
+                sentinel_id = apply_result.created_individual_ids[0]
+                change_events = session.query(ChangeEvent).filter_by(
+                    entity_id=sentinel_id,
+                    batch_run_id=run_id,
+                ).all()
+                assert len(change_events) >= 1, "Should have at least one change_event from NoOp apply"
+            finally:
+                session.close()
+        finally:
+            # Clear the batch run context
+            set_batch_run_context(None)
+
+
+class TestNoOpRevert:
+    """Test that NoOp apply changes are revertable via RevertService."""
+
+    @pytest.mark.asyncio
+    async def test_noop_apply_revert_round_trip(
+        self,
+        noop_orchestrator,
+        change_repo,
+        ontology_service,
+        ontology_repo,
+        session_factory,
+    ):
+        """NoOp apply changes should be fully revertable via RevertService."""
+        run_id = str(uuid4())
+
+        # Set batch run context
+        set_batch_run_context(run_id)
+
+        try:
+            # Execute NoOp orchestrator
+            state = NoOpPipelineState(
+                run_id=run_id,
+                pipeline_type=PipelineType.NO_OP,
+                input_data={"text": "test input"},
+            )
+            result_state = await noop_orchestrator.execute(state)
+
+            assert result_state.current_status == PipelineRunStatus.COMPLETED
+
+            # Create PipelineRun and apply
+            run = NoOpPipelineRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="noop",
+                configuration_slug="noop-v1",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=result_state.result,
+            )
+
+            apply_service = NoOpApplyService(ontology_service)
+            apply_result = apply_service.apply(run)
+
+            # Verify apply created entities
+            assert len(apply_result.created_individual_ids) >= 1, "Apply should create sentinel entity"
+            sentinel_id = apply_result.created_individual_ids[0]
+
+            # Verify sentinel exists before revert
+            assert ontology_repo.get_taxonomy(sentinel_id) is not None
 
             # Query change events for this run
             session = session_factory()
             try:
                 initial_events = session.query(ChangeEvent).filter_by(batch_run_id=run_id).all()
                 initial_count = len(initial_events)
-                assert initial_count >= 1, "Should have at least one change event for the run"
+                assert initial_count >= 1, "Should have at least one change event from NoOp apply"
             finally:
                 session.close()
 
-            # Revert service should not crash when called with valid run_id
-            try:
-                reverted_count = revert_service.revert(run_id)
-                # Verify revert was called successfully (may revert 0 or more events)
-                assert reverted_count >= 0, "Revert count should be non-negative"
-            except Exception as e:
-                pytest.fail(f"Revert service should work with valid batch_run_id: {e}")
+            # Revert the NoOp changes
+            revert_service = RevertService(change_repo, ontology_repo)
+            reverted_count = revert_service.revert(run_id)
+
+            # Verify at least one event was reverted
+            assert reverted_count >= 1, "Should have reverted at least one change event from NoOp apply"
+
+            # Verify sentinel is gone after revert
+            assert ontology_repo.get_taxonomy(sentinel_id) is None
         finally:
             # Clear the batch run context
             set_batch_run_context(None)
@@ -306,46 +349,70 @@ class TestNoOpStructuralComplete:
 
     @pytest.mark.asyncio
     async def test_noop_smoke_test_complete(
-        self, noop_orchestrator, llm_provider, ontology_service, change_repo, session_factory
+        self, noop_orchestrator, llm_provider, change_repo, ontology_service, ontology_repo, session_factory
     ):
         """Single NoOp run exercises _call_llm, produces change_event, and is revertable."""
         run_id = str(uuid4())
 
-        # Create ontology context for change_events
-        taxonomy = ontology_service.create_taxonomy("Test Ontology")
+        # Set batch run context
+        set_batch_run_context(run_id)
 
-        # Verify initial LLM call count
-        initial_call_count = llm_provider.call_count
-
-        # Execute NoOp
-        state = NoOpPipelineState(
-            run_id=run_id,
-            pipeline_type=PipelineType.NO_OP,
-            input_data={"text": "smoke test input"},
-        )
-        result_state = await noop_orchestrator.execute(state)
-
-        # Assertion 1: _call_llm was invoked
-        assert llm_provider.call_count > initial_call_count, "LLM should have been called"
-        assert result_state.current_status == "completed"
-
-        # Assertion 2: At least one change_event exists (from taxonomy creation)
-        session = session_factory()
         try:
-            change_events = session.query(ChangeEvent).filter_by(entity_id=taxonomy.id).all()
-            assert len(change_events) >= 1, "Should have at least one change_event"
-        finally:
-            session.close()
+            # Verify initial LLM call count
+            initial_call_count = llm_provider.call_count
 
-        # Assertion 3: Revert mechanism is available
-        revert_service = RevertService(change_repo, ontology_service._repository)
-        # Verify revert doesn't crash (smoke test for revert path)
-        try:
+            # Execute NoOp orchestrator
+            state = NoOpPipelineState(
+                run_id=run_id,
+                pipeline_type=PipelineType.NO_OP,
+                input_data={"text": "smoke test input"},
+            )
+            result_state = await noop_orchestrator.execute(state)
+
+            # Assertion 1: _call_llm was invoked
+            assert llm_provider.call_count > initial_call_count, "LLM should have been called"
+            assert result_state.current_status == PipelineRunStatus.COMPLETED
+
+            # Create PipelineRun and apply
+            run = NoOpPipelineRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="noop",
+                configuration_slug="noop-v1",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=result_state.result,
+            )
+
+            apply_service = NoOpApplyService(ontology_service)
+            apply_result = apply_service.apply(run)
+
+            # Assertion 2: Apply produces at least one change_event
+            assert len(apply_result.created_individual_ids) >= 1, "Should create sentinel entity"
+            sentinel_id = apply_result.created_individual_ids[0]
+
+            session = session_factory()
+            try:
+                change_events = session.query(ChangeEvent).filter_by(
+                    entity_id=sentinel_id,
+                    batch_run_id=run_id,
+                ).all()
+                assert len(change_events) >= 1, "Should have at least one change_event from NoOp apply"
+            finally:
+                session.close()
+
+            # Assertion 3: Revert mechanism works end-to-end
+            revert_service = RevertService(change_repo, ontology_repo)
             reverted_count = revert_service.revert(run_id)
-            # Revert count can be 0 if no events for this run, that's OK for smoke test
-            assert reverted_count >= 0
-        except Exception as e:
-            pytest.fail(f"Revert should not crash: {e}")
+
+            # Verify revert worked (at least one event reverted)
+            assert reverted_count >= 1, "Should have reverted at least one change event"
+
+            # Verify sentinel is gone
+            assert ontology_repo.get_taxonomy(sentinel_id) is None
+        finally:
+            # Clear the batch run context
+            set_batch_run_context(None)
 
 
 if __name__ == "__main__":
