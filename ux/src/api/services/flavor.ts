@@ -1,10 +1,9 @@
 import { BaseService } from "./base";
-import type { components } from "@/api/types";
 
 // TODO: These types are not yet in the OpenAPI spec (Phase 2 work)
-type PipelineFlavorResponse = any; // components["schemas"]["PipelineFlavorResponse"];
-type PipelineFlavorCreateRequest = any; // components["schemas"]["PipelineFlavorCreateRequest"];
-type PipelineFlavorUpdateRequest = any; // components["schemas"]["PipelineFlavorUpdateRequest"];
+type PipelineFlavorResponse = any;
+type PipelineFlavorCreateRequest = any;
+type PipelineFlavorUpdateRequest = any;
 
 class FlavorService extends BaseService {
   async listFlavors(): Promise<PipelineFlavorResponse[]> {

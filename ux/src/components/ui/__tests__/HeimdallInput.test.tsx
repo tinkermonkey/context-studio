@@ -306,7 +306,7 @@ describe("Heimdall Select", () => {
   describe("HTML attributes", () => {
     it("forwards required attribute", () => {
       render(
-        // @ts-ignore - Select component from Heimdall doesn't support all HTML attributes
+        // @ts-expect-error - Select component from Heimdall doesn't support all HTML attributes
         <Select required>
           <option>Option</option>
         </Select>,
@@ -343,7 +343,7 @@ describe("Heimdall Select", () => {
 
     it("renders with listbox role when size is specified", () => {
       render(
-        // @ts-ignore - Select component from Heimdall doesn't support all HTML attributes
+        // @ts-expect-error - Select component from Heimdall doesn't support all HTML attributes
         <Select size={5}>
           <option>Option</option>
         </Select>,

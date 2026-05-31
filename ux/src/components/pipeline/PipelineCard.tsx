@@ -1,4 +1,3 @@
-import type { components } from "@/api/types";
 import { usePipelineExecutions, useExecutePipeline } from "@/api/hooks/pipeline";
 import { formatRelativeTime, formatDuration } from "@/utils/formatters";
 import { PipelineCard as HeimdallPipelineCard, Button, type FlowNode } from "@tinkermonkey/heimdall-ui";

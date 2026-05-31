@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { pipelineService } from "@/api/services/pipeline";
-import type { components } from "@/api/types";
 
 // TODO: These types are not yet in the OpenAPI spec (Phase 2 work)
-type PipelineConfigurationCreate = any; // components["schemas"]["PipelineConfigurationCreate"];
-type PipelineConfigurationUpdate = any; // components["schemas"]["PipelineConfigurationUpdate"];
+type PipelineConfigurationCreate = any;
+type PipelineConfigurationUpdate = any;
 
 export function usePipelines(refetchInterval?: number | false) {
   return useQuery({

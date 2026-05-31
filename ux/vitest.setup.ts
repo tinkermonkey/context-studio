@@ -60,7 +60,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
-  Toast: ({ isOpen, onClose, title, subtitle, variant, duration = 4000, ...props }: any) => {
+  Toast: ({ isOpen, onClose, title, subtitle, _variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
       if (isOpen && duration) {
         const timer = setTimeout(onClose, duration);
@@ -72,7 +72,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
 
     return React.createElement(
       "div",
-      { className: `toast toast--${variant}`, role: "status", "aria-live": "polite", ...props },
+      { className: `toast toast--${_variant}`, role: "status", "aria-live": "polite", ...props },
       React.createElement("div", { className: "toast__title" }, title),
       subtitle && React.createElement("div", { className: "toast__subtitle" }, subtitle),
       React.createElement(
@@ -157,12 +157,12 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       {
         pipeline,
         onRun,
-        onCancel,
-        onOptions,
+        _onCancel,
+        _onOptions,
         footerContent,
         compact,
         selected,
-        headerAction,
+        _headerAction,
         className = "",
         ...props
       }: any,
@@ -258,7 +258,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     return IP;
   })(),
   Sparkline: React.forwardRef(
-    ({ data, width, height, color, area, label, className = "", ...props }: any, ref: any) =>
+    ({ _data, _width, _height, _color, _area, _label, className = "", ...props }: any, ref: any) =>
       React.createElement("div", {
         ref,
         className: ["sparkline", className].filter(Boolean).join(" "),
@@ -271,8 +271,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       {
         rows = [],
         onChange,
-        datatypeColumn,
-        datatypes,
+        _datatypeColumn,
+        _datatypes,
         disabled,
         keyPlaceholder = "Key",
         valuePlaceholder = "Value",
@@ -663,7 +663,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
-  Sidebar: ({ children, onCollapse, ..._props }: any) =>
+  Sidebar: ({ children, onCollapse, ...props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-sidebar" }, [
       React.createElement(
         "button",
@@ -672,10 +672,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
       children,
     ]),
-  Topbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
-  Titlebar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
-  Statusbar: ({ children, ..._props }: any) => React.createElement("div", {}, children),
-  CommandPalette: ({ children, ..._props }: any) =>
+  Topbar: ({ children, ...props }: any) => React.createElement("div", {}, children),
+  Titlebar: ({ children, ...props }: any) => React.createElement("div", {}, children),
+  Statusbar: ({ children, ...props }: any) => React.createElement("div", {}, children),
+  CommandPalette: ({ children, ...props }: any) =>
     React.createElement("div", { "data-testid": "heimdall-command-palette" }, children),
   Icon: ({ name, ...props }: any) =>
     React.createElement("span", { "data-icon": name, ...props }, name),

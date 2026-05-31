@@ -3,8 +3,6 @@
  * TODO: Pipeline types are not yet in the OpenAPI spec (Phase 2 work)
  */
 
-import type { components } from "@/api/types";
-
 export function createPipelineConfiguration(
   overrides?: Partial<any>,
 ): any {
