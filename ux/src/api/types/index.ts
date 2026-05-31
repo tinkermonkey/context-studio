@@ -3560,11 +3560,6 @@ export interface components {
      */
     ClassCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the class
        */
@@ -3574,11 +3569,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb'
-       */
-      color?: string | null;
       /**
        * Parent Class Id
        * @description Optional ID of parent class for hierarchy
@@ -3741,11 +3731,6 @@ export interface components {
      */
     ConceptSchemeCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the concept scheme
        */
@@ -3755,11 +3740,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb'
-       */
-      color?: string | null;
     };
     /**
      * ConceptSchemeResponse
@@ -6188,11 +6168,6 @@ export interface components {
      */
     TaxonomyCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the taxonomy
        */
@@ -6202,11 +6177,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb' for the taxonomy swatch
-       */
-      color?: string | null;
     };
     /**
      * TaxonomyPublishRequest

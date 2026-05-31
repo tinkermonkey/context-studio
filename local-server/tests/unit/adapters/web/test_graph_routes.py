@@ -44,12 +44,12 @@ def repository_with_data():
     repo = FakeOntologyRepository()
 
     # Create taxonomy
-    tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+    tax = Taxonomy(id=str(uuid4()), identifier="test_tax", title="Test Taxonomy", description="Test")
     repo.save_taxonomy(tax)
 
     # Create concept scheme
     scheme = ConceptScheme(
-        id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+        id=str(uuid4()), taxonomy_id=tax.id, identifier="test_scheme", title="Test Scheme", description="Test"
     )
     repo.save_concept_scheme(scheme)
 
@@ -58,6 +58,7 @@ def repository_with_data():
         id=str(uuid4()),
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
+        identifier="cls_1",
         title="Class 1",
         description="Class 1",
     )
@@ -65,6 +66,7 @@ def repository_with_data():
         id=str(uuid4()),
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
+        identifier="cls_2",
         title="Class 2",
         description="Class 2",
     )
@@ -72,6 +74,7 @@ def repository_with_data():
         id=str(uuid4()),
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
+        identifier="cls_3",
         title="Class 3",
         description="Class 3",
     )

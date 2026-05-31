@@ -76,7 +76,7 @@ class TestOntologyRepositoryProtocol:
         """FakeOntologyRepository implements taxonomy operations."""
         repo = FakeOntologyRepository()
         now = datetime.now(timezone.utc)
-        tax = Taxonomy(id="tax-1", title="Test", created_at=now, last_modified=now)
+        tax = Taxonomy(id="tax-1", identifier="tax_test", title="Test", created_at=now, last_modified=now)
 
         repo.save_taxonomy(tax)
         retrieved = repo.get_taxonomy("tax-1")

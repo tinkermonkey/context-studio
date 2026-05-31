@@ -10,6 +10,7 @@ for event distribution.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
@@ -59,6 +60,11 @@ from .value_objects import DataPropertyValue, Status
 _logger = logging.getLogger(__name__)
 
 
+def _slugify_title(text: str) -> str:
+    """Generate a slug-style identifier from text."""
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
+
+
 class OntologyService:
     """
     Service implementing all business rules for ontology management.
@@ -90,10 +96,10 @@ class OntologyService:
 
     def create_taxonomy(
         self,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
+        identifier: str | None = None,
     ) -> Taxonomy:
         """
         Create a new taxonomy.
@@ -102,10 +108,10 @@ class OntologyService:
         and that the title is unique across taxonomies.
 
         Args:
-            identifier: Globally-unique slug identifier (e.g. 'tax_life')
             title: Display name for the taxonomy
             description: Optional longer description
             color: Optional hex color string for the swatch
+            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
 
         Returns:
             The created Taxonomy
@@ -117,6 +123,9 @@ class OntologyService:
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
+
+        if identifier is None:
+            identifier = _slugify_title(title)
 
         # Check identifier uniqueness against existing taxonomy/scheme/class entities.
         if self._repository.get_by_identifier(identifier) is not None:
@@ -131,8 +140,8 @@ class OntologyService:
         now = datetime.now(timezone.utc)
         taxonomy = Taxonomy(
             id=taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             created_at=now,
@@ -505,10 +514,10 @@ class OntologyService:
     def create_scheme(
         self,
         taxonomy_id: str,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
+        identifier: str | None = None,
     ) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
@@ -520,10 +529,10 @@ class OntologyService:
 
         Args:
             taxonomy_id: ID of the parent taxonomy
-            identifier: Globally-unique slug identifier (e.g. 'scheme_ecology')
             title: Display name for the scheme
             description: Optional longer description
             color: Optional hex color string for the swatch
+            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
 
         Returns:
             The created ConceptScheme
@@ -536,6 +545,9 @@ class OntologyService:
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
+
+        if identifier is None:
+            identifier = _slugify_title(title)
 
         # Validate taxonomy exists
         taxonomy = self._repository.get_taxonomy(taxonomy_id)
@@ -560,8 +572,8 @@ class OntologyService:
         scheme = ConceptScheme(
             id=scheme_id,
             taxonomy_id=taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             created_at=now,
@@ -764,11 +776,11 @@ class OntologyService:
     def create_class(
         self,
         concept_scheme_id: str,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
         parent_class_id: str | None = None,
+        identifier: str | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -782,11 +794,11 @@ class OntologyService:
 
         Args:
             concept_scheme_id: ID of the parent concept scheme
-            identifier: Globally-unique slug identifier (e.g. 'cls_organism')
             title: Display name for the class
             description: Optional longer description
             color: Optional hex color string for the swatch
             parent_class_id: Optional ID of the parent class for hierarchy
+            identifier: Optional globally-unique slug identifier; auto-generated from title if not provided
 
         Returns:
             The created Class with generated embedding
@@ -799,6 +811,9 @@ class OntologyService:
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
+
+        if identifier is None:
+            identifier = _slugify_title(title)
 
         # Validate scheme exists
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
@@ -836,8 +851,8 @@ class OntologyService:
             id=class_id,
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             parent_class_id=parent_class_id,

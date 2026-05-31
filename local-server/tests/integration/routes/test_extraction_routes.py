@@ -72,18 +72,19 @@ def repository(session_factory):
 def populated_repository(repository):
     """Populate repository with test data."""
     # Create taxonomy
-    tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+    tax = Taxonomy(id=str(uuid4()), identifier="test_tax", title="Test Taxonomy", description="Test")
     repository.save_taxonomy(tax)
 
     # Create concept scheme
     scheme = ConceptScheme(
-        id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+        id=str(uuid4()), identifier="test_scheme", taxonomy_id=tax.id, title="Test Scheme", description="Test"
     )
     repository.save_concept_scheme(scheme)
 
     # Create classes for extraction context
     database_class = Class(
         id=str(uuid4()),
+        identifier="database_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Database",
@@ -91,6 +92,7 @@ def populated_repository(repository):
     )
     sql_class = Class(
         id=str(uuid4()),
+        identifier="sql_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="SQL",

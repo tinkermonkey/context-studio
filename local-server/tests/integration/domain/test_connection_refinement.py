@@ -25,8 +25,8 @@ from .mocks import MockLLMProvider
 @pytest.fixture
 def sample_classes(ontology_service):
     """Create sample classes for testing."""
-    taxonomy = ontology_service.create_taxonomy("Test", "")
-    scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Test")
+    taxonomy = ontology_service.create_taxonomy(title="Test Taxonomy", description="")
+    scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Test Scheme")
 
     class1 = ontology_service.create_class(
         concept_scheme_id=scheme.id,

@@ -76,6 +76,7 @@ class TestSKOSTaxonomyMapping:
         repo = FakeOntologyRepo()
         taxonomy = Taxonomy(
             id="tax-1",
+            identifier="tax_test",
             title="Biology",
             description="Biological classification",
         )
@@ -100,6 +101,7 @@ class TestSKOSTaxonomyMapping:
         repo = FakeOntologyRepo()
         taxonomy = Taxonomy(
             id="tax-1",
+            identifier="tax_test",
             title="Physics",
             description="Study of matter and energy",
         )
@@ -125,6 +127,7 @@ class TestSKOSTaxonomyMapping:
         repo = FakeOntologyRepo()
         taxonomy = Taxonomy(
             id="tax-1",
+            identifier="tax_test",
             title="Chemistry",
             description="Study of chemical reactions",
         )
@@ -152,12 +155,16 @@ class TestSKOSConceptSchemeMapping:
     def test_export_concept_scheme_with_parent_taxonomy(self):
         """Test that ConceptScheme with parent Taxonomy uses dct:isPartOf."""
         repo = FakeOntologyRepo()
-        taxonomy = Taxonomy(id="tax-1", title="Biology")
+        taxonomy = Taxonomy(
+            id="tax-1",
+            identifier="tax_test",
+            title="Biology")
         repo.taxonomies["tax-1"] = taxonomy
 
         scheme = ConceptScheme(
             id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="scheme_test",
             title="Organisms",
             description="Living organisms",
         )
@@ -190,6 +197,7 @@ class TestSKOSClassMapping:
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Dog",
             description="A domesticated mammal",
         )
@@ -215,6 +223,7 @@ class TestSKOSClassMapping:
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Cat",
         )
         repo.classes["class-1"] = class_entity
@@ -244,12 +253,14 @@ class TestSKOSHierarchyMapping:
             id="parent-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Animal",
         )
         child = Class(
             id="child-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Dog",
             parent_class_id="parent-1",
         )
@@ -283,6 +294,7 @@ class TestSKOSExternalReferenceMapping:
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Dog",
             external_references=[
                 ExternalReference(
@@ -320,6 +332,7 @@ class TestSKOSExternalReferenceMapping:
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
+            identifier="cls_test",
             title="Dog",
             external_references=[
                 ExternalReference(

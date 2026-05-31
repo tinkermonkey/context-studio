@@ -58,36 +58,26 @@ def _validate_color(value: Optional[str]) -> Optional[str]:
     return candidate
 
 
+def slugify_title(text: str) -> str:
+    """Generate a slug-style identifier from a title."""
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
+
+
 # ==================== Taxonomy Schemas ====================
 
 
 class TaxonomyCreateRequest(BaseModel):
     """Request to create a new taxonomy."""
 
-    identifier: str = Field(
-        ...,
-        description=(
-            "Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters,"
-            " digits, and underscores; must start with a letter; 2-64 chars."
-        ),
-        min_length=2,
-        max_length=64,
-    )
     title: str = Field(..., description="Display name for the taxonomy", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
-    color: Optional[str] = Field(
-        None, description="Optional hex color '#rrggbb' for the taxonomy swatch"
-    )
 
-    @field_validator("identifier")
+    @field_validator("title")
     @classmethod
-    def _validate_identifier_field(cls, value: str) -> str:
-        return _validate_identifier(value)
-
-    @field_validator("color")
-    @classmethod
-    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
-        return _validate_color(value)
+    def _validate_title_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value
 
 
 class TaxonomyUpdateRequest(BaseModel):
@@ -141,28 +131,15 @@ class TaxonomyResponse(BaseModel):
 class ConceptSchemeCreateRequest(BaseModel):
     """Request to create a new concept scheme."""
 
-    identifier: str = Field(
-        ...,
-        description=(
-            "Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars,"
-            " lowercase letters/digits/underscores, must start with a letter."
-        ),
-        min_length=2,
-        max_length=64,
-    )
     title: str = Field(..., description="Display name for the concept scheme", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
-    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
 
-    @field_validator("identifier")
+    @field_validator("title")
     @classmethod
-    def _validate_identifier_field(cls, value: str) -> str:
-        return _validate_identifier(value)
-
-    @field_validator("color")
-    @classmethod
-    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
-        return _validate_color(value)
+    def _validate_title_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value
 
 
 class ConceptSchemeUpdateRequest(BaseModel):
@@ -230,31 +207,18 @@ class DataPropertyValueRequest(BaseModel):
 class ClassCreateRequest(BaseModel):
     """Request to create a new class."""
 
-    identifier: str = Field(
-        ...,
-        description=(
-            "Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars,"
-            " lowercase letters/digits/underscores, must start with a letter."
-        ),
-        min_length=2,
-        max_length=64,
-    )
     title: str = Field(..., description="Display name for the class", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
-    color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     parent_class_id: Optional[str] = Field(
         None, description="Optional ID of parent class for hierarchy"
     )
 
-    @field_validator("identifier")
+    @field_validator("title")
     @classmethod
-    def _validate_identifier_field(cls, value: str) -> str:
-        return _validate_identifier(value)
-
-    @field_validator("color")
-    @classmethod
-    def _validate_color_field(cls, value: Optional[str]) -> Optional[str]:
-        return _validate_color(value)
+    def _validate_title_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value
 
 
 class ClassUpdateRequest(BaseModel):

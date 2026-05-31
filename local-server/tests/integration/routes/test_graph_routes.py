@@ -67,18 +67,19 @@ def repository(session_factory):
 def populated_repository(repository):
     """Populate repository with test data."""
     # Create taxonomy
-    tax = Taxonomy(id=str(uuid4()), title="Integration Test Taxonomy", description="Test")
+    tax = Taxonomy(id=str(uuid4()), identifier="test_tax", title="Integration Test Taxonomy", description="Test")
     repository.save_taxonomy(tax)
 
     # Create concept scheme
     scheme = ConceptScheme(
-        id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+        id=str(uuid4()), identifier="test_scheme", taxonomy_id=tax.id, title="Test Scheme", description="Test"
     )
     repository.save_concept_scheme(scheme)
 
     # Create classes
     class1 = Class(
         id=str(uuid4()),
+        identifier="person_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Person",
@@ -86,6 +87,7 @@ def populated_repository(repository):
     )
     class2 = Class(
         id=str(uuid4()),
+        identifier="agent_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Agent",
@@ -93,6 +95,7 @@ def populated_repository(repository):
     )
     class3 = Class(
         id=str(uuid4()),
+        identifier="organization_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Organization",
@@ -100,6 +103,7 @@ def populated_repository(repository):
     )
     class4 = Class(
         id=str(uuid4()),
+        identifier="place_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=tax.id,
         title="Place",

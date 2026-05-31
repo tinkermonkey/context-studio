@@ -57,6 +57,7 @@ def ontology_repo(session_factory):
     # Create test taxonomy and classes
     tax = Taxonomy(
         id="tax-1",
+        identifier="test_taxonomy",
         title="Test Taxonomy",
         description="A test taxonomy",
         created_at=datetime.now(timezone.utc),
@@ -66,6 +67,7 @@ def ontology_repo(session_factory):
 
     scheme = ConceptScheme(
         id="scheme-1",
+        identifier="test_scheme",
         taxonomy_id="tax-1",
         title="Test Scheme",
         description="A test concept scheme",
@@ -76,6 +78,7 @@ def ontology_repo(session_factory):
 
     class_entity = Class(
         id="class-1",
+        identifier="test_class",
         concept_scheme_id="scheme-1",
         taxonomy_id="tax-1",
         title="Test Class",

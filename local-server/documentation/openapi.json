@@ -6012,13 +6012,6 @@
       },
       "ClassCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6037,18 +6030,6 @@
             "title": "Description",
             "description": "Optional longer description"
           },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb'"
-          },
           "parent_class_id": {
             "anyOf": [
               {
@@ -6064,7 +6045,6 @@
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "ClassCreateRequest",
@@ -6344,13 +6324,6 @@
       },
       "ConceptSchemeCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6368,23 +6341,10 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb'"
           }
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "ConceptSchemeCreateRequest",
@@ -10192,13 +10152,6 @@
       },
       "TaxonomyCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -10216,23 +10169,10 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb' for the taxonomy swatch"
           }
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "TaxonomyCreateRequest",

@@ -40,7 +40,6 @@ export function createTaxonomyCreateRequest(
   overrides?: Partial<components["schemas"]["TaxonomyCreateRequest"]>,
 ): components["schemas"]["TaxonomyCreateRequest"] {
   return {
-    identifier: "new_taxonomy",
     title: "New Taxonomy",
     description: "A new test taxonomy",
     ...overrides,
@@ -83,7 +82,6 @@ export function createConceptSchemeCreateRequest(
   overrides?: Partial<components["schemas"]["ConceptSchemeCreateRequest"]>,
 ): components["schemas"]["ConceptSchemeCreateRequest"] {
   return {
-    identifier: "new_scheme",
     title: "New Scheme",
     description: "A new test scheme",
     ...overrides,
@@ -128,7 +126,6 @@ export function createClassCreateRequest(
   overrides?: Partial<components["schemas"]["ClassCreateRequest"]>,
 ): components["schemas"]["ClassCreateRequest"] {
   return {
-    identifier: "new_class",
     title: "New Class",
     description: "A new test class",
     ...overrides,

@@ -72,6 +72,7 @@ def sample_data(ontology_repo):
     # Create taxonomy
     taxonomy = Taxonomy(
         id=str(uuid.uuid4()),
+        identifier="biology_taxonomy",
         title="Biology",
         description="Biological classification",
     )
@@ -80,6 +81,7 @@ def sample_data(ontology_repo):
     # Create concept scheme
     scheme = ConceptScheme(
         id=str(uuid.uuid4()),
+        identifier="organisms_scheme",
         taxonomy_id=taxonomy.id,
         title="Organisms",
         description="Classification of living organisms",
@@ -89,6 +91,7 @@ def sample_data(ontology_repo):
     # Create classes
     dog = Class(
         id=str(uuid.uuid4()),
+        identifier="dog_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Dog",
@@ -110,6 +113,7 @@ def sample_data(ontology_repo):
 
     mammal = Class(
         id=str(uuid.uuid4()),
+        identifier="mammal_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Mammal",
@@ -119,6 +123,7 @@ def sample_data(ontology_repo):
 
     cat = Class(
         id=str(uuid.uuid4()),
+        identifier="cat_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Cat",

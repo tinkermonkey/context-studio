@@ -49,6 +49,7 @@ class FakeOntologyRepository:
                 id=entity_id,
                 concept_scheme_id="test-scheme",
                 taxonomy_id="test-taxonomy",
+                identifier=f"cls_{entity_id}",
                 title=entity_data.get("title", ""),
                 description=entity_data.get("description"),
                 embedding=entity_data.get("embedding"),
