@@ -41,8 +41,7 @@ class NoOpApplyService:
             description="Sentinel entity created by NoOp pipeline apply",
         )
 
-        # Track in result using created_individual_ids as a temporary holder for the entity ID
-        # since we don't have a better field in ApplyResult for taxonomy creation
-        result.created_individual_ids.append(sentinel_taxonomy.id)
+        # Track the created taxonomy ID
+        result.created_taxonomy_ids.append(sentinel_taxonomy.id)
 
         return result

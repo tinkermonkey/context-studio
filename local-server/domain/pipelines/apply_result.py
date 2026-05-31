@@ -25,3 +25,4 @@ class ApplyResult:
     created_relationship_ids: list[str] = field(default_factory=list)
     created_property_definition_ids: list[str] = field(default_factory=list)
     created_external_reference_ids: list[str] = field(default_factory=list)
+    created_taxonomy_ids: list[str] = field(default_factory=list)

@@ -196,17 +196,17 @@ class TestNoOpChangeEvents:
                 output_summary=result_state.result,
             )
 
-            # Apply the NoOp result (creates a sentinel individual)
+            # Apply the NoOp result (creates a sentinel taxonomy)
             apply_service = NoOpApplyService(ontology_service)
             apply_result = apply_service.apply(run)
 
-            # Verify at least one entity was created
-            assert len(apply_result.created_individual_ids) >= 1, "Should have sentinel entity ID"
+            # Verify at least one taxonomy was created
+            assert len(apply_result.created_taxonomy_ids) >= 1, "Should have sentinel taxonomy ID"
 
             # Verify change events were recorded for the applied entity
             session = session_factory()
             try:
-                sentinel_id = apply_result.created_individual_ids[0]
+                sentinel_id = apply_result.created_taxonomy_ids[0]
                 change_events = session.query(ChangeEvent).filter_by(
                     entity_id=sentinel_id,
                     batch_run_id=run_id,
@@ -263,8 +263,8 @@ class TestNoOpRevert:
             apply_result = apply_service.apply(run)
 
             # Verify apply created entities
-            assert len(apply_result.created_individual_ids) >= 1, "Apply should create sentinel entity"
-            sentinel_id = apply_result.created_individual_ids[0]
+            assert len(apply_result.created_taxonomy_ids) >= 1, "Apply should create sentinel taxonomy"
+            sentinel_id = apply_result.created_taxonomy_ids[0]
 
             # Verify sentinel exists before revert
             assert ontology_repo.get_taxonomy(sentinel_id) is not None
@@ -388,8 +388,8 @@ class TestNoOpStructuralComplete:
             apply_result = apply_service.apply(run)
 
             # Assertion 2: Apply produces at least one change_event
-            assert len(apply_result.created_individual_ids) >= 1, "Should create sentinel entity"
-            sentinel_id = apply_result.created_individual_ids[0]
+            assert len(apply_result.created_taxonomy_ids) >= 1, "Should create sentinel taxonomy"
+            sentinel_id = apply_result.created_taxonomy_ids[0]
 
             session = session_factory()
             try:

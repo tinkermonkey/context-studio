@@ -30,6 +30,11 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionState,
 )
 from tests.fixtures.schema_extraction_fixtures import get_microservices_text
+from tests.integration.fixtures.pipelines.harness import (
+    load_fixture,
+    load_expected_output,
+    run_pipeline_against_fixture,
+)
 
 
 class _SchemaExtractionMockLLM:
