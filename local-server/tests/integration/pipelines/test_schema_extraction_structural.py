@@ -28,7 +28,7 @@ from domain.pipelines.entities import PipelineRunStatus, PipelineType, SchemaExt
 from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.integration.fixtures.pipelines.harness import compare_output, run_pipeline_against_fixture
+from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
 
 
 @pytest.fixture
@@ -144,6 +144,74 @@ class TestSchemaExtractionStructural:
         assert len(result.created_class_ids) == 1
         assert len(result.created_property_definition_ids) == 1
         assert len(result.created_relationship_ids) == 1
+
+
+class TestSchemaExtractionViaHarness:
+    """End-to-end structural tests via the shared harness."""
+
+    @pytest.mark.asyncio
+    async def test_harness_runs_schema_extraction_and_returns_output(self, llm_provider):
+        """Harness successfully loads fixture, runs orchestrator, returns output."""
+        from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
+
+        orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_extraction",
+            "basic",
+        )
+
+        # Verify we got outputs
+        assert actual is not None
+        assert expected is not None
+        assert "status" in actual
+        assert actual["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_apply_produces_created_ids(self, llm_provider, ontology_service, ontology_repo):
+        """Apply service must return created_class_ids and created_property_definition_ids."""
+        from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
+        from domain.pipelines.entities import SchemaExtractionRun, PipelineRunStatus
+        from domain.interchange.services import set_batch_run_context
+
+        run_id = str(uuid4())
+        set_batch_run_context(run_id)
+
+        try:
+            orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+            actual, _ = await run_pipeline_against_fixture(
+                orchestrator,
+                "schema_extraction",
+                "basic",
+            )
+
+            assert actual["status"] == "completed"
+
+            # Create and apply run
+            run = SchemaExtractionRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="default",
+                configuration_slug="schema-extraction-default",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=actual["result"],
+            )
+
+            apply_service = SchemaExtractionApplyService(ontology_repo)
+            apply_result = apply_service.apply(run)
+
+            # Verify IDs are returned
+            assert hasattr(apply_result, "created_class_ids")
+            assert hasattr(apply_result, "created_property_definition_ids")
+            assert hasattr(apply_result, "created_relationship_ids")
+            assert isinstance(apply_result.created_class_ids, list)
+            assert isinstance(apply_result.created_property_definition_ids, list)
+            assert isinstance(apply_result.created_relationship_ids, list)
+        finally:
+            set_batch_run_context(None)
 
 
 if __name__ == "__main__":

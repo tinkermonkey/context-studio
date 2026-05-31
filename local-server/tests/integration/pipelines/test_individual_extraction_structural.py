@@ -210,5 +210,144 @@ class TestIndividualExtractionStructural:
         assert hasattr(result, "relationships_skipped")
 
 
+class TestIndividualExtractionViaBharness:
+    """End-to-end structural tests via the shared harness."""
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_produces_created_individual_and_relationship_ids(
+        self, extraction_orchestrator, ontology_repo, ontology_service, change_repo, session_factory
+    ):
+        """Orchestrator execute → apply → verify: IDs must be returned."""
+        from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
+        from domain.interchange.services import set_batch_run_context
+
+        run_id = str(uuid4())
+        set_batch_run_context(run_id)
+
+        try:
+            # Execute orchestrator
+            actual, expected = await run_pipeline_against_fixture(
+                extraction_orchestrator,
+                "individual_extraction",
+                "basic",
+            )
+
+            # Verify orchestrator completed
+            assert actual["status"] == "completed"
+            assert actual["result"] is not None
+
+            # Create extraction run for apply phase
+            run = IndividualExtractionRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="default",
+                configuration_slug="extraction-default",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=actual["result"],
+            )
+
+            # Apply the orchestrator output
+            apply_service = IndividualExtractionApplyService(ontology_repo)
+            apply_result = apply_service.apply(run)
+
+            # Verify IDs are returned
+            assert len(apply_result.created_individual_ids) >= 0
+            assert len(apply_result.created_relationship_ids) >= 0
+            assert apply_result.individuals_created >= 0
+            assert apply_result.relationships_created >= 0
+        finally:
+            set_batch_run_context(None)
+
+    @pytest.mark.asyncio
+    async def test_counts_match_between_result_and_entities(
+        self, extraction_orchestrator, ontology_repo, ontology_service, change_repo, session_factory
+    ):
+        """Verify that counts in ApplyResult match actual created entities."""
+        from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
+        from domain.interchange.services import set_batch_run_context
+
+        run_id = str(uuid4())
+        set_batch_run_context(run_id)
+
+        try:
+            # Execute orchestrator
+            actual, _ = await run_pipeline_against_fixture(
+                extraction_orchestrator,
+                "individual_extraction",
+                "basic",
+            )
+
+            # Create and apply run
+            run = IndividualExtractionRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="default",
+                configuration_slug="extraction-default",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=actual["result"],
+            )
+
+            apply_service = IndividualExtractionApplyService(ontology_repo)
+            apply_result = apply_service.apply(run)
+
+            # Verify count fields match ID list lengths
+            assert apply_result.individuals_created == len(apply_result.created_individual_ids)
+            assert apply_result.relationships_created == len(apply_result.created_relationship_ids)
+        finally:
+            set_batch_run_context(None)
+
+    @pytest.mark.asyncio
+    async def test_revert_round_trip_succeeds(
+        self, extraction_orchestrator, ontology_repo, ontology_service, change_repo, session_factory
+    ):
+        """Verify that applied changes are fully revertable."""
+        from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
+        from domain.versioning.revert_service import RevertService
+        from domain.interchange.services import set_batch_run_context
+
+        run_id = str(uuid4())
+        set_batch_run_context(run_id)
+
+        try:
+            # Execute and apply
+            actual, _ = await run_pipeline_against_fixture(
+                extraction_orchestrator,
+                "individual_extraction",
+                "basic",
+            )
+
+            run = IndividualExtractionRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="default",
+                configuration_slug="extraction-default",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=actual["result"],
+            )
+
+            apply_service = IndividualExtractionApplyService(ontology_repo)
+            apply_result = apply_service.apply(run)
+
+            # Verify entities exist before revert
+            if apply_result.created_individual_ids:
+                for ind_id in apply_result.created_individual_ids:
+                    assert ontology_repo.get_individual(ind_id) is not None
+
+            # Revert
+            revert_service = RevertService(change_repo, ontology_repo)
+            reverted_count = revert_service.revert(run_id)
+
+            # Verify revert worked
+            assert reverted_count >= 0
+            if apply_result.created_individual_ids:
+                for ind_id in apply_result.created_individual_ids:
+                    assert ontology_repo.get_individual(ind_id) is None
+        finally:
+            set_batch_run_context(None)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

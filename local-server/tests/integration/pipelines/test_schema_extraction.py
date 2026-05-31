@@ -429,3 +429,25 @@ class TestSchemaExtractionAgainstCanon:
         result_state = _run_orchestrator(paper)
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert (result_state.result or {}).get("candidate_count", 0) > 0
+
+
+class TestSchemaExtractionViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_extraction(self):
+        """Harness successfully loads fixture and runs schema extraction orchestrator."""
+        llm_provider = _SchemaExtractionMockLLM()
+        orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_extraction",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual

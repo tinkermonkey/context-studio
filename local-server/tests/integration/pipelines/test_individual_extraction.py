@@ -87,6 +87,38 @@ def load_all_fixtures() -> list[dict]:
     return fixtures
 
 
+class TestIndividualExtractionViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_extraction(
+        self, registered_extraction, extraction_service
+    ):
+        """Harness successfully loads fixture, runs orchestrator via harness."""
+        _, config_registry = registered_extraction
+        impl_registry = PipelineImplementationRegistry()
+        register_individual_extraction(impl_registry, config_registry)
+
+        llm_provider = FakeLLMProvider()
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        # Load fixture via harness
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "individual_extraction",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual
+
+
 @pytest.fixture
 def temp_db():
     """Create a temporary SQLite database for integration tests."""

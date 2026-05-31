@@ -253,3 +253,31 @@ class TestDefinitionRefinementExecution:
         result_state = asyncio.run(orchestrator.execute(state))
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert len(result_state.result.get("candidates", [])) == 1
+
+
+class TestDefinitionRefinementViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_refinement(self):
+        """Harness successfully loads fixture and runs definition refinement orchestrator."""
+        from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+            DefinitionRefinementOrchestrator,
+        )
+
+        llm_provider = FakeLLMProvider(
+            response_content='{"definitions": [{"label": "Microservice", "definition": "A small service"}]}'
+        )
+        orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_node_definition_refinement",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual

@@ -26,7 +26,7 @@ from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.integration.fixtures.pipelines.harness import compare_output, run_pipeline_against_fixture
+from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
 
 
 @pytest.fixture
@@ -126,6 +126,71 @@ class TestSchemaNodeGroundingStructural:
         # This ensures per-source adapter contract is enforced
         apply_service = SchemaGroundingApplyService(ontology_repo=None)
         assert apply_service is not None
+
+
+class TestSchemaNodeGroundingViaHarness:
+    """End-to-end structural tests via the shared harness."""
+
+    @pytest.mark.asyncio
+    async def test_harness_runs_grounding_via_orchestrator(self, llm_provider):
+        """Harness successfully loads fixture, runs orchestrator, returns output."""
+        from domain.pipelines.schema_node_grounding.orchestrator import SchemaNodeGroundingOrchestrator
+
+        orchestrator = SchemaNodeGroundingOrchestrator(llm_provider)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_node_grounding",
+            "basic",
+        )
+
+        # Verify we got outputs
+        assert actual is not None
+        assert expected is not None
+        assert "status" in actual
+        assert actual["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_apply_produces_external_reference_ids(
+        self, llm_provider, ontology_service, ontology_repo
+    ):
+        """Apply service must return created_external_reference_ids."""
+        from domain.pipelines.schema_node_grounding.orchestrator import SchemaNodeGroundingOrchestrator
+        from domain.pipelines.entities import SchemaNodeGroundingRun, PipelineRunStatus
+
+        run_id = str(uuid4())
+        set_batch_run_context(run_id)
+
+        try:
+            orchestrator = SchemaNodeGroundingOrchestrator(llm_provider)
+
+            actual, _ = await run_pipeline_against_fixture(
+                orchestrator,
+                "schema_node_grounding",
+                "basic",
+            )
+
+            assert actual["status"] == "completed"
+
+            # Create and apply run
+            run = SchemaNodeGroundingRun(
+                id=run_id,
+                batch_run_id=run_id,
+                implementation_id="default",
+                configuration_slug="grounding-default",
+                configuration_version=1,
+                status=PipelineRunStatus.COMPLETED,
+                output_summary=actual["result"],
+            )
+
+            apply_service = SchemaGroundingApplyService(ontology_repo)
+            apply_result = apply_service.apply(run)
+
+            # Verify external reference IDs are returned
+            assert hasattr(apply_result, "created_external_reference_ids")
+            assert isinstance(apply_result.created_external_reference_ids, list)
+        finally:
+            set_batch_run_context(None)
 
 
 if __name__ == "__main__":
