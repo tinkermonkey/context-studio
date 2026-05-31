@@ -14,7 +14,7 @@ export interface UseFocusTrapOptions {
 }
 
 export function useFocusTrap(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   isActive: boolean,
   options?: UseFocusTrapOptions
 ) {

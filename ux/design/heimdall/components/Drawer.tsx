@@ -20,7 +20,7 @@ export const Drawer = React.forwardRef<HTMLDivElement, DrawerProps>(
 
     useImperativeHandle(ref, () => drawerRef.current as HTMLDivElement)
 
-    useFocusTrap(drawerRef as React.RefObject<HTMLElement>, isOpen)
+    useFocusTrap(drawerRef, isOpen)
     useBodyOverflow(isOpen)
 
     useEffect(() => {

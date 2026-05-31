@@ -25,7 +25,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     useImperativeHandle(ref, () => modalRef.current as HTMLDivElement)
 
-    useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen)
+    useFocusTrap(modalRef, isOpen)
     useBodyOverflow(isOpen)
 
     useEffect(() => {
