@@ -110,6 +110,8 @@ class TestPipelineRunRequestExtraFieldPreservation:
             current_definition="A definition",
             implementation_id="default",
             configuration_ref="default",
+            groundings=None,
+            extraction_usages=None,
         )
 
         dumped = request.model_dump()
@@ -131,6 +133,8 @@ class TestPipelineRunRequestExtraFieldPreservation:
             current_connections=connections,
             implementation_id="default",
             configuration_ref="default",
+            groundings=None,
+            extraction_usages=None,
         )
 
         dumped = request.model_dump()
