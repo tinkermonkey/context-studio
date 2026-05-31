@@ -41,6 +41,7 @@ from adapters.web.schemas.pipelines import (
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
+    RevertRunResponse,
 )
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
@@ -789,11 +790,69 @@ async def apply_pipeline_run(
         run_id=run_id,
         pipeline_type=ptype.value,
         classes_created=apply_result.classes_created,
+        classes_updated=apply_result.classes_updated,
         classes_skipped=apply_result.classes_skipped,
         properties_created=apply_result.properties_created,
         properties_skipped=apply_result.properties_skipped,
         relationships_created=apply_result.relationships_created,
+        relationships_removed=apply_result.relationships_removed,
+        relationships_modified=apply_result.relationships_modified,
         relationships_skipped=apply_result.relationships_skipped,
         individuals_created=apply_result.individuals_created,
         individuals_skipped=apply_result.individuals_skipped,
+        external_references_created=apply_result.external_references_created,
+        external_references_skipped=apply_result.external_references_skipped,
+        created_class_ids=apply_result.created_class_ids,
+        created_individual_ids=apply_result.created_individual_ids,
+        created_relationship_ids=apply_result.created_relationship_ids,
+        created_property_definition_ids=apply_result.created_property_definition_ids,
+        created_external_reference_ids=apply_result.created_external_reference_ids,
     )
+
+
+@router.post(
+    "/runs/{run_id}/revert",
+    response_model=RevertRunResponse,
+    status_code=http_status.HTTP_200_OK,
+)
+async def revert_pipeline_run(
+    run_id: str,
+    request: Request,
+) -> RevertRunResponse:
+    """
+    Revert all changes made by a specific pipeline run.
+
+    Walks the change_events for the given run_id in reverse order and applies
+    the inverse of each operation. This restores the ontology to its state
+    before the run was applied.
+
+    The operation is idempotent — calling revert twice produces the same state
+    without error.
+
+    Args:
+        run_id: ID of the pipeline run to revert
+
+    Returns:
+        RevertRunResponse with count of events reverted
+
+    Raises:
+        HTTPException: 404 if run not found, 500 for revert errors
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run {run_id} not found",
+        )
+
+    revert_svc = request.app.state.revert_service
+    try:
+        events_reverted = revert_svc.revert(run_id)
+        return RevertRunResponse(run_id=run_id, events_reverted=events_reverted)
+    except Exception as exc:
+        _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to revert pipeline run: {str(exc)}",
+        ) from exc

@@ -101,6 +101,7 @@ class SchemaExtractionApplyService:
             existing_titles[label.lower()] = new_class.id
             all_class_title_to_id[label.lower()] = new_class.id
             result.classes_created += 1
+            result.created_class_ids.append(new_class.id)
 
         # --- Property Definitions ---
         prop_candidates = [c for c in candidates if c.get("kind") == "property_definition"]
@@ -128,6 +129,7 @@ class SchemaExtractionApplyService:
             )
             self._repo.save_property_definition(new_prop)
             result.properties_created += 1
+            result.created_property_definition_ids.append(new_prop.id)
 
         # --- Relationships ---
         for connection in connections:
@@ -176,5 +178,6 @@ class SchemaExtractionApplyService:
             )
             self._repo.save_relationship(new_rel)
             result.relationships_created += 1
+            result.created_relationship_ids.append(new_rel.id)
 
         return result

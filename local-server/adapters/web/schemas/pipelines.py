@@ -155,12 +155,15 @@ class ApplyRunResponse(BaseModel):
     run_id: str = Field(..., description="ID of the applied pipeline run")
     pipeline_type: str = Field(..., description="Pipeline type that was applied")
     classes_created: int = Field(default=0, description="Class entities created")
+    classes_updated: int = Field(default=0, description="Class entities updated")
     classes_skipped: int = Field(default=0, description="Class candidates skipped (already exist)")
     properties_created: int = Field(default=0, description="PropertyDefinition entities created")
     properties_skipped: int = Field(
         default=0, description="PropertyDefinition candidates skipped (already exist)"
     )
     relationships_created: int = Field(default=0, description="Relationship entities created")
+    relationships_removed: int = Field(default=0, description="Relationship entities removed")
+    relationships_modified: int = Field(default=0, description="Relationship entities modified")
     relationships_skipped: int = Field(
         default=0, description="Relationship candidates skipped (already exist or unresolvable)"
     )
@@ -168,6 +171,34 @@ class ApplyRunResponse(BaseModel):
     individuals_skipped: int = Field(
         default=0, description="Individual candidates skipped (already exist)"
     )
+    external_references_created: int = Field(
+        default=0, description="External references added to classes"
+    )
+    external_references_skipped: int = Field(
+        default=0, description="External references skipped (already exist)"
+    )
+    created_class_ids: list[str] = Field(
+        default_factory=list, description="IDs of created classes"
+    )
+    created_individual_ids: list[str] = Field(
+        default_factory=list, description="IDs of created individuals"
+    )
+    created_relationship_ids: list[str] = Field(
+        default_factory=list, description="IDs of created relationships"
+    )
+    created_property_definition_ids: list[str] = Field(
+        default_factory=list, description="IDs of created property definitions"
+    )
+    created_external_reference_ids: list[str] = Field(
+        default_factory=list, description="URIs of created external references"
+    )
+
+
+class RevertRunResponse(BaseModel):
+    """Response from reverting a pipeline run."""
+
+    run_id: str = Field(..., description="ID of the reverted pipeline run")
+    events_reverted: int = Field(..., description="Number of change events reverted")
 
 
 class CandidateResponse(BaseModel):

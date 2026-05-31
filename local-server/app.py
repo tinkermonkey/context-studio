@@ -410,6 +410,14 @@ async def lifespan(app: FastAPI):
             " event publisher"
         )
 
+        from domain.versioning.revert_service import RevertService
+
+        revert_service = RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+        )
+        logger.info("RevertService created and wired with change and ontology repositories")
+
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
         logger.info("ImportRunService created")
@@ -571,6 +579,7 @@ async def lifespan(app: FastAPI):
         app.state.graph_service = graph_service
         app.state.extraction_service = extraction_service
         app.state.versioning_service = versioning_service
+        app.state.revert_service = revert_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager

@@ -69,5 +69,5 @@ class SchemaDefinitionRefinementApplyService:
 
         cls.description = new_definition
         self._repo.save_class(cls)
-        result.classes_created += 1
+        result.classes_updated += 1
         return result

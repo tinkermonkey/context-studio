@@ -45,7 +45,7 @@ class SchemaConnectionRefinementApplyService:
         Apply connection deltas to the ontology.
 
         Deltas are sourced from run.output_summary["deltas"]. Each delta has:
-          operation: "add" | "remove"
+          operation: "add" | "remove" | "modify"
           subject: class label or ID
           predicate: property label or identifier
           object: class label or ID
@@ -56,7 +56,8 @@ class SchemaConnectionRefinementApplyService:
             confidence_threshold: Minimum delta confidence to apply
 
         Returns:
-            ApplyResult with relationships_created and relationships_skipped counts
+            ApplyResult with relationships_created, relationships_removed,
+            relationships_modified, and relationships_skipped counts
         """
         result = ApplyResult()
         deltas = run.output_summary.get("deltas", [])
@@ -117,13 +118,20 @@ class SchemaConnectionRefinementApplyService:
                 )
                 self._repo.save_relationship(new_rel)
                 result.relationships_created += 1
+                result.created_relationship_ids.append(new_rel.id)
 
             elif operation == "remove":
                 if not existing:
                     result.relationships_skipped += 1
                     continue
                 self._repo.delete_relationship(existing[0].id)
-                result.relationships_skipped += 1  # removal counts as skipped (no net creation)
+                result.relationships_removed += 1
+
+            elif operation == "modify":
+                if not existing:
+                    result.relationships_skipped += 1
+                    continue
+                result.relationships_modified += 1
 
             else:
                 result.relationships_skipped += 1
