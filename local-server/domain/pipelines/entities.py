@@ -67,8 +67,8 @@ class Batch:
         id: Unique identifier (UUID as string)
         status: Current batch status (pending | running | completed | failed | cancelled)
         created_at: UTC timestamp of batch creation
-        started_at: UTC timestamp when batch transitioned to RUNNING (None if not yet started)
-        completed_at: UTC timestamp when batch transitioned to terminal state (None if not completed)
+        started_at: UTC timestamp when transitioned to RUNNING (None if not started)
+        completed_at: UTC timestamp when transitioned to terminal state (None if not done)
         last_updated: UTC timestamp of last status change or run update
     """
 

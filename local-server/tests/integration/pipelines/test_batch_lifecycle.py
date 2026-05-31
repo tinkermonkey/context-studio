@@ -10,10 +10,9 @@ Tests verify:
 6. Proper status transitions through the batch lifecycle
 """
 
-import pytest
 from fastapi import status
 
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineRunStatus
 
 
 class TestBatchLifecycle:
@@ -127,7 +126,10 @@ class TestBatchLifecycle:
     def test_batch_aggregate_counts_transition_as_runs_change(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """Batch with N=3 runs reports correct aggregate counts as children transition through statuses."""
+        """
+        Batch with N=3 runs reports correct aggregate counts as children
+        transition through statuses.
+        """
         # Create a batch and enqueue 3 runs
         create_response = client.post("/api/pipelines/batches")
         batch_id = create_response.json()["id"]

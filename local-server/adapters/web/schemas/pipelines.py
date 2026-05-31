@@ -237,10 +237,19 @@ class BatchResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Batch UUID")
-    status: str = Field(..., description="Batch status (pending|running|completed|failed|cancelled)")
-    created_at: datetime = Field(..., description="UTC timestamp of batch creation")
-    started_at: Optional[datetime] = Field(None, description="UTC timestamp when batch started")
-    completed_at: Optional[datetime] = Field(None, description="UTC timestamp when batch completed")
+    status: str = Field(
+        ...,
+        description="Status: pending, running, completed, failed, or cancelled",
+    )
+    created_at: datetime = Field(
+        ..., description="UTC timestamp of batch creation"
+    )
+    started_at: Optional[datetime] = Field(
+        None, description="UTC timestamp when batch started"
+    )
+    completed_at: Optional[datetime] = Field(
+        None, description="UTC timestamp when batch completed"
+    )
     last_updated: datetime = Field(..., description="UTC timestamp of last update")
     run_count: int = Field(..., ge=0, description="Total number of runs in batch")
     run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
@@ -251,8 +260,12 @@ class EnqueueBatchRunsRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    runs: list[dict[str, Any]] = Field(..., min_length=1, description="List of run specs to enqueue")
-    idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for safe replay")
+    runs: list[dict[str, Any]] = Field(
+        ..., min_length=1, description="Run specs to enqueue"
+    )
+    idempotency_key: Optional[str] = Field(
+        None, description="Optional idempotency key for replay"
+    )
 
 
 class EnqueueBatchRunsResponse(BaseModel):

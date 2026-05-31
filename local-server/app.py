@@ -32,6 +32,7 @@ from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 
 # Import adapters
@@ -43,7 +44,6 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 )
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource

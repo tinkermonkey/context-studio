@@ -72,12 +72,12 @@ class BatchRepository:
             Domain entity
         """
         return Batch(
-            id=orm_obj.id,
-            status=BatchStatus(orm_obj.status),
-            created_at=orm_obj.created_at,
-            started_at=orm_obj.started_at,
-            completed_at=orm_obj.completed_at,
-            last_updated=orm_obj.last_updated,
+            id=orm_obj.id,  # type: ignore[arg-type]
+            status=BatchStatus(orm_obj.status),  # type: ignore[arg-type]
+            created_at=orm_obj.created_at,  # type: ignore[arg-type]
+            started_at=orm_obj.started_at,  # type: ignore[arg-type]
+            completed_at=orm_obj.completed_at,  # type: ignore[arg-type]
+            last_updated=orm_obj.last_updated,  # type: ignore[arg-type]
         )
 
     def create(self) -> Batch:
@@ -139,7 +139,7 @@ class BatchRepository:
             if self._should_close_session():
                 session.close()
 
-    def list(self) -> list[Batch]:
+    def list(self) -> "list[Batch]":  # type: ignore[valid-type]
         """
         List all batches.
 
@@ -160,7 +160,7 @@ class BatchRepository:
             if self._should_close_session():
                 session.close()
 
-    def list_by_status(self, status: BatchStatus) -> list[Batch]:
+    def list_by_status(self, status: BatchStatus) -> "list[Batch]":  # type: ignore[valid-type]
         """
         List all batches with a specific status.
 
@@ -204,8 +204,8 @@ class BatchRepository:
             if not orm_obj:
                 return False
 
-            orm_obj.status = status.value
-            orm_obj.last_updated = datetime.now(timezone.utc)
+            orm_obj.status = status.value  # type: ignore[assignment]
+            orm_obj.last_updated = datetime.now(timezone.utc)  # type: ignore[assignment]
             session.commit()
             return True
         except SQLAlchemyError as e:
@@ -236,8 +236,8 @@ class BatchRepository:
                 return False
 
             if orm_obj.started_at is None:
-                orm_obj.started_at = datetime.now(timezone.utc)
-                orm_obj.last_updated = datetime.now(timezone.utc)
+                orm_obj.started_at = datetime.now(timezone.utc)  # type: ignore[assignment,unreachable]
+                orm_obj.last_updated = datetime.now(timezone.utc)  # type: ignore[assignment,unreachable]
                 session.commit()
             return True
         except SQLAlchemyError as e:
@@ -268,8 +268,8 @@ class BatchRepository:
                 return False
 
             if orm_obj.completed_at is None:
-                orm_obj.completed_at = datetime.now(timezone.utc)
-                orm_obj.last_updated = datetime.now(timezone.utc)
+                orm_obj.completed_at = datetime.now(timezone.utc)  # type: ignore[assignment,unreachable]
+                orm_obj.last_updated = datetime.now(timezone.utc)  # type: ignore[assignment,unreachable]
                 session.commit()
             return True
         except SQLAlchemyError as e:
@@ -311,10 +311,12 @@ class BatchRepository:
             if PipelineRunStatus.RUNNING.value in statuses:
                 return BatchStatus.RUNNING
 
-            all_terminal = all(
-                s in (PipelineRunStatus.COMPLETED.value, PipelineRunStatus.FAILED.value, PipelineRunStatus.CANCELLED.value)
-                for s in statuses
+            terminal_statuses = (
+                PipelineRunStatus.COMPLETED.value,
+                PipelineRunStatus.FAILED.value,
+                PipelineRunStatus.CANCELLED.value,
             )
+            all_terminal = all(s in terminal_statuses for s in statuses)
 
             if all_terminal:
                 if PipelineRunStatus.COMPLETED.value in statuses:
@@ -326,8 +328,9 @@ class BatchRepository:
 
             return BatchStatus.PENDING
         except SQLAlchemyError as e:
-            logger.error(f"Failed to compute aggregate status for batch {batch_id}: {e}", exc_info=e)
-            raise PipelineStorageError(f"Failed to compute aggregate status: {e}") from e
+            msg = f"Failed to compute aggregate status for batch {batch_id}: {e}"
+            logger.error(msg, exc_info=e)
+            raise PipelineStorageError("Failed to compute aggregate status") from e
         finally:
             if self._should_close_session():
                 session.close()

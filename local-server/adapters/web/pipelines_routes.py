@@ -35,8 +35,8 @@ from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
     BatchResponse,
-    CandidateResponse,
     CancelBatchResponse,
+    CandidateResponse,
     ConfigurationResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
@@ -46,10 +46,8 @@ from adapters.web.schemas.pipelines import (
     PipelineTypeResponse,
     ResumeBatchResponse,
     RevertRunResponse,
-    RunCountsResponse,
 )
 from domain.pipelines.entities import (
-    BatchStatus,
     PipelineRun,
     PipelineRunStatus,
     PipelineType,

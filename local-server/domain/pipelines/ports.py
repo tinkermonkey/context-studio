@@ -113,6 +113,7 @@ class ExtractionPort(Protocol):
 
 
 PipelineRunList = list[PipelineRun]
+BatchList = list[Batch]
 ChangeEventDictList = list[dict[str, Any]]
 
 
@@ -280,7 +281,7 @@ class BatchRepository(Protocol):
         """
         ...
 
-    def list(self) -> list[Batch]:
+    def list(self) -> BatchList:
         """
         List all batches.
 
@@ -289,7 +290,7 @@ class BatchRepository(Protocol):
         """
         ...
 
-    def list_by_status(self, status: BatchStatus) -> list[Batch]:
+    def list_by_status(self, status: BatchStatus) -> BatchList:
         """
         List all batches with a specific status.
 

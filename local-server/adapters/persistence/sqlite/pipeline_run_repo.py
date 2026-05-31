@@ -173,7 +173,10 @@ class PipelineRepository:
             session.flush()
             session.commit()
             result = self._orm_to_domain(orm_obj)
-            logger.info(f"Created pipeline run: {run_id} in batch {batch_run_id} ({pipeline_type.value})")
+            logger.info(
+                f"Created pipeline run {run_id} in batch {batch_run_id} "
+                f"({pipeline_type.value})"
+            )
             return result
         except IntegrityError as e:
             session.rollback()
@@ -331,10 +334,12 @@ class PipelineRepository:
             orm_objs = session.query(PipelineRun).filter(PipelineRun.batch_id == batch_id).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         except OperationalError as e:
-            logger.error(f"Database operational error when listing pipeline runs by batch {batch_id}: {e}")
+            msg = f"Database operational error when listing runs for batch {batch_id}"
+            logger.error(msg, exc_info=e)
             raise PipelineStorageError("Failed to list pipeline runs by batch") from e
         except SQLAlchemyError as e:
-            logger.error(f"Database error when listing pipeline runs by batch {batch_id}: {e}")
+            msg = f"Database error when listing runs for batch {batch_id}"
+            logger.error(msg, exc_info=e)
             raise PipelineStorageError("Failed to list pipeline runs by batch") from e
         finally:
             if self._should_close_session():
