@@ -6,9 +6,7 @@ import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
-import { useExecutionStore } from "@/stores/executionStore";
 import { useHealth, useConfig } from "@/api/hooks/admin";
-import { usePipelines } from "@/api/hooks/pipeline";
 import {
   useClasses,
   useIndividuals,
@@ -37,9 +35,6 @@ const ROUTE_LABELS: Record<string, string[]> = {
   "/app/schema/relationships": ["Schema", "Relationships"],
   "/app/data/individuals": ["Data", "Individuals"],
   "/app/data/datasets": ["Data", "Datasets"],
-  "/app/pipelines": ["Pipelines", "All Pipelines"],
-  "/app/pipelines/runs": ["Pipelines", "Run History"],
-  "/app/pipelines/flavors": ["Pipelines", "Flavors"],
   "/app/reference/sources": ["External Reference", "Sources"],
   "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
   "/app/versioning": ["Versioning"],
@@ -55,7 +50,6 @@ const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
   { prefix: "/app/schema/relationships", id: "schema-relationships" },
   { prefix: "/app/schema", id: "schema" },
   { prefix: "/app/data", id: "data" },
-  { prefix: "/app/pipelines", id: "pipelines" },
   { prefix: "/app/reference", id: "external-reference" },
   { prefix: "/app/graph", id: "graph" },
   { prefix: "/app/settings", id: "settings" },
@@ -71,8 +65,6 @@ const NAV_ACTIONS = [
   { id: "nav-relationships", label: "Relationships", description: "Schema → Relationships", to: "/app/schema/relationships" },
   { id: "nav-individuals", label: "Individuals", description: "Data → Individuals", to: "/app/data/individuals" },
   { id: "nav-datasets", label: "Datasets", description: "Data → Datasets", to: "/app/data/datasets" },
-  { id: "nav-pipelines", label: "Pipelines", description: "Pipelines → All pipelines", to: "/app/pipelines" },
-  { id: "nav-pipeline-runs", label: "Pipeline Run History", description: "Pipelines → Run history", to: "/app/pipelines/runs" },
   { id: "nav-reference-sources", label: "Reference Sources", description: "External Reference → Sources", to: "/app/reference/sources" },
   { id: "nav-settings", label: "Configuration", description: "Go to settings", to: "/app/settings" },
 ] as const;
@@ -86,7 +78,6 @@ const SIDEBAR_PATH_MAP: Record<string, string> = {
   "schema-properties": "/app/schema/properties",
   "schema-relationships": "/app/schema/relationships",
   data: "/app/data/individuals",
-  pipelines: "/app/pipelines",
   "external-reference": "/app/reference/sources",
   graph: "/app/graph",
   settings: "/app/settings",
@@ -147,10 +138,6 @@ function AppShell() {
 
   const { data: health, isError } = useHealth();
   const { data: config } = useConfig();
-  const { inFlightPipelineIds } = useExecutionStore();
-  const runningCount = inFlightPipelineIds.size;
-  const hasRunning = runningCount > 0;
-  const { data: pipelines } = usePipelines(hasRunning ? 5000 : false);
   const { data: classes } = useClasses();
   const { data: individuals } = useIndividuals();
   const { data: taxonomies } = useTaxonomies();
@@ -160,7 +147,6 @@ function AppShell() {
 
   const classCount = classes?.total ?? 0;
   const individualCount = individuals?.total ?? 0;
-  const _pipelineCount = pipelines?.length ?? 0;
   const taxonomyCount = taxonomies?.total ?? 0;
   const schemeCount = schemes?.total ?? 0;
   const propertyCount = properties?.total ?? 0;
@@ -217,12 +203,6 @@ function AppShell() {
     ? `synced ${formatRelativeMinutes(health.uptime_seconds)}`
     : "syncing…";
 
-  const runningPipelines = (pipelines ?? []).filter((p) =>
-    inFlightPipelineIds.has((p as { id: string }).id),
-  );
-  const firstRunningName =
-    (runningPipelines[0] as { name?: string } | undefined)?.name ?? "pipeline";
-
   const statusbarLeft = (
     <>
       <div className="statusbar__item statusbar__item--pulse">
@@ -243,14 +223,7 @@ function AppShell() {
     </>
   );
 
-  const statusbarCenter = hasRunning ? (
-    <div className="statusbar__item statusbar__item--pulse">
-      <div className="statusbar__pulse statusbar__pulse--amber" />
-      <span className="statusbar__label--mono">
-        {runningCount} running <span className="statusbar__accent">{firstRunningName}</span>
-      </span>
-    </div>
-  ) : undefined;
+  const statusbarCenter = undefined;
 
   const statusbarRight = (
     <>
@@ -337,7 +310,6 @@ function AppShell() {
                 ],
               },
               { id: "data", label: "Data", icon: "data" },
-              { id: "pipelines", label: "Pipelines", icon: "pipeline" },
               { id: "external-reference", label: "External Reference", icon: "link" },
               { id: "graph", label: "Graph view", icon: "graph" },
               { id: "settings", label: "Configuration", icon: "settings" },

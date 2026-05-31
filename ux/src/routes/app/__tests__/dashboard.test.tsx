@@ -17,9 +17,8 @@ const HEALTH = {
 /**
  * Register handlers for every endpoint the Dashboard fetches. The test server
  * runs with onUnhandledRequest:"error", so each request must be mocked. The
- * Dashboard hooks call: taxonomies, schemes, classes, individuals, pipelines
- * (/api/pipelines — NOT /api/v1/pipelines), admin health, admin stats trends,
- * and versioning changes.
+ * Dashboard hooks call: taxonomies, schemes, classes, individuals, admin health,
+ * admin stats trends, and versioning changes.
  */
 function baseHandlers(overrides: ReturnType<typeof http.get>[] = []) {
   // MSW v2 resolves with the FIRST matching handler, so overrides must precede
@@ -28,13 +27,12 @@ function baseHandlers(overrides: ReturnType<typeof http.get>[] = []) {
     ...overrides,
     http.get("*/api/v1/admin/health", () => HttpResponse.json(HEALTH)),
     http.get("*/api/v1/admin/stats/trends", () =>
-      HttpResponse.json({ taxonomies: [], schemes: [], classes: [], individuals: [], pipelines: [] }),
+      HttpResponse.json({ taxonomies: [], schemes: [], classes: [], individuals: [] }),
     ),
     http.get("*/api/taxonomies", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
     http.get("*/api/schemes", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
     http.get("*/api/classes", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
     http.get("*/api/individuals", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
-    http.get("*/api/pipelines", () => HttpResponse.json([])),
     http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
   ];
 }
@@ -76,7 +74,6 @@ describe("Dashboard", () => {
         expect(screen.getByText("Welcome to Context Studio")).toBeInTheDocument();
         expect(screen.getByText("Start building your knowledge graph")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /Create taxonomy/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /Run pipeline/i })).toBeInTheDocument();
       });
     });
   });
@@ -194,12 +191,6 @@ describe("Dashboard", () => {
               offset: 0,
             }),
           ),
-          http.get("*/api/pipelines", () =>
-            HttpResponse.json([
-              { id: "pipe-1", title: "Extraction", enabled: true },
-              { id: "pipe-2", title: "Enrichment", enabled: false },
-            ]),
-          ),
         ]),
       );
 
@@ -223,10 +214,6 @@ describe("Dashboard", () => {
 
       expect(statGrid.getByText("Individuals")).toBeInTheDocument();
       expect(statGrid.getByText("5")).toBeInTheDocument();
-
-      // Two pipelines were returned by /api/pipelines.
-      expect(statGrid.getByText("Pipelines")).toBeInTheDocument();
-      expect(statGrid.getByText("2")).toBeInTheDocument();
     });
 
     it("displays activity section header when populated", async () => {
@@ -250,7 +237,7 @@ describe("Dashboard", () => {
       });
     });
 
-    it("displays active pipelines and quick access sections when populated", async () => {
+    it("displays quick access section when populated", async () => {
       server.use(
         ...baseHandlers([
           http.get("*/api/taxonomies", () =>
@@ -266,7 +253,6 @@ describe("Dashboard", () => {
       render(<Dashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText("Active pipelines")).toBeInTheDocument();
         expect(screen.getByText("Quick access")).toBeInTheDocument();
       });
     });

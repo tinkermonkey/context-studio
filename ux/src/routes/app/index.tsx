@@ -14,12 +14,9 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { HierarchyTree } from "@/components/ontology/HierarchyTree";
-import { PipelineCard } from "@/components/pipeline/PipelineCard";
 import { useHealth, useStatsTrends } from "@/api/hooks/admin";
 import { useTaxonomies, useSchemes, useClasses, useIndividuals } from "@/api/hooks/ontology";
-import { usePipelines } from "@/api/hooks/pipeline";
 import { useChanges } from "@/api/hooks/versioning";
-import { useExecutionStore } from "@/stores/executionStore";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
@@ -70,9 +67,6 @@ function EmptyState() {
         <Button variant="ghost" onClick={() => navigate({ to: "/app/schema/taxonomies" })}>
           <Icon name="plus" size={14} /> Create taxonomy
         </Button>
-        <Button variant="ghost" onClick={() => navigate({ to: "/app/pipelines" })}>
-          <Icon name="pipeline" size={14} /> Run pipeline
-        </Button>
         <Button variant="ghost" onClick={() => navigate({ to: "/app/reference/sources" })}>
           <Icon name="link" size={14} /> Import data
         </Button>
@@ -106,27 +100,16 @@ export function Dashboard() {
     isLoading: individualsLoading,
   } = useIndividuals();
   const {
-    data: pipelines,
-    isLoading: pipelinesLoading,
-    error: pipelinesError,
-    refetch: refetchPipelines,
-  } = usePipelines();
-  const {
     data: changesData,
     isLoading: changesLoading,
     error: changesError,
     refetch: refetchChanges,
   } = useChanges({ limit: 10 });
 
-  const inFlightPipelineIds = useExecutionStore((state) => state.inFlightPipelineIds);
-
   const taxonomyCount = taxonomies?.total ?? 0;
   const schemeCount = schemes?.total ?? 0;
   const classCount = classes?.total ?? 0;
   const individualCount = individuals?.total ?? 0;
-  const pipelineCount = pipelines?.length ?? 0;
-  const runningCount = inFlightPipelineIds.size;
-  const idleCount = pipelineCount - runningCount;
   const isEmptyState = !taxonomiesLoading && !taxonomiesError && taxonomyCount === 0;
 
   if (isEmptyState) {
@@ -161,8 +144,6 @@ export function Dashboard() {
         })
       : [];
 
-  const activePipelines = pipelines ?? [];
-
   const isDaemonHealthy = health?.status === "healthy";
 
   return (
@@ -185,9 +166,6 @@ export function Dashboard() {
             <Button variant="ghost" onClick={() => window.location.reload()}>
               <Icon name="reload" size={13} /> Refresh
             </Button>
-            <Button variant="primary" onClick={() => navigate({ to: "/app/pipelines" })}>
-              <Icon name="plus" size={13} /> New pipeline run
-            </Button>
           </>
         }
       />
@@ -201,7 +179,7 @@ export function Dashboard() {
         message="Could not load taxonomies"
         compact
       />
-      <StatGrid columns={4}>
+      <StatGrid columns={3}>
         <StatTile
           label="Taxonomies"
           value={taxonomiesLoading ? "—" : String(taxonomyCount)}
@@ -223,14 +201,6 @@ export function Dashboard() {
           color="emerald"
           icon="data"
           sparkData={meaningfulSparkData(trends?.individuals)}
-        />
-        <StatTile
-          label="Pipelines"
-          value={pipelinesLoading ? "—" : String(pipelineCount)}
-          color="amber"
-          icon="pipeline"
-          meta={pipelinesLoading ? undefined : `${runningCount} running · ${idleCount} idle`}
-          sparkData={meaningfulSparkData(trends?.pipelines)}
         />
       </StatGrid>
 
@@ -306,49 +276,6 @@ export function Dashboard() {
         </Panel>
       </div>
 
-      <div style={{ height: 18 }} />
-
-      {/* Active Pipelines */}
-      <Panel
-        title="Active pipelines"
-        headerAction={
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgb(var(--canvas-fg-3))" }}>
-              {runningCount} running · {idleCount} idle
-            </span>
-            <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/app/pipelines" })}>
-              All pipelines <Icon name="arrowRight" size={11} />
-            </Button>
-          </div>
-        }
-      >
-        <ErrorBanner
-          error={pipelinesError}
-          onRetry={refetchPipelines}
-          message="Could not load pipelines"
-          compact
-        />
-        {!pipelinesError && pipelinesLoading && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: "120px", borderRadius: "var(--radius-md, 6px)" }} />
-            ))}
-          </div>
-        )}
-        {!pipelinesError && !pipelinesLoading && activePipelines.length === 0 && (
-          <p style={{ fontSize: "var(--text-sm)", color: "rgb(var(--canvas-fg-3))", margin: 0 }}>
-            No active pipelines. Configure a pipeline to get started.
-          </p>
-        )}
-        {!pipelinesError && !pipelinesLoading && activePipelines.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            {activePipelines.slice(0, 2).map((pipeline) => (
-              <PipelineCard key={pipeline.id} pipeline={pipeline} compact />
-            ))}
-          </div>
-        )}
-      </Panel>
-
       <div style={{ height: 24 }} />
 
       {/* Quick Access */}
@@ -362,7 +289,6 @@ export function Dashboard() {
           { id: "cls", icon: "graph", title: "Classes", description: "Define the structure of your knowledge" },
           { id: "prop", icon: "component", title: "Properties", description: "Object and literal property definitions" },
           { id: "ind", icon: "data", title: "Individuals", description: "Browse instances populated from sources" },
-          { id: "pipe", icon: "pipeline", title: "Pipelines", description: "Configure and run Graph-RAG pipelines" },
           { id: "ref", icon: "link", title: "Reference sources", description: "External APIs and document corpora" },
         ]}
         onAction={(id) => {
@@ -371,7 +297,6 @@ export function Dashboard() {
             cls: "/app/schema/classes",
             prop: "/app/schema/properties",
             ind: "/app/data/individuals",
-            pipe: "/app/pipelines",
             ref: "/app/reference/sources",
           };
           const to = routes[id];

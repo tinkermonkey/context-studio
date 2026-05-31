@@ -5,7 +5,6 @@ import { useTaxonomies } from "@/api/hooks/ontology";
 import { useClasses } from "@/api/hooks/ontology";
 import { useIndividuals } from "@/api/hooks/ontology";
 import { useSchemes } from "@/api/hooks/ontology";
-import { usePipelines } from "@/api/hooks/pipeline";
 
 export function useCommandPaletteActions() {
   const navigate = useNavigate();
@@ -15,7 +14,6 @@ export function useCommandPaletteActions() {
   const { data: classes } = useClasses();
   const { data: individuals } = useIndividuals();
   const { data: schemes } = useSchemes();
-  const { data: pipelines } = usePipelines();
 
   useEffect(() => {
     const dynamicActions: PaletteAction[] = [];
@@ -72,19 +70,6 @@ export function useCommandPaletteActions() {
       });
     }
 
-    if (pipelines && pipelines.length > 0) {
-      pipelines.slice(0, 5).forEach((pipeline) => {
-        dynamicActions.push({
-          id: `pipeline-${pipeline.id}`,
-          label: `Run pipeline · ${pipeline.title}`,
-          description: pipeline.enabled ? "Enabled" : "Disabled",
-          onSelect: () => {
-            navigate({ to: `/app/pipelines/${pipeline.id}` }).catch(() => {});
-          },
-        });
-      });
-    }
-
     if (dynamicActions.length > 0) {
       registerActions(dynamicActions);
     }
@@ -99,7 +84,6 @@ export function useCommandPaletteActions() {
     classes,
     individuals,
     schemes,
-    pipelines,
     registerActions,
     unregisterActions,
     navigate,
