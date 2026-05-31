@@ -134,8 +134,8 @@ class TestTaxonomyCRUD:
 
     def test_list_taxonomies(self, repo):
         """Test listing all taxonomies."""
-        repo.save_taxonomy(Taxonomy(id="tax-1", identifier="tax_test", title="Tax 1"))
-        repo.save_taxonomy(Taxonomy(id="tax-2", identifier="tax_test", title="Tax 2"))
+        repo.save_taxonomy(Taxonomy(id="tax-1", identifier="tax_test_1", title="Tax 1"))
+        repo.save_taxonomy(Taxonomy(id="tax-2", identifier="tax_test_2", title="Tax 2"))
 
         taxonomies = repo.list_taxonomies()
         assert len(taxonomies) == 2

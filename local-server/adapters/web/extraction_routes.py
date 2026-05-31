@@ -17,6 +17,8 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from adapters.web.dependencies import get_extraction_service
@@ -27,6 +29,12 @@ from adapters.web.schemas.extraction import (
     ExtractionLayerResultSchema,
     ExtractionResultSchema,
     ExtractRequest,
+    ExtractTripleRequest,
+    ExtractTripleResponse,
+    Triple,
+    TripleNode,
+    TriplePredicate,
+    TripleProvenance,
 )
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.exceptions import (
@@ -237,6 +245,94 @@ async def enrich_from_references(
             service.enrich_from_references, request.text, extracted_entities
         )
         return _to_schema(result)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post(
+    "/extraction/extract",
+    response_model=ExtractTripleResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def extract_triples(
+    request: ExtractTripleRequest,
+    service: ExtractionService = Depends(get_extraction_service),
+) -> ExtractTripleResponse:
+    """
+    Extract RDF triples from text scoped to an ontology.
+
+    This endpoint accepts text and an ontology ID, then returns extracted RDF triples
+    with subject-predicate-object structure for knowledge graph construction.
+
+    Args:
+        request: ExtractTripleRequest with text, ontology_id, and options
+        service: ExtractionService from dependency injection
+
+    Returns:
+        ExtractTripleResponse containing extracted triples, warnings, and metadata
+
+    Raises:
+        HTTPException: 400 for invalid input, 422 for validation errors, 500 for internal errors
+    """
+    try:
+        # Validate text is not whitespace-only
+        if not request.text.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Text cannot be empty or whitespace-only",
+            )
+
+        # Get extraction options with defaults
+        options = request.options or {}
+        model = options.get("model", "gpt-4")
+        temperature = float(options.get("temperature", 0.0))
+
+        # Extract triples using domain service
+        result = await run_sync_in_executor(
+            service.extract_triples,
+            request.text,
+            request.ontology_id,
+            model,
+            temperature,
+        )
+
+        # Convert domain result to API response
+        triples = [
+            Triple(
+                subject=TripleNode(
+                    kind=t["subject"]["kind"],
+                    id=t["subject"].get("id"),
+                    label=t["subject"].get("label"),
+                ),
+                predicate=TriplePredicate(
+                    property_definition_id=t["predicate"].get("property_definition_id"),
+                    label=t["predicate"].get("label", ""),
+                ),
+                object=TripleNode(
+                    kind=t["object"]["kind"],
+                    id=t["object"].get("id"),
+                    label=t["object"].get("label"),
+                    value=t["object"].get("value"),
+                    datatype=t["object"].get("datatype"),
+                ),
+                confidence=t.get("confidence", 0.0),
+                provenance=TripleProvenance(
+                    text_offset_start=t["provenance"].get("text_offset_start", 0),
+                    text_offset_end=t["provenance"].get("text_offset_end", 0),
+                    raw=t["provenance"].get("raw", ""),
+                ),
+            )
+            for t in result.triples
+        ]
+
+        return ExtractTripleResponse(
+            triples=triples,
+            warnings=result.warnings,
+            metadata=result.metadata,
+        )
+    except HTTPException:
+        raise
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

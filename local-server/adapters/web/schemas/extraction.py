@@ -89,3 +89,62 @@ class EnrichFromReferencesRequest(BaseModel):
     extracted_entities: list[ExtractedEntitySchema] = Field(
         ..., description="Entities to enrich with reference knowledge"
     )
+
+
+class TripleNode(BaseModel):
+    """Represents a node (subject or object) in an RDF triple."""
+
+    kind: str = Field(..., description="Node kind: 'individual', 'class', or 'literal'")
+    id: Optional[str] = Field(None, description="Unique identifier (required for non-literals)")
+    label: Optional[str] = Field(None, description="Human-readable label")
+    value: Optional[str] = Field(None, description="Value for literal nodes")
+    datatype: Optional[str] = Field(None, description="Optional datatype for literal values")
+
+
+class TriplePredicate(BaseModel):
+    """Represents the predicate (relationship) in an RDF triple."""
+
+    property_definition_id: Optional[str] = Field(None, description="ID of the property definition")
+    label: str = Field(..., description="Human-readable label for the relationship")
+
+
+class TripleProvenance(BaseModel):
+    """Provenance information for where a triple was extracted from."""
+
+    text_offset_start: int = Field(..., description="Start offset in source text")
+    text_offset_end: int = Field(..., description="End offset in source text")
+    raw: str = Field(..., description="Raw text extracted from source")
+
+
+class Triple(BaseModel):
+    """Represents an RDF triple (subject-predicate-object)."""
+
+    subject: TripleNode = Field(..., description="Subject of the triple")
+    predicate: TriplePredicate = Field(..., description="Predicate (relationship) of the triple")
+    object: TripleNode = Field(..., description="Object of the triple")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score from 0.0 to 1.0")
+    provenance: TripleProvenance = Field(..., description="Provenance information")
+
+
+class ExtractTripleRequest(BaseModel):
+    """Request to extract RDF triples from text scoped to an ontology."""
+
+    text: str = Field(..., description="Text to extract triples from", min_length=1)
+    ontology_id: str = Field(..., description="ID of the ontology for scoping extraction")
+    options: Optional[dict] = Field(
+        default_factory=dict,
+        description="Optional extraction options (model, temperature, max_tokens)",
+    )
+
+
+class ExtractTripleResponse(BaseModel):
+    """Response containing extracted RDF triples."""
+
+    triples: list[Triple] = Field(default_factory=list, description="Extracted RDF triples")
+    warnings: list[str] = Field(
+        default_factory=list, description="Any warnings encountered during extraction"
+    )
+    metadata: dict = Field(
+        default_factory=dict,
+        description="Extraction metadata (model, tokens_used, duration_ms)",
+    )

@@ -34,6 +34,26 @@ from domain.ontology.entities import (
 from domain.ontology.value_objects import ExternalReference
 
 
+def _generate_valid_identifier(fallback_id: str) -> str:
+    """
+    Generate a valid identifier from a fallback ID string.
+
+    Identifiers must start with a lowercase letter and contain only lowercase letters,
+    digits, and underscores (2-64 chars). If the fallback starts with a digit,
+    prefix it with 'id_' to make it valid.
+
+    Args:
+        fallback_id: String to use as fallback identifier
+
+    Returns:
+        Valid identifier string
+    """
+    candidate = str(fallback_id)[:8].lower()
+    if candidate and not candidate[0].isalpha():
+        candidate = f"id_{candidate}"
+    return candidate
+
+
 def persist_incoming_entities(
     repo: SQLiteOntologyRepository, incoming_entities: Dict[str, Dict[str, Any]]
 ) -> None:
@@ -51,7 +71,7 @@ def persist_incoming_entities(
         if entity_dict.get("type") == "taxonomy":
             tax = Taxonomy(
                 id=entity_dict["id"],
-                identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
+                identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -65,7 +85,7 @@ def persist_incoming_entities(
             scheme = ConceptScheme(
                 id=entity_dict["id"],
                 taxonomy_id=entity_dict["taxonomy_id"],
-                identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
+                identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
                 title=entity_dict["title"],
                 description=entity_dict.get("description"),
                 created_at=datetime.now(timezone.utc),
@@ -107,7 +127,7 @@ def persist_incoming_entities(
                     taxonomy_id=_find_taxonomy_id_for_scheme(
                         repo, entity_dict["concept_scheme_id"]
                     ),
-                    identifier=entity_dict.get("identifier", entity_dict["id"][:8]),
+                    identifier=entity_dict.get("identifier", _generate_valid_identifier(entity_dict["id"])),
                     title=entity_dict["title"],
                     description=entity_dict.get("description"),
                     parent_class_id=parent_class_id,
