@@ -122,7 +122,9 @@ class TestPipelineRunRequestExtraFieldPreservation:
     def test_schema_connection_refinement_scope_id_field_survives_model_dump(
         self,
     ) -> None:
-        """Test that scope_id and current_connections fields are preserved for SchemaConnectionRefinementRunRequest."""
+        """Test that scope_id and current_connections fields are preserved.
+
+        For SchemaConnectionRefinementRunRequest."""
         connections = [{"source": "n1", "target": "n2"}]
         request = SchemaConnectionRefinementRunRequest(
             scope_id="scope1",
