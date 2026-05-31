@@ -99,6 +99,8 @@ def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
+        configuration_slug="extraction-default",
+        configuration_version=1,
     )
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(
@@ -119,6 +121,8 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
+        configuration_slug="extraction-default",
+        configuration_version=1,
         specific_data={"source_text_hash": "abc123"},
     )
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
@@ -247,6 +251,8 @@ class TestApplyEndpointErrors:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
         )
         # Do NOT complete the run — leave it in PENDING state
 
@@ -279,6 +285,8 @@ class TestApplyEndpointErrors:
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="default",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
         pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
         pipeline_repo.update_summaries(run_id, output_summary={"groundings": []})

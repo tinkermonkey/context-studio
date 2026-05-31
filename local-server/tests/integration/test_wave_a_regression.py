@@ -61,6 +61,8 @@ class TestWaveARegression:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="extraction-v1",
+            configuration_slug="extraction-v1",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": "sha256_abcdef123456",
                 "source_document_uri": "s3://bucket/document.txt",
