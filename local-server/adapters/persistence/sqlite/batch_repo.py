@@ -312,7 +312,7 @@ class BatchRepository:
                 return BatchStatus.RUNNING
 
             all_terminal = all(
-                s in (PipelineRunStatus.COMPLETED.value, PipelineRunStatus.FAILED.value)
+                s in (PipelineRunStatus.COMPLETED.value, PipelineRunStatus.FAILED.value, PipelineRunStatus.CANCELLED.value)
                 for s in statuses
             )
 
@@ -352,6 +352,7 @@ class BatchRepository:
                 "running": 0,
                 "completed": 0,
                 "failed": 0,
+                "cancelled": 0,
             }
 
             for run in runs:
@@ -363,6 +364,8 @@ class BatchRepository:
                     counts["completed"] += 1
                 elif run.status == PipelineRunStatus.FAILED.value:
                     counts["failed"] += 1
+                elif run.status == PipelineRunStatus.CANCELLED.value:
+                    counts["cancelled"] += 1
 
             return counts
         except SQLAlchemyError as e:
