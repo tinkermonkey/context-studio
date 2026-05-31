@@ -461,7 +461,101 @@ class PipelineRepository:
             if self._should_close_session():
                 session.close()
 
-    def update_started_at(self, run_id: str, started_at: Any) -> bool:
+    def update_running_status(self, run_id: str, started_at: datetime) -> bool:
+        """
+        Atomically update status to RUNNING and set started_at timestamp.
+
+        Updates both fields in a single transaction to prevent partial updates.
+
+        Args:
+            run_id: Pipeline run ID
+            started_at: Started timestamp
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.status = PipelineRunStatus.RUNNING.value
+            orm_obj.started_at = started_at
+            session.flush()
+            session.commit()
+            logger.info(f"Updated pipeline run to RUNNING: {run_id}")
+            return True
+        except IntegrityError as e:
+            session.rollback()
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
+        except OperationalError as e:
+            session.rollback()
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def update_failure_info(
+        self,
+        run_id: str,
+        failure_reason: str,
+        output_summary: dict[str, Any] | None = None,
+    ) -> bool:
+        """
+        Atomically update status to FAILED, set failure_reason, and optionally update output_summary.
+
+        Updates all fields in a single transaction to prevent partial updates.
+
+        Args:
+            run_id: Pipeline run ID
+            failure_reason: Failure reason string
+            output_summary: Output metadata dict (optional)
+
+        Returns:
+            True if updated, False if not found
+
+        Raises:
+            PipelineStorageError: If database operation fails
+        """
+        session = self._get_session()
+        try:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.status = PipelineRunStatus.FAILED.value
+            orm_obj.failure_reason = failure_reason
+            if output_summary is not None:
+                orm_obj.output_summary = output_summary
+            session.flush()
+            session.commit()
+            logger.info(f"Updated pipeline run to FAILED: {run_id}")
+            return True
+        except IntegrityError as e:
+            session.rollback()
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
+        except OperationalError as e:
+            session.rollback()
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Database error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def update_started_at(self, run_id: str, started_at: datetime) -> bool:
         """
         Update a pipeline run's started_at timestamp.
 

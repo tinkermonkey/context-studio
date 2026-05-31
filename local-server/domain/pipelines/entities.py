@@ -56,9 +56,12 @@ class PipelineRun:
         batch_run_id: FK to batch_runs.id for change_events correlation
         pipeline_type: Discriminator (individual_extraction | schema_extraction | ...)
         implementation_id: Reference to registered implementation
-        configuration_ref: Versioned configuration reference (immutable once set)
-        configuration_slug: Configuration slug part (non-null, immutable)
-        configuration_version: Configuration version part (non-null, immutable)
+        configuration_ref: Legacy reference field (kept for backwards compatibility; use
+            configuration_slug + configuration_version for resolution)
+        configuration_slug: Configuration slug part (non-null, immutable; used with
+            configuration_version to uniquely identify a pinned configuration)
+        configuration_version: Configuration version part (non-null, immutable; used with
+            configuration_slug to uniquely identify a pinned configuration)
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms

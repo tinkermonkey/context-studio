@@ -296,8 +296,9 @@ class PipelineConfigurationRegistry:
         If config_ref exists, increments version and stores as new version.
         Otherwise, creates version 1.
 
-        Raises ConfigurationImmutabilityError if attempting to update a version
-        that is already referenced by a PipelineRun.
+        Configuration versions are immutable by design: ConfigurationVersion is a frozen
+        dataclass and versions are stored in an append-only list. Existing versions cannot
+        be mutated; only new versions can be registered.
 
         Args:
             pipeline_type: Type of pipeline
@@ -307,21 +308,13 @@ class PipelineConfigurationRegistry:
 
         Returns:
             ConfigurationVersion just registered
-
-        Raises:
-            ConfigurationImmutabilityError: If attempting to mutate a version
-                already referenced by a run
         """
-        from domain.pipelines.exceptions import ConfigurationImmutabilityError
-
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
 
-        # If there are already versions and any of them are referenced, we can still
-        # create a new version (incrementing the version number). The check only prevents
-        # mutating an existing version that's already referenced.
-        # This allows: if v1 is referenced, you still can register v2, v3, etc.
-        # But prevents: if v1 is referenced, you can't change v1's config.
+        # Create a new version (incrementing the version number).
+        # Since ConfigurationVersion is a frozen dataclass and stored in an append-only
+        # list, existing versions cannot be mutated. Only new versions can be registered.
 
         next_version = (versions[-1].version + 1) if versions else 1
         version_obj = ConfigurationVersion(

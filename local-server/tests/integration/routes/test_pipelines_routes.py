@@ -1001,7 +1001,7 @@ class TestRunStatusLifecycle:
         Structural test: RUNNING status is written before orchestrator executes
         and can be observed via GET while execution is in progress.
 
-        This test uses a blocking LLM provider mock to verify:
+        This test uses a blocking orchestrator mock to verify:
         1. Status transitions to RUNNING before execution
         2. started_at timestamp is set before execution
         3. The status is observable via GET /api/pipelines/runs/{run_id} mid-execution
@@ -1023,82 +1023,75 @@ class TestRunStatusLifecycle:
 
         repo = client.app.state.pipeline_run_repo
 
-        # Create a blocking LLM provider that waits before completing
-        blocking_event = threading.Event()
+        # Synchronization event to signal when orchestrator starts execution
+        orchestrator_started_event = threading.Event()
+        orchestrator_complete_event = threading.Event()
 
-        async def blocking_complete_async(*args, **kwargs):
-            """Block until the event is set, simulating long-running execution."""
-            # Wait for the signal in a non-blocking way
-            while not blocking_event.is_set():
+        # Create a mock orchestrator that signals when it starts
+        async def blocking_orchestrator_execute(state):
+            """Mock orchestrator that signals when execution begins."""
+            # Signal that execution has started
+            orchestrator_started_event.set()
+            # Wait for test to verify mid-execution state, then complete
+            while not orchestrator_complete_event.is_set():
                 await asyncio.sleep(0.01)
-            # Return a mock response
-            response = MagicMock()
-            response.content = "[]"
-            return response
-
-        # Create a mock orchestrator that will run asynchronously
-        async def slow_orchestrator_execute(state):
-            """Simulate a slow orchestrator."""
-            await asyncio.sleep(0.5)
+            # Return successful result
             state.result = {"schemas": ["schema1"]}
             state.parse_warnings = []
             return state
 
-        # Start the pipeline run in a thread
-        run_id = None
+        # Track the response from the background thread
         response_data = None
+        exception_in_thread = None
 
         def run_pipeline():
-            nonlocal run_id, response_data
-            mock_llm = AsyncMock()
-            mock_llm.complete_async = blocking_complete_async
-            client.app.state.llm_router = mock_llm
+            nonlocal response_data, exception_in_thread
+            try:
+                mock_orchestrator = AsyncMock()
+                mock_orchestrator.execute = blocking_orchestrator_execute
 
-            mock_orchestrator = AsyncMock()
-            mock_orchestrator.execute = slow_orchestrator_execute
-
-            with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
-                response = client.post(
-                    "/api/pipelines/schema_extraction/run",
-                    json={
-                        "documents": ["doc1"],
-                        "implementation_id": "default",
-                        "configuration_ref": "default",
-                    },
-                )
-                run_id = response.json()["id"]
-                response_data = response.json()
+                with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+                    response = client.post(
+                        "/api/pipelines/schema_extraction/run",
+                        json={
+                            "documents": ["doc1"],
+                            "implementation_id": "default",
+                            "configuration_ref": "default",
+                        },
+                    )
+                    response_data = response.json()
+            except Exception as e:
+                exception_in_thread = e
 
         # Run the request in a background thread
         thread = threading.Thread(target=run_pipeline)
         thread.start()
 
-        # Give the request time to start and write RUNNING status
-        time.sleep(0.2)
+        # Wait for the orchestrator to start (status is RUNNING at this point)
+        assert orchestrator_started_event.wait(timeout=5.0), "Orchestrator did not start"
 
-        # While the orchestrator is still executing, query the run status
-        # It should be observable in the database
-        if run_id:
-            # Try to get the run status via repository
-            mid_execution_run = repo.get(run_id)
+        # Now query the runs to find the one we just created
+        # (run_id is not available yet, so we query by list)
+        all_runs = repo.list()
+        assert len(all_runs) > 0, "No runs found in repository"
+        mid_execution_run = all_runs[-1]  # Get the most recent run
 
-            # At this point, the run should have started_at set
-            # (it was set before the orchestrator executed)
-            assert mid_execution_run is not None
-            assert mid_execution_run.started_at is not None
+        # Verify RUNNING status and started_at are set
+        assert mid_execution_run.status == PipelineRunStatus.RUNNING
+        assert mid_execution_run.started_at is not None
 
-        # Signal the blocking provider to complete
-        blocking_event.set()
+        # Signal orchestrator to complete
+        orchestrator_complete_event.set()
 
         # Wait for the request to complete
         thread.join(timeout=5.0)
+        assert exception_in_thread is None, f"Exception in thread: {exception_in_thread}"
 
         # After completion, verify the run status is COMPLETED
-        if run_id:
-            final_run = repo.get(run_id)
-            assert final_run is not None
-            assert final_run.status == PipelineRunStatus.COMPLETED
-            assert final_run.started_at is not None
+        final_run = repo.get(mid_execution_run.id)
+        assert final_run is not None
+        assert final_run.status == PipelineRunStatus.COMPLETED
+        assert final_run.started_at is not None
 
     def test_run_failure_records_failed_status_and_reason(self, client, registries):
         """

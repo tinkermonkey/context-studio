@@ -398,8 +398,7 @@ async def run_pipeline(
 
     # Write RUNNING status and started_at before invoking orchestrator
     try:
-        repo.update_status(run_id, PipelineRunStatus.RUNNING)
-        repo.update_started_at(run_id, datetime.now(timezone.utc))
+        repo.update_running_status(run_id, datetime.now(timezone.utc))
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -415,9 +414,7 @@ async def run_pipeline(
     ) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
-            repo.update_failure_reason(run_id, str(exc))
-            repo.update_status(run_id, PipelineRunStatus.FAILED)
-            repo.update_summaries(run_id=run_id, output_summary={"error": message})
+            repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
@@ -425,9 +422,7 @@ async def run_pipeline(
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
         try:
-            repo.update_failure_reason(run_id, str(exc))
-            repo.update_status(run_id, PipelineRunStatus.FAILED)
-            repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
+            repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
