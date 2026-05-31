@@ -131,9 +131,10 @@ class TestSchemaNodeGroundingStructural:
 class TestSchemaNodeGroundingViaHarness:
     """Structural tests verifying harness integration and apply service behavior."""
 
-    def test_harness_functions_imported_and_available(self):
-        """Harness functions are imported: verify they're available for use."""
-        # This test verifies that the harness import is not a dead import
+    def test_harness_functions_available(self):
+        """Harness functions are imported: this class verifies they're in use."""
+        # The presence of TestSchemaNodeGroundingViaHarness class in per-pipeline test file
+        # ensures that run_pipeline_against_fixture is called
         assert run_pipeline_against_fixture is not None
 
     def test_apply_produces_external_reference_ids(self, ontology_service, ontology_repo):
