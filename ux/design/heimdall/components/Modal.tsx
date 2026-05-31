@@ -1,12 +1,6 @@
-import React, { useEffect, useRef, useImperativeHandle } from "react";
-import { Icon } from "./Icon";
-import { useFocusTrap } from "../hooks/useFocusTrap";
-import { useBodyOverflow } from "../hooks/useBodyOverflow";
-import "./Modal.css";
+type ModalSize = "sm" | "md" | "lg" | "xl";
 
-export type ModalSize = "sm" | "md" | "lg" | "xl";
-
-export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -17,7 +11,7 @@ export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: ModalSize;
 }
 
-export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
+const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
   (
     {
       isOpen,
@@ -39,7 +33,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     useImperativeHandle(ref, () => modalRef.current as HTMLDivElement);
 
-    useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+    useFocusTrap(modalRef, isOpen);
     useBodyOverflow(isOpen);
 
     useEffect(() => {
@@ -104,4 +98,5 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
 Modal.displayName = "Modal";
 
-export default Modal;
+// --- Babel-standalone: expose runtime values to window ---
+window.Modal = Modal;

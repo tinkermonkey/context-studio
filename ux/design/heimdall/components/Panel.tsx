@@ -1,21 +1,31 @@
-import React from 'react'
-import './Panel.css'
-
-export interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  subtitle?: string
-  headerAction?: React.ReactNode
-  footer?: React.ReactNode
-  bordered?: boolean
-  noPadding?: boolean
-  children?: React.ReactNode
+interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string;
+  subtitle?: string;
+  headerAction?: React.ReactNode;
+  footer?: React.ReactNode;
+  bordered?: boolean;
+  noPadding?: boolean;
+  children?: React.ReactNode;
 }
 
-export const Panel = React.forwardRef<HTMLDivElement, PanelProps>(
-  ({ title, subtitle, headerAction, footer, bordered = true, noPadding = false, className = '', children, ...props }, ref) => {
-    const classNames = ['panel', !bordered && 'panel--no-border', className]
+const Panel = React.forwardRef<HTMLDivElement, PanelProps>(
+  (
+    {
+      title,
+      subtitle,
+      headerAction,
+      footer,
+      bordered = true,
+      noPadding = false,
+      className = "",
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const classNames = ["panel", !bordered && "panel--no-border", className]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
     return (
       <div ref={ref} className={classNames} {...props}>
@@ -29,14 +39,17 @@ export const Panel = React.forwardRef<HTMLDivElement, PanelProps>(
           </div>
         )}
         {children != null && (
-          <div className={noPadding ? 'panel__body panel__body--no-padding' : 'panel__body'}>{children}</div>
+          <div className={noPadding ? "panel__body panel__body--no-padding" : "panel__body"}>
+            {children}
+          </div>
         )}
         {footer && <div className="panel__footer">{footer}</div>}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Panel.displayName = 'Panel'
+Panel.displayName = "Panel";
 
-export default Panel
+// --- Babel-standalone: expose runtime values to window ---
+window.Panel = Panel;

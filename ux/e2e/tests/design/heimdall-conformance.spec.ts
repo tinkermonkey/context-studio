@@ -36,16 +36,16 @@ test("S-3: dark canvas is active by default", async ({ page }) => {
   await page.goto("/app");
   await page.waitForLoadState("networkidle");
 
-  const hasDarkCanvas = await page.evaluate(() =>
-    document.body.classList.contains("dark-canvas")
-  );
+  const hasDarkCanvas = await page.evaluate(() => document.body.classList.contains("dark-canvas"));
   expect(hasDarkCanvas).toBe(true);
 });
 
 // ─── Behavioral: pipeline tab labels (P-1) ───────────────────────────────────
 // Status-based tabs vs state-based tabs — must check text content, not pixels.
 
-test("P-1: pipeline tabs use status labels (Running / Success / Idle / Failed)", async ({ page }) => {
+test("P-1: pipeline tabs use status labels (Running / Success / Idle / Failed)", async ({
+  page,
+}) => {
   await setupWorkspace(page);
   await page.goto("/app/pipelines");
   await page.waitForLoadState("networkidle");
@@ -71,7 +71,7 @@ test("ST-4: settings eyebrow uses lowercase label (not all-caps)", async ({ page
   await page.waitForLoadState("networkidle");
 
   const eyebrow = page.locator(
-    "[data-testid*='eyebrow'], [class*='eyebrow'], [class*='page-header-eyebrow']"
+    "[data-testid*='eyebrow'], [class*='eyebrow'], [class*='page-header-eyebrow']",
   );
   await expect(eyebrow.first()).toBeVisible();
 

@@ -1,46 +1,43 @@
-import React, { useRef, useEffect } from 'react'
-import './ChatComposer.css'
-import { Button } from './Button'
-import { Icon } from './Icon'
-
 const generateId = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
-  return `id-${Math.random().toString(36).slice(2, 11)}-${Date.now()}`
+  return `id-${Math.random().toString(36).slice(2, 11)}-${Date.now()}`;
+};
+
+interface ContextItem {
+  id: string;
+  label: string;
 }
 
-export interface ContextItem {
-  id: string
-  label: string
+interface Attachment {
+  id: string;
+  name: string;
+  size?: number;
 }
 
-export interface Attachment {
-  id: string
-  name: string
-  size?: number
+interface ChatComposerProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "onChange" | "onSubmit" | "placeholder" | "value"
+> {
+  placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: (value: string, contextItems: ContextItem[]) => void;
+  onContextChange?: (items: ContextItem[]) => void;
+  onAttachmentChange?: (attachments: Attachment[]) => void;
+  scopeLabel?: string;
+  contextItems?: ContextItem[];
+  attachments?: Attachment[];
+  disabled?: boolean;
+  loading?: boolean;
+  label?: string;
 }
 
-export interface ChatComposerProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'onSubmit' | 'placeholder' | 'value'> {
-  placeholder?: string
-  value: string
-  onChange: (value: string) => void
-  onSubmit: (value: string, contextItems: ContextItem[]) => void
-  onContextChange?: (items: ContextItem[]) => void
-  onAttachmentChange?: (attachments: Attachment[]) => void
-  scopeLabel?: string
-  contextItems?: ContextItem[]
-  attachments?: Attachment[]
-  disabled?: boolean
-  loading?: boolean
-  label?: string
-}
-
-export const ChatComposer = React.forwardRef<HTMLDivElement, ChatComposerProps>(
+const ChatComposer = React.forwardRef<HTMLDivElement, ChatComposerProps>(
   (
     {
-      placeholder = 'Type a message...',
+      placeholder = "Type a message...",
       value,
       onChange,
       onSubmit,
@@ -51,73 +48,72 @@ export const ChatComposer = React.forwardRef<HTMLDivElement, ChatComposerProps>(
       attachments = [],
       disabled = false,
       loading = false,
-      label = 'Message',
+      label = "Message",
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const fileInputRef = useRef<HTMLInputElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
       if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-        const newHeight = Math.min(
-          textareaRef.current.scrollHeight,
-          200
-        )
-        textareaRef.current.style.height = `${newHeight}px`
+        textareaRef.current.style.height = "auto";
+        const newHeight = Math.min(textareaRef.current.scrollHeight, 200);
+        textareaRef.current.style.height = `${newHeight}px`;
       }
-    }, [value])
+    }, [value]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault()
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
         if (value.trim() && !disabled && !loading) {
-          onSubmit(value, contextItems)
+          onSubmit(value, contextItems);
         }
       }
-    }
+    };
 
     const handleSubmit = () => {
       if (value.trim() && !disabled && !loading) {
-        onSubmit(value, contextItems)
+        onSubmit(value, contextItems);
       }
-    }
+    };
 
     const handleRemoveContext = (id: string) => {
-      const updated = contextItems.filter((item) => item.id !== id)
-      onContextChange?.(updated)
-    }
+      const updated = contextItems.filter((item) => item.id !== id);
+      onContextChange?.(updated);
+    };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files) return
+      if (!e.target.files) return;
 
-      const files = Array.from(e.target.files)
+      const files = Array.from(e.target.files);
       const newAttachments = files.map((file) => ({
         id: generateId(),
         name: file.name,
         size: file.size,
-      }))
+      }));
 
-      const updated = [...attachments, ...newAttachments]
-      onAttachmentChange?.(updated)
+      const updated = [...attachments, ...newAttachments];
+      onAttachmentChange?.(updated);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+        fileInputRef.current.value = "";
       }
-    }
+    };
 
     const handleRemoveAttachment = (id: string) => {
-      const updated = attachments.filter((item) => item.id !== id)
-      onAttachmentChange?.(updated)
-    }
+      const updated = attachments.filter((item) => item.id !== id);
+      onAttachmentChange?.(updated);
+    };
 
     return (
       <div
         ref={ref}
-        className={['chat-composer', disabled && 'chat-composer--disabled', className].filter(Boolean).join(' ')}
+        className={["chat-composer", disabled && "chat-composer--disabled", className]
+          .filter(Boolean)
+          .join(" ")}
         {...props}
       >
         <div className="chat-composer__tools">
@@ -205,10 +201,11 @@ export const ChatComposer = React.forwardRef<HTMLDivElement, ChatComposerProps>(
           </div>
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-ChatComposer.displayName = 'ChatComposer'
+ChatComposer.displayName = "ChatComposer";
 
-export default ChatComposer
+// --- Babel-standalone: expose runtime values to window ---
+window.ChatComposer = ChatComposer;

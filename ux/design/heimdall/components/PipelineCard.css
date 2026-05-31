@@ -209,7 +209,7 @@
 }
 
 .pipeline-card__arrow::after {
-  content: '';
+  content: "";
   position: absolute;
   right: -3px;
   top: 50%;

@@ -32,9 +32,7 @@ describe("Versioning Page", () => {
     it("renders versioning page root", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({ events: [], total: 0 }),
-        ),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
       );
 
       render(<VersioningPage />);
@@ -47,9 +45,7 @@ describe("Versioning Page", () => {
     it("displays tabs for changesets, conflicts, and sync", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({ events: [], total: 0 }),
-        ),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
       );
 
       render(<VersioningPage />);
@@ -69,9 +65,7 @@ describe("Versioning Page", () => {
     it("displays changeset panel on default tab with page root testid", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({ events: [], total: 0 }),
-        ),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
       );
 
       render(<VersioningPage />);
@@ -117,13 +111,9 @@ describe("Versioning Page", () => {
   describe("sync status panel states", () => {
     it("switches to sync tab when clicked", async () => {
       server.use(
-        http.get("*/api/v1/versioning/sync/status", () =>
-          HttpResponse.json(createSyncStatus()),
-        ),
+        http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(createSyncStatus())),
         http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({ events: [], total: 0 }),
-        ),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
       );
 
       render(<VersioningPage />);
@@ -144,9 +134,7 @@ describe("Versioning Page", () => {
     it("renders conflict tab and shows empty state when no proposal selected", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({ events: [], total: 0 }),
-        ),
+        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
       );
 
       render(<VersioningPage />);

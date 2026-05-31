@@ -1,27 +1,27 @@
-import React from 'react'
-import './Button.css'
+type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger" | "link";
+type Size = "sm" | "md";
 
-export type Variant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger' | 'link'
-export type Size = 'sm' | 'md'
-
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant
-  size?: Size
-  icon?: boolean
-  children: React.ReactNode
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant;
+  size?: Size;
+  icon?: boolean;
+  children: React.ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', icon, className = '', disabled, type = 'button', ...props }, ref) => {
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    { variant = "primary", size = "md", icon, className = "", disabled, type = "button", ...props },
+    ref,
+  ) => {
     const classNames = [
-      'btn',
+      "btn",
       `btn--${variant}`,
       `btn--${size}`,
-      icon ? 'btn--icon' : '',
+      icon ? "btn--icon" : "",
       className,
     ]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
     return (
       <button
@@ -31,10 +31,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={classNames}
         {...props}
       />
-    )
-  }
-)
+    );
+  },
+);
 
-Button.displayName = 'Button'
+Button.displayName = "Button";
 
-export default Button
+// --- Babel-standalone: expose runtime values to window ---
+window.Button = Button;

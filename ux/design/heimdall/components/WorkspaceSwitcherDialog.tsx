@@ -1,34 +1,28 @@
-import React from 'react'
-import { Modal } from './Modal'
-import { Icon } from './Icon'
-import type { IconName } from './Icon'
-import './WorkspaceSwitcherDialog.css'
-
-export interface Workspace {
-  id: string
-  name: string
-  path?: string
-  classCount?: number
-  individualCount?: number
+interface Workspace {
+  id: string;
+  name: string;
+  path?: string;
+  classCount?: number;
+  individualCount?: number;
 }
 
-export interface WorkspaceSwitcherDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  current?: Workspace
-  recent?: Workspace[]
-  onOpenFolder?: () => void
-  onNewWorkspace?: () => void
-  onCloneFromGit?: () => void
-  onPickRecent: (workspace: Workspace) => void
+interface WorkspaceSwitcherDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  current?: Workspace;
+  recent?: Workspace[];
+  onOpenFolder?: () => void;
+  onNewWorkspace?: () => void;
+  onCloneFromGit?: () => void;
+  onPickRecent: (workspace: Workspace) => void;
 }
 
 interface ActionTileProps {
-  icon: IconName
-  title: string
-  description: string
-  onClick: () => void
+  icon: IconName;
+  title: string;
+  description: string;
+  onClick: () => void;
 }
 
 function ActionTile({ icon, title, description, onClick }: ActionTileProps) {
@@ -40,29 +34,27 @@ function ActionTile({ icon, title, description, onClick }: ActionTileProps) {
       <div className="workspace-switcher-dialog__action-title">{title}</div>
       <div className="workspace-switcher-dialog__action-desc">{description}</div>
     </button>
-  )
+  );
 }
 
-export const WorkspaceSwitcherDialog = React.forwardRef<HTMLDivElement, WorkspaceSwitcherDialogProps>(
-  ({
-    isOpen,
-    onClose,
-    title = 'Switch Workspace',
-    current,
-    recent = [],
-    onOpenFolder,
-    onNewWorkspace,
-    onCloneFromGit,
-    onPickRecent,
-  }, ref) => {
-    const hasAnyTile = onOpenFolder || onNewWorkspace || onCloneFromGit
+const WorkspaceSwitcherDialog = React.forwardRef<HTMLDivElement, WorkspaceSwitcherDialogProps>(
+  (
+    {
+      isOpen,
+      onClose,
+      title = "Switch Workspace",
+      current,
+      recent = [],
+      onOpenFolder,
+      onNewWorkspace,
+      onCloneFromGit,
+      onPickRecent,
+    },
+    ref,
+  ) => {
+    const hasAnyTile = onOpenFolder || onNewWorkspace || onCloneFromGit;
     return (
-      <Modal
-        ref={ref}
-        isOpen={isOpen}
-        onClose={onClose}
-        title={title}
-      >
+      <Modal ref={ref} isOpen={isOpen} onClose={onClose} title={title}>
         <div className="workspace-switcher-dialog__content">
           {hasAnyTile && (
             <div className="workspace-switcher-dialog__tiles">
@@ -95,17 +87,15 @@ export const WorkspaceSwitcherDialog = React.forwardRef<HTMLDivElement, Workspac
 
           {recent.length > 0 && (
             <div className="workspace-switcher-dialog__recent">
-              <div className="workspace-switcher-dialog__recent-header">
-                Recent
-              </div>
+              <div className="workspace-switcher-dialog__recent-header">Recent</div>
               <div className="workspace-switcher-dialog__recent-list">
                 {recent.map((workspace) => {
-                  const isCurrent = current?.id === workspace.id
+                  const isCurrent = current?.id === workspace.id;
                   return (
                     <button
                       type="button"
                       key={workspace.id}
-                      className={`workspace-switcher-dialog__recent-item ${isCurrent ? 'workspace-switcher-dialog__recent-item--current' : ''}`}
+                      className={`workspace-switcher-dialog__recent-item ${isCurrent ? "workspace-switcher-dialog__recent-item--current" : ""}`}
                       aria-current={isCurrent ? true : undefined}
                       onClick={() => onPickRecent(workspace)}
                     >
@@ -126,23 +116,27 @@ export const WorkspaceSwitcherDialog = React.forwardRef<HTMLDivElement, Workspac
                         {(workspace.classCount != null || workspace.individualCount != null) && (
                           <span className="workspace-switcher-dialog__recent-stats">
                             {workspace.classCount != null && `${workspace.classCount} cls`}
-                            {workspace.classCount != null && workspace.individualCount != null && ' · '}
-                            {workspace.individualCount != null && `${workspace.individualCount} ind`}
+                            {workspace.classCount != null &&
+                              workspace.individualCount != null &&
+                              " · "}
+                            {workspace.individualCount != null &&
+                              `${workspace.individualCount} ind`}
                           </span>
                         )}
                       </div>
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
           )}
         </div>
       </Modal>
-    )
-  }
-)
+    );
+  },
+);
 
-WorkspaceSwitcherDialog.displayName = 'WorkspaceSwitcherDialog'
+WorkspaceSwitcherDialog.displayName = "WorkspaceSwitcherDialog";
 
-export default WorkspaceSwitcherDialog
+// --- Babel-standalone: expose runtime values to window ---
+window.WorkspaceSwitcherDialog = WorkspaceSwitcherDialog;

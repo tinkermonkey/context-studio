@@ -53,9 +53,7 @@ describe("Settings Page", () => {
 
     it("displays page title heading", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json({ sections: {} }),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json({ sections: {} })),
       );
 
       render(<SettingsPage />);
@@ -175,9 +173,7 @@ describe("Settings Page", () => {
   describe("empty state", () => {
     it("renders the page with empty config sections", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json({ sections: {} }),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json({ sections: {} })),
       );
 
       render(<SettingsPage />);

@@ -287,7 +287,9 @@ export function GroundingWorkflowDrawer({ workflowId, onClose }: GroundingWorkfl
         message="Are you sure you want to delete this workflow? This action cannot be undone."
         confirmLabel="Delete"
         variant="danger"
-        onConfirm={() => { void handleDeleteConfirm(); }}
+        onConfirm={() => {
+          void handleDeleteConfirm();
+        }}
       />
     </div>
   );

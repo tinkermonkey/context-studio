@@ -84,9 +84,7 @@ describe("Schemes Schema Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state copy when no concept schemes exist", async () => {
-      server.use(
-        http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
-      );
+      server.use(http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))));
 
       render(<SchemesIndexPage />);
 

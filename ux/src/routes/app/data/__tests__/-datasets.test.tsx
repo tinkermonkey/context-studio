@@ -85,9 +85,7 @@ describe("Datasets Data Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no datasets exist", async () => {
       server.use(
-        http.get("*/api/v1/admin/datasets", () =>
-          HttpResponse.json(createListDatasets([])),
-        ),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(createListDatasets([]))),
       );
 
       render(<DatasetsPage />);
@@ -102,9 +100,7 @@ describe("Datasets Data Page", () => {
 
     it("displays CTA button with correct label in empty state", async () => {
       server.use(
-        http.get("*/api/v1/admin/datasets", () =>
-          HttpResponse.json(createListDatasets([])),
-        ),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(createListDatasets([]))),
       );
 
       render(<DatasetsPage />);
@@ -120,9 +116,7 @@ describe("Datasets Data Page", () => {
 
     it("verifies empty-state element is present", async () => {
       server.use(
-        http.get("*/api/v1/admin/datasets", () =>
-          HttpResponse.json(createListDatasets([])),
-        ),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(createListDatasets([]))),
       );
 
       render(<DatasetsPage />);
@@ -155,9 +149,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -176,9 +168,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -200,9 +190,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -223,9 +211,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -246,9 +232,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -272,9 +256,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -296,9 +278,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -318,9 +298,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -342,9 +320,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -365,9 +341,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -402,9 +376,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -436,9 +408,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -467,9 +437,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -498,9 +466,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -530,9 +496,7 @@ describe("Datasets Data Page", () => {
         }),
       ]);
 
-      server.use(
-        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)),
-      );
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
 
       render(<DatasetsPage />);
 
@@ -558,9 +522,7 @@ describe("Datasets Data Page", () => {
   describe("page header and call-to-action", () => {
     it("displays page title 'Datasets'", async () => {
       server.use(
-        http.get("*/api/v1/admin/datasets", () =>
-          HttpResponse.json(createListDatasets([])),
-        ),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(createListDatasets([]))),
       );
 
       render(<DatasetsPage />);
@@ -572,9 +534,7 @@ describe("Datasets Data Page", () => {
 
     it("displays 'New Dataset' button in header", async () => {
       server.use(
-        http.get("*/api/v1/admin/datasets", () =>
-          HttpResponse.json(createListDatasets([])),
-        ),
+        http.get("*/api/v1/admin/datasets", () => HttpResponse.json(createListDatasets([]))),
       );
 
       render(<DatasetsPage />);

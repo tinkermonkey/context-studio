@@ -79,9 +79,7 @@ describe("Settings Page", () => {
   describe("populated state", () => {
     it("displays settings-page testid in populated state", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json(createAppConfiguration()),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(createAppConfiguration())),
       );
 
       render(<SettingsPage />);
@@ -140,7 +138,9 @@ describe("Settings Page", () => {
       expect(screen.getByDisplayValue("My Workspace")).toBeInTheDocument();
       expect(screen.getByDisplayValue("/path/to/workspace")).toBeInTheDocument();
       expect(screen.getByDisplayValue("claude-3-sonnet")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("sentence-transformers/all-MiniLM-L6-v2")).toBeInTheDocument();
+      expect(
+        screen.getByDisplayValue("sentence-transformers/all-MiniLM-L6-v2"),
+      ).toBeInTheDocument();
     });
   });
 
@@ -150,9 +150,7 @@ describe("Settings Page", () => {
   describe("individual config tiles", () => {
     it("displays backups config tile with correct testid", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json(createAppConfiguration()),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(createAppConfiguration())),
       );
 
       render(<SettingsPage />);
@@ -164,9 +162,7 @@ describe("Settings Page", () => {
 
     it("displays performance config tile with correct testid", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json(createAppConfiguration()),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(createAppConfiguration())),
       );
 
       render(<SettingsPage />);
@@ -178,9 +174,7 @@ describe("Settings Page", () => {
 
     it("displays telemetry config tile with correct testid", async () => {
       server.use(
-        http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json(createAppConfiguration()),
-        ),
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(createAppConfiguration())),
       );
 
       render(<SettingsPage />);

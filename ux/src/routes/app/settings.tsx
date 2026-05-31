@@ -1,4 +1,11 @@
-import { PageHeader, ConfigTile, TabBar, Field, TextInput, Select } from "@tinkermonkey/heimdall-ui";
+import {
+  PageHeader,
+  ConfigTile,
+  TabBar,
+  Field,
+  TextInput,
+  Select,
+} from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
@@ -53,11 +60,7 @@ export function SettingsPage() {
   if (error) {
     return (
       <div data-testid="settings-page">
-        <PageHeader
-          eyebrow="settings"
-          title={COPY.settingsPageTitle}
-          idChip="/settings"
-        />
+        <PageHeader eyebrow="settings" title={COPY.settingsPageTitle} idChip="/settings" />
         <ErrorBanner error={error} onRetry={refetch} message="Failed to load settings" />
       </div>
     );
@@ -189,9 +192,7 @@ export function SettingsPage() {
               icon="bell"
               title="Telemetry"
               description="Usage and error reporting"
-              summary={[
-                { label: "Reporting", value: "Disabled" },
-              ]}
+              summary={[{ label: "Reporting", value: "Disabled" }]}
               onClick={() => {}}
               data-testid="config-tile-telemetry"
             />

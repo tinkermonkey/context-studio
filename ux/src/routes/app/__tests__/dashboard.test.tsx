@@ -272,9 +272,7 @@ describe("Dashboard", () => {
               offset: 0,
             }),
           ),
-          http.get("*/api/classes", () =>
-            HttpResponse.json({ detail: "Error" }, { status: 500 }),
-          ),
+          http.get("*/api/classes", () => HttpResponse.json({ detail: "Error" }, { status: 500 })),
         ]),
       );
 

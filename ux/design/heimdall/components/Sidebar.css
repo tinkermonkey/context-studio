@@ -29,7 +29,9 @@
   flex-shrink: 0;
   align-self: flex-end;
   margin-bottom: 4px;
-  transition: background 80ms ease-out, color 80ms ease-out;
+  transition:
+    background 80ms ease-out,
+    color 80ms ease-out;
 }
 
 .sidebar__toggle:hover {
@@ -106,7 +108,7 @@
 }
 
 .sidebar__item--active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -8px;
   top: 5px;

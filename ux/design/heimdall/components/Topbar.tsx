@@ -1,32 +1,22 @@
-import React from 'react'
-import './Topbar.css'
-
-export interface BreadcrumbItem {
-  label: string
-  href?: string
-  onClick?: () => void
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  onClick?: () => void;
 }
 
-export interface TopbarProps extends React.HTMLAttributes<HTMLDivElement> {
-  breadcrumbs?: BreadcrumbItem[]
-  searchPlaceholder?: string
-  onSearch?: (query: string) => void
+interface TopbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  breadcrumbs?: BreadcrumbItem[];
+  searchPlaceholder?: string;
+  onSearch?: (query: string) => void;
 }
 
-export const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
+const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
   (
-    {
-      breadcrumbs,
-      searchPlaceholder = 'Search…',
-      onSearch,
-      children,
-      className = '',
-      ...props
-    },
-    ref
+    { breadcrumbs, searchPlaceholder = "Search…", onSearch, children, className = "", ...props },
+    ref,
   ) => {
-    const classNames = ['topbar', className].filter(Boolean).join(' ')
-    const lastIndex = breadcrumbs ? breadcrumbs.length - 1 : -1
+    const classNames = ["topbar", className].filter(Boolean).join(" ");
+    const lastIndex = breadcrumbs ? breadcrumbs.length - 1 : -1;
 
     return (
       <div ref={ref} className={classNames} {...props}>
@@ -35,12 +25,16 @@ export const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
             <nav className="breadcrumbs" aria-label="Breadcrumb">
               {breadcrumbs.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  {index > 0 && <span className="breadcrumbs__separator" aria-hidden="true">/</span>}
+                  {index > 0 && (
+                    <span className="breadcrumbs__separator" aria-hidden="true">
+                      /
+                    </span>
+                  )}
                   {crumb.href ? (
                     <a
                       href={crumb.href}
                       className="breadcrumbs__link"
-                      aria-current={index === lastIndex ? 'page' : undefined}
+                      aria-current={index === lastIndex ? "page" : undefined}
                     >
                       {crumb.label}
                     </a>
@@ -49,14 +43,14 @@ export const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
                       type="button"
                       className="breadcrumbs__link breadcrumbs__link--button"
                       onClick={crumb.onClick}
-                      aria-current={index === lastIndex ? 'page' : undefined}
+                      aria-current={index === lastIndex ? "page" : undefined}
                     >
                       {crumb.label}
                     </button>
                   ) : (
                     <span
                       className="breadcrumbs__link breadcrumbs__link--static"
-                      aria-current={index === lastIndex ? 'page' : undefined}
+                      aria-current={index === lastIndex ? "page" : undefined}
                     >
                       {crumb.label}
                     </span>
@@ -74,16 +68,17 @@ export const Topbar = React.forwardRef<HTMLDivElement, TopbarProps>(
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
               className="topbar__search"
-              onChange={e => onSearch(e.target.value)}
+              onChange={(e) => onSearch(e.target.value)}
             />
           )}
           {children}
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Topbar.displayName = 'Topbar'
+Topbar.displayName = "Topbar";
 
-export default Topbar
+// --- Babel-standalone: expose runtime values to window ---
+window.Topbar = Topbar;

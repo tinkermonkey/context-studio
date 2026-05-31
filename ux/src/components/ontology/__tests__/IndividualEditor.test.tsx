@@ -48,9 +48,7 @@ const mockClasses = [
 // ============================================================================
 
 function setupDefaultMocks() {
-  server.use(
-    http.get("*/api/classes", () => HttpResponse.json(createListClasses(mockClasses))),
-  );
+  server.use(http.get("*/api/classes", () => HttpResponse.json(createListClasses(mockClasses))));
 }
 
 // ============================================================================

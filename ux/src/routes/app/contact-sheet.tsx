@@ -91,9 +91,7 @@ export default function ContactSheet() {
     {
       key: "description",
       label: "Description",
-      render: (value) => (
-        <span className="contact-sheet-description-text">{value as string}</span>
-      ),
+      render: (value) => <span className="contact-sheet-description-text">{value as string}</span>,
     },
   ];
 
@@ -131,18 +129,10 @@ export default function ContactSheet() {
           <Button variant="danger">Danger</Button>
         </Row>
         <Row>
-          <Button variant="primary">
-            Primary sm
-          </Button>
-          <Button variant="secondary">
-            Secondary sm
-          </Button>
-          <Button variant="ghost">
-            Ghost sm
-          </Button>
-          <Button variant="danger">
-            Danger sm
-          </Button>
+          <Button variant="primary">Primary sm</Button>
+          <Button variant="secondary">Secondary sm</Button>
+          <Button variant="ghost">Ghost sm</Button>
+          <Button variant="danger">Danger sm</Button>
         </Row>
         <Row>
           <Button variant="primary" disabled>
@@ -260,7 +250,10 @@ export default function ContactSheet() {
                 key: "type",
                 label: "Type",
                 render: (value) => (
-                  <Chip variant={value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"}
+                  <Chip
+                    variant={
+                      value === "Class" ? "violet" : value === "Individual" ? "cyan" : "amber"
+                    }
                   >
                     {value}
                   </Chip>
@@ -460,7 +453,8 @@ export default function ContactSheet() {
             Open modal
           </Button>
         </Row>
-        <Modal isOpen={modalOpen}
+        <Modal
+          isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           title="Create Class"
           subtitle="Define a new ontology class"

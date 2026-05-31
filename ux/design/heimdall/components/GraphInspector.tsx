@@ -1,44 +1,41 @@
-import React from 'react'
-import './GraphInspector.css'
-
-export interface GraphNodeMetadata {
-  id: string
-  title: string
-  kind?: string
-  domain?: string
-  description?: string
-  metadata?: Record<string, string | number | boolean | null | undefined>
+interface GraphNodeMetadata {
+  id: string;
+  title: string;
+  kind?: string;
+  domain?: string;
+  description?: string;
+  metadata?: Record<string, string | number | boolean | null | undefined>;
 }
 
-export interface RelationshipLink {
-  id: string
-  target: string
-  targetTitle: string
-  targetDomain?: string
-  predicate: string
-  direction: 'in' | 'out'
+interface RelationshipLink {
+  id: string;
+  target: string;
+  targetTitle: string;
+  targetDomain?: string;
+  predicate: string;
+  direction: "in" | "out";
 }
 
-export interface GraphInspectorProps extends React.HTMLAttributes<HTMLDivElement> {
-  node?: GraphNodeMetadata | null
-  relationships?: RelationshipLink[]
-  onNodeSelect?: (nodeId: string) => void
-  emptyStateText?: string
+interface GraphInspectorProps extends React.HTMLAttributes<HTMLDivElement> {
+  node?: GraphNodeMetadata | null;
+  relationships?: RelationshipLink[];
+  onNodeSelect?: (nodeId: string) => void;
+  emptyStateText?: string;
 }
 
-export const GraphInspector = React.forwardRef<HTMLDivElement, GraphInspectorProps>(
+const GraphInspector = React.forwardRef<HTMLDivElement, GraphInspectorProps>(
   (
     {
       node,
       relationships = [],
       onNodeSelect,
-      emptyStateText = 'Select a node to inspect.',
-      className = '',
+      emptyStateText = "Select a node to inspect.",
+      className = "",
       ...props
     },
-    ref
+    ref,
   ) => {
-    const classNames = ['graph-inspector', className].filter(Boolean).join(' ')
+    const classNames = ["graph-inspector", className].filter(Boolean).join(" ");
 
     if (!node) {
       return (
@@ -47,11 +44,11 @@ export const GraphInspector = React.forwardRef<HTMLDivElement, GraphInspectorPro
             {emptyStateText}
           </div>
         </div>
-      )
+      );
     }
 
-    const outgoing = relationships.filter((r) => r.direction === 'out')
-    const incoming = relationships.filter((r) => r.direction === 'in')
+    const outgoing = relationships.filter((r) => r.direction === "out");
+    const incoming = relationships.filter((r) => r.direction === "in");
 
     return (
       <div ref={ref} className={classNames} {...props}>
@@ -123,9 +120,7 @@ export const GraphInspector = React.forwardRef<HTMLDivElement, GraphInspectorPro
               <ul className="graph-inspector__rels" data-testid="inspector-incoming">
                 {incoming.map((rel) => (
                   <li key={rel.id} className="graph-inspector__rel">
-                    <span className="graph-inspector__rel-dir graph-inspector__rel-dir--in">
-                      ←
-                    </span>
+                    <span className="graph-inspector__rel-dir graph-inspector__rel-dir--in">←</span>
                     <span className="graph-inspector__rel-pred">{rel.predicate}</span>
                     <button
                       type="button"
@@ -149,10 +144,11 @@ export const GraphInspector = React.forwardRef<HTMLDivElement, GraphInspectorPro
           )}
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-GraphInspector.displayName = 'GraphInspector'
+GraphInspector.displayName = "GraphInspector";
 
-export default GraphInspector
+// --- Babel-standalone: expose runtime values to window ---
+window.GraphInspector = GraphInspector;

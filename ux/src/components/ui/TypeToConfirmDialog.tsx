@@ -69,7 +69,14 @@ export function TypeToConfirmDialog({
           data-testid="type-confirm-input"
         />
       </div>
-      <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end", marginTop: "var(--space-4)" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "var(--space-2)",
+          justifyContent: "flex-end",
+          marginTop: "var(--space-4)",
+        }}
+      >
         <Button
           variant="ghost"
           onClick={handleClose}
@@ -80,7 +87,9 @@ export function TypeToConfirmDialog({
         </Button>
         <Button
           variant="danger"
-          onClick={() => { void handleConfirm(); }}
+          onClick={() => {
+            void handleConfirm();
+          }}
           disabled={isDisabled}
           data-testid="type-confirm-button"
         >

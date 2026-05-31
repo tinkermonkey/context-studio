@@ -23,7 +23,9 @@
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.08s, border-color 0.08s;
+  transition:
+    background 0.08s,
+    border-color 0.08s;
   outline: none;
 }
 

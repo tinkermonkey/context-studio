@@ -1,17 +1,12 @@
-import React from 'react'
-import { Icon } from './Icon'
-import type { IconName } from './Icon'
-import './QuickAccessTile.css'
-
-export interface QuickAccessTileProps extends React.HTMLAttributes<HTMLButtonElement> {
-  icon: IconName
-  title: string
-  description?: string
+interface QuickAccessTileProps extends React.HTMLAttributes<HTMLButtonElement> {
+  icon: IconName;
+  title: string;
+  description?: string;
 }
 
-export const QuickAccessTile = React.forwardRef<HTMLButtonElement, QuickAccessTileProps>(
-  ({ icon, title, description, className = '', ...props }, ref) => {
-    const classNames = ['quick-access-tile', className].filter(Boolean).join(' ')
+const QuickAccessTile = React.forwardRef<HTMLButtonElement, QuickAccessTileProps>(
+  ({ icon, title, description, className = "", ...props }, ref) => {
+    const classNames = ["quick-access-tile", className].filter(Boolean).join(" ");
 
     return (
       <button
@@ -30,10 +25,11 @@ export const QuickAccessTile = React.forwardRef<HTMLButtonElement, QuickAccessTi
         </div>
         <Icon name="chevronRight" size={13} className="quick-access-tile__chev" />
       </button>
-    )
-  }
-)
+    );
+  },
+);
 
-QuickAccessTile.displayName = 'QuickAccessTile'
+QuickAccessTile.displayName = "QuickAccessTile";
 
-export default QuickAccessTile
+// --- Babel-standalone: expose runtime values to window ---
+window.QuickAccessTile = QuickAccessTile;

@@ -81,9 +81,7 @@ describe("Taxonomies Schema Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state copy when no taxonomies exist", async () => {
-      server.use(
-        http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
-      );
+      server.use(http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))));
 
       render(<TaxonomiesPage />);
 

@@ -1,20 +1,29 @@
-import React from 'react'
-import { Sparkline, type SparklineColor } from './Sparkline'
-import { ProgressBar } from './ProgressBar'
-import './MetricRow.css'
-
-export interface MetricRowProps extends React.HTMLAttributes<HTMLDivElement> {
-  label: string
-  value: number | string
-  unit?: string
-  percent: number
-  sparklineData?: number[]
-  color?: SparklineColor
-  progressLabel?: string
+interface MetricRowProps extends React.HTMLAttributes<HTMLDivElement> {
+  label: string;
+  value: number | string;
+  unit?: string;
+  percent: number;
+  sparklineData?: number[];
+  color?: SparklineColor;
+  progressLabel?: string;
 }
 
-export const MetricRow = React.forwardRef<HTMLDivElement, MetricRowProps>(
-  ({ label, value, unit, percent, sparklineData = [], color = 'emerald', progressLabel, className = '', 'aria-label': ariaLabel, ...rest }, ref) => {
+const MetricRow = React.forwardRef<HTMLDivElement, MetricRowProps>(
+  (
+    {
+      label,
+      value,
+      unit,
+      percent,
+      sparklineData = [],
+      color = "emerald",
+      progressLabel,
+      className = "",
+      "aria-label": ariaLabel,
+      ...rest
+    },
+    ref,
+  ) => {
     return (
       <div
         ref={ref}
@@ -35,10 +44,11 @@ export const MetricRow = React.forwardRef<HTMLDivElement, MetricRowProps>(
           {unit && <span className="metric-row__unit">{unit}</span>}
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-MetricRow.displayName = 'MetricRow'
+MetricRow.displayName = "MetricRow";
 
-export default MetricRow
+// --- Babel-standalone: expose runtime values to window ---
+window.MetricRow = MetricRow;

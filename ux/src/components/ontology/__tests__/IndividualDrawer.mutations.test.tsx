@@ -54,9 +54,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
   function setupDefaultHandlers() {
     server.use(
       http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-      http.get("*/api/individuals/ind-001", () =>
-        HttpResponse.json(mockIndividuals.items[0]),
-      ),
+      http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
       http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       http.get("*/api/individuals/*/inherited-properties", () =>
         HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -73,12 +71,14 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.put(/.*\/api\/individuals\/.*/, () => {
           updateCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Updated Title",
-                description: "Original description",
-                class_ids: ["class-person", "class-employee"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Updated Title",
+              description: "Original description",
+              class_ids: ["class-person", "class-employee"],
+            }),
+          );
         }),
       );
 
@@ -108,12 +108,14 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.put(/.*\/api\/individuals\/.*/, () => {
           updateCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Test Individual",
-                description: "Updated description",
-                class_ids: ["class-person", "class-employee"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Test Individual",
+              description: "Updated description",
+              class_ids: ["class-person", "class-employee"],
+            }),
+          );
         }),
       );
 
@@ -147,11 +149,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.post(/.*\/api\/individuals\/.*\/classes/, () => {
           addClassCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Test Individual",
-                class_ids: ["class-person", "class-employee", "class-manager"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Test Individual",
+              class_ids: ["class-person", "class-employee", "class-manager"],
+            }),
+          );
         }),
       );
 
@@ -190,11 +194,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.delete(/.*\/api\/individuals\/.*\/classes\/.*/, () => {
           removeClassCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Test Individual",
-                class_ids: ["class-person"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Test Individual",
+              class_ids: ["class-person"],
+            }),
+          );
         }),
       );
 
@@ -264,11 +270,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.put(/.*\/api\/individuals\/.*\/classes$/, () => {
           reorderCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Test Individual",
-                class_ids: ["class-employee", "class-person"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Test Individual",
+              class_ids: ["class-employee", "class-person"],
+            }),
+          );
         }),
       );
 
@@ -297,11 +305,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       server.use(
         http.put(/.*\/api\/individuals\/.*\/classes$/, () => {
           reorderCalled = true;
-          return HttpResponse.json(createIndividual({
-                id: "ind-001",
-                title: "Test Individual",
-                class_ids: ["class-employee", "class-person"],
-              }),);
+          return HttpResponse.json(
+            createIndividual({
+              id: "ind-001",
+              title: "Test Individual",
+              class_ids: ["class-employee", "class-person"],
+            }),
+          );
         }),
       );
 

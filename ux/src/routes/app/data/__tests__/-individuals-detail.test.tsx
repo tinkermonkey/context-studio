@@ -70,9 +70,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/ind-001/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -104,9 +102,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -140,9 +136,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -176,9 +170,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -217,9 +209,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -258,9 +248,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -293,9 +281,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -327,9 +313,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -366,9 +350,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -400,9 +382,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 }),
@@ -442,9 +422,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
 
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/individuals/ind-001", () =>
-          HttpResponse.json(mockIndividuals.items[0]),
-        ),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(mockIndividuals.items[0])),
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
         http.get("*/api/individuals/*/inherited-properties", () =>
           HttpResponse.json({ detail: "Server error" }, { status: 500 }),

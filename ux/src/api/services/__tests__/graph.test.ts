@@ -50,9 +50,12 @@ describe("GraphService", () => {
     it("throws ApiError on 500 from buildGraph", async () => {
       server.use(
         http.post("*/api/graph/build", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Graph build failed",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -91,9 +94,12 @@ describe("GraphService", () => {
     it("throws ApiError on 400 from getMetrics", async () => {
       server.use(
         http.get("*/api/graph/metrics", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Invalid algorithm",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -131,9 +137,12 @@ describe("GraphService", () => {
     it("throws ApiError with 400 on getSubgraph with empty node list", async () => {
       server.use(
         http.get("*/api/graph/subgraph", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "At least one node ID is required",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -152,9 +161,7 @@ describe("GraphService", () => {
         distance: 4,
       });
 
-      server.use(
-        http.get("*/api/graph/paths/shortest", () => HttpResponse.json(mockPath)),
-      );
+      server.use(http.get("*/api/graph/paths/shortest", () => HttpResponse.json(mockPath)));
 
       const result = await graphService.getShortestPath("node-1", "node-10");
 
@@ -166,9 +173,12 @@ describe("GraphService", () => {
     it("throws ApiError on 404 when path not found", async () => {
       server.use(
         http.get("*/api/graph/paths/shortest", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "No path found between nodes",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -198,9 +208,12 @@ describe("GraphService", () => {
     it("throws ApiError on 400 for invalid SPARQL query", async () => {
       server.use(
         http.post("*/api/graph/sparql", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Invalid SPARQL query syntax",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -214,9 +227,12 @@ describe("GraphService", () => {
     it("throws ApiError on 500 for query execution error", async () => {
       server.use(
         http.post("*/api/graph/sparql", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Query execution timeout",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 

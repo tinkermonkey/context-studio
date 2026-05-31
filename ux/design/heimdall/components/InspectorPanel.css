@@ -157,7 +157,9 @@
   color: rgb(var(--canvas-fg-3));
   cursor: pointer;
   padding: 0;
-  transition: color 80ms ease-out, background-color 80ms ease-out;
+  transition:
+    color 80ms ease-out,
+    background-color 80ms ease-out;
   flex-shrink: 0;
 }
 

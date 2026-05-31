@@ -1,29 +1,23 @@
-import React from 'react'
-import './StatGrid.css'
-
-export interface StatGridProps extends React.HTMLAttributes<HTMLDivElement> {
-  columns?: number
-  children: React.ReactNode
+interface StatGridProps extends React.HTMLAttributes<HTMLDivElement> {
+  columns?: number;
+  children: React.ReactNode;
 }
 
-export const StatGrid = React.forwardRef<HTMLDivElement, StatGridProps>(
-  ({ columns = 4, className = '', children, ...props }, ref) => {
-    const classNames = ['stat-grid', `stat-grid--cols-${columns}`, className]
+const StatGrid = React.forwardRef<HTMLDivElement, StatGridProps>(
+  ({ columns = 4, className = "", children, ...props }, ref) => {
+    const classNames = ["stat-grid", `stat-grid--cols-${columns}`, className]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
     return (
-      <div
-        ref={ref}
-        className={classNames}
-        {...props}
-      >
+      <div ref={ref} className={classNames} {...props}>
         {children}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-StatGrid.displayName = 'StatGrid'
+StatGrid.displayName = "StatGrid";
 
-export default StatGrid
+// --- Babel-standalone: expose runtime values to window ---
+window.StatGrid = StatGrid;

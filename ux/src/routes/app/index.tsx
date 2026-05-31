@@ -51,7 +51,9 @@ function entityTypeToKind(entityType: string): { kind: string; kindLabel: string
     pipeline_configuration: { kind: "PIPELINE", kindLabel: "Pipeline" },
     pipeline_execution: { kind: "PIPELINE", kindLabel: "Pipeline Run" },
   };
-  return map[entityType] ?? { kind: entityType.toUpperCase(), kindLabel: entityType.replace(/_/g, " ") };
+  return (
+    map[entityType] ?? { kind: entityType.toUpperCase(), kindLabel: entityType.replace(/_/g, " ") }
+  );
 }
 
 function EmptyState() {
@@ -63,7 +65,10 @@ function EmptyState() {
         <div className="empty-state-title">Welcome to Context Studio</div>
         <div className="empty-state-description">Start building your knowledge graph</div>
       </div>
-      <div className="row" style={{ gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
+      <div
+        className="row"
+        style={{ gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}
+      >
         <Button variant="ghost" onClick={() => navigate({ to: "/app/schema/taxonomies" })}>
           <Icon name="plus" size={14} /> Create taxonomy
         </Button>
@@ -85,20 +90,14 @@ export function Dashboard() {
     error: taxonomiesError,
     refetch: refetchTaxonomies,
   } = useTaxonomies();
-  const {
-    data: schemes,
-    isLoading: schemesLoading,
-  } = useSchemes();
+  const { data: schemes, isLoading: schemesLoading } = useSchemes();
   const {
     data: classes,
     isLoading: classesLoading,
     error: classesError,
     refetch: refetchClasses,
   } = useClasses();
-  const {
-    data: individuals,
-    isLoading: individualsLoading,
-  } = useIndividuals();
+  const { data: individuals, isLoading: individualsLoading } = useIndividuals();
   const {
     data: changesData,
     isLoading: changesLoading,
@@ -136,7 +135,9 @@ export function Dashboard() {
           const kindProps = entityTypeToKind(event.entity_type);
           return {
             id: event.id,
-            type: isPipelineExecution ? ("run" as ActivityEventType) : mapOperationToEventType(event.operation),
+            type: isPipelineExecution
+              ? ("run" as ActivityEventType)
+              : mapOperationToEventType(event.operation),
             subject: stateTitle,
             timestamp: event.timestamp,
             ...kindProps,
@@ -213,10 +214,21 @@ export function Dashboard() {
           title="Knowledge graph structure"
           headerAction={
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "rgb(var(--canvas-fg-3))", whiteSpace: "nowrap" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  color: "rgb(var(--canvas-fg-3))",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {taxonomyCount} tax · {schemeCount} sch · {classCount} cls
               </span>
-              <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/app/schema/classes" })}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate({ to: "/app/schema/classes" })}
+              >
                 Open <Icon name="arrowRight" size={11} />
               </Button>
             </div>
@@ -245,7 +257,11 @@ export function Dashboard() {
         {/* Recent Activity */}
         <Panel
           title="Recent activity"
-          headerAction={<Button variant="ghost" size="sm">View all</Button>}
+          headerAction={
+            <Button variant="ghost" size="sm">
+              View all
+            </Button>
+          }
           noPadding
         >
           <ErrorBanner
@@ -280,16 +296,45 @@ export function Dashboard() {
 
       {/* Quick Access */}
       <div className="cs-between" style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgb(var(--canvas-fg-1))" }}>Quick access</h3>
-        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12 }}>Jump to common workflows</span>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgb(var(--canvas-fg-1))" }}>
+          Quick access
+        </h3>
+        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12 }}>
+          Jump to common workflows
+        </span>
       </div>
       <QuickAccessGrid
         tiles={[
-          { id: "tax", icon: "schema", title: "Taxonomies", description: "Manage top-level domains and concept schemes" },
-          { id: "cls", icon: "graph", title: "Classes", description: "Define the structure of your knowledge" },
-          { id: "prop", icon: "component", title: "Properties", description: "Object and literal property definitions" },
-          { id: "ind", icon: "data", title: "Individuals", description: "Browse instances populated from sources" },
-          { id: "ref", icon: "link", title: "Reference sources", description: "External APIs and document corpora" },
+          {
+            id: "tax",
+            icon: "schema",
+            title: "Taxonomies",
+            description: "Manage top-level domains and concept schemes",
+          },
+          {
+            id: "cls",
+            icon: "graph",
+            title: "Classes",
+            description: "Define the structure of your knowledge",
+          },
+          {
+            id: "prop",
+            icon: "component",
+            title: "Properties",
+            description: "Object and literal property definitions",
+          },
+          {
+            id: "ind",
+            icon: "data",
+            title: "Individuals",
+            description: "Browse instances populated from sources",
+          },
+          {
+            id: "ref",
+            icon: "link",
+            title: "Reference sources",
+            description: "External APIs and document corpora",
+          },
         ]}
         onAction={(id) => {
           const routes: Record<string, string> = {

@@ -1,31 +1,27 @@
-import React from 'react'
-import './ChatMessage.css'
-import { Icon } from './Icon'
-
-export interface ToolBlockData {
-  name: string
-  status: 'running' | 'success' | 'error'
-  output?: Array<{ key?: string; value: string }>
+interface ToolBlockData {
+  name: string;
+  status: "running" | "success" | "error";
+  output?: Array<{ key?: string; value: string }>;
 }
 
-export interface ThinkingBlockData {
-  content: string
+interface ThinkingBlockData {
+  content: string;
 }
 
-export interface ChatMessageProps extends React.HTMLAttributes<HTMLDivElement> {
-  role: 'user' | 'bot'
-  senderName: string
-  timestamp: string
-  body: React.ReactNode
-  avatar?: string
-  badge?: string
-  toolBlock?: ToolBlockData
-  thinkingBlock?: ThinkingBlockData
+interface ChatMessageProps extends React.HTMLAttributes<HTMLDivElement> {
+  role: "user" | "bot";
+  senderName: string;
+  timestamp: string;
+  body: React.ReactNode;
+  avatar?: string;
+  badge?: string;
+  toolBlock?: ToolBlockData;
+  thinkingBlock?: ThinkingBlockData;
 }
 
-const isUrl = (s: string) => /^https?:\/\//.test(s) || s.startsWith('/')
+const isUrl = (s: string) => /^https?:\/\//.test(s) || s.startsWith("/");
 
-export const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
+const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
   (
     {
       role,
@@ -36,24 +32,22 @@ export const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
       badge,
       toolBlock,
       thinkingBlock,
-      className = '',
+      className = "",
       ...props
     },
-    ref
+    ref,
   ) => {
     const avatarContent =
       avatar && isUrl(avatar) ? (
         <img src={avatar} alt={senderName} className="chat-message__avatar-img" />
       ) : (
-        (avatar || senderName.slice(0, 2).toUpperCase())
-      )
+        avatar || senderName.slice(0, 2).toUpperCase()
+      );
 
     return (
       <div
         ref={ref}
-        className={['chat-message', `chat-message--${role}`, className]
-          .filter(Boolean)
-          .join(' ')}
+        className={["chat-message", `chat-message--${role}`, className].filter(Boolean).join(" ")}
         data-testid={`chat-message-${role}`}
         {...props}
       >
@@ -67,29 +61,25 @@ export const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
           <div className="chat-message__body">{body}</div>
           {thinkingBlock && <ThinkingBlock content={thinkingBlock.content} />}
           {toolBlock && (
-            <ToolBlock
-              name={toolBlock.name}
-              status={toolBlock.status}
-              output={toolBlock.output}
-            />
+            <ToolBlock name={toolBlock.name} status={toolBlock.status} output={toolBlock.output} />
           )}
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-ChatMessage.displayName = 'ChatMessage'
+ChatMessage.displayName = "ChatMessage";
 
-export interface ToolBlockProps extends React.HTMLAttributes<HTMLDivElement> {
-  name: string
-  status: 'running' | 'success' | 'error'
-  output?: Array<{ key?: string; value: string }>
-  defaultCollapsed?: boolean
-  onToggleCollapsed?: (collapsed: boolean) => void
+interface ToolBlockProps extends React.HTMLAttributes<HTMLDivElement> {
+  name: string;
+  status: "running" | "success" | "error";
+  output?: Array<{ key?: string; value: string }>;
+  defaultCollapsed?: boolean;
+  onToggleCollapsed?: (collapsed: boolean) => void;
 }
 
-export const ToolBlock = React.forwardRef<HTMLDivElement, ToolBlockProps>(
+const ToolBlock = React.forwardRef<HTMLDivElement, ToolBlockProps>(
   (
     {
       name,
@@ -97,27 +87,26 @@ export const ToolBlock = React.forwardRef<HTMLDivElement, ToolBlockProps>(
       output = [],
       defaultCollapsed = false,
       onToggleCollapsed,
-      className = '',
+      className = "",
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-    const outputId = React.useId()
+    const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
+    const outputId = React.useId();
 
     const handleToggle = React.useCallback(() => {
-      const newCollapsed = !isCollapsed
-      setIsCollapsed(newCollapsed)
-      onToggleCollapsed?.(newCollapsed)
-    }, [isCollapsed, onToggleCollapsed])
+      const newCollapsed = !isCollapsed;
+      setIsCollapsed(newCollapsed);
+      onToggleCollapsed?.(newCollapsed);
+    }, [isCollapsed, onToggleCollapsed]);
 
-    const statusColor =
-      status === 'running' ? 'amber' : status === 'success' ? 'emerald' : 'rose'
+    const statusColor = status === "running" ? "amber" : status === "success" ? "emerald" : "rose";
 
     return (
       <div
         ref={ref}
-        className={['tool-block', className].filter(Boolean).join(' ')}
+        className={["tool-block", className].filter(Boolean).join(" ")}
         data-testid="tool-block"
         {...props}
       >
@@ -129,13 +118,13 @@ export const ToolBlock = React.forwardRef<HTMLDivElement, ToolBlockProps>(
           aria-controls={output.length > 0 ? outputId : undefined}
         >
           <Icon
-            name={isCollapsed ? 'chevronRight' : 'chevronDown'}
+            name={isCollapsed ? "chevronRight" : "chevronDown"}
             size={12}
             className="tool-block__toggle-icon"
           />
           <span className="tool-block__name">{name}</span>
           <span className={`tool-block__status tool-block__status--${statusColor}`}>
-            {status === 'running' ? 'running' : status === 'success' ? 'success' : 'error'}
+            {status === "running" ? "running" : status === "success" ? "success" : "error"}
           </span>
         </button>
         {!isCollapsed && output.length > 0 && (
@@ -149,44 +138,44 @@ export const ToolBlock = React.forwardRef<HTMLDivElement, ToolBlockProps>(
           </div>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-ToolBlock.displayName = 'ToolBlock'
+ToolBlock.displayName = "ToolBlock";
 
-export interface ThinkingBlockProps extends React.HTMLAttributes<HTMLDivElement> {
-  content: string
-  label?: string
-  defaultCollapsed?: boolean
-  onToggleCollapsed?: (collapsed: boolean) => void
+interface ThinkingBlockProps extends React.HTMLAttributes<HTMLDivElement> {
+  content: string;
+  label?: string;
+  defaultCollapsed?: boolean;
+  onToggleCollapsed?: (collapsed: boolean) => void;
 }
 
-export const ThinkingBlock = React.forwardRef<HTMLDivElement, ThinkingBlockProps>(
+const ThinkingBlock = React.forwardRef<HTMLDivElement, ThinkingBlockProps>(
   (
     {
       content,
-      label = 'thinking',
+      label = "thinking",
       defaultCollapsed = false,
       onToggleCollapsed,
-      className = '',
+      className = "",
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-    const contentId = React.useId()
+    const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
+    const contentId = React.useId();
 
     const handleToggle = React.useCallback(() => {
-      const newCollapsed = !isCollapsed
-      setIsCollapsed(newCollapsed)
-      onToggleCollapsed?.(newCollapsed)
-    }, [isCollapsed, onToggleCollapsed])
+      const newCollapsed = !isCollapsed;
+      setIsCollapsed(newCollapsed);
+      onToggleCollapsed?.(newCollapsed);
+    }, [isCollapsed, onToggleCollapsed]);
 
     return (
       <div
         ref={ref}
-        className={['thinking-block', className].filter(Boolean).join(' ')}
+        className={["thinking-block", className].filter(Boolean).join(" ")}
         data-testid="thinking-block"
         {...props}
       >
@@ -198,7 +187,7 @@ export const ThinkingBlock = React.forwardRef<HTMLDivElement, ThinkingBlockProps
           aria-controls={!isCollapsed ? contentId : undefined}
         >
           <Icon
-            name={isCollapsed ? 'chevronRight' : 'chevronDown'}
+            name={isCollapsed ? "chevronRight" : "chevronDown"}
             size={12}
             className="thinking-block__toggle-icon"
           />
@@ -210,10 +199,13 @@ export const ThinkingBlock = React.forwardRef<HTMLDivElement, ThinkingBlockProps
           </div>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-ThinkingBlock.displayName = 'ThinkingBlock'
+ThinkingBlock.displayName = "ThinkingBlock";
 
-export default ChatMessage
+// --- Babel-standalone: expose runtime values to window ---
+window.ChatMessage = ChatMessage;
+window.ToolBlock = ToolBlock;
+window.ThinkingBlock = ThinkingBlock;

@@ -26,9 +26,7 @@ describe("Reference Workflows Page", () => {
   // ========================================================================
   describe("page structure", () => {
     it("renders workflows page root with testid", async () => {
-      server.use(
-        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
-      );
+      server.use(http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])));
 
       render(<WorkflowsPageWrapper />);
 
@@ -38,9 +36,7 @@ describe("Reference Workflows Page", () => {
     });
 
     it("displays page title", async () => {
-      server.use(
-        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
-      );
+      server.use(http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])));
 
       render(<WorkflowsPageWrapper />);
 
@@ -50,9 +46,7 @@ describe("Reference Workflows Page", () => {
     });
 
     it("displays create button", async () => {
-      server.use(
-        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
-      );
+      server.use(http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])));
 
       render(<WorkflowsPageWrapper />);
 
@@ -114,9 +108,7 @@ describe("Reference Workflows Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state when no workflows exist", async () => {
-      server.use(
-        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
-      );
+      server.use(http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])));
 
       render(<WorkflowsPageWrapper />);
 
@@ -134,16 +126,16 @@ describe("Reference Workflows Page", () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
           HttpResponse.json([
-              {
-                id: "workflow-1",
-                title: "Entity Grounding",
-                description: "Ground entities using ConceptNet",
-                source: "ConceptNet",
-                class_scope: ["Person", "Organization"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ]),
+            {
+              id: "workflow-1",
+              title: "Entity Grounding",
+              description: "Ground entities using ConceptNet",
+              source: "ConceptNet",
+              class_scope: ["Person", "Organization"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
         ),
       );
 
@@ -158,25 +150,25 @@ describe("Reference Workflows Page", () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
           HttpResponse.json([
-              {
-                id: "workflow-1",
-                title: "Entity Grounding",
-                description: "Ground entities",
-                source: "ConceptNet",
-                class_scope: ["Person"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-              {
-                id: "workflow-2",
-                title: "Relationship Extraction",
-                description: "Extract relationships",
-                source: "DBpedia",
-                class_scope: ["Thing"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ]),
+            {
+              id: "workflow-1",
+              title: "Entity Grounding",
+              description: "Ground entities",
+              source: "ConceptNet",
+              class_scope: ["Person"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: "workflow-2",
+              title: "Relationship Extraction",
+              description: "Extract relationships",
+              source: "DBpedia",
+              class_scope: ["Thing"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
         ),
       );
 
@@ -192,16 +184,16 @@ describe("Reference Workflows Page", () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
           HttpResponse.json([
-              {
-                id: "workflow-1",
-                title: "Entity Grounding",
-                description: "Ground entities",
-                source: "ConceptNet",
-                class_scope: ["Person", "Organization"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ]),
+            {
+              id: "workflow-1",
+              title: "Entity Grounding",
+              description: "Ground entities",
+              source: "ConceptNet",
+              class_scope: ["Person", "Organization"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
         ),
       );
 
@@ -223,25 +215,25 @@ describe("Reference Workflows Page", () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
           HttpResponse.json([
-              {
-                id: "workflow-1",
-                title: "Entity Grounding",
-                description: "Ground entities",
-                source: "ConceptNet",
-                class_scope: ["Person"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-              {
-                id: "workflow-2",
-                title: "Relationship Extraction",
-                description: "Extract relationships",
-                source: "DBpedia",
-                class_scope: ["Thing"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ]),
+            {
+              id: "workflow-1",
+              title: "Entity Grounding",
+              description: "Ground entities",
+              source: "ConceptNet",
+              class_scope: ["Person"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: "workflow-2",
+              title: "Relationship Extraction",
+              description: "Extract relationships",
+              source: "DBpedia",
+              class_scope: ["Thing"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
         ),
       );
 
@@ -264,16 +256,16 @@ describe("Reference Workflows Page", () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
           HttpResponse.json([
-              {
-                id: "workflow-1",
-                title: "Entity Grounding",
-                description: "Ground entities",
-                source: "ConceptNet",
-                class_scope: ["Person"],
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ]),
+            {
+              id: "workflow-1",
+              title: "Entity Grounding",
+              description: "Ground entities",
+              source: "ConceptNet",
+              class_scope: ["Person"],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
         ),
       );
 
@@ -291,9 +283,7 @@ describe("Reference Workflows Page", () => {
     });
 
     it("allows creating a new workflow", async () => {
-      server.use(
-        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])),
-      );
+      server.use(http.get("*/api/reference/grounding-workflows", () => HttpResponse.json([])));
 
       render(<WorkflowsPageWrapper />);
 

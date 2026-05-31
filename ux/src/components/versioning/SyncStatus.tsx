@@ -46,8 +46,14 @@ function determineStatus(syncStatus: SyncStatusResponse): string {
 function SyncStatusLoadingState() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%" }}>
-      <div className="skeleton" style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }} />
-      <div className="skeleton" style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }} />
+      <div
+        className="skeleton"
+        style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }}
+      />
+      <div
+        className="skeleton"
+        style={{ height: "200px", borderRadius: "var(--radius-lg, 8px)" }}
+      />
     </div>
   );
 }

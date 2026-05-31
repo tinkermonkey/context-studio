@@ -140,17 +140,13 @@ function TaxonomiesPageContent({
     {
       key: "description",
       label: "Description",
-      render: (value) => (
-        <span className="taxonomy-desc-cell">{(value as string) || "—"}</span>
-      ),
+      render: (value) => <span className="taxonomy-desc-cell">{(value as string) || "—"}</span>,
     },
     {
       key: "id",
       label: "Schemes",
       width: "100px",
-      render: (_, row) => (
-        <Chip variant="neutral">{schemeCountByTaxonomy[row.id] ?? 0}</Chip>
-      ),
+      render: (_, row) => <Chip variant="neutral">{schemeCountByTaxonomy[row.id] ?? 0}</Chip>,
     },
     {
       key: "id",
@@ -174,9 +170,7 @@ function TaxonomiesPageContent({
       width: "120px",
       render: (value) => {
         const date = value as string | null;
-        return (
-          <span className="taxonomy-date-cell">{date ? toIsoDate(date) : "—"}</span>
-        );
+        return <span className="taxonomy-date-cell">{date ? toIsoDate(date) : "—"}</span>;
       },
     },
     {

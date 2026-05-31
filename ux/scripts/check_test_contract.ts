@@ -72,7 +72,10 @@ function findTestidDefinitions(dir: string, ext: string[]) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
         walk(full);
-      } else if (ext.some((e) => entry.name.endsWith(e)) && !/\.(test|spec)\.|__tests__/.test(full)) {
+      } else if (
+        ext.some((e) => entry.name.endsWith(e)) &&
+        !/\.(test|spec)\.|__tests__/.test(full)
+      ) {
         const content = fs.readFileSync(full, "utf-8");
         const rel = path.relative(process.cwd(), full);
         for (const m of content.matchAll(/data-testid=["']([^"']+)["']/g)) {
@@ -107,7 +110,11 @@ function resolveEntry(
   defs: ReturnType<typeof findTestidDefinitions>,
 ): SelectorEntry {
   if (defs.statics.has(testid)) {
-    return { selector: testid, component: defs.statics.get(testid)!, description: "TODO: describe" };
+    return {
+      selector: testid,
+      component: defs.statics.get(testid)!,
+      description: "TODO: describe",
+    };
   }
   // longest matching template prefix wins (most specific)
   let best: string | null = null;
@@ -115,10 +122,18 @@ function resolveEntry(
     if (testid.startsWith(prefix) && (best === null || prefix.length > best.length)) best = prefix;
   }
   if (best) {
-    return { selector: `${best}*`, component: defs.prefixes.get(best)!, description: "TODO: describe" };
+    return {
+      selector: `${best}*`,
+      component: defs.prefixes.get(best)!,
+      description: "TODO: describe",
+    };
   }
   // no source definition (e.g. produced by a third-party component, queried in a test)
-  return { selector: testid, component: usageFile, description: "TODO: describe (no source definition found)" };
+  return {
+    selector: testid,
+    component: usageFile,
+    description: "TODO: describe (no source definition found)",
+  };
 }
 
 function serializeEntry(e: SelectorEntry): string {
@@ -129,14 +144,19 @@ function main() {
   const registry = loadRegistry();
   const registered = new Set(registry.selectors.map((s) => s.selector));
 
-  const usages = [...findTestidUsages(srcDir, [".tsx", ".ts", ".jsx", ".js"]), ...findTestidUsages(e2eDir, [".ts", ".js"])];
+  const usages = [
+    ...findTestidUsages(srcDir, [".tsx", ".ts", ".jsx", ".js"]),
+    ...findTestidUsages(e2eDir, [".ts", ".js"]),
+  ];
   const usedSet = new Set(usages.map((u) => u.testid));
 
   const unregistered = usages.filter((u) => !isRegistered(u.testid, registered));
   const uniqueUnregistered = [...new Map(unregistered.map((u) => [u.testid, u])).values()];
 
   // Orphans: registered patterns that nothing in code uses (candidates for pruning).
-  const orphans = registry.selectors.filter((s) => ![...usedSet].some((t) => matches(t, s.selector)));
+  const orphans = registry.selectors.filter(
+    (s) => ![...usedSet].some((t) => matches(t, s.selector)),
+  );
 
   if (WRITE && uniqueUnregistered.length > 0) {
     const defs = findTestidDefinitions(srcDir, [".tsx", ".ts", ".jsx", ".js"]);
@@ -149,12 +169,16 @@ function main() {
       `\n  # ── Auto-added by \`validate-selectors --write\` — review the TODO descriptions ──\n` +
       [...newEntries.values()].map(serializeEntry).join("");
     fs.appendFileSync(registryPath, block);
-    console.log(`✍️  Added ${newEntries.size} registry entr${newEntries.size === 1 ? "y" : "ies"} for ${uniqueUnregistered.length} unregistered testid(s). Review and edit descriptions in selector-registry.yaml.`);
+    console.log(
+      `✍️  Added ${newEntries.size} registry entr${newEntries.size === 1 ? "y" : "ies"} for ${uniqueUnregistered.length} unregistered testid(s). Review and edit descriptions in selector-registry.yaml.`,
+    );
     return;
   }
 
   if (SHOW_ORPHANS && orphans.length > 0) {
-    console.warn(`⚠️  ${orphans.length} registered selector(s) are not used anywhere (candidates for pruning):`);
+    console.warn(
+      `⚠️  ${orphans.length} registered selector(s) are not used anywhere (candidates for pruning):`,
+    );
     orphans.forEach((o) => console.warn(`  - ${o.selector}  (${o.component})`));
     console.warn("");
   }
@@ -162,7 +186,9 @@ function main() {
   if (uniqueUnregistered.length > 0) {
     console.error("❌ Selector contract violation — unregistered data-testid attributes:");
     uniqueUnregistered.forEach((u) => console.error(`  - ${u.testid}  (${u.file})`));
-    console.error('\nRun `npm run validate-selectors -- --write` to auto-add stubs, then fill in descriptions.');
+    console.error(
+      "\nRun `npm run validate-selectors -- --write` to auto-add stubs, then fill in descriptions.",
+    );
     process.exit(1);
   }
 
