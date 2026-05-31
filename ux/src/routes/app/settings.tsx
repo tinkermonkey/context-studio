@@ -83,7 +83,6 @@ export function SettingsPage() {
         <TabBar
           tabs={[
             { id: "general", label: "General", count: 5 },
-            { id: "pipelines", label: "Pipelines", count: 0 },
             { id: "storage", label: "Storage", count: 0 },
             { id: "members", label: "Members", count: 0 },
             { id: "integrations", label: "Integrations", count: 0 },

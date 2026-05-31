@@ -3,7 +3,6 @@ export { adminService } from "./services/admin";
 export { ontologyService } from "./services/ontology";
 export { graphService } from "./services/graph";
 export { extractionService } from "./services/extraction";
-export { pipelineService } from "./services/pipeline";
 export { versioningService } from "./services/versioning";
 export { referenceService } from "./services/reference";
 

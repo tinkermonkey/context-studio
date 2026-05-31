@@ -223,8 +223,6 @@ function AppShell() {
     </>
   );
 
-  const statusbarCenter = undefined;
-
   const statusbarRight = (
     <>
       <div className="statusbar__item statusbar__item--branch">
@@ -330,7 +328,6 @@ function AppShell() {
       }}
       statusbar={{
         left: statusbarLeft,
-        center: statusbarCenter,
         right: statusbarRight,
       }}
     >
