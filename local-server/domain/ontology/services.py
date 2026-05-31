@@ -60,11 +60,6 @@ from .value_objects import DataPropertyValue, Status
 _logger = logging.getLogger(__name__)
 
 
-def _slugify_title(text: str) -> str:
-    """Generate a slug-style identifier from text."""
-    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
-
-
 class OntologyService:
     """
     Service implementing all business rules for ontology management.
@@ -124,17 +119,14 @@ class OntologyService:
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        if identifier is None:
-            identifier = _slugify_title(title)
-
-        # Check identifier uniqueness against existing taxonomy/scheme/class entities.
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
-
-        # Check for duplicate title
+        # Check for duplicate title first
         existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == title for t in existing):
             raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
+
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         taxonomy_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -546,17 +538,10 @@ class OntologyService:
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        if identifier is None:
-            identifier = _slugify_title(title)
-
         # Validate taxonomy exists
         taxonomy = self._repository.get_taxonomy(taxonomy_id)
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
-
-        # Check identifier uniqueness across schema-tier entities
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
 
         # Check for duplicate title within this taxonomy
         existing_schemes = self._repository.list_concept_schemes(
@@ -566,6 +551,10 @@ class OntologyService:
             raise DuplicateEntityError(
                 f"ConceptScheme with title '{title}' already exists in this taxonomy"
             )
+
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         scheme_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -812,17 +801,10 @@ class OntologyService:
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        if identifier is None:
-            identifier = _slugify_title(title)
-
         # Validate scheme exists
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
-
-        # Check identifier uniqueness across schema-tier entities
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
 
         # Check for duplicate title within this scheme
         existing_classes = self._repository.list_classes(
@@ -830,6 +812,10 @@ class OntologyService:
         )
         if any(c.title == title for c in existing_classes):
             raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
+
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         # Validate parent class if provided
         if parent_class_id is not None:

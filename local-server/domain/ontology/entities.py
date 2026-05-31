@@ -31,7 +31,7 @@ class Taxonomy:
     Attributes:
         id: Unique identifier (UUID as string)
         title: Display name for the taxonomy
-        identifier: Slug-style identifier (globally unique, immutable post-create); auto-generated if not provided
+        identifier: Slug-style identifier (optional); must be unique if provided
         description: Optional longer description
         color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
@@ -51,10 +51,8 @@ class Taxonomy:
     status: Status = Status.DRAFT
 
     def __post_init__(self) -> None:
-        if self.identifier is None:
-            import re
-            self.identifier = re.sub(r"[^a-z0-9]+", "_", self.title.lower()).strip("_")
-        self.identifier = validate_identifier(self.identifier)
+        if self.identifier is not None:
+            self.identifier = validate_identifier(self.identifier)
         self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
@@ -82,7 +80,7 @@ class ConceptScheme:
         id: Unique identifier (UUID as string)
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the scheme
-        identifier: Slug-style identifier (globally unique, immutable post-create); auto-generated if not provided
+        identifier: Slug-style identifier (optional); must be unique if provided
         description: Optional longer description
         color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
@@ -103,10 +101,8 @@ class ConceptScheme:
     status: Status = Status.DRAFT
 
     def __post_init__(self) -> None:
-        if self.identifier is None:
-            import re
-            self.identifier = re.sub(r"[^a-z0-9]+", "_", self.title.lower()).strip("_")
-        self.identifier = validate_identifier(self.identifier)
+        if self.identifier is not None:
+            self.identifier = validate_identifier(self.identifier)
         self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
@@ -135,7 +131,7 @@ class Class:
         concept_scheme_id: ID of the parent concept scheme
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the class
-        identifier: Slug-style identifier (globally unique, immutable post-create); auto-generated if not provided
+        identifier: Slug-style identifier (optional); must be unique if provided
         description: Optional longer description
         color: Optional hex color string (e.g. '#a3f2e4')
         parent_class_id: Optional ID of the parent class for hierarchy
@@ -171,10 +167,8 @@ class Class:
     source_run_id: str | None = None
 
     def __post_init__(self) -> None:
-        if self.identifier is None:
-            import re
-            self.identifier = re.sub(r"[^a-z0-9]+", "_", self.title.lower()).strip("_")
-        self.identifier = validate_identifier(self.identifier)
+        if self.identifier is not None:
+            self.identifier = validate_identifier(self.identifier)
         self.color = validate_hex_color(self.color)
 
     def rename(self, new_title: str) -> None:
