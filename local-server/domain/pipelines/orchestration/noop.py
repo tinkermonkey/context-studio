@@ -50,9 +50,10 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         Execute the no-op pipeline.
 
         Steps:
-        1. Validate input
-        2. Simulate processing
-        3. Return populated result
+        1. Initialize
+        2. Call LLM (exercises _call_llm)
+        3. Process
+        4. Finalize
 
         Args:
             state: PipelineState with input_data
@@ -68,19 +69,42 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
             steps_completed=["initialize"],
         )
 
-        # Step 2: Process (no-op)
+        # Step 2: Call LLM (exercises _call_llm method)
+        try:
+            llm_response = await self._call_llm(
+                system_prompt="You are a helpful assistant.",
+                user_prompt="Acknowledge that you received this message.",
+                model="test-model",
+                temperature=0.0,
+            )
+            noop_state = replace(
+                noop_state,
+                steps_completed=(noop_state.steps_completed or []) + ["call_llm"],
+            )
+        except Exception as e:
+            noop_state = replace(
+                noop_state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(e), "step": "call_llm"},
+            )
+            return noop_state
+
+        # Step 3: Process (no-op)
         noop_state = replace(
             noop_state,
             steps_completed=(noop_state.steps_completed or []) + ["process"],
         )
 
-        # Step 3: Finalize
+        # Step 4: Finalize
         result = {
             "status": "completed",
             "message": "No-op pipeline completed successfully",
             "input_echo": noop_state.input_data,
-            "step_count": 2,
+            "step_count": 3,
             "steps": noop_state.steps_completed or [],
+            "llm_model": llm_response.model if "llm_response" in locals() else None,
+            "llm_tokens_in": llm_response.tokens_in if "llm_response" in locals() else 0,
+            "llm_tokens_out": llm_response.tokens_out if "llm_response" in locals() else 0,
         }
 
         noop_state = replace(
