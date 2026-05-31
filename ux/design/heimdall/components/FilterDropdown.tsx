@@ -18,8 +18,8 @@ interface FilterDropdownContextValue {
   onValueChange: (value: string, selected: boolean) => void
   focusedValue: string | null
   onFocusedValueChange: (value: string | null) => void
-  triggerRef: React.RefObject<HTMLButtonElement>
-  panelRef: React.RefObject<HTMLDivElement>
+  triggerRef: React.RefObject<HTMLButtonElement | null>
+  panelRef: React.RefObject<HTMLDivElement | null>
 }
 
 const FilterDropdownContext = createContext<FilterDropdownContextValue | undefined>(undefined)
