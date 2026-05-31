@@ -81,9 +81,6 @@ class LLMProvider(Protocol):
         ...
 
 
-# ============================================================================
-
-
 class TripleExtractionResult(Protocol):
     """
     Result returned by ExtractionPort.extract_triples().

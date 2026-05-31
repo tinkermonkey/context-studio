@@ -1,8 +1,7 @@
 """
-SQLAlchemy ORM models for operations.db (Background Tasks).
+SQLAlchemy ORM models for operations.db.
 
-This module is currently empty. Legacy models (PipelineConfiguration, Execution,
-PipelineFlavorModel) have been removed in Phase 1 legacy demolition.
+Currently empty.
 """
 
 from sqlalchemy.orm import declarative_base
