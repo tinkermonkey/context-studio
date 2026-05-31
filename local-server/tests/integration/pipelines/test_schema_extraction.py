@@ -29,6 +29,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
 )
+from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
 from tests.fixtures.schema_extraction_fixtures import get_microservices_text
 
 

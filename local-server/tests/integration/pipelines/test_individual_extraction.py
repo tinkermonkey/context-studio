@@ -51,6 +51,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
 from tests.utils.canon_assertions import (
     load_canon,
     score_triples,
@@ -66,15 +67,15 @@ CANON_DIR = (
 )
 
 
-def load_fixture(fixture_name: str) -> dict:
-    """Load a fixture JSON file."""
+def _load_legacy_fixture(fixture_name: str) -> dict:
+    """Load a legacy fixture JSON file (internal use only)."""
     fixture_path = FIXTURES_DIR / f"{fixture_name}.json"
     with open(fixture_path, "r") as f:
         return json.load(f)
 
 
 def load_all_fixtures() -> list[dict]:
-    """Load all fixture files from the fixtures directory."""
+    """Load all legacy fixture files from the fixtures directory."""
     fixtures = []
     for fixture_file in sorted(FIXTURES_DIR.glob("fixture_*.json")):
         with open(fixture_file, "r") as f:
@@ -441,7 +442,7 @@ class TestOrchestratorExecution:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_1")
+        fixture = _load_legacy_fixture("fixture_paper_1")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -497,7 +498,7 @@ class TestOrchestratorExecution:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_3")
+        fixture = _load_legacy_fixture("fixture_paper_3")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -536,9 +537,9 @@ class TestCrossPaperConsistency:
 
         # Extract from papers 1, 2, and 5 which all mention John Doe
         paper_fixtures = [
-            load_fixture("fixture_paper_1"),
-            load_fixture("fixture_paper_2"),
-            load_fixture("fixture_paper_5"),
+            _load_legacy_fixture("fixture_paper_1"),
+            _load_legacy_fixture("fixture_paper_2"),
+            _load_legacy_fixture("fixture_paper_5"),
         ]
 
         extraction_results = []
@@ -583,7 +584,7 @@ class TestCrossPaperConsistency:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_5")
+        fixture = _load_legacy_fixture("fixture_paper_5")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -645,7 +646,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_cloud_provisioning_paper")
+        fixture = _load_legacy_fixture("fixture_cloud_provisioning_paper")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -676,7 +677,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_crdt_networks_paper")
+        fixture = _load_legacy_fixture("fixture_crdt_networks_paper")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -706,7 +707,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_kubernetes_energy_monitoring")
+        fixture = _load_legacy_fixture("fixture_kubernetes_energy_monitoring")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,

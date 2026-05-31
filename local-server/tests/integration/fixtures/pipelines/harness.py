@@ -41,6 +41,7 @@ def compare_output(actual: dict[str, Any], expected: dict[str, Any]) -> dict[str
     for key in actual:
         if key not in expected:
             diff["extra_keys"].append(key)
+            diff["matches"] = False
 
     # Check for mismatched values in keys that exist in both
     for key in expected:
@@ -107,8 +108,14 @@ async def run_pipeline_against_fixture(
     result_state = await orchestrator.execute(state)
 
     # Extract actual output from result state
+    # Convert status enum to string value (e.g., "completed" not "PipelineRunStatus.COMPLETED")
+    status_str = (
+        result_state.current_status.value
+        if hasattr(result_state.current_status, "value")
+        else str(result_state.current_status)
+    )
     actual_output = {
-        "status": str(result_state.current_status),
+        "status": status_str,
         "result": result_state.result,
     }
 

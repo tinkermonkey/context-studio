@@ -96,22 +96,23 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         )
 
         # Step 4: Finalize
+        steps_with_finalize = (noop_state.steps_completed or []) + ["finalize"]
         result = {
             "status": "completed",
             "message": "No-op pipeline completed successfully",
             "input_echo": noop_state.input_data,
             "step_count": 3,
-            "steps": noop_state.steps_completed or [],
-            "llm_model": llm_response.model if "llm_response" in locals() else None,
-            "llm_tokens_in": llm_response.tokens_in if "llm_response" in locals() else 0,
-            "llm_tokens_out": llm_response.tokens_out if "llm_response" in locals() else 0,
+            "steps": steps_with_finalize,
+            "llm_model": llm_response.model,
+            "llm_tokens_in": llm_response.tokens_in,
+            "llm_tokens_out": llm_response.tokens_out,
         }
 
         noop_state = replace(
             noop_state,
             current_status=PipelineRunStatus.COMPLETED,
             result=result,
-            steps_completed=(noop_state.steps_completed or []) + ["finalize"],
+            steps_completed=steps_with_finalize,
         )
 
         return noop_state

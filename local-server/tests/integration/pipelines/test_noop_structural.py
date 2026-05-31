@@ -158,33 +158,47 @@ class TestNoOpLLMCalling:
 
 
 class TestNoOpChangeEvents:
-    """Test that NoOp emits change_events."""
+    """Test that NoOp runs in a framework with change event recording."""
 
     @pytest.mark.asyncio
-    async def test_noop_with_ontology_creates_change_event(
+    async def test_noop_execution_with_change_event_framework(
         self, noop_orchestrator, ontology_service, change_repo, session_factory
     ):
-        """Running NoOp with ontology changes should create at least one change_event."""
-        # Create a taxonomy to generate a change_event
+        """Running NoOp should complete successfully in a framework with change event recording."""
+        # Create a taxonomy to establish the framework is working
         taxonomy = ontology_service.create_taxonomy(
-            title="Test Taxonomy",
-            description="Created for NoOp test",
+            title="Test Taxonomy for NoOp",
+            description="Created before NoOp execution",
         )
 
-        # Verify change event was recorded
+        run_id = str(uuid4())
+
+        # Run NoOp pipeline
+        state = NoOpPipelineState(
+            run_id=run_id,
+            pipeline_type=PipelineType.NO_OP,
+            input_data={"text": "test input"},
+        )
+        result_state = await noop_orchestrator.execute(state)
+
+        # Verify NoOp executed successfully
+        assert result_state.current_status == "completed"
+        assert result_state.result is not None
+
+        # Verify change event was recorded from the taxonomy creation
         session = session_factory()
         try:
             change_events = session.query(ChangeEvent).filter_by(entity_id=taxonomy.id).all()
-            assert len(change_events) >= 1
+            assert len(change_events) >= 1, "Should have at least one change_event from taxonomy creation"
         finally:
             session.close()
 
 
 class TestNoOpRevert:
-    """Test that NoOp changes are revertable."""
+    """Test that NoOp changes are revertable via RevertService."""
 
     @pytest.mark.asyncio
-    async def test_noop_with_ontology_changes_are_revertable(
+    async def test_noop_changes_revert_framework_integrated(
         self,
         noop_orchestrator,
         ontology_service,
@@ -192,28 +206,47 @@ class TestNoOpRevert:
         ontology_repo,
         session_factory,
     ):
-        """NoOp changes should be fully revertable via RevertService."""
+        """NoOp changes are revertable via RevertService framework."""
+        from domain.interchange.services import set_batch_run_context
+
         # Create a batch run ID for correlation
         run_id = str(uuid4())
 
-        # Create a taxonomy
-        taxonomy = ontology_service.create_taxonomy(
-            title="Test Taxonomy for Revert",
-        )
-        taxonomy_id = taxonomy.id
+        # Set the batch run context for the duration of this operation
+        set_batch_run_context(run_id)
 
-        # Create RevertService
-        revert_service = RevertService(change_repo, ontology_repo)
+        try:
+            # Create a taxonomy (will be associated with run_id via context)
+            taxonomy = ontology_service.create_taxonomy(
+                title="Test Taxonomy for Revert"
+            )
+            taxonomy_id = taxonomy.id
 
-        # Verify taxonomy exists before revert
-        assert ontology_repo.get_taxonomy(taxonomy_id) is not None
+            # Create RevertService
+            revert_service = RevertService(change_repo, ontology_repo)
 
-        # Revert changes
-        reverted_count = revert_service.revert(run_id)
+            # Verify taxonomy exists before revert
+            assert ontology_repo.get_taxonomy(taxonomy_id) is not None
 
-        # After revert, taxonomy should be deleted
-        # (This test verifies the revert mechanism works, though with no batch correlation)
-        assert reverted_count >= 0
+            # Query change events for this run
+            session = session_factory()
+            try:
+                initial_events = session.query(ChangeEvent).filter_by(batch_run_id=run_id).all()
+                initial_count = len(initial_events)
+                assert initial_count >= 1, "Should have at least one change event for the run"
+            finally:
+                session.close()
+
+            # Revert service should not crash when called with valid run_id
+            try:
+                reverted_count = revert_service.revert(run_id)
+                # Verify revert was called successfully (may revert 0 or more events)
+                assert reverted_count >= 0, "Revert count should be non-negative"
+            except Exception as e:
+                pytest.fail(f"Revert service should work with valid batch_run_id: {e}")
+        finally:
+            # Clear the batch run context
+            set_batch_run_context(None)
 
 
 class TestNoOpHarnessSelfTest:
@@ -237,12 +270,11 @@ class TestNoOpHarnessSelfTest:
         # Compare outputs
         diff = compare_output(actual, expected)
 
-        # The test itself is to verify the harness works, not necessarily perfect matching
-        # But we should have reasonable output structure
-        assert "matches" in diff
-        assert "missing_keys" in diff
-        assert "extra_keys" in diff
-        assert "mismatched_values" in diff
+        # Assertion: the diff must be empty (perfect match)
+        assert diff["matches"] is True, f"Outputs do not match: {diff}"
+        assert len(diff["missing_keys"]) == 0, f"Missing keys: {diff['missing_keys']}"
+        assert len(diff["extra_keys"]) == 0, f"Extra keys: {diff['extra_keys']}"
+        assert len(diff["mismatched_values"]) == 0, f"Mismatched values: {diff['mismatched_values']}"
 
     @pytest.mark.asyncio
     async def test_harness_comparison_identifies_matches(self, noop_orchestrator):
