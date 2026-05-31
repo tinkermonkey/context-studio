@@ -6,7 +6,6 @@ can safely resolve its (slug, version) reference because configurations
 are deterministically re-registered from code.
 """
 
-import pytest
 
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import PipelineConfigurationRegistry
@@ -24,13 +23,13 @@ class TestRegistryRestartSafety:
         """
         # Startup 1: initial server start
         registry_startup_1 = PipelineConfigurationRegistry()
-        v1_startup_1 = registry_startup_1.register(
+        registry_startup_1.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             "extraction-default",
             {"model": "claude-opus-4"},
         )
-        v2_startup_1 = registry_startup_1.register(
+        registry_startup_1.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             "extraction-default",
@@ -53,13 +52,13 @@ class TestRegistryRestartSafety:
 
         # Startup 2: server restarts, registry repopulated from code
         registry_startup_2 = PipelineConfigurationRegistry()
-        v1_startup_2 = registry_startup_2.register(
+        registry_startup_2.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             "extraction-default",
             {"model": "claude-opus-4"},
         )
-        v2_startup_2 = registry_startup_2.register(
+        registry_startup_2.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             "extraction-default",
@@ -188,7 +187,7 @@ class TestRegistryRestartSafety:
         registry = PipelineConfigurationRegistry()
 
         # Register v1
-        v1 = registry.register(
+        registry.register(
             PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             "default",
             "refinement-default",

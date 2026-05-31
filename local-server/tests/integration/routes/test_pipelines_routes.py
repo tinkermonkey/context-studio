@@ -21,7 +21,6 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
-    ConfigurationImmutabilityError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -1009,7 +1008,6 @@ class TestRunStatusLifecycle:
         """
         import asyncio
         import threading
-        import time
 
         registries["implementation_registry"].register_impl(
             PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
