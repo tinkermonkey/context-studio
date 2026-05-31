@@ -4,6 +4,8 @@ Apply service for schema node connection refinement pipeline.
 Applies connection delta proposals from a completed connection refinement run:
 - "add" deltas create new Relationship entities
 - "remove" deltas delete existing Relationship entities
+- "modify" deltas track the operation in relationships_modified counter (accounting only;
+  actual relationship mutation is deferred until delta structure includes modification payload)
 
 Idempotent: adding an already-existing relationship is skipped; removing a
 non-existent relationship is skipped.
@@ -11,12 +13,15 @@ non-existent relationship is skipped.
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from domain.ontology.entities import Relationship
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -131,6 +136,10 @@ class SchemaConnectionRefinementApplyService:
                 if not existing:
                     result.relationships_skipped += 1
                     continue
+                _logger.debug(
+                    f"Relationship modification tracked but not applied: {src_id} --{prop_identifier}--> {tgt_id} "
+                    "(delta structure does not specify mutation details)"
+                )
                 result.relationships_modified += 1
 
             else:

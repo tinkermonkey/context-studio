@@ -195,14 +195,15 @@ def test_revert_is_idempotent(ontology_repo, change_repo, revert_svc):
     )
 
     # First revert
-    revert_svc.revert("run-1")
+    events_reverted_first = revert_svc.revert("run-1")
+    assert events_reverted_first == 1
     state_after_first_revert = ontology_repo.get_class("cls-1")
     assert state_after_first_revert is None
 
     # Second revert (should not error and produce same state)
-    # The revert events themselves have _reverted_ in the change_reason, so
-    # subsequent reverts will skip them
-    revert_svc.revert("run-1")
+    # The original events are skipped because a corresponding revert event exists for them
+    events_reverted_second = revert_svc.revert("run-1")
+    assert events_reverted_second == 0
     state_after_second_revert = ontology_repo.get_class("cls-1")
 
     # State should be identical
@@ -317,3 +318,158 @@ def test_revert_emits_change_events_with_batch_run_id(ontology_repo, change_repo
     revert_events = [e for e in history.events if "_reverted_" in (e.change_reason or "")]
     assert len(revert_events) > 0
     assert all(e.batch_run_id == "run-1" for e in revert_events)
+
+
+# ============================================================================
+# Round-Trip Tests per Pipeline Type (Simulated Apply → Revert)
+# ============================================================================
+
+
+def test_schema_extraction_roundtrip(ontology_repo, change_repo, revert_svc):
+    """Simulate schema extraction: create class and property, then revert."""
+    # Simulate apply: create class and property definition
+    cls = Class(
+        id="cls-service",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Service",
+    )
+    prop = PropertyDefinition(
+        id="prop-1",
+        identifier="has_client",
+        title="Has Client",
+    )
+    ontology_repo.save_class(cls)
+    ontology_repo.save_property_definition(prop)
+
+    # Record creation events (as apply service would)
+    change_repo.record_change(
+        entity_id="cls-service",
+        entity_type="Class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-service", "title": "Service"},
+        batch_run_id="run-schema",
+    )
+    change_repo.record_change(
+        entity_id="prop-1",
+        entity_type="PropertyDefinition",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "prop-1", "identifier": "has_client", "title": "Has Client"},
+        batch_run_id="run-schema",
+    )
+
+    # Verify entities exist
+    assert ontology_repo.get_class("cls-service") is not None
+    assert ontology_repo.get_property_definition("prop-1") is not None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-schema")
+    assert events_reverted == 2
+
+    # Verify entities are deleted
+    assert ontology_repo.get_class("cls-service") is None
+    assert ontology_repo.get_property_definition("prop-1") is None
+
+
+def test_individual_extraction_roundtrip(ontology_repo, change_repo, revert_svc):
+    """Simulate individual extraction: create individuals and relationships, then revert."""
+    # Create classes first
+    cls = Class(
+        id="cls-person",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Person",
+    )
+    ontology_repo.save_class(cls)
+
+    # Simulate apply: create individuals
+    ind1 = Individual(id="ind-alice", class_ids=["cls-person"], title="Alice")
+    ind2 = Individual(id="ind-bob", class_ids=["cls-person"], title="Bob")
+    ontology_repo.save_individual(ind1)
+    ontology_repo.save_individual(ind2)
+
+    # Record creation events
+    change_repo.record_change(
+        entity_id="ind-alice",
+        entity_type="Individual",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "ind-alice", "class_ids": ["cls-person"], "title": "Alice"},
+        batch_run_id="run-individual",
+    )
+    change_repo.record_change(
+        entity_id="ind-bob",
+        entity_type="Individual",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "ind-bob", "class_ids": ["cls-person"], "title": "Bob"},
+        batch_run_id="run-individual",
+    )
+
+    # Verify entities exist
+    assert ontology_repo.get_individual("ind-alice") is not None
+    assert ontology_repo.get_individual("ind-bob") is not None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-individual")
+    assert events_reverted == 2
+
+    # Verify entities are deleted
+    assert ontology_repo.get_individual("ind-alice") is None
+    assert ontology_repo.get_individual("ind-bob") is None
+
+
+def test_connection_refinement_roundtrip(ontology_repo, change_repo, revert_svc):
+    """Simulate connection refinement: create relationships, then revert."""
+    # Create classes and property definition first
+    cls1 = Class(
+        id="cls-service",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Service",
+    )
+    cls2 = Class(
+        id="cls-client",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Client",
+    )
+    prop = PropertyDefinition(
+        id="prop-1",
+        identifier="has_client",
+        title="Has Client",
+    )
+    ontology_repo.save_class(cls1)
+    ontology_repo.save_class(cls2)
+    ontology_repo.save_property_definition(prop)
+
+    # Simulate apply: create relationship
+    rel = Relationship(
+        id="rel-1",
+        source_id="cls-service",
+        target_id="cls-client",
+        property_definition_id="prop-1",
+    )
+    ontology_repo.save_relationship(rel)
+
+    # Record creation event
+    change_repo.record_change(
+        entity_id="rel-1",
+        entity_type="Relationship",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "rel-1",
+            "source_id": "cls-service",
+            "target_id": "cls-client",
+            "property_definition_id": "prop-1",
+        },
+        batch_run_id="run-connection",
+    )
+
+    # Verify relationship exists
+    assert ontology_repo.get_relationship("rel-1") is not None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-connection")
+    assert events_reverted == 1
+
+    # Verify relationship is deleted
+    assert ontology_repo.get_relationship("rel-1") is None

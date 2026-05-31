@@ -86,6 +86,20 @@ class RevertService:
         # Skip if this event is itself a revert event (has _reverted_ in change_reason)
         if "_reverted_" in (event.change_reason or ""):
             return True
+
+        # Check if a corresponding revert event already exists for this original event
+        # by looking for a revert event for the same entity with the inverse operation
+        all_events_result = self._change_repo.get_changes(limit=None)
+        inverse_op = self._inverse_operation(event.operation)
+
+        for existing_event in all_events_result.events:
+            if (
+                existing_event.entity_id == event.entity_id
+                and existing_event.operation == inverse_op
+                and "_reverted_" in (existing_event.change_reason or "")
+            ):
+                return True
+
         return False
 
     def _apply_inverse(self, event, originating_run_id: str) -> None:
@@ -154,6 +168,11 @@ class RevertService:
             if ind:
                 self._restore_entity_state(ind, previous_state)
                 self._ontology_repo.save_individual(ind)
+        elif entity_type == "Relationship":
+            rel = self._ontology_repo.get_relationship(entity_id)
+            if rel:
+                self._restore_entity_state(rel, previous_state)
+                self._ontology_repo.save_relationship(rel)
         elif entity_type == "PropertyDefinition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:

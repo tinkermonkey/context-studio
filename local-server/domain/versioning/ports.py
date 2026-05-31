@@ -27,6 +27,7 @@ class ChangeRepository(Protocol):
         user_id: Optional[str] = None,
         change_reason: Optional[str] = None,
         changeset_id: Optional[str] = None,
+        batch_run_id: Optional[str] = None,
     ) -> str:
         """Record a change event and return its ID."""
         ...
@@ -35,7 +36,7 @@ class ChangeRepository(Protocol):
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
-        limit: int = 100,
+        limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """Get change events with optional filters, returning paginated results with total count."""
         ...
