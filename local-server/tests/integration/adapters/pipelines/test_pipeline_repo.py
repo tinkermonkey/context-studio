@@ -343,14 +343,15 @@ class TestPipelineRepositoryChangeEvents:
             specific_data={"source_text_hash": "hash123"},
         )
 
-        # Create change events linked to the batch run
+        # Create change events linked to the pipeline run
+        # Change events are correlated with the run via batch_run_id = run.id
         event1 = ChangeEvent(
             id="event-1",
             entity_type="Class",
             entity_id="class-123",
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_id,
+            batch_run_id=run.id,
             new_state={"label": "Class1", "uri": "http://example.org/Class1"},
         )
         event2 = ChangeEvent(
@@ -359,7 +360,7 @@ class TestPipelineRepositoryChangeEvents:
             entity_id="class-456",
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_id,
+            batch_run_id=run.id,
             new_state={"label": "Class2", "uri": "http://example.org/Class2"},
         )
         db_session.add(event1)

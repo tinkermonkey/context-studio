@@ -75,15 +75,16 @@ class TestWaveARegression:
         assert run.source_text_hash == "sha256_abcdef123456"
         assert run.source_document_uri == "s3://bucket/document.txt"
 
-        # Create change events linked to this batch run
+        # Create change events linked to this pipeline run
         # These represent entities created/modified during extraction
+        # Change events are correlated with the run via batch_run_id = run.id
         event1 = ChangeEvent(
             id=str(uuid4()),
             entity_type="Class",
             entity_id=str(uuid4()),
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_run_id,
+            batch_run_id=run.id,
             new_state={"label": "ExtractedClass1", "uri": "http://example.org/ExtractedClass1"},
         )
         event2 = ChangeEvent(
@@ -92,7 +93,7 @@ class TestWaveARegression:
             entity_id=str(uuid4()),
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_run_id,
+            batch_run_id=run.id,
             new_state={"source": "Class1", "target": "Class2", "type": "hasProperty"},
         )
         session.add(event1)
@@ -114,7 +115,7 @@ class TestWaveARegression:
         assert event2.entity_id in entity_ids
 
         for event in events:
-            assert event["batch_run_id"] == batch_run_id
+            assert event["batch_run_id"] == run.id
             assert "operation" in event
             assert "timestamp" in event
 

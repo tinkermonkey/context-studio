@@ -22,7 +22,6 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 
 from datetime import datetime, timezone
 from typing import Any, Optional
-from uuid import uuid4
 
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
@@ -39,6 +38,7 @@ from adapters.web.schemas.pipelines import (
     CandidateResponse,
     CancelBatchResponse,
     ConfigurationResponse,
+    EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     ImplementationResponse,
     PipelineRunRequest,
@@ -967,7 +967,7 @@ async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
 async def enqueue_batch_runs(
     batch_id: str,
     request: Request,
-    request_body: dict[str, Any] = Body(...),
+    request_body: EnqueueBatchRunsRequest = Body(...),
 ) -> dict[str, Any]:
     """
     Enqueue multiple runs in a batch.
@@ -986,6 +986,7 @@ async def enqueue_batch_runs(
     batch_repo = request.app.state.batch_repo
     pipeline_run_repo = request.app.state.pipeline_run_repo
     config_registry = request.app.state.config_registry
+    impl_registry = request.app.state.implementation_registry
 
     # Verify batch exists
     batch = batch_repo.get(batch_id)
@@ -995,7 +996,7 @@ async def enqueue_batch_runs(
             detail=f"Batch not found: {batch_id}",
         )
 
-    runs_data = request_body.get("runs", [])
+    runs_data = request_body.runs
     if not runs_data:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -1015,6 +1016,14 @@ async def enqueue_batch_runs(
                 raise HTTPException(
                     status_code=http_status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid pipeline type: {pipeline_type_str}",
+                )
+
+            # Validate implementation exists
+            impl = impl_registry.get(ptype, impl_id)
+            if not impl:
+                raise HTTPException(
+                    status_code=http_status.HTTP_404_NOT_FOUND,
+                    detail=f"Implementation not found: {impl_id}",
                 )
 
             config_version = config_registry.get_latest(ptype, impl_id, config_ref)
@@ -1089,15 +1098,23 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 
         for run in runs:
             if run.status == PipelineRunStatus.PENDING:
-                pipeline_run_repo.update_status(run.id, PipelineRunStatus.FAILED)
+                pipeline_run_repo.update_status(run.id, PipelineRunStatus.CANCELLED)
                 cancelled_count += 1
 
-        # Update batch last_updated and check if all runs are terminal
+        # Recompute batch status based on child runs
         if cancelled_count > 0:
-            batch_repo.update_status(batch_id, batch.status)
-            batch_repo.update_completed_at(batch_id)
+            run_counts = batch_repo.get_run_counts(batch_id)
+            # Only set completed_at if all runs are in terminal state
+            if run_counts.get("pending", 0) == 0 and run_counts.get("running", 0) == 0:
+                batch_repo.update_completed_at(batch_id)
+            # Recompute status from child runs
+            updated_batch = batch_repo.get(batch_id)
+            if updated_batch:
+                new_status = batch_repo.compute_aggregate_status(batch_id)
+                batch_repo.update_status(batch_id, new_status)
+        else:
+            run_counts = batch_repo.get_run_counts(batch_id)
 
-        run_counts = batch_repo.get_run_counts(batch_id)
         updated_batch = batch_repo.get(batch_id)
 
         return {
@@ -1145,7 +1162,7 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
         resumed_count = 0
 
         for run in runs:
-            if run.status in (PipelineRunStatus.FAILED,):
+            if run.status in (PipelineRunStatus.CANCELLED, PipelineRunStatus.FAILED):
                 pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
                 resumed_count += 1
 

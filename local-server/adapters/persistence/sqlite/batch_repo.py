@@ -8,7 +8,7 @@ Uses SQLAlchemy ORM for database access.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable
+from typing import Callable
 from uuid import uuid4
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,9 +19,6 @@ from adapters.persistence.sqlite.models import BatchRun as BatchRunORM
 from domain.pipelines.entities import Batch, BatchStatus, PipelineRunStatus
 from domain.pipelines.exceptions import PipelineStorageError
 from utils.logger import get_logger
-
-if TYPE_CHECKING:
-    pass
 
 logger = get_logger(__name__)
 

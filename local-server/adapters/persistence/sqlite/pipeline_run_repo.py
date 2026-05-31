@@ -684,13 +684,8 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            # Get the run to retrieve its batch_run_id
-            run = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            if not run or not run.batch_id:
-                return []
-
-            # Query change_events by the batch_run_id
-            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run.batch_id).all()
+            # Query change_events by the run's ID
+            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run_id).all()
 
             return [
                 {

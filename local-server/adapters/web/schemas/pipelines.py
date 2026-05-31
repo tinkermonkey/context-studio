@@ -245,16 +245,6 @@ class BatchResponse(BaseModel):
     run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
 
 
-class EnqueueBatchRunRequest(BaseModel):
-    """Single run spec for batch enqueue."""
-
-    model_config = ConfigDict(extra="allow")
-
-    pipeline_type: str = Field(..., description="Pipeline type (e.g., individual_extraction)")
-    implementation_id: str = Field(default="default", description="Implementation identifier")
-    configuration_ref: str = Field(default="default", description="Configuration reference")
-
-
 class EnqueueBatchRunsRequest(BaseModel):
     """Request to enqueue multiple runs in a batch."""
 
