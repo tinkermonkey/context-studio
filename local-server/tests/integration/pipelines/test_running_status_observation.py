@@ -17,7 +17,6 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
@@ -149,12 +148,6 @@ def ontology_repo(session_factory):
 
 
 @pytest.fixture
-def pipeline_repo(session_factory):
-    """Create a pipeline repository instance."""
-    return SQLitePipelineRepository(session_factory)
-
-
-@pytest.fixture
 def change_repo(session_factory):
     """Create a change repository instance."""
     return SQLiteChangeRepository(session_factory)
@@ -189,7 +182,7 @@ class TestRunningStatusObservation:
 
     @pytest.mark.asyncio
     async def test_running_status_written_before_llm_call_completes(
-        self, noop_orchestrator, blocking_llm_provider, pipeline_repo, session_factory
+        self, noop_orchestrator, blocking_llm_provider
     ):
         """
         RUNNING status is written to database before LLM call completes.
