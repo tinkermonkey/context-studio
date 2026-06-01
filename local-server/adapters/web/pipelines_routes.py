@@ -893,11 +893,11 @@ async def revert_pipeline_run(
         )
 
     batch_runs = repo.list_by_batch_id(run.batch_run_id)
-    if len(batch_runs.runs) > 1:
+    if len(batch_runs) > 1:
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot revert single run from multi-run batch. "
-                   f"Batch {run.batch_run_id} contains {len(batch_runs.runs)} runs. "
+                   f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
                    f"Use batch revert endpoint instead.",
         )
 

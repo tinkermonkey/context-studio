@@ -745,3 +745,64 @@ def test_inverse_delete_with_missing_state_raises_error(ontology_repo, change_re
     # Revert should raise an error
     with pytest.raises(ValueError, match="new_state is missing"):
         revert_svc.revert("run-bad")
+
+
+# ============================================================================
+# Silent No-Op Tests (Issue #1: Independent Entity Deletion)
+# ============================================================================
+
+
+def test_independent_entity_deletion_no_op(ontology_repo, change_repo, revert_svc):
+    """
+    Test that reverting an entity independently deleted before revert is called
+    correctly returns 0 reverted events and does not record a false revert event.
+
+    Scenario: An entity is created by a batch run (CREATE event recorded), but then
+    is independently deleted from the ontology before revert is called. When revert
+    is called, the entity is already gone, so the inverse operation should be skipped
+    and no change event should be recorded.
+
+    This tests the core fix for Issue #1: the revert service should not produce
+    false audit trail entries for operations that were never actually performed.
+    """
+    cls = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Animal",
+    )
+    ontology_repo.save_class(cls)
+
+    # Record the creation event for this class
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "cls-1",
+            "concept_scheme_id": "scheme-1",
+            "taxonomy_id": "tx-1",
+            "title": "Animal",
+        },
+        batch_run_id="run-1",
+    )
+
+    # Verify class exists
+    assert ontology_repo.get_class("cls-1") is not None
+
+    # Independently delete the entity (not via revert)
+    ontology_repo.delete_class("cls-1")
+    assert ontology_repo.get_class("cls-1") is None
+
+    # Now try to revert - the entity is already gone
+    events_reverted = revert_svc.revert("run-1")
+
+    # Assert that no events were reported as reverted
+    # (the inverse operation was not applied because the entity is gone)
+    assert events_reverted == 0
+
+    # Verify that no revert change event was recorded
+    # (this is the critical fix for Issue #1 - no false audit trail entry)
+    history = change_repo.get_changes(limit=None)
+    revert_events = [e for e in history.events if "_reverted_" in (e.change_reason or "")]
+    assert len(revert_events) == 0, "Should not record a revert event for skipped operation"

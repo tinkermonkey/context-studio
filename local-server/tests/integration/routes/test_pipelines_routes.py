@@ -1338,3 +1338,80 @@ class TestRevertEndpoint:
         assert "ValueError" not in detail
         assert "Traceback" not in detail
         assert ".py" not in detail
+
+    def test_revert_multi_run_batch_returns_422(
+        self, revert_client, pipeline_run_repo, batch_repo
+    ):
+        """POST /api/pipelines/runs/{run_id}/revert for run in multi-run batch returns 422."""
+        from domain.pipelines.entities import PipelineType
+
+        # Create a batch with multiple runs
+        batch_id = "batch-multi-1"
+
+        # Create first run in the batch
+        run1 = pipeline_run_repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Create second run in the same batch
+        run2 = pipeline_run_repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Verify both runs are in the same batch
+        batch_runs = pipeline_run_repo.list()
+        batch_run_ids = [r.batch_run_id for r in batch_runs]
+        assert batch_id in batch_run_ids
+        assert len([r for r in batch_runs if r.batch_run_id == batch_id]) == 2
+
+        # Try to revert the first run - should fail with 422 because batch has multiple runs
+        response = revert_client.post(
+            f"/api/pipelines/runs/{run1.id}/revert"
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        body = response.json()
+
+        # Verify error message is clear
+        assert "detail" in body
+        assert "multi" in body["detail"].lower() or "multiple" in body["detail"].lower()
+
+    def test_revert_single_run_batch_succeeds(
+        self, revert_client, pipeline_run_repo
+    ):
+        """POST /api/pipelines/runs/{run_id}/revert for run in single-run batch succeeds."""
+        from domain.pipelines.entities import PipelineType
+
+        # Create a batch with only one run
+        batch_id = "batch-single-1"
+
+        run = pipeline_run_repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Revert should succeed with 200
+        response = revert_client.post(
+            f"/api/pipelines/runs/{run.id}/revert"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+
+        # Verify response has expected structure
+        assert "run_id" in body
+        assert "events_reverted" in body
+        assert body["run_id"] == run.id
+        assert body["events_reverted"] == 0  # No events were recorded, so 0 reverted
