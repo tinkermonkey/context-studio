@@ -504,7 +504,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         user_prompt = (
             f"For these candidate classes, identify relationships and properties:\n\n"
             f"Classes: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text}\n\n"
+            f"Context: {state.normalized_text[:3000]}\n\n"
             "Return JSON:\n"
             "{\n"
             '  "relationships": [\n'
@@ -530,38 +530,44 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         try:
             parsed = json.loads(response.content)
-            if not isinstance(parsed, dict):
-                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
+            if isinstance(parsed, dict):
+                for rel in parsed.get("relationships", []):
+                    subject = rel.get("subject", "")
+                    obj = rel.get("object", "")
+                    if not subject or not obj:
+                        continue
+                    # Compose provenance from subject + object, not from the predicate string
+                    provenance = self._find_provenance(
+                        subject, state.source_text
+                    ) + self._find_provenance(obj, state.source_text)
+                    conn = CandidateConnection(
+                        subject_ref=subject,
+                        predicate=rel.get("predicate", ""),
+                        object_ref=obj,
+                        confidence=rel.get("confidence", 0.5),
+                        provenance=provenance,
+                    )
+                    connections.append(conn)
 
-            for rel in parsed.get("relationships", []):
-                subject = rel.get("subject", "")
-                obj = rel.get("object", "")
-                if not subject or not obj:
-                    continue
-                # Compose provenance from subject + object, not from the predicate string
-                provenance = self._find_provenance(
-                    subject, state.source_text
-                ) + self._find_provenance(obj, state.source_text)
-                conn = CandidateConnection(
-                    subject_ref=subject,
-                    predicate=rel.get("predicate", ""),
-                    object_ref=obj,
-                    confidence=rel.get("confidence", 0.5),
-                    provenance=provenance,
-                )
-                connections.append(conn)
-
-            for prop in parsed.get("properties", []):
-                provenance = self._find_provenance(prop.get("name", ""), state.source_text)
-                prop_def = CandidatePropertyDefinition(
-                    label=prop.get("name", ""),
-                    proposed_domain=prop.get("domain"),
-                    proposed_range=prop.get("range"),
-                    confidence=prop.get("confidence", 0.5),
-                    provenance=provenance,
-                )
-                properties.append(prop_def)
-        except (json.JSONDecodeError, AttributeError) as e:
+                for prop in parsed.get("properties", []):
+                    provenance = self._find_provenance(prop.get("name", ""), state.source_text)
+                    prop_def = CandidatePropertyDefinition(
+                        label=prop.get("name", ""),
+                        proposed_domain=prop.get("domain"),
+                        proposed_range=prop.get("range"),
+                        confidence=prop.get("confidence", 0.5),
+                        provenance=provenance,
+                    )
+                    properties.append(prop_def)
+            else:
+                warning = {
+                    "stage": "connection_proposal",
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
+                    "response_preview": response.content[:200],
+                    "fallback_action": "no connections extracted",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+        except json.JSONDecodeError as e:
             warning = {
                 "stage": "connection_proposal",
                 "error": f"JSON parse error: {str(e)}",
@@ -594,7 +600,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         user_prompt = (
             f"Check these terms for multiple senses:\n\n"
             f"Terms: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text}\n\n"
+            f"Context: {state.normalized_text[:3000]}\n\n"
             "Return JSON:\n"
             "{\n"
             '  "ambiguous_terms": [\n'
@@ -614,35 +620,41 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         disambiguated = list(state.candidate_classes)
         try:
             parsed = json.loads(response.content)
-            if not isinstance(parsed, dict):
-                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
+            if isinstance(parsed, dict):
+                for ambig in parsed.get("ambiguous_terms", []):
+                    term = ambig.get("term", "")
+                    senses = ambig.get("senses", [])
+                    rationale = ambig.get("rationale", "")
 
-            for ambig in parsed.get("ambiguous_terms", []):
-                term = ambig.get("term", "")
-                senses = ambig.get("senses", [])
-                rationale = ambig.get("rationale", "")
+                    original_idx = next((i for i, c in enumerate(disambiguated) if c.label == term), -1)
+                    if original_idx >= 0 and len(senses) > 1:
+                        original = disambiguated[original_idx]
+                        disambiguated_candidates = []
+                        for i, sense in enumerate(senses):
+                            new_label = f"{term} ({sense})" if sense else term
+                            candidate = CandidateClass(
+                                label=new_label,
+                                proposed_definition=original.proposed_definition,
+                                confidence=max(0.0, original.confidence - 0.1),
+                                provenance=original.provenance,
+                                disambiguation_rationale=f"Sense {i+1}: {rationale}",
+                            )
+                            disambiguated_candidates.append(candidate)
 
-                original_idx = next((i for i, c in enumerate(disambiguated) if c.label == term), -1)
-                if original_idx >= 0 and len(senses) > 1:
-                    original = disambiguated[original_idx]
-                    disambiguated_candidates = []
-                    for i, sense in enumerate(senses):
-                        new_label = f"{term} ({sense})" if sense else term
-                        candidate = CandidateClass(
-                            label=new_label,
-                            proposed_definition=original.proposed_definition,
-                            confidence=max(0.0, original.confidence - 0.1),
-                            provenance=original.provenance,
-                            disambiguation_rationale=f"Sense {i+1}: {rationale}",
+                        disambiguated = (
+                            disambiguated[:original_idx]
+                            + disambiguated_candidates
+                            + disambiguated[original_idx + 1 :]
                         )
-                        disambiguated_candidates.append(candidate)
-
-                    disambiguated = (
-                        disambiguated[:original_idx]
-                        + disambiguated_candidates
-                        + disambiguated[original_idx + 1 :]
-                    )
-        except (json.JSONDecodeError, AttributeError) as e:
+            else:
+                warning = {
+                    "stage": "disambiguation",
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
+                    "response_preview": response.content[:200],
+                    "fallback_action": "skipping disambiguation",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+        except json.JSONDecodeError as e:
             warning = {
                 "stage": "disambiguation",
                 "error": f"JSON parse error: {str(e)}",

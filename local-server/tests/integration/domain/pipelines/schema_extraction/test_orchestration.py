@@ -562,7 +562,7 @@ async def test_parse_warnings_connection_proposal_invalid_json():
     ]
     assert len(connection_warnings) > 0
     warning = connection_warnings[0]
-    assert "JSON parse error" in warning["error"]
+    assert "Expected dict" in warning["error"] or "JSON parse error" in warning["error"]
     assert warning["fallback_action"] == "no connections extracted"
 
     # Verify connections are empty but execution continues
