@@ -87,7 +87,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": str(e), "step": "call_llm"},
             )
-            return noop_state
+            raise
 
         # Step 3: Process (no-op)
         noop_state = replace(
@@ -101,7 +101,7 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
             "status": "completed",
             "message": "No-op pipeline completed successfully",
             "input_echo": noop_state.input_data,
-            "step_count": 3,
+            "step_count": len(steps_with_finalize),
             "steps": steps_with_finalize,
             "llm_model": llm_response.model,
             "llm_tokens_in": llm_response.tokens_in,
