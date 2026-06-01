@@ -1256,13 +1256,13 @@ class TestRevertEndpoint:
             configuration_version=1,
         )
 
-        # Record a change event with the run's ID
+        # Record a change event with the batch's ID
         change_repo.record_change(
             entity_id="cls-1",
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"id": "cls-1", "title": "Animal"},
-            batch_run_id=run.id,
+            batch_run_id=run.batch_run_id,
         )
 
         # Verify class exists
@@ -1317,7 +1317,7 @@ class TestRevertEndpoint:
             operation=ChangeOperation.UPDATE,
             new_state={"title": "Updated"},
             previous_state=None,  # Missing - this will cause an error
-            batch_run_id=run.id,
+            batch_run_id=run.batch_run_id,
         )
 
         # Try to revert - should get 500 with generic error message
