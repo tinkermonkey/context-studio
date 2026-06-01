@@ -74,8 +74,8 @@ class RevertService:
             if self._should_skip_revert(event, events):
                 continue
 
-            self._apply_inverse(event, batch_run_id)
-            reverted_count += 1
+            if self._apply_inverse(event, batch_run_id):
+                reverted_count += 1
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return reverted_count
@@ -103,29 +103,37 @@ class RevertService:
 
         return False
 
-    def _apply_inverse(self, event, batch_run_id: str) -> None:
-        """Apply the inverse operation for a change event."""
+    def _apply_inverse(self, event, batch_run_id: str) -> bool:
+        """
+        Apply the inverse operation for a change event.
+
+        Returns:
+            True if the inverse operation was actually applied, False if skipped due to missing entity
+        """
         entity_id = event.entity_id
         entity_type = self._normalize_entity_type(event.entity_type)
         operation = event.operation
 
         try:
+            operation_applied = False
             if operation == ChangeOperation.CREATE:
-                self._inverse_create(entity_id, entity_type)
+                operation_applied = self._inverse_create(entity_id, entity_type)
             elif operation == ChangeOperation.UPDATE:
-                self._inverse_update(entity_id, entity_type, event.previous_state)
+                operation_applied = self._inverse_update(entity_id, entity_type, event.previous_state)
             elif operation == ChangeOperation.DELETE:
-                self._inverse_delete(entity_id, entity_type, event.new_state)
+                operation_applied = self._inverse_delete(entity_id, entity_type, event.new_state)
 
-            self._change_repo.record_change(
-                entity_id=entity_id,
-                entity_type=event.entity_type,
-                operation=self._inverse_operation(operation),
-                new_state={},
-                previous_state=event.new_state,
-                change_reason=f"_reverted_from_{batch_run_id}",
-                batch_run_id=batch_run_id,
-            )
+            if operation_applied:
+                self._change_repo.record_change(
+                    entity_id=entity_id,
+                    entity_type=event.entity_type,
+                    operation=self._inverse_operation(operation),
+                    new_state={},
+                    previous_state=event.new_state,
+                    change_reason=f"_reverted_from_{batch_run_id}",
+                    batch_run_id=batch_run_id,
+                )
+            return operation_applied
         except Exception as exc:
             _logger.error(
                 f"Failed to revert event {event.id} for entity {entity_id}: {exc}",
@@ -133,39 +141,56 @@ class RevertService:
             )
             raise
 
-    def _inverse_create(self, entity_id: str, entity_type: str) -> None:
-        """Inverse of CREATE: delete the entity."""
+    def _inverse_create(self, entity_id: str, entity_type: str) -> bool:
+        """
+        Inverse of CREATE: delete the entity.
+
+        Returns:
+            True if the entity was found and deleted, False if entity no longer exists
+        """
         if entity_type == "taxonomy":
             tax = self._ontology_repo.get_taxonomy(entity_id)
             if tax:
                 self._ontology_repo.delete_taxonomy(entity_id)
+                return True
         elif entity_type == "concept_scheme":
             scheme = self._ontology_repo.get_concept_scheme(entity_id)
             if scheme:
                 self._ontology_repo.delete_concept_scheme(entity_id)
+                return True
         elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
                 self._ontology_repo.delete_class(entity_id)
+                return True
         elif entity_type == "individual":
             ind = self._ontology_repo.get_individual(entity_id)
             if ind:
                 self._ontology_repo.delete_individual(entity_id)
+                return True
         elif entity_type == "relationship":
             rel = self._ontology_repo.get_relationship(entity_id)
             if rel:
                 self._ontology_repo.delete_relationship(entity_id)
+                return True
         elif entity_type == "property_definition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._ontology_repo.delete_property_definition(entity_id)
+                return True
         else:
             raise ValueError(f"Unknown entity type for create revert: {entity_type}")
+        return False
 
     def _inverse_update(
         self, entity_id: str, entity_type: str, previous_state: Optional[dict]
-    ) -> None:
-        """Inverse of UPDATE: restore previous state."""
+    ) -> bool:
+        """
+        Inverse of UPDATE: restore previous state.
+
+        Returns:
+            True if the entity was found and restored, False if entity no longer exists
+        """
         if not previous_state:
             raise ValueError(
                 f"Cannot revert UPDATE for {entity_type} {entity_id}: "
@@ -177,38 +202,50 @@ class RevertService:
             if tax:
                 self._restore_entity_state(tax, previous_state)
                 self._ontology_repo.save_taxonomy(tax)
+                return True
         elif entity_type == "concept_scheme":
             scheme = self._ontology_repo.get_concept_scheme(entity_id)
             if scheme:
                 self._restore_entity_state(scheme, previous_state)
                 self._ontology_repo.save_concept_scheme(scheme)
+                return True
         elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
                 self._restore_entity_state(cls, previous_state)
                 self._ontology_repo.save_class(cls)
+                return True
         elif entity_type == "individual":
             ind = self._ontology_repo.get_individual(entity_id)
             if ind:
                 self._restore_entity_state(ind, previous_state)
                 self._ontology_repo.save_individual(ind)
+                return True
         elif entity_type == "relationship":
             rel = self._ontology_repo.get_relationship(entity_id)
             if rel:
                 self._restore_entity_state(rel, previous_state)
                 self._ontology_repo.save_relationship(rel)
+                return True
         elif entity_type == "property_definition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._restore_entity_state(prop, previous_state)
                 self._ontology_repo.save_property_definition(prop)
+                return True
         else:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
+        return False
 
     def _inverse_delete(
         self, entity_id: str, entity_type: str, new_state: dict
-    ) -> None:
-        """Inverse of DELETE: recreate the entity from new_state."""
+    ) -> bool:
+        """
+        Inverse of DELETE: recreate the entity from new_state.
+
+        Returns:
+            True if the entity was successfully recreated
+        """
         if not new_state:
             raise ValueError(
                 f"Cannot revert DELETE for {entity_type} {entity_id}: "
@@ -283,6 +320,7 @@ class RevertService:
                 self._ontology_repo.save_property_definition(prop)
             else:
                 raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
+            return True
         except Exception as exc:
             _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)
             raise

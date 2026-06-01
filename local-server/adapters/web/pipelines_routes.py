@@ -865,12 +865,15 @@ async def revert_pipeline_run(
     """
     Revert all changes made by a specific pipeline run.
 
-    Walks the change_events for the given run_id in reverse order and applies
+    Walks the change_events for the given run in reverse order and applies
     the inverse of each operation. This restores the ontology to its state
     before the run was applied.
 
     The operation is idempotent — calling revert twice produces the same state
     without error.
+
+    This endpoint only supports reverting runs from single-run batches. For multi-run
+    batches, use the batch revert endpoint instead.
 
     Args:
         run_id: ID of the pipeline run to revert
@@ -879,7 +882,7 @@ async def revert_pipeline_run(
         RevertRunResponse with count of events reverted
 
     Raises:
-        HTTPException: 404 if run not found, 500 for revert errors
+        HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -887,6 +890,15 @@ async def revert_pipeline_run(
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Pipeline run {run_id} not found",
+        )
+
+    batch_runs = repo.list_by_batch_id(run.batch_run_id)
+    if len(batch_runs.runs) > 1:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot revert single run from multi-run batch. "
+                   f"Batch {run.batch_run_id} contains {len(batch_runs.runs)} runs. "
+                   f"Use batch revert endpoint instead.",
         )
 
     revert_svc = request.app.state.revert_service
