@@ -29,9 +29,7 @@ class RevertService:
     Emits new change_events tagged with the originating batch_run_id for auditability.
     """
 
-    def __init__(
-        self, change_repo: ChangeRepository, ontology_repo: OntologyRepository
-    ) -> None:
+    def __init__(self, change_repo: ChangeRepository, ontology_repo: OntologyRepository) -> None:
         """
         Initialize the RevertService.
 
@@ -108,7 +106,7 @@ class RevertService:
         Apply the inverse operation for a change event.
 
         Returns:
-            True if the inverse operation was actually applied, False if skipped due to missing entity
+            True if applied, False if skipped due to missing entity
         """
         entity_id = event.entity_id
         entity_type = self._normalize_entity_type(event.entity_type)
@@ -119,7 +117,9 @@ class RevertService:
             if operation == ChangeOperation.CREATE:
                 operation_applied = self._inverse_create(entity_id, entity_type)
             elif operation == ChangeOperation.UPDATE:
-                operation_applied = self._inverse_update(entity_id, entity_type, event.previous_state)
+                operation_applied = self._inverse_update(
+                    entity_id, entity_type, event.previous_state
+                )
             elif operation == ChangeOperation.DELETE:
                 operation_applied = self._inverse_delete(entity_id, entity_type, event.new_state)
 
@@ -237,9 +237,7 @@ class RevertService:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
 
-    def _inverse_delete(
-        self, entity_id: str, entity_type: str, new_state: dict
-    ) -> bool:
+    def _inverse_delete(self, entity_id: str, entity_type: str, new_state: dict) -> bool:
         """
         Inverse of DELETE: recreate the entity from new_state.
 
@@ -334,9 +332,7 @@ class RevertService:
                 setattr(entity, key, value)
             except Exception as exc:
                 entity_type = type(entity).__name__
-                raise ValueError(
-                    f"Could not restore field {key} on {entity_type}: {exc}"
-                ) from exc
+                raise ValueError(f"Could not restore field {key} on {entity_type}: {exc}") from exc
 
     @staticmethod
     def _normalize_entity_type(entity_type: str) -> str:

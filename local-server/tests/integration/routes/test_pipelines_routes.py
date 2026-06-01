@@ -1359,7 +1359,7 @@ class TestRevertEndpoint:
         )
 
         # Create second run in the same batch
-        run2 = pipeline_run_repo.create(
+        pipeline_run_repo.create(
             batch_run_id=batch_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
