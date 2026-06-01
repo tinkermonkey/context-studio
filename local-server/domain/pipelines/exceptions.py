@@ -1,27 +1,36 @@
 """
-Exceptions for the Pipeline Management bounded context.
+Exception classes for the Pipeline Management domain.
+
+These exceptions represent domain-specific errors that may occur
+during pipeline operations.
 """
 
 
-class PipelineStorageError(Exception):
+class PipelineError(Exception):
+    """Base exception for all pipeline domain errors."""
+
+    pass
+
+
+class PipelineStorageError(PipelineError):
     """Raised when a database operation for pipeline runs fails."""
 
     pass
 
 
-class PipelineInputError(Exception):
+class PipelineInputError(PipelineError):
     """Raised when pipeline input is invalid or malformed."""
 
     pass
 
 
-class PipelineExternalServiceError(Exception):
+class PipelineExternalServiceError(PipelineError):
     """Raised when an external service fails (timeouts, connection errors)."""
 
     pass
 
 
-class PipelineExecutionError(Exception):
+class PipelineExecutionError(PipelineError):
     """Raised when internal orchestrator logic fails unexpectedly."""
 
     pass
