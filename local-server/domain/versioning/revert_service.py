@@ -295,7 +295,10 @@ class RevertService:
             try:
                 setattr(entity, key, value)
             except Exception as exc:
-                raise ValueError(f"Could not restore field {key} on {type(entity).__name__}: {exc}") from exc
+                entity_type = type(entity).__name__
+                raise ValueError(
+                    f"Could not restore field {key} on {entity_type}: {exc}"
+                ) from exc
 
     @staticmethod
     def _normalize_entity_type(entity_type: str) -> str:
