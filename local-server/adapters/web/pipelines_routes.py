@@ -437,6 +437,9 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
+            # Update batch timestamps and status when run fails
+            batch_repo.update_completed_at(batch_id)
+            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
@@ -445,6 +448,9 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(domain_exc)
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
+            # Update batch timestamps and status when run fails
+            batch_repo.update_completed_at(batch_id)
+            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
@@ -471,6 +477,9 @@ async def run_pipeline(
         repo.update_status(run_id, result_state.current_status)
         # Update batch completed_at timestamp since this single-run batch is now complete
         batch_repo.update_completed_at(batch_id)
+        # Compute and update batch status from its runs
+        new_batch_status = batch_repo.compute_aggregate_status(batch_id)
+        batch_repo.update_status(batch_id, new_batch_status)
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
