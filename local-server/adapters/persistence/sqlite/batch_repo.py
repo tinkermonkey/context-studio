@@ -286,12 +286,17 @@ class BatchRepository:
         """
         Compute batch status from child pipeline runs.
 
+        Batch status priority (when all runs are terminal):
+        1. COMPLETED: At least one run is COMPLETED
+        2. CANCELLED: No runs COMPLETED, but at least one CANCELLED
+        3. FAILED: All runs are FAILED
+
         Batch status transitions:
         - PENDING: No child runs started yet, or all runs still PENDING
         - RUNNING: At least one run is RUNNING
-        - COMPLETED: All runs are terminal (COMPLETED or FAILED) and at least one COMPLETED
-        - FAILED: All runs are terminal and all FAILED
-        - CANCELLED: User issued cancel command explicitly (stored status)
+        - COMPLETED: All runs terminal, at least one COMPLETED (highest priority)
+        - CANCELLED: All runs terminal, no COMPLETED, at least one CANCELLED
+        - FAILED: All runs terminal, all FAILED (lowest priority)
 
         Args:
             batch_id: Batch ID

@@ -404,6 +404,8 @@ async def run_pipeline(
         config_registry.mark_version_referenced(
             ptype, request_body.implementation_id, config_version.config_ref, config_version.version
         )
+        # Update batch started_at timestamp
+        batch_repo.update_started_at(batch_id)
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -467,6 +469,8 @@ async def run_pipeline(
             llm_metadata={},
         )
         repo.update_status(run_id, result_state.current_status)
+        # Update batch completed_at timestamp since this single-run batch is now complete
+        batch_repo.update_completed_at(batch_id)
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -1183,6 +1187,11 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
             if run.status in (PipelineRunStatus.CANCELLED, PipelineRunStatus.FAILED):
                 pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
                 resumed_count += 1
+
+        # Recompute batch status based on child runs
+        if resumed_count > 0:
+            new_status = batch_repo.compute_aggregate_status(batch_id)
+            batch_repo.update_status(batch_id, new_status)
 
         run_counts = batch_repo.get_run_counts(batch_id)
         updated_batch = batch_repo.get(batch_id)
