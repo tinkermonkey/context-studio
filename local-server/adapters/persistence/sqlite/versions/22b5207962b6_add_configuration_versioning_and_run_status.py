@@ -18,11 +18,11 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         'pipeline_runs',
-        sa.Column('configuration_slug', sa.String(length=255), nullable=False)
+        sa.Column('configuration_slug', sa.String(length=255), nullable=False, server_default='')
     )
     op.add_column(
         'pipeline_runs',
-        sa.Column('configuration_version', sa.Integer(), nullable=False)
+        sa.Column('configuration_version', sa.Integer(), nullable=False, server_default='1')
     )
     op.add_column(
         'pipeline_runs',
