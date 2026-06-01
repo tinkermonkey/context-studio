@@ -16,7 +16,11 @@ from typing import Any
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineRunStatusWriter,
+    PipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
@@ -51,6 +55,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         llm_provider: LLMProvider,
         traversal: SchemaNeighborhoodTraversal,
         config: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the connection refinement orchestrator.
@@ -59,8 +65,10 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             llm_provider: LLM provider for proposing deltas
             traversal: SchemaNeighborhoodTraversal for context assembly
             config: Configuration dict with model, temperature, etc.
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._traversal = traversal
         self._config = config or {}
 
@@ -80,6 +88,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         if not isinstance(state, ConnectionRefinementState):
             state = ConnectionRefinementState(
                 run_id=state.run_id,

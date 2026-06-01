@@ -1040,6 +1040,10 @@ class TestRunStatusLifecycle:
         # Create a mock orchestrator that signals when it starts
         async def blocking_orchestrator_execute(state):
             """Mock orchestrator that signals when execution begins."""
+            # Simulate the orchestrator writing RUNNING status (like real orchestrators do)
+            from datetime import datetime, timezone
+            repo.update_running_status(state.run_id, datetime.now(timezone.utc))
+
             # Signal that execution has started
             orchestrator_started_event.set()
             # Wait for test to verify mid-execution state, then complete

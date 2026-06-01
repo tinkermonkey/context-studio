@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Protocol
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.ports import LLMProvider, LLMResponse
@@ -43,6 +44,14 @@ class PipelineState:
     parse_warnings: list[dict[str, Any]] = field(default_factory=list)
 
 
+class PipelineRunStatusWriter(Protocol):
+    """Port for writing pipeline run status to persistence."""
+
+    def update_running_status(self, run_id: str, started_at: datetime) -> bool:
+        """Update run status to RUNNING with started_at timestamp."""
+        ...
+
+
 class PipelineOrchestrator(ABC):
     """
     Abstract base for pipeline orchestration implementations.
@@ -51,14 +60,23 @@ class PipelineOrchestrator(ABC):
     and implement the execute method.
     """
 
-    def __init__(self, llm_provider: LLMProvider) -> None:
+    def __init__(
+        self,
+        llm_provider: LLMProvider,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
+    ) -> None:
         """
-        Initialize orchestrator with LLM provider.
+        Initialize orchestrator with LLM provider and optional status writer.
 
         Args:
             llm_provider: Port implementation for LLM completions
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
         self._llm_provider = llm_provider
+        self._run_id = run_id
+        self._status_writer = status_writer
 
     def build_graph(self) -> None:
         """
@@ -68,6 +86,22 @@ class PipelineOrchestrator(ABC):
         and in orchestrators that do not use a pre-compiled graph.
         """
         return None
+
+    def _write_running_status(self) -> None:
+        """
+        Write RUNNING status to persistence.
+
+        This should be called at the start of execute() to ensure that the
+        orchestrator—not the caller—is responsible for marking the run as RUNNING.
+        This ensures that the status is written regardless of how the orchestrator
+        is invoked (HTTP route, background worker, batch runner, etc.).
+
+        Only writes if both run_id and status_writer are available.
+        """
+        if self._run_id and self._status_writer:
+            self._status_writer.update_running_status(
+                self._run_id, datetime.now(timezone.utc)
+            )
 
     @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:

@@ -18,7 +18,11 @@ from typing import Any
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineRunStatusWriter,
+    PipelineState,
+)
 from domain.pipelines.ports import ExtractionPort, LLMProvider
 
 _logger = logging.getLogger(__name__)
@@ -62,6 +66,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         self,
         llm_provider: LLMProvider,
         extraction_service: ExtractionPort,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -69,8 +75,10 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         Args:
             llm_provider: Port implementation for LLM completions
             extraction_service: Port implementation for extraction logic
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -91,6 +99,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If extraction fails
         """
+        self._write_running_status()
+
         # Cast to subclass for type checking
         if not isinstance(state, IndividualExtractionState):
             state = IndividualExtractionState(

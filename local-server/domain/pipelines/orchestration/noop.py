@@ -11,10 +11,14 @@ Exercises:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import cast
+from typing import Any, cast
 
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineRunStatusWriter,
+    PipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 
 
@@ -41,9 +45,14 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
     3. Finalize — populate result and metrics
     """
 
-    def __init__(self, llm_provider: LLMProvider) -> None:
+    def __init__(
+        self,
+        llm_provider: LLMProvider,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
+    ) -> None:
         """Initialize no-op orchestrator."""
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -61,6 +70,8 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         Returns:
             Updated state with result and metrics
         """
+        self._write_running_status()
+
         noop_state = cast(NoOpPipelineState, state)
         # Step 1: Initialize
         noop_state = replace(

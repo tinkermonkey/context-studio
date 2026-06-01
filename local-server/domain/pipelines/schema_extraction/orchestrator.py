@@ -24,7 +24,11 @@ from typing import Any, cast
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineRunStatusWriter,
+    PipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)
@@ -122,15 +126,23 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     Transitions are deterministic (no branching on LLM output).
     """
 
-    def __init__(self, llm_provider: LLMProvider, ontology_repo=None) -> None:
+    def __init__(
+        self,
+        llm_provider: LLMProvider,
+        ontology_repo=None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
+    ) -> None:
         """
         Initialize orchestrator with LLM provider and optional ontology repo.
 
         Args:
             llm_provider: LLM provider for completions
             ontology_repo: Optional OntologyRepository for existing-schema classification
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -147,6 +159,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required inputs are missing or invalid
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         schema_state = cast(SchemaExtractionState, state)
 
         # Extract documents from input

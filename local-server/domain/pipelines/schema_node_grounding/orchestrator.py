@@ -14,7 +14,11 @@ from typing import Any
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineRunStatusWriter,
+    PipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.schema_node_grounding.ports import GroundingAdapterPort
 from domain.pipelines.schema_node_grounding.scoring import (
@@ -62,6 +66,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         grounding_adapter: GroundingAdapterPort,
         scorer: GroundingScorer,
         config: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the grounding orchestrator.
@@ -71,8 +77,10 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             grounding_adapter: Adapter for external source queries
             scorer: GroundingScorer instance for combining scores
             config: Configuration dict (top_n, weights, type preferences, etc.)
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._grounding_adapter = grounding_adapter
         self._scorer = scorer
         self._config = config or {}
@@ -93,6 +101,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         if not isinstance(state, SchemaGroundingState):
             state = SchemaGroundingState(
                 run_id=state.run_id,

@@ -364,29 +364,6 @@ async def run_pipeline(
     # Extract input data from request body (now includes type-specific fields)
     input_data = request_body.model_dump()
 
-    # Prepare services for orchestrator instantiation
-    services = {
-        "extraction_service": getattr(request.app.state, "extraction_service", None),
-        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
-        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
-        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
-        "scorer": getattr(request.app.state, "grounding_scorer", None),
-        "grounding_config": _get_grounding_config(config_version.config),
-        "refinement_config": config_version.config,
-    }
-
-    # Instantiate orchestrator with dependencies (validates service dependencies)
-    try:
-        orchestrator = create_orchestrator(
-            orchestrator_class=impl_class,
-            llm_provider=llm_provider,
-            services=services,
-        )
-    except ValueError as e:
-        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message) from e
-
     # Persist pipeline run to database only after validation succeeds
     specific_data = build_run_specific_data(ptype, input_data)
     try:
@@ -410,6 +387,31 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
+    # Prepare services for orchestrator instantiation, including status writer
+    services = {
+        "extraction_service": getattr(request.app.state, "extraction_service", None),
+        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
+        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
+        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
+        "scorer": getattr(request.app.state, "grounding_scorer", None),
+        "grounding_config": _get_grounding_config(config_version.config),
+        "refinement_config": config_version.config,
+        "run_id": run_id,
+        "status_writer": repo,
+    }
+
+    # Instantiate orchestrator with dependencies (validates service dependencies)
+    try:
+        orchestrator = create_orchestrator(
+            orchestrator_class=impl_class,
+            llm_provider=llm_provider,
+            services=services,
+        )
+    except ValueError as e:
+        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
     # Create initial state for execution with the actual run ID
     state = create_pipeline_state(
         run_id=run_id,
@@ -417,13 +419,6 @@ async def run_pipeline(
         input_data=input_data,
         llm_provider=llm_provider,
     )
-
-    # Write RUNNING status and started_at before invoking orchestrator
-    try:
-        repo.update_running_status(run_id, datetime.now(timezone.utc))
-    except PipelineStorageError as e:
-        status_code, message = _handle_domain_error(e)
-        raise HTTPException(status_code=status_code, detail=message) from e
 
     # Execute the pipeline
     try:
