@@ -7,9 +7,29 @@ Provides `run_pipeline_against_fixture`: a helper that:
 4. Reports diffs in a structured way
 """
 
+from dataclasses import dataclass, field
 from typing import Any
 
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+
+
+@dataclass
+class OutputDiff:
+    """Structured comparison result between actual and expected outputs."""
+
+    matches: bool = True
+    missing_keys: list[str] = field(default_factory=list)
+    extra_keys: list[str] = field(default_factory=list)
+    mismatched_values: list[dict[str, Any]] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dict for backward compatibility."""
+        return {
+            "matches": self.matches,
+            "missing_keys": self.missing_keys,
+            "extra_keys": self.extra_keys,
+            "mismatched_values": self.mismatched_values,
+        }
 
 
 def compare_output(actual: dict[str, Any], expected: dict[str, Any]) -> dict[str, Any]:
@@ -24,39 +44,34 @@ def compare_output(actual: dict[str, Any], expected: dict[str, Any]) -> dict[str
         "mismatched_values": list of dicts with key, expected, actual,
     }
     """
-    diff = {
-        "matches": True,
-        "missing_keys": [],
-        "extra_keys": [],
-        "mismatched_values": [],
-    }
+    diff = OutputDiff()
 
     # Check for missing keys in actual
     for key in expected:
         if key not in actual:
-            diff["missing_keys"].append(key)
-            diff["matches"] = False
+            diff.missing_keys.append(key)
+            diff.matches = False
 
     # Check for extra keys in actual
     for key in actual:
         if key not in expected:
-            diff["extra_keys"].append(key)
-            diff["matches"] = False
+            diff.extra_keys.append(key)
+            diff.matches = False
 
     # Check for mismatched values in keys that exist in both
     for key in expected:
         if key in actual:
             if actual[key] != expected[key]:
-                diff["mismatched_values"].append(
+                diff.mismatched_values.append(
                     {
                         "key": key,
                         "expected": expected[key],
                         "actual": actual[key],
                     }
                 )
-                diff["matches"] = False
+                diff.matches = False
 
-    return diff
+    return diff.to_dict()
 
 
 async def run_pipeline_against_fixture(
@@ -81,6 +96,7 @@ async def run_pipeline_against_fixture(
     from uuid import uuid4
 
     from domain.pipelines.entities import PipelineType
+    from domain.pipelines.orchestration.base import PipelineState
     from domain.pipelines.orchestration.noop import NoOpPipelineState
 
     # Load fixture
@@ -88,6 +104,7 @@ async def run_pipeline_against_fixture(
     expected_output = load_expected_output(pipeline_type, scenario)
 
     # Create state based on pipeline type
+    state: PipelineState
     if pipeline_type == "no_op":
         state = NoOpPipelineState(
             run_id=str(uuid4()),
@@ -97,8 +114,6 @@ async def run_pipeline_against_fixture(
     else:
         # For other pipeline types, use appropriate state class
         # This will be extended per-pipeline-type
-        from domain.pipelines.orchestration.base import PipelineState
-
         state = PipelineState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType(pipeline_type),

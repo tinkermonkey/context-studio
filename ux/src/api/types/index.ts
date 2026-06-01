@@ -1531,8 +1531,10 @@ export interface paths {
      *     - individual_extraction: requires text and ontology_id
      *     - schema_extraction: requires documents, optional scope
      *     - schema_node_grounding: requires nodes and sources
-     *     - schema_node_definition_refinement: requires nodes, optional context
-     *     - schema_node_connection_refinement: requires edges, optional strategy
+     *     - schema_node_definition_refinement: requires node_id and
+     *       current_definition, optional groundings and extraction_usages
+     *     - schema_node_connection_refinement: requires scope_id and
+     *       current_connections, optional groundings and extraction_usages
      *
      *     Creates a pipeline run, executes it with the registered implementation,
      *     and returns the run with execution results.
@@ -1698,6 +1700,192 @@ export interface paths {
      *         HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params
      */
     post: operations["apply_pipeline_run_api_pipelines_runs__run_id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/revert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revert Pipeline Run
+     * @description Revert all changes made by a specific pipeline run.
+     *
+     *     Walks the change_events for the given run_id in reverse order and applies
+     *     the inverse of each operation. This restores the ontology to its state
+     *     before the run was applied.
+     *
+     *     The operation is idempotent — calling revert twice produces the same state
+     *     without error.
+     *
+     *     Args:
+     *         run_id: ID of the pipeline run to revert
+     *
+     *     Returns:
+     *         RevertRunResponse with count of events reverted
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found, 500 for revert errors
+     */
+    post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Batch
+     * @description Create a new batch.
+     *
+     *     Args:
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Batch info with id and status
+     *
+     *     Raises:
+     *         HTTPException: 500 for creation errors
+     */
+    post: operations["create_batch_api_pipelines_batches_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Batch
+     * @description Get batch info and aggregate status over child runs.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Batch info including aggregate status
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    get: operations["get_batch_api_pipelines_batches__batch_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Enqueue Batch Runs
+     * @description Enqueue multiple runs in a batch.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request_body: Contains 'runs' list with pipeline type and config
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of created run IDs
+     *
+     *     Raises:
+     *         HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors
+     */
+    post: operations["enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Batch Runs
+     * @description Cancel all PENDING runs in a batch.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Count of cancelled runs
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    post: operations["cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resume Batch Runs
+     * @description Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Count of resumed runs
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    post: operations["resume_batch_runs_api_pipelines_batches__batch_id__resume_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3292,6 +3480,12 @@ export interface components {
        */
       classes_created: number;
       /**
+       * Classes Updated
+       * @description Class entities updated
+       * @default 0
+       */
+      classes_updated: number;
+      /**
        * Classes Skipped
        * @description Class candidates skipped (already exist)
        * @default 0
@@ -3316,6 +3510,18 @@ export interface components {
        */
       relationships_created: number;
       /**
+       * Relationships Removed
+       * @description Relationship entities removed
+       * @default 0
+       */
+      relationships_removed: number;
+      /**
+       * Relationships Modified
+       * @description Relationship entities modified
+       * @default 0
+       */
+      relationships_modified: number;
+      /**
        * Relationships Skipped
        * @description Relationship candidates skipped (already exist or unresolvable)
        * @default 0
@@ -3333,6 +3539,43 @@ export interface components {
        * @default 0
        */
       individuals_skipped: number;
+      /**
+       * External References Created
+       * @description External references added to classes
+       * @default 0
+       */
+      external_references_created: number;
+      /**
+       * External References Skipped
+       * @description External references skipped (already exist)
+       * @default 0
+       */
+      external_references_skipped: number;
+      /**
+       * Created Class Ids
+       * @description IDs of created classes
+       */
+      created_class_ids?: string[];
+      /**
+       * Created Individual Ids
+       * @description IDs of created individuals
+       */
+      created_individual_ids?: string[];
+      /**
+       * Created Relationship Ids
+       * @description IDs of created relationships
+       */
+      created_relationship_ids?: string[];
+      /**
+       * Created Property Definition Ids
+       * @description IDs of created property definitions
+       */
+      created_property_definition_ids?: string[];
+      /**
+       * Created External Reference Ids
+       * @description URIs of created external references
+       */
+      created_external_reference_ids?: string[];
     };
     /**
      * AutoResolveConflictsRequest
@@ -3413,6 +3656,51 @@ export interface components {
         [key: string]: number;
       };
     };
+    /**
+     * BatchResponse
+     * @description Response containing batch information.
+     */
+    BatchResponse: {
+      /**
+       * Id
+       * @description Batch UUID
+       */
+      id: string;
+      /**
+       * Status
+       * @description Status: pending, running, completed, failed, or cancelled
+       */
+      status: string;
+      /**
+       * Created At
+       * Format: date-time
+       * @description UTC timestamp of batch creation
+       */
+      created_at: string;
+      /**
+       * Started At
+       * @description UTC timestamp when batch started
+       */
+      started_at?: string | null;
+      /**
+       * Completed At
+       * @description UTC timestamp when batch completed
+       */
+      completed_at?: string | null;
+      /**
+       * Last Updated
+       * Format: date-time
+       * @description UTC timestamp of last update
+       */
+      last_updated: string;
+      /**
+       * Run Count
+       * @description Total number of runs in batch
+       */
+      run_count: number;
+      /** @description Breakdown of runs by status */
+      run_counts: components["schemas"]["RunCountsResponse"];
+    };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
       /**
@@ -3436,6 +3724,29 @@ export interface components {
        * @description JSON-encoded conflict resolutions to apply on commit
        */
       resolutions?: string | null;
+    };
+    /**
+     * CancelBatchResponse
+     * @description Response from batch cancel operation.
+     */
+    CancelBatchResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Cancelled Count
+       * @description Number of runs cancelled
+       */
+      cancelled_count: number;
+      /**
+       * Status
+       * @description Batch status after operation
+       */
+      status: string;
+      /** @description Run counts after operation */
+      run_counts: components["schemas"]["RunCountsResponse"];
     };
     /**
      * CandidateResponse
@@ -4250,6 +4561,45 @@ export interface components {
        * @description Number of external references attached
        */
       external_references: number;
+    };
+    /**
+     * EnqueueBatchRunsRequest
+     * @description Request to enqueue multiple runs in a batch.
+     */
+    EnqueueBatchRunsRequest: {
+      /**
+       * Runs
+       * @description Run specs to enqueue
+       */
+      runs: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Idempotency Key
+       * @description Optional idempotency key for replay
+       */
+      idempotency_key?: string | null;
+    };
+    /**
+     * EnqueueBatchRunsResponse
+     * @description Response from batch enqueue operation.
+     */
+    EnqueueBatchRunsResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Run Ids
+       * @description IDs of created runs
+       */
+      run_ids: string[];
+      /**
+       * Run Count
+       * @description Total runs now in batch
+       */
+      run_count: number;
     };
     /**
      * EnrichFromReferencesRequest
@@ -5419,6 +5769,16 @@ export interface components {
        */
       configuration_ref: string;
       /**
+       * Configuration Slug
+       * @description Configuration slug
+       */
+      configuration_slug: string;
+      /**
+       * Configuration Version
+       * @description Configuration version
+       */
+      configuration_version: number;
+      /**
        * Input Summary
        * @description Input metadata
        */
@@ -5454,6 +5814,16 @@ export interface components {
        * @description Last update timestamp (reserved for future use)
        */
       updated_at?: string | null;
+      /**
+       * Started At
+       * @description Timestamp when run transitioned to RUNNING
+       */
+      started_at?: string | null;
+      /**
+       * Failure Reason
+       * @description Failure reason if status=FAILED
+       */
+      failure_reason?: string | null;
     };
     /**
      * PipelineTypeResponse
@@ -5956,6 +6326,76 @@ export interface components {
           [key: string]: unknown;
         };
       };
+    };
+    /**
+     * ResumeBatchResponse
+     * @description Response from batch resume operation.
+     */
+    ResumeBatchResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Resumed Count
+       * @description Number of runs resumed
+       */
+      resumed_count: number;
+      /**
+       * Status
+       * @description Batch status after operation
+       */
+      status: string;
+      /** @description Run counts after operation */
+      run_counts: components["schemas"]["RunCountsResponse"];
+    };
+    /**
+     * RevertRunResponse
+     * @description Response from reverting a pipeline run.
+     */
+    RevertRunResponse: {
+      /**
+       * Run Id
+       * @description ID of the reverted pipeline run
+       */
+      run_id: string;
+      /**
+       * Events Reverted
+       * @description Number of change events reverted
+       */
+      events_reverted: number;
+    };
+    /**
+     * RunCountsResponse
+     * @description Response containing run counts by status.
+     */
+    RunCountsResponse: {
+      /**
+       * Pending
+       * @description Number of pending runs
+       */
+      pending: number;
+      /**
+       * Running
+       * @description Number of running runs
+       */
+      running: number;
+      /**
+       * Completed
+       * @description Number of completed runs
+       */
+      completed: number;
+      /**
+       * Failed
+       * @description Number of failed runs
+       */
+      failed: number;
+      /**
+       * Cancelled
+       * @description Number of cancelled runs
+       */
+      cancelled: number;
     };
     /**
      * SPARQLRequest
@@ -8619,6 +9059,185 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ApplyRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  revert_pipeline_run_api_pipelines_runs__run_id__revert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RevertRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_batch_api_pipelines_batches_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchResponse"];
+        };
+      };
+    };
+  };
+  get_batch_api_pipelines_batches__batch_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EnqueueBatchRunsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnqueueBatchRunsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CancelBatchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  resume_batch_runs_api_pipelines_batches__batch_id__resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResumeBatchResponse"];
         };
       };
       /** @description Validation Error */
