@@ -1397,39 +1397,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/extraction/extract": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Extract Triples
-     * @description Extract RDF triples from text scoped to an ontology.
-     *
-     *     This endpoint accepts text and an ontology ID, then returns extracted RDF triples
-     *     with subject-predicate-object structure for knowledge graph construction.
-     *
-     *     Args:
-     *         request: ExtractTripleRequest with text, ontology_id, and options
-     *         service: ExtractionService from dependency injection
-     *
-     *     Returns:
-     *         ExtractTripleResponse containing extracted triples, warnings, and metadata
-     *
-     *     Raises:
-     *         HTTPException: 400 for invalid input, 422 for validation errors, 500 for internal errors
-     */
-    post: operations["extract_triples_api_extraction_extract_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/pipelines/types": {
     parameters: {
       query?: never;
@@ -4716,52 +4683,6 @@ export interface components {
       text: string;
     };
     /**
-     * ExtractTripleRequest
-     * @description Request to extract RDF triples from text scoped to an ontology.
-     */
-    ExtractTripleRequest: {
-      /**
-       * Text
-       * @description Text to extract triples from
-       */
-      text: string;
-      /**
-       * Ontology Id
-       * @description ID of the ontology for scoping extraction
-       */
-      ontology_id: string;
-      /**
-       * Options
-       * @description Optional extraction options (model, temperature, max_tokens)
-       */
-      options?: {
-        [key: string]: unknown;
-      } | null;
-    };
-    /**
-     * ExtractTripleResponse
-     * @description Response containing extracted RDF triples.
-     */
-    ExtractTripleResponse: {
-      /**
-       * Triples
-       * @description Extracted RDF triples
-       */
-      triples?: components["schemas"]["Triple"][];
-      /**
-       * Warnings
-       * @description Any warnings encountered during extraction
-       */
-      warnings?: string[];
-      /**
-       * Metadata
-       * @description Extraction metadata (model, tokens_used, duration_ms)
-       */
-      metadata?: {
-        [key: string]: unknown;
-      };
-    };
-    /**
      * ExtractedEntitySchema
      * @description Response containing extracted entity data.
      */
@@ -6784,25 +6705,6 @@ export interface components {
       color?: string | null;
     };
     /**
-     * Triple
-     * @description Represents an RDF triple (subject-predicate-object).
-     */
-    Triple: {
-      /** @description Subject of the triple */
-      subject: components["schemas"]["TripleNode"];
-      /** @description Predicate (relationship) of the triple */
-      predicate: components["schemas"]["TriplePredicate"];
-      /** @description Object of the triple */
-      object: components["schemas"]["TripleNode"];
-      /**
-       * Confidence
-       * @description Confidence score from 0.0 to 1.0
-       */
-      confidence: number;
-      /** @description Provenance information */
-      provenance: components["schemas"]["TripleProvenance"];
-    };
-    /**
      * TripleCountResponse
      * @description Response containing RDF triple count.
      */
@@ -6812,74 +6714,6 @@ export interface components {
        * @description Number of RDF triples in the graph
        */
       count: number;
-    };
-    /**
-     * TripleNode
-     * @description Represents a node (subject or object) in an RDF triple.
-     */
-    TripleNode: {
-      /**
-       * Kind
-       * @description Node kind: 'individual', 'class', or 'literal'
-       */
-      kind: string;
-      /**
-       * Id
-       * @description Unique identifier (required for non-literals)
-       */
-      id?: string | null;
-      /**
-       * Label
-       * @description Human-readable label
-       */
-      label?: string | null;
-      /**
-       * Value
-       * @description Value for literal nodes
-       */
-      value?: string | null;
-      /**
-       * Datatype
-       * @description Optional datatype for literal values
-       */
-      datatype?: string | null;
-    };
-    /**
-     * TriplePredicate
-     * @description Represents the predicate (relationship) in an RDF triple.
-     */
-    TriplePredicate: {
-      /**
-       * Property Definition Id
-       * @description ID of the property definition
-       */
-      property_definition_id?: string | null;
-      /**
-       * Label
-       * @description Human-readable label for the relationship
-       */
-      label: string;
-    };
-    /**
-     * TripleProvenance
-     * @description Provenance information for where a triple was extracted from.
-     */
-    TripleProvenance: {
-      /**
-       * Text Offset Start
-       * @description Start offset in source text
-       */
-      text_offset_start: number;
-      /**
-       * Text Offset End
-       * @description End offset in source text
-       */
-      text_offset_end: number;
-      /**
-       * Raw
-       * @description Raw text extracted from source
-       */
-      raw: string;
     };
     /**
      * TripleResponse
@@ -8762,39 +8596,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExtractionResultSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  extract_triples_api_extraction_extract_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ExtractTripleRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExtractTripleResponse"];
         };
       };
       /** @description Validation Error */
