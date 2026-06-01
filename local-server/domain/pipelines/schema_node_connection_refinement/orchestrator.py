@@ -114,7 +114,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             try:
                 neighborhood = self._traversal.get_class_neighborhood(scope_id)
             except ValueError as exc:
-                raise PipelineInputError(f"Scope with id '{scope_id}' not found or invalid") from exc
+                raise PipelineInputError(
+                    f"Scope with id '{scope_id}' not found or invalid"
+                ) from exc
             state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
@@ -164,7 +166,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": "Connection refinement encountered an unexpected error"},
             )
-            raise PipelineExecutionError("Connection refinement encountered an unexpected error") from exc
+            raise PipelineExecutionError(
+                "Connection refinement encountered an unexpected error"
+            ) from exc
 
         return state
 

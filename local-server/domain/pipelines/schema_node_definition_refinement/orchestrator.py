@@ -160,7 +160,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": "Definition refinement encountered an unexpected error"},
             )
-            raise PipelineExecutionError("Definition refinement encountered an unexpected error") from exc
+            raise PipelineExecutionError(
+                "Definition refinement encountered an unexpected error"
+            ) from exc
 
         return state
 
