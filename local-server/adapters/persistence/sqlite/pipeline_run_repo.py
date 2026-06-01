@@ -408,6 +408,9 @@ class PipelineRepository:
         """
         Update a pipeline run's status.
 
+        When status is set to PENDING, failure_reason is cleared to maintain
+        the invariant that PENDING status requires failure_reason to be None.
+
         Args:
             run_id: Pipeline run ID
             status: New status
@@ -424,6 +427,8 @@ class PipelineRepository:
             if not orm_obj:
                 return False
             orm_obj.status = status.value  # type: ignore[assignment]
+            if status == PipelineRunStatus.PENDING:
+                orm_obj.failure_reason = None  # type: ignore[assignment]
             session.flush()
             session.commit()
             logger.info(f"Updated pipeline run status: {run_id} → {status.value}")

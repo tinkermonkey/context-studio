@@ -10,6 +10,8 @@ Tests verify:
 6. Proper status transitions through the batch lifecycle
 """
 
+from uuid import uuid4
+
 from fastapi import status
 
 from domain.pipelines.entities import PipelineRunStatus
@@ -359,3 +361,83 @@ class TestBatchLifecycle:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid pipeline type" in response.json()["detail"]
+
+    def test_resume_batch_clears_failure_reason(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """Resume operation clears failure_reason when resuming FAILED runs."""
+        # Create a batch and enqueue runs
+        create_response = client.post("/api/pipelines/batches")
+        batch_id = create_response.json()["id"]
+
+        enqueue_response = client.post(
+            f"/api/pipelines/batches/{batch_id}/runs",
+            json={
+                "runs": [
+                    {
+                        "pipeline_type": "no_op",
+                        "implementation_id": "default",
+                        "configuration_ref": "noop-default",
+                    }
+                ]
+            },
+        )
+        run_id = enqueue_response.json()["run_ids"][0]
+
+        # Set run to FAILED with failure_reason
+        pipeline_run_repo.update_failure_info(run_id, "Test failure reason")
+        run = pipeline_run_repo.get(run_id)
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == "Test failure reason"
+
+        # Resume the batch
+        response = client.post(f"/api/pipelines/batches/{batch_id}/resume")
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify status is PENDING and failure_reason is cleared
+        run = pipeline_run_repo.get(run_id)
+        assert run.status == PipelineRunStatus.PENDING
+        assert run.failure_reason is None
+
+    def test_enqueue_batch_cannot_override_protected_fields(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """Enqueue batch blocks attempts to override protected fields via specific_data."""
+        # Create a batch
+        create_response = client.post("/api/pipelines/batches")
+        batch_id = create_response.json()["id"]
+
+        # Try to enqueue with malicious specific_data that attempts to override id and status
+        # Note: specific_data is ignored for no_op pipeline, so we're testing that the
+        # build_run_specific_data() validates and filters it properly
+        malicious_run_data = {
+            "pipeline_type": "no_op",
+            "implementation_id": "default",
+            "configuration_ref": "noop-default",
+            "specific_data": {
+                "id": "evil-run-id",
+                "status": "completed",
+                "batch_id": "evil-batch-id",
+            }
+        }
+
+        response = client.post(
+            f"/api/pipelines/batches/{batch_id}/runs",
+            json={"runs": [malicious_run_data]},
+        )
+
+        # Should succeed in creating the run
+        assert response.status_code == status.HTTP_201_CREATED
+        run_id = response.json()["run_ids"][0]
+
+        # Verify the run has the correct values, not the malicious ones
+        run = pipeline_run_repo.get(run_id)
+        assert run is not None
+        # The run should have the actual UUID, not "evil-run-id"
+        assert run.id == run_id
+        assert run.id != "evil-run-id"
+        # The run should be PENDING, not "completed"
+        assert run.status == PipelineRunStatus.PENDING
+        # The run should belong to the correct batch
+        assert run.batch_run_id == batch_id
+        assert run.batch_run_id != "evil-batch-id"
