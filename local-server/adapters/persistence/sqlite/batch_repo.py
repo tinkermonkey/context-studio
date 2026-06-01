@@ -235,8 +235,8 @@ class BatchRepository:
             if not orm_obj:
                 return False
 
-            if orm_obj.started_at is None:
-                now = datetime.now(timezone.utc)
+            if orm_obj.started_at is None:  # type: ignore[unreachable]
+                now = datetime.now(timezone.utc)  # type: ignore[unreachable]
                 orm_obj.started_at = now  # type: ignore[assignment,unreachable]
                 orm_obj.last_updated = now  # type: ignore[assignment,unreachable]
                 session.commit()
@@ -268,8 +268,8 @@ class BatchRepository:
             if not orm_obj:
                 return False
 
-            if orm_obj.completed_at is None:
-                now = datetime.now(timezone.utc)
+            if orm_obj.completed_at is None:  # type: ignore[unreachable]
+                now = datetime.now(timezone.utc)  # type: ignore[unreachable]
                 orm_obj.completed_at = now  # type: ignore[assignment,unreachable]
                 orm_obj.last_updated = now  # type: ignore[assignment,unreachable]
                 session.commit()
