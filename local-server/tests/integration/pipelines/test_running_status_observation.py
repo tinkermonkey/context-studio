@@ -17,6 +17,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
@@ -166,15 +167,15 @@ def ontology_service(ontology_repo, embedding_service, event_publisher):
 
 
 @pytest.fixture
-def blocking_llm_provider():
-    """Create a blocking fake LLM provider."""
-    return BlockingFakeLLMProvider(response_content="Test LLM response")
+def pipeline_repo(session_factory):
+    """Create a pipeline repository for database access."""
+    return PipelineRepository(session_factory)
 
 
 @pytest.fixture
-def noop_orchestrator(blocking_llm_provider):
-    """Create a NoOp orchestrator with the blocking LLM provider."""
-    return NoOpPipelineOrchestrator(blocking_llm_provider)
+def blocking_llm_provider():
+    """Create a blocking fake LLM provider."""
+    return BlockingFakeLLMProvider(response_content="Test LLM response")
 
 
 class TestRunningStatusObservation:
@@ -182,19 +183,32 @@ class TestRunningStatusObservation:
 
     @pytest.mark.asyncio
     async def test_running_status_written_before_llm_call_completes(
-        self, noop_orchestrator, blocking_llm_provider
+        self, blocking_llm_provider, pipeline_repo
     ):
         """
         RUNNING status is written to database before LLM call completes.
 
         This test:
-        1. Starts a pipeline execution with a blocking LLM provider
-        2. Allows the execution to reach the RUNNING state
-        3. Queries the database to verify RUNNING status is recorded
-        4. Unblocks the provider to complete execution
-        5. Verifies final status is COMPLETED
+        1. Creates a pipeline run in the database
+        2. Starts orchestration with a blocking LLM provider
+        3. Allows execution to reach RUNNING state
+        4. Queries the database to verify RUNNING status is recorded mid-flight
+        5. Unblocks the provider to complete execution
+        6. Verifies final status is COMPLETED
         """
-        run_id = str(uuid4())
+        # Create a pipeline run in the database
+        db_run = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id = db_run.id
+        orchestrator = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id, status_writer=pipeline_repo
+        )
 
         # Start execution in the background
         state = NoOpPipelineState(
@@ -204,15 +218,21 @@ class TestRunningStatusObservation:
         )
 
         # Create task for orchestrator execution
-        execution_task = asyncio.create_task(noop_orchestrator.execute(state))
+        execution_task = asyncio.create_task(orchestrator.execute(state))
 
-        # Give the orchestrator time to start and reach RUNNING status
-        await asyncio.sleep(0.5)
+        # Give the orchestrator time to start, write RUNNING status, and reach the LLM call
+        await asyncio.sleep(0.2)
 
-        # Query database to check for RUNNING status
-        # (In a real scenario, the orchestrator would write this via the database adapter)
-        # For now, we verify that the LLM provider's async method has been called
+        # Query database to verify RUNNING status is written mid-flight
         assert blocking_llm_provider.call_count > 0, "LLM provider should have been called"
+
+        # Check that the run status in the database is RUNNING
+        db_run_mid_execution = pipeline_repo.get(run_id)
+        assert db_run_mid_execution is not None, "Pipeline run should exist in database"
+        assert db_run_mid_execution.status == PipelineRunStatus.RUNNING, (
+            f"Pipeline run status should be RUNNING mid-execution, "
+            f"but got {db_run_mid_execution.status}"
+        )
 
         # Unblock the LLM provider to allow execution to complete
         blocking_llm_provider.unblock()
@@ -220,7 +240,7 @@ class TestRunningStatusObservation:
         # Wait for execution to complete
         result_state = await asyncio.wait_for(execution_task, timeout=5.0)
 
-        # Verify final status is COMPLETED
+        # Verify final status is COMPLETED in the returned state
         assert result_state.current_status == PipelineRunStatus.COMPLETED
 
     @pytest.mark.asyncio
@@ -257,20 +277,32 @@ class TestRunningStatusObservation:
 
     @pytest.mark.asyncio
     async def test_multiple_sequential_executions_with_blocking_provider(
-        self, noop_orchestrator, blocking_llm_provider
+        self, blocking_llm_provider, pipeline_repo
     ):
         """Multiple executions with blocking provider can be observed sequentially."""
-        run_id_1 = str(uuid4())
-        run_id_2 = str(uuid4())
-
         # First execution
+        run_id_1 = str(uuid4())
+        db_run_1 = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id_1 = db_run_1.id
+
+        orchestrator_1 = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id_1, status_writer=pipeline_repo
+        )
+
         state_1 = NoOpPipelineState(
             run_id=run_id_1,
             pipeline_type=PipelineType.NO_OP,
             input_data={"text": "first input"},
         )
 
-        task_1 = asyncio.create_task(noop_orchestrator.execute(state_1))
+        task_1 = asyncio.create_task(orchestrator_1.execute(state_1))
         await asyncio.sleep(0.2)
         assert blocking_llm_provider.call_count == 1
         blocking_llm_provider.unblock()
@@ -281,13 +313,28 @@ class TestRunningStatusObservation:
         blocking_llm_provider._unblock_event.clear()
 
         # Second execution
+        run_id_2 = str(uuid4())
+        db_run_2 = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id_2 = db_run_2.id
+
+        orchestrator_2 = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id_2, status_writer=pipeline_repo
+        )
+
         state_2 = NoOpPipelineState(
             run_id=run_id_2,
             pipeline_type=PipelineType.NO_OP,
             input_data={"text": "second input"},
         )
 
-        task_2 = asyncio.create_task(noop_orchestrator.execute(state_2))
+        task_2 = asyncio.create_task(orchestrator_2.execute(state_2))
         await asyncio.sleep(0.2)
         assert blocking_llm_provider.call_count == 2
         blocking_llm_provider.unblock()

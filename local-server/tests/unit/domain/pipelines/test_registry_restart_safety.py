@@ -6,6 +6,7 @@ can safely resolve its (slug, version) reference because configurations
 are deterministically re-registered from code.
 """
 
+import dataclasses
 import pytest
 
 from domain.pipelines.entities import PipelineType
@@ -238,9 +239,10 @@ class TestRegistryRestartSafety:
         and ConfigurationVersion is a frozen dataclass, making individual versions immutable.
 
         This test verifies that:
-        1. Referenced versions remain in the registry
-        2. New versions can be created independently
-        3. Old and new versions coexist and are distinct
+        1. Attempting to mutate a ConfigurationVersion raises FrozenInstanceError
+        2. Referenced versions remain in the registry
+        3. New versions can be created independently
+        4. Old and new versions coexist and are distinct
         """
         registry = PipelineConfigurationRegistry()
 
@@ -252,6 +254,13 @@ class TestRegistryRestartSafety:
             {"top_n": 10, "model": "claude-opus"},
         )
         assert v1.version == 1
+
+        # Verify that attempting to mutate a frozen ConfigurationVersion raises FrozenInstanceError
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            v1.config = {"top_n": 999}
+
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            v1.version = 99
 
         # Mark v1 as referenced by a pipeline run
         registry.mark_version_referenced(

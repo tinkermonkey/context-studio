@@ -82,8 +82,8 @@ class TestSchemaGroundingApplyServiceBasic:
 
         result = service.apply(sample_pipeline_run, sample_class.id)
 
-        # Should have created 3 new external references
-        # (the sample class already had 1, so we skip the wikidata Q12345)
+        # Should have created 3 new external references (Q123, dbpedia, schema.org)
+        # The sample class has Q12345 which doesn't match any run groundings
         assert result.external_references_created == 3
         assert result.external_references_skipped == 0
         assert len(result.created_external_reference_ids) == 3
