@@ -8,7 +8,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-import asyncio
 from uuid import uuid4
 
 import pytest
@@ -18,17 +17,16 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-from adapters.persistence.sqlite.models import Base, ChangeEvent
+from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import RelationshipCreated, RelationshipDeleted
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.entities import PipelineRunStatus, PipelineType, SchemaConnectionRefinementRun
+from domain.pipelines.entities import PipelineRunStatus, SchemaConnectionRefinementRun
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
-from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
@@ -179,7 +177,6 @@ class TestSchemaNodeConnectionRefinementViaHarness:
 
     def test_apply_distinguishes_all_relationship_operations(self, ontology_service, ontology_repo):
         """Apply service must produce distinct added, removed, modified, skipped counts."""
-        from domain.interchange.services import set_batch_run_context
 
         run_id = str(uuid4())
         set_batch_run_context(run_id)

@@ -8,7 +8,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-import asyncio
 from uuid import uuid4
 
 import pytest
@@ -18,25 +17,23 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-from adapters.persistence.sqlite.models import Base, ChangeEvent
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import IndividualCreated, RelationshipCreated
 from domain.ontology.services import OntologyService
-from domain.pipelines.entities import PipelineRunStatus, PipelineType, IndividualExtractionRun
+from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
 from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
-    IndividualExtractionState,
 )
-from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-from tests.integration.fixtures.pipelines.harness import compare_output, run_pipeline_against_fixture
+from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
 
 
 @pytest.fixture
@@ -131,8 +128,8 @@ def llm_provider():
 @pytest.fixture
 def extraction_orchestrator(llm_provider, ontology_service):
     """Create an individual extraction orchestrator with fake LLM."""
-    from domain.extraction.services import ExtractionService
     from adapters.events.in_process import InProcessEventPublisher
+    from domain.extraction.services import ExtractionService
 
     extraction_service = ExtractionService(
         ontology_repo=None,  # Not used in orchestrator
@@ -221,8 +218,6 @@ class TestIndividualExtractionViaHarness:
 
     def test_apply_service_returns_correct_id_fields(self, ontology_repo, ontology_service):
         """ApplyService must return created_individual_ids and created_relationship_ids."""
-        from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
-        from domain.interchange.services import set_batch_run_context
 
         run_id = str(uuid4())
         set_batch_run_context(run_id)
@@ -253,10 +248,11 @@ class TestIndividualExtractionViaHarness:
 
     def test_counts_match_between_result_and_entities(self, ontology_repo, ontology_service):
         """Verify that counts in ApplyResult match actual entity counts."""
-        from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
-        from domain.interchange.services import set_batch_run_context
-        from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Individual, Relationship, PropertyDefinition
         from uuid import uuid4
+
+        from domain.ontology.entities import (
+            Taxonomy,
+        )
 
         run_id = str(uuid4())
         set_batch_run_context(run_id)

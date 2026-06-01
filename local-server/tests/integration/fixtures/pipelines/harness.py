@@ -78,9 +78,10 @@ async def run_pipeline_against_fixture(
     Raises:
         FileNotFoundError: If fixture or expected output file not found
     """
+    from uuid import uuid4
+
     from domain.pipelines.entities import PipelineType
     from domain.pipelines.orchestration.noop import NoOpPipelineState
-    from uuid import uuid4
 
     # Load fixture
     fixture_input = load_fixture(pipeline_type, scenario)

@@ -7,7 +7,6 @@ Tests verify:
 4. Harness self-test: loads fixture, runs NoOp, compares output
 """
 
-import asyncio
 from uuid import uuid4
 
 import pytest
@@ -28,7 +27,10 @@ from domain.pipelines.orchestration.noop_apply_service import NoOpApplyService
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.integration.fixtures.pipelines.harness import compare_output, run_pipeline_against_fixture
+from tests.integration.fixtures.pipelines.harness import (
+    compare_output,
+    run_pipeline_against_fixture,
+)
 
 
 @pytest.fixture

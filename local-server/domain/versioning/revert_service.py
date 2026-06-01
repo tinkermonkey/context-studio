@@ -193,7 +193,13 @@ class RevertService:
         if not new_state:
             return
 
-        from domain.ontology.entities import Class, Individual, PropertyDefinition, Relationship, Taxonomy
+        from domain.ontology.entities import (
+            Class,
+            Individual,
+            PropertyDefinition,
+            Relationship,
+            Taxonomy,
+        )
         from domain.ontology.value_objects import Status
 
         try:

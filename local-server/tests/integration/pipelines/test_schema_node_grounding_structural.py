@@ -7,22 +7,17 @@ Tests verify:
 4. Uses shared test harness for fixture I/O
 """
 
-import asyncio
-from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.interchange.services import set_batch_run_context
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
@@ -111,7 +106,7 @@ class TestSchemaNodeGroundingStructural:
     def test_apply_service_per_source_contract(self):
         """ApplyService should support multiple grounding sources."""
         # Service should handle different source types
-        apply_service = SchemaGroundingApplyService(ontology_repo=None)
+        SchemaGroundingApplyService(ontology_repo=None)
         result = ApplyResult()
 
         # Should be able to track references from different sources

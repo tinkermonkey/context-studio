@@ -52,8 +52,6 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.integration.fixtures.pipelines.harness import (
-    load_fixture,
-    load_expected_output,
     run_pipeline_against_fixture,
 )
 from tests.utils.canon_assertions import (
