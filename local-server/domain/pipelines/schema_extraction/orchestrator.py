@@ -626,7 +626,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     senses = ambig.get("senses", [])
                     rationale = ambig.get("rationale", "")
 
-                    original_idx = next((i for i, c in enumerate(disambiguated) if c.label == term), -1)
+                    original_idx = next(
+                        (i for i, c in enumerate(disambiguated) if c.label == term), -1
+                    )
                     if original_idx >= 0 and len(senses) > 1:
                         original = disambiguated[original_idx]
                         disambiguated_candidates = []
