@@ -305,6 +305,58 @@ class TestApplyEndpointErrors:
         response = client.post(f"/api/pipelines/runs/{run_id}/apply")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_pipeline_storage_error_returns_500(self, client, pipeline_repo):
+        from domain.pipelines.exceptions import PipelineStorageError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=PipelineStorageError("Database connection failed")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_integrity_error_returns_500(self, client, pipeline_repo):
+        from sqlalchemy.exc import IntegrityError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=IntegrityError("Unique constraint", "", "")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_operational_error_returns_500(self, client, pipeline_repo):
+        from sqlalchemy.exc import OperationalError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=OperationalError("Database unavailable", "", "")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_key_error_returns_400(self, client, pipeline_repo):
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=KeyError("expected_field")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert "malformed" in body["detail"].lower()
+
 
 # ---------------------------------------------------------------------------
 # Response structure

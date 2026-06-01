@@ -48,12 +48,12 @@ from adapters.web.schemas.pipelines import (
     ResumeBatchResponse,
     RevertRunResponse,
 )
+from domain.interchange.services import set_batch_run_context
 from domain.pipelines.entities import (
     PipelineRun,
     PipelineRunStatus,
     PipelineType,
 )
-from domain.interchange.services import set_batch_run_context
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
@@ -749,75 +749,77 @@ async def apply_pipeline_run(
     ptype = run.pipeline_type
 
     set_batch_run_context(run.batch_run_id)
-
     try:
-        if ptype == PipelineType.SCHEMA_EXTRACTION:
-            if not concept_scheme_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="concept_scheme_id is required for schema_extraction apply",
+        try:
+            if ptype == PipelineType.SCHEMA_EXTRACTION:
+                if not concept_scheme_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="concept_scheme_id is required for schema_extraction apply",
+                    )
+                if not taxonomy_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="taxonomy_id is required for schema_extraction apply",
+                    )
+                svc = request.app.state.schema_extraction_apply_svc
+                apply_result = svc.apply(
+                    run=run,
+                    concept_scheme_id=concept_scheme_id,
+                    taxonomy_id=taxonomy_id,
+                    confidence_threshold=confidence_threshold,
                 )
-            if not taxonomy_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="taxonomy_id is required for schema_extraction apply",
+
+            elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+                svc = request.app.state.individual_extraction_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
+                if not node_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="node_id is required for schema_node_grounding apply",
+                    )
+                svc = request.app.state.schema_grounding_apply_svc
+                apply_result = svc.apply(
+                    run=run,
+                    node_id=node_id,
+                    confidence_threshold=confidence_threshold,
                 )
-            svc = request.app.state.schema_extraction_apply_svc
-            apply_result = svc.apply(
-                run=run,
-                concept_scheme_id=concept_scheme_id,
-                taxonomy_id=taxonomy_id,
-                confidence_threshold=confidence_threshold,
+
+            elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+                svc = request.app.state.schema_definition_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+                svc = request.app.state.schema_connection_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            else:
+                # NO_OP and any future types return empty result
+                from domain.pipelines.apply_result import ApplyResult
+
+                apply_result = ApplyResult()
+
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            ) from exc
+        except (PipelineStorageError, IntegrityError, OperationalError) as exc:
+            _logger.error(f"Storage/database error applying run {run_id}: {exc}")
+            status_code, message = _handle_domain_error(
+                exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
             )
-
-        elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
-            svc = request.app.state.individual_extraction_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
-            if not node_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="node_id is required for schema_node_grounding apply",
-                )
-            svc = request.app.state.schema_grounding_apply_svc
-            apply_result = svc.apply(
-                run=run,
-                node_id=node_id,
-                confidence_threshold=confidence_threshold,
-            )
-
-        elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
-            svc = request.app.state.schema_definition_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-            svc = request.app.state.schema_connection_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        else:
-            # NO_OP and any future types return empty result
-            from domain.pipelines.apply_result import ApplyResult
-
-            apply_result = ApplyResult()
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
-    except (PipelineStorageError, IntegrityError, OperationalError) as exc:
-        _logger.error(f"Storage/database error applying run {run_id}: {exc}")
-        status_code, message = _handle_domain_error(
-            exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
-        )
-        raise HTTPException(status_code=status_code, detail=message) from exc
-    except KeyError as exc:
-        _logger.error(f"Malformed output data for run {run_id}: missing key {exc}")
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Pipeline output is malformed: missing key {str(exc)}",
-        ) from exc
+            raise HTTPException(status_code=status_code, detail=message) from exc
+        except KeyError as exc:
+            _logger.error(f"Malformed output data for run {run_id}: missing key {exc}")
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Pipeline output is malformed: missing key {str(exc)}",
+            ) from exc
+    finally:
+        set_batch_run_context(None)
 
     return ApplyRunResponse(
         run_id=run_id,
