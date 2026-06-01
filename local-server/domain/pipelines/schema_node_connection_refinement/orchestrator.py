@@ -111,7 +111,10 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble current state
-            neighborhood = self._traversal.get_class_neighborhood(scope_id)
+            try:
+                neighborhood = self._traversal.get_class_neighborhood(scope_id)
+            except ValueError as exc:
+                raise PipelineInputError(f"Scope with id '{scope_id}' not found or invalid") from exc
             state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
@@ -271,12 +274,11 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
-            _logger.warning(
-                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
-                f"No deltas proposed.",
-                exc_info=True,
+            error_msg = (
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}"
             )
-            deltas = []
+            _logger.error(error_msg, exc_info=True)
+            raise PipelineExecutionError(error_msg) from exc
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",

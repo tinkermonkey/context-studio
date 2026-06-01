@@ -636,7 +636,7 @@ class TestPipelineErrorHandling:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         body = response.json()
         assert "detail" in body
-        assert "Internal logic failed" in body["detail"]
+        assert body["detail"] == "Pipeline execution failed"
 
     def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
         """Test that generic PipelineExecutionError from orchestrator returns 500."""

@@ -110,7 +110,10 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble context
-            neighborhood = self._traversal.get_class_neighborhood(node_id)
+            try:
+                neighborhood = self._traversal.get_class_neighborhood(node_id)
+            except ValueError as exc:
+                raise PipelineInputError(f"Node with id '{node_id}' not found or invalid") from exc
             state = replace(state, node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
@@ -259,12 +262,11 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
-            _logger.warning(
-                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
-                f"No candidates generated.",
-                exc_info=True,
+            error_msg = (
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}"
             )
-            candidates = []
+            _logger.error(error_msg, exc_info=True)
+            raise PipelineExecutionError(error_msg) from exc
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",

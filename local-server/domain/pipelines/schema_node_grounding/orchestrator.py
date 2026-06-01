@@ -111,10 +111,20 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
+        try:
+            node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
+        except ValueError as exc:
+            error_msg = f"Invalid node_type '{node_type_str}'. Must be one of: {', '.join([t.value for t in NodeType])}"
+            input_error = PipelineInputError(error_msg)
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": error_msg}
+            )
+            raise input_error from exc
+
         state = replace(
             state,
             node_label=node_label,
-            node_type=NodeType(node_type_str) if node_type_str else NodeType.CLASS,
+            node_type=node_type,
             sources=sources or ["DBpedia", "ConceptNet"],
             current_status=PipelineRunStatus.RUNNING,
         )

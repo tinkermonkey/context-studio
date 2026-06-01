@@ -98,7 +98,7 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
         return (
             http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            f"Pipeline execution failed: {str(exc)}",
+            "Pipeline execution failed",
         )
     elif isinstance(exc, ValueError):
         _logger.warning(f"Invalid pipeline input: {exc}")
