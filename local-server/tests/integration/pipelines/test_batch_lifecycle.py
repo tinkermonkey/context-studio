@@ -10,8 +10,6 @@ Tests verify:
 6. Proper status transitions through the batch lifecycle
 """
 
-from uuid import uuid4
-
 from fastapi import status
 
 from domain.pipelines.entities import PipelineRunStatus

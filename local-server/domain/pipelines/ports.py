@@ -202,6 +202,9 @@ class PipelineRunRepository(Protocol):
         """
         Update a pipeline run's status.
 
+        When status is PENDING, implementations must ensure failure_reason is cleared to maintain
+        the invariant that failure_reason is None when status is PENDING.
+
         Args:
             run_id: Pipeline run ID
             status: New status

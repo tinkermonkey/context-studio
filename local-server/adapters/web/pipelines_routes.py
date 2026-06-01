@@ -1059,7 +1059,7 @@ async def enqueue_batch_runs(
                     detail=f"Configuration not found: {config_ref}",
                 )
 
-            specific_data = build_run_specific_data(ptype, run_data)
+            specific_data = build_run_specific_data(ptype, run_data.get("specific_data") or {})
             run = pipeline_run_repo.create(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
