@@ -111,23 +111,16 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble current state
-            try:
-                neighborhood = self._traversal.get_class_neighborhood(scope_id)
-                state = replace(state, scope_label=neighborhood.class_label)
-            except ValueError:
-                neighborhood = None
-                state = replace(state, scope_label="")
+            neighborhood = self._traversal.get_class_neighborhood(scope_id)
+            state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
-            if neighborhood:
-                deltas = await self._propose_deltas(
-                    neighborhood,
-                    current_connections,
-                    groundings,
-                    extraction_usages,
-                )
-            else:
-                deltas = []
+            deltas = await self._propose_deltas(
+                neighborhood,
+                current_connections,
+                groundings,
+                extraction_usages,
+            )
             state = replace(state, deltas=deltas)
 
             state = replace(
@@ -153,6 +146,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             )
 
         except PipelineExecutionError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
+        except ValueError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
