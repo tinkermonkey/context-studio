@@ -189,6 +189,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": "Schema node grounding encountered an unexpected error"},
             )
-            raise PipelineExecutionError("Schema node grounding encountered an unexpected error") from exc
+            raise PipelineExecutionError(
+                "Schema node grounding encountered an unexpected error"
+            ) from exc
 
         return state

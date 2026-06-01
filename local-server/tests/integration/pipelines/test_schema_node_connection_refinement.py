@@ -147,7 +147,10 @@ class TestConnectionRefinementExecution:
             asyncio.run(orchestrator.execute(state))
 
     def test_missing_scope_raises_pipeline_input_error(self, traversal):
-        """Test that missing scope (not in graph) raises PipelineInputError, not PipelineExecutionError."""
+        """Verify missing scope raises PipelineInputError.
+
+        Not PipelineExecutionError.
+        """
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
@@ -299,9 +302,7 @@ class TestConnectionRefinementViaHarness:
             '"predicate": "depends_on", '
             '"object": "Database"}]}'
         )
-        llm_provider = FakeLLMProvider(
-            response_content=llm_response
-        )
+        llm_provider = FakeLLMProvider(response_content=llm_response)
         orchestrator = ConnectionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
 
         actual, expected = await run_pipeline_against_fixture(
