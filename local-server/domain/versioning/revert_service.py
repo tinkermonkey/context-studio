@@ -1,9 +1,9 @@
 """
 RevertService for the Versioning context.
 
-Walks change_events for a given run_id in reverse and applies the inverse of each event.
+Walks change_events for a given batch_run_id in reverse and applies the inverse of each event.
 Already-reverted events are skipped (idempotent). Emits new change_events tagged with
-the originating run_id for auditability.
+the originating batch_run_id for auditability.
 """
 
 from __future__ import annotations
@@ -61,8 +61,6 @@ class RevertService:
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
 
-        # Fetch all history to check for existing reverts (avoids O(N²) in _should_skip_revert)
-        all_history = self._change_repo.get_changes(limit=None)
         # Filter by batch_run_id at query level to avoid memory overhead
         events_result = self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None)
         events = list(events_result.events)
@@ -73,7 +71,7 @@ class RevertService:
 
         reverted_count = 0
         for event in reversed(events):
-            if self._should_skip_revert(event, all_history.events):
+            if self._should_skip_revert(event, events):
                 continue
 
             self._apply_inverse(event, batch_run_id)
@@ -105,7 +103,7 @@ class RevertService:
 
         return False
 
-    def _apply_inverse(self, event, originating_run_id: str) -> None:
+    def _apply_inverse(self, event, batch_run_id: str) -> None:
         """Apply the inverse operation for a change event."""
         entity_id = event.entity_id
         entity_type = self._normalize_entity_type(event.entity_type)
@@ -125,8 +123,8 @@ class RevertService:
                 operation=self._inverse_operation(operation),
                 new_state={},
                 previous_state=event.new_state,
-                change_reason=f"_reverted_from_{originating_run_id}",
-                batch_run_id=originating_run_id,
+                change_reason=f"_reverted_from_{batch_run_id}",
+                batch_run_id=batch_run_id,
             )
         except Exception as exc:
             _logger.error(
