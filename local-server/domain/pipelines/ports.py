@@ -131,16 +131,20 @@ class PipelineRunRepository(Protocol):
         pipeline_type: PipelineType,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         specific_data: dict[str, Any] | None = None,
     ) -> PipelineRun:
         """
         Create a new pipeline run and persist it.
 
         Args:
-            batch_run_id: ID of the existing batch_run
+            batch_run_id: ID of the batch this run belongs to
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
-            configuration_ref: Configuration reference
+            configuration_ref: Configuration reference (the full ref)
+            configuration_slug: Configuration slug part
+            configuration_version: Configuration version part
             specific_data: Type-specific fields
 
         Returns:
@@ -251,6 +255,92 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
+    def list_filtered(
+        self,
+        pipeline_type: PipelineType | None = None,
+        status: PipelineRunStatus | None = None,
+        implementation_id: str | None = None,
+        start_date: Any | None = None,
+        end_date: Any | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> tuple[PipelineRunList, int]:
+        """
+        List pipeline runs with DB-level filtering and pagination.
+
+        Args:
+            pipeline_type: Filter by pipeline type
+            status: Filter by status
+            implementation_id: Filter by implementation ID
+            start_date: Include only runs created on or after this UTC datetime
+            end_date: Include only runs created on or before this UTC datetime
+            limit: Maximum number of rows to return
+            offset: Number of rows to skip (for pagination)
+
+        Returns:
+            Tuple of (page of domain entities, total matching count)
+        """
+        ...
+
+    def update_running_status(self, run_id: str, started_at: Any) -> bool:
+        """
+        Atomically update status to RUNNING and set started_at timestamp.
+
+        Args:
+            run_id: Pipeline run ID
+            started_at: Started timestamp
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
+    def update_failure_info(
+        self,
+        run_id: str,
+        failure_reason: str,
+        output_summary: dict[str, Any] | None = None,
+    ) -> bool:
+        """
+        Atomically update status to FAILED, set failure_reason, and optionally
+        update output_summary.
+
+        Args:
+            run_id: Pipeline run ID
+            failure_reason: Failure reason string
+            output_summary: Output metadata dict (optional)
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
+    def update_started_at(self, run_id: str, started_at: Any) -> bool:
+        """
+        Update a pipeline run's started_at timestamp.
+
+        Args:
+            run_id: Pipeline run ID
+            started_at: Started timestamp
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
+    def update_failure_reason(self, run_id: str, failure_reason: str) -> bool:
+        """
+        Update a pipeline run's failure_reason.
+
+        Args:
+            run_id: Pipeline run ID
+            failure_reason: Failure reason string
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
 
 class BatchRepository(Protocol):
     """
@@ -312,5 +402,60 @@ class BatchRepository(Protocol):
 
         Returns:
             True if updated, False if not found
+        """
+        ...
+
+    def update_started_at(self, batch_id: str) -> bool:
+        """
+        Update a batch's started_at timestamp (PENDING -> RUNNING transition).
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
+    def update_completed_at(self, batch_id: str) -> bool:
+        """
+        Update a batch's completed_at timestamp (terminal state transition).
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            True if updated, False if not found
+        """
+        ...
+
+    def compute_aggregate_status(self, batch_id: str) -> BatchStatus:
+        """
+        Compute batch status from child pipeline runs.
+
+        Batch status transitions:
+        - PENDING: No child runs started yet, or all runs still PENDING
+        - RUNNING: At least one run is RUNNING
+        - COMPLETED: All runs are terminal (COMPLETED or FAILED) and at least one COMPLETED
+        - FAILED: All runs are terminal and all FAILED
+        - CANCELLED: User issued cancel command explicitly (stored status)
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            Computed BatchStatus (does not update database)
+        """
+        ...
+
+    def get_run_counts(self, batch_id: str) -> dict[str, int]:
+        """
+        Get count of runs in each status for a batch.
+
+        Args:
+            batch_id: Batch ID
+
+        Returns:
+            Dict with keys: pending, running, completed, failed, cancelled
         """
         ...
