@@ -695,6 +695,7 @@ class TestPipelineErrorHandling:
                 "fallback_action": "used default schema",
             }
         ]
+        mock_state.current_status = PipelineRunStatus.COMPLETED
 
         # Mock orchestrator to return state with warnings
         mock_orchestrator = AsyncMock()
@@ -1047,6 +1048,7 @@ class TestRunStatusLifecycle:
             # Return successful result
             state.result = {"schemas": ["schema1"]}
             state.parse_warnings = []
+            state.current_status = PipelineRunStatus.COMPLETED
             return state
 
         # Track the response from the background thread

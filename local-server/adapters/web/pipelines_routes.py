@@ -25,6 +25,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from adapters.factories.orchestrator_factory import (
     build_run_specific_data,
@@ -52,6 +53,7 @@ from domain.pipelines.entities import (
     PipelineRunStatus,
     PipelineType,
 )
+from domain.interchange.services import set_batch_run_context
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
     PipelineExternalServiceError,
@@ -464,7 +466,7 @@ async def run_pipeline(
             output_summary=output_summary,
             llm_metadata={},
         )
-        repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+        repo.update_status(run_id, result_state.current_status)
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -746,6 +748,8 @@ async def apply_pipeline_run(
 
     ptype = run.pipeline_type
 
+    set_batch_run_context(run.batch_run_id)
+
     try:
         if ptype == PipelineType.SCHEMA_EXTRACTION:
             if not concept_scheme_id:
@@ -801,6 +805,18 @@ async def apply_pipeline_run(
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
+        ) from exc
+    except (PipelineStorageError, IntegrityError, OperationalError) as exc:
+        _logger.error(f"Storage/database error applying run {run_id}: {exc}")
+        status_code, message = _handle_domain_error(
+            exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
+        )
+        raise HTTPException(status_code=status_code, detail=message) from exc
+    except KeyError as exc:
+        _logger.error(f"Malformed output data for run {run_id}: missing key {exc}")
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Pipeline output is malformed: missing key {str(exc)}",
         ) from exc
 
     return ApplyRunResponse(
