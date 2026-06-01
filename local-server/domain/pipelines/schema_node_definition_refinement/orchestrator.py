@@ -110,16 +110,23 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble context
-            neighborhood = self._traversal.get_class_neighborhood(node_id)
-            state = replace(state, node_label=neighborhood.class_label)
+            try:
+                neighborhood = self._traversal.get_class_neighborhood(node_id)
+                state = replace(state, node_label=neighborhood.class_label)
+            except ValueError:
+                neighborhood = None
+                state = replace(state, node_label="")
 
             # Step 2-4: Generate and score candidates
-            candidates = await self._generate_candidates(
-                neighborhood,
-                current_definition,
-                groundings,
-                extraction_usages,
-            )
+            if neighborhood:
+                candidates = await self._generate_candidates(
+                    neighborhood,
+                    current_definition,
+                    groundings,
+                    extraction_usages,
+                )
+            else:
+                candidates = []
             state = replace(state, candidates=candidates)
 
             state = replace(
@@ -143,8 +150,6 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
-            raise
-        except ValueError:
             raise
         except Exception as exc:
             state = replace(

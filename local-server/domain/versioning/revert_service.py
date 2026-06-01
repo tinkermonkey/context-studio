@@ -136,6 +136,10 @@ class RevertService:
             tax = self._ontology_repo.get_taxonomy(entity_id)
             if tax:
                 self._ontology_repo.delete_taxonomy(entity_id)
+        elif entity_type == "concept_scheme":
+            scheme = self._ontology_repo.get_concept_scheme(entity_id)
+            if scheme:
+                self._ontology_repo.delete_concept_scheme(entity_id)
         elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
@@ -165,6 +169,11 @@ class RevertService:
             if tax:
                 self._restore_entity_state(tax, previous_state)
                 self._ontology_repo.save_taxonomy(tax)
+        elif entity_type == "concept_scheme":
+            scheme = self._ontology_repo.get_concept_scheme(entity_id)
+            if scheme:
+                self._restore_entity_state(scheme, previous_state)
+                self._ontology_repo.save_concept_scheme(scheme)
         elif entity_type == "class":
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
@@ -195,6 +204,7 @@ class RevertService:
 
         from domain.ontology.entities import (
             Class,
+            ConceptScheme,
             Individual,
             PropertyDefinition,
             Relationship,
@@ -213,6 +223,16 @@ class RevertService:
                     status=Status(new_state.get("status", "draft")),
                 )
                 self._ontology_repo.save_taxonomy(tax)
+            elif entity_type == "concept_scheme":
+                scheme = ConceptScheme(
+                    id=new_state.get("id", entity_id),
+                    taxonomy_id=new_state.get("taxonomy_id", ""),
+                    title=new_state.get("title", ""),
+                    identifier=new_state.get("identifier"),
+                    description=new_state.get("description"),
+                    status=Status(new_state.get("status", "draft")),
+                )
+                self._ontology_repo.save_concept_scheme(scheme)
             elif entity_type == "class":
                 cls = Class(
                     id=new_state.get("id", entity_id),

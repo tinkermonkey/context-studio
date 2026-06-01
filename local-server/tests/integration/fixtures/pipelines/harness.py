@@ -94,10 +94,18 @@ async def run_pipeline_against_fixture(
         FileNotFoundError: If fixture or expected output file not found
     """
     from uuid import uuid4
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
 
     from domain.pipelines.entities import PipelineType
     from domain.pipelines.orchestration.base import PipelineState
     from domain.pipelines.orchestration.noop import NoOpPipelineState
+    from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
+    from domain.pipelines.schema_node_connection_refinement.orchestrator import ConnectionRefinementState
+    from domain.pipelines.schema_node_definition_refinement.orchestrator import DefinitionRefinementState
+    from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+    from adapters.persistence.sqlite.models import Base
+    from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 
     # Load fixture
     fixture_input = load_fixture(pipeline_type, scenario)
@@ -109,6 +117,38 @@ async def run_pipeline_against_fixture(
         state = NoOpPipelineState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.NO_OP,
+            input_data=fixture_input,
+        )
+    elif pipeline_type == "schema_extraction":
+        state = SchemaExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=fixture_input,
+        )
+    elif pipeline_type == "schema_node_connection_refinement":
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(bind=engine)
+        repo = SQLiteOntologyRepository(session_factory)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+        if hasattr(orchestrator, '_traversal') and orchestrator._traversal is None:
+            orchestrator._traversal = traversal
+        state = ConnectionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data=fixture_input,
+        )
+    elif pipeline_type == "schema_node_definition_refinement":
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(bind=engine)
+        repo = SQLiteOntologyRepository(session_factory)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+        if hasattr(orchestrator, '_traversal') and orchestrator._traversal is None:
+            orchestrator._traversal = traversal
+        state = DefinitionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             input_data=fixture_input,
         )
     else:
