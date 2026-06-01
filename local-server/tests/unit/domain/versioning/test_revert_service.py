@@ -81,7 +81,7 @@ def test_revert_deletes_created_class(ontology_repo, change_repo, revert_svc):
     # Record the creation event
     change_repo.record_change(
         entity_id="cls-1",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={
             "id": "cls-1",
@@ -116,7 +116,7 @@ def test_revert_individual_creation(ontology_repo, change_repo, revert_svc):
     # Record the creation event
     change_repo.record_change(
         entity_id="ind-1",
-        entity_type="Individual",
+        entity_type="individual",
         operation=ChangeOperation.CREATE,
         new_state={
             "id": "ind-1",
@@ -239,7 +239,7 @@ def test_revert_multiple_operations_same_run(ontology_repo, change_repo, revert_
     )
     change_repo.record_change(
         entity_id="ind-1",
-        entity_type="Individual",
+        entity_type="individual",
         operation=ChangeOperation.CREATE,
         new_state={"id": "ind-1", "class_ids": ["cls-1"], "title": "Alice"},
         batch_run_id="run-1",
@@ -356,7 +356,7 @@ def test_schema_extraction_roundtrip(ontology_repo, change_repo, revert_svc):
     )
     change_repo.record_change(
         entity_id="prop-1",
-        entity_type="PropertyDefinition",
+        entity_type="property_definition",
         operation=ChangeOperation.CREATE,
         new_state={"id": "prop-1", "identifier": "has_client", "title": "Has Client"},
         batch_run_id="run-schema",
@@ -457,7 +457,7 @@ def test_connection_refinement_roundtrip(ontology_repo, change_repo, revert_svc)
     # Record creation event
     change_repo.record_change(
         entity_id="rel-1",
-        entity_type="Relationship",
+        entity_type="relationship",
         operation=ChangeOperation.CREATE,
         new_state={
             "id": "rel-1",

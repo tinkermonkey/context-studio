@@ -1148,3 +1148,180 @@ class TestRunStatusLifecycle:
             "timeout" in run.failure_reason.lower()
             or "unavailable" in run.failure_reason.lower()
         )
+
+
+class TestRevertEndpoint:
+    """Test pipeline revert endpoint."""
+
+    @pytest.fixture
+    def change_repo(self, temp_local_db):
+        """Create a SQLite change repository."""
+        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+
+        engine = create_engine(temp_local_db)
+        SessionLocal = sessionmaker(bind=engine)
+        return SQLiteChangeRepository(session_factory=SessionLocal)
+
+    @pytest.fixture
+    def ontology_repo(self, temp_local_db):
+        """Create a SQLite ontology repository."""
+        from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+
+        engine = create_engine(temp_local_db)
+        SessionLocal = sessionmaker(bind=engine)
+        return SQLiteOntologyRepository(session_factory=SessionLocal)
+
+    @pytest.fixture
+    def revert_client(self, client, change_repo, ontology_repo, pipeline_run_repo):
+        """Wire revert service into the test client."""
+        from domain.versioning.revert_service import RevertService
+
+        revert_service = RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+        )
+        client.app.state.revert_service = revert_service
+        client.app.state.change_repo = change_repo
+        client.app.state.ontology_repo = ontology_repo
+        return client
+
+    def test_revert_nonexistent_run_returns_404(self, revert_client):
+        """POST /api/pipelines/runs/{run_id}/revert for nonexistent run returns 404."""
+        response = revert_client.post(
+            "/api/pipelines/runs/nonexistent-run-id/revert"
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_revert_empty_run_returns_200_with_zero_reverted(self, revert_client, pipeline_run_repo):
+        """POST /api/pipelines/runs/{run_id}/revert for run with no events returns 200."""
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
+        # Create a pipeline run with no associated change events
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-1",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        response = revert_client.post(
+            f"/api/pipelines/runs/{run.id}/revert"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["run_id"] == run.id
+        assert body["events_reverted"] == 0
+
+    def test_revert_with_changes_returns_200_with_count(self, revert_client, pipeline_run_repo, change_repo, ontology_repo):
+        """POST /api/pipelines/runs/{run_id}/revert reverts recorded changes."""
+        from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+        from domain.versioning.value_objects import ChangeOperation
+
+        # Create a taxonomy and scheme
+        tax = Taxonomy(id="tx-1", identifier="test_tax", title="Test Taxonomy")
+        scheme = ConceptScheme(
+            id="scheme-1",
+            taxonomy_id="tx-1",
+            identifier="test_scheme",
+            title="Test Scheme",
+        )
+        ontology_repo.save_taxonomy(tax)
+        ontology_repo.save_concept_scheme(scheme)
+
+        # Create a class and record it as created
+        cls = Class(
+            id="cls-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Animal",
+        )
+        ontology_repo.save_class(cls)
+
+        # Create the pipeline run first to get its ID
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-2",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Record a change event with the run's ID
+        change_repo.record_change(
+            entity_id="cls-1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "cls-1", "title": "Animal"},
+            batch_run_id=run.id,
+        )
+
+        # Verify class exists
+        assert ontology_repo.get_class("cls-1") is not None
+
+        # Revert
+        response = revert_client.post(
+            f"/api/pipelines/runs/{run.id}/revert"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["run_id"] == run.id
+        assert body["events_reverted"] == 1
+
+        # Verify class is deleted
+        assert ontology_repo.get_class("cls-1") is None
+
+    def test_revert_error_does_not_leak_details(self, revert_client, pipeline_run_repo, change_repo, ontology_repo):
+        """POST /api/pipelines/runs/{run_id}/revert error response does not leak internal details."""
+        from domain.ontology.entities import ConceptScheme, Taxonomy
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+        from domain.versioning.value_objects import ChangeOperation
+
+        # Create a taxonomy and scheme
+        tax = Taxonomy(id="tx-1", identifier="test_tax", title="Test Taxonomy")
+        scheme = ConceptScheme(
+            id="scheme-1",
+            taxonomy_id="tx-1",
+            identifier="test_scheme",
+            title="Test Scheme",
+        )
+        ontology_repo.save_taxonomy(tax)
+        ontology_repo.save_concept_scheme(scheme)
+
+        # Create the pipeline run first to get its ID
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-3",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Record a change event with missing previous_state (will cause error)
+        change_repo.record_change(
+            entity_id="cls-1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            new_state={"title": "Updated"},
+            previous_state=None,  # Missing - this will cause an error
+            batch_run_id=run.id,
+        )
+
+        # Try to revert - should get 500 with generic error message
+        response = revert_client.post(
+            f"/api/pipelines/runs/{run.id}/revert"
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        body = response.json()
+
+        # Error detail should not contain actual error details like stack traces or file paths
+        detail = body.get("detail", "")
+        assert "internal error" in detail.lower()
+        # Should not contain Python exception types or file paths
+        assert "ValueError" not in detail
+        assert "Traceback" not in detail
+        assert ".py" not in detail

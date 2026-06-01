@@ -871,7 +871,7 @@ async def revert_pipeline_run(
         _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to revert pipeline run: {str(exc)}",
+            detail="Failed to revert pipeline run due to an internal error",
         ) from exc
 
 

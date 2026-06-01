@@ -61,8 +61,9 @@ class RevertService:
         if not run_id:
             raise ValueError("run_id is required for revert")
 
-        history = self._change_repo.get_changes(limit=None)
-        events = [e for e in history.events if e.batch_run_id == run_id]
+        # Fetch all history once to avoid O(N²) queries in _should_skip_revert
+        all_history = self._change_repo.get_changes(limit=None)
+        events = [e for e in all_history.events if e.batch_run_id == run_id]
 
         if not events:
             _logger.info(f"No events found for run {run_id}")
@@ -70,7 +71,7 @@ class RevertService:
 
         reverted_count = 0
         for event in reversed(events):
-            if self._should_skip_revert(event):
+            if self._should_skip_revert(event, all_history.events):
                 continue
 
             self._apply_inverse(event, run_id)
@@ -79,7 +80,7 @@ class RevertService:
         _logger.info(f"Reverted {reverted_count} events for run {run_id}")
         return reverted_count
 
-    def _should_skip_revert(self, event) -> bool:
+    def _should_skip_revert(self, event, all_events) -> bool:
         """Check if an event should be skipped during revert (already reverted)."""
         # Skip if this event is itself a revert event (has _reverted_ in change_reason)
         if "_reverted_" in (event.change_reason or ""):
@@ -87,11 +88,10 @@ class RevertService:
 
         # Check if a corresponding revert event already exists for this original event
         # by looking for a revert event for the same entity with the inverse operation
-        all_events_result = self._change_repo.get_changes(limit=None)
         inverse_op = self._inverse_operation(event.operation)
         normalized_entity_type = self._normalize_entity_type(event.entity_type)
 
-        for existing_event in all_events_result.events:
+        for existing_event in all_events:
             normalized_existing_type = self._normalize_entity_type(existing_event.entity_type)
             if (
                 existing_event.entity_id == event.entity_id
@@ -159,13 +159,18 @@ class RevertService:
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
                 self._ontology_repo.delete_property_definition(entity_id)
+        else:
+            raise ValueError(f"Unknown entity type for create revert: {entity_type}")
 
     def _inverse_update(
         self, entity_id: str, entity_type: str, previous_state: Optional[dict]
     ) -> None:
         """Inverse of UPDATE: restore previous state."""
         if not previous_state:
-            return
+            raise ValueError(
+                f"Cannot revert UPDATE for {entity_type} {entity_id}: "
+                "previous_state is missing from change event"
+            )
 
         if entity_type == "taxonomy":
             tax = self._ontology_repo.get_taxonomy(entity_id)
@@ -197,13 +202,18 @@ class RevertService:
             if prop:
                 self._restore_entity_state(prop, previous_state)
                 self._ontology_repo.save_property_definition(prop)
+        else:
+            raise ValueError(f"Unknown entity type for update revert: {entity_type}")
 
     def _inverse_delete(
         self, entity_id: str, entity_type: str, new_state: dict
     ) -> None:
         """Inverse of DELETE: recreate the entity from new_state."""
         if not new_state:
-            return
+            raise ValueError(
+                f"Cannot revert DELETE for {entity_type} {entity_id}: "
+                "new_state is missing from change event"
+            )
 
         from domain.ontology.entities import (
             Class,
@@ -271,6 +281,8 @@ class RevertService:
                     status=Status(new_state.get("status", "draft")),
                 )
                 self._ontology_repo.save_property_definition(prop)
+            else:
+                raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
         except Exception as exc:
             _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)
             raise
@@ -278,11 +290,12 @@ class RevertService:
     def _restore_entity_state(self, entity, state: dict) -> None:
         """Restore an entity's fields from a previous state dict."""
         for key, value in state.items():
-            if hasattr(entity, key):
-                try:
-                    setattr(entity, key, value)
-                except Exception as exc:
-                    _logger.warning(f"Could not restore field {key}: {exc}")
+            if not hasattr(entity, key):
+                raise ValueError(f"Entity {type(entity).__name__} has no field {key}")
+            try:
+                setattr(entity, key, value)
+            except Exception as exc:
+                raise ValueError(f"Could not restore field {key} on {type(entity).__name__}: {exc}") from exc
 
     @staticmethod
     def _normalize_entity_type(entity_type: str) -> str:
