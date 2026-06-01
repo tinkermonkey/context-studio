@@ -1,7 +1,8 @@
 """Structural tests for Schema Extraction pipeline.
 
 Tests verify:
-1. SchemaExtractionOrchestrator + ApplyService produces created_class_ids, created_property_definition_ids, created_relationship_ids
+1. SchemaExtractionOrchestrator + ApplyService produces created_class_ids,
+   created_property_definition_ids, created_relationship_ids
 2. Counts match between result tracking and actual entities
 3. Parse failures are handled gracefully
 4. Contract alignment with apply result fields

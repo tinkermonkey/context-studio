@@ -1,7 +1,8 @@
 """Structural tests for Schema Node Connection Refinement pipeline.
 
 Tests verify:
-1. ApplyService produces distinct relationships_added, relationships_removed, relationships_modified, relationships_skipped
+1. ApplyService produces distinct relationships_added, relationships_removed,
+   relationships_modified, relationships_skipped
 2. Modify is a real operation (not just add/remove)
 3. Revert round-trip succeeds
 4. Contract alignment with apply result fields
@@ -91,7 +92,13 @@ def ontology_service(change_recorder, ontology_repo, embedding_service, event_pu
 @pytest.fixture
 def llm_provider():
     """Create a fake LLM provider with connection refinement response."""
-    llm_response = '{"refined_relationships": [{"subject": "Microservice", "predicate": "depends_on", "object": "Database", "confidence": 0.95}]}'
+    llm_response = (
+        '{"refined_relationships": '
+        '[{"subject": "Microservice", '
+        '"predicate": "depends_on", '
+        '"object": "Database", '
+        '"confidence": 0.95}]}'
+    )
     return FakeLLMProvider(
         response_content=llm_response,
         tokens_in=10,
@@ -103,7 +110,8 @@ class TestSchemaNodeConnectionRefinementStructural:
     """Structural tests for schema node connection refinement pipeline."""
 
     def test_apply_result_tracks_all_relationship_operations(self):
-        """ApplyResult must track created, removed, modified, and skipped relationships separately."""
+        """ApplyResult must track created, removed, modified, and skipped
+        relationships separately."""
         from domain.pipelines.apply_result import ApplyResult
 
         result = ApplyResult()
@@ -140,7 +148,8 @@ class TestSchemaNodeConnectionRefinementStructural:
         assert result.relationships_removed == 0
 
     def test_apply_service_tracks_skipped_relationships(self):
-        """ApplyService should track relationships that were skipped (insufficient confidence, etc)."""
+        """ApplyService should track relationships that were skipped
+        (insufficient confidence, etc)."""
         result = ApplyResult()
 
         # Skipped relationships are tracked separately
@@ -171,8 +180,8 @@ class TestSchemaNodeConnectionRefinementViaHarness:
 
     def test_harness_functions_available(self):
         """Harness functions are imported: this class verifies they're in use."""
-        # The presence of TestSchemaNodeConnectionRefinementViaHarness class in per-pipeline test file
-        # ensures that run_pipeline_against_fixture is called
+        # The presence of TestSchemaNodeConnectionRefinementViaHarness in
+        # per-pipeline test file ensures run_pipeline_against_fixture is called
         assert run_pipeline_against_fixture is not None
 
     def test_apply_distinguishes_all_relationship_operations(self, ontology_service, ontology_repo):

@@ -263,8 +263,13 @@ class TestDefinitionRefinementViaHarness:
             DefinitionRefinementOrchestrator,
         )
 
+        llm_response = (
+            '{"definitions": '
+            '[{"label": "Microservice", '
+            '"definition": "A small service"}]}'
+        )
         llm_provider = FakeLLMProvider(
-            response_content='{"definitions": [{"label": "Microservice", "definition": "A small service"}]}'
+            response_content=llm_response
         )
         orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
 

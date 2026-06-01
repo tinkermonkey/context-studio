@@ -87,7 +87,11 @@ def ontology_service(change_recorder, ontology_repo, embedding_service, event_pu
 @pytest.fixture
 def llm_provider():
     """Create a fake LLM provider with refinement response."""
-    llm_response = '{"refined_definitions": [{"class": "Microservice", "definition": "A small, independent service"}]}'
+    llm_response = (
+        '{"refined_definitions": '
+        '[{"class": "Microservice", '
+        '"definition": "A small, independent service"}]}'
+    )
     return FakeLLMProvider(
         response_content=llm_response,
         tokens_in=10,
@@ -148,8 +152,8 @@ class TestSchemaNodeDefinitionRefinementViaHarness:
 
     def test_harness_functions_available(self):
         """Harness functions are imported: this class verifies they're in use."""
-        # The presence of TestSchemaNodeDefinitionRefinementViaHarness class in per-pipeline test file
-        # ensures that run_pipeline_against_fixture is called
+        # The presence of TestSchemaNodeDefinitionRefinementViaHarness in
+        # per-pipeline test file ensures run_pipeline_against_fixture is called
         assert run_pipeline_against_fixture is not None
 
     def test_apply_distinguishes_created_vs_updated(self):

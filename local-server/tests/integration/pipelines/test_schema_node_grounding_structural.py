@@ -1,7 +1,8 @@
 """Structural tests for Schema Node Grounding pipeline.
 
 Tests verify:
-1. SchemaNodeGroundingOrchestrator + ApplyService produces created_external_reference_ids (not overloading relationships_created)
+1. SchemaNodeGroundingOrchestrator + ApplyService produces
+   created_external_reference_ids (not overloading relationships_created)
 2. Per-source adapter contract is tested
 3. Unknown source adapter raises error
 4. Uses shared test harness for fixture I/O

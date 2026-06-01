@@ -934,8 +934,10 @@ class TestIndividualExtractionAgainstCanon:
 
     def test_canon_corpus_loads_with_minimum_papers(self, canon_bundle):
         """At least the seminal 5 papers must be present; 15 is the full Phase 1 target."""
-        assert len(canon_bundle.papers) >= 5, (
-            f"Canon corpus underpopulated: found {len(canon_bundle.papers)} papers, " f"expected ≥5"
+        papers_found = len(canon_bundle.papers)
+        assert papers_found >= 5, (
+            f"Canon corpus underpopulated: found {papers_found} papers, "
+            f"expected ≥5"
         )
         # Sanity check on master slice integrity.
         assert len(canon_bundle.canon["taxonomies"]) >= 1

@@ -276,8 +276,14 @@ class TestConnectionRefinementViaHarness:
             ConnectionRefinementOrchestrator,
         )
 
+        llm_response = (
+            '{"relationships": '
+            '[{"subject": "Microservice", '
+            '"predicate": "depends_on", '
+            '"object": "Database"}]}'
+        )
         llm_provider = FakeLLMProvider(
-            response_content='{"relationships": [{"subject": "Microservice", "predicate": "depends_on", "object": "Database"}]}'
+            response_content=llm_response
         )
         orchestrator = ConnectionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
 

@@ -764,8 +764,8 @@ class TestCrossFormatRoundTrip:
         self, ontology_repo, interchange_repo, representative_graph
     ):
         """
-        Test the three-leg chain: SKOS export → SKOS import → OWL export → OWL import → GraphML
-        export → GraphML import.
+        Test the three-leg chain: SKOS export → SKOS import → OWL export →
+        OWL import → GraphML export → GraphML import.
 
         Verifies that:
         1. Original ontology exported to SKOS format

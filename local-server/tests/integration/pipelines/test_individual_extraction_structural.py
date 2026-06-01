@@ -1,7 +1,8 @@
 """Structural tests for Individual Extraction pipeline.
 
 Tests verify:
-1. IndividualExtractionOrchestrator + ApplyService produces created_individual_ids and created_relationship_ids
+1. IndividualExtractionOrchestrator + ApplyService produces
+   created_individual_ids and created_relationship_ids
 2. Counts match between result tracking and actual entities
 3. Revert round-trip succeeds
 4. Contract alignment with apply result fields

@@ -213,7 +213,8 @@ class TestNoOpChangeEvents:
                     entity_id=sentinel_id,
                     batch_run_id=run_id,
                 ).all()
-                assert len(change_events) >= 1, "Should have at least one change_event from NoOp apply"
+                msg = "Should have at least one change_event from NoOp apply"
+                assert len(change_events) >= 1, msg
             finally:
                 session.close()
         finally:
@@ -265,7 +266,8 @@ class TestNoOpRevert:
             apply_result = apply_service.apply(run)
 
             # Verify apply created entities
-            assert len(apply_result.created_taxonomy_ids) >= 1, "Apply should create sentinel taxonomy"
+            msg = "Apply should create sentinel taxonomy"
+            assert len(apply_result.created_taxonomy_ids) >= 1, msg
             sentinel_id = apply_result.created_taxonomy_ids[0]
 
             # Verify sentinel exists before revert
@@ -285,7 +287,8 @@ class TestNoOpRevert:
             reverted_count = revert_service.revert(run_id)
 
             # Verify at least one event was reverted
-            assert reverted_count >= 1, "Should have reverted at least one change event from NoOp apply"
+            msg = "Should have reverted at least one change event from NoOp apply"
+            assert reverted_count >= 1, msg
 
             # Verify sentinel is gone after revert
             assert ontology_repo.get_taxonomy(sentinel_id) is None
@@ -317,9 +320,12 @@ class TestNoOpHarnessSelfTest:
 
         # Assertion: the diff must be empty (perfect match)
         assert diff["matches"] is True, f"Outputs do not match: {diff}"
-        assert len(diff["missing_keys"]) == 0, f"Missing keys: {diff['missing_keys']}"
+        assert len(diff["missing_keys"]) == 0, (
+            f"Missing keys: {diff['missing_keys']}"
+        )
         assert len(diff["extra_keys"]) == 0, f"Extra keys: {diff['extra_keys']}"
-        assert len(diff["mismatched_values"]) == 0, f"Mismatched values: {diff['mismatched_values']}"
+        msg = f"Mismatched values: {diff['mismatched_values']}"
+        assert len(diff["mismatched_values"]) == 0, msg
 
     @pytest.mark.asyncio
     async def test_harness_comparison_identifies_matches(self, noop_orchestrator):
@@ -351,7 +357,13 @@ class TestNoOpStructuralComplete:
 
     @pytest.mark.asyncio
     async def test_noop_smoke_test_complete(
-        self, noop_orchestrator, llm_provider, change_repo, ontology_service, ontology_repo, session_factory
+        self,
+        noop_orchestrator,
+        llm_provider,
+        change_repo,
+        ontology_service,
+        ontology_repo,
+        session_factory,
     ):
         """Single NoOp run exercises _call_llm, produces change_event, and is revertable."""
         run_id = str(uuid4())
@@ -399,7 +411,8 @@ class TestNoOpStructuralComplete:
                     entity_id=sentinel_id,
                     batch_run_id=run_id,
                 ).all()
-                assert len(change_events) >= 1, "Should have at least one change_event from NoOp apply"
+                msg = "Should have at least one change_event from NoOp apply"
+                assert len(change_events) >= 1, msg
             finally:
                 session.close()
 
