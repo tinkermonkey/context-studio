@@ -153,7 +153,7 @@ def test_revert_class_update(ontology_repo, change_repo, revert_svc):
     # Record an update event that changed the description
     change_repo.record_change(
         entity_id="cls-1",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.UPDATE,
         previous_state={"description": "An organism"},
         new_state={"description": "A living being"},
@@ -192,7 +192,7 @@ def test_revert_is_idempotent(ontology_repo, change_repo, revert_svc):
 
     change_repo.record_change(
         entity_id="cls-1",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={"id": "cls-1", "title": "Animal"},
         batch_run_id="run-1",
@@ -232,7 +232,7 @@ def test_revert_multiple_operations_same_run(ontology_repo, change_repo, revert_
     # Record events in order
     change_repo.record_change(
         entity_id="cls-1",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={"id": "cls-1", "title": "Animal"},
         batch_run_id="run-1",
@@ -275,7 +275,7 @@ def test_revert_restores_ontology_after_apply(ontology_repo, change_repo, revert
 
     change_repo.record_change(
         entity_id="cls-new",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={"id": "cls-new", "title": "NewClass"},
         batch_run_id="run-1",
@@ -308,7 +308,7 @@ def test_revert_emits_change_events_with_batch_run_id(ontology_repo, change_repo
 
     change_repo.record_change(
         entity_id="cls-1",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={"id": "cls-1", "title": "Animal"},
         batch_run_id="run-1",
@@ -349,7 +349,7 @@ def test_schema_extraction_roundtrip(ontology_repo, change_repo, revert_svc):
     # Record creation events (as apply service would)
     change_repo.record_change(
         entity_id="cls-service",
-        entity_type="Class",
+        entity_type="class",
         operation=ChangeOperation.CREATE,
         new_state={"id": "cls-service", "title": "Service"},
         batch_run_id="run-schema",
@@ -395,14 +395,14 @@ def test_individual_extraction_roundtrip(ontology_repo, change_repo, revert_svc)
     # Record creation events
     change_repo.record_change(
         entity_id="ind-alice",
-        entity_type="Individual",
+        entity_type="individual",
         operation=ChangeOperation.CREATE,
         new_state={"id": "ind-alice", "class_ids": ["cls-person"], "title": "Alice"},
         batch_run_id="run-individual",
     )
     change_repo.record_change(
         entity_id="ind-bob",
-        entity_type="Individual",
+        entity_type="individual",
         operation=ChangeOperation.CREATE,
         new_state={"id": "ind-bob", "class_ids": ["cls-person"], "title": "Bob"},
         batch_run_id="run-individual",

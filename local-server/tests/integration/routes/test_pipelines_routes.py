@@ -1194,7 +1194,7 @@ class TestRevertEndpoint:
 
     def test_revert_empty_run_returns_200_with_zero_reverted(self, revert_client, pipeline_run_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run with no events returns 200."""
-        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+        from domain.pipelines.entities import PipelineType
 
         # Create a pipeline run with no associated change events
         run = pipeline_run_repo.create(
@@ -1217,7 +1217,7 @@ class TestRevertEndpoint:
     def test_revert_with_changes_returns_200_with_count(self, revert_client, pipeline_run_repo, change_repo, ontology_repo):
         """POST /api/pipelines/runs/{run_id}/revert reverts recorded changes."""
         from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+        from domain.pipelines.entities import PipelineType
         from domain.versioning.value_objects import ChangeOperation
 
         # Create a taxonomy and scheme
@@ -1277,7 +1277,7 @@ class TestRevertEndpoint:
     def test_revert_error_does_not_leak_details(self, revert_client, pipeline_run_repo, change_repo, ontology_repo):
         """POST /api/pipelines/runs/{run_id}/revert error response does not leak internal details."""
         from domain.ontology.entities import ConceptScheme, Taxonomy
-        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+        from domain.pipelines.entities import PipelineType
         from domain.versioning.value_objects import ChangeOperation
 
         # Create a taxonomy and scheme
