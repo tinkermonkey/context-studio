@@ -144,6 +144,23 @@ class TestDefinitionRefinementExecution:
         with pytest.raises(PipelineInputError, match="node_id"):
             asyncio.run(orchestrator.execute(state))
 
+    def test_missing_node_raises_pipeline_input_error(self, traversal):
+        """Test that missing node (not in graph) raises PipelineInputError, not PipelineExecutionError."""
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=FakeLLMProvider(response_content="[]"),
+            traversal=traversal,
+        )
+        state = DefinitionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            input_data={
+                "node_id": str(uuid4()),  # Use a UUID that doesn't exist
+                "current_definition": "anything",
+            },
+        )
+        with pytest.raises(PipelineInputError, match="Node with id"):
+            asyncio.run(orchestrator.execute(state))
+
     def test_refinement_against_canon_rest_class_emits_candidates(
         self, traversal, ontology_with_rest_class
     ):

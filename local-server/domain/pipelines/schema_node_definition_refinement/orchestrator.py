@@ -144,6 +144,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 },
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise

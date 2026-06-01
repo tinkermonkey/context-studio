@@ -148,6 +148,27 @@ class TestSchemaGroundingOrchestrator:
             await orchestrator.execute(state)
 
     @pytest.mark.asyncio
+    async def test_execute_invalid_node_type(self, mock_adapter, mock_scorer, mock_llm_provider):
+        """Test execution with invalid node_type raises PipelineInputError."""
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=mock_llm_provider,
+            grounding_adapter=mock_adapter,
+            scorer=mock_scorer,
+        )
+
+        state = SchemaGroundingState(
+            run_id="run-123",
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            input_data={
+                "node_label": "Person",
+                "node_type": "InvalidType",
+            },
+        )
+
+        with pytest.raises(PipelineInputError, match="Invalid node_type"):
+            await orchestrator.execute(state)
+
+    @pytest.mark.asyncio
     async def test_execute_truncates_to_top_n(self, mock_adapter, mock_scorer, mock_llm_provider):
         """Test that results are truncated to top_n."""
         candidates = [

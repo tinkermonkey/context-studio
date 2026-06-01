@@ -146,6 +146,23 @@ class TestConnectionRefinementExecution:
         with pytest.raises(PipelineInputError, match="scope_id"):
             asyncio.run(orchestrator.execute(state))
 
+    def test_missing_scope_raises_pipeline_input_error(self, traversal):
+        """Test that missing scope (not in graph) raises PipelineInputError, not PipelineExecutionError."""
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=FakeLLMProvider(response_content="[]"),
+            traversal=traversal,
+        )
+        state = ConnectionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={
+                "scope_id": str(uuid4()),  # Use a UUID that doesn't exist
+                "current_connections": [],
+            },
+        )
+        with pytest.raises(PipelineInputError, match="Scope with id"):
+            asyncio.run(orchestrator.execute(state))
+
     def test_refinement_against_canon_microservices_class_emits_deltas(
         self, traversal, ontology_with_microservice_class
     ):
