@@ -96,12 +96,24 @@ def client(pipeline_run_repo, batch_repo, registries):
     mock_response.content = "[]"  # Default to empty list for JSON responses
     mock_llm_router.complete_async.return_value = mock_response
 
+    # Create mocks for required services to satisfy service wiring validation
+    mock_ontology_repo = MagicMock()
+    mock_extraction_service = MagicMock()
+    mock_extraction_repo = MagicMock()
+    mock_grounding_adapter = MagicMock()
+    mock_grounding_scorer = MagicMock()
+
     # Store in app.state for route handlers
     app.state.pipeline_run_repo = pipeline_run_repo
     app.state.batch_repo = batch_repo
     app.state.implementation_registry = registries["implementation_registry"]
     app.state.config_registry = registries["config_registry"]
     app.state.llm_router = mock_llm_router
+    app.state.ontology_repo = mock_ontology_repo
+    app.state.extraction_service = mock_extraction_service
+    app.state.extraction_repo = mock_extraction_repo
+    app.state.grounding_adapter = mock_grounding_adapter
+    app.state.grounding_scorer = mock_grounding_scorer
 
     return TestClient(app)
 
@@ -262,14 +274,23 @@ class TestPipelineRunEndpoints:
             {"model": "test-model", "batch_size": 32},
         )
 
-        response = client.post(
-            "/api/pipelines/schema_extraction/run",
-            json={
-                "documents": ["doc1", "doc2"],
-                "implementation_id": "default",
-                "configuration_ref": "default",
-            },
-        )
+        # Mock orchestrator to avoid needing actual services
+        mock_orchestrator = AsyncMock()
+        mock_state = MagicMock()
+        mock_state.current_status = PipelineRunStatus.COMPLETED
+        mock_state.result = {}
+        mock_state.parse_warnings = []
+        mock_orchestrator.execute.return_value = mock_state
+
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+            response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1", "doc2"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
         assert response.status_code == status.HTTP_201_CREATED
 
         body = response.json()
@@ -294,15 +315,24 @@ class TestPipelineRunEndpoints:
             {"model": "test-model"},
         )
 
+        # Mock orchestrator to avoid needing actual services
+        mock_orchestrator = AsyncMock()
+        mock_state = MagicMock()
+        mock_state.current_status = PipelineRunStatus.COMPLETED
+        mock_state.result = {}
+        mock_state.parse_warnings = []
+        mock_orchestrator.execute.return_value = mock_state
+
         # Create a run
-        create_response = client.post(
-            "/api/pipelines/schema_extraction/run",
-            json={
-                "documents": ["doc1", "doc2"],
-                "implementation_id": "default",
-                "configuration_ref": "default",
-            },
-        )
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+            create_response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1", "doc2"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
         assert create_response.status_code == status.HTTP_201_CREATED
         created_run = create_response.json()
         run_id = created_run["id"]
@@ -334,15 +364,24 @@ class TestPipelineRunEndpoints:
             {"model": "test-model"},
         )
 
+        # Mock orchestrator to avoid needing actual services
+        mock_orchestrator = AsyncMock()
+        mock_state = MagicMock()
+        mock_state.current_status = PipelineRunStatus.COMPLETED
+        mock_state.result = {}
+        mock_state.parse_warnings = []
+        mock_orchestrator.execute.return_value = mock_state
+
         # Create a run
-        create_response = client.post(
-            "/api/pipelines/schema_extraction/run",
-            json={
-                "documents": ["doc1", "doc2"],
-                "implementation_id": "default",
-                "configuration_ref": "default",
-            },
-        )
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
+            create_response = client.post(
+                "/api/pipelines/schema_extraction/run",
+                json={
+                    "documents": ["doc1", "doc2"],
+                    "implementation_id": "default",
+                    "configuration_ref": "default",
+                },
+            )
         created_run = create_response.json()
         run_id = created_run["id"]
 

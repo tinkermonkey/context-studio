@@ -9,6 +9,7 @@ import asyncio
 import json
 from pathlib import Path
 from typing import cast
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -116,6 +117,13 @@ def schema_client(pipeline_run_repo, batch_repo):
     config_registry = PipelineConfigurationRegistry()
     register_schema_extraction(None, config_registry)
 
+    # Create mocks for required services to satisfy service wiring validation
+    mock_ontology_repo = MagicMock()
+    mock_extraction_service = MagicMock()
+    mock_extraction_repo = MagicMock()
+    mock_grounding_adapter = MagicMock()
+    mock_grounding_scorer = MagicMock()
+
     app = FastAPI()
     app.include_router(router)
     app.state.pipeline_run_repo = pipeline_run_repo
@@ -123,6 +131,11 @@ def schema_client(pipeline_run_repo, batch_repo):
     app.state.implementation_registry = impl_registry
     app.state.config_registry = config_registry
     app.state.llm_router = _SchemaExtractionMockLLM()
+    app.state.ontology_repo = mock_ontology_repo
+    app.state.extraction_service = mock_extraction_service
+    app.state.extraction_repo = mock_extraction_repo
+    app.state.grounding_adapter = mock_grounding_adapter
+    app.state.grounding_scorer = mock_grounding_scorer
 
     return TestClient(app)
 

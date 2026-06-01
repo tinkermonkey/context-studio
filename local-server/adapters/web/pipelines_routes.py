@@ -75,6 +75,66 @@ _logger = get_logger(__name__)
 # ==================== Helper Functions ====================
 
 
+def _validate_required_services(
+    services: dict[str, Any], pipeline_type: PipelineType
+) -> None:
+    """
+    Validate that all required services for a pipeline type are present and not None.
+
+    Args:
+        services: Dict of services loaded from app.state
+        pipeline_type: The pipeline type being executed
+
+    Raises:
+        ValueError: If any required service is None or missing, with details on which service
+    """
+    if pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        if not services.get("extraction_service"):
+            raise ValueError(
+                "extraction_service is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+    elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        if not services.get("ontology_repo"):
+            raise ValueError(
+                "ontology_repo is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        if not services.get("grounding_adapter"):
+            raise ValueError(
+                "grounding_adapter is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+        if not services.get("scorer"):
+            raise ValueError(
+                "scorer (grounding_scorer) is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        if not services.get("ontology_repo"):
+            raise ValueError(
+                "ontology_repo is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+        if not services.get("extraction_repo"):
+            raise ValueError(
+                "extraction_repo is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+    elif pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+        if not services.get("ontology_repo"):
+            raise ValueError(
+                "ontology_repo is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+        if not services.get("extraction_repo"):
+            raise ValueError(
+                "extraction_repo is not wired. "
+                "Ensure the application initialization wired all required services."
+            )
+
+
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     Map domain exceptions to HTTP status codes and error messages.
@@ -399,6 +459,16 @@ async def run_pipeline(
         "run_id": run_id,
         "status_writer": repo,
     }
+
+    # Validate that all required services for this pipeline type are wired and not None
+    try:
+        _validate_required_services(services, ptype)
+    except ValueError as e:
+        _logger.error(f"Service wiring error: {str(e)}")
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
 
     # Instantiate orchestrator with dependencies (validates service dependencies)
     try:
