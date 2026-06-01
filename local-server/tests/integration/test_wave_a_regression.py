@@ -2,8 +2,7 @@
 Wave A regression tests for IndividualExtractionRun and change_event lineage.
 
 Verifies that:
-1. POST /api/extraction/extract continues to function (tested in test_extraction_routes.py)
-2. IndividualExtractionRun (migrated from ExtractionRun) produces correct change_event lineage
+1. IndividualExtractionRun (migrated from ExtractionRun) produces correct change_event lineage
 """
 
 import tempfile

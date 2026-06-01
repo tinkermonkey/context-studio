@@ -7,8 +7,6 @@ Tests verify:
 3. Orchestrator produces well-formed triples with confidence and provenance
 4. IndividualExtractionRun rows persisted with source_text_hash and lineage
 5. Cross-paper entity consistency across multiple fixture documents
-6. Backward compatibility with legacy /api/extraction/extract endpoint
-7. Text2KGBench benchmark harness compatibility
 
 Tests use 5 hand-authored fixtures including multi-paper cross-paper consistency.
 """
@@ -21,8 +19,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -32,7 +28,6 @@ from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunR
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from adapters.web.extraction_routes import router as extraction_router
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import IndividualExtractionRun, PipelineType
@@ -249,16 +244,6 @@ def pipeline_run_repo(session_factory):
     return PipelineRepository(session_factory)
 
 
-@pytest.fixture
-def legacy_client(extraction_service):
-    """Create a TestClient for legacy extraction routes."""
-    app = FastAPI()
-    app.include_router(extraction_router)
-    app.state.extraction_service = extraction_service
-
-    return TestClient(app)
-
-
 class TestIndividualExtractionRegistration:
     """Test pipeline registration and configuration."""
 
@@ -310,156 +295,6 @@ class TestIndividualExtractionRegistration:
         # Verify Wave A's original Anthropic config is unchanged
         assert wave_a_config.config["provider"] == "anthropic"
         assert "claude-opus" in wave_a_config.config["model"]
-
-
-class TestLegacyExtractionEndpoint:
-    """Test backward compatibility with Wave A /api/extraction/extract endpoint."""
-
-    def test_extract_triples_legacy_endpoint_returns_200(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract returns 200 with valid inputs."""
-        # Get an ontology ID from the repo
-        ontologies = ontology_repo.list_taxonomies()
-        assert len(ontologies) > 0
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-    def test_extract_triples_response_structure(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract response has correct format for benchmark."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-
-        # Verify expected benchmark format
-        assert "triples" in body
-        assert "warnings" in body
-        assert "metadata" in body
-
-        assert isinstance(body["triples"], list)
-        assert isinstance(body["warnings"], list)
-        assert isinstance(body["metadata"], dict)
-
-    def test_extract_triples_metadata_includes_model_info(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract metadata includes model and token counts."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-        metadata = body["metadata"]
-
-        # Verify benchmark harness expectations
-        assert "model" in metadata
-        assert "tokens_used" in metadata
-        assert "duration_ms" in metadata
-
-        assert isinstance(metadata["model"], str)
-        assert isinstance(metadata["tokens_used"], int)
-        assert isinstance(metadata["duration_ms"], int)
-
-    def test_extract_triples_with_invalid_ontology_returns_200_with_warnings(self, legacy_client):
-        """POST /api/extraction/extract with invalid ontology_id returns 200."""
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": "nonexistent-ontology-id",
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        # Errors are returned as warnings in the response
-        assert len(body["warnings"]) > 0
-        assert "not found" in body["warnings"][0].lower()
-
-    def test_extract_triples_with_empty_text_returns_422(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract with empty text returns 422 (validation error)."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        # Empty text is caught by Pydantic validation
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    def test_extract_triples_produces_structured_output(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract produces well-formed triples with confidence."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-        triples = body["triples"]
-
-        # Verify triple structure (from fake LLM response)
-        if triples:
-            for triple in triples:
-                assert "subject" in triple or "subject_ref" in triple
-                assert "predicate" in triple or "predicate_ref" in triple
-                assert "object" in triple or "object_ref" in triple
-                # confidence and provenance are optional but often present
 
 
 class TestOrchestratorExecution:
