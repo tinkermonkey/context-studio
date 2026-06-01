@@ -368,3 +368,108 @@ def test_schema_grounding_uses_external_references_created(repo):
     assert result.external_references_created == 1
     assert result.relationships_created == 0
     assert result.external_references_skipped == 0
+
+
+# ============================================================================
+# ApplyResult Validation Tests
+# ============================================================================
+
+
+class TestApplyResultValidation:
+    """Tests for ApplyResult count/ID consistency validation."""
+
+    def test_apply_result_rejects_classes_created_without_ids(self):
+        """ApplyResult rejects classes_created > 0 with empty created_class_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="classes_created.*created_class_ids.*must be consistent"):
+            ApplyResult(
+                classes_created=5,
+                created_class_ids=[],  # Inconsistent
+            )
+
+    def test_apply_result_rejects_classes_ids_without_count(self):
+        """ApplyResult rejects created_class_ids with classes_created = 0."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="classes_created.*created_class_ids.*must be consistent"):
+            ApplyResult(
+                classes_created=0,
+                created_class_ids=["cls-1", "cls-2"],  # Inconsistent
+            )
+
+    def test_apply_result_accepts_matching_classes(self):
+        """ApplyResult accepts consistent classes_created and created_class_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        result = ApplyResult(
+            classes_created=2,
+            created_class_ids=["cls-1", "cls-2"],
+        )
+        assert result.classes_created == 2
+        assert len(result.created_class_ids) == 2
+
+    def test_apply_result_accepts_zero_classes(self):
+        """ApplyResult accepts classes_created = 0 with empty created_class_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        result = ApplyResult(
+            classes_created=0,
+            created_class_ids=[],
+        )
+        assert result.classes_created == 0
+        assert len(result.created_class_ids) == 0
+
+    def test_apply_result_rejects_individuals_created_without_ids(self):
+        """ApplyResult rejects individuals_created > 0 with empty created_individual_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="individuals_created.*created_individual_ids.*must be consistent"):
+            ApplyResult(
+                individuals_created=3,
+                created_individual_ids=[],  # Inconsistent
+            )
+
+    def test_apply_result_rejects_relationships_created_without_ids(self):
+        """ApplyResult rejects relationships_created > 0 with empty created_relationship_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="relationships_created.*created_relationship_ids.*must be consistent"):
+            ApplyResult(
+                relationships_created=2,
+                created_relationship_ids=[],  # Inconsistent
+            )
+
+    def test_apply_result_rejects_properties_created_without_ids(self):
+        """ApplyResult rejects properties_created > 0 with empty created_property_definition_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="properties_created.*created_property_definition_ids.*must be consistent"):
+            ApplyResult(
+                properties_created=1,
+                created_property_definition_ids=[],  # Inconsistent
+            )
+
+    def test_apply_result_rejects_external_references_without_ids(self):
+        """ApplyResult rejects external_references_created > 0 with empty created_external_reference_ids."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        with pytest.raises(ValueError, match="external_references_created.*created_external_reference_ids.*must be consistent"):
+            ApplyResult(
+                external_references_created=1,
+                created_external_reference_ids=[],  # Inconsistent
+            )
+
+    def test_apply_result_allows_other_counts_without_id_lists(self):
+        """ApplyResult allows other counts (skipped, updated, removed) without restrictions."""
+        from domain.pipelines.apply_result import ApplyResult
+
+        # These should all be fine - skipped/updated/removed don't require ID lists
+        result = ApplyResult(
+            classes_skipped=5,
+            classes_updated=3,
+            relationships_removed=2,
+            individuals_skipped=4,
+        )
+        assert result.classes_skipped == 5
+        assert result.classes_updated == 3

@@ -103,11 +103,10 @@ class PipelineRun:
 
     Attributes:
         id: Unique identifier (UUID as string)
-        batch_run_id: Legacy field, now represents the batch ID (FK to batch_runs.id)
+        batch_run_id: Batch identifier (FK to batches.id)
         pipeline_type: Discriminator (individual_extraction | schema_extraction | ...)
         implementation_id: Reference to registered implementation
-        configuration_ref: Legacy reference field (kept for backwards compatibility; use
-            configuration_slug + configuration_version for resolution)
+        configuration_ref: Primary user-facing configuration identifier
         configuration_slug: Configuration slug part (non-null, immutable; used with
             configuration_version to uniquely identify a pinned configuration)
         configuration_version: Configuration version part (non-null, immutable; used with
@@ -135,6 +134,16 @@ class PipelineRun:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: datetime | None = None
     failure_reason: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.batch_run_id:
+            raise ValueError("batch_run_id cannot be empty")
+        if self.configuration_version <= 0:
+            raise ValueError("configuration_version must be greater than 0")
+        if self.status == PipelineRunStatus.PENDING and self.failure_reason is not None:
+            raise ValueError(
+                "status=PENDING is incompatible with a set failure_reason"
+            )
 
 
 @dataclass(frozen=True)
@@ -192,7 +201,7 @@ class IndividualExtractionRun(PipelineRun):
 
         Args:
             id: Unique identifier (UUID string)
-            batch_run_id: FK to batch_runs.id
+            batch_run_id: FK to batches.id
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
             configuration_slug: Configuration slug part

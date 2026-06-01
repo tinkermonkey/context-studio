@@ -185,6 +185,74 @@ class TestSchemaConnectionRefinementRun:
         assert run.configuration_version == 1
 
 
+class TestPipelineRunValidation:
+    """Tests for PipelineRun construction-time validation."""
+
+    def test_pipeline_run_rejects_empty_batch_run_id(self):
+        """PipelineRun rejects empty batch_run_id."""
+        with pytest.raises(ValueError, match="batch_run_id cannot be empty"):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="",  # Invalid: empty
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+            )
+
+    def test_pipeline_run_rejects_zero_configuration_version(self):
+        """PipelineRun rejects configuration_version <= 0."""
+        with pytest.raises(ValueError, match="configuration_version must be greater than 0"):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="batch-456",
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+                configuration_version=0,  # Invalid: must be > 0
+            )
+
+    def test_pipeline_run_rejects_pending_with_failure_reason(self):
+        """PipelineRun rejects status=PENDING with failure_reason set."""
+        with pytest.raises(ValueError, match="status=PENDING is incompatible with a set failure_reason"):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="batch-456",
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+                status=PipelineRunStatus.PENDING,
+                failure_reason="Some failure",  # Invalid: PENDING shouldn't have failure reason
+            )
+
+    def test_pipeline_run_accepts_failed_with_failure_reason(self):
+        """PipelineRun accepts status=FAILED with failure_reason set."""
+        run = PipelineRun(
+            id="run-123",
+            batch_run_id="batch-456",
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-001",
+            configuration_ref="config-default",
+            status=PipelineRunStatus.FAILED,
+            failure_reason="Extraction failed",  # Valid: FAILED with failure reason
+        )
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == "Extraction failed"
+
+    def test_pipeline_run_accepts_valid_construction(self):
+        """PipelineRun accepts valid construction parameters."""
+        run = PipelineRun(
+            id="run-123",
+            batch_run_id="batch-456",
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-001",
+            configuration_ref="config-default",
+            configuration_version=1,
+            status=PipelineRunStatus.PENDING,
+        )
+        assert run.batch_run_id == "batch-456"
+        assert run.configuration_version == 1
+
+
 class TestPipelineRunStatus:
     """Tests for PipelineRunStatus enum."""
 
