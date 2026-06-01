@@ -63,9 +63,12 @@ def _build_individual_extraction(
 def _build_schema_extraction(
     llm_provider: LLMProvider, services: dict[str, Any]
 ) -> PipelineOrchestrator:
+    ontology_repo = services.get("ontology_repo")
+    if not ontology_repo:
+        raise ValueError("ontology_repo is required for SchemaExtractionOrchestrator")
     return SchemaExtractionOrchestrator(
         llm_provider=llm_provider,
-        ontology_repo=services.get("ontology_repo"),
+        ontology_repo=ontology_repo,
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
     )
@@ -96,9 +99,12 @@ def _build_definition_refinement(
     ontology_repo = services.get("ontology_repo")
     if not ontology_repo:
         raise ValueError("ontology_repo is required for DefinitionRefinementOrchestrator")
+    extraction_repo = services.get("extraction_repo")
+    if not extraction_repo:
+        raise ValueError("extraction_repo is required for DefinitionRefinementOrchestrator")
     traversal = SchemaNeighborhoodTraversal(
         ontology_repo=ontology_repo,
-        extraction_repo=services.get("extraction_repo"),
+        extraction_repo=extraction_repo,
     )
     return DefinitionRefinementOrchestrator(
         llm_provider=llm_provider,
@@ -115,9 +121,12 @@ def _build_connection_refinement(
     ontology_repo = services.get("ontology_repo")
     if not ontology_repo:
         raise ValueError("ontology_repo is required for ConnectionRefinementOrchestrator")
+    extraction_repo = services.get("extraction_repo")
+    if not extraction_repo:
+        raise ValueError("extraction_repo is required for ConnectionRefinementOrchestrator")
     traversal = SchemaNeighborhoodTraversal(
         ontology_repo=ontology_repo,
-        extraction_repo=services.get("extraction_repo"),
+        extraction_repo=extraction_repo,
     )
     return ConnectionRefinementOrchestrator(
         llm_provider=llm_provider,
