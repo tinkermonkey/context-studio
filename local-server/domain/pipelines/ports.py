@@ -465,3 +465,16 @@ class BatchRepository(Protocol):
             Dict with keys: pending, running, completed, failed, cancelled
         """
         ...
+
+
+class PipelineRunStatusWriter(Protocol):
+    """Port for writing pipeline run status to persistence.
+
+    Narrower interface than PipelineRunRepository — orchestrators use this
+    to update run status at the start of execution without depending on the
+    full repository contract.
+    """
+
+    def update_running_status(self, run_id: str, started_at: datetime) -> bool:
+        """Update run status to RUNNING with started_at timestamp."""
+        ...

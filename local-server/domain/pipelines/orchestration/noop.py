@@ -11,15 +11,14 @@ Exercises:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Any, cast
+from typing import cast
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
-    PipelineRunStatusWriter,
     PipelineState,
 )
-from domain.pipelines.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 
 
 @dataclass

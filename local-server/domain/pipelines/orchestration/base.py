@@ -11,10 +11,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Protocol
+from typing import Any
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.ports import LLMProvider, LLMResponse
+from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
 
 
 @dataclass
@@ -42,14 +42,6 @@ class PipelineState:
     llm_provider: LLMProvider | None = None
     result: dict[str, Any] | None = None
     parse_warnings: list[dict[str, Any]] = field(default_factory=list)
-
-
-class PipelineRunStatusWriter(Protocol):
-    """Port for writing pipeline run status to persistence."""
-
-    def update_running_status(self, run_id: str, started_at: datetime) -> bool:
-        """Update run status to RUNNING with started_at timestamp."""
-        ...
 
 
 class PipelineOrchestrator(ABC):

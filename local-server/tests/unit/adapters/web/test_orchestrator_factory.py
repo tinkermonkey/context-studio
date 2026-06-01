@@ -16,7 +16,7 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
-from domain.pipelines.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
@@ -71,6 +71,12 @@ def mock_scorer() -> Mock:
     return Mock()
 
 
+@pytest.fixture
+def mock_status_writer() -> Mock:
+    """Create a mock pipeline run status writer."""
+    return Mock(spec=PipelineRunStatusWriter)
+
+
 class TestCreateOrchestratorNoOp:
     """Test create_orchestrator for NoOpPipelineOrchestrator."""
 
@@ -98,6 +104,25 @@ class TestCreateOrchestratorNoOp:
 
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
         assert orchestrator._llm_provider is mock_llm_provider
+
+    def test_passes_run_id_and_status_writer_to_noop(
+        self, mock_llm_provider, mock_status_writer
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "run_id": "test-run-456",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            NoOpPipelineOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, NoOpPipelineOrchestrator)
+        assert orchestrator._run_id == "test-run-456"
+        assert orchestrator._status_writer is mock_status_writer
 
 
 class TestCreateOrchestratorIndividualExtraction:
@@ -158,6 +183,26 @@ class TestCreateOrchestratorIndividualExtraction:
 
         assert "extraction_service is required" in str(exc_info.value)
 
+    def test_passes_run_id_and_status_writer_to_individual_extraction(
+        self, mock_llm_provider, mock_extraction_service, mock_status_writer
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "extraction_service": mock_extraction_service,
+            "run_id": "test-run-789",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            IndividualExtractionOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, IndividualExtractionOrchestrator)
+        assert orchestrator._run_id == "test-run-789"
+        assert orchestrator._status_writer is mock_status_writer
+
 
 class TestCreateOrchestratorSchemaExtraction:
     """Test create_orchestrator for SchemaExtractionOrchestrator."""
@@ -188,6 +233,25 @@ class TestCreateOrchestratorSchemaExtraction:
 
         assert isinstance(orchestrator, SchemaExtractionOrchestrator)
         assert orchestrator._llm_provider is mock_llm_provider
+
+    def test_passes_run_id_and_status_writer_to_schema_extraction(
+        self, mock_llm_provider, mock_status_writer
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "run_id": "test-run-011",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            SchemaExtractionOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, SchemaExtractionOrchestrator)
+        assert orchestrator._run_id == "test-run-011"
+        assert orchestrator._status_writer is mock_status_writer
 
 
 class TestCreateOrchestratorSchemaGrounding:
@@ -338,6 +402,31 @@ class TestCreateOrchestratorSchemaGrounding:
 
         assert "scorer is required" in str(exc_info.value)
 
+    def test_passes_run_id_and_status_writer_to_schema_grounding(
+        self,
+        mock_llm_provider,
+        mock_grounding_adapter,
+        mock_scorer,
+        mock_status_writer,
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "grounding_adapter": mock_grounding_adapter,
+            "scorer": mock_scorer,
+            "run_id": "test-run-012",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            SchemaGroundingOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, SchemaGroundingOrchestrator)
+        assert orchestrator._run_id == "test-run-012"
+        assert orchestrator._status_writer is mock_status_writer
+
 
 class TestCreateOrchestratorDefinitionRefinement:
     """Test create_orchestrator for DefinitionRefinementOrchestrator."""
@@ -446,6 +535,26 @@ class TestCreateOrchestratorDefinitionRefinement:
 
         assert "ontology_repo is required" in str(exc_info.value)
 
+    def test_passes_run_id_and_status_writer_to_definition_refinement(
+        self, mock_llm_provider, mock_ontology_repo, mock_status_writer
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "ontology_repo": mock_ontology_repo,
+            "run_id": "test-run-013",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            DefinitionRefinementOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, DefinitionRefinementOrchestrator)
+        assert orchestrator._run_id == "test-run-013"
+        assert orchestrator._status_writer is mock_status_writer
+
 
 class TestCreateOrchestratorConnectionRefinement:
     """Test create_orchestrator for ConnectionRefinementOrchestrator."""
@@ -553,6 +662,26 @@ class TestCreateOrchestratorConnectionRefinement:
             )
 
         assert "ontology_repo is required" in str(exc_info.value)
+
+    def test_passes_run_id_and_status_writer_to_connection_refinement(
+        self, mock_llm_provider, mock_ontology_repo, mock_status_writer
+    ):
+        """Test that run_id and status_writer are set on orchestrator."""
+        services = {
+            "ontology_repo": mock_ontology_repo,
+            "run_id": "test-run-014",
+            "status_writer": mock_status_writer,
+        }
+
+        orchestrator = create_orchestrator(
+            ConnectionRefinementOrchestrator,
+            llm_provider=mock_llm_provider,
+            services=services,
+        )
+
+        assert isinstance(orchestrator, ConnectionRefinementOrchestrator)
+        assert orchestrator._run_id == "test-run-014"
+        assert orchestrator._status_writer is mock_status_writer
 
 
 class TestCreateOrchestratorUnknownClass:

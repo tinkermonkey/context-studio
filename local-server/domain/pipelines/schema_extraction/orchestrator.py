@@ -26,10 +26,9 @@ from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
-    PipelineRunStatusWriter,
     PipelineState,
 )
-from domain.pipelines.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 
 _logger = logging.getLogger(__name__)
 
