@@ -75,7 +75,9 @@ def sample_pipeline_run():
 class TestSchemaGroundingApplyServiceBasic:
     """Basic functionality tests for grounding apply service."""
 
-    def test_apply_with_valid_groundings(self, mock_ontology_repo, sample_class, sample_pipeline_run):
+    def test_apply_with_valid_groundings(
+        self, mock_ontology_repo, sample_class, sample_pipeline_run
+    ):
         """Applying groundings creates new external references."""
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaGroundingApplyService(mock_ontology_repo)
@@ -153,7 +155,9 @@ class TestSchemaGroundingApplyServiceBasic:
         assert result.external_references_created == 3
         assert result.external_references_skipped == 1
 
-    def test_confidence_threshold_filtering(self, mock_ontology_repo, sample_class, sample_pipeline_run):
+    def test_confidence_threshold_filtering(
+        self, mock_ontology_repo, sample_class, sample_pipeline_run
+    ):
         """Groundings below confidence threshold are skipped."""
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaGroundingApplyService(mock_ontology_repo)
@@ -299,7 +303,9 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert result.external_references_created == 0
         assert result.external_references_skipped == 1
 
-    def test_zero_confidence_accepted_with_default_threshold(self, mock_ontology_repo, sample_class):
+    def test_zero_confidence_accepted_with_default_threshold(
+        self, mock_ontology_repo, sample_class
+    ):
         """Zero confidence is accepted when threshold is 0.0."""
         run = PipelineRun(
             id="run-zero-conf",
@@ -358,7 +364,9 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         new_refs = [ref for ref in saved_class.external_references if ref.source == "unknown"]
         assert len(new_refs) > 0
 
-    def test_apply_result_created_ids_tracking(self, mock_ontology_repo, sample_class, sample_pipeline_run):
+    def test_apply_result_created_ids_tracking(
+        self, mock_ontology_repo, sample_class, sample_pipeline_run
+    ):
         """ApplyResult correctly tracks created_external_reference_ids."""
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaGroundingApplyService(mock_ontology_repo)

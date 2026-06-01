@@ -36,7 +36,7 @@ class BlockingFakeLLMProvider:
         self.tokens_in = 10
         self.tokens_out = 20
         self.call_count = 0
-        self.last_call_args = None
+        self.last_call_args: dict[str, str] | None = None
         self._unblock_event = asyncio.Event()
         self.available_models = ["test-model"]
 
