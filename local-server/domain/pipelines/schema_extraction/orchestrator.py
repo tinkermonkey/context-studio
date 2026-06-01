@@ -205,7 +205,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": "Schema extraction encountered an unexpected error"},
             )
-            raise PipelineExecutionError("Schema extraction encountered an unexpected error") from exc
+            raise PipelineExecutionError(
+                "Schema extraction encountered an unexpected error"
+            ) from exc
 
         return schema_state
 

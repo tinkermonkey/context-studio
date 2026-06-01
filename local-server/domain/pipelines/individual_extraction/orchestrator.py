@@ -175,6 +175,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": "Individual extraction encountered an unexpected error"},
             )
-            raise PipelineExecutionError("Individual extraction encountered an unexpected error") from exc
+            raise PipelineExecutionError(
+                "Individual extraction encountered an unexpected error"
+            ) from exc
 
         return state
