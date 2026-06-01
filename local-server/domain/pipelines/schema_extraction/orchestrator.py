@@ -17,6 +17,7 @@ Execution flow (7 stages):
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
@@ -25,6 +26,8 @@ from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.ports import LLMProvider
+
+_logger = logging.getLogger(__name__)
 
 _MAX_CHUNK_CHARS = 8000
 
@@ -189,16 +192,20 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             # Finalize
             schema_state = await self._stage_finalize(schema_state)
 
+        except PipelineInputError:
+            schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during schema extraction: {exc}", exc_info=True)
             schema_state = replace(
                 schema_state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Schema extraction encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Schema extraction failed: {str(exc)}") from exc
+            raise PipelineExecutionError("Schema extraction encountered an unexpected error") from exc
 
         return schema_state
 

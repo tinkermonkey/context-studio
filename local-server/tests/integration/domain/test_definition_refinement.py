@@ -12,7 +12,7 @@ import pytest
 
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import PipelineState
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
@@ -124,7 +124,7 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        with pytest.raises(ValueError, match="Class not found"):
+        with pytest.raises(PipelineInputError, match="Node with id"):
             asyncio.run(orchestrator.execute(state))
 
     def test_handles_llm_json_with_code_fence(self, sample_class, session_factory):
@@ -166,7 +166,7 @@ class TestDefinitionRefinementOrchestrator:
         assert result_state.candidates[0]["definition"] == "A human"
 
     def test_handles_malformed_llm_response(self, sample_class, session_factory):
-        """Should handle gracefully when LLM response is not valid JSON."""
+        """Should raise error when LLM response is not valid JSON."""
         repo = SQLiteOntologyRepository(session_factory=session_factory)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
 
@@ -186,9 +186,5 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        result_state = asyncio.run(orchestrator.execute(state))
-
-        assert result_state.current_status == "completed"
-        # Should return no candidates when parsing fails (no fabrication)
-        assert result_state.candidates == []
-        assert result_state.result["total_candidates"] == 0
+        with pytest.raises(PipelineExecutionError, match="LLM response validation failed"):
+            asyncio.run(orchestrator.execute(state))

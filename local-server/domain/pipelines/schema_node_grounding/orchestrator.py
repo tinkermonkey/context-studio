@@ -8,6 +8,7 @@ and returns ranked groundings.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -21,6 +22,8 @@ from domain.pipelines.schema_node_grounding.scoring import (
     NodeType,
     ScoredCandidate,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -173,15 +176,19 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                 },
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during schema node grounding: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Schema node grounding encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Schema node grounding failed: {str(exc)}") from exc
+            raise PipelineExecutionError("Schema node grounding encountered an unexpected error") from exc
 
         return state

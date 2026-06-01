@@ -154,12 +154,13 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during definition refinement: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Definition refinement encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Definition refinement failed: {str(exc)}") from exc
+            raise PipelineExecutionError("Definition refinement encountered an unexpected error") from exc
 
         return state
 
@@ -265,11 +266,12 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
-            error_msg = (
-                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}"
+            _logger.error(
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}",
+                exc_info=True,
             )
-            _logger.error(error_msg, exc_info=True)
-            raise PipelineExecutionError(error_msg) from exc
+            sanitized_msg = f"LLM response validation failed for {neighborhood.class_label}"
+            raise PipelineExecutionError(sanitized_msg) from exc
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",
