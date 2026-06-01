@@ -95,22 +95,24 @@ class PipelineTypeRegistry:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             description="Refine schema node definitions using LLM",
             input_contract={
-                "nodes": "list[dict] — schema nodes to refine",
+                "node_id": "str (required) — UUID of the node to refine",
+                "current_definition": "str (required) — current definition text",
                 "context": "str (optional) — additional context for refinement",
             },
             output_contract={
-                "refined_nodes": "list[dict] — refined nodes with updated definitions",
+                "refined_definition": "str — refined definition text",
             },
         ),
         PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: PipelineTypeDefinition(
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             description="Refine connections between schema nodes",
             input_contract={
-                "edges": "list[dict] — edges (connections) to refine",
+                "scope_id": "str (required) — UUID of the scope containing the connections",
+                "current_connections": "list[dict] — current connections to refine",
                 "strategy": "str (optional) — refinement strategy",
             },
             output_contract={
-                "refined_edges": "list[dict] — refined edges with updated properties",
+                "refined_connections": "list[dict] — refined connections with updated properties",
             },
         ),
     }
@@ -241,9 +243,6 @@ class PipelineConfigurationRegistry:
     Configurations are immutable once set. Updates increment the version;
     old versions remain accessible. A PipelineRun references a specific
     version via configuration_ref + the version it used at creation time.
-
-    Once a (slug, version) pair is referenced by a PipelineRun, that pair
-    becomes immutable — attempting to update it raises ConfigurationImmutabilityError.
 
     In-Memory Design and Server Restart Safety:
 
@@ -378,8 +377,10 @@ class PipelineConfigurationRegistry:
         """
         Mark a configuration version as referenced by a PipelineRun.
 
-        Once a version is referenced, it becomes immutable — subsequent register()
-        calls for the same slug will fail if they try to update this version.
+        This documents the immutability contract: once a version is referenced by a run,
+        that version will not be modified. New runs can only reference the latest version
+        or explicitly pin an older version. Immutability is enforced by the architecture
+        (ConfigurationVersion is a frozen dataclass stored in an append-only list).
 
         Args:
             pipeline_type: Type of pipeline

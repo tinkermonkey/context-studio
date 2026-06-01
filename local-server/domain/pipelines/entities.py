@@ -19,8 +19,6 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
-_VALID_PROVIDERS: frozenset[str] = frozenset({"openai", "anthropic", "openrouter"})
-
 
 class PipelineRunStatus(str, Enum):
     """Status of a pipeline run."""
@@ -117,8 +115,7 @@ class PipelineRun:
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
-        status: Current status (pending | running | completed | failed | reviewed |
-            committed | abandoned)
+        status: Current status (pending | running | completed | failed | cancelled)
         created_at: UTC timestamp of run creation
         started_at: UTC timestamp when run actually started executing (RUNNING status)
         failure_reason: String description of failure reason if status=FAILED
