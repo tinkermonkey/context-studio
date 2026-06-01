@@ -357,21 +357,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         ontology_id = state.input_data.get("ontology_id")
         if ontology_id and self._ontology_repo is not None:
-            try:
-                classes = self._ontology_repo.list_classes(limit=None)
-                existing_labels = {cls.label.lower() for cls in classes}
-            except ValueError as e:
-                state = replace(
-                    state,
-                    parse_warnings=state.parse_warnings
-                    + [
-                        {
-                            "stage": "classification",
-                            "error": f"ontology lookup failed: {e}",
-                            "fallback_action": "all candidates marked as new",
-                        }
-                    ],
-                )
+            classes = self._ontology_repo.list_classes(limit=None)
+            existing_labels = {cls.label.lower() for cls in classes}
 
         classified = {
             concept: concept.lower() in existing_labels for concept in state.candidate_concepts
@@ -406,7 +393,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         )
         user_prompt = (
             f"Define these classes for a technical ontology.\n\n"
-            f"Labels: {', '.join(labels)}\n\n"
+            f"Labels: {label_list}\n\n"
             f"Context: {state.normalized_text[:3000]}\n\n"
             f"Return JSON: {{{example}, ...}}"
         )
