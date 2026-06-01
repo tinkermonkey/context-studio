@@ -13,15 +13,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
-from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
 class BlockingFakeLLMProvider:
@@ -134,36 +129,6 @@ def temp_db():
 def session_factory(temp_db):
     """Create a session factory for the temporary database."""
     return sessionmaker(bind=temp_db)
-
-
-@pytest.fixture
-def event_publisher():
-    """Create an in-process event publisher."""
-    return InProcessEventPublisher()
-
-
-@pytest.fixture
-def ontology_repo(session_factory):
-    """Create an ontology repository instance."""
-    return SQLiteOntologyRepository(session_factory)
-
-
-@pytest.fixture
-def change_repo(session_factory):
-    """Create a change repository instance."""
-    return SQLiteChangeRepository(session_factory)
-
-
-@pytest.fixture
-def embedding_service():
-    """Create a lightweight fake embedding service."""
-    return FakeEmbeddingService()
-
-
-@pytest.fixture
-def ontology_service(ontology_repo, embedding_service, event_publisher):
-    """Create the ontology service with all dependencies."""
-    return OntologyService(ontology_repo, embedding_service, event_publisher)
 
 
 @pytest.fixture
@@ -281,7 +246,6 @@ class TestRunningStatusObservation:
     ):
         """Multiple executions with blocking provider can be observed sequentially."""
         # First execution
-        run_id_1 = str(uuid4())
         db_run_1 = pipeline_repo.create(
             batch_run_id=str(uuid4()),
             pipeline_type=PipelineType.NO_OP,
@@ -313,7 +277,6 @@ class TestRunningStatusObservation:
         blocking_llm_provider._unblock_event.clear()
 
         # Second execution
-        run_id_2 = str(uuid4())
         db_run_2 = pipeline_repo.create(
             batch_run_id=str(uuid4()),
             pipeline_type=PipelineType.NO_OP,
