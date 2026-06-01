@@ -9,6 +9,7 @@ explicitly inherit from these protocols.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Literal, Protocol
 
 from .entities import Batch, BatchStatus, PipelineRun, PipelineRunStatus, PipelineType
@@ -260,8 +261,8 @@ class PipelineRunRepository(Protocol):
         pipeline_type: PipelineType | None = None,
         status: PipelineRunStatus | None = None,
         implementation_id: str | None = None,
-        start_date: Any | None = None,
-        end_date: Any | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[PipelineRunList, int]:
@@ -282,7 +283,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def update_running_status(self, run_id: str, started_at: Any) -> bool:
+    def update_running_status(self, run_id: str, started_at: datetime) -> bool:
         """
         Atomically update status to RUNNING and set started_at timestamp.
 
@@ -315,7 +316,7 @@ class PipelineRunRepository(Protocol):
         """
         ...
 
-    def update_started_at(self, run_id: str, started_at: Any) -> bool:
+    def update_started_at(self, run_id: str, started_at: datetime) -> bool:
         """
         Update a pipeline run's started_at timestamp.
 
