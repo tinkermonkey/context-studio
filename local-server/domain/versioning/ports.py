@@ -36,6 +36,7 @@ class ChangeRepository(Protocol):
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
+        batch_run_id: Optional[str] = None,
         limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """Get change events with optional filters, returning paginated results with total count."""

@@ -75,6 +75,7 @@ class FakeChangeRepository:
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
+        batch_run_id: Optional[str] = None,
         limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """Retrieve change events with optional filters and return total count."""
@@ -85,6 +86,9 @@ class FakeChangeRepository:
 
         if since:
             events = [e for e in events if e.timestamp >= since]
+
+        if batch_run_id:
+            events = [e for e in events if e.batch_run_id == batch_run_id]
 
         total_count = len(events)
         events.sort(key=lambda e: e.timestamp, reverse=True)

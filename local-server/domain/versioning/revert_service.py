@@ -22,11 +22,11 @@ _logger = logging.getLogger(__name__)
 
 class RevertService:
     """
-    Reverts the effects of a pipeline run by inverting change events.
+    Reverts the effects of a batch run by inverting change events.
 
-    Given a run_id, walks change_events for that run in reverse and applies
+    Given a batch_run_id, walks change_events for that batch in reverse and applies
     the inverse of each event. Already-reverted events are skipped (idempotent).
-    Emits new change_events tagged with the originating run_id for auditability.
+    Emits new change_events tagged with the originating batch_run_id for auditability.
     """
 
     def __init__(
@@ -42,31 +42,33 @@ class RevertService:
         self._change_repo = change_repo
         self._ontology_repo = ontology_repo
 
-    def revert(self, run_id: str) -> int:
+    def revert(self, batch_run_id: str) -> int:
         """
-        Revert all changes made by a specific pipeline run.
+        Revert all changes made by a specific batch run.
 
-        Walks the change_events for the given run_id in reverse chronological order
+        Walks the change_events for the given batch_run_id in reverse chronological order
         and applies the inverse of each operation. Already-reverted events are skipped.
 
         Args:
-            run_id: ID of the pipeline run to revert
+            batch_run_id: ID of the batch run to revert
 
         Returns:
             Count of events successfully reverted
 
         Raises:
-            ValueError: If run_id is empty
+            ValueError: If batch_run_id is empty
         """
-        if not run_id:
-            raise ValueError("run_id is required for revert")
+        if not batch_run_id:
+            raise ValueError("batch_run_id is required for revert")
 
-        # Fetch all history once to avoid O(N²) queries in _should_skip_revert
+        # Fetch all history to check for existing reverts (avoids O(N²) in _should_skip_revert)
         all_history = self._change_repo.get_changes(limit=None)
-        events = [e for e in all_history.events if e.batch_run_id == run_id]
+        # Filter by batch_run_id at query level to avoid memory overhead
+        events_result = self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None)
+        events = list(events_result.events)
 
         if not events:
-            _logger.info(f"No events found for run {run_id}")
+            _logger.info(f"No events found for batch run {batch_run_id}")
             return 0
 
         reverted_count = 0
@@ -74,10 +76,10 @@ class RevertService:
             if self._should_skip_revert(event, all_history.events):
                 continue
 
-            self._apply_inverse(event, run_id)
+            self._apply_inverse(event, batch_run_id)
             reverted_count += 1
 
-        _logger.info(f"Reverted {reverted_count} events for run {run_id}")
+        _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return reverted_count
 
     def _should_skip_revert(self, event, all_events) -> bool:

@@ -477,3 +477,271 @@ def test_connection_refinement_roundtrip(ontology_repo, change_repo, revert_svc)
 
     # Verify relationship is deleted
     assert ontology_repo.get_relationship("rel-1") is None
+
+
+# ============================================================================
+# _inverse_delete Tests (DELETE Revert)
+# ============================================================================
+
+
+def test_inverse_delete_taxonomy(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted taxonomy from new_state."""
+    # Record a DELETE event for a taxonomy (as if it was deleted)
+    taxonomy_state = {
+        "id": "tax-deleted",
+        "title": "Deleted Taxonomy",
+        "identifier": "del_tax",
+        "description": "A deleted taxonomy",
+        "color": "#ff0000",
+        "status": "published",
+    }
+    change_repo.record_change(
+        entity_id="tax-deleted",
+        entity_type="taxonomy",
+        operation=ChangeOperation.DELETE,
+        new_state=taxonomy_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify taxonomy doesn't exist
+    assert ontology_repo.get_taxonomy("tax-deleted") is None
+
+    # Revert (this will apply _inverse_delete)
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify taxonomy was recreated with correct state
+    recreated = ontology_repo.get_taxonomy("tax-deleted")
+    assert recreated is not None
+    assert recreated.title == "Deleted Taxonomy"
+    assert recreated.identifier == "del_tax"
+    assert recreated.description == "A deleted taxonomy"
+    assert recreated.color == "#ff0000"
+
+
+def test_inverse_delete_concept_scheme(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted concept scheme."""
+    concept_scheme_state = {
+        "id": "scheme-deleted",
+        "taxonomy_id": "tx-1",
+        "title": "Deleted Scheme",
+        "identifier": "del_scheme",
+        "description": "A deleted scheme",
+        "status": "published",
+    }
+    change_repo.record_change(
+        entity_id="scheme-deleted",
+        entity_type="concept_scheme",
+        operation=ChangeOperation.DELETE,
+        new_state=concept_scheme_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify doesn't exist
+    assert ontology_repo.get_concept_scheme("scheme-deleted") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify was recreated
+    recreated = ontology_repo.get_concept_scheme("scheme-deleted")
+    assert recreated is not None
+    assert recreated.title == "Deleted Scheme"
+    assert recreated.taxonomy_id == "tx-1"
+
+
+def test_inverse_delete_class(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted class."""
+    class_state = {
+        "id": "cls-deleted",
+        "taxonomy_id": "tx-1",
+        "concept_scheme_id": "scheme-1",
+        "title": "Deleted Class",
+        "description": "A deleted class",
+        "status": "published",
+    }
+    change_repo.record_change(
+        entity_id="cls-deleted",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state=class_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify doesn't exist
+    assert ontology_repo.get_class("cls-deleted") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify was recreated
+    recreated = ontology_repo.get_class("cls-deleted")
+    assert recreated is not None
+    assert recreated.title == "Deleted Class"
+    assert recreated.taxonomy_id == "tx-1"
+    assert recreated.concept_scheme_id == "scheme-1"
+
+
+def test_inverse_delete_individual(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted individual."""
+    individual_state = {
+        "id": "ind-deleted",
+        "class_ids": ["cls-1", "cls-2"],
+        "title": "Deleted Individual",
+        "status": "published",
+    }
+    change_repo.record_change(
+        entity_id="ind-deleted",
+        entity_type="individual",
+        operation=ChangeOperation.DELETE,
+        new_state=individual_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify doesn't exist
+    assert ontology_repo.get_individual("ind-deleted") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify was recreated
+    recreated = ontology_repo.get_individual("ind-deleted")
+    assert recreated is not None
+    assert recreated.title == "Deleted Individual"
+    assert recreated.class_ids == ["cls-1", "cls-2"]
+
+
+def test_inverse_delete_relationship(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted relationship."""
+    relationship_state = {
+        "id": "rel-deleted",
+        "source_id": "cls-1",
+        "target_id": "cls-2",
+        "property_definition_id": "prop-1",
+    }
+    change_repo.record_change(
+        entity_id="rel-deleted",
+        entity_type="relationship",
+        operation=ChangeOperation.DELETE,
+        new_state=relationship_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify doesn't exist
+    assert ontology_repo.get_relationship("rel-deleted") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify was recreated
+    recreated = ontology_repo.get_relationship("rel-deleted")
+    assert recreated is not None
+    assert recreated.source_id == "cls-1"
+    assert recreated.target_id == "cls-2"
+    assert recreated.property_definition_id == "prop-1"
+
+
+def test_inverse_delete_property_definition(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete recreates a deleted property definition."""
+    property_state = {
+        "id": "prop-deleted",
+        "identifier": "has_deleted",
+        "title": "Deleted Property",
+        "description": "A deleted property",
+        "status": "published",
+    }
+    change_repo.record_change(
+        entity_id="prop-deleted",
+        entity_type="property_definition",
+        operation=ChangeOperation.DELETE,
+        new_state=property_state,
+        batch_run_id="run-delete",
+    )
+
+    # Verify doesn't exist
+    assert ontology_repo.get_property_definition("prop-deleted") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete")
+    assert events_reverted == 1
+
+    # Verify was recreated
+    recreated = ontology_repo.get_property_definition("prop-deleted")
+    assert recreated is not None
+    assert recreated.title == "Deleted Property"
+    assert recreated.identifier == "has_deleted"
+    assert recreated.description == "A deleted property"
+
+
+def test_inverse_delete_multiple_entities(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete handles multiple deleted entities correctly."""
+    # Record DELETE events for multiple entities
+    change_repo.record_change(
+        entity_id="cls-del-1",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state={
+            "id": "cls-del-1",
+            "taxonomy_id": "tx-1",
+            "concept_scheme_id": "scheme-1",
+            "title": "Class 1",
+        },
+        batch_run_id="run-delete-multi",
+    )
+    change_repo.record_change(
+        entity_id="cls-del-2",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state={
+            "id": "cls-del-2",
+            "taxonomy_id": "tx-1",
+            "concept_scheme_id": "scheme-1",
+            "title": "Class 2",
+        },
+        batch_run_id="run-delete-multi",
+    )
+    change_repo.record_change(
+        entity_id="ind-del-1",
+        entity_type="individual",
+        operation=ChangeOperation.DELETE,
+        new_state={
+            "id": "ind-del-1",
+            "class_ids": ["cls-del-1"],
+            "title": "Individual 1",
+        },
+        batch_run_id="run-delete-multi",
+    )
+
+    # Verify none exist
+    assert ontology_repo.get_class("cls-del-1") is None
+    assert ontology_repo.get_class("cls-del-2") is None
+    assert ontology_repo.get_individual("ind-del-1") is None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-delete-multi")
+    assert events_reverted == 3
+
+    # Verify all were recreated
+    assert ontology_repo.get_class("cls-del-1") is not None
+    assert ontology_repo.get_class("cls-del-2") is not None
+    assert ontology_repo.get_individual("ind-del-1") is not None
+
+
+def test_inverse_delete_with_missing_state_raises_error(ontology_repo, change_repo, revert_svc):
+    """Test _inverse_delete raises error when new_state is missing."""
+    # Record a DELETE event with empty new_state
+    change_repo.record_change(
+        entity_id="cls-bad",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state={},  # Missing new_state
+        batch_run_id="run-bad",
+    )
+
+    # Revert should raise an error
+    with pytest.raises(ValueError, match="new_state is missing"):
+        revert_svc.revert("run-bad")
