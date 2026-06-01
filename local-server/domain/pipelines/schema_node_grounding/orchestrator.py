@@ -117,7 +117,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         try:
             node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
         except ValueError as exc:
-            error_msg = f"Invalid node_type '{node_type_str}'. Must be one of: {', '.join([t.value for t in NodeType])}"
+            valid_types = ", ".join([t.value for t in NodeType])
+            error_msg = f"Invalid node_type '{node_type_str}'. " f"Must be one of: {valid_types}"
             input_error = PipelineInputError(error_msg)
             state = replace(
                 state, current_status=PipelineRunStatus.FAILED, result={"error": error_msg}

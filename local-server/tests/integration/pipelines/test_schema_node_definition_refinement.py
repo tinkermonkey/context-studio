@@ -145,7 +145,7 @@ class TestDefinitionRefinementExecution:
             asyncio.run(orchestrator.execute(state))
 
     def test_missing_node_raises_pipeline_input_error(self, traversal):
-        """Test that missing node (not in graph) raises PipelineInputError, not PipelineExecutionError."""
+        """Test that missing node raises PipelineInputError, not PipelineExecutionError."""
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
@@ -281,13 +281,9 @@ class TestDefinitionRefinementViaHarness:
         )
 
         llm_response = (
-            '{"definitions": '
-            '[{"label": "Microservice", '
-            '"definition": "A small service"}]}'
+            '{"definitions": ' '[{"label": "Microservice", ' '"definition": "A small service"}]}'
         )
-        llm_provider = FakeLLMProvider(
-            response_content=llm_response
-        )
+        llm_provider = FakeLLMProvider(response_content=llm_response)
         orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
 
         actual, expected = await run_pipeline_against_fixture(
