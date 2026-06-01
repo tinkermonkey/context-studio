@@ -89,11 +89,14 @@ class RevertService:
         # by looking for a revert event for the same entity with the inverse operation
         all_events_result = self._change_repo.get_changes(limit=None)
         inverse_op = self._inverse_operation(event.operation)
+        normalized_entity_type = self._normalize_entity_type(event.entity_type)
 
         for existing_event in all_events_result.events:
+            normalized_existing_type = self._normalize_entity_type(existing_event.entity_type)
             if (
                 existing_event.entity_id == event.entity_id
                 and existing_event.operation == inverse_op
+                and normalized_existing_type == normalized_entity_type
                 and "_reverted_" in (existing_event.change_reason or "")
             ):
                 return True
@@ -103,7 +106,7 @@ class RevertService:
     def _apply_inverse(self, event, originating_run_id: str) -> None:
         """Apply the inverse operation for a change event."""
         entity_id = event.entity_id
-        entity_type = event.entity_type
+        entity_type = self._normalize_entity_type(event.entity_type)
         operation = event.operation
 
         try:
@@ -116,7 +119,7 @@ class RevertService:
 
             self._change_repo.record_change(
                 entity_id=entity_id,
-                entity_type=entity_type,
+                entity_type=event.entity_type,
                 operation=self._inverse_operation(operation),
                 new_state={},
                 previous_state=event.new_state,
@@ -280,6 +283,16 @@ class RevertService:
                     setattr(entity, key, value)
                 except Exception as exc:
                     _logger.warning(f"Could not restore field {key}: {exc}")
+
+    @staticmethod
+    def _normalize_entity_type(entity_type: str) -> str:
+        """Normalize entity type to lowercase snake_case for comparison."""
+        if not entity_type:
+            return entity_type
+        normalized = entity_type.lower()
+        normalized = normalized.replace("conceptscheme", "concept_scheme")
+        normalized = normalized.replace("propertydefinition", "property_definition")
+        return normalized
 
     @staticmethod
     def _inverse_operation(operation: ChangeOperation) -> ChangeOperation:

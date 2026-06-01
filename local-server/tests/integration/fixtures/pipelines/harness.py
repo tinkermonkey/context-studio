@@ -94,18 +94,23 @@ async def run_pipeline_against_fixture(
         FileNotFoundError: If fixture or expected output file not found
     """
     from uuid import uuid4
+
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 
+    from adapters.persistence.sqlite.models import Base
+    from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
     from domain.pipelines.entities import PipelineType
     from domain.pipelines.orchestration.base import PipelineState
     from domain.pipelines.orchestration.noop import NoOpPipelineState
-    from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
-    from domain.pipelines.schema_node_connection_refinement.orchestrator import ConnectionRefinementState
-    from domain.pipelines.schema_node_definition_refinement.orchestrator import DefinitionRefinementState
     from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
-    from adapters.persistence.sqlite.models import Base
-    from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+    from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
+    from domain.pipelines.schema_node_connection_refinement.orchestrator import (
+        ConnectionRefinementState,
+    )
+    from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+        DefinitionRefinementState,
+    )
 
     # Load fixture
     fixture_input = load_fixture(pipeline_type, scenario)
