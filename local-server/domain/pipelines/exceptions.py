@@ -25,9 +25,3 @@ class PipelineExecutionError(Exception):
     """Raised when internal orchestrator logic fails unexpectedly."""
 
     pass
-
-
-class ConfigurationImmutabilityError(Exception):
-    """Raised when attempting to mutate a configuration that is already referenced by a run."""
-
-    pass

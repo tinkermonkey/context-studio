@@ -108,7 +108,7 @@ class PipelineTypeRegistry:
             description="Refine connections between schema nodes",
             input_contract={
                 "scope_id": "str (required) — UUID of the scope containing the connections",
-                "current_connections": "list[dict] — current connections to refine",
+                "current_connections": "list[dict] (optional) — current connections to refine",
                 "strategy": "str (optional) — refinement strategy",
             },
             output_contract={
