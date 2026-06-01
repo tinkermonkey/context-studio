@@ -502,10 +502,10 @@ def run_benchmark(
 
         _logger.info(f"Processing {len(ontology_samples)} samples for {ontology}")
 
-        precision_scores = []
-        recall_scores = []
-        f1_scores = []
-        conformance_scores = []
+        precision_scores: list[float] = []
+        recall_scores: list[float] = []
+        f1_scores: list[float] = []
+        conformance_scores: list[float] = []
         total_false_positives = 0
         total_predicted_triples = 0
         consecutive_failures = 0
@@ -513,33 +513,16 @@ def run_benchmark(
 
         for sample_idx, sample in enumerate(ontology_samples):
             text = sample.get("text", "")
-            gold_triples = sample.get("triples", [])
 
             if not text:
                 continue
 
             try:
                 raise NotImplementedError(
-                    "HTTP-based extraction via POST /api/extraction/extract is no longer available. "
-                    "The endpoint has been removed in this version."
+                    "HTTP-based extraction via POST /api/extraction/extract is "
+                    "no longer available. The endpoint has been removed in this "
+                    "version."
                 )
-
-                result.total_duration_ms += duration_ms
-                if not result.model:
-                    result.model = model_used
-
-                # Compute metrics
-                precision, recall, f1, conformance, false_positives, num_predicted = (
-                    compute_metrics(pred_triples, gold_triples)
-                )
-                precision_scores.append(precision)
-                recall_scores.append(recall)
-                f1_scores.append(f1)
-                conformance_scores.append(conformance)
-                total_false_positives += false_positives
-                total_predicted_triples += num_predicted
-                result.samples_processed += 1
-                consecutive_failures = 0
 
             except (ConnectionError, httpx.HTTPStatusError) as e:
                 consecutive_failures += 1
