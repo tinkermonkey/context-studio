@@ -382,7 +382,10 @@ class TestApplyResultValidation:
         """ApplyResult rejects classes_created > 0 with empty created_class_ids."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="classes_created.*created_class_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="classes_created.*created_class_ids.*must be consistent",
+        ):
             ApplyResult(
                 classes_created=5,
                 created_class_ids=[],  # Inconsistent
@@ -392,7 +395,10 @@ class TestApplyResultValidation:
         """ApplyResult rejects created_class_ids with classes_created = 0."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="classes_created.*created_class_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="classes_created.*created_class_ids.*must be consistent",
+        ):
             ApplyResult(
                 classes_created=0,
                 created_class_ids=["cls-1", "cls-2"],  # Inconsistent
@@ -424,7 +430,11 @@ class TestApplyResultValidation:
         """ApplyResult rejects individuals_created > 0 with empty created_individual_ids."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="individuals_created.*created_individual_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="individuals_created.*created_individual_ids.*must be "
+            "consistent",
+        ):
             ApplyResult(
                 individuals_created=3,
                 created_individual_ids=[],  # Inconsistent
@@ -434,7 +444,11 @@ class TestApplyResultValidation:
         """ApplyResult rejects relationships_created > 0 with empty created_relationship_ids."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="relationships_created.*created_relationship_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="relationships_created.*created_relationship_ids.*must be "
+            "consistent",
+        ):
             ApplyResult(
                 relationships_created=2,
                 created_relationship_ids=[],  # Inconsistent
@@ -444,17 +458,26 @@ class TestApplyResultValidation:
         """ApplyResult rejects properties_created > 0 with empty created_property_definition_ids."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="properties_created.*created_property_definition_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="properties_created.*created_property_definition_ids.*must "
+            "be consistent",
+        ):
             ApplyResult(
                 properties_created=1,
                 created_property_definition_ids=[],  # Inconsistent
             )
 
     def test_apply_result_rejects_external_references_without_ids(self):
-        """ApplyResult rejects external_references_created > 0 with empty created_external_reference_ids."""
+        """ApplyResult rejects external_references_created > 0 with empty
+        created_external_reference_ids."""
         from domain.pipelines.apply_result import ApplyResult
 
-        with pytest.raises(ValueError, match="external_references_created.*created_external_reference_ids.*must be consistent"):
+        with pytest.raises(
+            ValueError,
+            match="external_references_created.*"
+            "created_external_reference_ids.*must be consistent",
+        ):
             ApplyResult(
                 external_references_created=1,
                 created_external_reference_ids=[],  # Inconsistent

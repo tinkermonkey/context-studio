@@ -213,7 +213,10 @@ class TestPipelineRunValidation:
 
     def test_pipeline_run_rejects_pending_with_failure_reason(self):
         """PipelineRun rejects status=PENDING with failure_reason set."""
-        with pytest.raises(ValueError, match="status=PENDING is incompatible with a set failure_reason"):
+        with pytest.raises(
+            ValueError,
+            match="status=PENDING is incompatible with a set failure_reason",
+        ):
             PipelineRun(
                 id="run-123",
                 batch_run_id="batch-456",

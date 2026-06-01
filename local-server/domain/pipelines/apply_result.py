@@ -30,23 +30,41 @@ class ApplyResult:
     def __post_init__(self) -> None:
         if (self.classes_created > 0) != bool(self.created_class_ids):
             raise ValueError(
-                f"classes_created ({self.classes_created}) and created_class_ids ({len(self.created_class_ids)} items) must be consistent"
+                f"classes_created ({self.classes_created}) and "
+                f"created_class_ids ({len(self.created_class_ids)} items) "
+                "must be consistent"
             )
         if (self.individuals_created > 0) != bool(self.created_individual_ids):
             raise ValueError(
-                f"individuals_created ({self.individuals_created}) and created_individual_ids ({len(self.created_individual_ids)} items) must be consistent"
+                f"individuals_created ({self.individuals_created}) and "
+                f"created_individual_ids ({len(self.created_individual_ids)} "
+                "items) must be consistent"
             )
-        if (self.relationships_created > 0) != bool(self.created_relationship_ids):
+        if (self.relationships_created > 0) != bool(
+            self.created_relationship_ids
+        ):
             raise ValueError(
-                f"relationships_created ({self.relationships_created}) and created_relationship_ids ({len(self.created_relationship_ids)} items) must be consistent"
+                f"relationships_created ({self.relationships_created}) and "
+                f"created_relationship_ids "
+                f"({len(self.created_relationship_ids)} items) must be "
+                "consistent"
             )
-        if (self.properties_created > 0) != bool(self.created_property_definition_ids):
+        if (self.properties_created > 0) != bool(
+            self.created_property_definition_ids
+        ):
             raise ValueError(
-                f"properties_created ({self.properties_created}) and created_property_definition_ids ({len(self.created_property_definition_ids)} items) must be consistent"
+                f"properties_created ({self.properties_created}) and "
+                f"created_property_definition_ids "
+                f"({len(self.created_property_definition_ids)} items) must be "
+                "consistent"
             )
         if (self.external_references_created > 0) != bool(
             self.created_external_reference_ids
         ):
             raise ValueError(
-                f"external_references_created ({self.external_references_created}) and created_external_reference_ids ({len(self.created_external_reference_ids)} items) must be consistent"
+                f"external_references_created "
+                f"({self.external_references_created}) and "
+                f"created_external_reference_ids "
+                f"({len(self.created_external_reference_ids)} items) must be "
+                "consistent"
             )
