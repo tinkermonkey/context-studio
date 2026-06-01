@@ -360,7 +360,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             try:
                 classes = self._ontology_repo.list_classes(limit=None)
                 existing_labels = {cls.label.lower() for cls in classes}
-            except Exception as e:
+            except ValueError as e:
                 state = replace(
                     state,
                     parse_warnings=state.parse_warnings
@@ -396,7 +396,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
         labels = state.candidate_concepts
-        ", ".join(f'"{label}"' for label in labels)
+        label_list = ", ".join(f'"{label}"' for label in labels)
         example = ", ".join(f'"{label}": "definition..."' for label in labels[:2])
 
         system_prompt = (
