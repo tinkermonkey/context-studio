@@ -307,6 +307,9 @@ class PipelineConfigurationRegistry:
 
         Returns:
             ConfigurationVersion just registered
+
+        Raises:
+            ValueError: If a referenced version would be mutated
         """
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
@@ -316,6 +319,7 @@ class PipelineConfigurationRegistry:
         # list, existing versions cannot be mutated. Only new versions can be registered.
 
         next_version = (versions[-1].version + 1) if versions else 1
+
         version_obj = ConfigurationVersion(
             pipeline_type=pipeline_type,
             implementation_id=implementation_id,

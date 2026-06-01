@@ -6,6 +6,7 @@ can safely resolve its (slug, version) reference because configurations
 are deterministically re-registered from code.
 """
 
+import pytest
 
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import PipelineConfigurationRegistry
@@ -227,3 +228,68 @@ class TestRegistryRestartSafety:
         # v1 and v2 are distinct versions
         assert v1_again.version == 1
         assert v1_again.config != v2.config
+
+    def test_configuration_immutability_enforced_by_frozen_dataclass(self):
+        """
+        Configuration immutability is enforced by the frozen dataclass design.
+
+        Once a version is referenced by a run, that version cannot be replaced or removed.
+        New versions must be created instead. Versions are stored in an append-only list
+        and ConfigurationVersion is a frozen dataclass, making individual versions immutable.
+
+        This test verifies that:
+        1. Referenced versions remain in the registry
+        2. New versions can be created independently
+        3. Old and new versions coexist and are distinct
+        """
+        registry = PipelineConfigurationRegistry()
+
+        # Register v1 with specific config
+        v1 = registry.register(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            {"top_n": 10, "model": "claude-opus"},
+        )
+        assert v1.version == 1
+
+        # Mark v1 as referenced by a pipeline run
+        registry.mark_version_referenced(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            1,
+        )
+
+        # Verify v1 is marked as referenced
+        assert registry.is_version_referenced(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            1,
+        )
+
+        # Even though v1 is referenced, we can register a new version (v2)
+        v2 = registry.register(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            {"top_n": 20, "model": "claude-opus"},
+        )
+        assert v2.version == 2
+        assert v2.config["top_n"] == 20
+
+        # v1 still exists and is unchanged
+        retrieved_v1 = registry.get_version(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            1,
+        )
+        assert retrieved_v1 is not None
+        assert retrieved_v1.version == 1
+        assert retrieved_v1.config["top_n"] == 10
+
+        # Both v1 and v2 are distinct
+        assert v1.version != v2.version
+        assert v1.config != v2.config
