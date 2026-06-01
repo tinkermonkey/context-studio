@@ -6,12 +6,12 @@ three-way operation handling (add/remove/modify), confidence thresholds,
 and property definition resolution via slugification.
 """
 
-import pytest
 from unittest.mock import Mock
 from uuid import uuid4
 
+import pytest
+
 from domain.ontology.entities import Class, PropertyDefinition, Relationship
-from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,

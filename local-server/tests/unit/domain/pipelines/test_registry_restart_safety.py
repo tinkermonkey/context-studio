@@ -7,6 +7,7 @@ are deterministically re-registered from code.
 """
 
 import dataclasses
+
 import pytest
 
 from domain.pipelines.entities import PipelineType

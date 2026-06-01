@@ -5,11 +5,11 @@ Tests cover confidence thresholds, node_id handling, candidate selection,
 and correct ApplyResult tracking.
 """
 
-import pytest
 from unittest.mock import Mock
 
+import pytest
+
 from domain.ontology.entities import Class
-from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,

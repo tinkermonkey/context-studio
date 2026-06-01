@@ -5,13 +5,13 @@ Tests cover URI deduplication, confidence thresholds, edge cases,
 and correct ApplyResult tracking.
 """
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
-from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 
 
