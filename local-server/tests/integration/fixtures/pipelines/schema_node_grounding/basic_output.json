@@ -7,12 +7,10 @@
         "label": "Microservice",
         "description": "A small, independent service",
         "source": "wikidata",
-        "source_score": 0.9,
-        "label_match_score": 0.95,
-        "semantic_similarity_score": 0.9,
         "match_confidence": 0.92,
         "match_rationale": "strong match"
       }
-    ]
+    ],
+    "total_candidates_evaluated": 1
   }
 }
