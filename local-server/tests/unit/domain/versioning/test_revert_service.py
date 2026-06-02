@@ -479,6 +479,98 @@ def test_connection_refinement_roundtrip(ontology_repo, change_repo, revert_svc)
     assert ontology_repo.get_relationship("rel-1") is None
 
 
+def test_schema_node_definition_refinement_roundtrip(ontology_repo, change_repo, revert_svc):
+    """Simulate schema node definition refinement: update class, then revert."""
+    # Create a class first
+    cls = Class(
+        id="cls-microservice",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Microservice",
+        description="Old definition",
+    )
+    ontology_repo.save_class(cls)
+
+    # Simulate apply: update the class description
+    original_description = "Old definition"
+    refined_description = "A small, independent service"
+    cls.description = refined_description
+    ontology_repo.save_class(cls)
+
+    # Record update event
+    change_repo.record_change(
+        entity_id="cls-microservice",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": original_description},
+        new_state={"description": refined_description},
+        batch_run_id="run-definition-refinement",
+    )
+
+    # Verify class has refined description
+    assert ontology_repo.get_class("cls-microservice").description == refined_description
+
+    # Revert
+    events_reverted = revert_svc.revert("run-definition-refinement")
+    assert events_reverted == 1
+
+    # Verify class has original description
+    assert ontology_repo.get_class("cls-microservice").description == original_description
+
+
+def test_schema_node_grounding_roundtrip(ontology_repo, change_repo, revert_svc):
+    """Simulate schema node grounding: add external references, then revert."""
+    # Create a class first
+    cls = Class(
+        id="cls-service",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Service",
+    )
+    ontology_repo.save_class(cls)
+
+    # Simulate apply: add external reference via relationship
+    # (Grounding typically creates relationships to external entities)
+    prop = PropertyDefinition(
+        id="prop-grounded-in",
+        identifier="grounded_in",
+        title="Grounded In",
+    )
+    ontology_repo.save_property_definition(prop)
+
+    rel = Relationship(
+        id="rel-grounding-1",
+        source_id="cls-service",
+        target_id="wikidata-q1",  # External reference ID
+        property_definition_id="prop-grounded-in",
+    )
+    ontology_repo.save_relationship(rel)
+
+    # Record creation events
+    change_repo.record_change(
+        entity_id="rel-grounding-1",
+        entity_type="relationship",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "rel-grounding-1",
+            "source_id": "cls-service",
+            "target_id": "wikidata-q1",
+            "property_definition_id": "prop-grounded-in",
+        },
+        batch_run_id="run-grounding",
+    )
+
+    # Verify relationship (grounding) exists
+    assert ontology_repo.get_relationship("rel-grounding-1") is not None
+
+    # Revert
+    events_reverted = revert_svc.revert("run-grounding")
+    assert events_reverted == 1
+
+    # Verify relationship is deleted
+    assert ontology_repo.get_relationship("rel-grounding-1") is None
+
+
 # ============================================================================
 # _inverse_delete Tests (DELETE Revert)
 # ============================================================================

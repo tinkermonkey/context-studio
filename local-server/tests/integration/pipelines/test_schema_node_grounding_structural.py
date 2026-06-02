@@ -9,6 +9,8 @@ Tests verify:
 """
 
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -20,6 +22,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
@@ -83,6 +86,50 @@ def llm_provider():
     )
 
 
+@pytest.fixture
+def mock_grounding_adapter():
+    """Create a mock grounding adapter."""
+    mock = AsyncMock()
+    mock.query_sources = AsyncMock(
+        return_value=[
+            GroundingCandidate(
+                uri="http://wikidata.org/entity/Q1",
+                label="Microservice",
+                description="A small, independent service",
+                source="wikidata",
+                source_score=0.9,
+            ),
+        ]
+    )
+    return mock
+
+
+@pytest.fixture
+def mock_grounding_scorer():
+    """Create a mock grounding scorer."""
+    from domain.pipelines.schema_node_grounding.scoring import ScoredCandidate
+
+    async def score_fn(candidates, node_label, node_type=None):
+        return [
+            ScoredCandidate(
+                uri=c.uri,
+                label=c.label,
+                description=c.description,
+                source=c.source,
+                source_score=c.source_score,
+                label_match_score=0.95,
+                semantic_similarity_score=0.9,
+                match_confidence=0.92,
+                match_rationale="strong match",
+            )
+            for c in candidates
+        ]
+
+    mock = MagicMock()
+    mock.score_candidates = AsyncMock(side_effect=score_fn)
+    return mock
+
+
 class TestSchemaNodeGroundingStructural:
     """Structural tests for schema node grounding pipeline."""
 
@@ -127,11 +174,33 @@ class TestSchemaNodeGroundingStructural:
 class TestSchemaNodeGroundingViaHarness:
     """Structural tests verifying harness integration and apply service behavior."""
 
-    def test_harness_functions_available(self):
-        """Harness functions are imported: this class verifies they're in use."""
-        # The presence of TestSchemaNodeGroundingViaHarness class in per-pipeline test file
-        # ensures that run_pipeline_against_fixture is called
-        assert run_pipeline_against_fixture is not None
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_grounding_fixture(
+        self, llm_provider, mock_grounding_adapter, mock_grounding_scorer
+    ):
+        """Harness loads grounding fixture, runs pipeline, verifies output structure."""
+        from domain.pipelines.schema_node_grounding.orchestrator import (
+            SchemaGroundingOrchestrator,
+        )
+
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=llm_provider,
+            grounding_adapter=mock_grounding_adapter,
+            scorer=mock_grounding_scorer,
+        )
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_node_grounding",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual
+        assert isinstance(actual["result"], dict)
 
     def test_apply_produces_external_reference_ids(self):
         """Apply service must return created_external_reference_ids."""

@@ -1,6 +1,7 @@
 {
-  "class_id": "test-class-123",
-  "scope_id": "test-scope-456",
+  "node_label": "Microservice",
+  "node_type": "Class",
+  "sources": ["wikidata"],
   "ontology_id": "test-ontology-123",
   "model": "claude-opus-4-7",
   "temperature": 0.0

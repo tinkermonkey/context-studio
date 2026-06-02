@@ -111,6 +111,7 @@ async def run_pipeline_against_fixture(
     from domain.pipelines.schema_node_definition_refinement.orchestrator import (
         DefinitionRefinementState,
     )
+    from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingState
 
     # Load fixture
     fixture_input = load_fixture(pipeline_type, scenario)
@@ -220,6 +221,52 @@ async def run_pipeline_against_fixture(
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            input_data=fixture_input,
+        )
+    elif pipeline_type == "schema_node_grounding":
+        from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(bind=engine)
+        repo = SQLiteOntologyRepository(session_factory)
+
+        # Setup fixture data if _setup section exists
+        if "_setup" in fixture_input:
+            setup = fixture_input["_setup"]
+            if "create_class" in setup:
+                class_spec = setup["create_class"]
+                # Create taxonomy and scheme if needed
+                tax = Taxonomy(
+                    id="fixture-tax-1",
+                    identifier="fixture_taxonomy",
+                    title="Fixture Taxonomy",
+                )
+                repo.save_taxonomy(tax)
+                scheme = ConceptScheme(
+                    id="fixture-scheme-1",
+                    identifier="fixture_scheme",
+                    taxonomy_id=tax.id,
+                    title="Fixture Scheme",
+                )
+                repo.save_concept_scheme(scheme)
+                # Create the class
+                cls = Class(
+                    id=class_spec.get("id", "test-grounding-456"),
+                    identifier=class_spec.get("identifier", "test_class"),
+                    concept_scheme_id=scheme.id,
+                    taxonomy_id=tax.id,
+                    title=class_spec.get("title", "Test Class"),
+                    description=class_spec.get("description", ""),
+                )
+                repo.save_class(cls)
+
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+        if hasattr(orchestrator, '_traversal') and orchestrator._traversal is None:
+            orchestrator._traversal = traversal
+        state = SchemaGroundingState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             input_data=fixture_input,
         )
     else:
