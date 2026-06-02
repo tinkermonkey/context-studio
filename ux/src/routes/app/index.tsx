@@ -48,8 +48,6 @@ function entityTypeToKind(entityType: string): { kind: string; kindLabel: string
     relationship: { kind: "RELATIONSHIP", kindLabel: "Relationship" },
     property_definition: { kind: "PROPERTY", kindLabel: "Property" },
     concept_scheme: { kind: "CONCEPT_SCHEME", kindLabel: "Concept Scheme" },
-    pipeline_configuration: { kind: "PIPELINE", kindLabel: "Pipeline" },
-    pipeline_execution: { kind: "PIPELINE", kindLabel: "Pipeline Run" },
   };
   return (
     map[entityType] ?? { kind: entityType.toUpperCase(), kindLabel: entityType.replace(/_/g, " ") }
@@ -131,13 +129,10 @@ export function Dashboard() {
             (typeof event.new_state?.name === "string" && event.new_state.name) ||
             (typeof event.new_state?.label === "string" && event.new_state.label) ||
             `Unnamed ${event.entity_type.replace(/_/g, " ")}`;
-          const isPipelineExecution = event.entity_type === "pipeline_execution";
           const kindProps = entityTypeToKind(event.entity_type);
           return {
             id: event.id,
-            type: isPipelineExecution
-              ? ("run" as ActivityEventType)
-              : mapOperationToEventType(event.operation),
+            type: mapOperationToEventType(event.operation),
             subject: stateTitle,
             timestamp: event.timestamp,
             ...kindProps,
