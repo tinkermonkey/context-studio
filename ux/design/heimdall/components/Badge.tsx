@@ -1,54 +1,44 @@
-import React from 'react'
-import './Badge.css'
-import type { StatusColor } from './statusColors'
+type BadgeColor = StatusColor;
 
-export type BadgeColor = StatusColor
-
-export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  color?: BadgeColor
-  pulse?: boolean
+interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  color?: BadgeColor;
+  pulse?: boolean;
 }
 
-export interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  color?: BadgeColor
-  pulse?: boolean
+interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  color?: BadgeColor;
+  pulse?: boolean;
 }
 
-export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ color = 'cyan', pulse = false, className = '', ...props }, ref) => {
-    const classNames = ['badge', `badge--${color}`, pulse && 'badge--pulse', className]
+const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ color = "cyan", pulse = false, className = "", ...props }, ref) => {
+    const classNames = ["badge", `badge--${color}`, pulse && "badge--pulse", className]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
-    return (
-      <span
-        ref={ref}
-        className={classNames}
-        {...props}
-      />
-    )
-  }
-)
+    return <span ref={ref} className={classNames} {...props} />;
+  },
+);
 
-Badge.displayName = 'Badge'
+Badge.displayName = "Badge";
 
-export const StatusBadge = React.forwardRef<HTMLDivElement, StatusBadgeProps>(
-  ({ color = 'cyan', pulse = false, className = '', role = 'img', ...props }, ref) => {
-    const classNames = ['status-badge', `status-badge--${color}`, pulse && 'status-badge--pulse', className]
+const StatusBadge = React.forwardRef<HTMLDivElement, StatusBadgeProps>(
+  ({ color = "cyan", pulse = false, className = "", role = "img", ...props }, ref) => {
+    const classNames = [
+      "status-badge",
+      `status-badge--${color}`,
+      pulse && "status-badge--pulse",
+      className,
+    ]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
-    return (
-      <div
-        ref={ref}
-        role={role}
-        className={classNames}
-        {...props}
-      />
-    )
-  }
-)
+    return <div ref={ref} role={role} className={classNames} {...props} />;
+  },
+);
 
-StatusBadge.displayName = 'StatusBadge'
+StatusBadge.displayName = "StatusBadge";
 
-export default Badge
+// --- Babel-standalone: expose runtime values to window ---
+window.Badge = Badge;
+window.StatusBadge = StatusBadge;

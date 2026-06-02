@@ -1,23 +1,18 @@
-import React from 'react'
-import { Modal } from './Modal'
-import { Button } from './Button'
-import './ConfirmDialog.css'
+type ConfirmDialogVariant = "primary" | "danger";
 
-export type ConfirmDialogVariant = 'primary' | 'danger'
-
-export interface ConfirmDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title?: string
-  subtitle?: string
-  message: React.ReactNode
-  confirmLabel?: string
-  cancelLabel?: string
-  variant?: ConfirmDialogVariant
+interface ConfirmDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title?: string;
+  subtitle?: string;
+  message: React.ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: ConfirmDialogVariant;
 }
 
-export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps>(
+const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps>(
   (
     {
       isOpen,
@@ -26,42 +21,29 @@ export const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps
       title,
       subtitle,
       message,
-      confirmLabel = 'Confirm',
-      cancelLabel = 'Cancel',
-      variant = 'danger',
+      confirmLabel = "Confirm",
+      cancelLabel = "Cancel",
+      variant = "danger",
     },
-    ref
+    ref,
   ) => {
     return (
-      <Modal
-        ref={ref}
-        isOpen={isOpen}
-        onClose={onClose}
-        title={title}
-        subtitle={subtitle}
-      >
+      <Modal ref={ref} isOpen={isOpen} onClose={onClose} title={title} subtitle={subtitle}>
         <div className="confirm-dialog__message">{message}</div>
         <div className="confirm-dialog__footer">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-          >
+          <Button variant="ghost" size="sm" onClick={onClose}>
             {cancelLabel}
           </Button>
-          <Button
-            variant={variant}
-            size="sm"
-            onClick={onConfirm}
-          >
+          <Button variant={variant} size="sm" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>
       </Modal>
-    )
-  }
-)
+    );
+  },
+);
 
-ConfirmDialog.displayName = 'ConfirmDialog'
+ConfirmDialog.displayName = "ConfirmDialog";
 
-export default ConfirmDialog
+// --- Babel-standalone: expose runtime values to window ---
+window.ConfirmDialog = ConfirmDialog;

@@ -1,14 +1,12 @@
 """
 Integration tests verifying that event handler failures are logged in services.
 
-This test suite validates that ExtractionService and PipelineService properly
-capture and log event publishing failures, ensuring operators have visibility
-into audit trail gaps.
+This test suite validates that ExtractionService properly captures and logs
+event publishing failures, ensuring operators have visibility into audit trail gaps.
 """
 
 from adapters.events.in_process import InProcessEventPublisher
 from domain.extraction.events import ExtractionCompleted
-from domain.pipelines.events import PipelineExecuted
 
 
 class TestExtractionServiceEventHandlerFailures:
@@ -27,30 +25,6 @@ class TestExtractionServiceEventHandlerFailures:
 
         # Publish an event directly to verify the failure is captured
         event = ExtractionCompleted(result_id="test", entity_count=5, duration_ms=100)
-        failures = publisher.publish(event)
-
-        # Verify that the failure was captured
-        assert len(failures) == 1
-        assert failures[0][0] == "audit_recorder"
-        assert isinstance(failures[0][1], ValueError)
-
-
-class TestPipelineServiceEventHandlerFailures:
-    """Test PipelineService logs event handler failures."""
-
-    def test_logs_warning_when_execution_event_fails(self):
-        """PipelineService should log warning when event handlers fail."""
-        # Create publisher that will cause handler failure
-        publisher = InProcessEventPublisher()
-
-        def failing_handler(event):
-            raise ValueError("Simulated handler failure")
-
-        failing_handler.__name__ = "audit_recorder"
-        publisher.subscribe(PipelineExecuted, failing_handler)
-
-        # Publish an event directly to verify the failure is captured
-        event = PipelineExecuted(execution_id="exec_1", pipeline_id="pipe_1", status="success")
         failures = publisher.publish(event)
 
         # Verify that the failure was captured

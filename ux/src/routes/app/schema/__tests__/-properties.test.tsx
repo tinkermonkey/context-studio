@@ -111,9 +111,7 @@ describe("Properties Schema Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state copy when no properties exist", async () => {
-      server.use(
-        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
-      );
+      server.use(http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))));
 
       render(<PropertiesPage />);
 
@@ -126,9 +124,7 @@ describe("Properties Schema Page", () => {
     });
 
     it("empty state displays action label button", async () => {
-      server.use(
-        http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
-      );
+      server.use(http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))));
 
       render(<PropertiesPage />);
 

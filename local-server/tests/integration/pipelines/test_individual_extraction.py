@@ -7,8 +7,6 @@ Tests verify:
 3. Orchestrator produces well-formed triples with confidence and provenance
 4. IndividualExtractionRun rows persisted with source_text_hash and lineage
 5. Cross-paper entity consistency across multiple fixture documents
-6. Backward compatibility with legacy /api/extraction/extract endpoint
-7. Text2KGBench benchmark harness compatibility
 
 Tests use 5 hand-authored fixtures including multi-paper cross-paper consistency.
 """
@@ -21,8 +19,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from fastapi import FastAPI, status
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -32,11 +28,10 @@ from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunR
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from adapters.web.extraction_routes import router as extraction_router
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.entities import IndividualExtractionRun, PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -51,8 +46,10 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.integration.fixtures.pipelines.harness import (
+    run_pipeline_against_fixture,
+)
 from tests.utils.canon_assertions import (
-    assert_triples_match,
     load_canon,
     score_triples,
 )
@@ -63,27 +60,56 @@ FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "pipelines" / "indivi
 # Canon (software-architecture gold corpus) shared between the test cycle and
 # the demo dataset loader.
 CANON_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "datafiles"
-    / "canon"
-    / "software_architecture"
+    Path(__file__).parent.parent.parent.parent / "datafiles" / "canon" / "software_architecture"
 )
 
 
-def load_fixture(fixture_name: str) -> dict:
-    """Load a fixture JSON file."""
+def _load_legacy_fixture(fixture_name: str) -> dict:
+    """Load a legacy fixture JSON file (internal use only)."""
     fixture_path = FIXTURES_DIR / f"{fixture_name}.json"
     with open(fixture_path, "r") as f:
         return json.load(f)
 
 
 def load_all_fixtures() -> list[dict]:
-    """Load all fixture files from the fixtures directory."""
+    """Load all legacy fixture files from the fixtures directory."""
     fixtures = []
     for fixture_file in sorted(FIXTURES_DIR.glob("fixture_*.json")):
         with open(fixture_file, "r") as f:
             fixtures.append(json.load(f))
     return fixtures
+
+
+class TestIndividualExtractionViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_extraction(
+        self, registered_extraction, extraction_service
+    ):
+        """Harness successfully loads fixture, runs orchestrator via harness."""
+        _, config_registry = registered_extraction
+        impl_registry = PipelineImplementationRegistry()
+        register_individual_extraction(impl_registry, config_registry)
+
+        llm_provider = FakeLLMProvider()
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        # Load fixture via harness
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "individual_extraction",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual
 
 
 @pytest.fixture
@@ -218,16 +244,6 @@ def pipeline_run_repo(session_factory):
     return PipelineRepository(session_factory)
 
 
-@pytest.fixture
-def legacy_client(extraction_service):
-    """Create a TestClient for legacy extraction routes."""
-    app = FastAPI()
-    app.include_router(extraction_router)
-    app.state.extraction_service = extraction_service
-
-    return TestClient(app)
-
-
 class TestIndividualExtractionRegistration:
     """Test pipeline registration and configuration."""
 
@@ -281,158 +297,6 @@ class TestIndividualExtractionRegistration:
         assert "claude-opus" in wave_a_config.config["model"]
 
 
-class TestLegacyExtractionEndpoint:
-    """Test backward compatibility with Wave A /api/extraction/extract endpoint."""
-
-    def test_extract_triples_legacy_endpoint_returns_200(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract returns 200 with valid inputs."""
-        # Get an ontology ID from the repo
-        ontologies = ontology_repo.list_taxonomies()
-        assert len(ontologies) > 0
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-    def test_extract_triples_response_structure(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract response has correct format for benchmark."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-
-        # Verify expected benchmark format
-        assert "triples" in body
-        assert "warnings" in body
-        assert "metadata" in body
-
-        assert isinstance(body["triples"], list)
-        assert isinstance(body["warnings"], list)
-        assert isinstance(body["metadata"], dict)
-
-    def test_extract_triples_metadata_includes_model_info(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract metadata includes model and token counts."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-        metadata = body["metadata"]
-
-        # Verify benchmark harness expectations
-        assert "model" in metadata
-        assert "tokens_used" in metadata
-        assert "duration_ms" in metadata
-
-        assert isinstance(metadata["model"], str)
-        assert isinstance(metadata["tokens_used"], int)
-        assert isinstance(metadata["duration_ms"], int)
-
-    def test_extract_triples_with_invalid_ontology_returns_200_with_warnings(
-        self, legacy_client
-    ):
-        """POST /api/extraction/extract with invalid ontology_id returns 200."""
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": "nonexistent-ontology-id",
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        # Errors are returned as warnings in the response
-        assert len(body["warnings"]) > 0
-        assert "not found" in body["warnings"][0].lower()
-
-    def test_extract_triples_with_empty_text_returns_422(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract with empty text returns 422 (validation error)."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        # Empty text is caught by Pydantic validation
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    def test_extract_triples_produces_structured_output(self, legacy_client, ontology_repo):
-        """POST /api/extraction/extract produces well-formed triples with confidence."""
-        ontologies = ontology_repo.list_taxonomies()
-        ontology_id = ontologies[0].id
-
-        response = legacy_client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "John Doe works for ACME Corp.",
-                "ontology_id": ontology_id,
-                "options": {
-                    "model": "claude-opus-4-7",
-                    "temperature": 0.0,
-                    "max_tokens": 4096,
-                },
-            },
-        )
-        body = response.json()
-        triples = body["triples"]
-
-        # Verify triple structure (from fake LLM response)
-        if triples:
-            for triple in triples:
-                assert "subject" in triple or "subject_ref" in triple
-                assert "predicate" in triple or "predicate_ref" in triple
-                assert "object" in triple or "object_ref" in triple
-                # confidence and provenance are optional but often present
-
-
 class TestOrchestratorExecution:
     """Test orchestrator.execute() direct method invocation."""
 
@@ -447,7 +311,7 @@ class TestOrchestratorExecution:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_1")
+        fixture = _load_legacy_fixture("fixture_paper_1")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -488,6 +352,7 @@ class TestOrchestratorExecution:
         )
 
         import asyncio
+
         with pytest.raises(PipelineInputError, match="text is required"):
             asyncio.run(orchestrator.execute(state))
 
@@ -502,7 +367,7 @@ class TestOrchestratorExecution:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_3")
+        fixture = _load_legacy_fixture("fixture_paper_3")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -541,13 +406,14 @@ class TestCrossPaperConsistency:
 
         # Extract from papers 1, 2, and 5 which all mention John Doe
         paper_fixtures = [
-            load_fixture("fixture_paper_1"),
-            load_fixture("fixture_paper_2"),
-            load_fixture("fixture_paper_5"),
+            _load_legacy_fixture("fixture_paper_1"),
+            _load_legacy_fixture("fixture_paper_2"),
+            _load_legacy_fixture("fixture_paper_5"),
         ]
 
         extraction_results = []
         import asyncio
+
         for fixture in paper_fixtures:
             state = IndividualExtractionState(
                 run_id=str(uuid4()),
@@ -561,10 +427,12 @@ class TestCrossPaperConsistency:
             )
 
             result_state = asyncio.run(orchestrator.execute(state))
-            extraction_results.append({
-                "fixture": fixture["name"],
-                "state": result_state,
-            })
+            extraction_results.append(
+                {
+                    "fixture": fixture["name"],
+                    "state": result_state,
+                }
+            )
 
         # Verify all extractions completed successfully
         for result in extraction_results:
@@ -585,7 +453,7 @@ class TestCrossPaperConsistency:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_paper_5")
+        fixture = _load_legacy_fixture("fixture_paper_5")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -628,17 +496,15 @@ class TestCrossPaperConsistency:
         ]
 
         for fixture_name in expected_corpus_fixtures:
-            assert fixture_name in fixture_names, (
-                f"Corpus-derived fixture '{fixture_name}' not found in {fixture_names}"
-            )
+            assert (
+                fixture_name in fixture_names
+            ), f"Corpus-derived fixture '{fixture_name}' not found in {fixture_names}"
 
 
 class TestCorpusDerivedFixtures:
     """Test individual extraction with corpus-derived fixtures."""
 
-    def test_corpus_cloud_provisioning_extraction(
-        self, extraction_service, ontology_repo
-    ):
+    def test_corpus_cloud_provisioning_extraction(self, extraction_service, ontology_repo):
         """Extract from corpus-derived cloud provisioning paper fixture."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -649,7 +515,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_cloud_provisioning_paper")
+        fixture = _load_legacy_fixture("fixture_cloud_provisioning_paper")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -669,9 +535,7 @@ class TestCorpusDerivedFixtures:
         assert result_state.extracted_triples is not None
         assert isinstance(result_state.extracted_triples, list)
 
-    def test_corpus_crdt_networks_extraction(
-        self, extraction_service, ontology_repo
-    ):
+    def test_corpus_crdt_networks_extraction(self, extraction_service, ontology_repo):
         """Extract from corpus-derived CRDT networks paper fixture."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -682,7 +546,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_crdt_networks_paper")
+        fixture = _load_legacy_fixture("fixture_crdt_networks_paper")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -701,9 +565,7 @@ class TestCorpusDerivedFixtures:
         assert result_state.source_text_hash != ""
         assert result_state.extracted_triples is not None
 
-    def test_corpus_kubernetes_energy_extraction(
-        self, extraction_service, ontology_repo
-    ):
+    def test_corpus_kubernetes_energy_extraction(self, extraction_service, ontology_repo):
         """Extract from corpus-derived Kubernetes energy monitoring fixture."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -714,7 +576,7 @@ class TestCorpusDerivedFixtures:
         ontologies = ontology_repo.list_taxonomies()
         ontology_id = ontologies[0].id
 
-        fixture = load_fixture("fixture_kubernetes_energy_monitoring")
+        fixture = _load_legacy_fixture("fixture_kubernetes_energy_monitoring")
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -749,6 +611,8 @@ class TestIndividualExtractionRunPersistence:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default:1",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": source_text_hash,
                 "source_document_uri": "test://paper-1.txt",
@@ -776,6 +640,8 @@ class TestIndividualExtractionRunPersistence:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-openrouter-default:1",
+            configuration_slug="extraction-openrouter-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": source_text_hash,
                 "source_document_uri": "test://paper-2.txt",
@@ -784,6 +650,7 @@ class TestIndividualExtractionRunPersistence:
 
         # Retrieve the run from the database using a new session
         from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+
         repo2 = PipelineRepository(session_factory)
         retrieved_run = repo2.get(run.id)
 
@@ -811,6 +678,8 @@ class TestIndividualExtractionRunPersistence:
                 pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                 implementation_id="default",
                 configuration_ref="extraction-default:1",
+                configuration_slug="extraction-default",
+                configuration_version=1,
                 specific_data={
                     "source_text_hash": text_hash,
                     "source_document_uri": f"test://paper-{i+1}.txt",
@@ -900,8 +769,9 @@ class TestIndividualExtractionAgainstCanon:
 
     def test_canon_corpus_loads_with_minimum_papers(self, canon_bundle):
         """At least the seminal 5 papers must be present; 15 is the full Phase 1 target."""
-        assert len(canon_bundle.papers) >= 5, (
-            f"Canon corpus underpopulated: found {len(canon_bundle.papers)} papers, "
+        papers_found = len(canon_bundle.papers)
+        assert papers_found >= 5, (
+            f"Canon corpus underpopulated: found {papers_found} papers, "
             f"expected ≥5"
         )
         # Sanity check on master slice integrity.
@@ -968,14 +838,17 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert metrics.f1 == 1.0, (
-            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 (p={metrics.precision}, r={metrics.recall})"
+        assert (
+            metrics.f1 == 1.0
+        ), (
+            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
+            f"(p={metrics.precision}, r={metrics.recall})"
         )
 
     def test_microservices_extraction_perfect_against_canon_fake(
         self, canon_orchestrator, canon_bundle, ontology_repo
     ):
-        """Fowler microservices article: perfect against fake; multi-sense 'service' present in source."""
+        """Fowler article: perfect against fake; multi-sense 'service' in source."""  # noqa: E501
         paper = canon_bundle.papers["fowler_microservices_article"]
         ontology_id = ontology_repo.list_taxonomies()[0].id
 
@@ -986,8 +859,11 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert metrics.f1 == 1.0, (
-            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 (p={metrics.precision}, r={metrics.recall})"
+        assert (
+            metrics.f1 == 1.0
+        ), (
+            f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
+            f"(p={metrics.precision}, r={metrics.recall})"
         )
 
     def test_all_canon_papers_perfect_against_canon_fake(
@@ -1016,9 +892,7 @@ class TestIndividualExtractionAgainstCanon:
                 produced=result_state.extracted_triples or [],
                 expected=paper["expected_relationships"],
             )
-            per_paper_metrics.append(
-                (name, metrics.precision, metrics.recall, metrics.f1)
-            )
+            per_paper_metrics.append((name, metrics.precision, metrics.recall, metrics.f1))
             if metrics.f1 != 1.0:
                 regressions.append(
                     f"{name}: p={metrics.precision:.4f} r={metrics.recall:.4f} f1={metrics.f1:.4f} "
@@ -1030,9 +904,10 @@ class TestIndividualExtractionAgainstCanon:
         for name, prec, rec, f1 in sorted(per_paper_metrics):
             print(f"  {name}: precision={prec:.2f} recall={rec:.2f} f1={f1:.2f}")
 
-        assert not regressions, (
-            "Canon-fake rollup expects F1=1.0 on every paper. Regressions:\n  "
-            + "\n  ".join(regressions)
+        assert (
+            not regressions
+        ), "Canon-fake rollup expects F1=1.0 on every paper. Regressions:\n  " + "\n  ".join(
+            regressions
         )
 
     def test_cross_paper_term_service_appears_across_corpus(self, canon_bundle):
@@ -1044,9 +919,10 @@ class TestIndividualExtractionAgainstCanon:
         pass.
         """
         appearances = [
-            name for name, paper in canon_bundle.papers.items()
+            name
+            for name, paper in canon_bundle.papers.items()
             if "service" in paper.get("multi_sense_terms_present", [])
         ]
-        assert len(appearances) >= 2, (
-            f"'service' multi-sense token expected in ≥2 papers, found in {appearances}"
-        )
+        assert (
+            len(appearances) >= 2
+        ), f"'service' multi-sense token expected in ≥2 papers, found in {appearances}"

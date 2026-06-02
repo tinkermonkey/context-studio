@@ -1,0 +1,309 @@
+"""
+Integration tests for observing RUNNING status mid-execution.
+
+Tests verify that pipeline orchestrator writes RUNNING status to the database
+early in execution, before the LLM call completes. Uses a blocking fake LLM
+provider to allow observation mid-flight.
+"""
+
+import asyncio
+from uuid import uuid4
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+
+
+class BlockingFakeLLMProvider:
+    """
+    Fake LLM provider that blocks until signaled, allowing test to observe
+    RUNNING status mid-execution.
+    """
+
+    def __init__(self, response_content: str = "Test response"):
+        """
+        Initialize the blocking fake LLM provider.
+
+        Args:
+            response_content: Content to return after unblocking
+        """
+        self.response_content = response_content
+        self.tokens_in = 10
+        self.tokens_out = 20
+        self.call_count = 0
+        self.last_call_args: dict[str, str] | None = None
+        self._unblock_event = asyncio.Event()
+        self.available_models = ["test-model"]
+
+    def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: str | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ):
+        """Synchronous complete (not used in async context)."""
+        from domain.pipelines.ports import LLMResponse
+
+        self.call_count += 1
+        self.last_call_args = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "model": model,
+        }
+        return LLMResponse(
+            content=self.response_content,
+            tokens_in=self.tokens_in,
+            tokens_out=self.tokens_out,
+            duration_ms=0.0,
+            finish_reason="stop",
+            model=model,
+        )
+
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: str | None = None,
+        timeout: float | None = None,
+        seed: int | None = None,
+    ):
+        """Async complete that blocks until unblocked."""
+        from domain.pipelines.ports import LLMResponse
+
+        self.call_count += 1
+        self.last_call_args = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "model": model,
+        }
+        # Block until test signals us to proceed
+        await self._unblock_event.wait()
+
+        return LLMResponse(
+            content=self.response_content,
+            tokens_in=self.tokens_in,
+            tokens_out=self.tokens_out,
+            duration_ms=0.0,
+            finish_reason="stop",
+            model=model,
+        )
+
+    def unblock(self):
+        """Signal the provider to unblock and return a response."""
+        self._unblock_event.set()
+
+    def is_model_available(self, model: str) -> bool:
+        """Check if a model is available."""
+        return model in self.available_models
+
+    def list_available_models(self) -> list[str]:
+        """Get list of available models."""
+        return list(self.available_models)
+
+
+@pytest.fixture
+def temp_db():
+    """Create a temporary SQLite database for integration tests."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
+    Base.metadata.create_all(engine)
+    return engine
+
+
+@pytest.fixture
+def session_factory(temp_db):
+    """Create a session factory for the temporary database."""
+    return sessionmaker(bind=temp_db)
+
+
+@pytest.fixture
+def pipeline_repo(session_factory):
+    """Create a pipeline repository for database access."""
+    return PipelineRepository(session_factory)
+
+
+@pytest.fixture
+def blocking_llm_provider():
+    """Create a blocking fake LLM provider."""
+    return BlockingFakeLLMProvider(response_content="Test LLM response")
+
+
+class TestRunningStatusObservation:
+    """Tests for observing RUNNING status mid-execution."""
+
+    @pytest.mark.asyncio
+    async def test_running_status_written_before_llm_call_completes(
+        self, blocking_llm_provider, pipeline_repo
+    ):
+        """
+        RUNNING status is written to database before LLM call completes.
+
+        This test:
+        1. Creates a pipeline run in the database
+        2. Starts orchestration with a blocking LLM provider
+        3. Allows execution to reach RUNNING state
+        4. Queries the database to verify RUNNING status is recorded mid-flight
+        5. Unblocks the provider to complete execution
+        6. Verifies final status is COMPLETED
+        """
+        # Create a pipeline run in the database
+        db_run = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id = db_run.id
+        orchestrator = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id, status_writer=pipeline_repo
+        )
+
+        # Start execution in the background
+        state = NoOpPipelineState(
+            run_id=run_id,
+            pipeline_type=PipelineType.NO_OP,
+            input_data={"text": "test input"},
+        )
+
+        # Create task for orchestrator execution
+        execution_task = asyncio.create_task(orchestrator.execute(state))
+
+        # Give the orchestrator time to start, write RUNNING status, and reach the LLM call
+        await asyncio.sleep(0.2)
+
+        # Query database to verify RUNNING status is written mid-flight
+        assert blocking_llm_provider.call_count > 0, "LLM provider should have been called"
+
+        # Check that the run status in the database is RUNNING
+        db_run_mid_execution = pipeline_repo.get(run_id)
+        assert db_run_mid_execution is not None, "Pipeline run should exist in database"
+        assert db_run_mid_execution.status == PipelineRunStatus.RUNNING, (
+            f"Pipeline run status should be RUNNING mid-execution, "
+            f"but got {db_run_mid_execution.status}"
+        )
+
+        # Unblock the LLM provider to allow execution to complete
+        blocking_llm_provider.unblock()
+
+        # Wait for execution to complete
+        result_state = await asyncio.wait_for(execution_task, timeout=5.0)
+
+        # Verify final status is COMPLETED in the returned state
+        assert result_state.current_status == PipelineRunStatus.COMPLETED
+
+    @pytest.mark.asyncio
+    async def test_blocking_provider_allows_status_observation(
+        self, blocking_llm_provider
+    ):
+        """Blocking provider correctly blocks and unblocks."""
+        async def call_provider():
+            return await blocking_llm_provider.complete_async(
+                system_prompt="test",
+                user_prompt="test",
+                model="test-model",
+            )
+
+        # Start the provider call in the background
+        provider_task = asyncio.create_task(call_provider())
+
+        # Give it time to block
+        await asyncio.sleep(0.2)
+
+        # Provider should still be waiting
+        assert not provider_task.done()
+
+        # Unblock
+        blocking_llm_provider.unblock()
+
+        # Wait for completion
+        response = await asyncio.wait_for(provider_task, timeout=1.0)
+
+        # Verify response
+        assert response.content == "Test LLM response"
+        assert response.tokens_in == 10
+        assert response.tokens_out == 20
+
+    @pytest.mark.asyncio
+    async def test_multiple_sequential_executions_with_blocking_provider(
+        self, blocking_llm_provider, pipeline_repo
+    ):
+        """Multiple executions with blocking provider can be observed sequentially."""
+        # First execution
+        db_run_1 = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id_1 = db_run_1.id
+
+        orchestrator_1 = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id_1, status_writer=pipeline_repo
+        )
+
+        state_1 = NoOpPipelineState(
+            run_id=run_id_1,
+            pipeline_type=PipelineType.NO_OP,
+            input_data={"text": "first input"},
+        )
+
+        task_1 = asyncio.create_task(orchestrator_1.execute(state_1))
+        await asyncio.sleep(0.2)
+        assert blocking_llm_provider.call_count == 1
+        blocking_llm_provider.unblock()
+        result_1 = await asyncio.wait_for(task_1, timeout=5.0)
+        assert result_1.current_status == PipelineRunStatus.COMPLETED
+
+        # Reset for second execution
+        blocking_llm_provider._unblock_event.clear()
+
+        # Second execution
+        db_run_2 = pipeline_repo.create(
+            batch_run_id=str(uuid4()),
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default@1",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        run_id_2 = db_run_2.id
+
+        orchestrator_2 = NoOpPipelineOrchestrator(
+            blocking_llm_provider, run_id=run_id_2, status_writer=pipeline_repo
+        )
+
+        state_2 = NoOpPipelineState(
+            run_id=run_id_2,
+            pipeline_type=PipelineType.NO_OP,
+            input_data={"text": "second input"},
+        )
+
+        task_2 = asyncio.create_task(orchestrator_2.execute(state_2))
+        await asyncio.sleep(0.2)
+        assert blocking_llm_provider.call_count == 2
+        blocking_llm_provider.unblock()
+        result_2 = await asyncio.wait_for(task_2, timeout=5.0)
+        assert result_2.current_status == PipelineRunStatus.COMPLETED
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

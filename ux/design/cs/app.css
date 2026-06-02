@@ -45,7 +45,7 @@
 }
 
 .cs-page-meta__health::before {
-  content: '';
+  content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -91,25 +91,25 @@
 
 /* stage 1 — source (cyan) */
 .pipeline-card__flow > div:nth-child(1) {
-  border-color: rgb(var(--status-cyan) / 0.30);
+  border-color: rgb(var(--status-cyan) / 0.3);
 }
 .pipeline-card__flow > div:nth-child(1) .pipeline-card__icon-tile {
-  background: rgb(var(--status-cyan) / 0.10);
+  background: rgb(var(--status-cyan) / 0.1);
   color: rgb(var(--status-cyan));
 }
 
 /* stage 2 — extract (violet) */
 .pipeline-card__flow > div:nth-child(3) {
-  border-color: rgb(var(--status-violet) / 0.30);
+  border-color: rgb(var(--status-violet) / 0.3);
 }
 .pipeline-card__flow > div:nth-child(3) .pipeline-card__icon-tile {
-  background: rgb(var(--status-violet) / 0.10);
+  background: rgb(var(--status-violet) / 0.1);
   color: rgb(var(--status-violet));
 }
 
 /* stage 3 — resolve (amber, same as accent so we keep the existing token) */
 .pipeline-card__flow > div:nth-child(5) {
-  border-color: rgb(var(--status-amber) / 0.30);
+  border-color: rgb(var(--status-amber) / 0.3);
 }
 .pipeline-card__flow > div:nth-child(5) .pipeline-card__icon-tile {
   background: rgb(var(--status-amber) / 0.12);
@@ -118,10 +118,10 @@
 
 /* stage 4 — write (emerald) */
 .pipeline-card__flow > div:nth-child(7) {
-  border-color: rgb(var(--status-emerald) / 0.30);
+  border-color: rgb(var(--status-emerald) / 0.3);
 }
 .pipeline-card__flow > div:nth-child(7) .pipeline-card__icon-tile {
-  background: rgb(var(--status-emerald) / 0.10);
+  background: rgb(var(--status-emerald) / 0.1);
   color: rgb(var(--status-emerald));
 }
 

@@ -6,6 +6,7 @@ supporting all entity types (taxonomy, concept_scheme, class, individual,
 property_definition, relationship).
 """
 
+import re
 from typing import Any, Dict, List
 
 from domain.interchange.value_objects import ResolutionKind
@@ -21,6 +22,11 @@ from domain.ontology.value_objects import ExternalReference
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _slugify(text: str) -> str:
+    """Convert a label to a snake_case identifier."""
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
 
 
 def persist_incoming_entities(
@@ -111,10 +117,11 @@ def _persist_class(
 
     class_entity = Class(
         id=entity_dict["id"],
-        title=entity_dict["title"],
-        description=entity_dict.get("description"),
         concept_scheme_id=concept_scheme_id,
         taxonomy_id=taxonomy_id,
+        identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
+        title=entity_dict["title"],
+        description=entity_dict.get("description"),
         parent_class_id=entity_dict.get("parent_class_id"),
         external_references=[
             ExternalReference(
@@ -135,9 +142,10 @@ def _persist_concept_scheme(
     """Persist a ConceptScheme entity."""
     scheme = ConceptScheme(
         id=entity_dict["id"],
+        taxonomy_id=entity_dict.get("taxonomy_id", ""),
+        identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
-        taxonomy_id=entity_dict.get("taxonomy_id", ""),
     )
     ontology_repo.save_concept_scheme(scheme)
 
@@ -149,6 +157,7 @@ def _persist_taxonomy(
     """Persist a Taxonomy entity."""
     taxonomy = Taxonomy(
         id=entity_dict["id"],
+        identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
     )

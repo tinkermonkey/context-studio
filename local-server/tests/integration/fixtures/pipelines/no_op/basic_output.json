@@ -10,13 +10,10 @@
       "implementation_id": "default",
       "configuration_ref": "noop-default"
     },
-    "step_count": 2,
-    "steps": ["initialize", "process", "finalize"]
-  },
-  "metadata": {
-    "tokens_in": 10,
-    "tokens_out": 20,
-    "duration_ms": 0.0,
-    "finish_reason": "stop"
+    "step_count": 4,
+    "steps": ["initialize", "call_llm", "process", "finalize"],
+    "llm_model": "test-model",
+    "llm_tokens_in": 10,
+    "llm_tokens_out": 20
   }
 }

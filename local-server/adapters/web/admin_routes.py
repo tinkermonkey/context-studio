@@ -578,40 +578,39 @@ async def get_stats_trends(
 
         # --- Query change_events in local.db ---
         rows = local_db.execute(
-            text(
-                """
+            text("""
                 SELECT date(timestamp) AS day, entity_type, COUNT(*) AS cnt
                 FROM change_events
                 WHERE operation = 'create'
                   AND entity_type IN ('taxonomy', 'class', 'individual')
                   AND timestamp >= :cutoff
                 GROUP BY date(timestamp), entity_type
-                """
-            ),
+                """),
             {"cutoff": cutoff.isoformat()},
         ).fetchall()
 
         # Accumulate counts keyed by (date_str, entity_type)
         event_counts: dict[tuple[str, str], int] = defaultdict(int)
         for row in rows:
-            event_counts[(row[0], row[1])] += row[2]
+            day, entity_type, cnt = row
+            day_str = str(day)
+            event_counts[(day_str, str(entity_type))] += int(cnt)
 
         # --- Query pipeline_configurations in operations.db ---
         pipeline_rows = ops_db.execute(
-            text(
-                """
+            text("""
                 SELECT date(created_at) AS day, COUNT(*) AS cnt
                 FROM pipeline_configurations
                 WHERE created_at >= :cutoff
                 GROUP BY date(created_at)
-                """
-            ),
+                """),
             {"cutoff": cutoff.isoformat()},
         ).fetchall()
 
         pipeline_counts: dict[str, int] = defaultdict(int)
         for row in pipeline_rows:
-            pipeline_counts[row[0]] += row[1]
+            day, cnt = row
+            pipeline_counts[str(day)] += int(cnt)
 
         # Build arrays: one integer per calendar day, oldest first
         taxonomies = [event_counts.get((str(d), "taxonomy"), 0) for d in date_labels]

@@ -1,59 +1,67 @@
-import React from 'react'
-import './Sparkline.css'
-import type { StatusColor } from './statusColors'
-import { statusColorMap } from './statusColors'
+type SparklineColor = StatusColor;
 
-export type SparklineColor = StatusColor
-
-export interface SparklineProps extends Omit<React.SVGAttributes<SVGSVGElement>, 'children'> {
-  data: number[]
-  width?: number
-  height?: number
-  color?: SparklineColor | (string & {})
-  area?: boolean
-  label?: string
+interface SparklineProps extends Omit<React.SVGAttributes<SVGSVGElement>, "children"> {
+  data: number[];
+  width?: number;
+  height?: number;
+  color?: SparklineColor | (string & {});
+  area?: boolean;
+  label?: string;
 }
 
 function resolveColor(color: string): string {
-  return color in statusColorMap ? statusColorMap[color as StatusColor] : color
+  return color in statusColorMap ? statusColorMap[color as StatusColor] : color;
 }
 
 function linePath(pts: [number, number][]): string {
-  return pts.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(2) + ',' + y.toFixed(2)).join(' ')
+  return pts.map(([x, y], i) => (i ? "L" : "M") + x.toFixed(2) + "," + y.toFixed(2)).join(" ");
 }
 
-export const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(
-  ({ data, width = 88, height = 28, color = 'emerald', area = true, label, className = '', style, ...rest }, ref) => {
-    const gradId = React.useId()
+const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(
+  (
+    {
+      data,
+      width = 88,
+      height = 28,
+      color = "emerald",
+      area = true,
+      label,
+      className = "",
+      style,
+      ...rest
+    },
+    ref,
+  ) => {
+    const gradId = React.useId();
 
     const geometry = React.useMemo(() => {
-      if (!data || data.length < 2) return null
-      const min = Math.min(...data)
-      const max = Math.max(...data)
+      if (!data || data.length < 2) return null;
+      const min = Math.min(...data);
+      const max = Math.max(...data);
       const pts: [number, number][] = data.map((v, i) => [
         (i / (data.length - 1)) * width,
         height - 2 - ((v - min) / (max - min || 1)) * (height - 4),
-      ])
-      const line = linePath(pts)
-      const fill = `${line} L${width},${height} L0,${height} Z`
-      return { line, fill }
-    }, [data, width, height])
+      ]);
+      const line = linePath(pts);
+      const fill = `${line} L${width},${height} L0,${height} Z`;
+      return { line, fill };
+    }, [data, width, height]);
 
-    if (!geometry) return null
+    if (!geometry) return null;
 
-    const c = resolveColor(String(color))
-    const { line, fill } = geometry
+    const c = resolveColor(String(color));
+    const { line, fill } = geometry;
 
     return (
       <svg
         ref={ref}
         role="img"
-        aria-label={label ?? 'trend sparkline'}
+        aria-label={label ?? "trend sparkline"}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
-        style={{ display: 'block', ...style }}
+        style={{ display: "block", ...style }}
         className={className}
         {...rest}
       >
@@ -66,11 +74,20 @@ export const Sparkline = React.forwardRef<SVGSVGElement, SparklineProps>(
           </defs>
         )}
         {area && <path d={fill} fill={`url(#${gradId})`} />}
-        <path d={line} stroke={c} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d={line}
+          stroke={c}
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
-    )
-  }
-)
+    );
+  },
+);
 
-Sparkline.displayName = 'Sparkline'
-export default Sparkline
+Sparkline.displayName = "Sparkline";
+
+// --- Babel-standalone: expose runtime values to window ---
+window.Sparkline = Sparkline;

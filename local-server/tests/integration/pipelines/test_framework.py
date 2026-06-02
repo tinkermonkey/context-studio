@@ -491,26 +491,3 @@ class TestCandidatesEndpoint:
             candidate = candidates[0]
             # Candidate should have at least some expected fields (varies by pipeline type)
             assert isinstance(candidate, dict)
-
-
-class TestWaveARegression:
-    """Test Wave A extraction pipeline regression: `POST /api/extraction/extract` still works."""
-
-    @pytest.mark.skip(
-        reason="Wave A extraction endpoint not yet wired into current test client"
-    )
-    def test_extraction_extract_endpoint_works(self, client):
-        """POST /api/extraction/extract returns well-formed response."""
-        response = client.post(
-            "/api/extraction/extract",
-            json={
-                "text": "Test document content.",
-                "schema_type": "entity",
-            },
-        )
-        assert response.status_code in (status.HTTP_200_OK, status.HTTP_201_CREATED)
-        body = response.json()
-
-        # Verify response structure
-        assert "id" in body or "extraction_id" in body
-        assert "status" in body or "success" in body

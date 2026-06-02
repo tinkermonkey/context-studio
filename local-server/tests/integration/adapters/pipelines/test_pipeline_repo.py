@@ -17,8 +17,8 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from domain.pipelines.exceptions import PipelineStorageError
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.exceptions import PipelineStorageError
 
 
 @pytest.fixture
@@ -45,14 +45,16 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": "abc123def456",
                 "source_document_uri": "s3://bucket/doc.txt",
             },
         )
 
-        assert run.id == batch_id
-        assert run.batch_run_id == batch_id
+        assert run.id != batch_id  # Run has its own ID, distinct from batch
+        assert run.batch_run_id == batch_id  # Run belongs to the batch
         assert run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
         assert run.status == PipelineRunStatus.PENDING
         assert run.source_text_hash == "abc123def456"
@@ -68,6 +70,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-default",
+            configuration_slug="schema-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_EXTRACTION
@@ -83,6 +87,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-default",
+            configuration_slug="noop-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.NO_OP
@@ -98,6 +104,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
@@ -113,6 +121,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-default",
+            configuration_slug="def-refinement-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
@@ -128,6 +138,8 @@ class TestPipelineRepositoryCreate:
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-default",
+            configuration_slug="conn-refinement-default",
+            configuration_version=1,
         )
 
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
@@ -147,6 +159,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "abc123"},
         )
 
@@ -164,6 +178,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
+            configuration_slug="config-1",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -172,6 +188,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
+            configuration_slug="config-2",
+            configuration_version=1,
         )
 
         # Both should be PENDING
@@ -190,6 +208,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="config-extraction",
+            configuration_slug="config-extraction",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -198,6 +218,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="config-schema",
+            configuration_slug="config-schema",
+            configuration_version=1,
         )
 
         # List individual extraction runs
@@ -219,6 +241,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
+            configuration_slug="config-1",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash1"},
         )
 
@@ -227,6 +251,8 @@ class TestPipelineRepositoryQuery:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
+            configuration_slug="config-2",
+            configuration_version=1,
         )
 
         # List all runs
@@ -250,6 +276,8 @@ class TestPipelineRepositoryUpdate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -269,6 +297,8 @@ class TestPipelineRepositoryUpdate:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
@@ -308,17 +338,20 @@ class TestPipelineRepositoryChangeEvents:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
-        # Create change events linked to the batch run
+        # Create change events linked to the pipeline run
+        # Change events are correlated with the run via batch_run_id = run.id
         event1 = ChangeEvent(
             id="event-1",
             entity_type="Class",
             entity_id="class-123",
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_id,
+            batch_run_id=run.id,
             new_state={"label": "Class1", "uri": "http://example.org/Class1"},
         )
         event2 = ChangeEvent(
@@ -327,7 +360,7 @@ class TestPipelineRepositoryChangeEvents:
             entity_id="class-456",
             operation="create",
             timestamp=datetime.now(timezone.utc),
-            batch_run_id=batch_id,
+            batch_run_id=run.id,
             new_state={"label": "Class2", "uri": "http://example.org/Class2"},
         )
         db_session.add(event1)
@@ -355,6 +388,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-config",
+            configuration_slug="noop-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -374,6 +409,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="extraction-config",
+            configuration_slug="extraction-config",
+            configuration_version=1,
             specific_data={
                 "source_text_hash": "hash123",
                 "source_document_uri": "s3://bucket/file.txt",
@@ -397,6 +434,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-config",
+            configuration_slug="schema-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -415,6 +454,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-config",
+            configuration_slug="grounding-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -433,6 +474,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-config",
+            configuration_slug="def-refinement-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -451,6 +494,8 @@ class TestPipelineRepositoryOrmTodomainMapping:
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-config",
+            configuration_slug="conn-refinement-config",
+            configuration_version=1,
         )
 
         retrieved = repo.get(created.id)
@@ -470,13 +515,15 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise IntegrityError
         error = IntegrityError("constraint", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -487,13 +534,15 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.commit to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -503,13 +552,15 @@ class TestPipelineRepositoryErrorHandling:
         batch_id = str(uuid4())
 
         # Mock session.commit to raise SQLAlchemyError
-        with patch.object(db_session, 'commit', side_effect=SQLAlchemyError("error")):
+        with patch.object(db_session, "commit", side_effect=SQLAlchemyError("error")):
             with pytest.raises(PipelineStorageError, match="Failed to create pipeline run"):
                 repo.create(
                     batch_run_id=batch_id,
                     pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                     implementation_id="impl-default",
                     configuration_ref="config-default",
+                    configuration_slug="config-default",
+                    configuration_version=1,
                     specific_data={"source_text_hash": "hash123"},
                 )
 
@@ -524,12 +575,14 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
         # Mock session.commit to raise IntegrityError
         error = IntegrityError("constraint", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to update pipeline run status"):
                 repo.update_status(run.id, PipelineRunStatus.RUNNING)
 
@@ -544,12 +597,14 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
         # Mock session.commit to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'commit', side_effect=error):
+        with patch.object(db_session, "commit", side_effect=error):
             expected_msg = "Failed to update pipeline run summaries"
             with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.update_summaries(
@@ -568,12 +623,14 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
                 repo.get(run.id)
 
@@ -588,12 +645,14 @@ class TestPipelineRepositoryErrorHandling:
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
+            configuration_slug="config-default",
+            configuration_version=1,
             specific_data={"source_text_hash": "hash123"},
         )
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve pipeline run"):
                 repo.get(run.id)
 
@@ -603,7 +662,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs"):
                 repo.list()
 
@@ -613,7 +672,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             expected_msg = "Failed to list pipeline runs by status"
             with pytest.raises(PipelineStorageError, match=expected_msg):
                 repo.list_by_status(PipelineRunStatus.PENDING)
@@ -624,7 +683,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise OperationalError
         error = OperationalError("statement", "params", "orig")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to list pipeline runs by type"):
                 repo.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
 
@@ -635,7 +694,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Mock session.query to raise SQLAlchemyError
         error = SQLAlchemyError("error")
-        with patch.object(db_session, 'query', side_effect=error):
+        with patch.object(db_session, "query", side_effect=error):
             with pytest.raises(PipelineStorageError, match="Failed to retrieve change events"):
                 repo.get_change_events_for_run(batch_id)
 

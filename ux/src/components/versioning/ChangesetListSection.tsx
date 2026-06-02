@@ -58,7 +58,11 @@ export function ChangesetListSection({
     return (
       <div className="stack-lg" style={{ flex: 1, overflow: "auto" }}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: "48px", borderRadius: "var(--radius-md, 6px)" }} />
+          <div
+            key={i}
+            className="skeleton"
+            style={{ height: "48px", borderRadius: "var(--radius-md, 6px)" }}
+          />
         ))}
       </div>
     );

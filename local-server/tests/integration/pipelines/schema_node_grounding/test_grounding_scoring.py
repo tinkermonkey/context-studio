@@ -60,25 +60,19 @@ class TestMatchRationale:
 
     def test_strong_match(self):
         """Test strong match rationale."""
-        rationale = build_match_rationale(
-            label_match=0.9, semantic_sim=0.85, source_score=0.9
-        )
+        rationale = build_match_rationale(label_match=0.9, semantic_sim=0.85, source_score=0.9)
         assert "strong label match" in rationale
         assert "high semantic similarity" in rationale
         assert "high source confidence" in rationale
 
     def test_weak_match(self):
         """Test weak match rationale."""
-        rationale = build_match_rationale(
-            label_match=0.2, semantic_sim=0.3, source_score=0.3
-        )
+        rationale = build_match_rationale(label_match=0.2, semantic_sim=0.3, source_score=0.3)
         assert "weak" in rationale or "low" in rationale
 
     def test_empty_rationale(self):
         """Test zero scores produce low confidence message."""
-        rationale = build_match_rationale(
-            label_match=0.0, semantic_sim=0.0, source_score=0.0
-        )
+        rationale = build_match_rationale(label_match=0.0, semantic_sim=0.0, source_score=0.0)
         assert "low confidence" in rationale
 
 

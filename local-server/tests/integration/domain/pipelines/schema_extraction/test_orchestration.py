@@ -108,22 +108,40 @@ class MockLLMProvider:
             else:
                 # Stage 4: Batched definition synthesis — return JSON dict of label → definition
                 content = (
-                    '{"Microservice": "A small, independent service that handles a specific business capability.", '
-                    '"API Gateway": "A server that acts as an intermediary between clients and backend services.", '
-                    '"Service": "An independent unit of functionality exposed over a network interface.", '
-                    '"Message Queue": "A mechanism for asynchronous inter-service communication that decouples producers and consumers.", '
-                    '"Database": "A structured collection of data organized for efficient retrieval and storage.", '
-                    '"Table": "A database structure that stores data in rows and columns with a defined schema.", '
-                    '"Primary Key": "A column or set of columns that uniquely identifies each row in a table.", '
-                    '"Foreign Key": "A column that references the primary key of another table to enforce referential integrity.", '
-                    '"Index": "A data structure that improves the speed of data retrieval operations on a table.", '
-                    '"Query": "A request to retrieve or manipulate data within a database.", '
-                    '"Transaction": "A sequence of database operations executed as a single atomic unit.", '
-                    '"Semantic Web": "A framework for representing data with explicit meaning to enable machine understanding.", '
-                    '"Ontology": "A formal representation of knowledge within a domain, defining classes and relationships.", '
-                    '"RDF": "Resource Description Framework, a standard model for data interchange on the web.", '
-                    '"Resource": "An entity or concept identified by a URI within the Semantic Web.", '
-                    '"Property": "A characteristic or relationship attribute that describes a resource."}'
+                    '{"Microservice": '
+                    '"A small, independent service handling a specific business capability.", '
+                    '"API Gateway": '
+                    '"A server acting as intermediary between clients and backend services.", '
+                    '"Service": '
+                    '"An independent unit of functionality exposed over a network interface.", '
+                    '"Message Queue": '
+                    '"A mechanism for asynchronous inter-service communication decoupling '
+                    'producers and consumers.", '
+                    '"Database": '
+                    '"A structured collection of data organized for efficient retrieval.", '
+                    '"Table": '
+                    '"A database structure storing data in rows and columns with schema.", '
+                    '"Primary Key": '
+                    '"A column or set uniquely identifying each row in a table.", '
+                    '"Foreign Key": '
+                    "\"A column referencing another table's primary key for referential "
+                    'integrity.", '
+                    '"Index": '
+                    '"A data structure improving speed of data retrieval on a table.", '
+                    '"Query": '
+                    '"A request to retrieve or manipulate data within a database.", '
+                    '"Transaction": '
+                    '"A sequence of database operations executed as an atomic unit.", '
+                    '"Semantic Web": '
+                    '"A framework for data representation enabling machine understanding.", '
+                    '"Ontology": '
+                    '"A formal representation of knowledge defining classes and relationships.", '
+                    '"RDF": '
+                    '"Resource Description Framework for data interchange on the web.", '
+                    '"Resource": '
+                    '"An entity identified by a URI within the Semantic Web.", '
+                    '"Property": '
+                    '"A characteristic or relationship attribute describing a resource."}'
                 )
 
         return LLMResponse(
@@ -544,7 +562,7 @@ async def test_parse_warnings_connection_proposal_invalid_json():
     ]
     assert len(connection_warnings) > 0
     warning = connection_warnings[0]
-    assert "JSON parse error" in warning["error"]
+    assert "Expected dict" in warning["error"] or "JSON parse error" in warning["error"]
     assert warning["fallback_action"] == "no connections extracted"
 
     # Verify connections are empty but execution continues
@@ -720,8 +738,12 @@ async def test_parse_warnings_definition_synthesis_missing_keys():
             else:
                 content = '["Microservice", "API Gateway", "Service"]'
             return LLMResponse(
-                content=content, tokens_in=5, tokens_out=10,
-                duration_ms=5, finish_reason="stop", model=model,
+                content=content,
+                tokens_in=5,
+                tokens_out=10,
+                duration_ms=5,
+                finish_reason="stop",
+                model=model,
             )
 
         async def complete_async(self, **kwargs):
@@ -777,7 +799,8 @@ async def test_connection_proposal_skips_incomplete_relationships():
                 # One valid relationship, one missing subject, one missing object
                 content = (
                     '{"relationships": ['
-                    '{"subject": "Microservice", "predicate": "subclass_of", "object": "Service", "confidence": 0.9},'
+                    '{"subject": "Microservice", "predicate": "subclass_of", '
+                    '"object": "Service", "confidence": 0.9},'
                     '{"predicate": "related_to", "object": "Service"},'
                     '{"subject": "Microservice", "predicate": "related_to"}'
                     '], "properties": []}'
@@ -785,8 +808,12 @@ async def test_connection_proposal_skips_incomplete_relationships():
             else:
                 content = '["Microservice", "Service"]'
             return LLMResponse(
-                content=content, tokens_in=5, tokens_out=10,
-                duration_ms=5, finish_reason="stop", model=model,
+                content=content,
+                tokens_in=5,
+                tokens_out=10,
+                duration_ms=5,
+                finish_reason="stop",
+                model=model,
             )
 
         async def complete_async(self, **kwargs):

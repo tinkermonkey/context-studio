@@ -1,169 +1,361 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=1280, initial-scale=1" />
-  <title>Context Studio · Heimdall</title>
-  <link rel="stylesheet" href="heimdall/fonts.css" />
-  <link rel="stylesheet" href="heimdall/tokens.css" />
-  <link rel="stylesheet" href="heimdall/components/ActivityTimeline.css" />
-  <link rel="stylesheet" href="heimdall/components/AlertStrip.css" />
-  <link rel="stylesheet" href="heimdall/components/AppTitle.css" />
-  <link rel="stylesheet" href="heimdall/components/Badge.css" />
-  <link rel="stylesheet" href="heimdall/components/BarChart.css" />
-  <link rel="stylesheet" href="heimdall/components/BarH.css" />
-  <link rel="stylesheet" href="heimdall/components/BarV.css" />
-  <link rel="stylesheet" href="heimdall/components/Button.css" />
-  <link rel="stylesheet" href="heimdall/components/ChatComposer.css" />
-  <link rel="stylesheet" href="heimdall/components/ChatContainer.css" />
-  <link rel="stylesheet" href="heimdall/components/ChatDivider.css" />
-  <link rel="stylesheet" href="heimdall/components/ChatMessage.css" />
-  <link rel="stylesheet" href="heimdall/components/ChatSuggestions.css" />
-  <link rel="stylesheet" href="heimdall/components/Chip.css" />
-  <link rel="stylesheet" href="heimdall/components/CommandPalette.css" />
-  <link rel="stylesheet" href="heimdall/components/ConfigTile.css" />
-  <link rel="stylesheet" href="heimdall/components/ConfirmDialog.css" />
-  <link rel="stylesheet" href="heimdall/components/Donut.css" />
-  <link rel="stylesheet" href="heimdall/components/Drawer.css" />
-  <link rel="stylesheet" href="heimdall/components/EntityPicker.css" />
-  <link rel="stylesheet" href="heimdall/components/Field.css" />
-  <link rel="stylesheet" href="heimdall/components/FilterBar.css" />
-  <link rel="stylesheet" href="heimdall/components/FilterDropdown.css" />
-  <link rel="stylesheet" href="heimdall/components/FormCallout.css" />
-  <link rel="stylesheet" href="heimdall/components/GraphCanvas.css" />
-  <link rel="stylesheet" href="heimdall/components/GraphEdge.css" />
-  <link rel="stylesheet" href="heimdall/components/GraphInspector.css" />
-  <link rel="stylesheet" href="heimdall/components/GraphNode.css" />
-  <link rel="stylesheet" href="heimdall/components/Heatmap.css" />
-  <link rel="stylesheet" href="heimdall/components/HierarchyRow.css" />
-  <link rel="stylesheet" href="heimdall/components/HierarchyTree.css" />
-  <link rel="stylesheet" href="heimdall/components/InspectorPanel.css" />
-  <link rel="stylesheet" href="heimdall/components/KVGrid.css" />
-  <link rel="stylesheet" href="heimdall/components/KeyValueEditor.css" />
-  <link rel="stylesheet" href="heimdall/components/LineChart.css" />
-  <link rel="stylesheet" href="heimdall/components/MetricRow.css" />
-  <link rel="stylesheet" href="heimdall/components/Modal.css" />
-  <link rel="stylesheet" href="heimdall/components/NavItem.css" />
-  <link rel="stylesheet" href="heimdall/components/OrderedList.css" />
-  <link rel="stylesheet" href="heimdall/components/PageHeader.css" />
-  <link rel="stylesheet" href="heimdall/components/Panel.css" />
-  <link rel="stylesheet" href="heimdall/components/PieChart.css" />
-  <link rel="stylesheet" href="heimdall/components/PipelineCard.css" />
-  <link rel="stylesheet" href="heimdall/components/ProgressBar.css" />
-  <link rel="stylesheet" href="heimdall/components/QuickAccessGrid.css" />
-  <link rel="stylesheet" href="heimdall/components/QuickAccessTile.css" />
-  <link rel="stylesheet" href="heimdall/components/RelationshipBuilder.css" />
-  <link rel="stylesheet" href="heimdall/components/RowMenu.css" />
-  <link rel="stylesheet" href="heimdall/components/SegmentedControl.css" />
-  <link rel="stylesheet" href="heimdall/components/Select.css" />
-  <link rel="stylesheet" href="heimdall/components/ShellLayout.css" />
-  <link rel="stylesheet" href="heimdall/components/Sidebar.css" />
-  <link rel="stylesheet" href="heimdall/components/Sparkline.css" />
-  <link rel="stylesheet" href="heimdall/components/SplitPane.css" />
-  <link rel="stylesheet" href="heimdall/components/StackedBar.css" />
-  <link rel="stylesheet" href="heimdall/components/StatGrid.css" />
-  <link rel="stylesheet" href="heimdall/components/StatTile.css" />
-  <link rel="stylesheet" href="heimdall/components/StatusTimeline.css" />
-  <link rel="stylesheet" href="heimdall/components/Statusbar.css" />
-  <link rel="stylesheet" href="heimdall/components/TabBar.css" />
-  <link rel="stylesheet" href="heimdall/components/Table.css" />
-  <link rel="stylesheet" href="heimdall/components/Titlebar.css" />
-  <link rel="stylesheet" href="heimdall/components/Toast.css" />
-  <link rel="stylesheet" href="heimdall/components/Topbar.css" />
-  <link rel="stylesheet" href="heimdall/components/TopologyNode.css" />
-  <link rel="stylesheet" href="heimdall/components/TriState.css" />
-  <link rel="stylesheet" href="heimdall/components/VersionPill.css" />
-  <link rel="stylesheet" href="heimdall/components/WorkspaceSwitcherDialog.css" />
-  <link rel="stylesheet" href="heimdall/components/inputs.css" />
-  <link rel="stylesheet" href="cs/app.css" />
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: rgb(var(--shell-bg)); }
-    body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-    #root { height: 100vh; }
-    #cs-boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgb(var(--shell-bg)); color: rgb(var(--shell-fg-3)); font-family: var(--font-mono); font-size: 12px; z-index: 1; }
-    #cs-boot.hidden { display: none; }
-    #cs-boot-bar { width: 360px; height: 1px; margin-top: 18px; background: rgb(var(--shell-border)); position: relative; overflow: hidden; }
-    #cs-boot-bar::after { content: ''; position: absolute; inset: 0; background: rgb(var(--accent-primary)); transform: translateX(-100%); animation: csBoot 1.6s ease-in-out infinite; }
-    @keyframes csBoot { 0% { transform: translateX(-100%); } 60% { transform: translateX(0); } 100% { transform: translateX(100%); } }
-    #cs-err { position: fixed; inset: 24px; overflow: auto; z-index: 100; color: #fca; font-family: var(--font-mono); font-size: 12px; white-space: pre-wrap; padding: 20px; background: #2a0a0a; border: 1px solid #c33; border-radius: 8px; display: none; }
-  </style>
-</head>
-<body class="dark-canvas">
-  <div id="cs-boot">
-    <div>
-      <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
-        <div style="width:14px; height:14px; border-radius:3px; background: linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-primary-deep)));"></div>
-        <span style="color: rgb(var(--shell-fg-2)); font-weight: 500;">Context Studio</span>
-      </div>
-      <div id="cs-boot-status" style="text-align:center; margin-top: 10px; font-size: 11px;">Booting Heimdall components…</div>
-      <div id="cs-boot-bar"></div>
-    </div>
-  </div>
-  <div id="root"></div>
-  <div id="cs-err"></div>
-
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-
-  <script src="data.js"></script>
-
-  <script>
-    Object.assign(window, {
-      useState: React.useState, useEffect: React.useEffect, useMemo: React.useMemo,
-      useCallback: React.useCallback, useRef: React.useRef, useLayoutEffect: React.useLayoutEffect,
-      useImperativeHandle: React.useImperativeHandle, useContext: React.useContext,
-      useReducer: React.useReducer, useId: React.useId, useTransition: React.useTransition,
-      useDeferredValue: React.useDeferredValue, useSyncExternalStore: React.useSyncExternalStore,
-      Fragment: React.Fragment, forwardRef: React.forwardRef, memo: React.memo,
-      createContext: React.createContext, createRef: React.createRef,
-      Children: React.Children, cloneElement: React.cloneElement, isValidElement: React.isValidElement,
-    });
-
-    const HEIMDALL_PATHS = ["heimdall/utils/graph.jsx","heimdall/utils/graphLayout.jsx","heimdall/hooks/useFocusTrap.jsx","heimdall/hooks/useBodyOverflow.jsx","heimdall/components/AppTitle.jsx","heimdall/components/Button.jsx","heimdall/components/ChartWrapper.jsx","heimdall/components/ChatContainer.jsx","heimdall/components/ChatDivider.jsx","heimdall/components/ChatSuggestions.jsx","heimdall/components/Field.jsx","heimdall/components/GraphCanvasContext.jsx","heimdall/components/GraphInspector.jsx","heimdall/components/HierarchyRow.jsx","heimdall/components/HierarchyTree.jsx","heimdall/components/Icon.jsx","heimdall/components/KVGrid.jsx","heimdall/components/NumberInput.jsx","heimdall/components/Panel.jsx","heimdall/components/SegmentedControl.jsx","heimdall/components/Select.jsx","heimdall/components/SplitPane.jsx","heimdall/components/StatGrid.jsx","heimdall/components/TextArea.jsx","heimdall/components/TextInput.jsx","heimdall/components/Titlebar.jsx","heimdall/components/Topbar.jsx","heimdall/components/TriState.jsx","heimdall/components/VersionPill.jsx","heimdall/components/chartColors.jsx","heimdall/components/chartTone.jsx","heimdall/components/statusColors.jsx","heimdall/components/GraphEdge.jsx","heimdall/components/ChatComposer.jsx","heimdall/components/ChatMessage.jsx","heimdall/components/CommandPalette.jsx","heimdall/components/ConfigTile.jsx","heimdall/components/Drawer.jsx","heimdall/components/FilterDropdown.jsx","heimdall/components/FormCallout.jsx","heimdall/components/Modal.jsx","heimdall/components/NavItem.jsx","heimdall/components/OrderedList.jsx","heimdall/components/QuickAccessTile.jsx","heimdall/components/RowMenu.jsx","heimdall/components/Sidebar.jsx","heimdall/components/Statusbar.jsx","heimdall/components/Table.jsx","heimdall/components/Toast.jsx","heimdall/components/KeyValueEditor.jsx","heimdall/components/InspectorPanel.jsx","heimdall/components/BarH.jsx","heimdall/components/BarV.jsx","heimdall/components/Donut.jsx","heimdall/components/Heatmap.jsx","heimdall/components/LineChart.jsx","heimdall/components/PieChart.jsx","heimdall/components/StackedBar.jsx","heimdall/components/StatusTimeline.jsx","heimdall/components/Badge.jsx","heimdall/components/BarChart.jsx","heimdall/components/Chip.jsx","heimdall/components/ProgressBar.jsx","heimdall/components/Sparkline.jsx","heimdall/components/TopologyNode.jsx","heimdall/components/ConfirmDialog.jsx","heimdall/components/WorkspaceSwitcherDialog.jsx","heimdall/components/QuickAccessGrid.jsx","heimdall/components/ShellLayout.jsx","heimdall/components/ActivityTimeline.jsx","heimdall/components/AlertStrip.jsx","heimdall/components/EntityPicker.jsx","heimdall/components/FilterBar.jsx","heimdall/components/PageHeader.jsx","heimdall/components/PipelineCard.jsx","heimdall/components/TabBar.jsx","heimdall/components/MetricRow.jsx","heimdall/components/StatTile.jsx","heimdall/components/RelationshipBuilder.jsx","heimdall/components/GraphNode.jsx","heimdall/components/GraphCanvas.jsx"];
-    const APP_PATHS = ["cs/pages.jsx","cs/app.jsx"];
-
-    const boot = async () => {
-      const status = document.getElementById('cs-boot-status');
-      const errEl = document.getElementById('cs-err');
-      const reportErr = (path, e) => {
-        errEl.style.display = 'block';
-        errEl.textContent += '⚠ ' + path + '\n' + (e.stack || e.message || String(e)) + '\n\n';
-        document.getElementById('cs-boot').classList.add('hidden');
-        console.error(path, e);
-      };
-
-      const loadJSX = async (path) => {
-        let src;
-        try {
-          const r = await fetch(path);
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          src = await r.text();
-        } catch (e) { reportErr(path, e); throw e; }
-
-        let out;
-        try {
-          out = Babel.transform(src, {
-            presets: [['typescript', { allExtensions: true, isTSX: true }], 'react'],
-            filename: path,
-          }).code;
-        } catch (e) { reportErr(path + ' (transform)', e); throw e; }
-
-        try {
-          (new Function(out))();
-        } catch (e) { reportErr(path + ' (execute)', e); throw e; }
-      };
-
-      for (let i = 0; i < HEIMDALL_PATHS.length; i++) {
-        status.textContent = 'Loading components (' + (i+1) + '/' + HEIMDALL_PATHS.length + ')…';
-        await loadJSX(HEIMDALL_PATHS[i]);
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1280, initial-scale=1" />
+    <title>Context Studio · Heimdall</title>
+    <link rel="stylesheet" href="heimdall/fonts.css" />
+    <link rel="stylesheet" href="heimdall/tokens.css" />
+    <link rel="stylesheet" href="heimdall/components/ActivityTimeline.css" />
+    <link rel="stylesheet" href="heimdall/components/AlertStrip.css" />
+    <link rel="stylesheet" href="heimdall/components/AppTitle.css" />
+    <link rel="stylesheet" href="heimdall/components/Badge.css" />
+    <link rel="stylesheet" href="heimdall/components/BarChart.css" />
+    <link rel="stylesheet" href="heimdall/components/BarH.css" />
+    <link rel="stylesheet" href="heimdall/components/BarV.css" />
+    <link rel="stylesheet" href="heimdall/components/Button.css" />
+    <link rel="stylesheet" href="heimdall/components/ChatComposer.css" />
+    <link rel="stylesheet" href="heimdall/components/ChatContainer.css" />
+    <link rel="stylesheet" href="heimdall/components/ChatDivider.css" />
+    <link rel="stylesheet" href="heimdall/components/ChatMessage.css" />
+    <link rel="stylesheet" href="heimdall/components/ChatSuggestions.css" />
+    <link rel="stylesheet" href="heimdall/components/Chip.css" />
+    <link rel="stylesheet" href="heimdall/components/CommandPalette.css" />
+    <link rel="stylesheet" href="heimdall/components/ConfigTile.css" />
+    <link rel="stylesheet" href="heimdall/components/ConfirmDialog.css" />
+    <link rel="stylesheet" href="heimdall/components/Donut.css" />
+    <link rel="stylesheet" href="heimdall/components/Drawer.css" />
+    <link rel="stylesheet" href="heimdall/components/EntityPicker.css" />
+    <link rel="stylesheet" href="heimdall/components/Field.css" />
+    <link rel="stylesheet" href="heimdall/components/FilterBar.css" />
+    <link rel="stylesheet" href="heimdall/components/FilterDropdown.css" />
+    <link rel="stylesheet" href="heimdall/components/FormCallout.css" />
+    <link rel="stylesheet" href="heimdall/components/GraphCanvas.css" />
+    <link rel="stylesheet" href="heimdall/components/GraphEdge.css" />
+    <link rel="stylesheet" href="heimdall/components/GraphInspector.css" />
+    <link rel="stylesheet" href="heimdall/components/GraphNode.css" />
+    <link rel="stylesheet" href="heimdall/components/Heatmap.css" />
+    <link rel="stylesheet" href="heimdall/components/HierarchyRow.css" />
+    <link rel="stylesheet" href="heimdall/components/HierarchyTree.css" />
+    <link rel="stylesheet" href="heimdall/components/InspectorPanel.css" />
+    <link rel="stylesheet" href="heimdall/components/KVGrid.css" />
+    <link rel="stylesheet" href="heimdall/components/KeyValueEditor.css" />
+    <link rel="stylesheet" href="heimdall/components/LineChart.css" />
+    <link rel="stylesheet" href="heimdall/components/MetricRow.css" />
+    <link rel="stylesheet" href="heimdall/components/Modal.css" />
+    <link rel="stylesheet" href="heimdall/components/NavItem.css" />
+    <link rel="stylesheet" href="heimdall/components/OrderedList.css" />
+    <link rel="stylesheet" href="heimdall/components/PageHeader.css" />
+    <link rel="stylesheet" href="heimdall/components/Panel.css" />
+    <link rel="stylesheet" href="heimdall/components/PieChart.css" />
+    <link rel="stylesheet" href="heimdall/components/PipelineCard.css" />
+    <link rel="stylesheet" href="heimdall/components/ProgressBar.css" />
+    <link rel="stylesheet" href="heimdall/components/QuickAccessGrid.css" />
+    <link rel="stylesheet" href="heimdall/components/QuickAccessTile.css" />
+    <link rel="stylesheet" href="heimdall/components/RelationshipBuilder.css" />
+    <link rel="stylesheet" href="heimdall/components/RowMenu.css" />
+    <link rel="stylesheet" href="heimdall/components/SegmentedControl.css" />
+    <link rel="stylesheet" href="heimdall/components/Select.css" />
+    <link rel="stylesheet" href="heimdall/components/ShellLayout.css" />
+    <link rel="stylesheet" href="heimdall/components/Sidebar.css" />
+    <link rel="stylesheet" href="heimdall/components/Sparkline.css" />
+    <link rel="stylesheet" href="heimdall/components/SplitPane.css" />
+    <link rel="stylesheet" href="heimdall/components/StackedBar.css" />
+    <link rel="stylesheet" href="heimdall/components/StatGrid.css" />
+    <link rel="stylesheet" href="heimdall/components/StatTile.css" />
+    <link rel="stylesheet" href="heimdall/components/StatusTimeline.css" />
+    <link rel="stylesheet" href="heimdall/components/Statusbar.css" />
+    <link rel="stylesheet" href="heimdall/components/TabBar.css" />
+    <link rel="stylesheet" href="heimdall/components/Table.css" />
+    <link rel="stylesheet" href="heimdall/components/Titlebar.css" />
+    <link rel="stylesheet" href="heimdall/components/Toast.css" />
+    <link rel="stylesheet" href="heimdall/components/Topbar.css" />
+    <link rel="stylesheet" href="heimdall/components/TopologyNode.css" />
+    <link rel="stylesheet" href="heimdall/components/TriState.css" />
+    <link rel="stylesheet" href="heimdall/components/VersionPill.css" />
+    <link rel="stylesheet" href="heimdall/components/WorkspaceSwitcherDialog.css" />
+    <link rel="stylesheet" href="heimdall/components/inputs.css" />
+    <link rel="stylesheet" href="cs/app.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: rgb(var(--shell-bg));
       }
-      status.textContent = 'Loading app…';
-      for (const p of APP_PATHS) await loadJSX(p);
-      document.getElementById('cs-boot').classList.add('hidden');
-    };
+      body {
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        height: 100vh;
+      }
+      #cs-boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgb(var(--shell-bg));
+        color: rgb(var(--shell-fg-3));
+        font-family: var(--font-mono);
+        font-size: 12px;
+        z-index: 1;
+      }
+      #cs-boot.hidden {
+        display: none;
+      }
+      #cs-boot-bar {
+        width: 360px;
+        height: 1px;
+        margin-top: 18px;
+        background: rgb(var(--shell-border));
+        position: relative;
+        overflow: hidden;
+      }
+      #cs-boot-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgb(var(--accent-primary));
+        transform: translateX(-100%);
+        animation: csBoot 1.6s ease-in-out infinite;
+      }
+      @keyframes csBoot {
+        0% {
+          transform: translateX(-100%);
+        }
+        60% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      #cs-err {
+        position: fixed;
+        inset: 24px;
+        overflow: auto;
+        z-index: 100;
+        color: #fca;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        white-space: pre-wrap;
+        padding: 20px;
+        background: #2a0a0a;
+        border: 1px solid #c33;
+        border-radius: 8px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="dark-canvas">
+    <div id="cs-boot">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; justify-content: center">
+          <div
+            style="
+              width: 14px;
+              height: 14px;
+              border-radius: 3px;
+              background: linear-gradient(
+                135deg,
+                rgb(var(--accent-primary)),
+                rgb(var(--accent-primary-deep))
+              );
+            "
+          ></div>
+          <span style="color: rgb(var(--shell-fg-2)); font-weight: 500">Context Studio</span>
+        </div>
+        <div id="cs-boot-status" style="text-align: center; margin-top: 10px; font-size: 11px">
+          Booting Heimdall components…
+        </div>
+        <div id="cs-boot-bar"></div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <div id="cs-err"></div>
 
-    boot();
-  </script>
-</body>
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+      integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+      integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+      integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="data.js"></script>
+
+    <script>
+      Object.assign(window, {
+        useState: React.useState,
+        useEffect: React.useEffect,
+        useMemo: React.useMemo,
+        useCallback: React.useCallback,
+        useRef: React.useRef,
+        useLayoutEffect: React.useLayoutEffect,
+        useImperativeHandle: React.useImperativeHandle,
+        useContext: React.useContext,
+        useReducer: React.useReducer,
+        useId: React.useId,
+        useTransition: React.useTransition,
+        useDeferredValue: React.useDeferredValue,
+        useSyncExternalStore: React.useSyncExternalStore,
+        Fragment: React.Fragment,
+        forwardRef: React.forwardRef,
+        memo: React.memo,
+        createContext: React.createContext,
+        createRef: React.createRef,
+        Children: React.Children,
+        cloneElement: React.cloneElement,
+        isValidElement: React.isValidElement,
+      });
+
+      const HEIMDALL_PATHS = [
+        "heimdall/utils/graph.jsx",
+        "heimdall/utils/graphLayout.jsx",
+        "heimdall/hooks/useFocusTrap.jsx",
+        "heimdall/hooks/useBodyOverflow.jsx",
+        "heimdall/components/AppTitle.jsx",
+        "heimdall/components/Button.jsx",
+        "heimdall/components/ChartWrapper.jsx",
+        "heimdall/components/ChatContainer.jsx",
+        "heimdall/components/ChatDivider.jsx",
+        "heimdall/components/ChatSuggestions.jsx",
+        "heimdall/components/Field.jsx",
+        "heimdall/components/GraphCanvasContext.jsx",
+        "heimdall/components/GraphInspector.jsx",
+        "heimdall/components/HierarchyRow.jsx",
+        "heimdall/components/HierarchyTree.jsx",
+        "heimdall/components/Icon.jsx",
+        "heimdall/components/KVGrid.jsx",
+        "heimdall/components/NumberInput.jsx",
+        "heimdall/components/Panel.jsx",
+        "heimdall/components/SegmentedControl.jsx",
+        "heimdall/components/Select.jsx",
+        "heimdall/components/SplitPane.jsx",
+        "heimdall/components/StatGrid.jsx",
+        "heimdall/components/TextArea.jsx",
+        "heimdall/components/TextInput.jsx",
+        "heimdall/components/Titlebar.jsx",
+        "heimdall/components/Topbar.jsx",
+        "heimdall/components/TriState.jsx",
+        "heimdall/components/VersionPill.jsx",
+        "heimdall/components/chartColors.jsx",
+        "heimdall/components/chartTone.jsx",
+        "heimdall/components/statusColors.jsx",
+        "heimdall/components/GraphEdge.jsx",
+        "heimdall/components/ChatComposer.jsx",
+        "heimdall/components/ChatMessage.jsx",
+        "heimdall/components/CommandPalette.jsx",
+        "heimdall/components/ConfigTile.jsx",
+        "heimdall/components/Drawer.jsx",
+        "heimdall/components/FilterDropdown.jsx",
+        "heimdall/components/FormCallout.jsx",
+        "heimdall/components/Modal.jsx",
+        "heimdall/components/NavItem.jsx",
+        "heimdall/components/OrderedList.jsx",
+        "heimdall/components/QuickAccessTile.jsx",
+        "heimdall/components/RowMenu.jsx",
+        "heimdall/components/Sidebar.jsx",
+        "heimdall/components/Statusbar.jsx",
+        "heimdall/components/Table.jsx",
+        "heimdall/components/Toast.jsx",
+        "heimdall/components/KeyValueEditor.jsx",
+        "heimdall/components/InspectorPanel.jsx",
+        "heimdall/components/BarH.jsx",
+        "heimdall/components/BarV.jsx",
+        "heimdall/components/Donut.jsx",
+        "heimdall/components/Heatmap.jsx",
+        "heimdall/components/LineChart.jsx",
+        "heimdall/components/PieChart.jsx",
+        "heimdall/components/StackedBar.jsx",
+        "heimdall/components/StatusTimeline.jsx",
+        "heimdall/components/Badge.jsx",
+        "heimdall/components/BarChart.jsx",
+        "heimdall/components/Chip.jsx",
+        "heimdall/components/ProgressBar.jsx",
+        "heimdall/components/Sparkline.jsx",
+        "heimdall/components/TopologyNode.jsx",
+        "heimdall/components/ConfirmDialog.jsx",
+        "heimdall/components/WorkspaceSwitcherDialog.jsx",
+        "heimdall/components/QuickAccessGrid.jsx",
+        "heimdall/components/ShellLayout.jsx",
+        "heimdall/components/ActivityTimeline.jsx",
+        "heimdall/components/AlertStrip.jsx",
+        "heimdall/components/EntityPicker.jsx",
+        "heimdall/components/FilterBar.jsx",
+        "heimdall/components/PageHeader.jsx",
+        "heimdall/components/PipelineCard.jsx",
+        "heimdall/components/TabBar.jsx",
+        "heimdall/components/MetricRow.jsx",
+        "heimdall/components/StatTile.jsx",
+        "heimdall/components/RelationshipBuilder.jsx",
+        "heimdall/components/GraphNode.jsx",
+        "heimdall/components/GraphCanvas.jsx",
+      ];
+      const APP_PATHS = ["cs/pages.jsx", "cs/app.jsx"];
+
+      const boot = async () => {
+        const status = document.getElementById("cs-boot-status");
+        const errEl = document.getElementById("cs-err");
+        const reportErr = (path, e) => {
+          errEl.style.display = "block";
+          errEl.textContent += "⚠ " + path + "\n" + (e.stack || e.message || String(e)) + "\n\n";
+          document.getElementById("cs-boot").classList.add("hidden");
+          console.error(path, e);
+        };
+
+        const loadJSX = async (path) => {
+          let src;
+          try {
+            const r = await fetch(path);
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            src = await r.text();
+          } catch (e) {
+            reportErr(path, e);
+            throw e;
+          }
+
+          let out;
+          try {
+            out = Babel.transform(src, {
+              presets: [["typescript", { allExtensions: true, isTSX: true }], "react"],
+              filename: path,
+            }).code;
+          } catch (e) {
+            reportErr(path + " (transform)", e);
+            throw e;
+          }
+
+          try {
+            new Function(out)();
+          } catch (e) {
+            reportErr(path + " (execute)", e);
+            throw e;
+          }
+        };
+
+        for (let i = 0; i < HEIMDALL_PATHS.length; i++) {
+          status.textContent =
+            "Loading components (" + (i + 1) + "/" + HEIMDALL_PATHS.length + ")…";
+          await loadJSX(HEIMDALL_PATHS[i]);
+        }
+        status.textContent = "Loading app…";
+        for (const p of APP_PATHS) await loadJSX(p);
+        document.getElementById("cs-boot").classList.add("hidden");
+      };
+
+      boot();
+    </script>
+  </body>
 </html>

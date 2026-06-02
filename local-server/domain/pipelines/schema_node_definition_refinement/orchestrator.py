@@ -14,10 +14,13 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+)
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
 _logger = logging.getLogger(__name__)
@@ -50,6 +53,8 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         llm_provider: LLMProvider,
         traversal: SchemaNeighborhoodTraversal,
         config: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the definition refinement orchestrator.
@@ -58,8 +63,10 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             llm_provider: LLM provider for generating definitions
             traversal: SchemaNeighborhoodTraversal for context assembly
             config: Configuration dict with model, temperature, etc.
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._traversal = traversal
         self._config = config or {}
 
@@ -79,6 +86,8 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         if not isinstance(state, DefinitionRefinementState):
             state = DefinitionRefinementState(
                 run_id=state.run_id,
@@ -110,7 +119,10 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble context
-            neighborhood = self._traversal.get_class_neighborhood(node_id)
+            try:
+                neighborhood = self._traversal.get_class_neighborhood(node_id)
+            except ValueError as exc:
+                raise PipelineInputError(f"Node with id '{node_id}' not found or invalid") from exc
             state = replace(state, node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
@@ -141,18 +153,25 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 },
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except ValueError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during definition refinement: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Definition refinement encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Definition refinement failed: {str(exc)}") from exc
+            raise PipelineExecutionError(
+                "Definition refinement encountered an unexpected error"
+            ) from exc
 
         return state
 
@@ -192,9 +211,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             )
 
         if neighborhood.sibling_classes:
-            sibling_info = ", ".join(
-                [f"{s.title}" for s in neighborhood.sibling_classes[:3]]
-            )
+            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
             context_parts.append(f"Sibling classes: {sibling_info}")
 
         if neighborhood.property_definitions:
@@ -208,9 +225,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"External groundings:\n{groundings_text}")
 
         if extraction_usages:
-            usages_text = "\n".join(
-                [f"- {u.get('extracted_text')}" for u in extraction_usages[:2]]
-            )
+            usages_text = "\n".join([f"- {u.get('extracted_text')}" for u in extraction_usages[:2]])
             context_parts.append(f"Extraction usages:\n{usages_text}")
 
         context_str = "\n".join(context_parts)
@@ -262,12 +277,12 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
-            _logger.warning(
-                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
-                f"No candidates generated.",
+            _logger.error(
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
-            candidates = []
+            sanitized_msg = f"LLM response validation failed for {neighborhood.class_label}"
+            raise PipelineExecutionError(sanitized_msg) from exc
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",

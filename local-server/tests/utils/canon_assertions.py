@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-
 # Slug pattern from domain/ontology/value_objects.py — enforced by the migration
 # f319bb8dc961_add_color_column_and_require_identifier_.py.
 _SLUG_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
@@ -169,21 +168,18 @@ def assert_triples_match(
     metrics = score_triples(produced, expected)
     failures = []
     if metrics.recall < min_recall:
-        failures.append(
-            f"recall={metrics.recall:.2f} < min {min_recall:.2f}"
-        )
+        failures.append(f"recall={metrics.recall:.2f} < min {min_recall:.2f}")
     if metrics.precision < min_precision:
-        failures.append(
-            f"precision={metrics.precision:.2f} < min {min_precision:.2f}"
-        )
+        failures.append(f"precision={metrics.precision:.2f} < min {min_precision:.2f}")
     if metrics.f1 < min_f1:
-        failures.append(
-            f"f1={metrics.f1:.2f} < min {min_f1:.2f}"
-        )
+        failures.append(f"f1={metrics.f1:.2f} < min {min_f1:.2f}")
     if failures:
         msg_lines = [
             f"Triple-match assertion failed for paper {paper_name!r}: " + ", ".join(failures),
-            f"  tp={metrics.true_positives} fp={metrics.false_positives} fn={metrics.false_negatives}",
+            (
+                f"  tp={metrics.true_positives} fp={metrics.false_positives} "
+                f"fn={metrics.false_negatives}"
+            ),
         ]
         if metrics.missing_expected:
             msg_lines.append("  missing (recall gap):")
@@ -267,9 +263,7 @@ def assert_color_present(repo: Any, *, for_node_types: Iterable[str]) -> None:
                 offenders.append(f"class {cls.id} color={color!r}")
 
     if offenders:
-        msg = "\n".join(
-            ["Color missing or malformed:"] + [f"  - {o}" for o in offenders]
-        )
+        msg = "\n".join(["Color missing or malformed:"] + [f"  - {o}" for o in offenders])
         raise AssertionError(msg)
 
 
@@ -300,9 +294,7 @@ def assert_class_hierarchy_matches(repo: Any, canon: CanonBundle) -> None:
             continue
 
         actual_parent_id = getattr(actual, "parent_class_id", None)
-        expected_parent_obj = (
-            by_identifier.get(expected_parent) if expected_parent else None
-        )
+        expected_parent_obj = by_identifier.get(expected_parent) if expected_parent else None
         expected_parent_id = (
             getattr(expected_parent_obj, "id", None) if expected_parent_obj else None
         )
@@ -316,7 +308,8 @@ def assert_class_hierarchy_matches(repo: Any, canon: CanonBundle) -> None:
     failures = []
     if missing_classes:
         failures.append(
-            "missing classes: " + ", ".join(missing_classes[:10])
+            "missing classes: "
+            + ", ".join(missing_classes[:10])
             + (f" (and {len(missing_classes)-10} more)" if len(missing_classes) > 10 else "")
         )
     if wrong_parents:
@@ -377,10 +370,7 @@ def assert_external_references_populated(
     if not classes:
         raise AssertionError("No classes in repo; cannot assert reference coverage")
 
-    grounded = sum(
-        1 for cls in classes
-        if getattr(cls, "external_references", None)
-    )
+    grounded = sum(1 for cls in classes if getattr(cls, "external_references", None))
     coverage = grounded / len(classes)
     if coverage < min_coverage:
         raise AssertionError(
@@ -403,10 +393,7 @@ def assert_source_run_id_lineage(
     if not hasattr(repo, "list_classes"):
         raise AssertionError("Repo does not expose list_classes")
 
-    tagged = [
-        cls for cls in repo.list_classes()
-        if getattr(cls, "source_run_id", None) == run_id
-    ]
+    tagged = [cls for cls in repo.list_classes() if getattr(cls, "source_run_id", None) == run_id]
     if len(tagged) < min_count:
         raise AssertionError(
             f"Expected ≥{min_count} classes tagged with source_run_id={run_id!r}, "

@@ -55,9 +55,7 @@ class SchemaDefinitionRefinementApplyService:
             raise ValueError(f"Class {node_id} not found")
 
         candidates = run.output_summary.get("candidates", [])
-        qualifying = [
-            c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold
-        ]
+        qualifying = [c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold]
         if not qualifying:
             result.classes_skipped += 1
             return result
@@ -71,5 +69,5 @@ class SchemaDefinitionRefinementApplyService:
 
         cls.description = new_definition
         self._repo.save_class(cls)
-        result.classes_created += 1
+        result.classes_updated += 1
         return result

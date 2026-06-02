@@ -5,7 +5,6 @@ This module implements HTTP endpoints for knowledge extraction:
 - POST /api/extract — Extract entities from text through coordinated layers
 - POST /api/analyze_text — Analyze text for linguistic features and named entities
 - POST /api/enrich_from_references — Enrich extracted entities with external knowledge
-- POST /api/extraction/extract — Extract RDF triples from text scoped to an ontology
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -17,7 +16,6 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -26,13 +24,9 @@ from adapters.web.schemas.extraction import (
     AnalyzeTextRequest,
     EnrichFromReferencesRequest,
     ExtractedEntitySchema,
-    ExtractedTriple,
     ExtractionLayerResultSchema,
-    ExtractionMetadata,
     ExtractionResultSchema,
     ExtractRequest,
-    ExtractTripleRequest,
-    ExtractTripleResponse,
 )
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.exceptions import (
@@ -246,71 +240,3 @@ async def enrich_from_references(
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
-
-
-# ==================== Triple Extraction (RDF) Endpoint ====================
-
-
-@router.post(
-    "/extraction/extract",
-    response_model=ExtractTripleResponse,
-    status_code=status.HTTP_200_OK,
-    tags=["extraction"],
-    deprecated=True,
-)
-async def extract_triples(
-    request: ExtractTripleRequest,
-    service: ExtractionService = Depends(get_extraction_service),
-) -> ExtractTripleResponse:
-    """
-    [DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.
-
-    **This endpoint is maintained for backward compatibility with Wave A code.**
-    **New code should use POST /api/pipelines/individual_extraction/run instead.**
-
-    This endpoint uses an LLM to extract subject-predicate-object triples
-    from the input text, linking them to classes and individuals from a
-    specific ontology. Each triple is returned with confidence and provenance
-    (character offsets into the source text).
-
-    Args:
-        request: ExtractTripleRequest with text, ontology_id, and extraction options
-        service: ExtractionService from dependency injection
-
-    Returns:
-        ExtractTripleResponse with extracted triples, warnings, and metadata
-
-    Raises:
-        HTTPException: 400 if input is invalid, 500 for internal errors
-    """
-    try:
-        result = await run_sync_in_executor(
-            service.extract_triples,
-            request.text,
-            request.ontology_id,
-            request.options.model,
-            request.options.temperature,
-        )
-
-        triples = [ExtractedTriple.model_validate(t) for t in result.triples]
-        metadata = ExtractionMetadata(
-            model=cast(str, result.metadata["model"]),
-            tokens_used=cast(int, result.metadata["tokens_used"]),
-            duration_ms=cast(int, result.metadata["duration_ms"]),
-        )
-
-        return ExtractTripleResponse(
-            triples=triples,
-            warnings=result.warnings,
-            metadata=metadata,
-        )
-    except (InvalidInputError, ExtractionError) as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    except Exception as exc:
-        _logger.error(f"Triple extraction error: {exc}", exc_info=exc)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Triple extraction failed",
-        )

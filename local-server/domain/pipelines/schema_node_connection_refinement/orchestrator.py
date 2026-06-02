@@ -14,10 +14,13 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+)
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 
 _logger = logging.getLogger(__name__)
@@ -51,6 +54,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         llm_provider: LLMProvider,
         traversal: SchemaNeighborhoodTraversal,
         config: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the connection refinement orchestrator.
@@ -59,8 +64,10 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             llm_provider: LLM provider for proposing deltas
             traversal: SchemaNeighborhoodTraversal for context assembly
             config: Configuration dict with model, temperature, etc.
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._traversal = traversal
         self._config = config or {}
 
@@ -80,6 +87,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         if not isinstance(state, ConnectionRefinementState):
             state = ConnectionRefinementState(
                 run_id=state.run_id,
@@ -111,7 +120,12 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         try:
             # Step 1: Assemble current state
-            neighborhood = self._traversal.get_class_neighborhood(scope_id)
+            try:
+                neighborhood = self._traversal.get_class_neighborhood(scope_id)
+            except ValueError as exc:
+                raise PipelineInputError(
+                    f"Scope with id '{scope_id}' not found or invalid"
+                ) from exc
             state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
@@ -145,18 +159,25 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                 },
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except ValueError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during connection refinement: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Connection refinement encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Connection refinement failed: {str(exc)}") from exc
+            raise PipelineExecutionError(
+                "Connection refinement encountered an unexpected error"
+            ) from exc
 
         return state
 
@@ -189,20 +210,14 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         ]
 
         if neighborhood.parent_class:
-            context_parts.append(
-                f"Parent class: {neighborhood.parent_class.title}"
-            )
+            context_parts.append(f"Parent class: {neighborhood.parent_class.title}")
 
         if neighborhood.sibling_classes:
-            sibling_info = ", ".join(
-                [f"{s.title}" for s in neighborhood.sibling_classes[:3]]
-            )
+            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
             context_parts.append(f"Sibling classes: {sibling_info}")
 
         if neighborhood.child_classes:
-            children_info = ", ".join(
-                [f"{c.title}" for c in neighborhood.child_classes[:3]]
-            )
+            children_info = ", ".join([f"{c.title}" for c in neighborhood.child_classes[:3]])
             context_parts.append(f"Child classes: {children_info}")
 
         # Current connections
@@ -216,15 +231,11 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"Current connections:\n{conn_text}")
 
         if groundings:
-            groundings_text = "\n".join(
-                [f"- {g.get('label')}" for g in groundings[:2]]
-            )
+            groundings_text = "\n".join([f"- {g.get('label')}" for g in groundings[:2]])
             context_parts.append(f"External groundings:\n{groundings_text}")
 
         if extraction_usages:
-            usages_text = "\n".join(
-                [f"- {u.get('extracted_text')}" for u in extraction_usages[:2]]
-            )
+            usages_text = "\n".join([f"- {u.get('extracted_text')}" for u in extraction_usages[:2]])
             context_parts.append(f"Extraction usages:\n{usages_text}")
 
         context_str = "\n".join(context_parts)
@@ -280,12 +291,12 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
-            _logger.warning(
-                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}. "
-                f"No deltas proposed.",
+            _logger.error(
+                f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
-            deltas = []
+            sanitized_msg = f"LLM response validation failed for {neighborhood.class_label}"
+            raise PipelineExecutionError(sanitized_msg) from exc
         except Exception as exc:
             _logger.error(
                 f"Unexpected error parsing LLM response for node {neighborhood.class_label}: {exc}",

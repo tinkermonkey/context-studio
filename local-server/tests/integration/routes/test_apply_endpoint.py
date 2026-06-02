@@ -5,8 +5,8 @@ Uses a real PipelineRepository (SQLite in-memory) and FakeOntologyRepository
 to verify the full apply flow without external dependencies.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -21,10 +21,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
+from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
@@ -36,7 +37,6 @@ from domain.pipelines.schema_node_definition_refinement.apply_service import (
 )
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-
 
 TAXONOMY_ID = "tx-apply-test"
 SCHEME_ID = "cs-apply-test"
@@ -58,19 +58,32 @@ def pipeline_repo(temp_db):
 
 
 @pytest.fixture()
+def batch_repo(temp_db):
+    return BatchRepository(session_factory=temp_db)
+
+
+@pytest.fixture()
 def ontology_repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, title="Apply Test Taxonomy"))
-    r.save_concept_scheme(ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Apply Test Scheme"))
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Apply Test Taxonomy"))
+    r.save_concept_scheme(
+        ConceptScheme(
+            id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="test_scheme",
+            title="Apply Test Scheme",
+        )
+    )
     return r
 
 
 @pytest.fixture()
-def client(pipeline_repo, ontology_repo):
+def client(pipeline_repo, batch_repo, ontology_repo):
     app = FastAPI()
     app.include_router(router)
 
     app.state.pipeline_run_repo = pipeline_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = MagicMock()
     app.state.config_registry = MagicMock()
     app.state.llm_router = MagicMock()
@@ -87,13 +100,16 @@ def client(pipeline_repo, ontology_repo):
 
 def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=None):
     """Create a completed schema extraction run with the given output."""
-    run_id = str(uuid4())
-    pipeline_repo.create(
-        batch_run_id=run_id,
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
+        configuration_slug="extraction-default",
+        configuration_version=1,
     )
+    run_id = run.id
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(
         run_id,
@@ -107,14 +123,17 @@ def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=
 
 def _create_and_complete_individual_run(pipeline_repo, triples=None):
     """Create a completed individual extraction run."""
-    run_id = str(uuid4())
-    pipeline_repo.create(
-        batch_run_id=run_id,
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
+        configuration_slug="extraction-default",
+        configuration_version=1,
         specific_data={"source_text_hash": "abc123"},
     )
+    run_id = run.id
     pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(run_id, output_summary={"triples": triples or []})
     return run_id
@@ -123,6 +142,7 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
 # ---------------------------------------------------------------------------
 # Happy-path tests
 # ---------------------------------------------------------------------------
+
 
 class TestApplyEndpointHappyPath:
     def test_apply_schema_extraction_returns_200(self, client, pipeline_repo):
@@ -137,7 +157,12 @@ class TestApplyEndpointHappyPath:
         run_id = _create_and_complete_schema_run(
             pipeline_repo,
             candidates=[
-                {"kind": "class", "label": "Service", "proposed_definition": "A service", "confidence": 0.9},
+                {
+                    "kind": "class",
+                    "label": "Service",
+                    "proposed_definition": "A service",
+                    "confidence": 0.9,
+                },
                 {"kind": "class", "label": "Client", "confidence": 0.8},
             ],
         )
@@ -167,6 +192,7 @@ class TestApplyEndpointHappyPath:
 # ---------------------------------------------------------------------------
 # Idempotency
 # ---------------------------------------------------------------------------
+
 
 class TestApplyIdempotency:
     def test_apply_twice_creates_no_duplicates(self, client, pipeline_repo, ontology_repo):
@@ -203,7 +229,11 @@ class TestApplyIdempotency:
         )
         response = client.post(
             f"/api/pipelines/runs/{run_id}/apply",
-            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID, "confidence_threshold": 0.5},
+            params={
+                "concept_scheme_id": SCHEME_ID,
+                "taxonomy_id": TAXONOMY_ID,
+                "confidence_threshold": 0.5,
+            },
         )
         body = response.json()
         assert body["classes_created"] == 1
@@ -214,6 +244,7 @@ class TestApplyIdempotency:
 # Error cases
 # ---------------------------------------------------------------------------
 
+
 class TestApplyEndpointErrors:
     def test_nonexistent_run_returns_404(self, client):
         response = client.post(
@@ -223,13 +254,16 @@ class TestApplyEndpointErrors:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_non_completed_run_returns_422(self, client, pipeline_repo):
-        run_id = str(uuid4())
-        pipeline_repo.create(
-            batch_run_id=run_id,
+        batch_id = str(uuid4())
+        run = pipeline_repo.create(
+            batch_run_id=batch_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
         )
+        run_id = run.id
         # Do NOT complete the run — leave it in PENDING state
 
         response = client.post(
@@ -255,23 +289,79 @@ class TestApplyEndpointErrors:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_grounding_missing_node_id_returns_400(self, client, pipeline_repo):
-        run_id = str(uuid4())
-        pipeline_repo.create(
-            batch_run_id=run_id,
+        batch_id = str(uuid4())
+        run = pipeline_repo.create(
+            batch_run_id=batch_id,
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="default",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
+        run_id = run.id
         pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
         pipeline_repo.update_summaries(run_id, output_summary={"groundings": []})
 
         response = client.post(f"/api/pipelines/runs/{run_id}/apply")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_pipeline_storage_error_returns_500(self, client, pipeline_repo):
+        from domain.pipelines.exceptions import PipelineStorageError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=PipelineStorageError("Database connection failed")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_integrity_error_returns_500(self, client, pipeline_repo):
+        from sqlalchemy.exc import IntegrityError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=IntegrityError("Unique constraint", "", "")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_operational_error_returns_500(self, client, pipeline_repo):
+        from sqlalchemy.exc import OperationalError
+
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=OperationalError("Database unavailable", "", "")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def test_key_error_returns_400(self, client, pipeline_repo):
+        run_id = _create_and_complete_schema_run(pipeline_repo)
+        client.app.state.schema_extraction_apply_svc.apply = MagicMock(
+            side_effect=KeyError("expected_field")
+        )
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"concept_scheme_id": SCHEME_ID, "taxonomy_id": TAXONOMY_ID},
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        body = response.json()
+        assert "malformed" in body["detail"].lower()
+
 
 # ---------------------------------------------------------------------------
 # Response structure
 # ---------------------------------------------------------------------------
+
 
 class TestApplyResponseStructure:
     def test_response_includes_all_count_fields(self, client, pipeline_repo):
@@ -282,10 +372,15 @@ class TestApplyResponseStructure:
         )
         body = response.json()
         expected_fields = {
-            "run_id", "pipeline_type",
-            "classes_created", "classes_skipped",
-            "properties_created", "properties_skipped",
-            "relationships_created", "relationships_skipped",
-            "individuals_created", "individuals_skipped",
+            "run_id",
+            "pipeline_type",
+            "classes_created",
+            "classes_skipped",
+            "properties_created",
+            "properties_skipped",
+            "relationships_created",
+            "relationships_skipped",
+            "individuals_created",
+            "individuals_skipped",
         }
         assert expected_fields.issubset(set(body.keys()))

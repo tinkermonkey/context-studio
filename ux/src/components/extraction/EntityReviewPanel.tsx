@@ -282,7 +282,7 @@ export function EntityReviewPanel({
   }
 
   // Batch actions
-  const batchActions = (
+  const _batchActions = (
     <div className="flex-gap-sm">
       <Button
         variant="primary"

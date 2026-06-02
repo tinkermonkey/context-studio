@@ -46,9 +46,7 @@ describe("ReferenceService", () => {
         ],
       });
 
-      server.use(
-        http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)),
-      );
+      server.use(http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)));
 
       const result = await referenceService.search("machine learning");
 
@@ -69,9 +67,7 @@ describe("ReferenceService", () => {
         })),
       });
 
-      server.use(
-        http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)),
-      );
+      server.use(http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)));
 
       const result = await referenceService.search("test", { limit: 5 });
 
@@ -92,9 +88,7 @@ describe("ReferenceService", () => {
         ],
       });
 
-      server.use(
-        http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)),
-      );
+      server.use(http.post("*/api/reference/search", () => HttpResponse.json(mockResponse)));
 
       const result = await referenceService.search("knowledge", {
         sources: ["custom_db"],
@@ -106,9 +100,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 400 for empty search term", async () => {
       server.use(
         http.post("*/api/reference/search", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Search term cannot be empty",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -121,9 +118,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 404 when no results found", async () => {
       server.use(
         http.post("*/api/reference/search", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "No results found for search term",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -136,9 +136,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 503 when reference service unavailable", async () => {
       server.use(
         http.post("*/api/reference/search", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Reference service temporarily unavailable",
-            }, { status: 503 }),
+            },
+            { status: 503 },
+          ),
         ),
       );
 
@@ -195,9 +198,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 500 from getStatus", async () => {
       server.use(
         http.get("*/api/reference/status", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Failed to retrieve reference service status",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -210,9 +216,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 503 when service is down", async () => {
       server.use(
         http.get("*/api/reference/status", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Reference service is down",
-            }, { status: 503 }),
+            },
+            { status: 503 },
+          ),
         ),
       );
 
@@ -231,9 +240,7 @@ describe("ReferenceService", () => {
       ];
 
       server.use(
-        http.get("*/api/reference/grounding-workflows", () =>
-          HttpResponse.json(mockWorkflows),
-        ),
+        http.get("*/api/reference/grounding-workflows", () => HttpResponse.json(mockWorkflows)),
       );
 
       const result = await referenceService.listGroundingWorkflows();
@@ -245,9 +252,12 @@ describe("ReferenceService", () => {
     it("throws ApiError on 500 from listGroundingWorkflows", async () => {
       server.use(
         http.get("*/api/reference/grounding-workflows", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Internal server error",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -277,9 +287,12 @@ describe("ReferenceService", () => {
     it("throws ApiError with 404 on getGroundingWorkflow with non-existent ID", async () => {
       server.use(
         http.get("*/api/reference/grounding-workflows/not-found", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Workflow not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -296,9 +309,7 @@ describe("ReferenceService", () => {
       const mockResponse = createGroundingWorkflow({ id: "wf-999" });
 
       server.use(
-        http.post("*/api/reference/grounding-workflows", () =>
-          HttpResponse.json(mockResponse),
-        ),
+        http.post("*/api/reference/grounding-workflows", () => HttpResponse.json(mockResponse)),
       );
 
       const result = await referenceService.createGroundingWorkflow(createRequest);
@@ -312,9 +323,12 @@ describe("ReferenceService", () => {
 
       server.use(
         http.post("*/api/reference/grounding-workflows", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Title is required",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -349,9 +363,12 @@ describe("ReferenceService", () => {
 
       server.use(
         http.put("*/api/reference/grounding-workflows/not-found", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Workflow not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -367,8 +384,9 @@ describe("ReferenceService", () => {
   describe("deleteGroundingWorkflow", () => {
     it("deletes workflow via DELETE /api/reference/grounding-workflows/:id", async () => {
       server.use(
-        http.delete("*/api/reference/grounding-workflows/wf-123", () =>
-          new HttpResponse(null, { status: 204 }),
+        http.delete(
+          "*/api/reference/grounding-workflows/wf-123",
+          () => new HttpResponse(null, { status: 204 }),
         ),
       );
 
@@ -378,9 +396,12 @@ describe("ReferenceService", () => {
     it("throws ApiError with 404 on deleteGroundingWorkflow with non-existent ID", async () => {
       server.use(
         http.delete("*/api/reference/grounding-workflows/not-found", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Workflow not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -410,9 +431,12 @@ describe("ReferenceService", () => {
     it("throws ApiError with 400 on runGroundingWorkflow when workflow is inactive", async () => {
       server.use(
         http.post("*/api/reference/grounding-workflows/wf-123/run", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Cannot run inactive workflow",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -445,9 +469,12 @@ describe("ReferenceService", () => {
     it("throws ApiError with 404 on getGroundingWorkflowRuns with non-existent workflow", async () => {
       server.use(
         http.get("*/api/reference/grounding-workflows/not-found/runs", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Workflow not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 

@@ -42,7 +42,6 @@ from domain.graph.services import GraphAnalysisService
 from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
-from domain.pipelines.services import PipelineService
 from domain.versioning.services import VersioningService
 from utils.async_executor import run_sync_in_executor
 
@@ -101,25 +100,6 @@ async def get_extraction_service(request: Request) -> ExtractionService:
     service = getattr(request.app.state, "extraction_service", None)
     if service is None:
         raise RuntimeError("ExtractionService not initialized in app.state")
-    return service
-
-
-async def get_pipeline_service(request: Request) -> PipelineService:
-    """
-    Extract the PipelineService from app state.
-
-    Args:
-        request: FastAPI request object
-
-    Returns:
-        The PipelineService instance from app.state
-
-    Raises:
-        RuntimeError: If service is not initialized in app.state
-    """
-    service = getattr(request.app.state, "pipeline_service", None)
-    if service is None:
-        raise RuntimeError("PipelineService not initialized in app.state")
     return service
 
 

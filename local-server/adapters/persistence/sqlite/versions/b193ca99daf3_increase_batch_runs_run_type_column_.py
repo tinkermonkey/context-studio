@@ -12,10 +12,9 @@ and cross-database compatibility.
 
 """
 
-
 # revision identifiers, used by Alembic.
-revision = 'b193ca99daf3'
-down_revision = '518a8c514f35'
+revision = "b193ca99daf3"
+down_revision = "518a8c514f35"
 branch_labels = None
 depends_on = None
 

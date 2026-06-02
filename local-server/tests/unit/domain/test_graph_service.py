@@ -50,7 +50,12 @@ def repository_with_data():
     repo = FakeOntologyRepository()
 
     # Create taxonomy
-    tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+    tax = Taxonomy(
+        id=str(uuid4()),
+        identifier="test_tax",
+        title="Test Taxonomy",
+        description="Test",
+    )
     repo.save_taxonomy(tax)
 
     # Create concept scheme
@@ -966,12 +971,20 @@ class TestIndividualGraphIntegration:
         repo = FakeOntologyRepository()
 
         # Create taxonomy
-        tax = Taxonomy(id=str(uuid4()), title="Test Taxonomy", description="Test")
+        tax = Taxonomy(
+            id=str(uuid4()),
+            identifier="test_tax",
+            title="Test Taxonomy",
+            description="Test",
+        )
         repo.save_taxonomy(tax)
 
         # Create concept scheme
         scheme = ConceptScheme(
-            id=str(uuid4()), taxonomy_id=tax.id, title="Test Scheme", description="Test"
+            id=str(uuid4()),
+            taxonomy_id=tax.id,
+            title="Test Scheme",
+            description="Test",
         )
         repo.save_concept_scheme(scheme)
 

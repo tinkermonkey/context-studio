@@ -62,7 +62,7 @@ handoff/
 - `Context Studio.html`'s `<script src=…@babel/standalone…>` block is
   prototype-only. Production uses Vite + tsx.
 - The four CSS overrides in `cs/app.css` (marked `OVERRIDE — pending
-  library fix`) are explicit prototype-only patches. Once the
+library fix`) are explicit prototype-only patches. Once the
   corresponding Heimdall changes land, delete them — see the feedback
   doc for which selectors go away.
 

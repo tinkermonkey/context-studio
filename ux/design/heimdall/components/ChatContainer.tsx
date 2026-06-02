@@ -1,23 +1,20 @@
-import React, { useRef, useEffect } from 'react'
-import './ChatContainer.css'
-
-export interface BotTab {
-  id: string
-  label: string
-  role: string
-  status: 'idle' | 'busy' | 'healthy' | 'error'
+interface BotTab {
+  id: string;
+  label: string;
+  role: string;
+  status: "idle" | "busy" | "healthy" | "error";
 }
 
-export interface ChatContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode
-  bots?: BotTab[]
-  activeBotId?: string
-  onBotChange?: (botId: string) => void
-  autoScroll?: boolean
-  composer?: React.ReactNode
+interface ChatContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  bots?: BotTab[];
+  activeBotId?: string;
+  onBotChange?: (botId: string) => void;
+  autoScroll?: boolean;
+  composer?: React.ReactNode;
 }
 
-export const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps>(
+const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps>(
   (
     {
       children,
@@ -26,25 +23,21 @@ export const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps
       onBotChange,
       autoScroll = true,
       composer,
-      className = '',
+      className = "",
       ...props
     },
-    ref
+    ref,
   ) => {
-    const threadRef = useRef<HTMLDivElement>(null)
+    const threadRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       if (autoScroll && threadRef.current) {
-        threadRef.current.scrollTop = threadRef.current.scrollHeight
+        threadRef.current.scrollTop = threadRef.current.scrollHeight;
       }
-    }, [children, autoScroll])
+    }, [children, autoScroll]);
 
     return (
-      <div
-        ref={ref}
-        className={['chat-container', className].filter(Boolean).join(' ')}
-        {...props}
-      >
+      <div ref={ref} className={["chat-container", className].filter(Boolean).join(" ")} {...props}>
         {bots && bots.length > 0 && (
           <div className="chat-container__bot-tabs" role="group" aria-label="Bot tabs">
             {bots.map((bot) => (
@@ -52,11 +45,11 @@ export const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps
                 key={bot.id}
                 type="button"
                 className={[
-                  'chat-container__bot-tab',
-                  activeBotId === bot.id && 'chat-container__bot-tab--active',
+                  "chat-container__bot-tab",
+                  activeBotId === bot.id && "chat-container__bot-tab--active",
                 ]
                   .filter(Boolean)
-                  .join(' ')}
+                  .join(" ")}
                 onClick={() => onBotChange?.(bot.id)}
                 aria-pressed={activeBotId === bot.id}
                 aria-label={`${bot.label} — ${bot.role}`}
@@ -64,11 +57,11 @@ export const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps
                 <span className="chat-container__bot-label">
                   <span
                     className={[
-                      'chat-container__bot-status',
+                      "chat-container__bot-status",
                       `chat-container__bot-status--${bot.status}`,
                     ]
                       .filter(Boolean)
-                      .join(' ')}
+                      .join(" ")}
                   />
                   {bot.label}
                 </span>
@@ -85,17 +78,16 @@ export const ChatContainer = React.forwardRef<HTMLDivElement, ChatContainerProps
           aria-live="polite"
           aria-atomic="false"
         >
-          <div className="chat-container__messages">
-            {children}
-          </div>
+          <div className="chat-container__messages">{children}</div>
         </div>
 
         {composer}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-ChatContainer.displayName = 'ChatContainer'
+ChatContainer.displayName = "ChatContainer";
 
-export default ChatContainer
+// --- Babel-standalone: expose runtime values to window ---
+window.ChatContainer = ChatContainer;

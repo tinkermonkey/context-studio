@@ -12,14 +12,19 @@ the existing extraction service rather than reimplementing extraction logic.
 from __future__ import annotations
 
 import hashlib
+import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
-from domain.pipelines.ports import ExtractionPort
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+)
+from domain.pipelines.ports import ExtractionPort, LLMProvider, PipelineRunStatusWriter
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -60,6 +65,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         self,
         llm_provider: LLMProvider,
         extraction_service: ExtractionPort,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -67,8 +74,10 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         Args:
             llm_provider: Port implementation for LLM completions
             extraction_service: Port implementation for extraction logic
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -89,6 +98,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If extraction fails
         """
+        self._write_running_status()
+
         # Cast to subclass for type checking
         if not isinstance(state, IndividualExtractionState):
             state = IndividualExtractionState(
@@ -160,15 +171,21 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.COMPLETED,
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during individual extraction: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Individual extraction encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Individual extraction failed: {str(exc)}") from exc
+            raise PipelineExecutionError(
+                "Individual extraction encountered an unexpected error"
+            ) from exc
 
         return state

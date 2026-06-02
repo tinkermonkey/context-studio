@@ -2,13 +2,13 @@
 FastAPI routes for the Pipeline Orchestration bounded context.
 
 This module implements HTTP endpoints for generic pipeline execution:
-- GET    /api/pipelines/types                                    → List pipeline types
-- GET    /api/pipelines/types/{type}/implementations             → List implementations for type
-- GET    /api/pipelines/types/{type}/implementations/{id}/configurations → List configs for impl
-- POST   /api/pipelines/{type}/run                               → Invoke a pipeline
-- GET    /api/pipelines/runs/{run_id}                            → Fetch a PipelineRun by ID
-- GET    /api/pipelines/runs                                     → List PipelineRuns with filters
-- POST   /api/pipelines/runs/{run_id}/apply                      → Materialize run output into ontology
+- GET /api/pipelines/types → List pipeline types
+- GET /api/pipelines/types/{type}/implementations → List implementations
+- GET /api/pipelines/types/{type}/implementations/{id}/configurations → Configs
+- POST /api/pipelines/{type}/run → Invoke a pipeline
+- GET /api/pipelines/runs/{run_id} → Fetch a PipelineRun by ID
+- GET /api/pipelines/runs → List PipelineRuns with filters
+- POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -18,14 +18,14 @@ Each endpoint is a thin adapter that:
 
 No business logic lives here—all validation and constraints are in the domain service.
 Error handling translates domain exceptions to appropriate HTTP responses.
-"""
+"""  # noqa: E501
 
 from datetime import datetime, timezone
 from typing import Any, Optional
-from uuid import uuid4
 
 from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi import status as http_status
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from adapters.factories.orchestrator_factory import (
     build_run_specific_data,
@@ -35,21 +35,31 @@ from adapters.factories.orchestrator_factory import (
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
+    BatchResponse,
+    CancelBatchResponse,
     CandidateResponse,
     ConfigurationResponse,
+    EnqueueBatchRunsRequest,
+    EnqueueBatchRunsResponse,
     ImplementationResponse,
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
+    ResumeBatchResponse,
+    RevertRunResponse,
+)
+from domain.interchange.services import set_batch_run_context
+from domain.pipelines.entities import (
+    PipelineRun,
+    PipelineRunStatus,
+    PipelineType,
 )
 from domain.pipelines.exceptions import (
-    PipelineError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
     PipelineStorageError,
 )
-from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -86,13 +96,13 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (http_status.HTTP_503_SERVICE_UNAVAILABLE, "External service unavailable")
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
-    elif isinstance(exc, PipelineError):
-        _logger.error(f"Unexpected pipeline error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Pipeline execution failed")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Pipeline execution failed",
+        )
     elif isinstance(exc, ValueError):
-        _logger.warning(f"Invalid pipeline input: {exc}")
-        return (http_status.HTTP_400_BAD_REQUEST, str(exc))
+        _logger.error(f"Server misconfiguration error: {exc}", exc_info=exc)
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
     else:
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
@@ -110,11 +120,14 @@ def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
     """
     return {
         "top_n": config.get("top_n", 10),
-        "weights": config.get("weights", {
-            "source_score": 0.3,
-            "label_match": 0.3,
-            "semantic_similarity": 0.4,
-        }),
+        "weights": config.get(
+            "weights",
+            {
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+        ),
     }
 
 
@@ -138,12 +151,16 @@ def _to_response(run: PipelineRun) -> PipelineRunResponse:
             "pipeline_type": run.pipeline_type.value,
             "implementation_id": run.implementation_id,
             "configuration_ref": run.configuration_ref,
+            "configuration_slug": run.configuration_slug,
+            "configuration_version": run.configuration_version,
             "input_summary": run.input_summary,
             "output_summary": run.output_summary,
             "llm_metadata": run.llm_metadata,
             "status": run.status.value,
             "created_at": run.created_at,
             "updated_at": None,
+            "started_at": run.started_at,
+            "failure_reason": run.failure_reason,
         }
     )
 
@@ -280,8 +297,10 @@ async def run_pipeline(
     - individual_extraction: requires text and ontology_id
     - schema_extraction: requires documents, optional scope
     - schema_node_grounding: requires nodes and sources
-    - schema_node_definition_refinement: requires nodes, optional context
-    - schema_node_connection_refinement: requires edges, optional strategy
+    - schema_node_definition_refinement: requires node_id and
+      current_definition, optional groundings and extraction_usages
+    - schema_node_connection_refinement: requires scope_id and
+      current_connections, optional groundings and extraction_usages
 
     Creates a pipeline run, executes it with the registered implementation,
     and returns the run with execution results.
@@ -306,6 +325,7 @@ async def run_pipeline(
         )
 
     repo = request.app.state.pipeline_run_repo
+    batch_repo = request.app.state.batch_repo
     impl_registry = request.app.state.implementation_registry
     config_registry = request.app.state.config_registry
     llm_provider = request.app.state.llm_router
@@ -318,7 +338,12 @@ async def run_pipeline(
             detail=f"Implementation not found: {ptype.value}:{request_body.implementation_id}",
         )
 
-    # Verify configuration exists
+    # Verify configuration exists. get_latest() retrieves the current version,
+    # which is stored in the database along with the run. After a server restart,
+    # get_version(slug, version) can re-resolve the same configuration because
+    # configs are deterministically re-registered from code at startup.
+    # This ensures that runs can always resolve their pinned (slug, version) pair
+    # even across server restarts.
     config_version = config_registry.get_latest(
         ptype, request_body.implementation_id, request_body.configuration_ref
     )
@@ -328,13 +353,41 @@ async def run_pipeline(
             detail=f"Configuration not found: {request_body.configuration_ref}",
         )
 
-    # Create pipeline run ID (but don't persist yet)
-    run_id = str(uuid4())
+    # Create a batch for this single-run submission
+    try:
+        batch = batch_repo.create()
+        batch_id = batch.id
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
 
     # Extract input data from request body (now includes type-specific fields)
     input_data = request_body.model_dump()
 
-    # Prepare services for orchestrator instantiation
+    # Persist pipeline run to database only after validation succeeds
+    specific_data = build_run_specific_data(ptype, input_data)
+    try:
+        run = repo.create(
+            batch_run_id=batch_id,
+            pipeline_type=ptype,
+            implementation_id=request_body.implementation_id,
+            configuration_ref=request_body.configuration_ref,
+            configuration_slug=config_version.config_ref,
+            configuration_version=config_version.version,
+            specific_data=specific_data or None,
+        )
+        run_id = run.id  # Use the actual run ID returned by repo.create()
+        # Mark this configuration version as referenced by this run
+        config_registry.mark_version_referenced(
+            ptype, request_body.implementation_id, config_version.config_ref, config_version.version
+        )
+        # Update batch started_at timestamp
+        batch_repo.update_started_at(batch_id)
+    except PipelineStorageError as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+    # Prepare services for orchestrator instantiation, including status writer
     services = {
         "extraction_service": getattr(request.app.state, "extraction_service", None),
         "ontology_repo": getattr(request.app.state, "ontology_repo", None),
@@ -343,6 +396,8 @@ async def run_pipeline(
         "scorer": getattr(request.app.state, "grounding_scorer", None),
         "grounding_config": _get_grounding_config(config_version.config),
         "refinement_config": config_version.config,
+        "run_id": run_id,
+        "status_writer": repo,
     }
 
     # Instantiate orchestrator with dependencies (validates service dependencies)
@@ -353,11 +408,10 @@ async def run_pipeline(
             services=services,
         )
     except ValueError as e:
-        exc = PipelineInputError(f"Failed to instantiate orchestrator: {str(e)}")
-        status_code, message = _handle_domain_error(exc)
+        status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
-    # Create initial state for execution
+    # Create initial state for execution with the actual run ID
     state = create_pipeline_state(
         run_id=run_id,
         pipeline_type=ptype,
@@ -365,28 +419,21 @@ async def run_pipeline(
         llm_provider=llm_provider,
     )
 
-    # Persist pipeline run to database only after validation succeeds
-    specific_data = build_run_specific_data(ptype, input_data)
-    try:
-        repo.create(
-            batch_run_id=run_id,
-            pipeline_type=ptype,
-            implementation_id=request_body.implementation_id,
-            configuration_ref=request_body.configuration_ref,
-            specific_data=specific_data or None,
-        )
-    except PipelineStorageError as e:
-        status_code, message = _handle_domain_error(e)
-        raise HTTPException(status_code=status_code, detail=message) from e
-
     # Execute the pipeline
     try:
         result_state = await orchestrator.execute(state)
-    except PipelineError as exc:
+    except (
+        PipelineStorageError,
+        PipelineInputError,
+        PipelineExternalServiceError,
+        PipelineExecutionError,
+    ) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
-            repo.update_status(run_id, PipelineRunStatus.FAILED)
-            repo.update_summaries(run_id=run_id, output_summary={"error": message})
+            repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
+            # Update batch timestamps and status when run fails
+            batch_repo.update_completed_at(batch_id)
+            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
@@ -394,8 +441,10 @@ async def run_pipeline(
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
         try:
-            repo.update_status(run_id, PipelineRunStatus.FAILED)
-            repo.update_summaries(run_id=run_id, output_summary={"error": str(exc)})
+            repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
+            # Update batch timestamps and status when run fails
+            batch_repo.update_completed_at(batch_id)
+            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
         except PipelineStorageError as db_err:
             _logger.error(f"Failed to update run status after execution error: {db_err}")
         raise HTTPException(status_code=status_code, detail=message) from exc
@@ -419,7 +468,12 @@ async def run_pipeline(
             output_summary=output_summary,
             llm_metadata={},
         )
-        repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+        repo.update_status(run_id, result_state.current_status)
+        # Update batch completed_at timestamp since this single-run batch is now complete
+        batch_repo.update_completed_at(batch_id)
+        # Compute and update batch status from its runs
+        new_batch_status = batch_repo.compute_aggregate_status(batch_id)
+        batch_repo.update_status(batch_id, new_batch_status)
     except PipelineStorageError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
@@ -525,14 +579,16 @@ async def get_pipeline_candidates(
 
     # Convert candidate dicts to response schema
     return [
-        CandidateResponse.model_validate({
-            "uri": cand.get("uri") or cand.get("id") or "",
-            "label": cand.get("label") or cand.get("name") or "",
-            "description": cand.get("description") or "",
-            "source": cand.get("source") or cand.get("source_uri") or "",
-            "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
-            "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
-        })
+        CandidateResponse.model_validate(
+            {
+                "uri": cand.get("uri") or cand.get("id") or "",
+                "label": cand.get("label") or cand.get("name") or "",
+                "description": cand.get("description") or "",
+                "source": cand.get("source") or cand.get("source_uri") or "",
+                "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
+                "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
+            }
+        )
         for cand in candidates_data
     ]
 
@@ -638,10 +694,23 @@ async def list_pipeline_runs(
 async def apply_pipeline_run(
     run_id: str,
     request: Request,
-    concept_scheme_id: Optional[str] = Query(None, description="Target concept scheme (required for schema_extraction)"),
-    taxonomy_id: Optional[str] = Query(None, description="Parent taxonomy (required for schema_extraction)"),
-    node_id: Optional[str] = Query(None, description="Target class node ID (required for schema_node_grounding)"),
-    confidence_threshold: float = Query(0.0, ge=0.0, le=1.0, description="Minimum candidate confidence"),
+    concept_scheme_id: Optional[str] = Query(
+        None,
+        description="Target concept scheme (required for schema_extraction)",
+    ),
+    taxonomy_id: Optional[str] = Query(
+        None, description="Parent taxonomy (required for schema_extraction)"
+    ),
+    node_id: Optional[str] = Query(
+        None,
+        description="Target class node ID (required for schema_node_grounding)",
+    ),
+    confidence_threshold: float = Query(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Minimum candidate confidence",
+    ),
 ) -> ApplyRunResponse:
     """
     Apply a completed pipeline run's output to the ontology.
@@ -686,71 +755,469 @@ async def apply_pipeline_run(
 
     ptype = run.pipeline_type
 
+    set_batch_run_context(run.batch_run_id)
     try:
-        if ptype == PipelineType.SCHEMA_EXTRACTION:
-            if not concept_scheme_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="concept_scheme_id is required for schema_extraction apply",
+        try:
+            if ptype == PipelineType.SCHEMA_EXTRACTION:
+                if not concept_scheme_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="concept_scheme_id is required for schema_extraction apply",
+                    )
+                if not taxonomy_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="taxonomy_id is required for schema_extraction apply",
+                    )
+                svc = request.app.state.schema_extraction_apply_svc
+                apply_result = svc.apply(
+                    run=run,
+                    concept_scheme_id=concept_scheme_id,
+                    taxonomy_id=taxonomy_id,
+                    confidence_threshold=confidence_threshold,
                 )
-            if not taxonomy_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="taxonomy_id is required for schema_extraction apply",
+
+            elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+                svc = request.app.state.individual_extraction_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
+                if not node_id:
+                    raise HTTPException(
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
+                        detail="node_id is required for schema_node_grounding apply",
+                    )
+                svc = request.app.state.schema_grounding_apply_svc
+                apply_result = svc.apply(
+                    run=run,
+                    node_id=node_id,
+                    confidence_threshold=confidence_threshold,
                 )
-            svc = request.app.state.schema_extraction_apply_svc
-            apply_result = svc.apply(
-                run=run,
-                concept_scheme_id=concept_scheme_id,
-                taxonomy_id=taxonomy_id,
-                confidence_threshold=confidence_threshold,
+
+            elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+                svc = request.app.state.schema_definition_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+                svc = request.app.state.schema_connection_apply_svc
+                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+
+            else:
+                # NO_OP and any future types return empty result
+                from domain.pipelines.apply_result import ApplyResult
+
+                apply_result = ApplyResult()
+
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            ) from exc
+        except (PipelineStorageError, IntegrityError, OperationalError) as exc:
+            _logger.error(f"Storage/database error applying run {run_id}: {exc}")
+            status_code, message = _handle_domain_error(
+                exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
             )
-
-        elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
-            svc = request.app.state.individual_extraction_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
-            if not node_id:
-                raise HTTPException(
-                    status_code=http_status.HTTP_400_BAD_REQUEST,
-                    detail="node_id is required for schema_node_grounding apply",
-                )
-            svc = request.app.state.schema_grounding_apply_svc
-            apply_result = svc.apply(
-                run=run,
-                node_id=node_id,
-                confidence_threshold=confidence_threshold,
-            )
-
-        elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
-            svc = request.app.state.schema_definition_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-            svc = request.app.state.schema_connection_apply_svc
-            apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
-
-        else:
-            # NO_OP and any future types return empty result
-            from domain.pipelines.apply_result import ApplyResult
-            apply_result = ApplyResult()
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
+            raise HTTPException(status_code=status_code, detail=message) from exc
+        except KeyError as exc:
+            _logger.error(f"Malformed output data for run {run_id}: missing key {exc}")
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Pipeline output is malformed: missing key {str(exc)}",
+            ) from exc
+    finally:
+        set_batch_run_context(None)
 
     return ApplyRunResponse(
         run_id=run_id,
         pipeline_type=ptype.value,
         classes_created=apply_result.classes_created,
+        classes_updated=apply_result.classes_updated,
         classes_skipped=apply_result.classes_skipped,
         properties_created=apply_result.properties_created,
         properties_skipped=apply_result.properties_skipped,
         relationships_created=apply_result.relationships_created,
+        relationships_removed=apply_result.relationships_removed,
+        relationships_modified=apply_result.relationships_modified,
         relationships_skipped=apply_result.relationships_skipped,
         individuals_created=apply_result.individuals_created,
         individuals_skipped=apply_result.individuals_skipped,
+        external_references_created=apply_result.external_references_created,
+        external_references_skipped=apply_result.external_references_skipped,
+        created_class_ids=apply_result.created_class_ids,
+        created_individual_ids=apply_result.created_individual_ids,
+        created_relationship_ids=apply_result.created_relationship_ids,
+        created_property_definition_ids=apply_result.created_property_definition_ids,
+        created_external_reference_ids=apply_result.created_external_reference_ids,
     )
+
+
+@router.post(
+    "/runs/{run_id}/revert",
+    response_model=RevertRunResponse,
+    status_code=http_status.HTTP_200_OK,
+)
+async def revert_pipeline_run(
+    run_id: str,
+    request: Request,
+) -> RevertRunResponse:
+    """
+    Revert all changes made by a specific pipeline run.
+
+    Walks the change_events for the given run in reverse order and applies
+    the inverse of each operation. This restores the ontology to its state
+    before the run was applied.
+
+    The operation is idempotent — calling revert twice produces the same state
+    without error.
+
+    This endpoint only supports reverting runs from single-run batches. For multi-run
+    batches, use the batch revert endpoint instead.
+
+    Args:
+        run_id: ID of the pipeline run to revert
+
+    Returns:
+        RevertRunResponse with count of events reverted
+
+    Raises:
+        HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run {run_id} not found",
+        )
+
+    batch_runs = repo.list_by_batch_id(run.batch_run_id)
+    if len(batch_runs) > 1:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot revert single run from multi-run batch. "
+                   f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
+                   f"Use batch revert endpoint instead.",
+        )
+
+    revert_svc = request.app.state.revert_service
+    try:
+        events_reverted = revert_svc.revert(run.batch_run_id)
+        return RevertRunResponse(run_id=run_id, events_reverted=events_reverted)
+    except Exception as exc:
+        _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to revert pipeline run due to an internal error",
+        ) from exc
+
+
+# ==================== Batch Management ====================
+
+
+@router.post(
+    "/batches",
+    status_code=http_status.HTTP_201_CREATED,
+    response_model=BatchResponse,
+)
+async def create_batch(request: Request) -> dict[str, Any]:
+    """
+    Create a new batch.
+
+    Args:
+        request: FastAPI request (for service access)
+
+    Returns:
+        Batch info with id and status
+
+    Raises:
+        HTTPException: 500 for creation errors
+    """
+    batch_repo = request.app.state.batch_repo
+    try:
+        batch = batch_repo.create()
+        return {
+            "id": batch.id,
+            "status": batch.status.value,
+            "created_at": batch.created_at,
+            "started_at": batch.started_at,
+            "completed_at": batch.completed_at,
+            "last_updated": batch.last_updated,
+            "run_count": 0,
+            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0, "cancelled": 0},
+        }
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.get("/batches/{batch_id}", response_model=BatchResponse)
+async def get_batch(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Get batch info and aggregate status over child runs.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Batch info including aggregate status
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+
+    try:
+        batch = batch_repo.get(batch_id)
+        if not batch:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=f"Batch not found: {batch_id}",
+            )
+
+        run_counts = batch_repo.get_run_counts(batch_id)
+        total_runs = sum(run_counts.values())
+
+        return {
+            "id": batch.id,
+            "status": batch.status.value,
+            "created_at": batch.created_at,
+            "started_at": batch.started_at,
+            "completed_at": batch.completed_at,
+            "last_updated": batch.last_updated,
+            "run_count": total_runs,
+            "run_counts": run_counts,
+        }
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post(
+    "/batches/{batch_id}/runs",
+    status_code=http_status.HTTP_201_CREATED,
+    response_model=EnqueueBatchRunsResponse,
+)
+async def enqueue_batch_runs(
+    batch_id: str,
+    request: Request,
+    request_body: EnqueueBatchRunsRequest = Body(...),
+) -> dict[str, Any]:
+    """
+    Enqueue multiple runs in a batch.
+
+    Args:
+        batch_id: Batch ID
+        request_body: Contains 'runs' list with pipeline type and config
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of created run IDs
+
+    Raises:
+        HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+    config_registry = request.app.state.config_registry
+    impl_registry = request.app.state.implementation_registry
+
+    # Verify batch exists
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    runs_data = request_body.runs
+    if not runs_data:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail="'runs' must be a non-empty list",
+        )
+
+    created_run_ids = []
+    try:
+        for run_data in runs_data:
+            pipeline_type_str = run_data.get("pipeline_type")
+            impl_id = run_data.get("implementation_id", "default")
+            config_ref = run_data.get("configuration_ref", "default")
+
+            try:
+                ptype = PipelineType(pipeline_type_str)
+            except ValueError:
+                raise HTTPException(
+                    status_code=http_status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid pipeline type: {pipeline_type_str}",
+                )
+
+            # Validate implementation exists
+            impl = impl_registry.get(ptype, impl_id)
+            if not impl:
+                raise HTTPException(
+                    status_code=http_status.HTTP_404_NOT_FOUND,
+                    detail=f"Implementation not found: {impl_id}",
+                )
+
+            config_version = config_registry.get_latest(ptype, impl_id, config_ref)
+            if not config_version:
+                raise HTTPException(
+                    status_code=http_status.HTTP_404_NOT_FOUND,
+                    detail=f"Configuration not found: {config_ref}",
+                )
+
+            specific_data = build_run_specific_data(ptype, run_data.get("specific_data") or {})
+            run = pipeline_run_repo.create(
+                batch_run_id=batch_id,
+                pipeline_type=ptype,
+                implementation_id=impl_id,
+                configuration_ref=config_ref,
+                configuration_slug=config_version.config_ref,
+                configuration_version=config_version.version,
+                specific_data=specific_data or None,
+            )
+            created_run_ids.append(run.id)
+
+        # Update batch started_at timestamp if this is the first run
+        if created_run_ids:
+            batch_repo.update_started_at(batch_id)
+
+        run_counts = batch_repo.get_run_counts(batch_id)
+        total_runs = sum(run_counts.values())
+
+        return {
+            "batch_id": batch_id,
+            "run_ids": created_run_ids,
+            "run_count": total_runs,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post(
+    "/batches/{batch_id}/cancel",
+    status_code=http_status.HTTP_200_OK,
+    response_model=CancelBatchResponse,
+)
+async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Cancel all PENDING runs in a batch.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Count of cancelled runs
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    try:
+        runs = pipeline_run_repo.list_by_batch_id(batch_id)
+        cancelled_count = 0
+
+        for run in runs:
+            if run.status == PipelineRunStatus.PENDING:
+                pipeline_run_repo.update_status(run.id, PipelineRunStatus.CANCELLED)
+                cancelled_count += 1
+
+        # Recompute batch status based on child runs
+        if cancelled_count > 0:
+            run_counts = batch_repo.get_run_counts(batch_id)
+            # Only set completed_at if all runs are in terminal state
+            if run_counts.get("pending", 0) == 0 and run_counts.get("running", 0) == 0:
+                batch_repo.update_completed_at(batch_id)
+            # Recompute status from child runs
+            updated_batch = batch_repo.get(batch_id)
+            if updated_batch:
+                new_status = batch_repo.compute_aggregate_status(batch_id)
+                batch_repo.update_status(batch_id, new_status)
+        else:
+            run_counts = batch_repo.get_run_counts(batch_id)
+
+        updated_batch = batch_repo.get(batch_id)
+
+        return {
+            "batch_id": batch_id,
+            "cancelled_count": cancelled_count,
+            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "run_counts": run_counts,
+        }
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e
+
+
+@router.post(
+    "/batches/{batch_id}/resume",
+    status_code=http_status.HTTP_200_OK,
+    response_model=ResumeBatchResponse,
+)
+async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+    """
+    Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+
+    Args:
+        batch_id: Batch ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        Count of resumed runs
+
+    Raises:
+        HTTPException: 404 if batch not found
+    """
+    batch_repo = request.app.state.batch_repo
+    pipeline_run_repo = request.app.state.pipeline_run_repo
+
+    batch = batch_repo.get(batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found: {batch_id}",
+        )
+
+    try:
+        runs = pipeline_run_repo.list_by_batch_id(batch_id)
+        resumed_count = 0
+
+        for run in runs:
+            if run.status in (PipelineRunStatus.CANCELLED, PipelineRunStatus.FAILED):
+                pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
+                resumed_count += 1
+
+        # Recompute batch status based on child runs
+        if resumed_count > 0:
+            new_status = batch_repo.compute_aggregate_status(batch_id)
+            batch_repo.update_status(batch_id, new_status)
+
+        run_counts = batch_repo.get_run_counts(batch_id)
+        updated_batch = batch_repo.get(batch_id)
+
+        return {
+            "batch_id": batch_id,
+            "resumed_count": resumed_count,
+            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "run_counts": run_counts,
+        }
+    except Exception as e:
+        status_code, message = _handle_domain_error(e)
+        raise HTTPException(status_code=status_code, detail=message) from e

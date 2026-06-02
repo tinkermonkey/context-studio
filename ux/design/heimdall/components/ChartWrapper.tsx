@@ -1,13 +1,11 @@
-import React from 'react'
-
-export interface ChartWrapperProps {
+interface ChartWrapperProps {
   /** Required accessible label — maps to aria-label on the SVG element */
-  label: string
-  width?: number | string
-  height?: number | string
-  viewBox?: string
-  className?: string
-  children: React.ReactNode
+  label: string;
+  width?: number | string;
+  height?: number | string;
+  viewBox?: string;
+  className?: string;
+  children: React.ReactNode;
 }
 
 /**
@@ -22,25 +20,28 @@ export interface ChartWrapperProps {
  *     {SVG content goes here}
  *   </ChartWrapper>
  */
-export const ChartWrapper = React.forwardRef<SVGSVGElement, ChartWrapperProps & Omit<React.SVGAttributes<SVGSVGElement>, 'children'>>(
-  ({ label, width, height, viewBox, className = '', children, ...rest }, ref) => {
-    return (
-      <svg
-        ref={ref}
-        role="img"
-        aria-label={label}
-        width={width}
-        height={height}
-        viewBox={viewBox}
-        className={className}
-        style={{ display: 'block' }}
-        {...rest}
-      >
-        {children}
-      </svg>
-    )
-  }
-)
+const ChartWrapper = React.forwardRef<
+  SVGSVGElement,
+  ChartWrapperProps & Omit<React.SVGAttributes<SVGSVGElement>, "children">
+>(({ label, width, height, viewBox, className = "", children, ...rest }, ref) => {
+  return (
+    <svg
+      ref={ref}
+      role="img"
+      aria-label={label}
+      width={width}
+      height={height}
+      viewBox={viewBox}
+      className={className}
+      style={{ display: "block" }}
+      {...rest}
+    >
+      {children}
+    </svg>
+  );
+});
 
-ChartWrapper.displayName = 'ChartWrapper'
-export default ChartWrapper
+ChartWrapper.displayName = "ChartWrapper";
+
+// --- Babel-standalone: expose runtime values to window ---
+window.ChartWrapper = ChartWrapper;

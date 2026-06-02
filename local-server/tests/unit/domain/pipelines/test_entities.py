@@ -68,6 +68,8 @@ class TestIndividualExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             source_text_hash="abc123",
             source_document_uri="s3://bucket/doc.txt",
         )
@@ -77,6 +79,8 @@ class TestIndividualExtractionRun:
         assert run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION
         assert run.implementation_id == "impl-default"
         assert run.configuration_ref == "extraction-default"
+        assert run.configuration_slug == "extraction-default"
+        assert run.configuration_version == 1
         assert run.status == PipelineRunStatus.PENDING
         assert run.source_text_hash == "abc123"
         assert run.source_document_uri == "s3://bucket/doc.txt"
@@ -88,6 +92,8 @@ class TestIndividualExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-default",
             configuration_ref="extraction-default",
+            configuration_slug="extraction-default",
+            configuration_version=1,
             source_text_hash="abc123",
         )
 
@@ -105,11 +111,15 @@ class TestSchemaExtractionRun:
             batch_run_id="batch-456",
             implementation_id="impl-schema",
             configuration_ref="schema-default",
+            configuration_slug="schema-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_EXTRACTION
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "schema-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaGroundingRun:
@@ -122,11 +132,15 @@ class TestSchemaGroundingRun:
             batch_run_id="batch-456",
             implementation_id="impl-grounding",
             configuration_ref="grounding-default",
+            configuration_slug="grounding-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "grounding-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaDefinitionRefinementRun:
@@ -139,11 +153,15 @@ class TestSchemaDefinitionRefinementRun:
             batch_run_id="batch-456",
             implementation_id="impl-definition",
             configuration_ref="definition-default",
+            configuration_slug="definition-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "definition-default"
+        assert run.configuration_version == 1
 
 
 class TestSchemaConnectionRefinementRun:
@@ -156,11 +174,86 @@ class TestSchemaConnectionRefinementRun:
             batch_run_id="batch-456",
             implementation_id="impl-connection",
             configuration_ref="connection-default",
+            configuration_slug="connection-default",
+            configuration_version=1,
         )
 
         assert run.id == "run-123"
         assert run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
         assert run.status == PipelineRunStatus.PENDING
+        assert run.configuration_slug == "connection-default"
+        assert run.configuration_version == 1
+
+
+class TestPipelineRunValidation:
+    """Tests for PipelineRun construction-time validation."""
+
+    def test_pipeline_run_rejects_empty_batch_run_id(self):
+        """PipelineRun rejects empty batch_run_id."""
+        with pytest.raises(ValueError, match="batch_run_id cannot be empty"):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="",  # Invalid: empty
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+            )
+
+    def test_pipeline_run_rejects_zero_configuration_version(self):
+        """PipelineRun rejects configuration_version <= 0."""
+        with pytest.raises(ValueError, match="configuration_version must be greater than 0"):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="batch-456",
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+                configuration_version=0,  # Invalid: must be > 0
+            )
+
+    def test_pipeline_run_rejects_pending_with_failure_reason(self):
+        """PipelineRun rejects status=PENDING with failure_reason set."""
+        with pytest.raises(
+            ValueError,
+            match="status=PENDING is incompatible with a set failure_reason",
+        ):
+            PipelineRun(
+                id="run-123",
+                batch_run_id="batch-456",
+                pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+                implementation_id="impl-001",
+                configuration_ref="config-default",
+                status=PipelineRunStatus.PENDING,
+                failure_reason="Some failure",  # Invalid: PENDING shouldn't have failure reason
+            )
+
+    def test_pipeline_run_accepts_failed_with_failure_reason(self):
+        """PipelineRun accepts status=FAILED with failure_reason set."""
+        run = PipelineRun(
+            id="run-123",
+            batch_run_id="batch-456",
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-001",
+            configuration_ref="config-default",
+            status=PipelineRunStatus.FAILED,
+            failure_reason="Extraction failed",  # Valid: FAILED with failure reason
+        )
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == "Extraction failed"
+
+    def test_pipeline_run_accepts_valid_construction(self):
+        """PipelineRun accepts valid construction parameters."""
+        run = PipelineRun(
+            id="run-123",
+            batch_run_id="batch-456",
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="impl-001",
+            configuration_ref="config-default",
+            configuration_version=1,
+            status=PipelineRunStatus.PENDING,
+        )
+        assert run.batch_run_id == "batch-456"
+        assert run.configuration_version == 1
 
 
 class TestPipelineRunStatus:

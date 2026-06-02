@@ -32,6 +32,7 @@ from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 
 # Import adapters
@@ -43,7 +44,6 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 )
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -65,7 +65,6 @@ from adapters.web.interchange_routes import router as interchange_router
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
-from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
@@ -103,27 +102,29 @@ from domain.ontology.events import (
 
 # Import domain services
 from domain.ontology.services import OntologyService
-from domain.pipelines.events import PipelineExecuted
-from domain.pipelines.services import PipelineService
 from domain.pipelines.individual_extraction import register_individual_extraction
+from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
-from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
-from domain.pipelines.schema_node_definition_refinement.apply_service import SchemaDefinitionRefinementApplyService
-from domain.pipelines.schema_node_connection_refinement.apply_service import SchemaConnectionRefinementApplyService
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
+)
+from domain.pipelines.schema_node_connection_refinement.apply_service import (
+    SchemaConnectionRefinementApplyService,
 )
 from domain.pipelines.schema_node_definition_refinement import (
     register_schema_node_definition_refinement,
 )
+from domain.pipelines.schema_node_definition_refinement.apply_service import (
+    SchemaDefinitionRefinementApplyService,
+)
 from domain.pipelines.schema_node_grounding import register_schema_node_grounding
+from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
@@ -204,10 +205,10 @@ async def lifespan(app: FastAPI):
             " InterchangeRepository created"
         )
 
-        operations_session_factory = db_manager.get_operations_session_factory()
-        pipeline_repo = SQLitePipelineRepository(operations_session_factory)
+        db_manager.get_operations_session_factory()
         pipeline_run_repo = PipelineRepository(local_session_factory)
-        logger.info("PipelineRepository and PipelineRunRepository created")
+        batch_repo = BatchRepository(local_session_factory)
+        logger.info("PipelineRunRepository and BatchRepository created")
 
         # Initialize pipeline registries (currently empty—implementations/configs added at startup)
         implementation_registry = PipelineImplementationRegistry()
@@ -337,13 +338,6 @@ async def lifespan(app: FastAPI):
         )
         logger.info("Schema node connection refinement pipeline registered")
 
-        pipeline_service = PipelineService(
-            pipeline_repo=pipeline_repo,
-            llm=llm_router,
-            event_publisher=event_publisher,
-        )
-        logger.info("PipelineService created and wired with adapters")
-
         # Versioning service with sync adapter
         sync_config = settings.sync
         sync_target: SyncTarget
@@ -418,6 +412,14 @@ async def lifespan(app: FastAPI):
             " event publisher"
         )
 
+        from domain.versioning.revert_service import RevertService
+
+        revert_service = RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+        )
+        logger.info("RevertService created and wired with change and ontology repositories")
+
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
         logger.info("ImportRunService created")
@@ -468,11 +470,6 @@ async def lifespan(app: FastAPI):
         logger.info(
             "Event subscription: ExtractionCompleted ->"
             " ChangeEventRecorder.on_extraction_completed"
-        )
-
-        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
-        logger.info(
-            "Event subscription: PipelineExecuted ->" " ChangeEventRecorder.on_pipeline_executed"
         )
 
         event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
@@ -583,18 +580,20 @@ async def lifespan(app: FastAPI):
         app.state.ontology_service = ontology_service
         app.state.graph_service = graph_service
         app.state.extraction_service = extraction_service
-        app.state.pipeline_service = pipeline_service
         app.state.versioning_service = versioning_service
+        app.state.revert_service = revert_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
         app.state.ontology_repo = ontology_repo
+        app.state.change_repo = change_repo
         app.state.interchange_repo = interchange_repo
         app.state.import_run_service = import_run_service
 
         # Store pipeline run repo and registries for generic pipeline endpoints
         app.state.pipeline_run_repo = pipeline_run_repo
+        app.state.batch_repo = batch_repo
         app.state.implementation_registry = implementation_registry
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry
@@ -603,8 +602,12 @@ async def lifespan(app: FastAPI):
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
         app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
         app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
-        app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
-        app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)
+        app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
+            ontology_repo
+        )
+        app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(
+            ontology_repo
+        )
 
         # Store grounding dependencies for orchestrator factory
         app.state.grounding_adapter = grounding_adapter
@@ -663,7 +666,6 @@ app.add_middleware(
 app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
-app.include_router(pipeline_router)
 app.include_router(pipelines_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)

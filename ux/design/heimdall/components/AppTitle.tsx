@@ -1,23 +1,19 @@
-import React from 'react'
-import './AppTitle.css'
-
-export interface AppTitleProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string
-  version?: string
-  collapsed?: boolean
+interface AppTitleProps extends React.HTMLAttributes<HTMLDivElement> {
+  title: string;
+  version?: string;
+  collapsed?: boolean;
 }
 
-export const AppTitle = React.forwardRef<HTMLDivElement, AppTitleProps>(
-  ({ title, version, collapsed = false, className = '', 'aria-label': ariaLabel, ...props }, ref) => {
-    const classNames = [
-      'app-title',
-      collapsed && 'app-title--collapsed',
-      className,
-    ]
+const AppTitle = React.forwardRef<HTMLDivElement, AppTitleProps>(
+  (
+    { title, version, collapsed = false, className = "", "aria-label": ariaLabel, ...props },
+    ref,
+  ) => {
+    const classNames = ["app-title", collapsed && "app-title--collapsed", className]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
-    const computedLabel = ariaLabel ?? (version ? `${title} ${version}` : title)
+    const computedLabel = ariaLabel ?? (version ? `${title} ${version}` : title);
 
     return (
       <div ref={ref} className={classNames} aria-label={computedLabel} role="banner" {...props}>
@@ -29,10 +25,11 @@ export const AppTitle = React.forwardRef<HTMLDivElement, AppTitleProps>(
           </div>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-AppTitle.displayName = 'AppTitle'
+AppTitle.displayName = "AppTitle";
 
-export default AppTitle
+// --- Babel-standalone: expose runtime values to window ---
+window.AppTitle = AppTitle;

@@ -1,37 +1,32 @@
-import React from 'react'
-import { QuickAccessTile } from './QuickAccessTile'
-import type { IconName } from './Icon'
-import './QuickAccessGrid.css'
-
-export interface QuickAccessGridItem {
-  id: string
-  icon: IconName
-  title: string
-  description: string
+interface QuickAccessGridItem {
+  id: string;
+  icon: IconName;
+  title: string;
+  description: string;
 }
 
-export interface QuickAccessGridProps extends React.HTMLAttributes<HTMLDivElement> {
-  tiles: QuickAccessGridItem[]
-  onAction?: (tileId: string) => void
-  columns?: number
+interface QuickAccessGridProps extends React.HTMLAttributes<HTMLDivElement> {
+  tiles: QuickAccessGridItem[];
+  onAction?: (tileId: string) => void;
+  columns?: number;
 }
 
 // Backward compatibility export
-export type QuickAccessTile = QuickAccessGridItem
+type QuickAccessTile = QuickAccessGridItem;
 
-export const QuickAccessGrid = React.forwardRef<HTMLDivElement, QuickAccessGridProps>(
-  ({ tiles, onAction, columns = 4, className = '', ...props }, ref) => {
-    const classNames = ['quick-access-grid', className].filter(Boolean).join(' ')
+const QuickAccessGrid = React.forwardRef<HTMLDivElement, QuickAccessGridProps>(
+  ({ tiles, onAction, columns = 4, className = "", ...props }, ref) => {
+    const classNames = ["quick-access-grid", className].filter(Boolean).join(" ");
 
     return (
       <div
         ref={ref}
         className={classNames}
-        style={{ '--qa-columns': columns } as React.CSSProperties}
+        style={{ "--qa-columns": columns } as React.CSSProperties}
         data-testid="quick-access-grid"
         {...props}
       >
-        {tiles.map(tile => (
+        {tiles.map((tile) => (
           <QuickAccessTile
             key={tile.id}
             icon={tile.icon}
@@ -42,10 +37,11 @@ export const QuickAccessGrid = React.forwardRef<HTMLDivElement, QuickAccessGridP
           />
         ))}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-QuickAccessGrid.displayName = 'QuickAccessGrid'
+QuickAccessGrid.displayName = "QuickAccessGrid";
 
-export default QuickAccessGrid
+// --- Babel-standalone: expose runtime values to window ---
+window.QuickAccessGrid = QuickAccessGrid;

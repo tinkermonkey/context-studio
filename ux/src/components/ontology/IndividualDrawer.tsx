@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { ChevronUp, ChevronDown, Loader, AlertCircle } from "lucide-react";
-import { InspectorPanel, TextInput as Input, TextArea as Textarea, Button, Panel } from "@tinkermonkey/heimdall-ui";
+import {
+  InspectorPanel,
+  TextInput as Input,
+  TextArea as Textarea,
+  Button,
+  Panel,
+} from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -126,10 +132,7 @@ function ClassChip({
   );
 }
 
-export function IndividualDrawer({
-  individualId,
-  onSelectIndividual,
-}: IndividualDrawerProps) {
+export function IndividualDrawer({ individualId, onSelectIndividual }: IndividualDrawerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -251,12 +254,7 @@ export function IndividualDrawer({
   // Error state
   if (individualError) {
     return (
-      <InspectorPanel
-        eyebrow="individual"
-        title="Error"
-        id=""
-        data-testid="individual-detail-page"
-      >
+      <InspectorPanel eyebrow="individual" title="Error" id="" data-testid="individual-detail-page">
         <InspectorPanel.Section title="Details">
           <ErrorBanner
             error={individualError}
@@ -375,7 +373,9 @@ export function IndividualDrawer({
             Saved {formatTimeAgo(lastSavedAtRef.current)}
           </span>
         )}
-        {autosaveState === "error" && <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />}
+        {autosaveState === "error" && (
+          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+        )}
       </span>
       {isDirty && (
         <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">

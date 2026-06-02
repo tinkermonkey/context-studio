@@ -90,10 +90,10 @@ class OntologyService:
 
     def create_taxonomy(
         self,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
+        identifier: str | None = None,
     ) -> Taxonomy:
         """
         Create a new taxonomy.
@@ -102,10 +102,11 @@ class OntologyService:
         and that the title is unique across taxonomies.
 
         Args:
-            identifier: Globally-unique slug identifier (e.g. 'tax_life')
             title: Display name for the taxonomy
             description: Optional longer description
             color: Optional hex color string for the swatch
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created Taxonomy
@@ -118,21 +119,21 @@ class OntologyService:
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        # Check identifier uniqueness against existing taxonomy/scheme/class entities.
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
-
-        # Check for duplicate title
+        # Check for duplicate title first
         existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == title for t in existing):
             raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
+
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         taxonomy_id = str(uuid4())
         now = datetime.now(timezone.utc)
         taxonomy = Taxonomy(
             id=taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             created_at=now,
@@ -266,6 +267,7 @@ class OntologyService:
         if color is not None:
             # Re-validate via the entity's helper by reassigning + post-init equivalent.
             from .value_objects import validate_hex_color as _vc
+
             taxonomy.color = _vc(color)
 
         # Guard against no-op updates
@@ -504,10 +506,10 @@ class OntologyService:
     def create_scheme(
         self,
         taxonomy_id: str,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
+        identifier: str | None = None,
     ) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
@@ -519,10 +521,11 @@ class OntologyService:
 
         Args:
             taxonomy_id: ID of the parent taxonomy
-            identifier: Globally-unique slug identifier (e.g. 'scheme_ecology')
             title: Display name for the scheme
             description: Optional longer description
             color: Optional hex color string for the swatch
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created ConceptScheme
@@ -541,10 +544,6 @@ class OntologyService:
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
-        # Check identifier uniqueness across schema-tier entities
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
-
         # Check for duplicate title within this taxonomy
         existing_schemes = self._repository.list_concept_schemes(
             taxonomy_id=taxonomy_id, limit=None
@@ -554,13 +553,17 @@ class OntologyService:
                 f"ConceptScheme with title '{title}' already exists in this taxonomy"
             )
 
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
+
         scheme_id = str(uuid4())
         now = datetime.now(timezone.utc)
         scheme = ConceptScheme(
             id=scheme_id,
             taxonomy_id=taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             created_at=now,
@@ -763,11 +766,11 @@ class OntologyService:
     def create_class(
         self,
         concept_scheme_id: str,
-        identifier: str,
         title: str,
         description: str | None = None,
         color: str | None = None,
         parent_class_id: str | None = None,
+        identifier: str | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -781,11 +784,12 @@ class OntologyService:
 
         Args:
             concept_scheme_id: ID of the parent concept scheme
-            identifier: Globally-unique slug identifier (e.g. 'cls_organism')
             title: Display name for the class
             description: Optional longer description
             color: Optional hex color string for the swatch
             parent_class_id: Optional ID of the parent class for hierarchy
+            identifier: (Optional) globally-unique slug identifier;
+                auto-generated from title if not provided
 
         Returns:
             The created Class with generated embedding
@@ -804,16 +808,16 @@ class OntologyService:
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
-        # Check identifier uniqueness across schema-tier entities
-        if self._repository.get_by_identifier(identifier) is not None:
-            raise IdentifierConflictError(identifier)
-
         # Check for duplicate title within this scheme
         existing_classes = self._repository.list_classes(
             concept_scheme_id=concept_scheme_id, limit=None
         )
         if any(c.title == title for c in existing_classes):
             raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
+
+        # Check identifier uniqueness only if provided
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
+            raise IdentifierConflictError(identifier)
 
         # Validate parent class if provided
         if parent_class_id is not None:
@@ -835,8 +839,8 @@ class OntologyService:
             id=class_id,
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
-            identifier=identifier,
             title=title,
+            identifier=identifier,
             description=description,
             color=color,
             parent_class_id=parent_class_id,
@@ -972,6 +976,7 @@ class OntologyService:
 
         if color is not None:
             from .value_objects import validate_hex_color as _vc
+
             cls.color = _vc(color)
 
         color_changed = color is not None and cls.color != old_color
@@ -1905,6 +1910,7 @@ class OntologyService:
 
         if color is not None:
             from .value_objects import validate_hex_color as _vc
+
             scheme.color = _vc(color)
 
         scheme.last_modified = datetime.now(timezone.utc)

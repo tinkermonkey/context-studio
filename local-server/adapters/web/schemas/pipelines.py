@@ -97,17 +97,29 @@ class SchemaGroundingRunRequest(PipelineRunRequest):
 class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_definition_refinement pipeline."""
 
-    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to refine")
-    context: Optional[str] = Field(None, description="Additional context (optional)")
+    node_id: str = Field(..., min_length=1, description="Schema node ID to refine")
+    current_definition: str = Field(..., description="Current definition to refine")
+    groundings: Optional[list[dict[str, Any]]] = Field(
+        None, description="External groundings (optional)"
+    )
+    extraction_usages: Optional[list[dict[str, Any]]] = Field(
+        None, description="Extraction usage examples (optional)"
+    )
 
 
 class SchemaConnectionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_connection_refinement pipeline."""
 
-    edges: list[dict[str, Any]] = Field(
-        ..., min_length=1, description="Edges (connections) to refine"
+    scope_id: str = Field(..., min_length=1, description="Schema node ID to refine connections for")
+    current_connections: list[dict[str, Any]] = Field(
+        ..., description="Current connections for the scope"
     )
-    strategy: Optional[str] = Field(None, description="Refinement strategy (optional)")
+    groundings: Optional[list[dict[str, Any]]] = Field(
+        None, description="External groundings (optional)"
+    )
+    extraction_usages: Optional[list[dict[str, Any]]] = Field(
+        None, description="Extraction usage examples (optional)"
+    )
 
 
 GenericPipelineRunRequest = Union[
@@ -129,6 +141,8 @@ class PipelineRunResponse(BaseModel):
     pipeline_type: str = Field(..., description="Pipeline type (discriminator)")
     implementation_id: str = Field(..., description="Implementation ID")
     configuration_ref: str = Field(..., description="Configuration reference")
+    configuration_slug: str = Field(..., description="Configuration slug")
+    configuration_version: int = Field(..., description="Configuration version")
     input_summary: dict[str, Any] = Field(default_factory=dict, description="Input metadata")
     output_summary: dict[str, Any] = Field(
         default_factory=dict, description="Output counts/metrics"
@@ -141,6 +155,10 @@ class PipelineRunResponse(BaseModel):
     updated_at: Optional[datetime] = Field(
         None, description="Last update timestamp (reserved for future use)"
     )
+    started_at: Optional[datetime] = Field(
+        None, description="Timestamp when run transitioned to RUNNING"
+    )
+    failure_reason: Optional[str] = Field(None, description="Failure reason if status=FAILED")
 
 
 class ApplyRunResponse(BaseModel):
@@ -149,12 +167,15 @@ class ApplyRunResponse(BaseModel):
     run_id: str = Field(..., description="ID of the applied pipeline run")
     pipeline_type: str = Field(..., description="Pipeline type that was applied")
     classes_created: int = Field(default=0, description="Class entities created")
+    classes_updated: int = Field(default=0, description="Class entities updated")
     classes_skipped: int = Field(default=0, description="Class candidates skipped (already exist)")
     properties_created: int = Field(default=0, description="PropertyDefinition entities created")
     properties_skipped: int = Field(
         default=0, description="PropertyDefinition candidates skipped (already exist)"
     )
     relationships_created: int = Field(default=0, description="Relationship entities created")
+    relationships_removed: int = Field(default=0, description="Relationship entities removed")
+    relationships_modified: int = Field(default=0, description="Relationship entities modified")
     relationships_skipped: int = Field(
         default=0, description="Relationship candidates skipped (already exist or unresolvable)"
     )
@@ -162,6 +183,34 @@ class ApplyRunResponse(BaseModel):
     individuals_skipped: int = Field(
         default=0, description="Individual candidates skipped (already exist)"
     )
+    external_references_created: int = Field(
+        default=0, description="External references added to classes"
+    )
+    external_references_skipped: int = Field(
+        default=0, description="External references skipped (already exist)"
+    )
+    created_class_ids: list[str] = Field(
+        default_factory=list, description="IDs of created classes"
+    )
+    created_individual_ids: list[str] = Field(
+        default_factory=list, description="IDs of created individuals"
+    )
+    created_relationship_ids: list[str] = Field(
+        default_factory=list, description="IDs of created relationships"
+    )
+    created_property_definition_ids: list[str] = Field(
+        default_factory=list, description="IDs of created property definitions"
+    )
+    created_external_reference_ids: list[str] = Field(
+        default_factory=list, description="URIs of created external references"
+    )
+
+
+class RevertRunResponse(BaseModel):
+    """Response from reverting a pipeline run."""
+
+    run_id: str = Field(..., description="ID of the reverted pipeline run")
+    events_reverted: int = Field(..., description="Number of change events reverted")
 
 
 class CandidateResponse(BaseModel):
@@ -178,9 +227,86 @@ class CandidateResponse(BaseModel):
     label: str = Field(..., description="Human-readable candidate label")
     description: str = Field(default="", description="Candidate description or definition")
     source: str = Field(default="", description="Source or database where candidate originates")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
+    provenance: str = Field(default="", description="Rationale or provenance for the candidate")
+
+
+class RunCountsResponse(BaseModel):
+    """Response containing run counts by status."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    pending: int = Field(..., ge=0, description="Number of pending runs")
+    running: int = Field(..., ge=0, description="Number of running runs")
+    completed: int = Field(..., ge=0, description="Number of completed runs")
+    failed: int = Field(..., ge=0, description="Number of failed runs")
+    cancelled: int = Field(..., ge=0, description="Number of cancelled runs")
+
+
+class BatchResponse(BaseModel):
+    """Response containing batch information."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Batch UUID")
+    status: str = Field(
+        ...,
+        description="Status: pending, running, completed, failed, or cancelled",
     )
-    provenance: str = Field(
-        default="", description="Rationale or provenance for the candidate"
+    created_at: datetime = Field(
+        ..., description="UTC timestamp of batch creation"
     )
+    started_at: Optional[datetime] = Field(
+        None, description="UTC timestamp when batch started"
+    )
+    completed_at: Optional[datetime] = Field(
+        None, description="UTC timestamp when batch completed"
+    )
+    last_updated: datetime = Field(..., description="UTC timestamp of last update")
+    run_count: int = Field(..., ge=0, description="Total number of runs in batch")
+    run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
+
+
+class EnqueueBatchRunsRequest(BaseModel):
+    """Request to enqueue multiple runs in a batch."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    runs: list[dict[str, Any]] = Field(
+        ..., min_length=1, description="Run specs to enqueue"
+    )
+    idempotency_key: Optional[str] = Field(
+        None, description="Optional idempotency key for replay"
+    )
+
+
+class EnqueueBatchRunsResponse(BaseModel):
+    """Response from batch enqueue operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    run_ids: list[str] = Field(..., description="IDs of created runs")
+    run_count: int = Field(..., ge=0, description="Total runs now in batch")
+
+
+class CancelBatchResponse(BaseModel):
+    """Response from batch cancel operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    cancelled_count: int = Field(..., ge=0, description="Number of runs cancelled")
+    status: str = Field(..., description="Batch status after operation")
+    run_counts: RunCountsResponse = Field(..., description="Run counts after operation")
+
+
+class ResumeBatchResponse(BaseModel):
+    """Response from batch resume operation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str = Field(..., description="Batch UUID")
+    resumed_count: int = Field(..., ge=0, description="Number of runs resumed")
+    status: str = Field(..., description="Batch status after operation")
+    run_counts: RunCountsResponse = Field(..., description="Run counts after operation")

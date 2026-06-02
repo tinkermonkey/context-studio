@@ -9,6 +9,7 @@ describe("RelationshipForm", () => {
   const mockClasses: components["schemas"]["ClassResponse"][] = [
     {
       id: "class-1",
+      identifier: "class_1",
       title: "Class 1",
       concept_scheme_id: "scheme-1",
       taxonomy_id: "tax-1",
@@ -17,6 +18,7 @@ describe("RelationshipForm", () => {
     },
     {
       id: "class-2",
+      identifier: "class_2",
       title: "Class 2",
       concept_scheme_id: "scheme-1",
       taxonomy_id: "tax-1",

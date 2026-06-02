@@ -105,7 +105,8 @@ export function WorkflowsPageContent({
       label: COPY.workflowsTableHeaderStatus,
       render: (value) => {
         const status = value as string;
-        const statusColor = status === "active" ? "emerald" : status === "error" ? "rose" : "neutral";
+        const statusColor =
+          status === "active" ? "emerald" : status === "error" ? "rose" : "neutral";
         return <Chip variant={statusColor as "emerald" | "rose" | "neutral"}>{status}</Chip>;
       },
     },

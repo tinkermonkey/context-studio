@@ -59,6 +59,7 @@ def sample_taxonomy(repo):
     """Create and return a sample taxonomy."""
     taxonomy = Taxonomy(
         id="tax-1",
+        identifier="tax_biology",
         title="Biology",
         description="Biological classification",
     )
@@ -71,6 +72,7 @@ def sample_concept_scheme(repo, sample_taxonomy):
     scheme = ConceptScheme(
         id="scheme-1",
         taxonomy_id=sample_taxonomy.id,
+        identifier="scheme_organisms",
         title="Organisms",
         description="Classification of living organisms",
     )
@@ -84,6 +86,7 @@ def sample_class(repo, sample_concept_scheme, sample_taxonomy):
         id="class-1",
         concept_scheme_id=sample_concept_scheme.id,
         taxonomy_id=sample_taxonomy.id,
+        identifier="cls_animal",
         title="Animal",
         description="A living organism of the kingdom Animalia",
     )
@@ -125,14 +128,14 @@ class TestTaxonomyCRUD:
 
     def test_save_taxonomy_empty_title(self, repo):
         """Test that empty title raises ValueError."""
-        taxonomy = Taxonomy(id="tax-1", title="")
+        taxonomy = Taxonomy(id="tax-1", identifier="tax_test", title="")
         with pytest.raises(ValueError, match="cannot be empty"):
             repo.save_taxonomy(taxonomy)
 
     def test_list_taxonomies(self, repo):
         """Test listing all taxonomies."""
-        repo.save_taxonomy(Taxonomy(id="tax-1", title="Tax 1"))
-        repo.save_taxonomy(Taxonomy(id="tax-2", title="Tax 2"))
+        repo.save_taxonomy(Taxonomy(id="tax-1", identifier="tax_test_1", title="Tax 1"))
+        repo.save_taxonomy(Taxonomy(id="tax-2", identifier="tax_test_2", title="Tax 2"))
 
         taxonomies = repo.list_taxonomies()
         assert len(taxonomies) == 2
@@ -189,8 +192,18 @@ class TestConceptSchemeCRUD:
 
     def test_list_concept_schemes(self, repo, sample_taxonomy):
         """Test listing concept schemes."""
-        scheme1 = ConceptScheme(id="s1", taxonomy_id=sample_taxonomy.id, title="S1")
-        scheme2 = ConceptScheme(id="s2", taxonomy_id=sample_taxonomy.id, title="S2")
+        scheme1 = ConceptScheme(
+            id="s1",
+            taxonomy_id=sample_taxonomy.id,
+            identifier="s1_test",
+            title="S1",
+        )
+        scheme2 = ConceptScheme(
+            id="s2",
+            taxonomy_id=sample_taxonomy.id,
+            identifier="s2_test",
+            title="S2",
+        )
         repo.save_concept_scheme(scheme1)
         repo.save_concept_scheme(scheme2)
 
@@ -683,7 +696,7 @@ class TestStatusPersistence:
     def test_taxonomy_status_persisted_on_update(self, repo):
         """Test that taxonomy status is persisted when updating."""
         # Create taxonomy with default draft status
-        taxonomy = Taxonomy(id="tax-status-1", title="Test Taxonomy")
+        taxonomy = Taxonomy(id="tax-status-1", identifier="tax_test", title="Test Taxonomy")
         saved = repo.save_taxonomy(taxonomy)
         assert saved.status == Status.DRAFT
 

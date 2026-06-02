@@ -14,13 +14,12 @@ keep their existing identifiers; the column's pre-existing UNIQUE constraint
 continues to enforce global uniqueness across all node types.
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'f319bb8dc961'
-down_revision = '79d973513131'
+revision = "f319bb8dc961"
+down_revision = "79d973513131"
 branch_labels = None
 depends_on = None
 
@@ -34,8 +33,8 @@ _PREFIX_BY_NODE_TYPE = {
 
 def upgrade() -> None:
     op.add_column(
-        'ontology_entities',
-        sa.Column('color', sa.String(length=7), nullable=True),
+        "ontology_entities",
+        sa.Column("color", sa.String(length=7), nullable=True),
     )
 
     conn = op.get_bind()
@@ -51,13 +50,11 @@ def upgrade() -> None:
             short = entity_id.replace("-", "")[:8]
             slug = f"{prefix}_{short}"
             conn.execute(
-                sa.text(
-                    "UPDATE ontology_entities SET identifier = :slug WHERE id = :entity_id"
-                ),
+                sa.text("UPDATE ontology_entities SET identifier = :slug WHERE id = :entity_id"),
                 {"slug": slug, "entity_id": entity_id},
             )
 
 
 def downgrade() -> None:
     # Backfilled identifiers are not reverted — they remain valid slugs.
-    op.drop_column('ontology_entities', 'color')
+    op.drop_column("ontology_entities", "color")

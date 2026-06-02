@@ -43,7 +43,9 @@ from domain.pipelines.schema_node_connection_refinement.orchestrator import (
     ConnectionRefinementState,
 )
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-
+from tests.integration.fixtures.pipelines.harness import (
+    run_pipeline_against_fixture,
+)
 
 # ---------------------------------------------------------------------------- #
 # Fixtures                                                                     #
@@ -110,9 +112,7 @@ class TestConnectionRefinementRegistration:
     def test_orchestrator_registered_with_implementation_registry(self):
         impl_registry = PipelineImplementationRegistry()
         register_schema_node_connection_refinement(impl_registry, None)
-        impl_class = impl_registry.get(
-            PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default"
-        )
+        impl_class = impl_registry.get(PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default")
         assert impl_class is ConnectionRefinementOrchestrator
 
     def test_default_configuration_registered(self):
@@ -144,6 +144,26 @@ class TestConnectionRefinementExecution:
             input_data={"scope_id": "", "current_connections": []},
         )
         with pytest.raises(PipelineInputError, match="scope_id"):
+            asyncio.run(orchestrator.execute(state))
+
+    def test_missing_scope_raises_pipeline_input_error(self, traversal):
+        """Verify missing scope raises PipelineInputError.
+
+        Not PipelineExecutionError.
+        """
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=FakeLLMProvider(response_content="[]"),
+            traversal=traversal,
+        )
+        state = ConnectionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={
+                "scope_id": str(uuid4()),  # Use a UUID that doesn't exist
+                "current_connections": [],
+            },
+        )
+        with pytest.raises(PipelineInputError, match="Scope with id"):
             asyncio.run(orchestrator.execute(state))
 
     def test_refinement_against_canon_microservices_class_emits_deltas(
@@ -181,7 +201,9 @@ class TestConnectionRefinementExecution:
                 "scope_id": ms_cls.id,
                 "current_connections": [],
                 "groundings": [{"label": "Microservice"}],
-                "extraction_usages": [{"extracted_text": "Microservices communicate via API Gateway"}],
+                "extraction_usages": [
+                    {"extracted_text": "Microservices communicate via API Gateway"}
+                ],
             },
         )
         result_state = asyncio.run(orchestrator.execute(state))
@@ -262,3 +284,35 @@ class TestConnectionRefinementExecution:
         result_state = asyncio.run(orchestrator.execute(state))
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert len((result_state.result or {}).get("deltas", [])) == 1
+
+
+class TestConnectionRefinementViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_connection_refinement(self):
+        """Harness successfully loads fixture and runs connection refinement orchestrator."""
+        from domain.pipelines.schema_node_connection_refinement.orchestrator import (
+            ConnectionRefinementOrchestrator,
+        )
+
+        llm_response = (
+            '{"relationships": '
+            '[{"subject": "Microservice", '
+            '"predicate": "depends_on", '
+            '"object": "Database"}]}'
+        )
+        llm_provider = FakeLLMProvider(response_content=llm_response)
+        orchestrator = ConnectionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_node_connection_refinement",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual

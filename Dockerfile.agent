@@ -1,31 +1,15 @@
 # ============================================================================
-# Pre-build stage: Build heimdall-ui with react available
+# Pre-build stage: Build heimdall-ui from main branch
 # ============================================================================
-# heimdall-ui is referenced by git commit hash. The feature branch restructured
-# into a monorepo (packages/heimdall-ui/). We build from the package subdirectory,
-# fixing the package name and adding missing barrel exports that context-studio uses.
+# heimdall-ui is a flat repo on main. We clone, add missing hook re-exports
+# to the barrel, build with vite, and pack for local install.
 FROM node:22-slim AS heimdall-builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/tinkermonkey/heimdall.git . && \
-    git checkout c6bc35441187a2a8ac5bf550566d21deb069e09e
+RUN git clone --depth 1 https://github.com/tinkermonkey/heimdall.git .
 
-WORKDIR /build/packages/heimdall-ui
-
-# Fix package name and remove postinstall font-download script (fonts are
-# cosmetic and the CDN URLs 404; the scripts/ dir isn't in the "files" list
-# so npm install would fail trying to run a missing script)
-RUN sed -i \
-    -e 's|"@heimdall/ui"|"@tinkermonkey/heimdall-ui"|' \
-    -e '/"postinstall"/d' \
-    package.json
-
-# Add missing type and hook re-exports to the barrel file
-RUN sed -i \
-    -e "s|export { Chip } from './components/Chip'|export { Chip, type ChipVariant } from './components/Chip'|" \
-    -e "s|export { StatTile } from './components/StatTile'|export { StatTile, type StatColor } from './components/StatTile'|" \
-    src/index.ts && \
-    echo "" >> src/index.ts && \
+# Add missing hook re-exports to the barrel file
+RUN echo "" >> src/index.ts && \
     echo "export { useFocusTrap } from './hooks/useFocusTrap'" >> src/index.ts && \
     echo "export { useBodyOverflow } from './hooks/useBodyOverflow'" >> src/index.ts
 
@@ -136,9 +120,11 @@ COPY --from=heimdall-builder /build/out/*.tgz /opt/heimdall-ui.tgz
 USER orchestrator
 
 # Replace git dependency with pre-built tarball to avoid prepare script failure,
-# then install all dependencies
+# then install all dependencies. Remove lock file since it points to a git hash
+# that won't resolve to our patched tarball.
 RUN cd ux && \
-    sed -i 's|"@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall#[^"]*"|"@tinkermonkey/heimdall-ui": "file:///tmp/heimdall-ui.tgz"|' package.json && \
+    sed -i 's|"@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall[^"]*"|"@tinkermonkey/heimdall-ui": "file:///tmp/heimdall-ui.tgz"|' package.json && \
+    rm -f package-lock.json && \
     npm install --legacy-peer-deps
 
 RUN --mount=type=cache,target=/home/orchestrator/.npm,uid=1000,gid=1000 \
@@ -193,8 +179,8 @@ RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-net
 # Verify key frontend packages are installed
 RUN test -f /workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.js && \
     echo "heimdall-ui OK" && \
-    test -d /workspace/context-studio/ux/node_modules/reagraph && \
-    echo "reagraph OK"
+    test -d /workspace/context-studio/ux/node_modules/msw && \
+    echo "msw OK"
 
 # Verify stashed tarball is available for runtime patching
 RUN test -f /opt/heimdall-ui.tgz && echo "heimdall-ui tarball stashed OK"
@@ -205,13 +191,48 @@ RUN test -f /opt/heimdall-ui.tgz && echo "heimdall-ui tarball stashed OK"
 USER root
 RUN cat > /usr/local/bin/entrypoint.sh << 'ENTRY'
 #!/bin/bash
-BARREL="/workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.d.ts"
-if [ -d "/workspace/context-studio/ux/node_modules" ] && [ -f "$BARREL" ]; then
-  if ! grep -q "useFocusTrap" "$BARREL" 2>/dev/null; then
-    echo "[entrypoint] Stale heimdall-ui detected — reinstalling from patched tarball..."
-    cd /workspace/context-studio/ux && npm install /opt/heimdall-ui.tgz --legacy-peer-deps --no-audit --no-fund 2>&1 | tail -3
-    echo "[entrypoint] heimdall-ui patched."
+UX="/workspace/context-studio/ux"
+BARREL="$UX/node_modules/@tinkermonkey/heimdall-ui/dist/index.d.ts"
+STALE=0
+
+if [ -d "$UX/node_modules" ]; then
+  # Check 1: heimdall-ui missing patched exports (hook re-exports)
+  if [ -f "$BARREL" ] && ! grep -q "useFocusTrap" "$BARREL" 2>/dev/null; then
+    echo "[entrypoint] Stale heimdall-ui detected (missing hook exports)"
+    STALE=1
   fi
+
+  # Check 2: MSW version mismatch (v1 installed but v2 required)
+  MSW_VER=$(node -e "try{console.log(require('$UX/node_modules/msw/package.json').version)}catch(e){console.log('missing')}" 2>/dev/null)
+  if [ "$MSW_VER" = "missing" ] || [ "${MSW_VER%%.*}" != "2" ]; then
+    echo "[entrypoint] Stale MSW detected (found $MSW_VER, need v2)"
+    STALE=1
+  fi
+
+  # Check 3: package-lock.json newer than installed node_modules
+  if [ -f "$UX/package-lock.json" ] && [ -f "$UX/node_modules/.package-lock.json" ]; then
+    if [ "$UX/package-lock.json" -nt "$UX/node_modules/.package-lock.json" ]; then
+      echo "[entrypoint] package-lock.json is newer than node_modules"
+      STALE=1
+    fi
+  fi
+
+  if [ "$STALE" -eq 1 ]; then
+    echo "[entrypoint] Rebuilding node_modules..."
+    cd "$UX"
+    sed -i 's|"@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall[^"]*"|"@tinkermonkey/heimdall-ui": "file:///opt/heimdall-ui.tgz"|' package.json
+    npm install --legacy-peer-deps --no-audit --no-fund 2>&1 | tail -5
+    git checkout -- package.json 2>/dev/null
+    echo "[entrypoint] node_modules rebuilt."
+  fi
+elif [ -f "$UX/package.json" ]; then
+  # node_modules missing entirely (empty mount or first run)
+  echo "[entrypoint] No node_modules found — running npm install..."
+  cd "$UX"
+  sed -i 's|"@tinkermonkey/heimdall-ui": "github:tinkermonkey/heimdall[^"]*"|"@tinkermonkey/heimdall-ui": "file:///opt/heimdall-ui.tgz"|' package.json
+  npm install --legacy-peer-deps --no-audit --no-fund 2>&1 | tail -5
+  git checkout -- package.json 2>/dev/null
+  echo "[entrypoint] node_modules installed."
 fi
 exec "$@"
 ENTRY

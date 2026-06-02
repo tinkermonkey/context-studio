@@ -5,7 +5,6 @@ Tests the SchemaNeighborhoodTraversal utility for extracting class and
 property neighborhoods with various levels of context.
 """
 
-
 import pytest
 
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -16,7 +15,7 @@ from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 def sample_schema(ontology_service):
     """Create a sample schema hierarchy."""
     # Create taxonomy
-    taxonomy = ontology_service.create_taxonomy("Test Taxonomy", "Testing")
+    taxonomy = ontology_service.create_taxonomy(title="Test Taxonomy", description="Testing")
 
     # Create concept scheme
     scheme = ontology_service.create_scheme(
@@ -34,24 +33,24 @@ def sample_schema(ontology_service):
     # Create sibling classes
     sibling1 = ontology_service.create_class(
         concept_scheme_id=scheme.id,
-        parent_class_id=parent.id,
         title="Person",
         description="A person entity",
+        parent_class_id=parent.id,
     )
 
     sibling2 = ontology_service.create_class(
         concept_scheme_id=scheme.id,
-        parent_class_id=parent.id,
         title="Organization",
         description="An organization entity",
+        parent_class_id=parent.id,
     )
 
     # Create child class
     child = ontology_service.create_class(
         concept_scheme_id=scheme.id,
-        parent_class_id=sibling1.id,
         title="Employee",
         description="A person employed by an organization",
+        parent_class_id=sibling1.id,
     )
 
     # Create property definitions
@@ -150,14 +149,14 @@ class TestClassNeighborhood:
 
     def test_isolated_node_with_no_neighborhood(self, ontology_service, traversal):
         """Should handle isolated classes with no neighbors."""
-        taxonomy = ontology_service.create_taxonomy("Isolated", "")
+        taxonomy = ontology_service.create_taxonomy(title="Isolated Taxonomy", description="")
         scheme = ontology_service.create_scheme(
             taxonomy_id=taxonomy.id,
             title="Isolated Scheme",
         )
         isolated_class = ontology_service.create_class(
             concept_scheme_id=scheme.id,
-            title="Isolated",
+            title="Isolated Class",
             description="An isolated class",
         )
 

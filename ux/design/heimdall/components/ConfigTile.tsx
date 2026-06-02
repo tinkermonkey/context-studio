@@ -1,24 +1,34 @@
-import React from 'react'
-import { Icon } from './Icon'
-import type { IconName } from './Icon'
-import './ConfigTile.css'
-
-export interface ConfigTileSummaryItem {
-  label: string
-  value: string
+interface ConfigTileSummaryItem {
+  label: string;
+  value: string;
 }
 
-export interface ConfigTileProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: IconName
-  title: string
-  description?: string
-  summary?: ConfigTileSummaryItem[]
-  onClick?: () => void
+interface ConfigTileProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: IconName;
+  title: string;
+  description?: string;
+  summary?: ConfigTileSummaryItem[];
+  onClick?: () => void;
 }
 
-export const ConfigTile = React.forwardRef<HTMLButtonElement, ConfigTileProps>(
-  ({ icon, title, description, summary = [], onClick, className = '', disabled, type = 'button', ...props }, ref) => {
-    const classNames = ['config-tile', disabled && 'config-tile--disabled', className].filter(Boolean).join(' ')
+const ConfigTile = React.forwardRef<HTMLButtonElement, ConfigTileProps>(
+  (
+    {
+      icon,
+      title,
+      description,
+      summary = [],
+      onClick,
+      className = "",
+      disabled,
+      type = "button",
+      ...props
+    },
+    ref,
+  ) => {
+    const classNames = ["config-tile", disabled && "config-tile--disabled", className]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <button
@@ -51,10 +61,11 @@ export const ConfigTile = React.forwardRef<HTMLButtonElement, ConfigTileProps>(
           <Icon name="chevronRight" size={16} />
         </div>
       </button>
-    )
-  }
-)
+    );
+  },
+);
 
-ConfigTile.displayName = 'ConfigTile'
+ConfigTile.displayName = "ConfigTile";
 
-export default ConfigTile
+// --- Babel-standalone: expose runtime values to window ---
+window.ConfigTile = ConfigTile;

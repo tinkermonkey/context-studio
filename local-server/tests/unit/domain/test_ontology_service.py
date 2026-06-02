@@ -6,6 +6,7 @@ reference prevention, embedding generation and updates, event emission, and
 constraints enforcement. Uses in-memory fakes with zero infrastructure imports.
 """
 
+import re
 from unittest.mock import MagicMock
 
 import pytest
@@ -37,6 +38,11 @@ from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+
+
+def slugify(text: str) -> str:
+    """Generate a slug-style identifier from text."""
+    return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
 
 
 @pytest.fixture

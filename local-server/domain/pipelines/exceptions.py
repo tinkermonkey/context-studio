@@ -1,22 +1,13 @@
 """
-Exceptions for the Pipeline Management bounded context.
+Exception classes for the Pipeline Management domain.
+
+These exceptions represent domain-specific errors that may occur
+during pipeline operations.
 """
 
 
 class PipelineError(Exception):
-    """Base exception for pipeline domain errors."""
-
-    pass
-
-
-class PipelineNotFoundError(PipelineError):
-    """Raised when a pipeline configuration is not found."""
-
-    pass
-
-
-class LayerExecutionError(PipelineError):
-    """Raised when a pipeline layer execution fails."""
+    """Base exception for all pipeline domain errors."""
 
     pass
 

@@ -44,8 +44,10 @@ def _setup_graph_service(
     repository = FakeOntologyRepository()
 
     # Create taxonomy and concept scheme
-    taxonomy = Taxonomy(id=str(uuid4()), title="Test Taxonomy")
-    scheme = ConceptScheme(id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id)
+    taxonomy = Taxonomy(id=str(uuid4()), identifier="test_taxonomy", title="Test Taxonomy")
+    scheme = ConceptScheme(
+        id=str(uuid4()), taxonomy_id=taxonomy.id, identifier="test_scheme", title="Test Scheme"
+    )
     repository.save_taxonomy(taxonomy)
     repository.save_concept_scheme(scheme)
 
@@ -58,9 +60,10 @@ def _setup_graph_service(
     for i in range(num_nodes):
         cls = Class(
             id=str(uuid4()),
-            title=f"Node_{i}",
             concept_scheme_id=scheme.id,
             taxonomy_id=taxonomy.id,
+            identifier=f"node_{i}",
+            title=f"Node_{i}",
         )
         repository.save_class(cls)
         class_ids.append(cls.id)

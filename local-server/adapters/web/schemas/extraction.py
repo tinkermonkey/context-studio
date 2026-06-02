@@ -6,20 +6,15 @@ Entity extraction:
 - ExtractionResultSchema (entity-centric response)
 - ExtractedEntitySchema, ExtractionLayerResultSchema (supporting)
 
-Triple extraction (RDF):
-- ExtractTripleRequest (triple-centric)
-- ExtractTripleResponse (triple-centric response)
-- Related node and provenance schemas (supporting)
-
 Text analysis & enrichment:
 - AnalyzeTextRequest, EnrichFromReferencesRequest
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
 
-from typing import Literal, Optional, Union
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExtractedEntitySchema(BaseModel):
@@ -91,138 +86,3 @@ class EnrichFromReferencesRequest(BaseModel):
     )
 
 
-# ==================== Triple Extraction (RDF) Schemas ====================
-
-
-class ExtractTripleOptions(BaseModel):
-    """Options for triple extraction."""
-
-    model: str = Field(
-        ...,
-        description="Model identifier for extraction (e.g., 'gpt-4', 'claude-opus')",
-    )
-    temperature: float = Field(
-        default=0.0,
-        ge=0.0,
-        le=2.0,
-        description="Sampling temperature (0.0 = deterministic, up to 2.0)",
-    )
-    max_tokens: Optional[int] = Field(
-        None,
-        ge=100,
-        le=8000,
-        description="Maximum tokens in LLM response",
-    )
-
-
-class ExtractTripleRequest(BaseModel):
-    """Request to extract triples from text scoped to an ontology."""
-
-    text: str = Field(..., min_length=1, description="Source text to extract triples from")
-    ontology_id: str = Field(
-        ...,
-        description=("ID of the ontology scoping extraction to specific classes/individuals"),
-    )
-    options: ExtractTripleOptions = Field(
-        ..., description="Extraction options (model, temperature, etc.)"
-    )
-
-
-class TripleProvenance(BaseModel):
-    """Provenance metadata for an extracted triple."""
-
-    text_offset_start: int = Field(
-        ..., ge=0, description="Character offset where triple evidence begins"
-    )
-    text_offset_end: int = Field(
-        ..., ge=0, description="Character offset where triple evidence ends"
-    )
-    raw: str = Field(..., description="Exact text span supporting this triple")
-
-    @model_validator(mode="after")
-    def validate_offsets(self) -> "TripleProvenance":
-        """Ensure text_offset_end >= text_offset_start."""
-        if self.text_offset_end < self.text_offset_start:
-            raise ValueError(
-                f"text_offset_end ({self.text_offset_end}) must be >= text_offset_start"
-                f" ({self.text_offset_start})"
-            )
-        return self
-
-
-class SubjectNode(BaseModel):
-    """Subject node of a triple—individual or class."""
-
-    kind: Literal["individual", "class"]
-    id: str = Field(..., description="Entity ID in the ontology")
-    label: str = Field(..., description="Human-readable label")
-
-
-class PredicateNode(BaseModel):
-    """Predicate node of a triple—a property definition."""
-
-    property_definition_id: str = Field(..., description="ID of the property definition")
-    label: str = Field(..., description="Human-readable property name")
-
-
-class ObjectNodeIndividual(BaseModel):
-    """Object node: individual instance."""
-
-    kind: Literal["individual"] = "individual"
-    id: str = Field(..., description="Individual ID in the ontology")
-    label: str = Field(..., description="Human-readable label")
-
-
-class ObjectNodeClass(BaseModel):
-    """Object node: class/concept."""
-
-    kind: Literal["class"] = "class"
-    id: str = Field(..., description="Class ID in the ontology")
-    label: str = Field(..., description="Human-readable label")
-
-
-class ObjectNodeLiteral(BaseModel):
-    """Object node: literal value."""
-
-    kind: Literal["literal"] = "literal"
-    value: str | int | float | bool | None = Field(
-        ..., description="Literal value (string, number, boolean, or null)"
-    )
-    datatype: Optional[str] = Field(
-        None, description="XSD datatype (e.g., 'xsd:string', 'xsd:integer')"
-    )
-
-
-class ExtractedTriple(BaseModel):
-    """A single extracted triple with confidence and provenance."""
-
-    subject: SubjectNode
-    predicate: PredicateNode
-    object: Union[ObjectNodeIndividual, ObjectNodeClass, ObjectNodeLiteral] = Field(
-        ...,
-        discriminator="kind",
-        description="Object node discriminated by 'kind' field",
-    )
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0–1.0)")
-    provenance: TripleProvenance = Field(
-        ..., description="Provenance linking triple to source text"
-    )
-
-
-class ExtractionMetadata(BaseModel):
-    """Metadata about a triple extraction operation."""
-
-    model: str = Field(..., description="Model used for extraction")
-    tokens_used: int = Field(..., ge=0, description="Total tokens consumed")
-    duration_ms: int = Field(..., ge=0, description="Extraction duration in milliseconds")
-
-
-class ExtractTripleResponse(BaseModel):
-    """Response containing extracted triples."""
-
-    triples: list[ExtractedTriple] = Field(..., description="List of extracted triples")
-    warnings: list[str] = Field(
-        default_factory=list,
-        description="Warnings (e.g., confidence out of range, invalid provenance)",
-    )
-    metadata: ExtractionMetadata = Field(..., description="Metadata about the extraction operation")

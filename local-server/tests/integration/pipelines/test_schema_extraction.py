@@ -8,6 +8,8 @@ read endpoints through the FastAPI test client with a schema-aware mock LLM.
 import asyncio
 import json
 from pathlib import Path
+from typing import cast
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -16,9 +18,9 @@ from fastapi.testclient import TestClient
 from starlette import status
 
 from adapters.web.pipelines_routes import router
-from domain.pipelines.ports import LLMResponse
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
+from domain.pipelines.ports import LLMResponse
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -29,6 +31,9 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionState,
 )
 from tests.fixtures.schema_extraction_fixtures import get_microservices_text
+from tests.integration.fixtures.pipelines.harness import (
+    run_pipeline_against_fixture,
+)
 
 
 class _SchemaExtractionMockLLM:
@@ -73,8 +78,27 @@ class _SchemaExtractionMockLLM:
             model=model,
         )
 
-    async def complete_async(self, **kwargs) -> LLMResponse:
-        return self.complete(**kwargs)
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ) -> LLMResponse:
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
 
     def is_model_available(self, model: str) -> bool:
         return True
@@ -84,7 +108,7 @@ class _SchemaExtractionMockLLM:
 
 
 @pytest.fixture
-def schema_client(pipeline_run_repo):
+def schema_client(pipeline_run_repo, batch_repo):
     """FastAPI test client wired with a schema-aware mock LLM."""
     impl_registry = PipelineImplementationRegistry()
     impl_registry.register_impl(PipelineType.NO_OP, "default", NoOpPipelineOrchestrator)
@@ -93,12 +117,25 @@ def schema_client(pipeline_run_repo):
     config_registry = PipelineConfigurationRegistry()
     register_schema_extraction(None, config_registry)
 
+    # Create mocks for required services to satisfy service wiring validation
+    mock_ontology_repo = MagicMock()
+    mock_extraction_service = MagicMock()
+    mock_extraction_repo = MagicMock()
+    mock_grounding_adapter = MagicMock()
+    mock_grounding_scorer = MagicMock()
+
     app = FastAPI()
     app.include_router(router)
     app.state.pipeline_run_repo = pipeline_run_repo
+    app.state.batch_repo = batch_repo
     app.state.implementation_registry = impl_registry
     app.state.config_registry = config_registry
     app.state.llm_router = _SchemaExtractionMockLLM()
+    app.state.ontology_repo = mock_ontology_repo
+    app.state.extraction_service = mock_extraction_service
+    app.state.extraction_repo = mock_extraction_repo
+    app.state.grounding_adapter = mock_grounding_adapter
+    app.state.grounding_scorer = mock_grounding_scorer
 
     return TestClient(app)
 
@@ -226,10 +263,7 @@ class TestSchemaExtractionHTTP:
 
 
 _CANON_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "datafiles"
-    / "canon"
-    / "software_architecture"
+    Path(__file__).parent.parent.parent.parent / "datafiles" / "canon" / "software_architecture"
 )
 
 
@@ -247,9 +281,7 @@ class _CanonSchemaLLM:
 
     def __init__(self, paper: dict) -> None:
         self._paper = paper
-        self._candidate_labels = [
-            e["label"] for e in paper.get("expected_entities", [])
-        ]
+        self._candidate_labels = [e["label"] for e in paper.get("expected_entities", [])]
         self._definitions = {
             e["label"]: e.get("context", f"Canon concept: {e['label']}")
             for e in paper.get("expected_entities", [])
@@ -301,8 +333,27 @@ class _CanonSchemaLLM:
             model=model,
         )
 
-    async def complete_async(self, **kwargs) -> LLMResponse:
-        return self.complete(**kwargs)
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ) -> LLMResponse:
+        return self.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+            timeout=timeout,
+            seed=seed,
+        )
 
     def is_model_available(self, model: str) -> bool:
         return True
@@ -324,7 +375,8 @@ def _run_orchestrator(paper: dict) -> SchemaExtractionState:
             "model": "google/gemini-3-flash-preview",
         },
     )
-    return asyncio.run(orchestrator.execute(state))
+    result = asyncio.run(orchestrator.execute(state))
+    return cast(SchemaExtractionState, result)
 
 
 class TestSchemaExtractionAgainstCanon:
@@ -337,9 +389,9 @@ class TestSchemaExtractionAgainstCanon:
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert result_state.result is not None
         candidate_count = result_state.result.get("candidate_count", 0)
-        assert candidate_count > 0, (
-            f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
-        )
+        assert (
+            candidate_count > 0
+        ), f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
 
     def test_canon_candidates_include_microservice_terminology(self):
         """At least one produced candidate must match a canon expected entity label."""
@@ -348,9 +400,7 @@ class TestSchemaExtractionAgainstCanon:
 
         candidates = result_state.result.get("candidates", [])
         produced_labels = {c.get("label", "").lower() for c in candidates}
-        expected_labels = {
-            e["label"].lower() for e in paper.get("expected_entities", [])
-        }
+        expected_labels = {e["label"].lower() for e in paper.get("expected_entities", [])}
         overlap = produced_labels & expected_labels
         assert overlap, (
             f"No produced candidate aligned with canon expected_entities. "
@@ -365,9 +415,10 @@ class TestSchemaExtractionAgainstCanon:
         candidates = result_state.result.get("candidates", [])
         assert candidates, "Expected at least one candidate"
         for cand in candidates:
-            assert cand.get("kind") in ("class", "property_definition"), (
-                f"Unexpected kind {cand.get('kind')!r} in {cand}"
-            )
+            assert cand.get("kind") in (
+                "class",
+                "property_definition",
+            ), f"Unexpected kind {cand.get('kind')!r} in {cand}"
             confidence = cand.get("confidence")
             assert confidence is None or 0.0 <= confidence <= 1.0
 
@@ -389,3 +440,25 @@ class TestSchemaExtractionAgainstCanon:
         result_state = _run_orchestrator(paper)
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert (result_state.result or {}).get("candidate_count", 0) > 0
+
+
+class TestSchemaExtractionViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_extraction(self):
+        """Harness successfully loads fixture and runs schema extraction orchestrator."""
+        llm_provider = _SchemaExtractionMockLLM()
+        orchestrator = SchemaExtractionOrchestrator(llm_provider)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_extraction",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual

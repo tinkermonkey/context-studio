@@ -1,7 +1,6 @@
 import { TextInput as Input, Select, Button, Modal } from "@tinkermonkey/heimdall-ui";
 import { useState, useEffect, useRef } from "react";
 
-
 import { COPY } from "@/routes/app/settings/copy";
 
 export interface ConfigField {
@@ -121,10 +120,12 @@ export function EditConfigModal({
   );
 
   return (
-    <Modal isOpen={open}
+    <Modal
+      isOpen={open}
       onClose={onClose}
       title={title}
-      footer={footer} data-testid="edit-config-modal"
+      footer={footer}
+      data-testid="edit-config-modal"
     >
       <div className="stack-lg">
         {errors._form && <div className="form-error">{errors._form}</div>}
@@ -139,7 +140,7 @@ export function EditConfigModal({
             {field.options ? (
               <Select
                 value={String(formState[field.key] || "")}
-                onChange={(e) => handleChange(field.key, e.target.value)}
+                onChange={(value) => handleChange(field.key, value)}
                 disabled={field.readOnly || isSaving}
                 data-testid={`${section.toLowerCase()}-${field.key}-select`}
                 aria-label={field.label}

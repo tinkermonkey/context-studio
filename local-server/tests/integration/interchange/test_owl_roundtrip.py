@@ -69,6 +69,7 @@ def sample_data(ontology_repo):
     # Create taxonomy
     taxonomy = Taxonomy(
         id=str(uuid.uuid4()),
+        identifier="owl_test_taxonomy",
         title="OWL Test Taxonomy",
         description="Taxonomy for OWL roundtrip testing",
     )
@@ -77,6 +78,7 @@ def sample_data(ontology_repo):
     # Create concept scheme
     scheme = ConceptScheme(
         id=str(uuid.uuid4()),
+        identifier="owl_test_scheme",
         taxonomy_id=taxonomy.id,
         title="OWL Test Scheme",
         description="Concept scheme for OWL roundtrip testing",
@@ -86,6 +88,7 @@ def sample_data(ontology_repo):
     # Create classes
     animal = Class(
         id=str(uuid.uuid4()),
+        identifier="animal_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Animal",
@@ -95,6 +98,7 @@ def sample_data(ontology_repo):
 
     vertebrate = Class(
         id=str(uuid.uuid4()),
+        identifier="vertebrate_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Vertebrate",
@@ -105,6 +109,7 @@ def sample_data(ontology_repo):
 
     mammal = Class(
         id=str(uuid.uuid4()),
+        identifier="mammal_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Mammal",
@@ -122,6 +127,7 @@ def sample_data(ontology_repo):
 
     dog = Class(
         id=str(uuid.uuid4()),
+        identifier="dog_class",
         concept_scheme_id=scheme.id,
         taxonomy_id=taxonomy.id,
         title="Dog",

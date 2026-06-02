@@ -17,10 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Literal
 from uuid import uuid4
-
-_VALID_PROVIDERS: frozenset[str] = frozenset({"openai", "anthropic", "openrouter"})
 
 
 class PipelineRunStatus(str, Enum):
@@ -30,6 +27,17 @@ class PipelineRunStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class BatchStatus(str, Enum):
+    """Status of a batch."""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class PipelineType(str, Enum):
@@ -44,6 +52,44 @@ class PipelineType(str, Enum):
 
 
 @dataclass(frozen=True)
+class Batch:
+    """
+    Domain entity for a batch of pipeline runs.
+
+    A batch is a container for one or more pipeline runs, providing lifecycle
+    management and aggregated status. Each batch has its own UUID identity,
+    independent of any single run. A batch transitions through states as its
+    child runs complete, fail, or are cancelled.
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        status: Current batch status (pending | running | completed | failed | cancelled)
+        created_at: UTC timestamp of batch creation
+        started_at: UTC timestamp when transitioned to RUNNING (None if not started)
+        completed_at: UTC timestamp when transitioned to terminal state (None if not done)
+        last_updated: UTC timestamp of last status change or run update
+    """
+
+    id: str = field(default_factory=lambda: str(uuid4()))
+    status: BatchStatus = BatchStatus.PENDING
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @classmethod
+    def create(cls, created_at: datetime | None = None) -> "Batch":
+        """Create a new batch with status=PENDING."""
+        now = created_at or datetime.now(timezone.utc)
+        return cls(
+            id=str(uuid4()),
+            status=BatchStatus.PENDING,
+            created_at=now,
+            last_updated=now,
+        )
+
+
+@dataclass(frozen=True)
 class PipelineRun:
     """
     Base domain entity for all pipeline runs.
@@ -52,18 +98,26 @@ class PipelineRun:
     recording the pipeline type, implementation, configuration,
     and LLM metadata. This entity is immutable once constructed.
 
+    A pipeline run belongs to a batch (identified by batch_id), which provides
+    lifecycle management and status aggregation across multiple runs.
+
     Attributes:
         id: Unique identifier (UUID as string)
-        batch_run_id: FK to batch_runs.id for change_events correlation
+        batch_run_id: Batch identifier (FK to batches.id)
         pipeline_type: Discriminator (individual_extraction | schema_extraction | ...)
         implementation_id: Reference to registered implementation
-        configuration_ref: Versioned configuration reference (immutable once set)
+        configuration_ref: Primary user-facing configuration identifier
+        configuration_slug: Configuration slug part (non-null, immutable; used with
+            configuration_version to uniquely identify a pinned configuration)
+        configuration_version: Configuration version part (non-null, immutable; used with
+            configuration_slug to uniquely identify a pinned configuration)
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
-        status: Current status (pending | running | completed | failed | reviewed |
-            committed | abandoned)
+        status: Current status (pending | running | completed | failed | cancelled)
         created_at: UTC timestamp of run creation
+        started_at: UTC timestamp when run actually started executing (RUNNING status)
+        failure_reason: String description of failure reason if status=FAILED
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -71,12 +125,25 @@ class PipelineRun:
     pipeline_type: PipelineType = PipelineType.INDIVIDUAL_EXTRACTION
     implementation_id: str = ""
     configuration_ref: str = ""
+    configuration_slug: str = ""
+    configuration_version: int = 1
     input_summary: dict = field(default_factory=dict)
     output_summary: dict = field(default_factory=dict)
     llm_metadata: dict = field(default_factory=dict)
     status: PipelineRunStatus = PipelineRunStatus.PENDING
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    failure_reason: str | None = None
 
+    def __post_init__(self) -> None:
+        if not self.batch_run_id:
+            raise ValueError("batch_run_id cannot be empty")
+        if self.configuration_version <= 0:
+            raise ValueError("configuration_version must be greater than 0")
+        if self.status == PipelineRunStatus.PENDING and self.failure_reason is not None:
+            raise ValueError(
+                "status=PENDING is incompatible with a set failure_reason"
+            )
 
 
 @dataclass(frozen=True)
@@ -123,6 +190,8 @@ class IndividualExtractionRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         source_text_hash: str,
         source_document_uri: str | None = None,
         created_at: datetime | None = None,
@@ -132,9 +201,11 @@ class IndividualExtractionRun(PipelineRun):
 
         Args:
             id: Unique identifier (UUID string)
-            batch_run_id: FK to batch_runs.id
+            batch_run_id: FK to batches.id
             implementation_id: Implementation identifier
             configuration_ref: Configuration reference
+            configuration_slug: Configuration slug part
+            configuration_version: Configuration version part
             source_text_hash: SHA256 hash of source text
             source_document_uri: Optional document URI
             created_at: UTC timestamp (defaults to now)
@@ -147,6 +218,8 @@ class IndividualExtractionRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -177,6 +250,8 @@ class SchemaExtractionRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaExtractionRun":
         """Create a new SchemaExtractionRun with status=PENDING."""
@@ -185,6 +260,8 @@ class SchemaExtractionRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -213,6 +290,8 @@ class SchemaGroundingRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaGroundingRun":
         """Create a new SchemaGroundingRun with status=PENDING."""
@@ -221,6 +300,8 @@ class SchemaGroundingRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
@@ -251,6 +332,8 @@ class SchemaDefinitionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaDefinitionRefinementRun":
         """Create a new SchemaDefinitionRefinementRun with status=PENDING."""
@@ -259,83 +342,14 @@ class SchemaDefinitionRefinementRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},
             status=PipelineRunStatus.PENDING,
             created_at=created_at or datetime.now(timezone.utc),
         )
-
-
-@dataclass(frozen=True)
-class PipelineConfiguration:
-    """
-    Configuration for an LLM pipeline.
-
-    Defines how to invoke an LLM, including the model, provider, prompts, and
-    runtime settings.
-    """
-
-    id: str
-    pipeline: str
-    title: str
-    provider: str
-    model: str
-    config: dict
-    system_prompt: str
-    user_prompt: str
-    version: int
-    enabled: bool
-    created_at: datetime
-    last_updated: datetime
-    seed: int | None = None
-
-    def __post_init__(self) -> None:
-        if self.provider not in _VALID_PROVIDERS:
-            raise ValueError(
-                f"provider must be one of {sorted(_VALID_PROVIDERS)}, got '{self.provider}'"
-            )
-        if self.version < 1:
-            raise ValueError(f"version must be >= 1, got {self.version}")
-        if self.seed is not None and self.seed < 0:
-            raise ValueError(f"seed must be non-negative if provided, got {self.seed}")
-
-
-@dataclass(frozen=True)
-class Execution:
-    """
-    Record of a single LLM pipeline execution.
-
-    Captures the input, output, resource consumption, and completion status of
-    an LLM invocation.
-    """
-
-    id: str
-    pipeline_config_id: str
-    input_text: str
-    output_text: str
-    provider: str
-    model: str
-    tokens_in: int
-    tokens_out: int
-    duration_ms: int
-    status: Literal["success", "error", "timeout"]
-    error_message: str | None
-    timestamp: datetime
-
-    def __post_init__(self) -> None:
-        if self.status not in ("success", "error", "timeout"):
-            raise ValueError(
-                f"status must be 'success', 'error', or 'timeout', got '{self.status}'"
-            )
-        if self.tokens_in < 0:
-            raise ValueError(f"tokens_in must be non-negative, got {self.tokens_in}")
-        if self.tokens_out < 0:
-            raise ValueError(f"tokens_out must be non-negative, got {self.tokens_out}")
-        if self.duration_ms < 0:
-            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
-        if self.status == "error" and not self.error_message:
-            raise ValueError("error_message must be set when status is 'error'")
 
 
 @dataclass(frozen=True)
@@ -360,6 +374,8 @@ class SchemaConnectionRefinementRun(PipelineRun):
         batch_run_id: str,
         implementation_id: str,
         configuration_ref: str,
+        configuration_slug: str,
+        configuration_version: int,
         created_at: datetime | None = None,
     ) -> "SchemaConnectionRefinementRun":
         """Create a new SchemaConnectionRefinementRun with status=PENDING."""
@@ -368,6 +384,8 @@ class SchemaConnectionRefinementRun(PipelineRun):
             batch_run_id=batch_run_id,
             implementation_id=implementation_id,
             configuration_ref=configuration_ref,
+            configuration_slug=configuration_slug,
+            configuration_version=configuration_version,
             input_summary={},
             output_summary={},
             llm_metadata={},

@@ -103,6 +103,7 @@ class IndividualExtractionApplyService:
                 self._repo.save_individual(new_individual)
                 resolved_id = new_individual.id
                 result.individuals_created += 1
+                result.created_individual_ids.append(resolved_id)
 
                 # Cache for dedup within this apply pass
                 for cid in valid_class_ids:
@@ -186,3 +187,4 @@ class IndividualExtractionApplyService:
         )
         self._repo.save_relationship(new_rel)
         result.relationships_created += 1
+        result.created_relationship_ids.append(new_rel.id)

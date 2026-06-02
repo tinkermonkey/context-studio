@@ -95,9 +95,7 @@ describe("Relationships Schema Page", () => {
   describe("empty state", () => {
     it("displays empty state copy when no relationships exist", async () => {
       server.use(
-        http.get("*/api/relationships", () =>
-          HttpResponse.json(createListRelationships([])),
-        ),
+        http.get("*/api/relationships", () => HttpResponse.json(createListRelationships([]))),
         http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
         http.get("*/api/properties", () => HttpResponse.json(createListProperties([]))),
       );

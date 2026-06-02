@@ -8,19 +8,25 @@ and returns ranked groundings.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+)
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_node_grounding.ports import GroundingAdapterPort
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingScorer,
     NodeType,
     ScoredCandidate,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -59,6 +65,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         grounding_adapter: GroundingAdapterPort,
         scorer: GroundingScorer,
         config: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
         """
         Initialize the grounding orchestrator.
@@ -68,8 +76,10 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             grounding_adapter: Adapter for external source queries
             scorer: GroundingScorer instance for combining scores
             config: Configuration dict (top_n, weights, type preferences, etc.)
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._grounding_adapter = grounding_adapter
         self._scorer = scorer
         self._config = config or {}
@@ -90,6 +100,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required input fields are missing
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         if not isinstance(state, SchemaGroundingState):
             state = SchemaGroundingState(
                 run_id=state.run_id,
@@ -111,10 +123,21 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
+        try:
+            node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
+        except ValueError as exc:
+            valid_types = ", ".join([t.value for t in NodeType])
+            error_msg = f"Invalid node_type '{node_type_str}'. " f"Must be one of: {valid_types}"
+            input_error = PipelineInputError(error_msg)
+            state = replace(
+                state, current_status=PipelineRunStatus.FAILED, result={"error": error_msg}
+            )
+            raise input_error from exc
+
         state = replace(
             state,
             node_label=node_label,
-            node_type=NodeType(node_type_str) if node_type_str else NodeType.CLASS,
+            node_type=node_type,
             sources=sources or ["DBpedia", "ConceptNet"],
             current_status=PipelineRunStatus.RUNNING,
         )
@@ -163,15 +186,21 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                 },
             )
 
+        except PipelineInputError:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during schema node grounding: {exc}", exc_info=True)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Schema node grounding encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Schema node grounding failed: {str(exc)}") from exc
+            raise PipelineExecutionError(
+                "Schema node grounding encountered an unexpected error"
+            ) from exc
 
         return state

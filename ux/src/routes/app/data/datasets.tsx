@@ -5,7 +5,12 @@ import { Button, Modal, FilterBar, PageHeader, RowMenu } from "@tinkermonkey/hei
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
-import { useDatasets, useCreateDataset, useDeleteDataset, useActivateDataset } from "@/api/hooks/admin/useDatasets";
+import {
+  useDatasets,
+  useCreateDataset,
+  useDeleteDataset,
+  useActivateDataset,
+} from "@/api/hooks/admin/useDatasets";
 import { datasetsCopy } from "./datasets/-copy";
 import type { components } from "@/api/types";
 
@@ -21,7 +26,6 @@ interface DatasetsPageContentProps {
   onSelectedIdChange: (id?: string) => void;
   onDeleteClick: (id: string) => void;
 }
-
 
 function DatasetsPageContent({
   onCreateClick,
@@ -46,9 +50,7 @@ function DatasetsPageContent({
     {
       key: "id",
       label: "ID",
-      render: (value) => (
-        <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>
-      ),
+      render: (value) => <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>,
     },
     {
       key: "title",
@@ -56,7 +58,7 @@ function DatasetsPageContent({
       sortable: true,
       render: (value, row) => (
         <span
-          className="text-cyan-400 font-medium cursor-pointer"
+          className="cursor-pointer font-medium text-cyan-400"
           data-testid={`dataset-name-${row.id}`}
           onClick={() => onSelectedIdChange(row.id)}
         >
@@ -270,7 +272,8 @@ function DatasetsPageWrapper() {
         onDeleteClick={handleDeleteClick}
       />
 
-      <Modal isOpen={showCreateModal}
+      <Modal
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           setCreateError(null);

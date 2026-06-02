@@ -14,14 +14,10 @@ Notes:
 from __future__ import annotations
 
 import json
-from typing import Literal
-
-import pytest
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.layers import llm_extract
 from domain.extraction.value_objects import LayerInput
-from domain.pipelines.ports import LLMResponse
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
@@ -106,16 +102,18 @@ def test_malformed_response_records_parse_error():
     out = llm_extract.execute(_input(), fake)
     assert out.entities == ()
     assert out.metadata is not None
-    assert out.metadata.get("parse_error"), (
-        f"Expected parse_error in metadata; got {dict(out.metadata)}"
-    )
+    assert out.metadata.get(
+        "parse_error"
+    ), f"Expected parse_error in metadata; got {dict(out.metadata)}"
 
 
 def test_prior_entities_propagate_into_user_prompt():
     """Layer 1 must include the labels of existing_entities as LLM context."""
     fake = FakeLLMProvider(response_content="[]")
     prior = (
-        ExtractedEntity(label="REST", entity_type="ArchitecturalStyle", source_layer=0, confidence=0.9),
+        ExtractedEntity(
+            label="REST", entity_type="ArchitecturalStyle", source_layer=0, confidence=0.9
+        ),
         ExtractedEntity(label="HATEOAS", entity_type="Concept", source_layer=0, confidence=0.85),
     )
     llm_extract.execute(_input(prior=prior), fake)

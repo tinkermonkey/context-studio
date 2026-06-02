@@ -599,3 +599,82 @@ class TestSQLiteChangeRepository:
 
         with pytest.raises(VersionNotFoundError):
             change_repo.atomic_update_changeset_and_proposal(domain_changeset, domain_proposal)
+
+    def test_get_changes_filters_by_batch_run_id(self, change_repo):
+        """Test that get_changes correctly filters by batch_run_id."""
+        # Record changes for different batch runs
+        change_repo.record_change(
+            entity_id="entity-1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "entity-1"},
+            batch_run_id="batch-1",
+        )
+        change_repo.record_change(
+            entity_id="entity-2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "entity-2"},
+            batch_run_id="batch-1",
+        )
+        change_repo.record_change(
+            entity_id="entity-3",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "entity-3"},
+            batch_run_id="batch-2",
+        )
+
+        # Get changes for batch-1
+        result = change_repo.get_changes(batch_run_id="batch-1", limit=None)
+        assert len(result.events) == 2
+        assert all(e.batch_run_id == "batch-1" for e in result.events)
+        entity_ids = {e.entity_id for e in result.events}
+        assert entity_ids == {"entity-1", "entity-2"}
+
+        # Get changes for batch-2
+        result = change_repo.get_changes(batch_run_id="batch-2", limit=None)
+        assert len(result.events) == 1
+        assert result.events[0].batch_run_id == "batch-2"
+        assert result.events[0].entity_id == "entity-3"
+
+        # Get changes for non-existent batch
+        result = change_repo.get_changes(batch_run_id="batch-nonexistent", limit=None)
+        assert len(result.events) == 0
+
+    def test_get_changes_combines_multiple_filters(self, change_repo):
+        """Test that get_changes correctly applies multiple filters together."""
+        # Record changes with different combinations of attributes
+        change_repo.record_change(
+            entity_id="entity-1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "entity-1"},
+            batch_run_id="batch-1",
+        )
+        change_repo.record_change(
+            entity_id="entity-1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={},
+            new_state={"id": "entity-1", "updated": True},
+            batch_run_id="batch-1",
+        )
+        change_repo.record_change(
+            entity_id="entity-2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"id": "entity-2"},
+            batch_run_id="batch-2",
+        )
+
+        # Filter by batch_run_id and entity_id
+        result = change_repo.get_changes(
+            batch_run_id="batch-1", entity_id="entity-1", limit=None
+        )
+        assert len(result.events) == 2
+        assert all(e.entity_id == "entity-1" and e.batch_run_id == "batch-1" for e in result.events)
+
+        # Filter by batch_run_id only
+        result = change_repo.get_changes(batch_run_id="batch-1", limit=None)
+        assert len(result.events) == 2

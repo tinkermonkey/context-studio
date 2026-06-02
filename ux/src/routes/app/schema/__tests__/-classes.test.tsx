@@ -82,9 +82,7 @@ describe("Classes Schema Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state copy when no classes exist", async () => {
-      server.use(
-        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
-      );
+      server.use(http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))));
 
       render(<ClassesPage />);
 

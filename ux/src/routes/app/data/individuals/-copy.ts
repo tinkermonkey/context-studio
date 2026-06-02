@@ -1,13 +1,12 @@
 export const individualsCopy = {
   pageTitle: "Individuals",
   subtitle:
-    "Concrete instances populated from pipelines or curators. Each individual belongs to one or more classes.",
+    "Concrete instances curated by experts. Each individual belongs to one or more classes.",
   emptyState: {
     title: "No individuals yet",
     description:
       "Individuals are instances of classes that represent specific entities in your knowledge graph.",
     actionLabel: "+ New individual",
-    runPipelineLabel: "Run pipeline",
     importLabel: "Import…",
   },
   filteredEmpty: {

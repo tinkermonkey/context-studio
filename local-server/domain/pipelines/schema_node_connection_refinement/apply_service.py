@@ -4,6 +4,8 @@ Apply service for schema node connection refinement pipeline.
 Applies connection delta proposals from a completed connection refinement run:
 - "add" deltas create new Relationship entities
 - "remove" deltas delete existing Relationship entities
+- "modify" deltas track the operation in relationships_modified counter (accounting only;
+  actual relationship mutation is deferred until delta structure includes modification payload)
 
 Idempotent: adding an already-existing relationship is skipped; removing a
 non-existent relationship is skipped.
@@ -11,12 +13,15 @@ non-existent relationship is skipped.
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from domain.ontology.entities import Relationship
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -45,7 +50,7 @@ class SchemaConnectionRefinementApplyService:
         Apply connection deltas to the ontology.
 
         Deltas are sourced from run.output_summary["deltas"]. Each delta has:
-          operation: "add" | "remove"
+          operation: "add" | "remove" | "modify"
           subject: class label or ID
           predicate: property label or identifier
           object: class label or ID
@@ -56,7 +61,8 @@ class SchemaConnectionRefinementApplyService:
             confidence_threshold: Minimum delta confidence to apply
 
         Returns:
-            ApplyResult with relationships_created and relationships_skipped counts
+            ApplyResult with relationships_created, relationships_removed,
+            relationships_modified, and relationships_skipped counts
         """
         result = ApplyResult()
         deltas = run.output_summary.get("deltas", [])
@@ -117,13 +123,25 @@ class SchemaConnectionRefinementApplyService:
                 )
                 self._repo.save_relationship(new_rel)
                 result.relationships_created += 1
+                result.created_relationship_ids.append(new_rel.id)
 
             elif operation == "remove":
                 if not existing:
                     result.relationships_skipped += 1
                     continue
                 self._repo.delete_relationship(existing[0].id)
-                result.relationships_skipped += 1  # removal counts as skipped (no net creation)
+                result.relationships_removed += 1
+
+            elif operation == "modify":
+                if not existing:
+                    result.relationships_skipped += 1
+                    continue
+                _logger.debug(
+                    f"Relationship modification tracked but not applied: {src_id} "
+                    f"--{prop_identifier}--> {tgt_id} (delta structure does not "
+                    f"specify mutation details)"
+                )
+                result.relationships_modified += 1
 
             else:
                 result.relationships_skipped += 1

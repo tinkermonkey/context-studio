@@ -17,14 +17,20 @@ Execution flow (7 stages):
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.ports import LLMProvider
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+)
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
+
+_logger = logging.getLogger(__name__)
 
 _MAX_CHUNK_CHARS = 8000
 
@@ -119,15 +125,23 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     Transitions are deterministic (no branching on LLM output).
     """
 
-    def __init__(self, llm_provider: LLMProvider, ontology_repo=None) -> None:
+    def __init__(
+        self,
+        llm_provider: LLMProvider,
+        ontology_repo=None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
+    ) -> None:
         """
         Initialize orchestrator with LLM provider and optional ontology repo.
 
         Args:
             llm_provider: LLM provider for completions
             ontology_repo: Optional OntologyRepository for existing-schema classification
+            run_id: Pipeline run ID for writing RUNNING status
+            status_writer: Optional port for writing run status to persistence
         """
-        super().__init__(llm_provider)
+        super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -144,6 +158,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             PipelineInputError: If required inputs are missing or invalid
             PipelineExecutionError: If pipeline execution fails
         """
+        self._write_running_status()
+
         schema_state = cast(SchemaExtractionState, state)
 
         # Extract documents from input
@@ -189,16 +205,22 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             # Finalize
             schema_state = await self._stage_finalize(schema_state)
 
+        except PipelineInputError:
+            schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
+            raise
         except PipelineExecutionError:
             schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
+            _logger.error(f"Unexpected error during schema extraction: {exc}", exc_info=True)
             schema_state = replace(
                 schema_state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": str(exc)},
+                result={"error": "Schema extraction encountered an unexpected error"},
             )
-            raise PipelineExecutionError(f"Schema extraction failed: {str(exc)}") from exc
+            raise PipelineExecutionError(
+                "Schema extraction encountered an unexpected error"
+            ) from exc
 
         return schema_state
 
@@ -256,9 +278,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         term_freq = len(re.findall(re.escape(label), source_text, re.IGNORECASE))
         return min(
             1.0,
-            0.2
-            + (0.4 if provenance_found else 0.0)
-            + min(0.4, term_freq * 0.1),
+            0.2 + (0.4 if provenance_found else 0.0) + min(0.4, term_freq * 0.1),
         )
 
     # ------------------------------------------------------------------
@@ -298,7 +318,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         system_prompt = (
             "You are an expert in ontology design and schema extraction. "
-            "Extract candidate classes and key terms from the text. Return a JSON array of candidate labels. "
+            "Extract candidate classes and key terms from the text. "
+            "Return a JSON array of candidate labels. "
             "Be precise and extract technical/domain terms, not generic words."
         )
 
@@ -308,7 +329,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         for chunk in state.text_chunks:
             user_prompt = (
                 f"Extract candidate classes and technical terms from this text:\n\n{chunk}\n\n"
-                'Return a JSON array of strings (labels only). Example: ["Microservice", "Message Queue", "API Gateway"]'
+                "Return a JSON array of strings (labels only). "
+                'Example: ["Microservice", "Message Queue", "API Gateway"]'
             )
 
             response = await self._call_llm(
@@ -331,9 +353,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     "fallback_action": "regex extraction",
                 }
                 state = replace(state, parse_warnings=state.parse_warnings + [warning])
-                chunk_candidates = re.findall(
-                    r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk
-                )
+                chunk_candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk)
 
             # Merge with global dedup (case-insensitive, keep first occurrence)
             for candidate in chunk_candidates:
@@ -359,22 +379,11 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         ontology_id = state.input_data.get("ontology_id")
         if ontology_id and self._ontology_repo is not None:
-            try:
-                classes = self._ontology_repo.list_classes(limit=None)
-                existing_labels = {cls.label.lower() for cls in classes}
-            except Exception as e:
-                state = replace(
-                    state,
-                    parse_warnings=state.parse_warnings + [{
-                        "stage": "classification",
-                        "error": f"ontology lookup failed: {e}",
-                        "fallback_action": "all candidates marked as new",
-                    }],
-                )
+            classes = self._ontology_repo.list_classes(limit=None)
+            existing_labels = {cls.label.lower() for cls in classes}
 
         classified = {
-            concept: concept.lower() in existing_labels
-            for concept in state.candidate_concepts
+            concept: concept.lower() in existing_labels for concept in state.candidate_concepts
         }
 
         return replace(
@@ -396,8 +405,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
         labels = state.candidate_concepts
-        label_list = ", ".join(f'"{l}"' for l in labels)
-        example = ", ".join(f'"{l}": "definition..."' for l in labels[:2])
+        label_list = ", ".join(f'"{label}"' for label in labels)
+        example = ", ".join(f'"{label}": "definition..."' for label in labels[:2])
 
         system_prompt = (
             "You are an expert in ontology definition writing. "
@@ -406,7 +415,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         )
         user_prompt = (
             f"Define these classes for a technical ontology.\n\n"
-            f"Labels: {', '.join(labels)}\n\n"
+            f"Labels: {label_list}\n\n"
             f"Context: {state.normalized_text[:3000]}\n\n"
             f"Return JSON: {{{example}, ...}}"
         )
@@ -439,12 +448,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         if missing_keys:
             state = replace(
                 state,
-                parse_warnings=state.parse_warnings + [{
-                    "stage": "definition_synthesis",
-                    "error": f"LLM response missing {len(missing_keys)} label(s)",
-                    "missing_labels": missing_keys,
-                    "fallback_action": "generic definition per missing candidate",
-                }],
+                parse_warnings=state.parse_warnings
+                + [
+                    {
+                        "stage": "definition_synthesis",
+                        "error": f"LLM response missing {len(missing_keys)} label(s)",
+                        "missing_labels": missing_keys,
+                        "fallback_action": "generic definition per missing candidate",
+                    }
+                ],
             )
 
         candidates: list[CandidateClass] = []
@@ -492,15 +504,17 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         user_prompt = (
             f"For these candidate classes, identify relationships and properties:\n\n"
             f"Classes: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text}\n\n"
+            f"Context: {state.normalized_text[:3000]}\n\n"
             "Return JSON:\n"
             "{\n"
             '  "relationships": [\n'
-            '    {"subject": "Class1", "predicate": "subclass_of", "object": "Class2", "confidence": 0.8},\n'
+            '    {"subject": "Class1", "predicate": "subclass_of", '
+            '"object": "Class2", "confidence": 0.8},\n'
             "    ...\n"
             "  ],\n"
             '  "properties": [\n'
-            '    {"name": "Property1", "domain": "Class1", "range": "Class2", "confidence": 0.7},\n'
+            '    {"name": "Property1", "domain": "Class1", '
+            '"range": "Class2", "confidence": 0.7},\n'
             "    ...\n"
             "  ]\n"
             "}"
@@ -516,38 +530,44 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         try:
             parsed = json.loads(response.content)
-            if not isinstance(parsed, dict):
-                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
+            if isinstance(parsed, dict):
+                for rel in parsed.get("relationships", []):
+                    subject = rel.get("subject", "")
+                    obj = rel.get("object", "")
+                    if not subject or not obj:
+                        continue
+                    # Compose provenance from subject + object, not from the predicate string
+                    provenance = self._find_provenance(
+                        subject, state.source_text
+                    ) + self._find_provenance(obj, state.source_text)
+                    conn = CandidateConnection(
+                        subject_ref=subject,
+                        predicate=rel.get("predicate", ""),
+                        object_ref=obj,
+                        confidence=rel.get("confidence", 0.5),
+                        provenance=provenance,
+                    )
+                    connections.append(conn)
 
-            for rel in parsed.get("relationships", []):
-                subject = rel.get("subject", "")
-                obj = rel.get("object", "")
-                if not subject or not obj:
-                    continue
-                # Compose provenance from subject + object, not from the predicate string
-                provenance = self._find_provenance(
-                    subject, state.source_text
-                ) + self._find_provenance(obj, state.source_text)
-                conn = CandidateConnection(
-                    subject_ref=subject,
-                    predicate=rel.get("predicate", ""),
-                    object_ref=obj,
-                    confidence=rel.get("confidence", 0.5),
-                    provenance=provenance,
-                )
-                connections.append(conn)
-
-            for prop in parsed.get("properties", []):
-                provenance = self._find_provenance(prop.get("name", ""), state.source_text)
-                prop_def = CandidatePropertyDefinition(
-                    label=prop.get("name", ""),
-                    proposed_domain=prop.get("domain"),
-                    proposed_range=prop.get("range"),
-                    confidence=prop.get("confidence", 0.5),
-                    provenance=provenance,
-                )
-                properties.append(prop_def)
-        except (json.JSONDecodeError, AttributeError) as e:
+                for prop in parsed.get("properties", []):
+                    provenance = self._find_provenance(prop.get("name", ""), state.source_text)
+                    prop_def = CandidatePropertyDefinition(
+                        label=prop.get("name", ""),
+                        proposed_domain=prop.get("domain"),
+                        proposed_range=prop.get("range"),
+                        confidence=prop.get("confidence", 0.5),
+                        provenance=provenance,
+                    )
+                    properties.append(prop_def)
+            else:
+                warning = {
+                    "stage": "connection_proposal",
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
+                    "response_preview": response.content[:200],
+                    "fallback_action": "no connections extracted",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+        except json.JSONDecodeError as e:
             warning = {
                 "stage": "connection_proposal",
                 "error": f"JSON parse error: {str(e)}",
@@ -580,7 +600,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         user_prompt = (
             f"Check these terms for multiple senses:\n\n"
             f"Terms: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text}\n\n"
+            f"Context: {state.normalized_text[:3000]}\n\n"
             "Return JSON:\n"
             "{\n"
             '  "ambiguous_terms": [\n'
@@ -600,37 +620,43 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         disambiguated = list(state.candidate_classes)
         try:
             parsed = json.loads(response.content)
-            if not isinstance(parsed, dict):
-                raise AttributeError(f"Expected dict, got {type(parsed).__name__}")
+            if isinstance(parsed, dict):
+                for ambig in parsed.get("ambiguous_terms", []):
+                    term = ambig.get("term", "")
+                    senses = ambig.get("senses", [])
+                    rationale = ambig.get("rationale", "")
 
-            for ambig in parsed.get("ambiguous_terms", []):
-                term = ambig.get("term", "")
-                senses = ambig.get("senses", [])
-                rationale = ambig.get("rationale", "")
-
-                original_idx = next(
-                    (i for i, c in enumerate(disambiguated) if c.label == term), -1
-                )
-                if original_idx >= 0 and len(senses) > 1:
-                    original = disambiguated[original_idx]
-                    disambiguated_candidates = []
-                    for i, sense in enumerate(senses):
-                        new_label = f"{term} ({sense})" if sense else term
-                        candidate = CandidateClass(
-                            label=new_label,
-                            proposed_definition=original.proposed_definition,
-                            confidence=max(0.0, original.confidence - 0.1),
-                            provenance=original.provenance,
-                            disambiguation_rationale=f"Sense {i+1}: {rationale}",
-                        )
-                        disambiguated_candidates.append(candidate)
-
-                    disambiguated = (
-                        disambiguated[:original_idx]
-                        + disambiguated_candidates
-                        + disambiguated[original_idx + 1 :]
+                    original_idx = next(
+                        (i for i, c in enumerate(disambiguated) if c.label == term), -1
                     )
-        except (json.JSONDecodeError, AttributeError) as e:
+                    if original_idx >= 0 and len(senses) > 1:
+                        original = disambiguated[original_idx]
+                        disambiguated_candidates = []
+                        for i, sense in enumerate(senses):
+                            new_label = f"{term} ({sense})" if sense else term
+                            candidate = CandidateClass(
+                                label=new_label,
+                                proposed_definition=original.proposed_definition,
+                                confidence=max(0.0, original.confidence - 0.1),
+                                provenance=original.provenance,
+                                disambiguation_rationale=f"Sense {i+1}: {rationale}",
+                            )
+                            disambiguated_candidates.append(candidate)
+
+                        disambiguated = (
+                            disambiguated[:original_idx]
+                            + disambiguated_candidates
+                            + disambiguated[original_idx + 1 :]
+                        )
+            else:
+                warning = {
+                    "stage": "disambiguation",
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
+                    "response_preview": response.content[:200],
+                    "fallback_action": "skipping disambiguation",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+        except json.JSONDecodeError as e:
             warning = {
                 "stage": "disambiguation",
                 "error": f"JSON parse error: {str(e)}",

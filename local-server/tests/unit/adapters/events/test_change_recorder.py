@@ -28,7 +28,6 @@ from domain.ontology.events import (
     TaxonomyDeleted,
     TaxonomyUpdated,
 )
-from domain.pipelines.events import PipelineExecuted
 
 
 @pytest.fixture
@@ -100,63 +99,6 @@ class TestChangeEventRecorder:
 
         with pytest.raises(RuntimeError, match="DB error"):
             recorder.on_extraction_completed(event)
-
-        mock_change_repo.record_change.assert_called_once()
-
-    def test_on_pipeline_executed_records_change(self, recorder, mock_change_repo):
-        """Test that PipelineExecuted event is recorded."""
-        # Reset context to ensure no batch_run_id is set
-        set_batch_run_context(None)
-        mock_change_repo.record_change.return_value = "change-789"
-        event = PipelineExecuted(
-            execution_id="exec-123",
-            pipeline_id="pipeline-456",
-            status="success",
-        )
-
-        recorder.on_pipeline_executed(event)
-
-        mock_change_repo.record_change.assert_called_once()
-        call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs["entity_id"] == "exec-123"
-        assert call_args.kwargs["entity_type"] == "pipeline_execution"
-        assert call_args.kwargs["operation"] == "create"
-        assert call_args.kwargs["new_state"]["pipeline_id"] == "pipeline-456"
-        assert call_args.kwargs["new_state"]["status"] == "success"
-        assert call_args.kwargs["batch_run_id"] is None
-
-    def test_on_pipeline_executed_propagates_batch_run_id(self, recorder, mock_change_repo):
-        """Test that batch_run_id is propagated from context to record_change."""
-        batch_run_id = "batch-999"
-        set_batch_run_context(batch_run_id)
-        try:
-            mock_change_repo.record_change.return_value = "change-789"
-            event = PipelineExecuted(
-                execution_id="exec-123",
-                pipeline_id="pipeline-456",
-                status="success",
-            )
-
-            recorder.on_pipeline_executed(event)
-
-            mock_change_repo.record_change.assert_called_once()
-            call_args = mock_change_repo.record_change.call_args
-            assert call_args.kwargs["batch_run_id"] == batch_run_id
-        finally:
-            set_batch_run_context(None)
-
-    def test_on_pipeline_executed_propagates_exception(self, recorder, mock_change_repo):
-        """Test that repo exceptions propagate to the event publisher."""
-        set_batch_run_context(None)
-        mock_change_repo.record_change.side_effect = RuntimeError("DB error")
-        event = PipelineExecuted(
-            execution_id="exec-123",
-            pipeline_id="pipeline-456",
-            status="success",
-        )
-
-        with pytest.raises(RuntimeError, match="DB error"):
-            recorder.on_pipeline_executed(event)
 
         mock_change_repo.record_change.assert_called_once()
 

@@ -645,9 +645,7 @@ class SQLiteOntologyRepository:
                 orm_entity.structural_property_id = (
                     structural_property_id  # type: ignore[assignment]
                 )
-                orm_entity.external_references = (
-                    mapped_orm.external_references
-                )
+                orm_entity.external_references = mapped_orm.external_references
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.embedding = mapped_orm.embedding  # type: ignore[assignment]
@@ -878,9 +876,7 @@ class SQLiteOntologyRepository:
                 mapped_orm = map_domain_to_orm(individual)
                 orm_entity.title = individual.title  # type: ignore[assignment]
                 orm_entity.description = individual.description  # type: ignore[assignment]
-                orm_entity.data_properties = (
-                    mapped_orm.data_properties
-                )  # type: ignore[assignment]
+                orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
                 orm_entity.external_references = (
                     mapped_orm.external_references
                 )  # type: ignore[assignment]
@@ -1058,9 +1054,7 @@ class SQLiteOntologyRepository:
 
             return q.count()
 
-    def get_by_identifier(
-        self, identifier: str
-    ) -> Optional[Taxonomy | ConceptScheme | Class]:
+    def get_by_identifier(self, identifier: str) -> Optional[Taxonomy | ConceptScheme | Class]:
         """
         Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique slug.
 
@@ -1199,9 +1193,7 @@ class SQLiteOntologyRepository:
                     mapped_orm.ontology_mapping
                 )  # type: ignore[assignment]
                 orm_entity.is_relevant = prop.is_relevant  # type: ignore[assignment]
-                orm_entity.lexical_senses = (
-                    mapped_orm.lexical_senses
-                )  # type: ignore[assignment]
+                orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
                 orm_entity.status = prop.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
@@ -1220,9 +1212,9 @@ class SQLiteOntologyRepository:
                         mapped_orm.ontology_mapping
                     )
                     prop_def_orm_maybe.is_relevant = prop.is_relevant  # type: ignore[assignment]
-                    prop_def_orm_maybe.last_modified = (
-                        datetime.now(timezone.utc)  # type: ignore[assignment]
-                    )
+                    prop_def_orm_maybe.last_modified = datetime.now(
+                        timezone.utc
+                    )  # type: ignore[assignment]
                     prop_def_orm_maybe.version = (
                         prop_def_orm_maybe.version + 1  # type: ignore[assignment]
                     )

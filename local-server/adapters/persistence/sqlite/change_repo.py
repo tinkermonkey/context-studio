@@ -127,7 +127,8 @@ class SQLiteChangeRepository:
         self,
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
-        limit: int = 100,
+        batch_run_id: Optional[str] = None,
+        limit: Optional[int] = 100,
     ) -> ChangeHistoryResult:
         """
         Retrieve change events with optional filters.
@@ -135,6 +136,7 @@ class SQLiteChangeRepository:
         Args:
             entity_id: Optional filter to changes for a specific entity
             since: Optional filter to changes after a specific timestamp
+            batch_run_id: Optional filter to changes for a specific batch run
             limit: Maximum number of results to return
 
         Returns:
@@ -147,6 +149,8 @@ class SQLiteChangeRepository:
                 conditions.append(ChangeEvent.entity_id == entity_id)
             if since:
                 conditions.append(ChangeEvent.timestamp >= since)
+            if batch_run_id:
+                conditions.append(ChangeEvent.batch_run_id == batch_run_id)
 
             # Apply filters to base query
             base_query = select(ChangeEvent)

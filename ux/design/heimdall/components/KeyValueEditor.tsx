@@ -1,74 +1,80 @@
-import React from 'react'
-import './KeyValueEditor.css'
-import { Button } from './Button'
-import { TextInput } from './TextInput'
-import { Select } from './Select'
-import { Icon } from './Icon'
-
-export interface KeyValueRow {
-  id: string
-  key: string
-  value: string
-  datatype?: string
+interface KeyValueRow {
+  id: string;
+  key: string;
+  value: string;
+  datatype?: string;
 }
 
-export interface KeyValueEditorProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
-  rows: KeyValueRow[]
-  onChange: (rows: KeyValueRow[]) => void
-  datatypeColumn?: boolean
-  datatypes?: string[]
-  disabled?: boolean
-  keyPlaceholder?: string
-  valuePlaceholder?: string
-  addLabel?: string
+interface KeyValueEditorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  rows: KeyValueRow[];
+  onChange: (rows: KeyValueRow[]) => void;
+  datatypeColumn?: boolean;
+  datatypes?: string[];
+  disabled?: boolean;
+  keyPlaceholder?: string;
+  valuePlaceholder?: string;
+  addLabel?: string;
 }
 
-export const KeyValueEditor = React.forwardRef<HTMLDivElement, KeyValueEditorProps>(
-  ({ rows, onChange, datatypeColumn = false, datatypes = ['string', 'number', 'boolean'], disabled = false, keyPlaceholder = 'Key', valuePlaceholder = 'Value', addLabel = 'Add row', className, ...props }, ref) => {
-    const rowIdPrefix = React.useId()
-    const rowIdCounter = React.useRef(0)
+const KeyValueEditor = React.forwardRef<HTMLDivElement, KeyValueEditorProps>(
+  (
+    {
+      rows,
+      onChange,
+      datatypeColumn = false,
+      datatypes = ["string", "number", "boolean"],
+      disabled = false,
+      keyPlaceholder = "Key",
+      valuePlaceholder = "Value",
+      addLabel = "Add row",
+      className,
+      ...props
+    },
+    ref,
+  ) => {
+    const rowIdPrefix = React.useId();
+    const rowIdCounter = React.useRef(0);
 
     const handleKeyChange = (id: string, newKey: string) => {
-      onChange(
-        rows.map((row) =>
-          row.id === id ? { ...row, key: newKey } : row
-        )
-      )
-    }
+      onChange(rows.map((row) => (row.id === id ? { ...row, key: newKey } : row)));
+    };
 
     const handleValueChange = (id: string, newValue: string) => {
-      onChange(
-        rows.map((row) =>
-          row.id === id ? { ...row, value: newValue } : row
-        )
-      )
-    }
+      onChange(rows.map((row) => (row.id === id ? { ...row, value: newValue } : row)));
+    };
 
     const handleDatatypeChange = (id: string, newDatatype: string) => {
-      onChange(
-        rows.map((row) =>
-          row.id === id ? { ...row, datatype: newDatatype } : row
-        )
-      )
-    }
+      onChange(rows.map((row) => (row.id === id ? { ...row, datatype: newDatatype } : row)));
+    };
 
     const handleRemoveRow = (id: string) => {
-      onChange(rows.filter((row) => row.id !== id))
-    }
+      onChange(rows.filter((row) => row.id !== id));
+    };
 
     const handleAddRow = () => {
       const newRow: KeyValueRow = {
         id: `${rowIdPrefix}-${rowIdCounter.current++}`,
-        key: '',
-        value: '',
-        ...(datatypeColumn && { datatype: 'string' }),
-      }
-      onChange([...rows, newRow])
-    }
+        key: "",
+        value: "",
+        ...(datatypeColumn && { datatype: "string" }),
+      };
+      onChange([...rows, newRow]);
+    };
 
     return (
-      <div ref={ref} className={['key-value-editor', datatypeColumn && 'key-value-editor--has-datatype', disabled && 'key-value-editor--disabled', className].filter(Boolean).join(' ')} data-testid="key-value-editor" {...props}>
+      <div
+        ref={ref}
+        className={[
+          "key-value-editor",
+          datatypeColumn && "key-value-editor--has-datatype",
+          disabled && "key-value-editor--disabled",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        data-testid="key-value-editor"
+        {...props}
+      >
         <div className="key-value-editor__table">
           <div className="key-value-editor__header">
             <div className="key-value-editor__col key-value-editor__col--key">Key</div>
@@ -104,7 +110,7 @@ export const KeyValueEditor = React.forwardRef<HTMLDivElement, KeyValueEditorPro
               {datatypeColumn && (
                 <Select
                   className="key-value-editor__input key-value-editor__select"
-                  value={row.datatype || 'string'}
+                  value={row.datatype || "string"}
                   onChange={(e) => handleDatatypeChange(row.id, e.target.value)}
                   disabled={disabled}
                   data-testid={`datatype-select-${row.id}`}
@@ -142,10 +148,11 @@ export const KeyValueEditor = React.forwardRef<HTMLDivElement, KeyValueEditorPro
           {addLabel}
         </Button>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-KeyValueEditor.displayName = 'KeyValueEditor'
+KeyValueEditor.displayName = "KeyValueEditor";
 
-export default KeyValueEditor
+// --- Babel-standalone: expose runtime values to window ---
+window.KeyValueEditor = KeyValueEditor;

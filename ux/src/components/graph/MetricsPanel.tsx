@@ -92,7 +92,7 @@ export function MetricsPanel() {
               label={COPY.COMMUNITIES_LABEL}
               value={communityCount.toString()}
               color="amber"
-              />
+            />
           </div>
           <div data-testid="graph-metrics-avg-degree">
             <StatTile

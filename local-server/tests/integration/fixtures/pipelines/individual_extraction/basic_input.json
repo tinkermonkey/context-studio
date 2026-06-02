@@ -1,0 +1,6 @@
+{
+  "text": "John Doe works for ACME Corporation. ACME develops software.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

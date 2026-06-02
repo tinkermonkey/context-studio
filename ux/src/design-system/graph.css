@@ -23,7 +23,6 @@ body.dark-canvas {
   --graph-edge-strong: #5a6573;
 }
 
-
 /* ============ Cluster zones ============ */
 .graph-cluster rect {
   fill: var(--graph-cluster-life-bg);
@@ -453,7 +452,6 @@ body.dark-canvas .gt-chip.irrelevant {
 .gt-btn .dot.dom-software {
   background: rgb(var(--dom-software));
 }
-
 
 /* ============ View toggle (table / graph) ============ */
 .view-toggle {

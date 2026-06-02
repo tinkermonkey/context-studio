@@ -60,7 +60,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
-  Toast: ({ isOpen, onClose, title, subtitle, variant, duration = 4000, ...props }: any) => {
+  Toast: ({ isOpen, onClose, title, subtitle, _variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
       if (isOpen && duration) {
         const timer = setTimeout(onClose, duration);
@@ -72,7 +72,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
 
     return React.createElement(
       "div",
-      { className: `toast toast--${variant}`, role: "status", "aria-live": "polite", ...props },
+      { className: `toast toast--${_variant}`, role: "status", "aria-live": "polite", ...props },
       React.createElement("div", { className: "toast__title" }, title),
       subtitle && React.createElement("div", { className: "toast__subtitle" }, subtitle),
       React.createElement(
@@ -157,12 +157,12 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       {
         pipeline,
         onRun,
-        onCancel,
-        onOptions,
+        _onCancel,
+        _onOptions,
         footerContent,
         compact,
-        selected,
-        headerAction,
+        _selected,
+        _headerAction,
         className = "",
         ...props
       }: any,
@@ -182,7 +182,11 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         pipeline?.id &&
           React.createElement("div", { className: "pipeline-card__id-mono" }, pipeline.id),
         pipeline?.description &&
-          React.createElement("p", { className: "pipeline-card__description" }, pipeline.description),
+          React.createElement(
+            "p",
+            { className: "pipeline-card__description" },
+            pipeline.description,
+          ),
         React.createElement(
           "span",
           { className: "pipeline-card__status", "data-status": pipeline?.status },
@@ -228,22 +232,51 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           { className: "inspector-panel__section-title" },
           title,
           count != null &&
-            React.createElement("span", { className: "inspector-panel__section-count" }, `· ${count}`),
+            React.createElement(
+              "span",
+              { className: "inspector-panel__section-count" },
+              `· ${count}`,
+            ),
         ),
-        actions && React.createElement("div", { className: "inspector-panel__section-actions" }, actions),
-        children && React.createElement("div", { className: "inspector-panel__section-content" }, children),
+        actions &&
+          React.createElement("div", { className: "inspector-panel__section-actions" }, actions),
+        children &&
+          React.createElement("div", { className: "inspector-panel__section-content" }, children),
       );
-    IP.PropertySection = ({ title, count, actionLabel, onAction, rows = [], className = "", ...props }: any) =>
+    IP.PropertySection = ({
+      title,
+      count,
+      actionLabel,
+      onAction,
+      rows = [],
+      className = "",
+      ...props
+    }: any) =>
       React.createElement(
         "div",
-        { className: ["inspector-panel__property-section", className].filter(Boolean).join(" "), ...props },
-        React.createElement("span", { className: "inspector-panel__property-section-title" }, title),
+        {
+          className: ["inspector-panel__property-section", className].filter(Boolean).join(" "),
+          ...props,
+        },
+        React.createElement(
+          "span",
+          { className: "inspector-panel__property-section-title" },
+          title,
+        ),
         count != null &&
-          React.createElement("span", { className: "inspector-panel__property-section-count" }, count),
+          React.createElement(
+            "span",
+            { className: "inspector-panel__property-section-count" },
+            count,
+          ),
         onAction &&
           React.createElement(
             "button",
-            { type: "button", className: "inspector-panel__property-section-action", onClick: onAction },
+            {
+              type: "button",
+              className: "inspector-panel__property-section-action",
+              onClick: onAction,
+            },
             actionLabel,
           ),
         rows.map((row: any) =>
@@ -251,14 +284,18 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             "div",
             { key: row.key, className: "inspector-panel__property-row" },
             React.createElement("span", { className: "inspector-panel__property-key" }, row.key),
-            React.createElement("span", { className: "inspector-panel__property-value" }, row.value),
+            React.createElement(
+              "span",
+              { className: "inspector-panel__property-value" },
+              row.value,
+            ),
           ),
         ),
       );
     return IP;
   })(),
   Sparkline: React.forwardRef(
-    ({ data, width, height, color, area, label, className = "", ...props }: any, ref: any) =>
+    ({ _data, _width, _height, _color, _area, _label, className = "", ...props }: any, ref: any) =>
       React.createElement("div", {
         ref,
         className: ["sparkline", className].filter(Boolean).join(" "),
@@ -271,8 +308,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       {
         rows = [],
         onChange,
-        datatypeColumn,
-        datatypes,
+        _datatypeColumn,
+        _datatypes,
         disabled,
         keyPlaceholder = "Key",
         valuePlaceholder = "Value",
@@ -301,7 +338,9 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
               value: row.key,
               disabled,
               onChange: (e: any) =>
-                onChange?.(rows.map((r: any) => (r.id === row.id ? { ...r, key: e.target.value } : r))),
+                onChange?.(
+                  rows.map((r: any) => (r.id === row.id ? { ...r, key: e.target.value } : r)),
+                ),
             }),
             React.createElement("input", {
               className: "key-value-row__value",
@@ -310,7 +349,9 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
               value: row.value,
               disabled,
               onChange: (e: any) =>
-                onChange?.(rows.map((r: any) => (r.id === row.id ? { ...r, value: e.target.value } : r))),
+                onChange?.(
+                  rows.map((r: any) => (r.id === row.id ? { ...r, value: e.target.value } : r)),
+                ),
             }),
             React.createElement(
               "button",
@@ -332,7 +373,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             className: "key-value-editor__add",
             "data-testid": "add-row-btn",
             disabled,
-            onClick: () => onChange?.([...rows, { id: `kv-${rows.length + 1}`, key: "", value: "" }]),
+            onClick: () =>
+              onChange?.([...rows, { id: `kv-${rows.length + 1}`, key: "", value: "" }]),
           },
           addLabel,
         ),
@@ -869,11 +911,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                 "span",
                 { key: filter.id, className: "filterbar__chip" },
                 filter.label,
-                React.createElement(
-                  "button",
-                  { onClick: () => onFilterRemove?.(filter.id) },
-                  "✕",
-                ),
+                React.createElement("button", { onClick: () => onFilterRemove?.(filter.id) }, "✕"),
               ),
             ),
           ),
@@ -898,7 +936,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     ),
   ),
   RowMenu: React.forwardRef(
-    ({ actions = [], onAction, className = "", ...props }: any, ref: any) =>
+    ({ _actions = [], _onAction, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
@@ -931,7 +969,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         domain,
         kind,
         label,
-        description,
+        _description,
         meta,
         selected,
         onSelect,
@@ -991,7 +1029,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
   ),
   ConfigTile: React.forwardRef(
-    ({ icon, title, description, summary = [], onClick, className = "", ...props }: any, ref: any) =>
+    (
+      { icon, title, description, summary = [], onClick, className = "", ...props }: any,
+      ref: any,
+    ) =>
       React.createElement(
         "button",
         {
@@ -1018,7 +1059,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     (
       {
         isOpen,
-        onClose,
+        _onClose,
         current,
         recent = [],
         onOpenFolder,
@@ -1074,7 +1115,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     },
   ),
   QuickAccessGrid: React.forwardRef(
-    ({ tiles = [], onAction, columns = 3, className = "", ...props }: any, ref: any) =>
+    ({ tiles = [], onAction, _columns = 3, className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {

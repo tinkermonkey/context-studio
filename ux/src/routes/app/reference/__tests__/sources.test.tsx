@@ -29,9 +29,9 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [],
-              workflows: [],
-            }),
+            sources: [],
+            workflows: [],
+          }),
         ),
       );
 
@@ -46,9 +46,9 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [],
-              workflows: [],
-            }),
+            sources: [],
+            workflows: [],
+          }),
         ),
       );
 
@@ -74,9 +74,9 @@ describe("Reference Sources Page", () => {
         http.get("*/api/reference/status", async () => {
           await promise;
           return HttpResponse.json({
-              sources: [],
-              workflows: [],
-            });
+            sources: [],
+            workflows: [],
+          });
         }),
       );
 
@@ -117,9 +117,9 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [],
-              workflows: [],
-            }),
+            sources: [],
+            workflows: [],
+          }),
         ),
       );
 
@@ -139,16 +139,16 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [
-                {
-                  name: "ConceptNet",
-                  available: true,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 100,
-                },
-              ],
-              workflows: [],
-            }),
+            sources: [
+              {
+                name: "ConceptNet",
+                available: true,
+                last_checked: new Date().toISOString(),
+                entities_count: 100,
+              },
+            ],
+            workflows: [],
+          }),
         ),
       );
 
@@ -163,22 +163,22 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [
-                {
-                  name: "ConceptNet",
-                  available: true,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 100,
-                },
-                {
-                  name: "DBpedia",
-                  available: false,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 0,
-                },
-              ],
-              workflows: [],
-            }),
+            sources: [
+              {
+                name: "ConceptNet",
+                available: true,
+                last_checked: new Date().toISOString(),
+                entities_count: 100,
+              },
+              {
+                name: "DBpedia",
+                available: false,
+                last_checked: new Date().toISOString(),
+                entities_count: 0,
+              },
+            ],
+            workflows: [],
+          }),
         ),
       );
 
@@ -199,22 +199,22 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [
-                {
-                  name: "ConceptNet",
-                  available: true,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 100,
-                },
-                {
-                  name: "DBpedia",
-                  available: true,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 200,
-                },
-              ],
-              workflows: [],
-            }),
+            sources: [
+              {
+                name: "ConceptNet",
+                available: true,
+                last_checked: new Date().toISOString(),
+                entities_count: 100,
+              },
+              {
+                name: "DBpedia",
+                available: true,
+                last_checked: new Date().toISOString(),
+                entities_count: 200,
+              },
+            ],
+            workflows: [],
+          }),
         ),
       );
 
@@ -237,16 +237,16 @@ describe("Reference Sources Page", () => {
       server.use(
         http.get("*/api/reference/status", () =>
           HttpResponse.json({
-              sources: [
-                {
-                  name: "ConceptNet",
-                  available: true,
-                  last_checked: new Date().toISOString(),
-                  entities_count: 100,
-                },
-              ],
-              workflows: [],
-            }),
+            sources: [
+              {
+                name: "ConceptNet",
+                available: true,
+                last_checked: new Date().toISOString(),
+                entities_count: 100,
+              },
+            ],
+            workflows: [],
+          }),
         ),
       );
 

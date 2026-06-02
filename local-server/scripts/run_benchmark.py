@@ -325,86 +325,6 @@ def stratified_sample_dataset(
     return sampled
 
 
-def extract_triples_http(
-    text: str,
-    ontology_id: str,
-    config: dict[str, Any],
-    base_url: str = "http://localhost:8000",
-) -> tuple[list[dict], int, str]:
-    """
-    Call extraction API via HTTP.
-
-    Calls POST /api/extraction/extract to extract RDF triples scoped to an ontology.
-
-    Args:
-        text: Text to extract from
-        ontology_id: ID of ontology for scoped extraction
-        config: Extraction configuration
-        base_url: API base URL
-
-    Returns:
-        Tuple of (triples, duration_ms, model_used)
-
-    Raises:
-        ConnectionError: If unable to connect to the API (API not running)
-        httpx.HTTPStatusError: If API returns non-200 status
-        ValueError: If API response cannot be parsed
-
-    Note:
-        The API response currently is a placeholder. When the extraction is fully
-        implemented, this should also track extraction_run_id from the response.
-        ExtractionRun entities should be created server-side and their IDs included
-        in the metadata or response body.
-    """
-    url = f"{base_url}/api/extraction/extract"
-    options = {
-        "model": config.get("model", "gpt-3.5-turbo"),
-        "temperature": config.get("temperature", 0.0),
-        "max_tokens": config.get("max_tokens", 4096),
-    }
-    if "seed" in config and config["seed"] is not None:
-        options["seed"] = config["seed"]
-
-    payload = {
-        "text": text,
-        "ontology_id": ontology_id,
-        "options": options,
-    }
-
-    start_time = time.time()
-    try:
-        response = httpx.post(url, json=payload, timeout=60.0)
-        duration_ms = int((time.time() - start_time) * 1000)
-
-        if response.status_code != 200:
-            error_detail = response.text[:200] if response.text else f"HTTP {response.status_code}"
-            raise httpx.HTTPStatusError(
-                f"Extraction API returned {response.status_code}: {error_detail}",
-                request=response.request,
-                response=response,
-            )
-
-        data = response.json()
-        triples = data.get("triples", [])
-        metadata = data.get("metadata", {})
-        model_used = metadata.get("model", config.get("model", "unknown"))
-
-        return triples, duration_ms, model_used
-
-    except httpx.ConnectError as e:
-        _logger.error(f"Could not connect to extraction API at {url}: {e}")
-        raise ConnectionError(f"Extraction API not responding at {base_url}") from e
-    except httpx.HTTPStatusError as e:
-        _logger.error(f"Extraction API error: {e}")
-        raise
-    except (json.JSONDecodeError, ValueError) as e:
-        _logger.error(f"Failed to parse extraction API response: {e}")
-        raise ValueError(f"Invalid API response format: {e}") from e
-    except Exception as e:
-        _logger.error(f"Unexpected error calling extraction API: {e}")
-        raise
-
-
 def compute_metrics(
     predicted_triples: list[dict],
     gold_triples: list[dict],
@@ -582,10 +502,10 @@ def run_benchmark(
 
         _logger.info(f"Processing {len(ontology_samples)} samples for {ontology}")
 
-        precision_scores = []
-        recall_scores = []
-        f1_scores = []
-        conformance_scores = []
+        precision_scores: list[float] = []
+        recall_scores: list[float] = []
+        f1_scores: list[float] = []
+        conformance_scores: list[float] = []
         total_false_positives = 0
         total_predicted_triples = 0
         consecutive_failures = 0
@@ -593,36 +513,16 @@ def run_benchmark(
 
         for sample_idx, sample in enumerate(ontology_samples):
             text = sample.get("text", "")
-            gold_triples = sample.get("triples", [])
 
             if not text:
                 continue
 
             try:
-                # Extract triples via API
-                pred_triples, duration_ms, model_used = extract_triples_http(
-                    text,
-                    ontology,
-                    config,
-                    api_base_url,
+                raise NotImplementedError(
+                    "HTTP-based extraction via POST /api/extraction/extract is "
+                    "no longer available. The endpoint has been removed in this "
+                    "version."
                 )
-
-                result.total_duration_ms += duration_ms
-                if not result.model:
-                    result.model = model_used
-
-                # Compute metrics
-                precision, recall, f1, conformance, false_positives, num_predicted = (
-                    compute_metrics(pred_triples, gold_triples)
-                )
-                precision_scores.append(precision)
-                recall_scores.append(recall)
-                f1_scores.append(f1)
-                conformance_scores.append(conformance)
-                total_false_positives += false_positives
-                total_predicted_triples += num_predicted
-                result.samples_processed += 1
-                consecutive_failures = 0
 
             except (ConnectionError, httpx.HTTPStatusError) as e:
                 consecutive_failures += 1

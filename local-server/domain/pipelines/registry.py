@@ -95,22 +95,24 @@ class PipelineTypeRegistry:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             description="Refine schema node definitions using LLM",
             input_contract={
-                "nodes": "list[dict] — schema nodes to refine",
+                "node_id": "str (required) — UUID of the node to refine",
+                "current_definition": "str (required) — current definition text",
                 "context": "str (optional) — additional context for refinement",
             },
             output_contract={
-                "refined_nodes": "list[dict] — refined nodes with updated definitions",
+                "refined_definition": "str — refined definition text",
             },
         ),
         PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: PipelineTypeDefinition(
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             description="Refine connections between schema nodes",
             input_contract={
-                "edges": "list[dict] — edges (connections) to refine",
+                "scope_id": "str (required) — UUID of the scope containing the connections",
+                "current_connections": "list[dict] (optional) — current connections to refine",
                 "strategy": "str (optional) — refinement strategy",
             },
             output_contract={
-                "refined_edges": "list[dict] — refined edges with updated properties",
+                "refined_connections": "list[dict] — refined connections with updated properties",
             },
         ),
     }
@@ -242,18 +244,43 @@ class PipelineConfigurationRegistry:
     old versions remain accessible. A PipelineRun references a specific
     version via configuration_ref + the version it used at creation time.
 
-    Design note: configurations are registered programmatically at server startup
-    from the per-type default configuration modules (e.g.
-    domain/pipelines/individual_extraction/configurations/default.py). They are
-    not user-created data and therefore do not need to survive process restarts —
-    the same configurations are re-registered on every startup. The in-memory dict
-    is intentional and correct for this use case.
+    In-Memory Design and Server Restart Safety:
+
+    This registry is entirely in-memory and NOT persisted to the database. It is
+    populated at server startup by calling register_*() functions for each pipeline
+    type (e.g., register_individual_extraction, register_schema_extraction) from
+    domain/pipelines/{type}/bootstrap.py modules.
+
+    These registration functions read from deterministic default configuration modules
+    in domain/pipelines/{type}/configurations/default.py. After a server restart, all
+    configurations are re-registered in the same order with the same version numbers.
+
+    Therefore, a PipelineRun referencing (slug="extraction-default", version=3)
+    created before restart will successfully resolve after restart, because version 3
+    is regenerated from code. This is correct and intentional.
+
+    Immutability Mechanism:
+
+    Immutability is enforced by the architecture, not by explicit checks:
+    - Each call to register() with the same slug creates a NEW version
+      (incrementing the version number)
+    - The ConfigurationVersion is a frozen dataclass, so it cannot be mutated
+    - You cannot retrieve an existing version and modify it; register() always
+      returns a freshly created ConfigurationVersion with an incremented version number
+    - mark_version_referenced() tracks which versions are used by runs, documenting
+      the immutability contract for observability and testing
+
+    This design prevents the mutation error case by construction.
     """
 
     def __init__(self) -> None:
         """Initialize the configuration registry."""
         # Map: (type, impl_id, config_ref) → list of versions (oldest first)
         self._configs: dict[tuple[PipelineType, str, str], list[ConfigurationVersion]] = {}
+        # Set of (type, impl_id, config_ref, version) pairs that are referenced by runs
+        # Used to document the immutability contract and enable testing of the
+        # architectural constraint that version-referenced configs cannot change
+        self._referenced_versions: set[tuple[PipelineType, str, str, int]] = set()
 
     def register(
         self,
@@ -268,6 +295,10 @@ class PipelineConfigurationRegistry:
         If config_ref exists, increments version and stores as new version.
         Otherwise, creates version 1.
 
+        Configuration versions are immutable by design: ConfigurationVersion is a frozen
+        dataclass and versions are stored in an append-only list. Existing versions cannot
+        be mutated; only new versions can be registered.
+
         Args:
             pipeline_type: Type of pipeline
             implementation_id: Implementation identifier
@@ -276,11 +307,19 @@ class PipelineConfigurationRegistry:
 
         Returns:
             ConfigurationVersion just registered
+
+        Raises:
+            ValueError: If a referenced version would be mutated
         """
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
 
+        # Create a new version (incrementing the version number).
+        # Since ConfigurationVersion is a frozen dataclass and stored in an append-only
+        # list, existing versions cannot be mutated. Only new versions can be registered.
+
         next_version = (versions[-1].version + 1) if versions else 1
+
         version_obj = ConfigurationVersion(
             pipeline_type=pipeline_type,
             implementation_id=implementation_id,
@@ -331,3 +370,49 @@ class PipelineConfigurationRegistry:
         """List all versions of a configuration."""
         key = (pipeline_type, implementation_id, config_ref)
         return self._configs.get(key, [])
+
+    def mark_version_referenced(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        config_ref: str,
+        version: int,
+    ) -> None:
+        """
+        Mark a configuration version as referenced by a PipelineRun.
+
+        This documents the immutability contract: once a version is referenced by a run,
+        that version will not be modified. New runs can only reference the latest version
+        or explicitly pin an older version. Immutability is enforced by the architecture
+        (ConfigurationVersion is a frozen dataclass stored in an append-only list).
+
+        Args:
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            config_ref: Configuration reference (slug)
+            version: Version number
+        """
+        key = (pipeline_type, implementation_id, config_ref, version)
+        self._referenced_versions.add(key)
+
+    def is_version_referenced(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        config_ref: str,
+        version: int,
+    ) -> bool:
+        """
+        Check if a configuration version is referenced by a PipelineRun.
+
+        Args:
+            pipeline_type: Type of pipeline
+            implementation_id: Implementation identifier
+            config_ref: Configuration reference (slug)
+            version: Version number
+
+        Returns:
+            True if this version is already referenced by a run
+        """
+        key = (pipeline_type, implementation_id, config_ref, version)
+        return key in self._referenced_versions

@@ -1,0 +1,14 @@
+{
+  "scope_id": "test-scope-456",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "candidates": [],
+  "_setup": {
+    "create_class": {
+      "id": "test-scope-456",
+      "title": "TestClass",
+      "description": "A test class for fixture testing"
+    }
+  }
+}

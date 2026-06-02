@@ -18,7 +18,6 @@ from __future__ import annotations
 import asyncio
 import json
 import tempfile
-from dataclasses import replace
 from pathlib import Path
 from uuid import uuid4
 
@@ -44,7 +43,9 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementState,
 )
 from tests.fakes.fake_llm_provider import FakeLLMProvider
-
+from tests.integration.fixtures.pipelines.harness import (
+    run_pipeline_against_fixture,
+)
 
 # ---------------------------------------------------------------------------- #
 # Fixtures                                                                     #
@@ -109,9 +110,7 @@ class TestDefinitionRefinementRegistration:
     def test_orchestrator_registered_with_implementation_registry(self):
         impl_registry = PipelineImplementationRegistry()
         register_schema_node_definition_refinement(impl_registry, None)
-        impl_class = impl_registry.get(
-            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, "default"
-        )
+        impl_class = impl_registry.get(PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, "default")
         assert impl_class is DefinitionRefinementOrchestrator
 
     def test_default_configuration_registered(self):
@@ -145,6 +144,23 @@ class TestDefinitionRefinementExecution:
         with pytest.raises(PipelineInputError, match="node_id"):
             asyncio.run(orchestrator.execute(state))
 
+    def test_missing_node_raises_pipeline_input_error(self, traversal):
+        """Test that missing node raises PipelineInputError, not PipelineExecutionError."""
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=FakeLLMProvider(response_content="[]"),
+            traversal=traversal,
+        )
+        state = DefinitionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            input_data={
+                "node_id": str(uuid4()),  # Use a UUID that doesn't exist
+                "current_definition": "anything",
+            },
+        )
+        with pytest.raises(PipelineInputError, match="Node with id"):
+            asyncio.run(orchestrator.execute(state))
+
     def test_refinement_against_canon_rest_class_emits_candidates(
         self, traversal, ontology_with_rest_class
     ):
@@ -171,9 +187,7 @@ class TestDefinitionRefinementExecution:
             },
         ]
         orchestrator = DefinitionRefinementOrchestrator(
-            llm_provider=FakeLLMProvider(
-                response_content=_refinement_response(canon_definitions)
-            ),
+            llm_provider=FakeLLMProvider(response_content=_refinement_response(canon_definitions)),
             traversal=traversal,
         )
         state = DefinitionRefinementState(
@@ -182,9 +196,7 @@ class TestDefinitionRefinementExecution:
             input_data={
                 "node_id": rest_cls.id,
                 "current_definition": rest_cls.description,
-                "groundings": [
-                    {"label": "Representational State Transfer", "description": "..."}
-                ],
+                "groundings": [{"label": "Representational State Transfer", "description": "..."}],
                 "extraction_usages": [],
             },
         )
@@ -231,9 +243,7 @@ class TestDefinitionRefinementExecution:
         candidates = result_state.result.get("candidates", [])
         assert len(candidates) <= 3
 
-    def test_wrapped_definitions_object_is_also_parsed(
-        self, traversal, ontology_with_rest_class
-    ):
+    def test_wrapped_definitions_object_is_also_parsed(self, traversal, ontology_with_rest_class):
         """The orchestrator accepts both bare arrays and `{"definitions": [...]}` wrapping."""
         _, rest_cls = ontology_with_rest_class
         wrapped = {
@@ -258,3 +268,32 @@ class TestDefinitionRefinementExecution:
         result_state = asyncio.run(orchestrator.execute(state))
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert len(result_state.result.get("candidates", [])) == 1
+
+
+class TestDefinitionRefinementViaHarness:
+    """Harness-based integration tests using shared fixture infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_harness_loads_and_runs_basic_refinement(self):
+        """Harness successfully loads fixture and runs definition refinement orchestrator."""
+        from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+            DefinitionRefinementOrchestrator,
+        )
+
+        llm_response = (
+            '{"definitions": ' '[{"label": "Microservice", ' '"definition": "A small service"}]}'
+        )
+        llm_provider = FakeLLMProvider(response_content=llm_response)
+        orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+
+        actual, expected = await run_pipeline_against_fixture(
+            orchestrator,
+            "schema_node_definition_refinement",
+            "basic",
+        )
+
+        # Verify outputs were loaded and execution succeeded
+        assert actual is not None
+        assert expected is not None
+        assert actual["status"] == "completed"
+        assert "result" in actual

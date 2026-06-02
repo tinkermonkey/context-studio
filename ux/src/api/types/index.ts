@@ -1397,232 +1397,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/extraction/extract": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Extract Triples
-     * @deprecated
-     * @description [DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.
-     *
-     *     **This endpoint is maintained for backward compatibility with Wave A code.**
-     *     **New code should use POST /api/pipelines/individual_extraction/run instead.**
-     *
-     *     This endpoint uses an LLM to extract subject-predicate-object triples
-     *     from the input text, linking them to classes and individuals from a
-     *     specific ontology. Each triple is returned with confidence and provenance
-     *     (character offsets into the source text).
-     *
-     *     Args:
-     *         request: ExtractTripleRequest with text, ontology_id, and extraction options
-     *         service: ExtractionService from dependency injection
-     *
-     *     Returns:
-     *         ExtractTripleResponse with extracted triples, warnings, and metadata
-     *
-     *     Raises:
-     *         HTTPException: 400 if input is invalid, 500 for internal errors
-     */
-    post: operations["extract_triples_api_extraction_extract_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Pipeline Configurations
-     * @description Retrieve all pipeline configurations.
-     *
-     *     Returns:
-     *         List of PipelineConfigurationResponse objects
-     */
-    get: operations["list_pipeline_configurations_api_pipelines_get"];
-    put?: never;
-    /**
-     * Create Pipeline Configuration
-     * @description Create a new pipeline configuration.
-     *
-     *     Args:
-     *         request: PipelineConfigurationCreate with configuration details
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Created PipelineConfigurationResponse with server-generated id
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid input, 500 for internal errors
-     */
-    post: operations["create_pipeline_configuration_api_pipelines_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/executions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List All Pipeline Executions
-     * @description Retrieve execution history across all pipeline configurations.
-     *
-     *     Results are returned in reverse chronological order (most recent first).
-     *
-     *     Args:
-     *         status_filter: Optional status filter ("success", "error", "timeout")
-     *         limit: Maximum number of executions to return (1-500, default 100)
-     *         offset: Number of executions to skip for pagination (default 0)
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Paginated list of ExecutionWithPipelineResponse objects with total count
-     */
-    get: operations["list_all_pipeline_executions_api_pipelines_executions_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/{pipeline_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Pipeline Configuration
-     * @description Retrieve a pipeline configuration by ID.
-     *
-     *     Args:
-     *         pipeline_id: The pipeline configuration ID
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         PipelineConfigurationResponse
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    get: operations["get_pipeline_configuration_api_pipelines__pipeline_id__get"];
-    /**
-     * Update Pipeline Configuration
-     * @description Update a pipeline configuration's properties.
-     *
-     *     Args:
-     *         pipeline_id: The pipeline configuration ID
-     *         request: PipelineConfigurationUpdate with optional fields to update
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         Updated PipelineConfigurationResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid, 404 if not found
-     */
-    put: operations["update_pipeline_configuration_api_pipelines__pipeline_id__put"];
-    post?: never;
-    /**
-     * Delete Pipeline Configuration
-     * @description Delete a pipeline configuration.
-     *
-     *     Args:
-     *         pipeline_id: The pipeline configuration ID
-     *         service: PipelineService from dependency injection
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    delete: operations["delete_pipeline_configuration_api_pipelines__pipeline_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/{pipeline_id}/execute": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute Pipeline
-     * @description Execute a pipeline configuration with the given input.
-     *
-     *     Args:
-     *         pipeline_id: The pipeline configuration ID
-     *         request: PipelineExecuteRequest with input_text
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         ExecutionResponse with output, tokens, duration, and status
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid, 404 if configuration not found
-     */
-    post: operations["execute_pipeline_api_pipelines__pipeline_id__execute_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/pipelines/{pipeline_id}/executions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Pipeline Executions
-     * @description Retrieve execution history for a pipeline configuration.
-     *
-     *     Results are returned in reverse chronological order (most recent first).
-     *
-     *     Args:
-     *         pipeline_id: The pipeline configuration ID
-     *         service: PipelineService from dependency injection
-     *
-     *     Returns:
-     *         List of ExecutionResponse objects, up to 50 most recent
-     *
-     *     Raises:
-     *         HTTPException: 404 if configuration not found
-     */
-    get: operations["get_pipeline_executions_api_pipelines__pipeline_id__executions_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/pipelines/types": {
     parameters: {
       query?: never;
@@ -1724,8 +1498,10 @@ export interface paths {
      *     - individual_extraction: requires text and ontology_id
      *     - schema_extraction: requires documents, optional scope
      *     - schema_node_grounding: requires nodes and sources
-     *     - schema_node_definition_refinement: requires nodes, optional context
-     *     - schema_node_connection_refinement: requires edges, optional strategy
+     *     - schema_node_definition_refinement: requires node_id and
+     *       current_definition, optional groundings and extraction_usages
+     *     - schema_node_connection_refinement: requires scope_id and
+     *       current_connections, optional groundings and extraction_usages
      *
      *     Creates a pipeline run, executes it with the registered implementation,
      *     and returns the run with execution results.
@@ -1891,6 +1667,192 @@ export interface paths {
      *         HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params
      */
     post: operations["apply_pipeline_run_api_pipelines_runs__run_id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/revert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revert Pipeline Run
+     * @description Revert all changes made by a specific pipeline run.
+     *
+     *     Walks the change_events for the given run_id in reverse order and applies
+     *     the inverse of each operation. This restores the ontology to its state
+     *     before the run was applied.
+     *
+     *     The operation is idempotent — calling revert twice produces the same state
+     *     without error.
+     *
+     *     Args:
+     *         run_id: ID of the pipeline run to revert
+     *
+     *     Returns:
+     *         RevertRunResponse with count of events reverted
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found, 500 for revert errors
+     */
+    post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Batch
+     * @description Create a new batch.
+     *
+     *     Args:
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Batch info with id and status
+     *
+     *     Raises:
+     *         HTTPException: 500 for creation errors
+     */
+    post: operations["create_batch_api_pipelines_batches_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Batch
+     * @description Get batch info and aggregate status over child runs.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Batch info including aggregate status
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    get: operations["get_batch_api_pipelines_batches__batch_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Enqueue Batch Runs
+     * @description Enqueue multiple runs in a batch.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request_body: Contains 'runs' list with pipeline type and config
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of created run IDs
+     *
+     *     Raises:
+     *         HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors
+     */
+    post: operations["enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Batch Runs
+     * @description Cancel all PENDING runs in a batch.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Count of cancelled runs
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    post: operations["cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/batches/{batch_id}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resume Batch Runs
+     * @description Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+     *
+     *     Args:
+     *         batch_id: Batch ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         Count of resumed runs
+     *
+     *     Raises:
+     *         HTTPException: 404 if batch not found
+     */
+    post: operations["resume_batch_runs_api_pipelines_batches__batch_id__resume_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3485,6 +3447,12 @@ export interface components {
        */
       classes_created: number;
       /**
+       * Classes Updated
+       * @description Class entities updated
+       * @default 0
+       */
+      classes_updated: number;
+      /**
        * Classes Skipped
        * @description Class candidates skipped (already exist)
        * @default 0
@@ -3509,6 +3477,18 @@ export interface components {
        */
       relationships_created: number;
       /**
+       * Relationships Removed
+       * @description Relationship entities removed
+       * @default 0
+       */
+      relationships_removed: number;
+      /**
+       * Relationships Modified
+       * @description Relationship entities modified
+       * @default 0
+       */
+      relationships_modified: number;
+      /**
        * Relationships Skipped
        * @description Relationship candidates skipped (already exist or unresolvable)
        * @default 0
@@ -3526,6 +3506,43 @@ export interface components {
        * @default 0
        */
       individuals_skipped: number;
+      /**
+       * External References Created
+       * @description External references added to classes
+       * @default 0
+       */
+      external_references_created: number;
+      /**
+       * External References Skipped
+       * @description External references skipped (already exist)
+       * @default 0
+       */
+      external_references_skipped: number;
+      /**
+       * Created Class Ids
+       * @description IDs of created classes
+       */
+      created_class_ids?: string[];
+      /**
+       * Created Individual Ids
+       * @description IDs of created individuals
+       */
+      created_individual_ids?: string[];
+      /**
+       * Created Relationship Ids
+       * @description IDs of created relationships
+       */
+      created_relationship_ids?: string[];
+      /**
+       * Created Property Definition Ids
+       * @description IDs of created property definitions
+       */
+      created_property_definition_ids?: string[];
+      /**
+       * Created External Reference Ids
+       * @description URIs of created external references
+       */
+      created_external_reference_ids?: string[];
     };
     /**
      * AutoResolveConflictsRequest
@@ -3606,6 +3623,51 @@ export interface components {
         [key: string]: number;
       };
     };
+    /**
+     * BatchResponse
+     * @description Response containing batch information.
+     */
+    BatchResponse: {
+      /**
+       * Id
+       * @description Batch UUID
+       */
+      id: string;
+      /**
+       * Status
+       * @description Status: pending, running, completed, failed, or cancelled
+       */
+      status: string;
+      /**
+       * Created At
+       * Format: date-time
+       * @description UTC timestamp of batch creation
+       */
+      created_at: string;
+      /**
+       * Started At
+       * @description UTC timestamp when batch started
+       */
+      started_at?: string | null;
+      /**
+       * Completed At
+       * @description UTC timestamp when batch completed
+       */
+      completed_at?: string | null;
+      /**
+       * Last Updated
+       * Format: date-time
+       * @description UTC timestamp of last update
+       */
+      last_updated: string;
+      /**
+       * Run Count
+       * @description Total number of runs in batch
+       */
+      run_count: number;
+      /** @description Breakdown of runs by status */
+      run_counts: components["schemas"]["RunCountsResponse"];
+    };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
       /**
@@ -3629,6 +3691,29 @@ export interface components {
        * @description JSON-encoded conflict resolutions to apply on commit
        */
       resolutions?: string | null;
+    };
+    /**
+     * CancelBatchResponse
+     * @description Response from batch cancel operation.
+     */
+    CancelBatchResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Cancelled Count
+       * @description Number of runs cancelled
+       */
+      cancelled_count: number;
+      /**
+       * Status
+       * @description Batch status after operation
+       */
+      status: string;
+      /** @description Run counts after operation */
+      run_counts: components["schemas"]["RunCountsResponse"];
     };
     /**
      * CandidateResponse
@@ -3786,11 +3871,6 @@ export interface components {
      */
     ClassCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the class
        */
@@ -3800,11 +3880,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb'
-       */
-      color?: string | null;
       /**
        * Parent Class Id
        * @description Optional ID of parent class for hierarchy
@@ -3967,11 +4042,6 @@ export interface components {
      */
     ConceptSchemeCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the concept scheme
        */
@@ -3981,11 +4051,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb'
-       */
-      color?: string | null;
     };
     /**
      * ConceptSchemeResponse
@@ -4465,6 +4530,45 @@ export interface components {
       external_references: number;
     };
     /**
+     * EnqueueBatchRunsRequest
+     * @description Request to enqueue multiple runs in a batch.
+     */
+    EnqueueBatchRunsRequest: {
+      /**
+       * Runs
+       * @description Run specs to enqueue
+       */
+      runs: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Idempotency Key
+       * @description Optional idempotency key for replay
+       */
+      idempotency_key?: string | null;
+    };
+    /**
+     * EnqueueBatchRunsResponse
+     * @description Response from batch enqueue operation.
+     */
+    EnqueueBatchRunsResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Run Ids
+       * @description IDs of created runs
+       */
+      run_ids: string[];
+      /**
+       * Run Count
+       * @description Total runs now in batch
+       */
+      run_count: number;
+    };
+    /**
      * EnrichFromReferencesRequest
      * @description Request to enrich extracted entities with external reference knowledge.
      */
@@ -4518,137 +4622,6 @@ export interface components {
        * @description Version number of parent; None if this is the first version
        */
       parent_version?: number | null;
-    };
-    /**
-     * ExecutionResponse
-     * @description Response containing pipeline execution record data.
-     */
-    ExecutionResponse: {
-      /**
-       * Id
-       * @description Unique identifier for this execution
-       */
-      id: string;
-      /**
-       * Pipeline Config Id
-       * @description ID of the executed PipelineConfiguration
-       */
-      pipeline_config_id: string;
-      /**
-       * Output Text
-       * @description The generated response from the LLM
-       */
-      output_text: string;
-      /**
-       * Provider
-       * @description LLM provider that executed the request
-       */
-      provider: string;
-      /**
-       * Model
-       * @description Model that generated the response
-       */
-      model: string;
-      /**
-       * Tokens In
-       * @description Number of tokens in the input
-       */
-      tokens_in: number;
-      /**
-       * Tokens Out
-       * @description Number of tokens in the output
-       */
-      tokens_out: number;
-      /**
-       * Duration Ms
-       * @description Execution duration in milliseconds
-       */
-      duration_ms: number;
-      /**
-       * Status
-       * @description Completion status (success, error, timeout)
-       * @enum {string}
-       */
-      status: "success" | "error" | "timeout";
-      /**
-       * Error Message
-       * @description Error description if applicable
-       */
-      error_message?: string | null;
-      /**
-       * Timestamp
-       * Format: date-time
-       * @description ISO 8601 execution timestamp
-       */
-      timestamp: string;
-    };
-    /**
-     * ExecutionWithPipelineResponse
-     * @description Response containing execution record with associated pipeline configuration name.
-     */
-    ExecutionWithPipelineResponse: {
-      /**
-       * Id
-       * @description Unique identifier for this execution
-       */
-      id: string;
-      /**
-       * Pipeline Config Id
-       * @description ID of the executed PipelineConfiguration
-       */
-      pipeline_config_id: string;
-      /**
-       * Pipeline Title
-       * @description Title of the pipeline configuration that was executed
-       */
-      pipeline_title: string;
-      /**
-       * Output Text
-       * @description The generated response from the LLM
-       */
-      output_text: string;
-      /**
-       * Provider
-       * @description LLM provider that executed the request
-       */
-      provider: string;
-      /**
-       * Model
-       * @description Model that generated the response
-       */
-      model: string;
-      /**
-       * Tokens In
-       * @description Number of tokens in the input
-       */
-      tokens_in: number;
-      /**
-       * Tokens Out
-       * @description Number of tokens in the output
-       */
-      tokens_out: number;
-      /**
-       * Duration Ms
-       * @description Execution duration in milliseconds
-       */
-      duration_ms: number;
-      /**
-       * Status
-       * @description Completion status (success, error, timeout)
-       * @enum {string}
-       */
-      status: "success" | "error" | "timeout";
-      /**
-       * Error Message
-       * @description Error description if applicable
-       */
-      error_message?: string | null;
-      /**
-       * Timestamp
-       * Format: date-time
-       * @description ISO 8601 execution timestamp
-       */
-      timestamp: string;
     };
     /**
      * ExportRequest
@@ -4710,64 +4683,6 @@ export interface components {
       text: string;
     };
     /**
-     * ExtractTripleOptions
-     * @description Options for triple extraction.
-     */
-    ExtractTripleOptions: {
-      /**
-       * Model
-       * @description Model identifier for extraction (e.g., 'gpt-4', 'claude-opus')
-       */
-      model: string;
-      /**
-       * Temperature
-       * @description Sampling temperature (0.0 = deterministic, up to 2.0)
-       * @default 0
-       */
-      temperature: number;
-      /**
-       * Max Tokens
-       * @description Maximum tokens in LLM response
-       */
-      max_tokens?: number | null;
-    };
-    /**
-     * ExtractTripleRequest
-     * @description Request to extract triples from text scoped to an ontology.
-     */
-    ExtractTripleRequest: {
-      /**
-       * Text
-       * @description Source text to extract triples from
-       */
-      text: string;
-      /**
-       * Ontology Id
-       * @description ID of the ontology scoping extraction to specific classes/individuals
-       */
-      ontology_id: string;
-      /** @description Extraction options (model, temperature, etc.) */
-      options: components["schemas"]["ExtractTripleOptions"];
-    };
-    /**
-     * ExtractTripleResponse
-     * @description Response containing extracted triples.
-     */
-    ExtractTripleResponse: {
-      /**
-       * Triples
-       * @description List of extracted triples
-       */
-      triples: components["schemas"]["ExtractedTriple"][];
-      /**
-       * Warnings
-       * @description Warnings (e.g., confidence out of range, invalid provenance)
-       */
-      warnings?: string[];
-      /** @description Metadata about the extraction operation */
-      metadata: components["schemas"]["ExtractionMetadata"];
-    };
-    /**
      * ExtractedEntitySchema
      * @description Response containing extracted entity data.
      */
@@ -4821,29 +4736,6 @@ export interface components {
       };
     };
     /**
-     * ExtractedTriple
-     * @description A single extracted triple with confidence and provenance.
-     */
-    ExtractedTriple: {
-      subject: components["schemas"]["SubjectNode"];
-      predicate: components["schemas"]["PredicateNode"];
-      /**
-       * Object
-       * @description Object node discriminated by 'kind' field
-       */
-      object:
-        | components["schemas"]["ObjectNodeIndividual"]
-        | components["schemas"]["ObjectNodeClass"]
-        | components["schemas"]["ObjectNodeLiteral"];
-      /**
-       * Confidence
-       * @description Confidence score (0.0–1.0)
-       */
-      confidence: number;
-      /** @description Provenance linking triple to source text */
-      provenance: components["schemas"]["TripleProvenance"];
-    };
-    /**
      * ExtractionLayerResultSchema
      * @description Response containing execution metadata for a single extraction layer.
      */
@@ -4878,27 +4770,6 @@ export interface components {
        * @description Error message if layer failed
        */
       error_message?: string | null;
-    };
-    /**
-     * ExtractionMetadata
-     * @description Metadata about a triple extraction operation.
-     */
-    ExtractionMetadata: {
-      /**
-       * Model
-       * @description Model used for extraction
-       */
-      model: string;
-      /**
-       * Tokens Used
-       * @description Total tokens consumed
-       */
-      tokens_used: number;
-      /**
-       * Duration Ms
-       * @description Extraction duration in milliseconds
-       */
-      duration_ms: number;
     };
     /**
      * ExtractionResultSchema
@@ -5511,29 +5382,6 @@ export interface components {
        */
       offset: number;
     };
-    /** ListResponse[ExecutionWithPipelineResponse] */
-    ListResponse_ExecutionWithPipelineResponse_: {
-      /**
-       * Items
-       * @description List of items
-       */
-      items: components["schemas"]["ExecutionWithPipelineResponse"][];
-      /**
-       * Total
-       * @description Total number of items
-       */
-      total: number;
-      /**
-       * Limit
-       * @description Limit applied
-       */
-      limit: number;
-      /**
-       * Offset
-       * @description Offset applied
-       */
-      offset: number;
-    };
     /** ListResponse[ImportRunResponse] */
     ListResponse_ImportRunResponse_: {
       /**
@@ -5761,69 +5609,6 @@ export interface components {
       outgoing: string[];
     };
     /**
-     * ObjectNodeClass
-     * @description Object node: class/concept.
-     */
-    ObjectNodeClass: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      kind: "class";
-      /**
-       * Id
-       * @description Class ID in the ontology
-       */
-      id: string;
-      /**
-       * Label
-       * @description Human-readable label
-       */
-      label: string;
-    };
-    /**
-     * ObjectNodeIndividual
-     * @description Object node: individual instance.
-     */
-    ObjectNodeIndividual: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      kind: "individual";
-      /**
-       * Id
-       * @description Individual ID in the ontology
-       */
-      id: string;
-      /**
-       * Label
-       * @description Human-readable label
-       */
-      label: string;
-    };
-    /**
-     * ObjectNodeLiteral
-     * @description Object node: literal value.
-     */
-    ObjectNodeLiteral: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      kind: "literal";
-      /**
-       * Value
-       * @description Literal value (string, number, boolean, or null)
-       */
-      value: string | number | boolean | null;
-      /**
-       * Datatype
-       * @description XSD datatype (e.g., 'xsd:string', 'xsd:integer')
-       */
-      datatype?: string | null;
-    };
-    /**
      * PathResultResponse
      * @description Response containing a single path between two nodes.
      */
@@ -5853,179 +5638,6 @@ export interface components {
        * @description Relationship types traversed along the path
        */
       relationships: string[];
-    };
-    /**
-     * PipelineConfigurationCreate
-     * @description Request to create a new pipeline configuration.
-     */
-    PipelineConfigurationCreate: {
-      /**
-       * Pipeline
-       * @description Pipeline identifier/slug for categorization
-       */
-      pipeline: string;
-      /**
-       * Title
-       * @description Human-readable title for the pipeline
-       */
-      title: string;
-      /**
-       * Provider
-       * @description LLM provider name (openai, anthropic)
-       */
-      provider: string;
-      /**
-       * Model
-       * @description Model identifier (e.g., gpt-4, claude-opus)
-       */
-      model: string;
-      /**
-       * Config
-       * @description Provider-specific configuration
-       */
-      config?: {
-        [key: string]: unknown;
-      };
-      /**
-       * System Prompt
-       * @description System prompt to guide model behavior
-       */
-      system_prompt: string;
-      /**
-       * User Prompt
-       * @description User message template with {text} placeholder
-       */
-      user_prompt: string;
-      /**
-       * Enabled
-       * @description Whether this configuration is active
-       * @default true
-       */
-      enabled: boolean;
-    };
-    /**
-     * PipelineConfigurationResponse
-     * @description Response containing pipeline configuration data.
-     */
-    PipelineConfigurationResponse: {
-      /**
-       * Id
-       * @description Unique identifier
-       */
-      id: string;
-      /**
-       * Pipeline
-       * @description Pipeline identifier/slug
-       */
-      pipeline: string;
-      /**
-       * Title
-       * @description Human-readable title
-       */
-      title: string;
-      /**
-       * Provider
-       * @description LLM provider name
-       */
-      provider: string;
-      /**
-       * Model
-       * @description Model identifier
-       */
-      model: string;
-      /**
-       * Config
-       * @description Provider-specific configuration
-       */
-      config?: {
-        [key: string]: unknown;
-      };
-      /**
-       * System Prompt
-       * @description System prompt
-       */
-      system_prompt: string;
-      /**
-       * User Prompt
-       * @description User message template
-       */
-      user_prompt: string;
-      /**
-       * Version
-       * @description Configuration version number
-       */
-      version: number;
-      /**
-       * Enabled
-       * @description Whether this configuration is active
-       */
-      enabled: boolean;
-      /**
-       * Created At
-       * Format: date-time
-       * @description ISO 8601 creation timestamp
-       */
-      created_at: string;
-      /**
-       * Last Updated
-       * Format: date-time
-       * @description ISO 8601 last update timestamp
-       */
-      last_updated: string;
-    };
-    /**
-     * PipelineConfigurationUpdate
-     * @description Request to update a pipeline configuration.
-     */
-    PipelineConfigurationUpdate: {
-      /**
-       * Title
-       * @description Updated title
-       */
-      title?: string | null;
-      /**
-       * Provider
-       * @description Updated provider
-       */
-      provider?: string | null;
-      /**
-       * Model
-       * @description Updated model
-       */
-      model?: string | null;
-      /**
-       * Config
-       * @description Updated configuration
-       */
-      config?: {
-        [key: string]: unknown;
-      } | null;
-      /**
-       * System Prompt
-       * @description Updated system prompt
-       */
-      system_prompt?: string | null;
-      /**
-       * User Prompt
-       * @description Updated user prompt
-       */
-      user_prompt?: string | null;
-      /**
-       * Enabled
-       * @description Updated enabled status
-       */
-      enabled?: boolean | null;
-    };
-    /**
-     * PipelineExecuteRequest
-     * @description Request to execute a pipeline.
-     */
-    PipelineExecuteRequest: {
-      /**
-       * Input Text
-       * @description Input text to process
-       */
-      input_text: string;
     };
     /**
      * PipelineRunRequest
@@ -6078,6 +5690,16 @@ export interface components {
        */
       configuration_ref: string;
       /**
+       * Configuration Slug
+       * @description Configuration slug
+       */
+      configuration_slug: string;
+      /**
+       * Configuration Version
+       * @description Configuration version
+       */
+      configuration_version: number;
+      /**
        * Input Summary
        * @description Input metadata
        */
@@ -6113,6 +5735,16 @@ export interface components {
        * @description Last update timestamp (reserved for future use)
        */
       updated_at?: string | null;
+      /**
+       * Started At
+       * @description Timestamp when run transitioned to RUNNING
+       */
+      started_at?: string | null;
+      /**
+       * Failure Reason
+       * @description Failure reason if status=FAILED
+       */
+      failure_reason?: string | null;
     };
     /**
      * PipelineTypeResponse
@@ -6143,22 +5775,6 @@ export interface components {
       output_contract: {
         [key: string]: unknown;
       };
-    };
-    /**
-     * PredicateNode
-     * @description Predicate node of a triple—a property definition.
-     */
-    PredicateNode: {
-      /**
-       * Property Definition Id
-       * @description ID of the property definition
-       */
-      property_definition_id: string;
-      /**
-       * Label
-       * @description Human-readable property name
-       */
-      label: string;
     };
     /**
      * PropertyDefinitionCreateRequest
@@ -6211,6 +5827,11 @@ export interface components {
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
        */
       is_relevant?: boolean | null;
+      /**
+       * Lexical Senses
+       * @description Word-sense disambiguation entries. A property whose label has more than one distinct meaning across the corpus (e.g. 'service' or 'clock') carries one LexicalSense per sense.
+       */
+      lexical_senses?: components["schemas"]["LexicalSenseResponse"][];
       /**
        * Created At
        * @description Creation timestamp
@@ -6628,6 +6249,76 @@ export interface components {
       };
     };
     /**
+     * ResumeBatchResponse
+     * @description Response from batch resume operation.
+     */
+    ResumeBatchResponse: {
+      /**
+       * Batch Id
+       * @description Batch UUID
+       */
+      batch_id: string;
+      /**
+       * Resumed Count
+       * @description Number of runs resumed
+       */
+      resumed_count: number;
+      /**
+       * Status
+       * @description Batch status after operation
+       */
+      status: string;
+      /** @description Run counts after operation */
+      run_counts: components["schemas"]["RunCountsResponse"];
+    };
+    /**
+     * RevertRunResponse
+     * @description Response from reverting a pipeline run.
+     */
+    RevertRunResponse: {
+      /**
+       * Run Id
+       * @description ID of the reverted pipeline run
+       */
+      run_id: string;
+      /**
+       * Events Reverted
+       * @description Number of change events reverted
+       */
+      events_reverted: number;
+    };
+    /**
+     * RunCountsResponse
+     * @description Response containing run counts by status.
+     */
+    RunCountsResponse: {
+      /**
+       * Pending
+       * @description Number of pending runs
+       */
+      pending: number;
+      /**
+       * Running
+       * @description Number of running runs
+       */
+      running: number;
+      /**
+       * Completed
+       * @description Number of completed runs
+       */
+      completed: number;
+      /**
+       * Failed
+       * @description Number of failed runs
+       */
+      failed: number;
+      /**
+       * Cancelled
+       * @description Number of cancelled runs
+       */
+      cancelled: number;
+    };
+    /**
      * SPARQLRequest
      * @description Request to execute a SPARQL query.
      */
@@ -6801,27 +6492,6 @@ export interface components {
       depth: number;
     };
     /**
-     * SubjectNode
-     * @description Subject node of a triple—individual or class.
-     */
-    SubjectNode: {
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind: "individual" | "class";
-      /**
-       * Id
-       * @description Entity ID in the ontology
-       */
-      id: string;
-      /**
-       * Label
-       * @description Human-readable label
-       */
-      label: string;
-    };
-    /**
      * SyncResultResponse
      * @description Response with synchronization operation results
      */
@@ -6938,11 +6608,6 @@ export interface components {
      */
     TaxonomyCreateRequest: {
       /**
-       * Identifier
-       * @description Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars.
-       */
-      identifier: string;
-      /**
        * Title
        * @description Display name for the taxonomy
        */
@@ -6952,11 +6617,6 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
-      /**
-       * Color
-       * @description Optional hex color '#rrggbb' for the taxonomy swatch
-       */
-      color?: string | null;
     };
     /**
      * TaxonomyPublishRequest
@@ -7054,27 +6714,6 @@ export interface components {
        * @description Number of RDF triples in the graph
        */
       count: number;
-    };
-    /**
-     * TripleProvenance
-     * @description Provenance metadata for an extracted triple.
-     */
-    TripleProvenance: {
-      /**
-       * Text Offset Start
-       * @description Character offset where triple evidence begins
-       */
-      text_offset_start: number;
-      /**
-       * Text Offset End
-       * @description Character offset where triple evidence ends
-       */
-      text_offset_end: number;
-      /**
-       * Raw
-       * @description Exact text span supporting this triple
-       */
-      raw: string;
     };
     /**
      * TripleResponse
@@ -8970,289 +8609,6 @@ export interface operations {
       };
     };
   };
-  extract_triples_api_extraction_extract_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ExtractTripleRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExtractTripleResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_pipeline_configurations_api_pipelines_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineConfigurationResponse"][];
-        };
-      };
-    };
-  };
-  create_pipeline_configuration_api_pipelines_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PipelineConfigurationCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineConfigurationResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_all_pipeline_executions_api_pipelines_executions_get: {
-    parameters: {
-      query?: {
-        /** @description Optional status filter (success, error, timeout) */
-        status_filter?: ("success" | "error" | "timeout") | null;
-        /** @description Maximum number of results */
-        limit?: number;
-        /** @description Number of results to skip */
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListResponse_ExecutionWithPipelineResponse_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_pipeline_configuration_api_pipelines__pipeline_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        pipeline_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineConfigurationResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_pipeline_configuration_api_pipelines__pipeline_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        pipeline_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PipelineConfigurationUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PipelineConfigurationResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_pipeline_configuration_api_pipelines__pipeline_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        pipeline_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  execute_pipeline_api_pipelines__pipeline_id__execute_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        pipeline_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PipelineExecuteRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExecutionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_pipeline_executions_api_pipelines__pipeline_id__executions_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        pipeline_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ExecutionResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   list_pipeline_types_api_pipelines_types_get: {
     parameters: {
       query?: never;
@@ -9504,6 +8860,185 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ApplyRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  revert_pipeline_run_api_pipelines_runs__run_id__revert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RevertRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_batch_api_pipelines_batches_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchResponse"];
+        };
+      };
+    };
+  };
+  get_batch_api_pipelines_batches__batch_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EnqueueBatchRunsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EnqueueBatchRunsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CancelBatchResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  resume_batch_runs_api_pipelines_batches__batch_id__resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        batch_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResumeBatchResponse"];
         };
       };
       /** @description Validation Error */

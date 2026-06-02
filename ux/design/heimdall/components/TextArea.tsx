@@ -1,32 +1,24 @@
-import React from 'react'
-import './inputs.css'
-
-export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  mono?: boolean
-  error?: boolean
+interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  mono?: boolean;
+  error?: boolean;
 }
 
-export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ mono = false, error = false, className = '', ...props }, ref) => {
+const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  ({ mono = false, error = false, className = "", ...props }, ref) => {
     const classNames = [
-      'text-area',
-      mono && 'text-area--mono',
-      error && 'text-area--error',
+      "text-area",
+      mono && "text-area--mono",
+      error && "text-area--error",
       className,
     ]
       .filter(Boolean)
-      .join(' ')
+      .join(" ");
 
-    return (
-      <textarea
-        ref={ref}
-        className={classNames}
-        {...props}
-      />
-    )
-  }
-)
+    return <textarea ref={ref} className={classNames} {...props} />;
+  },
+);
 
-TextArea.displayName = 'TextArea'
+TextArea.displayName = "TextArea";
 
-export default TextArea
+// --- Babel-standalone: expose runtime values to window ---
+window.TextArea = TextArea;

@@ -4,20 +4,22 @@ Unit tests for IndividualExtractionApplyService.
 Uses FakeOntologyRepository for in-memory testing — no database, no I/O.
 """
 
-import sys
 import os
+import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+)
+
+from unittest.mock import MagicMock
 
 import pytest
-from unittest.mock import MagicMock
 
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -31,9 +33,24 @@ CLASS_ID = "cls-person"
 @pytest.fixture()
 def repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, title="Test Taxonomy"))
-    r.save_concept_scheme(ConceptScheme(id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Test Scheme"))
-    r.save_class(Class(id=CLASS_ID, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Person"))
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
+    r.save_concept_scheme(
+        ConceptScheme(
+            id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="test_scheme",
+            title="Test Scheme",
+        )
+    )
+    r.save_class(
+        Class(
+            id=CLASS_ID,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="cls_test",
+            title="Person",
+        )
+    )
     return r
 
 
@@ -52,7 +69,14 @@ def _make_run(triples=None, run_id="run-ind-1"):
     return run
 
 
-def _make_triple(subject_label, class_ids=None, confidence=0.9, predicate_prop_id=None, obj_id=None, obj_kind="class"):
+def _make_triple(
+    subject_label,
+    class_ids=None,
+    confidence=0.9,
+    predicate_prop_id=None,
+    obj_id=None,
+    obj_kind="class",
+):
     """Helper to build a triple dict matching the individual extraction output format."""
     triple = {
         "subject": {
@@ -73,6 +97,7 @@ def _make_triple(subject_label, class_ids=None, confidence=0.9, predicate_prop_i
 # Individual creation
 # ---------------------------------------------------------------------------
 
+
 class TestIndividualCreation:
     def test_creates_individual_with_draft_status_and_source_run_id(self, svc, repo):
         run = _make_run(triples=[_make_triple("Alice")])
@@ -89,10 +114,19 @@ class TestIndividualCreation:
 
     def test_skips_triples_where_subject_is_not_individual(self, svc, repo):
         """Triples with subject.kind != 'individual' should be ignored."""
-        run = _make_run(triples=[{
-            "subject": {"kind": "class", "id": "cls-x", "label": "SomeClass", "class_ids": [CLASS_ID]},
-            "confidence": 0.9,
-        }])
+        run = _make_run(
+            triples=[
+                {
+                    "subject": {
+                        "kind": "class",
+                        "id": "cls-x",
+                        "label": "SomeClass",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "confidence": 0.9,
+                }
+            ]
+        )
         result = svc.apply(run)
         assert result.individuals_created == 0
 
@@ -107,6 +141,7 @@ class TestIndividualCreation:
 # ---------------------------------------------------------------------------
 # Idempotency
 # ---------------------------------------------------------------------------
+
 
 class TestIdempotency:
     def test_second_apply_skips_existing_individuals(self, svc, repo):
@@ -139,12 +174,15 @@ class TestIdempotency:
 # Confidence threshold
 # ---------------------------------------------------------------------------
 
+
 class TestConfidenceThreshold:
     def test_skips_triples_below_threshold(self, svc, repo):
-        run = _make_run(triples=[
-            _make_triple("Alice", confidence=0.9),
-            _make_triple("Bob", confidence=0.2),
-        ])
+        run = _make_run(
+            triples=[
+                _make_triple("Alice", confidence=0.9),
+                _make_triple("Bob", confidence=0.2),
+            ]
+        )
         result = svc.apply(run, confidence_threshold=0.5)
 
         assert result.individuals_created == 1
@@ -157,16 +195,23 @@ class TestConfidenceThreshold:
 # Relationship creation
 # ---------------------------------------------------------------------------
 
+
 class TestRelationshipCreation:
     def test_creates_relationship_from_triple_predicate(self, svc, repo):
         prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
         repo.save_property_definition(prop)
-        target_cls = Class(id="cls-org", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Org")
+        target_cls = Class(
+            id="cls-org", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Org"
+        )
         repo.save_class(target_cls)
 
-        run = _make_run(triples=[
-            _make_triple("Alice", predicate_prop_id="prop-knows", obj_id="cls-org", obj_kind="class"),
-        ])
+        run = _make_run(
+            triples=[
+                _make_triple(
+                    "Alice", predicate_prop_id="prop-knows", obj_id="cls-org", obj_kind="class"
+                ),
+            ]
+        )
         result = svc.apply(run)
 
         assert result.individuals_created == 1

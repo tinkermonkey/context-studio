@@ -1,63 +1,62 @@
-import React, { useEffect } from 'react'
-import './Toast.css'
-import { Icon, IconName } from './Icon'
+type ToastVariant = "success" | "error" | "warning" | "info";
 
-export type ToastVariant = 'success' | 'error' | 'warning' | 'info'
-
-export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  subtitle?: string
-  variant?: ToastVariant
-  icon?: IconName
-  duration?: number
+interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  variant?: ToastVariant;
+  icon?: IconName;
+  duration?: number;
 }
 
 const variantIcons: Record<ToastVariant, IconName> = {
-  success: 'check',
-  error: 'x',
-  warning: 'alert',
-  info: 'info',
-}
+  success: "check",
+  error: "x",
+  warning: "alert",
+  info: "info",
+};
 
 const variantColors: Record<ToastVariant, string> = {
-  success: 'emerald',
-  error: 'rose',
-  warning: 'amber',
-  info: 'cyan',
-}
+  success: "emerald",
+  error: "rose",
+  warning: "amber",
+  info: "cyan",
+};
 
-export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
-  ({
-    isOpen,
-    onClose,
-    title,
-    subtitle,
-    variant = 'info',
-    icon,
-    duration = 4000,
-    className = '',
-    ...props
-  }, ref) => {
+const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
+  (
+    {
+      isOpen,
+      onClose,
+      title,
+      subtitle,
+      variant = "info",
+      icon,
+      duration = 4000,
+      className = "",
+      ...props
+    },
+    ref,
+  ) => {
     useEffect(() => {
       if (isOpen && duration) {
-        const timer = setTimeout(onClose, duration)
-        return () => clearTimeout(timer)
+        const timer = setTimeout(onClose, duration);
+        return () => clearTimeout(timer);
       }
-    }, [isOpen, duration, onClose])
+    }, [isOpen, duration, onClose]);
 
-    if (!isOpen) return null
+    if (!isOpen) return null;
 
-    const iconName = icon || variantIcons[variant]
-    const color = variantColors[variant]
+    const iconName = icon || variantIcons[variant];
+    const color = variantColors[variant];
 
     return (
       <div
         ref={ref}
-        className={['toast', `toast--${variant}`, className].filter(Boolean).join(' ')}
-        role={variant === 'error' || variant === 'warning' ? 'alert' : 'status'}
-        aria-live={variant === 'error' || variant === 'warning' ? 'assertive' : 'polite'}
+        className={["toast", `toast--${variant}`, className].filter(Boolean).join(" ")}
+        role={variant === "error" || variant === "warning" ? "alert" : "status"}
+        aria-live={variant === "error" || variant === "warning" ? "assertive" : "polite"}
         aria-atomic="true"
         {...props}
       >
@@ -77,10 +76,11 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
           <Icon name="x" size={14} />
         </button>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Toast.displayName = 'Toast'
+Toast.displayName = "Toast";
 
-export default Toast
+// --- Babel-standalone: expose runtime values to window ---
+window.Toast = Toast;

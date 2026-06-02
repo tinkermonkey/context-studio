@@ -46,7 +46,11 @@ export function GraphPage() {
     : null;
 
   const inspectorPanel = (
-    <div role="complementary" aria-label="Inspector panel" className="flex flex-col h-full overflow-hidden">
+    <div
+      role="complementary"
+      aria-label="Inspector panel"
+      className="flex h-full flex-col overflow-hidden"
+    >
       <TabBar
         tabs={[
           { id: "metrics", label: COPY.METRICS_TAB },
@@ -60,11 +64,11 @@ export function GraphPage() {
       {activeTab === "metrics" ? (
         <MetricsPanel />
       ) : activeTab === "path" ? (
-        <div className="p-3.5 overflow-y-auto flex-1 text-[13px]">
+        <div className="flex-1 overflow-y-auto p-3.5 text-[13px]">
           <PathFinder onNodeSelect={setSelectedNodeId} />
         </div>
       ) : activeTab === "sparql" ? (
-        <div className="p-3.5 overflow-y-auto flex-1 text-[13px]">
+        <div className="flex-1 overflow-y-auto p-3.5 text-[13px]">
           <SparqlEditor />
         </div>
       ) : (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,

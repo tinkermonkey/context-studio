@@ -1,22 +1,20 @@
-import React from 'react'
-import './HierarchyTree.css'
-
-export interface HierarchyTreeProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode
+interface HierarchyTreeProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
-export const HierarchyTree = React.forwardRef<HTMLDivElement, HierarchyTreeProps>(
-  ({ className = '', children, ...props }, ref) => {
-    const classNames = ['hierarchy-tree', className].filter(Boolean).join(' ')
+const HierarchyTree = React.forwardRef<HTMLDivElement, HierarchyTreeProps>(
+  ({ className = "", children, ...props }, ref) => {
+    const classNames = ["hierarchy-tree", className].filter(Boolean).join(" ");
 
     return (
       <div ref={ref} className={classNames} {...props}>
         {children}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-HierarchyTree.displayName = 'HierarchyTree'
+HierarchyTree.displayName = "HierarchyTree";
 
-export default HierarchyTree
+// --- Babel-standalone: expose runtime values to window ---
+window.HierarchyTree = HierarchyTree;

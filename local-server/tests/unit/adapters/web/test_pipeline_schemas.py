@@ -5,7 +5,6 @@ Tests verify that type-specific fields survive Pydantic's model_dump() method
 due to the extra="allow" configuration in PipelineRunRequest.
 """
 
-
 from adapters.web.schemas.pipelines import (
     IndividualExtractionRunRequest,
     SchemaConnectionRefinementRunRequest,
@@ -104,37 +103,46 @@ class TestPipelineRunRequestExtraFieldPreservation:
         assert "sources" in dumped
         assert dumped["sources"] == sources
 
-    def test_schema_definition_refinement_nodes_field_survives_model_dump(self) -> None:
-        """Test that nodes field is preserved for SchemaDefinitionRefinementRunRequest."""
-        nodes = [{"id": "def_node1"}]
+    def test_schema_definition_refinement_node_id_field_survives_model_dump(self) -> None:
+        """Test that node_id field is preserved for SchemaDefinitionRefinementRunRequest."""
         request = SchemaDefinitionRefinementRunRequest(
-            nodes=nodes,
-            context=None,
+            node_id="def_node1",
+            current_definition="A definition",
             implementation_id="default",
             configuration_ref="default",
+            groundings=None,
+            extraction_usages=None,
         )
 
         dumped = request.model_dump()
 
-        assert "nodes" in dumped
-        assert dumped["nodes"] == nodes
+        assert "node_id" in dumped
+        assert dumped["node_id"] == "def_node1"
+        assert "current_definition" in dumped
+        assert dumped["current_definition"] == "A definition"
 
-    def test_schema_connection_refinement_edges_field_survives_model_dump(
+    def test_schema_connection_refinement_scope_id_field_survives_model_dump(
         self,
     ) -> None:
-        """Test that edges field is preserved for SchemaConnectionRefinementRunRequest."""
-        edges = [{"source": "n1", "target": "n2"}]
+        """Test that scope_id and current_connections fields are preserved.
+
+        For SchemaConnectionRefinementRunRequest."""
+        connections = [{"source": "n1", "target": "n2"}]
         request = SchemaConnectionRefinementRunRequest(
-            edges=edges,
-            strategy=None,
+            scope_id="scope1",
+            current_connections=connections,
             implementation_id="default",
             configuration_ref="default",
+            groundings=None,
+            extraction_usages=None,
         )
 
         dumped = request.model_dump()
 
-        assert "edges" in dumped
-        assert dumped["edges"] == edges
+        assert "scope_id" in dumped
+        assert dumped["scope_id"] == "scope1"
+        assert "current_connections" in dumped
+        assert dumped["current_connections"] == connections
 
     def test_base_fields_preserved_in_all_request_types(self) -> None:
         """Test that base request fields are preserved for all types."""
@@ -188,4 +196,3 @@ class TestPipelineRunRequestExtraFieldPreservation:
         # Verify values match
         assert dumped["documents"] == documents
         assert dumped["scope"] == scope
-

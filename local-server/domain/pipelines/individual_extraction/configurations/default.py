@@ -30,8 +30,7 @@ def get_default_config() -> dict:
     """
     config = _load_config_from_file("extraction-default.json")
     config["description"] = (
-        "Default individual extraction pipeline with Anthropic Claude Opus "
-        "(Wave A compatible)"
+        "Default individual extraction pipeline with Anthropic Claude Opus " "(Wave A compatible)"
     )
     return config
 

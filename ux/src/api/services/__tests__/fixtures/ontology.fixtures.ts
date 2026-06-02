@@ -14,6 +14,7 @@ export function createTaxonomy(
 ): components["schemas"]["TaxonomyResponse"] {
   return {
     id: "tax-123",
+    identifier: "test_taxonomy",
     title: "Test Taxonomy",
     description: "A test taxonomy for unit testing",
     created_at: new Date().toISOString(),
@@ -54,6 +55,7 @@ export function createConceptScheme(
 ): components["schemas"]["ConceptSchemeResponse"] {
   return {
     id: "scheme-123",
+    identifier: "test_scheme",
     title: "Test Scheme",
     description: "A test concept scheme",
     taxonomy_id: "tax-123",
@@ -95,6 +97,7 @@ export function createClass(
 ): components["schemas"]["ClassResponse"] {
   return {
     id: "class-123",
+    identifier: "test_class",
     title: "Test Class",
     description: "A test class",
     concept_scheme_id: "scheme-123",

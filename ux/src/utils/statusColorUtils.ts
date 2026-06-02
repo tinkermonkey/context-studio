@@ -1,6 +1,5 @@
-import type { components } from "@/api/types";
-
-type ExecutionStatus = components["schemas"]["ExecutionResponse"]["status"];
+// TODO: ExecutionResponse not yet in OpenAPI spec (Phase 2 work)
+type ExecutionStatus = "success" | "error" | "timeout" | string;
 type ChipColor = "emerald" | "rose" | "amber" | "neutral";
 
 export function getStatusColor(status: ExecutionStatus): ChipColor {

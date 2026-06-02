@@ -20,7 +20,6 @@ import re
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
-
 _SLUG_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
 _HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-f]{6}$")
 

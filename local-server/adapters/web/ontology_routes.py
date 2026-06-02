@@ -121,10 +121,9 @@ async def create_taxonomy(
     try:
         taxonomy = await run_sync_in_executor(
             service.create_taxonomy,
-            request.identifier,
             request.title,
             request.description,
-            request.color,
+            None,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
@@ -349,10 +348,9 @@ async def create_concept_scheme(
         scheme = await run_sync_in_executor(
             service.create_scheme,
             taxonomy_id=taxonomy_id,
-            identifier=request.identifier,
             title=request.title,
             description=request.description,
-            color=request.color,
+            color=None,
         )
         return ConceptSchemeResponse.model_validate(scheme)
     except Exception as exc:
@@ -524,10 +522,9 @@ async def create_class(
     try:
         cls = service.create_class(
             concept_scheme_id=scheme_id,
-            identifier=request.identifier,
             title=request.title,
             description=request.description,
-            color=request.color,
+            color=None,
             parent_class_id=request.parent_class_id,
         )
         return ClassResponse.model_validate(cls)

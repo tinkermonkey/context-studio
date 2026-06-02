@@ -49,6 +49,7 @@ def repo(session_factory):
 def sample_taxonomy(repo):
     taxonomy = Taxonomy(
         id="tax-1",
+        identifier="tax_biology",
         title="Biology",
         description="Biological classification",
     )
@@ -60,6 +61,7 @@ def sample_concept_scheme(repo, sample_taxonomy):
     scheme = ConceptScheme(
         id="scheme-1",
         taxonomy_id=sample_taxonomy.id,
+        identifier="scheme_organisms",
         title="Organisms",
         description="Classification of living organisms",
     )
@@ -95,6 +97,7 @@ def large_taxonomy_dataset(repo):
     for i, name in enumerate(names):
         tax = Taxonomy(
             id=f"tax-{i}",
+            identifier=f"tax_{i}",
             title=name,
             description=f"Study of {name.lower()}",
         )
@@ -128,6 +131,7 @@ def large_concept_scheme_dataset(repo, sample_taxonomy):
         scheme = ConceptScheme(
             id=f"scheme-{i}",
             taxonomy_id=sample_taxonomy.id,
+            identifier=f"scheme_{i}",
             title=name,
             description=f"Classification of {name.lower()}",
         )
@@ -167,6 +171,7 @@ def large_class_dataset(repo, sample_concept_scheme, sample_taxonomy):
             id=f"class-{i}",
             concept_scheme_id=sample_concept_scheme.id,
             taxonomy_id=sample_taxonomy.id,
+            identifier=f"cls_{i}",
             title=name,
             description=f"Class of {name.lower()}",
         )

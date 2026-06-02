@@ -2829,428 +2829,6 @@
         }
       }
     },
-    "/api/extraction/extract": {
-      "post": {
-        "tags": [
-          "extraction",
-          "extraction"
-        ],
-        "summary": "Extract Triples",
-        "description": "[DEPRECATED] Extract RDF triples from text, scoped to a specific ontology.\n\n**This endpoint is maintained for backward compatibility with Wave A code.**\n**New code should use POST /api/pipelines/individual_extraction/run instead.**\n\nThis endpoint uses an LLM to extract subject-predicate-object triples\nfrom the input text, linking them to classes and individuals from a\nspecific ontology. Each triple is returned with confidence and provenance\n(character offsets into the source text).\n\nArgs:\n    request: ExtractTripleRequest with text, ontology_id, and extraction options\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractTripleResponse with extracted triples, warnings, and metadata\n\nRaises:\n    HTTPException: 400 if input is invalid, 500 for internal errors",
-        "operationId": "extract_triples_api_extraction_extract_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExtractTripleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExtractTripleResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "deprecated": true
-      }
-    },
-    "/api/pipelines": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "List Pipeline Configurations",
-        "description": "Retrieve all pipeline configurations.\n\nReturns:\n    List of PipelineConfigurationResponse objects",
-        "operationId": "list_pipeline_configurations_api_pipelines_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PipelineConfigurationResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Pipeline Configurations Api Pipelines Get"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Create Pipeline Configuration",
-        "description": "Create a new pipeline configuration.\n\nArgs:\n    request: PipelineConfigurationCreate with configuration details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineConfigurationResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 500 for internal errors",
-        "operationId": "create_pipeline_configuration_api_pipelines_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineConfigurationCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/executions": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "List All Pipeline Executions",
-        "description": "Retrieve execution history across all pipeline configurations.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    status_filter: Optional status filter (\"success\", \"error\", \"timeout\")\n    limit: Maximum number of executions to return (1-500, default 100)\n    offset: Number of executions to skip for pagination (default 0)\n    service: PipelineService from dependency injection\n\nReturns:\n    Paginated list of ExecutionWithPipelineResponse objects with total count",
-        "operationId": "list_all_pipeline_executions_api_pipelines_executions_get",
-        "parameters": [
-          {
-            "name": "status_filter",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "enum": [
-                    "success",
-                    "error",
-                    "timeout"
-                  ],
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Optional status filter (success, error, timeout)",
-              "title": "Status Filter"
-            },
-            "description": "Optional status filter (success, error, timeout)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 500,
-              "minimum": 1,
-              "description": "Maximum number of results",
-              "default": 100,
-              "title": "Limit"
-            },
-            "description": "Maximum number of results"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Number of results to skip",
-              "default": 0,
-              "title": "Offset"
-            },
-            "description": "Number of results to skip"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListResponse_ExecutionWithPipelineResponse_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/{pipeline_id}": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Get Pipeline Configuration",
-        "description": "Retrieve a pipeline configuration by ID.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "get_pipeline_configuration_api_pipelines__pipeline_id__get",
-        "parameters": [
-          {
-            "name": "pipeline_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pipeline Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Update Pipeline Configuration",
-        "description": "Update a pipeline configuration's properties.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineConfigurationUpdate with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
-        "operationId": "update_pipeline_configuration_api_pipelines__pipeline_id__put",
-        "parameters": [
-          {
-            "name": "pipeline_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pipeline Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineConfigurationUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Delete Pipeline Configuration",
-        "description": "Delete a pipeline configuration.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "delete_pipeline_configuration_api_pipelines__pipeline_id__delete",
-        "parameters": [
-          {
-            "name": "pipeline_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pipeline Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/{pipeline_id}/execute": {
-      "post": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Execute Pipeline",
-        "description": "Execute a pipeline configuration with the given input.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineExecuteRequest with input_text\n    service: PipelineService from dependency injection\n\nReturns:\n    ExecutionResponse with output, tokens, duration, and status\n\nRaises:\n    HTTPException: 400 if invalid, 404 if configuration not found",
-        "operationId": "execute_pipeline_api_pipelines__pipeline_id__execute_post",
-        "parameters": [
-          {
-            "name": "pipeline_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pipeline Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PipelineExecuteRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExecutionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/pipelines/{pipeline_id}/executions": {
-      "get": {
-        "tags": [
-          "pipeline"
-        ],
-        "summary": "Get Pipeline Executions",
-        "description": "Retrieve execution history for a pipeline configuration.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    List of ExecutionResponse objects, up to 50 most recent\n\nRaises:\n    HTTPException: 404 if configuration not found",
-        "operationId": "get_pipeline_executions_api_pipelines__pipeline_id__executions_get",
-        "parameters": [
-          {
-            "name": "pipeline_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Pipeline Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExecutionResponse"
-                  },
-                  "title": "Response Get Pipeline Executions Api Pipelines  Pipeline Id  Executions Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/pipelines/types": {
       "get": {
         "tags": [
@@ -3386,7 +2964,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires nodes, optional context\n- schema_node_connection_refinement: requires edges, optional strategy\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires node_id and\n  current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -3768,6 +3346,253 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApplyRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/revert": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Revert Pipeline Run",
+        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run_id in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 500 for revert errors",
+        "operationId": "revert_pipeline_run_api_pipelines_runs__run_id__revert_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevertRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Create Batch",
+        "description": "Create a new batch.\n\nArgs:\n    request: FastAPI request (for service access)\n\nReturns:\n    Batch info with id and status\n\nRaises:\n    HTTPException: 500 for creation errors",
+        "operationId": "create_batch_api_pipelines_batches_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Batch",
+        "description": "Get batch info and aggregate status over child runs.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Batch info including aggregate status\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "get_batch_api_pipelines_batches__batch_id__get",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/runs": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Enqueue Batch Runs",
+        "description": "Enqueue multiple runs in a batch.\n\nArgs:\n    batch_id: Batch ID\n    request_body: Contains 'runs' list with pipeline type and config\n    request: FastAPI request (for service access)\n\nReturns:\n    List of created run IDs\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing batch, 500 for errors",
+        "operationId": "enqueue_batch_runs_api_pipelines_batches__batch_id__runs_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnqueueBatchRunsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnqueueBatchRunsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/cancel": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Cancel Batch Runs",
+        "description": "Cancel all PENDING runs in a batch.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of cancelled runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelBatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/batches/{batch_id}/resume": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Resume Batch Runs",
+        "description": "Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "operationId": "resume_batch_runs_api_pipelines_batches__batch_id__resume_post",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeBatchResponse"
                 }
               }
             }
@@ -6003,6 +5828,12 @@
             "description": "Class entities created",
             "default": 0
           },
+          "classes_updated": {
+            "type": "integer",
+            "title": "Classes Updated",
+            "description": "Class entities updated",
+            "default": 0
+          },
           "classes_skipped": {
             "type": "integer",
             "title": "Classes Skipped",
@@ -6027,6 +5858,18 @@
             "description": "Relationship entities created",
             "default": 0
           },
+          "relationships_removed": {
+            "type": "integer",
+            "title": "Relationships Removed",
+            "description": "Relationship entities removed",
+            "default": 0
+          },
+          "relationships_modified": {
+            "type": "integer",
+            "title": "Relationships Modified",
+            "description": "Relationship entities modified",
+            "default": 0
+          },
           "relationships_skipped": {
             "type": "integer",
             "title": "Relationships Skipped",
@@ -6044,6 +5887,58 @@
             "title": "Individuals Skipped",
             "description": "Individual candidates skipped (already exist)",
             "default": 0
+          },
+          "external_references_created": {
+            "type": "integer",
+            "title": "External References Created",
+            "description": "External references added to classes",
+            "default": 0
+          },
+          "external_references_skipped": {
+            "type": "integer",
+            "title": "External References Skipped",
+            "description": "External references skipped (already exist)",
+            "default": 0
+          },
+          "created_class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Class Ids",
+            "description": "IDs of created classes"
+          },
+          "created_individual_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Individual Ids",
+            "description": "IDs of created individuals"
+          },
+          "created_relationship_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Relationship Ids",
+            "description": "IDs of created relationships"
+          },
+          "created_property_definition_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Property Definition Ids",
+            "description": "IDs of created property definitions"
+          },
+          "created_external_reference_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created External Reference Ids",
+            "description": "URIs of created external references"
           }
         },
         "type": "object",
@@ -6180,6 +6075,79 @@
         "title": "BackgroundTaskSummaryResponse",
         "description": "Response containing summary of background task execution status."
       },
+      "BatchResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Batch UUID"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Status: pending, running, completed, failed, or cancelled"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC timestamp of batch creation"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "UTC timestamp when batch started"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "UTC timestamp when batch completed"
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Updated",
+            "description": "UTC timestamp of last update"
+          },
+          "run_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Run Count",
+            "description": "Total number of runs in batch"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Breakdown of runs by status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "created_at",
+          "last_updated",
+          "run_count",
+          "run_counts"
+        ],
+        "title": "BatchResponse",
+        "description": "Response containing batch information."
+      },
       "Body_import_ontology_api_v1_interchange_import_post": {
         "properties": {
           "format": {
@@ -6218,6 +6186,39 @@
           "file"
         ],
         "title": "Body_import_ontology_api_v1_interchange_import_post"
+      },
+      "CancelBatchResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "cancelled_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cancelled Count",
+            "description": "Number of runs cancelled"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Batch status after operation"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Run counts after operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "cancelled_count",
+          "status",
+          "run_counts"
+        ],
+        "title": "CancelBatchResponse",
+        "description": "Response from batch cancel operation."
       },
       "CandidateResponse": {
         "properties": {
@@ -6434,13 +6435,6 @@
       },
       "ClassCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'cls_organism'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6459,18 +6453,6 @@
             "title": "Description",
             "description": "Optional longer description"
           },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb'"
-          },
           "parent_class_id": {
             "anyOf": [
               {
@@ -6486,7 +6468,6 @@
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "ClassCreateRequest",
@@ -6766,13 +6747,6 @@
       },
       "ConceptSchemeCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'scheme_ecology'). 2-64 chars, lowercase letters/digits/underscores, must start with a letter."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -6790,23 +6764,10 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb'"
           }
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "ConceptSchemeCreateRequest",
@@ -7534,6 +7495,69 @@
         "title": "DemoDatasetLoadResponse",
         "description": "Counts of entities persisted by a demo dataset load."
       },
+      "EnqueueBatchRunsRequest": {
+        "properties": {
+          "runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Runs",
+            "description": "Run specs to enqueue"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key",
+            "description": "Optional idempotency key for replay"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs"
+        ],
+        "title": "EnqueueBatchRunsRequest",
+        "description": "Request to enqueue multiple runs in a batch."
+      },
+      "EnqueueBatchRunsResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Run Ids",
+            "description": "IDs of created runs"
+          },
+          "run_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Run Count",
+            "description": "Total runs now in batch"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "run_ids",
+          "run_count"
+        ],
+        "title": "EnqueueBatchRunsResponse",
+        "description": "Response from batch enqueue operation."
+      },
       "EnrichFromReferencesRequest": {
         "properties": {
           "text": {
@@ -7611,186 +7635,6 @@
         ],
         "title": "EntityVersionResponse",
         "description": "Response representing an entity version"
-      },
-      "ExecutionResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier for this execution"
-          },
-          "pipeline_config_id": {
-            "type": "string",
-            "title": "Pipeline Config Id",
-            "description": "ID of the executed PipelineConfiguration"
-          },
-          "output_text": {
-            "type": "string",
-            "title": "Output Text",
-            "description": "The generated response from the LLM"
-          },
-          "provider": {
-            "type": "string",
-            "title": "Provider",
-            "description": "LLM provider that executed the request"
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Model that generated the response"
-          },
-          "tokens_in": {
-            "type": "integer",
-            "title": "Tokens In",
-            "description": "Number of tokens in the input"
-          },
-          "tokens_out": {
-            "type": "integer",
-            "title": "Tokens Out",
-            "description": "Number of tokens in the output"
-          },
-          "duration_ms": {
-            "type": "integer",
-            "title": "Duration Ms",
-            "description": "Execution duration in milliseconds"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "success",
-              "error",
-              "timeout"
-            ],
-            "title": "Status",
-            "description": "Completion status (success, error, timeout)"
-          },
-          "error_message": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error Message",
-            "description": "Error description if applicable"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp",
-            "description": "ISO 8601 execution timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "pipeline_config_id",
-          "output_text",
-          "provider",
-          "model",
-          "tokens_in",
-          "tokens_out",
-          "duration_ms",
-          "status",
-          "timestamp"
-        ],
-        "title": "ExecutionResponse",
-        "description": "Response containing pipeline execution record data."
-      },
-      "ExecutionWithPipelineResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier for this execution"
-          },
-          "pipeline_config_id": {
-            "type": "string",
-            "title": "Pipeline Config Id",
-            "description": "ID of the executed PipelineConfiguration"
-          },
-          "pipeline_title": {
-            "type": "string",
-            "title": "Pipeline Title",
-            "description": "Title of the pipeline configuration that was executed"
-          },
-          "output_text": {
-            "type": "string",
-            "title": "Output Text",
-            "description": "The generated response from the LLM"
-          },
-          "provider": {
-            "type": "string",
-            "title": "Provider",
-            "description": "LLM provider that executed the request"
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Model that generated the response"
-          },
-          "tokens_in": {
-            "type": "integer",
-            "title": "Tokens In",
-            "description": "Number of tokens in the input"
-          },
-          "tokens_out": {
-            "type": "integer",
-            "title": "Tokens Out",
-            "description": "Number of tokens in the output"
-          },
-          "duration_ms": {
-            "type": "integer",
-            "title": "Duration Ms",
-            "description": "Execution duration in milliseconds"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "success",
-              "error",
-              "timeout"
-            ],
-            "title": "Status",
-            "description": "Completion status (success, error, timeout)"
-          },
-          "error_message": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error Message",
-            "description": "Error description if applicable"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp",
-            "description": "ISO 8601 execution timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "pipeline_config_id",
-          "pipeline_title",
-          "output_text",
-          "provider",
-          "model",
-          "tokens_in",
-          "tokens_out",
-          "duration_ms",
-          "status",
-          "timestamp"
-        ],
-        "title": "ExecutionWithPipelineResponse",
-        "description": "Response containing execution record with associated pipeline configuration name."
       },
       "ExportRequest": {
         "properties": {
@@ -7885,101 +7729,6 @@
         "title": "ExtractRequest",
         "description": "Request to extract entities from text."
       },
-      "ExtractTripleOptions": {
-        "properties": {
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Model identifier for extraction (e.g., 'gpt-4', 'claude-opus')"
-          },
-          "temperature": {
-            "type": "number",
-            "maximum": 2.0,
-            "minimum": 0.0,
-            "title": "Temperature",
-            "description": "Sampling temperature (0.0 = deterministic, up to 2.0)",
-            "default": 0.0
-          },
-          "max_tokens": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 8000.0,
-                "minimum": 100.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Tokens",
-            "description": "Maximum tokens in LLM response"
-          }
-        },
-        "type": "object",
-        "required": [
-          "model"
-        ],
-        "title": "ExtractTripleOptions",
-        "description": "Options for triple extraction."
-      },
-      "ExtractTripleRequest": {
-        "properties": {
-          "text": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Text",
-            "description": "Source text to extract triples from"
-          },
-          "ontology_id": {
-            "type": "string",
-            "title": "Ontology Id",
-            "description": "ID of the ontology scoping extraction to specific classes/individuals"
-          },
-          "options": {
-            "$ref": "#/components/schemas/ExtractTripleOptions",
-            "description": "Extraction options (model, temperature, etc.)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "text",
-          "ontology_id",
-          "options"
-        ],
-        "title": "ExtractTripleRequest",
-        "description": "Request to extract triples from text scoped to an ontology."
-      },
-      "ExtractTripleResponse": {
-        "properties": {
-          "triples": {
-            "items": {
-              "$ref": "#/components/schemas/ExtractedTriple"
-            },
-            "type": "array",
-            "title": "Triples",
-            "description": "List of extracted triples"
-          },
-          "warnings": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Warnings",
-            "description": "Warnings (e.g., confidence out of range, invalid provenance)"
-          },
-          "metadata": {
-            "$ref": "#/components/schemas/ExtractionMetadata",
-            "description": "Metadata about the extraction operation"
-          }
-        },
-        "type": "object",
-        "required": [
-          "triples",
-          "metadata"
-        ],
-        "title": "ExtractTripleResponse",
-        "description": "Response containing extracted triples."
-      },
       "ExtractedEntitySchema": {
         "properties": {
           "id": {
@@ -8063,60 +7812,6 @@
         "title": "ExtractedEntitySchema",
         "description": "Response containing extracted entity data."
       },
-      "ExtractedTriple": {
-        "properties": {
-          "subject": {
-            "$ref": "#/components/schemas/SubjectNode"
-          },
-          "predicate": {
-            "$ref": "#/components/schemas/PredicateNode"
-          },
-          "object": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ObjectNodeIndividual"
-              },
-              {
-                "$ref": "#/components/schemas/ObjectNodeClass"
-              },
-              {
-                "$ref": "#/components/schemas/ObjectNodeLiteral"
-              }
-            ],
-            "title": "Object",
-            "description": "Object node discriminated by 'kind' field",
-            "discriminator": {
-              "propertyName": "kind",
-              "mapping": {
-                "class": "#/components/schemas/ObjectNodeClass",
-                "individual": "#/components/schemas/ObjectNodeIndividual",
-                "literal": "#/components/schemas/ObjectNodeLiteral"
-              }
-            }
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "description": "Confidence score (0.0\u20131.0)"
-          },
-          "provenance": {
-            "$ref": "#/components/schemas/TripleProvenance",
-            "description": "Provenance linking triple to source text"
-          }
-        },
-        "type": "object",
-        "required": [
-          "subject",
-          "predicate",
-          "object",
-          "confidence",
-          "provenance"
-        ],
-        "title": "ExtractedTriple",
-        "description": "A single extracted triple with confidence and provenance."
-      },
       "ExtractionLayerResultSchema": {
         "properties": {
           "layer_number": {
@@ -8167,35 +7862,6 @@
         ],
         "title": "ExtractionLayerResultSchema",
         "description": "Response containing execution metadata for a single extraction layer."
-      },
-      "ExtractionMetadata": {
-        "properties": {
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Model used for extraction"
-          },
-          "tokens_used": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Tokens Used",
-            "description": "Total tokens consumed"
-          },
-          "duration_ms": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Duration Ms",
-            "description": "Extraction duration in milliseconds"
-          }
-        },
-        "type": "object",
-        "required": [
-          "model",
-          "tokens_used",
-          "duration_ms"
-        ],
-        "title": "ExtractionMetadata",
-        "description": "Metadata about a triple extraction operation."
       },
       "ExtractionResultSchema": {
         "properties": {
@@ -9223,41 +8889,6 @@
         ],
         "title": "ListResponse[DataPropertyValueResponse]"
       },
-      "ListResponse_ExecutionWithPipelineResponse_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/ExecutionWithPipelineResponse"
-            },
-            "type": "array",
-            "title": "Items",
-            "description": "List of items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total",
-            "description": "Total number of items"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit",
-            "description": "Limit applied"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset",
-            "description": "Offset applied"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
-        "title": "ListResponse[ExecutionWithPipelineResponse]"
-      },
       "ListResponse_ImportRunResponse_": {
         "properties": {
           "items": {
@@ -9597,109 +9228,6 @@
         "title": "NeighborsResponse",
         "description": "Response containing neighbor nodes."
       },
-      "ObjectNodeClass": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "const": "class",
-            "title": "Kind",
-            "default": "class"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Class ID in the ontology"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "label"
-        ],
-        "title": "ObjectNodeClass",
-        "description": "Object node: class/concept."
-      },
-      "ObjectNodeIndividual": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "const": "individual",
-            "title": "Kind",
-            "default": "individual"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Individual ID in the ontology"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "label"
-        ],
-        "title": "ObjectNodeIndividual",
-        "description": "Object node: individual instance."
-      },
-      "ObjectNodeLiteral": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "const": "literal",
-            "title": "Kind",
-            "default": "literal"
-          },
-          "value": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value",
-            "description": "Literal value (string, number, boolean, or null)"
-          },
-          "datatype": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Datatype",
-            "description": "XSD datatype (e.g., 'xsd:string', 'xsd:integer')"
-          }
-        },
-        "type": "object",
-        "required": [
-          "value"
-        ],
-        "title": "ObjectNodeLiteral",
-        "description": "Object node: literal value."
-      },
       "PathResultResponse": {
         "properties": {
           "source_id": {
@@ -9744,265 +9272,6 @@
         ],
         "title": "PathResultResponse",
         "description": "Response containing a single path between two nodes."
-      },
-      "PipelineConfigurationCreate": {
-        "properties": {
-          "pipeline": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Pipeline",
-            "description": "Pipeline identifier/slug for categorization"
-          },
-          "title": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Title",
-            "description": "Human-readable title for the pipeline"
-          },
-          "provider": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Provider",
-            "description": "LLM provider name (openai, anthropic)"
-          },
-          "model": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Model",
-            "description": "Model identifier (e.g., gpt-4, claude-opus)"
-          },
-          "config": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Config",
-            "description": "Provider-specific configuration"
-          },
-          "system_prompt": {
-            "type": "string",
-            "minLength": 1,
-            "title": "System Prompt",
-            "description": "System prompt to guide model behavior"
-          },
-          "user_prompt": {
-            "type": "string",
-            "minLength": 1,
-            "title": "User Prompt",
-            "description": "User message template with {text} placeholder"
-          },
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled",
-            "description": "Whether this configuration is active",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "pipeline",
-          "title",
-          "provider",
-          "model",
-          "system_prompt",
-          "user_prompt"
-        ],
-        "title": "PipelineConfigurationCreate",
-        "description": "Request to create a new pipeline configuration."
-      },
-      "PipelineConfigurationResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Unique identifier"
-          },
-          "pipeline": {
-            "type": "string",
-            "title": "Pipeline",
-            "description": "Pipeline identifier/slug"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title",
-            "description": "Human-readable title"
-          },
-          "provider": {
-            "type": "string",
-            "title": "Provider",
-            "description": "LLM provider name"
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Model identifier"
-          },
-          "config": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Config",
-            "description": "Provider-specific configuration"
-          },
-          "system_prompt": {
-            "type": "string",
-            "title": "System Prompt",
-            "description": "System prompt"
-          },
-          "user_prompt": {
-            "type": "string",
-            "title": "User Prompt",
-            "description": "User message template"
-          },
-          "version": {
-            "type": "integer",
-            "title": "Version",
-            "description": "Configuration version number"
-          },
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled",
-            "description": "Whether this configuration is active"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At",
-            "description": "ISO 8601 creation timestamp"
-          },
-          "last_updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Last Updated",
-            "description": "ISO 8601 last update timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "pipeline",
-          "title",
-          "provider",
-          "model",
-          "system_prompt",
-          "user_prompt",
-          "version",
-          "enabled",
-          "created_at",
-          "last_updated"
-        ],
-        "title": "PipelineConfigurationResponse",
-        "description": "Response containing pipeline configuration data."
-      },
-      "PipelineConfigurationUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title",
-            "description": "Updated title"
-          },
-          "provider": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Provider",
-            "description": "Updated provider"
-          },
-          "model": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Model",
-            "description": "Updated model"
-          },
-          "config": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Config",
-            "description": "Updated configuration"
-          },
-          "system_prompt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "System Prompt",
-            "description": "Updated system prompt"
-          },
-          "user_prompt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Prompt",
-            "description": "Updated user prompt"
-          },
-          "enabled": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Enabled",
-            "description": "Updated enabled status"
-          }
-        },
-        "type": "object",
-        "title": "PipelineConfigurationUpdate",
-        "description": "Request to update a pipeline configuration."
-      },
-      "PipelineExecuteRequest": {
-        "properties": {
-          "input_text": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Input Text",
-            "description": "Input text to process"
-          }
-        },
-        "type": "object",
-        "required": [
-          "input_text"
-        ],
-        "title": "PipelineExecuteRequest",
-        "description": "Request to execute a pipeline."
       },
       "PipelineRunRequest": {
         "properties": {
@@ -10050,6 +9319,16 @@
             "type": "string",
             "title": "Configuration Ref",
             "description": "Configuration reference"
+          },
+          "configuration_slug": {
+            "type": "string",
+            "title": "Configuration Slug",
+            "description": "Configuration slug"
+          },
+          "configuration_version": {
+            "type": "integer",
+            "title": "Configuration Version",
+            "description": "Configuration version"
           },
           "input_summary": {
             "additionalProperties": true,
@@ -10099,6 +9378,31 @@
             ],
             "title": "Updated At",
             "description": "Last update timestamp (reserved for future use)"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "Timestamp when run transitioned to RUNNING"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason",
+            "description": "Failure reason if status=FAILED"
           }
         },
         "type": "object",
@@ -10108,6 +9412,8 @@
           "pipeline_type",
           "implementation_id",
           "configuration_ref",
+          "configuration_slug",
+          "configuration_version",
           "status"
         ],
         "title": "PipelineRunResponse",
@@ -10147,27 +9453,6 @@
         ],
         "title": "PipelineTypeResponse",
         "description": "Response containing pipeline type metadata."
-      },
-      "PredicateNode": {
-        "properties": {
-          "property_definition_id": {
-            "type": "string",
-            "title": "Property Definition Id",
-            "description": "ID of the property definition"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable property name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "property_definition_id",
-          "label"
-        ],
-        "title": "PredicateNode",
-        "description": "Predicate node of a triple\u2014a property definition."
       },
       "PropertyDefinitionCreateRequest": {
         "properties": {
@@ -10244,6 +9529,14 @@
             ],
             "title": "Is Relevant",
             "description": "Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"
+          },
+          "lexical_senses": {
+            "items": {
+              "$ref": "#/components/schemas/LexicalSenseResponse"
+            },
+            "type": "array",
+            "title": "Lexical Senses",
+            "description": "Word-sense disambiguation entries. A property whose label has more than one distinct meaning across the corpus (e.g. 'service' or 'clock') carries one LexicalSense per sense."
           },
           "created_at": {
             "anyOf": [
@@ -10894,6 +10187,104 @@
         "title": "ResolveConflictsRequest",
         "description": "Request to resolve conflicts in a proposal"
       },
+      "ResumeBatchResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id",
+            "description": "Batch UUID"
+          },
+          "resumed_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Resumed Count",
+            "description": "Number of runs resumed"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Batch status after operation"
+          },
+          "run_counts": {
+            "$ref": "#/components/schemas/RunCountsResponse",
+            "description": "Run counts after operation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "resumed_count",
+          "status",
+          "run_counts"
+        ],
+        "title": "ResumeBatchResponse",
+        "description": "Response from batch resume operation."
+      },
+      "RevertRunResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "ID of the reverted pipeline run"
+          },
+          "events_reverted": {
+            "type": "integer",
+            "title": "Events Reverted",
+            "description": "Number of change events reverted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "events_reverted"
+        ],
+        "title": "RevertRunResponse",
+        "description": "Response from reverting a pipeline run."
+      },
+      "RunCountsResponse": {
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pending",
+            "description": "Number of pending runs"
+          },
+          "running": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Running",
+            "description": "Number of running runs"
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Completed",
+            "description": "Number of completed runs"
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Failed",
+            "description": "Number of failed runs"
+          },
+          "cancelled": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cancelled",
+            "description": "Number of cancelled runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "running",
+          "completed",
+          "failed",
+          "cancelled"
+        ],
+        "title": "RunCountsResponse",
+        "description": "Response containing run counts by status."
+      },
       "SPARQLRequest": {
         "properties": {
           "query": {
@@ -11205,36 +10596,6 @@
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
       },
-      "SubjectNode": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "individual",
-              "class"
-            ],
-            "title": "Kind"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id",
-            "description": "Entity ID in the ontology"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "kind",
-          "id",
-          "label"
-        ],
-        "title": "SubjectNode",
-        "description": "Subject node of a triple\u2014individual or class."
-      },
       "SyncResultResponse": {
         "properties": {
           "pushed": {
@@ -11412,13 +10773,6 @@
       },
       "TaxonomyCreateRequest": {
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 2,
-            "title": "Identifier",
-            "description": "Globally-unique slug identifier (e.g. 'tax_life'). Lowercase letters, digits, and underscores; must start with a letter; 2-64 chars."
-          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -11436,23 +10790,10 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color",
-            "description": "Optional hex color '#rrggbb' for the taxonomy swatch"
           }
         },
         "type": "object",
         "required": [
-          "identifier",
           "title"
         ],
         "title": "TaxonomyCreateRequest",
@@ -11625,35 +10966,6 @@
         ],
         "title": "TripleCountResponse",
         "description": "Response containing RDF triple count."
-      },
-      "TripleProvenance": {
-        "properties": {
-          "text_offset_start": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Text Offset Start",
-            "description": "Character offset where triple evidence begins"
-          },
-          "text_offset_end": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Text Offset End",
-            "description": "Character offset where triple evidence ends"
-          },
-          "raw": {
-            "type": "string",
-            "title": "Raw",
-            "description": "Exact text span supporting this triple"
-          }
-        },
-        "type": "object",
-        "required": [
-          "text_offset_start",
-          "text_offset_end",
-          "raw"
-        ],
-        "title": "TripleProvenance",
-        "description": "Provenance metadata for an extracted triple."
       },
       "TripleResponse": {
         "properties": {

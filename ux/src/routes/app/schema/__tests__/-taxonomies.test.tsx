@@ -81,9 +81,7 @@ describe("Taxonomies Schema Page", () => {
   // ========================================================================
   describe("empty state", () => {
     it("displays empty state copy when no taxonomies exist", async () => {
-      server.use(
-        http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
-      );
+      server.use(http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))));
 
       render(<TaxonomiesPage />);
 
@@ -130,6 +128,7 @@ describe("Taxonomies Schema Page", () => {
       const mockTaxonomies = createListTaxonomies([
         createTaxonomy({
           id: "tax-123",
+          identifier: "tax_123",
           title: "TestTax",
         }),
       ]);
@@ -142,11 +141,11 @@ describe("Taxonomies Schema Page", () => {
         expect(screen.getByText("TestTax")).toBeInTheDocument();
       });
 
-      // The identifier cell renders the (truncated) id in a mono-font span,
+      // The identifier cell renders the identifier in a mono-font span,
       // no longer a <code> element.
-      const monoId = screen.getByText("tax-123");
+      const monoId = screen.getByText("tax_123");
       expect(monoId.tagName.toLowerCase()).toBe("span");
-      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
+      expect(monoId).toHaveClass("taxonomy-id-cell__text");
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {

@@ -119,8 +119,8 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
-      expect(call.commands).toHaveLength(1);
-      expect(call.commands[0].label).toBe("Create Class");
+      expect((call as any).commands).toHaveLength(1);
+      expect((call as any).commands[0].label).toBe("Create Class");
     });
 
     it("filters actions by description", () => {
@@ -137,8 +137,8 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
-      expect(call.commands).toHaveLength(1);
-      expect(call.commands[0].label).toBe("Edit Class");
+      expect((call as any).commands).toHaveLength(1);
+      expect((call as any).commands[0].label).toBe("Edit Class");
     });
 
     it("performs case-insensitive filtering", () => {
@@ -155,8 +155,8 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
-      expect(call.commands).toHaveLength(1);
-      expect(call.commands[0].label).toBe("Create Class");
+      expect((call as any).commands).toHaveLength(1);
+      expect((call as any).commands[0].label).toBe("Create Class");
     });
 
     it("returns all actions when query is empty", () => {
@@ -269,8 +269,8 @@ describe("CommandPalette", () => {
 
       render(<CommandPalette />);
       const call = vi.mocked(heimdallModule.CommandPalette).mock.calls[0][0];
-      expect(call.commands).toHaveLength(1);
-      expect(call.commands[0].label).toBe("Create Class");
+      expect((call as any).commands).toHaveLength(1);
+      expect((call as any).commands[0].label).toBe("Create Class");
     });
   });
 

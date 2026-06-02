@@ -54,9 +54,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 400 for empty text", async () => {
       server.use(
         http.post("*/api/extract", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Text cannot be empty",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -69,9 +72,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 500 from extract", async () => {
       server.use(
         http.post("*/api/extract", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Extraction service error",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -99,9 +105,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 413 for text too long", async () => {
       server.use(
         http.post("*/api/analyze_text", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Text exceeds maximum length",
-            }, { status: 413 }),
+            },
+            { status: 413 },
+          ),
         ),
       );
 
@@ -114,9 +123,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 500 from analyzeText", async () => {
       server.use(
         http.post("*/api/analyze_text", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Analysis failed",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -166,9 +178,7 @@ describe("ExtractionService", () => {
         ],
       });
 
-      server.use(
-        http.post("*/api/enrich_from_references", () => HttpResponse.json(mockResult)),
-      );
+      server.use(http.post("*/api/enrich_from_references", () => HttpResponse.json(mockResult)));
 
       const result = await extractionService.enrichFromReferences(request);
 
@@ -179,9 +189,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 400 for invalid entity names", async () => {
       server.use(
         http.post("*/api/enrich_from_references", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Entity names list cannot be empty",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -199,9 +212,12 @@ describe("ExtractionService", () => {
     it("throws ApiError on 503 when reference service unavailable", async () => {
       server.use(
         http.post("*/api/enrich_from_references", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Reference service temporarily unavailable",
-            }, { status: 503 }),
+            },
+            { status: 503 },
+          ),
         ),
       );
 

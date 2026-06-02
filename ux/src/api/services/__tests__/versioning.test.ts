@@ -48,9 +48,7 @@ describe("VersioningService", () => {
         ],
       });
 
-      server.use(
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockHistory)),
-      );
+      server.use(http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockHistory)));
 
       const result = await versioningService.getChanges();
 
@@ -74,9 +72,7 @@ describe("VersioningService", () => {
         ],
       });
 
-      server.use(
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockHistory)),
-      );
+      server.use(http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockHistory)));
 
       const result = await versioningService.getChanges({ limit: 10 });
 
@@ -86,9 +82,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 500 from getChanges", async () => {
       server.use(
         http.get("*/api/v1/versioning/changes", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Failed to retrieve changes",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -126,9 +125,7 @@ describe("VersioningService", () => {
       });
 
       server.use(
-        http.get("*/api/v1/versioning/changes/entity-123", () =>
-          HttpResponse.json(mockHistory),
-        ),
+        http.get("*/api/v1/versioning/changes/entity-123", () => HttpResponse.json(mockHistory)),
       );
 
       const result = await versioningService.getChangesByEntity("entity-123");
@@ -140,9 +137,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 404 for non-existent entity", async () => {
       server.use(
         http.get("*/api/v1/versioning/changes/not-found", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Entity not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -178,9 +178,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 400 for invalid changeset data", async () => {
       server.use(
         http.post("*/api/v1/versioning/changesets", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Changeset name is required",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -195,9 +198,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 409 for duplicate changeset", async () => {
       server.use(
         http.post("*/api/v1/versioning/changesets", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Changeset with this name already exists",
-            }, { status: 409 }),
+            },
+            { status: 409 },
+          ),
         ),
       );
 
@@ -230,9 +236,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 404 for non-existent changeset", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets/not-found", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Changeset not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -251,9 +260,7 @@ describe("VersioningService", () => {
         is_degraded: false,
       });
 
-      server.use(
-        http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(mockStatus)),
-      );
+      server.use(http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(mockStatus)));
 
       const result = await versioningService.getSyncStatus();
 
@@ -269,9 +276,7 @@ describe("VersioningService", () => {
         is_degraded: false,
       });
 
-      server.use(
-        http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(mockStatus)),
-      );
+      server.use(http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(mockStatus)));
 
       const result = await versioningService.getSyncStatus();
 
@@ -282,9 +287,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 500 from getSyncStatus", async () => {
       server.use(
         http.get("*/api/v1/versioning/sync/status", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Failed to get sync status",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -302,9 +310,7 @@ describe("VersioningService", () => {
         pulled: 0,
       });
 
-      server.use(
-        http.post("*/api/v1/versioning/sync/push", () => HttpResponse.json(mockResult)),
-      );
+      server.use(http.post("*/api/v1/versioning/sync/push", () => HttpResponse.json(mockResult)));
 
       const result = await versioningService.pushSync();
 
@@ -315,9 +321,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 409 for sync conflict", async () => {
       server.use(
         http.post("*/api/v1/versioning/sync/push", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Sync conflict detected",
-            }, { status: 409 }),
+            },
+            { status: 409 },
+          ),
         ),
       );
 
@@ -330,9 +339,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 503 when remote unavailable", async () => {
       server.use(
         http.post("*/api/v1/versioning/sync/push", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Remote service unavailable",
-            }, { status: 503 }),
+            },
+            { status: 503 },
+          ),
         ),
       );
 
@@ -350,9 +362,7 @@ describe("VersioningService", () => {
         pulled: 3,
       });
 
-      server.use(
-        http.post("*/api/v1/versioning/sync/pull", () => HttpResponse.json(mockResult)),
-      );
+      server.use(http.post("*/api/v1/versioning/sync/pull", () => HttpResponse.json(mockResult)));
 
       const result = await versioningService.pullSync();
 
@@ -363,9 +373,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 400 when local changes pending", async () => {
       server.use(
         http.post("*/api/v1/versioning/sync/pull", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Local changes must be pushed before pulling",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 
@@ -384,9 +397,7 @@ describe("VersioningService", () => {
       ];
 
       server.use(
-        http.get("*/api/v1/versioning/changesets", () =>
-          HttpResponse.json(mockChangesets),
-        ),
+        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json(mockChangesets)),
       );
 
       const result = await versioningService.listChangesets();
@@ -398,9 +409,12 @@ describe("VersioningService", () => {
     it("throws ApiError on 500 from listChangesets", async () => {
       server.use(
         http.get("*/api/v1/versioning/changesets", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Internal server error",
-            }, { status: 500 }),
+            },
+            { status: 500 },
+          ),
         ),
       );
 
@@ -429,9 +443,12 @@ describe("VersioningService", () => {
     it("throws ApiError with 404 on applyChangeset with non-existent changeset", async () => {
       server.use(
         http.post("*/api/v1/versioning/changesets/not-found/apply", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Changeset not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -461,9 +478,12 @@ describe("VersioningService", () => {
     it("throws ApiError with 404 on getProposalConflicts with non-existent proposal", async () => {
       server.use(
         http.get("*/api/v1/versioning/proposals/not-found/conflicts", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "Proposal not found",
-            }, { status: 404 }),
+            },
+            { status: 404 },
+          ),
         ),
       );
 
@@ -504,9 +524,12 @@ describe("VersioningService", () => {
 
       server.use(
         http.post("*/api/v1/versioning/proposals/proposal-123/resolve", () =>
-          HttpResponse.json({
+          HttpResponse.json(
+            {
               detail: "All conflicts must be resolved",
-            }, { status: 400 }),
+            },
+            { status: 400 },
+          ),
         ),
       );
 

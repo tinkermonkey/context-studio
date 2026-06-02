@@ -1,4 +1,9 @@
-import { TextInput as Input, Button, Modal, WorkspaceSwitcherDialog } from "@tinkermonkey/heimdall-ui";
+import {
+  TextInput as Input,
+  Button,
+  Modal,
+  WorkspaceSwitcherDialog,
+} from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { useConfig } from "@/api/hooks/admin/useConfig";
 import type { Workspace } from "@tinkermonkey/heimdall-ui";
@@ -80,7 +85,11 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleOpenSubmit} disabled={!openPath.trim() || isLoading}>
+            <Button
+              variant="primary"
+              onClick={handleOpenSubmit}
+              disabled={!openPath.trim() || isLoading}
+            >
               Open
             </Button>
           </div>
@@ -166,7 +175,11 @@ export function WorkspaceSwitcher({ onSelect, isLoading = false }: WorkspaceSwit
             >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleCloneSubmit} disabled={!gitUrl.trim() || isLoading}>
+            <Button
+              variant="primary"
+              onClick={handleCloneSubmit}
+              disabled={!gitUrl.trim() || isLoading}
+            >
               Clone
             </Button>
           </div>

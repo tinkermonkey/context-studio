@@ -108,7 +108,7 @@ export function ExtractionResultPanel({
     );
   };
 
-  const toggleActions = (
+  const _toggleActions = (
     <button
       type="button"
       className="btn btn-icon"

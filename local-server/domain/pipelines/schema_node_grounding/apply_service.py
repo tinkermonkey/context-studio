@@ -43,7 +43,7 @@ class SchemaGroundingApplyService:
             confidence_threshold: Minimum match_confidence to include a grounding
 
         Returns:
-            ApplyResult (relationships_created used as proxy for references_added)
+            ApplyResult with external_references_created and external_references_skipped
 
         Raises:
             ValueError: If node_id is empty or the class does not exist
@@ -63,10 +63,10 @@ class SchemaGroundingApplyService:
             uri = (grounding.get("uri") or "").strip()
             confidence = grounding.get("match_confidence", 0.0)
             if not uri or confidence < confidence_threshold:
-                result.relationships_skipped += 1
+                result.external_references_skipped += 1
                 continue
             if uri in existing_uris:
-                result.relationships_skipped += 1
+                result.external_references_skipped += 1
                 continue
             ref = ExternalReference(
                 source=grounding.get("source", "unknown"),
@@ -75,9 +75,10 @@ class SchemaGroundingApplyService:
             )
             cls.external_references.append(ref)
             existing_uris.add(uri)
-            result.relationships_created += 1
+            result.external_references_created += 1
+            result.created_external_reference_ids.append(uri)
 
-        if result.relationships_created > 0:
+        if result.external_references_created > 0:
             self._repo.save_class(cls)
 
         return result

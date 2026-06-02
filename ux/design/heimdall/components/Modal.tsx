@@ -1,65 +1,69 @@
-import React, { useEffect, useRef, useImperativeHandle } from 'react'
-import { Icon } from './Icon'
-import { useFocusTrap } from '../hooks/useFocusTrap'
-import { useBodyOverflow } from '../hooks/useBodyOverflow'
-import './Modal.css'
+type ModalSize = "sm" | "md" | "lg" | "xl";
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
-
-export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  subtitle?: string
-  children: React.ReactNode
-  footer?: React.ReactNode
-  hintFooter?: string
-  size?: ModalSize
+interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  hintFooter?: string;
+  size?: ModalSize;
 }
 
-export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
-  ({ isOpen, onClose, title, subtitle, children, footer, hintFooter, size = 'md', className = '', ...props }, ref) => {
-    const titleId = React.useId()
-    const backdropRef = useRef<HTMLDivElement>(null)
-    const modalRef = useRef<HTMLDivElement>(null)
+const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
+  (
+    {
+      isOpen,
+      onClose,
+      title,
+      subtitle,
+      children,
+      footer,
+      hintFooter,
+      size = "md",
+      className = "",
+      ...props
+    },
+    ref,
+  ) => {
+    const titleId = React.useId();
+    const backdropRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
-    useImperativeHandle(ref, () => modalRef.current as HTMLDivElement)
+    useImperativeHandle(ref, () => modalRef.current as HTMLDivElement);
 
-    useFocusTrap(modalRef, isOpen)
-    useBodyOverflow(isOpen)
+    useFocusTrap(modalRef, isOpen);
+    useBodyOverflow(isOpen);
 
     useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && isOpen) {
-          onClose()
+        if (e.key === "Escape" && isOpen) {
+          onClose();
         }
-      }
+      };
 
       if (isOpen) {
-        document.addEventListener('keydown', handleEscape)
+        document.addEventListener("keydown", handleEscape);
         return () => {
-          document.removeEventListener('keydown', handleEscape)
-        }
+          document.removeEventListener("keydown", handleEscape);
+        };
       }
-    }, [isOpen, onClose])
+    }, [isOpen, onClose]);
 
     const handleBackdropClick = (e: React.MouseEvent) => {
       if (e.target === backdropRef.current) {
-        onClose()
+        onClose();
       }
-    }
+    };
 
-    if (!isOpen) return null
+    if (!isOpen) return null;
 
     return (
-      <div
-        ref={backdropRef}
-        className="modal-backdrop"
-        onClick={handleBackdropClick}
-      >
+      <div ref={backdropRef} className="modal-backdrop" onClick={handleBackdropClick}>
         <div
           ref={modalRef}
-          className={['modal', `modal--${size}`, className].filter(Boolean).join(' ')}
+          className={["modal", `modal--${size}`, className].filter(Boolean).join(" ")}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? titleId : undefined}
@@ -68,7 +72,9 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {title && (
             <div className="modal__header">
               <div className="modal__header-text">
-                <div id={titleId} className="modal__title">{title}</div>
+                <div id={titleId} className="modal__title">
+                  {title}
+                </div>
                 {subtitle && <div className="modal__subtitle">{subtitle}</div>}
               </div>
               <button
@@ -86,10 +92,11 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           {hintFooter && <div className="modal__foot-hint">{hintFooter}</div>}
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Modal.displayName = 'Modal'
+Modal.displayName = "Modal";
 
-export default Modal
+// --- Babel-standalone: expose runtime values to window ---
+window.Modal = Modal;
