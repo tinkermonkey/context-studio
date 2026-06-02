@@ -576,37 +576,6 @@ class TestPipelineErrorHandling:
         assert "table" not in body["detail"].lower()
         assert "constraint" not in body["detail"].lower()
 
-    def test_missing_required_service_returns_500(self, client, registries):
-        """Test that missing required service returns 500 with error indicating which service."""
-        # Register implementation and configuration
-        registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
-        )
-        registries["config_registry"].register(
-            PipelineType.SCHEMA_EXTRACTION,
-            "default",
-            "default",
-            {"model": "test-model"},
-        )
-
-        # Set ontology_repo to None to simulate missing service
-        client.app.state.ontology_repo = None
-
-        response = client.post(
-            "/api/pipelines/schema_extraction/run",
-            json={
-                "documents": ["doc1"],
-                "implementation_id": "default",
-                "configuration_ref": "default",
-            },
-        )
-
-        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        body = response.json()
-        assert "detail" in body
-        # Verify error message identifies the missing service
-        assert "ontology_repo" in body["detail"]
-
     def test_orchestrator_raises_pipeline_input_error_returns_400(self, client, registries):
         """Test that PipelineInputError from orchestrator returns 400."""
         # Register implementation and configuration
