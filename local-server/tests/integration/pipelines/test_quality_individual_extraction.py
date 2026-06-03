@@ -106,8 +106,8 @@ def compute_per_category_metrics(
 
     Returns dict mapping (subject, predicate) tuple to PrecisionRecallF1.
     """
-    expected_by_category = {}
-    actual_by_category = {}
+    expected_by_category: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
+    actual_by_category: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
 
     for triple in expected_triples:
         subject = triple.get("subject", {}).get("label", "unknown")
@@ -330,6 +330,7 @@ class TestQualityIndividualExtraction:
 
         # Determine whether to use cassette (recording mode) or real LLM
         use_cassette = cassette_path.exists()
+        llm_provider: CassetteLLMProvider | RecordingLLMProvider
         if use_cassette:
             llm_provider = CassetteLLMProvider(cassette_path)
         else:
@@ -355,7 +356,7 @@ class TestQualityIndividualExtraction:
         result_state = await orchestrator.execute(state)
 
         # Extract triples from result
-        actual_triples = result_state.result.get("triples", [])
+        actual_triples = (result_state.result or {}).get("triples", [])
         expected_triples = expected_output.get("result", {}).get("triples", [])
 
         # Compute quality metrics
@@ -483,10 +484,14 @@ class TestQualityIndividualExtraction:
         ]
 
         # Assert idempotence: same entities created (excluding IDs)
-        assert len(individuals_after_apply1) == len(
-            individuals_after_apply2
-        ), f"Individual count mismatch: {len(individuals_after_apply1)} != {len(individuals_after_apply2)}"
+        count1_indiv = len(individuals_after_apply1)
+        count2_indiv = len(individuals_after_apply2)
+        assert count1_indiv == count2_indiv, (
+            f"Individual count mismatch: {count1_indiv} != {count2_indiv}"
+        )
 
-        assert len(relationships_after_apply1) == len(
-            relationships_after_apply2
-        ), f"Relationship count mismatch: {len(relationships_after_apply1)} != {len(relationships_after_apply2)}"
+        count1_rel = len(relationships_after_apply1)
+        count2_rel = len(relationships_after_apply2)
+        assert count1_rel == count2_rel, (
+            f"Relationship count mismatch: {count1_rel} != {count2_rel}"
+        )

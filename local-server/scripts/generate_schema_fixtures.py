@@ -24,7 +24,17 @@ Fixture tests extraction of async programming schema including concepts, types, 
 - Expected properties: manages, awaits, enables, handles
 - Connection relationships: Task-EventLoop, Future-Task, Coroutine-EventLoop
 """,
-        "text": "Asynchronous programming allows a program to perform tasks without blocking execution. The async/await syntax in Python provides a clean way to write coroutines. An event loop manages the execution of tasks and futures. When a coroutine awaits another coroutine, control returns to the event loop. Multiple tasks can be gathered together using asyncio.gather. Callbacks are registered with tasks to handle completion. A future represents a value that may not be available yet but will be eventually. To prepare for dessert after dinner, ensure the kitchen is clean and ready. Event loops do NOT run tasks in parallel threads. The event loop continuously polls tasks for readiness.",
+        "text": "Asynchronous programming allows a program to perform tasks without" +
+                 "blocking execution. The async/await syntax in Python provides a" +
+                 "clean way to write coroutines. An event loop manages the execution" +
+                 "of tasks and futures. When a coroutine awaits another coroutine," +
+                 "control returns to the event loop. Multiple tasks can be gathered" +
+                 "together using asyncio.gather. Callbacks are registered with tasks" +
+                 "to handle completion. A future represents a value that may not be" +
+                 "available yet but will be eventually. To prepare for dessert after" +
+                 "dinner, ensure the kitchen is clean and ready. Event loops do NOT" +
+                 "run tasks in parallel threads. The event loop continuously polls" +
+                 "tasks for readiness.",
         "expected_classes": ["Coroutine", "EventLoop", "Task", "Future", "Callback", "Gather"],
         "expected_properties": ["manages", "awaits", "enables", "handles", "polls", "awaits"],
         "expected_connections": [
@@ -49,9 +59,19 @@ Fixture tests extraction of code design schema.
 - Expected properties: defines, implements, extends, encapsulates
 - Connection relationships capture design hierarchies
 """,
-        "text": "Clean code is readable and maintainable code. Functions should be small and focused on a single responsibility. Classes should follow the Single Responsibility Principle. Meaningful names are crucial for code comprehension. Comments should explain why, not what. Methods implement class behavior. Variables store state. Meaningful names do NOT consist of random characters or abbreviations.",
-        "expected_classes": ["Function", "Class", "Comment", "Variable", "Method", "Responsibility"],
-        "expected_properties": ["defines", "implements", "extends", "encapsulates", "documents"],
+        "text": "Clean code is readable and maintainable code. Functions should be" +
+                 "small and focused on a single responsibility. Classes should follow" +
+                 "the Single Responsibility Principle. Meaningful names are crucial" +
+                 "for code comprehension. Comments should explain why, not what." +
+                 "Methods implement class behavior. Variables store state. Meaningful" +
+                 "names do NOT consist of random characters or abbreviations.",
+        "expected_classes": [
+            "Function", "Class", "Comment", "Variable", "Method",
+            "Responsibility"
+        ],
+        "expected_properties": [
+            "defines", "implements", "extends", "encapsulates", "documents"
+        ],
         "expected_connections": [
             ("Class", "contains", "Method"),
             ("Function", "defines", "Behavior"),
@@ -72,8 +92,18 @@ Fixture tests extraction of design pattern taxonomy and relationships.
 - Key classes: Pattern, CreationalPattern, StructuralPattern, BehavioralPattern
 - Expected properties: categorizes, solves, implements
 """,
-        "text": "Design patterns are reusable solutions to common software design problems. The Factory pattern abstracts object creation. The Observer pattern enables loose coupling between objects. The Strategy pattern allows behavior to vary at runtime. The Singleton pattern restricts instantiation to a single instance. Creational patterns deal with object creation. Structural patterns deal with object composition. Behavioral patterns focus on communication between objects.",
-        "expected_classes": ["DesignPattern", "CreationalPattern", "StructuralPattern", "BehavioralPattern", "Factory", "Observer", "Strategy"],
+        "text": "Design patterns are reusable solutions to common software design" +
+                 "problems. The Factory pattern abstracts object creation. The" +
+                 "Observer pattern enables loose coupling between objects. The" +
+                 "Strategy pattern allows behavior to vary at runtime. The Singleton" +
+                 "pattern restricts instantiation to a single instance. Creational" +
+                 "patterns deal with object creation. Structural patterns deal with" +
+                 "object composition. Behavioral patterns focus on communication" +
+                 "between objects.",
+        "expected_classes": [
+            "DesignPattern", "CreationalPattern", "StructuralPattern",
+            "BehavioralPattern", "Factory", "Observer", "Strategy"
+        ],
         "expected_properties": ["categorizes", "solves", "abstracts", "enables"],
         "expected_connections": [
             ("Factory", "is_a", "CreationalPattern"),
@@ -95,8 +125,17 @@ Fixture tests extraction of distributed systems concepts and trade-offs.
 - Key classes: ConsensusAlgorithm, ReplicationStrategy, ConsistencyModel, Availability
 - Expected properties: ensures, improves, constrains
 """,
-        "text": "Distributed systems must handle challenges of network latency, failures, and asynchrony. Consensus algorithms like Raft ensure agreement on state. Replication improves availability and fault tolerance. Partitioning distributes data across nodes. Consistency models trade off between safety and performance. Strong consistency guarantees immediate visibility of updates. Eventual consistency allows temporary divergence.",
-        "expected_classes": ["ConsensusAlgorithm", "Replication", "ConsistencyModel", "StrongConsistency", "EventualConsistency", "Partition"],
+        "text": "Distributed systems must handle challenges of network latency," +
+                 "failures, and asynchrony. Consensus algorithms like Raft ensure" +
+                 "agreement on state. Replication improves availability and fault" +
+                 "tolerance. Partitioning distributes data across nodes. Consistency" +
+                 "models trade off between safety and performance. Strong consistency" +
+                 "guarantees immediate visibility of updates. Eventual consistency" +
+                 "allows temporary divergence.",
+        "expected_classes": [
+            "ConsensusAlgorithm", "Replication", "ConsistencyModel",
+            "StrongConsistency", "EventualConsistency", "Partition"
+        ],
         "expected_properties": ["ensures", "improves", "allows", "guarantees"],
         "expected_connections": [
             ("StrongConsistency", "is_a", "ConsistencyModel"),
@@ -118,8 +157,16 @@ Fixture tests extraction of DDD building blocks and relationships.
 - Key classes: BoundedContext, Entity, ValueObject, Aggregate, Repository
 - Expected properties: defines, contains, protects
 """,
-        "text": "Domain-Driven Design focuses on modeling the business domain. Bounded contexts define clear boundaries around models. Entities have identity and lifecycle. Value objects are immutable and defined by their attributes. Aggregates group related entities with a root entity. Repositories abstract persistence concerns. Ubiquitous language ensures consistent terminology.",
-        "expected_classes": ["BoundedContext", "Entity", "ValueObject", "Aggregate", "Repository", "UbiquitousLanguage"],
+        "text": "Domain-Driven Design focuses on modeling the business domain. Bounded" +
+                 "contexts define clear boundaries around models. Entities have" +
+                 "identity and lifecycle. Value objects are immutable and defined by" +
+                 "their attributes. Aggregates group related entities with a root" +
+                 "entity. Repositories abstract persistence concerns. Ubiquitous" +
+                 "language ensures consistent terminology.",
+        "expected_classes": [
+            "BoundedContext", "Entity", "ValueObject", "Aggregate",
+            "Repository", "UbiquitousLanguage"
+        ],
         "expected_properties": ["defines", "contains", "protects", "abstracts", "groups"],
         "expected_connections": [
             ("Aggregate", "contains", "Entity"),
@@ -141,8 +188,17 @@ Fixture tests extraction of microservices architecture patterns.
 - Key classes: Microservice, APIGateway, EventBus, ServiceMesh, CircuitBreaker
 - Expected properties: routes, facilitates, manages, prevents
 """,
-        "text": "Microservices architecture decomposes systems into independently deployable services. Each service owns its data and exposes APIs. An API gateway routes requests to appropriate services. Services communicate synchronously via REST or gRPC, or asynchronously via events. An event bus facilitates loose coupling. Service mesh manages inter-service communication. Circuit breakers prevent cascading failures.",
-        "expected_classes": ["Microservice", "APIGateway", "EventBus", "ServiceMesh", "CircuitBreaker", "RESTInterface"],
+        "text": "Microservices architecture decomposes systems into independently" +
+                 "deployable services. Each service owns its data and exposes APIs. An" +
+                 "API gateway routes requests to appropriate services. Services" +
+                 "communicate synchronously via REST or gRPC, or asynchronously via" +
+                 "events. An event bus facilitates loose coupling. Service mesh" +
+                 "manages inter-service communication. Circuit breakers prevent" +
+                 "cascading failures.",
+        "expected_classes": [
+            "Microservice", "APIGateway", "EventBus", "ServiceMesh",
+            "CircuitBreaker", "RESTInterface"
+        ],
         "expected_properties": ["routes", "facilitates", "manages", "prevents", "owns"],
         "expected_connections": [
             ("APIGateway", "routes_to", "Microservice"),
@@ -164,8 +220,17 @@ Fixture tests extraction of OOP principles and relationships.
 - Key classes: Inheritance, Composition, Encapsulation, Polymorphism, Interface
 - Expected properties: models, enables, hides, allows
 """,
-        "text": "Object-oriented design uses inheritance to model hierarchies. Composition favors flexible design over rigid inheritance. Encapsulation hides internal implementation details. Polymorphism allows objects to be treated uniformly despite different types. Interfaces define contracts without specifying implementation. The Liskov Substitution Principle ensures derived classes can substitute base classes.",
-        "expected_classes": ["Inheritance", "Composition", "Encapsulation", "Polymorphism", "Interface", "LiskovSubstitution"],
+        "text": "Object-oriented design uses inheritance to model hierarchies." +
+                 "Composition favors flexible design over rigid inheritance." +
+                 "Encapsulation hides internal implementation details. Polymorphism" +
+                 "allows objects to be treated uniformly despite different types." +
+                 "Interfaces define contracts without specifying implementation. The" +
+                 "Liskov Substitution Principle ensures derived classes can substitute" +
+                 "base classes.",
+        "expected_classes": [
+            "Inheritance", "Composition", "Encapsulation", "Polymorphism",
+            "Interface", "LiskovSubstitution"
+        ],
         "expected_properties": ["models", "enables", "hides", "allows", "defines"],
         "expected_connections": [
             ("Inheritance", "models", "Hierarchy"),
@@ -187,8 +252,16 @@ Fixture tests extraction of reactive programming concepts.
 - Key classes: Observable, Stream, Operator, Subscription, Backpressure
 - Expected properties: emits, transforms, controls
 """,
-        "text": "Reactive programming uses data streams and propagation of changes. Observables represent data sources that emit values over time. Streams are sequences of asynchronous events. Operators transform streams: map, filter, flatMap, etc. Subscriptions connect observers to observables. Backpressure allows consumers to control the rate of emission.",
-        "expected_classes": ["Observable", "Stream", "Operator", "Subscription", "Backpressure", "Observer"],
+        "text": "Reactive programming uses data streams and propagation of changes." +
+                 "Observables represent data sources that emit values over time." +
+                 "Streams are sequences of asynchronous events. Operators transform" +
+                 "streams: map, filter, flatMap, etc. Subscriptions connect observers" +
+                 "to observables. Backpressure allows consumers to control the rate of" +
+                 "emission.",
+        "expected_classes": [
+            "Observable", "Stream", "Operator", "Subscription",
+            "Backpressure", "Observer"
+        ],
         "expected_properties": ["emits", "transforms", "connects", "controls", "propagates"],
         "expected_connections": [
             ("Observable", "emits", "Stream"),
@@ -210,8 +283,16 @@ Fixture tests extraction of SOA concepts and relationships.
 - Key classes: Service, Contract, Composition, Orchestration, Governance
 - Expected properties: exposes, orchestrates, manages
 """,
-        "text": "Service-Oriented Architecture structures systems as collections of services. Services expose contracts that define functionality and interfaces. Composition orchestrates multiple services to fulfill business processes. Orchestration uses workflows to coordinate services. Governance manages service versioning and quality. Services are loosely coupled and independently deployable.",
-        "expected_classes": ["Service", "Contract", "Composition", "Orchestration", "Governance", "ServiceRegistry"],
+        "text": "Service-Oriented Architecture structures systems as collections of" +
+                 "services. Services expose contracts that define functionality and" +
+                 "interfaces. Composition orchestrates multiple services to fulfill" +
+                 "business processes. Orchestration uses workflows to coordinate" +
+                 "services. Governance manages service versioning and quality." +
+                 "Services are loosely coupled and independently deployable.",
+        "expected_classes": [
+            "Service", "Contract", "Composition", "Orchestration",
+            "Governance", "ServiceRegistry"
+        ],
         "expected_properties": ["exposes", "orchestrates", "manages", "coordinates"],
         "expected_connections": [
             ("Service", "exposes", "Contract"),
@@ -233,8 +314,17 @@ Fixture tests extraction of testing concepts and taxonomy.
 - Key classes: UnitTest, IntegrationTest, E2ETest, Mock, Stub
 - Expected properties: verifies, validates, simulates
 """,
-        "text": "Testing ensures software correctness and quality. Unit tests verify individual components in isolation. Integration tests verify components work together. End-to-end tests validate full user workflows. Mocks simulate dependencies for unit testing. Stubs provide canned responses. Test-driven development writes tests before implementation. Code coverage measures how much code is tested.",
-        "expected_classes": ["UnitTest", "IntegrationTest", "E2ETest", "Mock", "Stub", "CodeCoverage"],
+        "text": "Testing ensures software correctness and quality. Unit tests verify" +
+                 "individual components in isolation. Integration tests verify" +
+                 "components work together. End-to-end tests validate full user" +
+                 "workflows. Mocks simulate dependencies for unit testing. Stubs" +
+                 "provide canned responses. Test-driven development writes tests" +
+                 "before implementation. Code coverage measures how much code is" +
+                 "tested.",
+        "expected_classes": [
+            "UnitTest", "IntegrationTest", "E2ETest", "Mock", "Stub",
+            "CodeCoverage"
+        ],
         "expected_properties": ["verifies", "validates", "simulates", "provides", "measures"],
         "expected_connections": [
             ("UnitTest", "verifies", "Component"),
@@ -267,8 +357,14 @@ def create_schema_extraction_fixtures():
         input_path.write_text(json.dumps(input_data, indent=2))
 
         # Write expected.json
-        classes = [{"label": c, "confidence": 0.85} for c in scenario_data["expected_classes"]]
-        properties = [{"label": p, "confidence": 0.80} for p in scenario_data["expected_properties"]]
+        classes = [
+            {"label": c, "confidence": 0.85}
+            for c in scenario_data["expected_classes"]
+        ]
+        properties = [
+            {"label": p, "confidence": 0.80}
+            for p in scenario_data["expected_properties"]
+        ]
         connections = [
             {
                 "subject_class": subj,

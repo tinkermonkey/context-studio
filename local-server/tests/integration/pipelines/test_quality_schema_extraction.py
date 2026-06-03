@@ -343,6 +343,7 @@ class TestQualitySchemaExtraction:
 
         # Determine whether to use cassette (recording mode) or real LLM
         use_cassette = cassette_path.exists()
+        llm_provider: CassetteLLMProvider | RecordingLLMProvider
         if use_cassette:
             llm_provider = CassetteLLMProvider(cassette_path)
         else:
@@ -504,14 +505,20 @@ class TestQualitySchemaExtraction:
         ]
 
         # Assert idempotence: same entities created (excluding IDs)
-        assert len(classes_after_apply1) == len(
-            classes_after_apply2
-        ), f"Class count mismatch: {len(classes_after_apply1)} != {len(classes_after_apply2)}"
+        count1_class = len(classes_after_apply1)
+        count2_class = len(classes_after_apply2)
+        assert count1_class == count2_class, (
+            f"Class count mismatch: {count1_class} != {count2_class}"
+        )
 
-        assert len(properties_after_apply1) == len(
-            properties_after_apply2
-        ), f"Property count mismatch: {len(properties_after_apply1)} != {len(properties_after_apply2)}"
+        count1_prop = len(properties_after_apply1)
+        count2_prop = len(properties_after_apply2)
+        assert count1_prop == count2_prop, (
+            f"Property count mismatch: {count1_prop} != {count2_prop}"
+        )
 
-        assert len(relationships_after_apply1) == len(
-            relationships_after_apply2
-        ), f"Relationship count mismatch: {len(relationships_after_apply1)} != {len(relationships_after_apply2)}"
+        count1_rel = len(relationships_after_apply1)
+        count2_rel = len(relationships_after_apply2)
+        assert count1_rel == count2_rel, (
+            f"Relationship count mismatch: {count1_rel} != {count2_rel}"
+        )
