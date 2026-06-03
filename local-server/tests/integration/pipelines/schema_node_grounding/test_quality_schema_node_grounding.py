@@ -89,7 +89,6 @@ class TestQualitySchemaNodeGrounding:
         except Exception as e:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
-
     @pytest.mark.asyncio
     async def test_apply_roundtrip_idempotent(self):
         """Test apply round-trip: run → apply → revert → re-apply → verify idempotent state."""
@@ -215,8 +214,12 @@ class TestQualitySchemaNodeGrounding:
                 # Verify candidates have required fields
                 for candidate in candidates:
                     assert hasattr(candidate, "uri"), f"Candidate missing uri for {node_label}"
-                    assert hasattr(candidate, "source"), f"Candidate missing source for {node_label}"
-                    assert hasattr(candidate, "confidence"), f"Candidate missing confidence for {node_label}"
+                    assert hasattr(
+                        candidate, "source"
+                    ), f"Candidate missing source for {node_label}"
+                    assert hasattr(
+                        candidate, "confidence"
+                    ), f"Candidate missing confidence for {node_label}"
 
             except (ConnectionError, TimeoutError, OSError) as e:
                 # Skip this scenario if source query fails (network may be unavailable)

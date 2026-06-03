@@ -633,9 +633,12 @@ class TestQualityE2EChain:
 
         # Individual extraction
         register_individual_extraction(impl_registry, config_registry)
+        extraction_impl = impl_registry.get_implementation(PipelineType.INDIVIDUAL_EXTRACTION)
+        if not extraction_impl:
+            pytest.skip("Individual extraction implementation not registered")
         ie_orchestrator = IndividualExtractionOrchestrator(
             llm_provider=llm_provider,
-            extraction_service=None,
+            extraction_service=extraction_impl,
         )
 
         ie_state = IndividualExtractionState(
@@ -740,7 +743,9 @@ class TestQualityE2EChain:
                 "input": fixture_input,
                 "expected": expected_output,
                 "actual": {
-                    "classes": [{"label": c.title, "description": c.description} for c in final_classes],
+                    "classes": [
+                        {"label": c.title, "description": c.description} for c in final_classes
+                    ],
                     "properties": [{"label": p.label} for p in final_properties],
                     "relationships": len(final_relationships),
                 },
