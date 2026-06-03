@@ -40,6 +40,7 @@ from tests.integration.pipelines._harness import (
     MetricsEmitter,
     ranking_metrics,
 )
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 _test_file = os.path.abspath(__file__)
@@ -130,14 +131,15 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.fixture
     def mock_grounding_adapter(self):
-        """Create a mock grounding adapter that returns expected URIs for testing.
+        """Create a mock grounding adapter that returns expected URIs mixed with distractors.
 
         This fixture provides a controlled environment where the grounding adapter
-        returns the exact URIs from the expected.json files, allowing metrics computation
-        without requiring live HTTP calls or complex cassette management.
+        returns both correct URIs (from expected.json) and incorrect URIs (from distractors.json),
+        enabling meaningful ranking metrics computation. The ranking algorithm must
+        distinguish correct from incorrect candidates.
         """
         async def mock_query_sources(label: str, sources: list[str] | None = None):
-            """Mock query_sources that returns expected URIs based on fixture data."""
+            """Mock query_sources that returns expected URIs + distractors based on fixture data."""
             # Try to find a matching fixture scenario by label
             scenarios = _list_fixture_scenarios()
             matching_scenario = None
@@ -148,32 +150,53 @@ class TestQualitySchemaNodeGrounding:
                     if fixture.get("node_label", "").lower() == label.lower():
                         matching_scenario = scenario
                         break
-                except:
-                    pass
+                except FileNotFoundError:
+                    continue
+                except KeyError:
+                    continue
 
             if not matching_scenario:
                 return []
 
-            # Load expected URIs
+            candidates = []
+
+            # Load and add expected URIs (correct answers)
             try:
                 expected = load_expected_output("schema_node_grounding", matching_scenario)
                 expected_refs = expected.get("expected_external_references", [])
 
-                # Convert to GroundingCandidate objects
-                candidates = []
                 for ref in expected_refs:
                     candidate = GroundingCandidate(
                         uri=ref["uri"],
                         label=ref.get("label", label),
                         description=ref.get("description", ""),
                         source=ref["source"],
-                        source_score=0.9,  # High confidence for test data
+                        source_score=0.9,  # High confidence for correct candidates
                     )
                     candidates.append(candidate)
+            except Exception as e:
+                # Log but continue - fixtures may not have expected URIs
+                pass
 
-                return candidates
-            except:
-                return []
+            # Load and add distractors (incorrect answers) to create ranking challenge
+            try:
+                distractors = load_distractors("schema_node_grounding", matching_scenario)
+                if distractors:
+                    for source, uris in distractors.items():
+                        for uri in uris:
+                            candidate = GroundingCandidate(
+                                uri=uri,
+                                label=uri.split("/")[-1],  # Extract label from URI
+                                description="Distractor candidate",
+                                source=source,
+                                source_score=0.5,  # Lower confidence for distractors
+                            )
+                            candidates.append(candidate)
+            except Exception as e:
+                # Log but continue - fixtures may not have distractors
+                pass
+
+            return candidates
 
         adapter = MagicMock(spec=GroundingAdapter)
         adapter.query_sources = mock_query_sources
@@ -181,17 +204,18 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     async def test_quality_metrics_computation_all_fixtures(
-        self, mock_grounding_adapter, fake_llm_provider, grounding_scorer
+        self, mock_grounding_adapter, grounding_scorer
     ):
         """
         Execute all 30+ fixtures through grounding orchestrator and compute ranking metrics.
 
         This is the primary quality test that:
-        1. Loads each fixture
-        2. Executes through the orchestrator with mock adapter returning expected URIs
-        3. Computes top-1, top-3, MRR metrics
-        4. Aggregates and asserts against floor gates
-        5. Emits JSONL metrics artifacts
+        1. Loads each fixture with both expected URIs and distractors
+        2. Executes through the orchestrator with mock adapter returning mixed candidates
+        3. Computes top-1, top-3, MRR metrics to measure ranking quality
+        4. Uses cassette-recorded LLM responses for deterministic testing
+        5. Aggregates and asserts against floor gates per spec
+        6. Emits JSONL metrics artifacts
         """
         scenarios = _list_fixture_scenarios()
         quality_scenarios = [s for s in scenarios if s != "basic"]
@@ -200,10 +224,17 @@ class TestQualitySchemaNodeGrounding:
             f"Expected ≥30 quality fixtures for grounding, got {len(quality_scenarios)}"
         )
 
+        # Wire cassette-based LLM provider for deterministic testing (FR-H5)
+        cassette_path = Path(__file__).parent / "_cassettes" / "test_quality_schema_node_grounding" / "test_quality_metrics_computation_all_fixtures.json"
+        if not cassette_path.exists():
+            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record cassette.")
+
+        llm_provider = CassetteLLMProvider(cassette_path)
+
         # Create orchestrator with mock adapter
         config = {"top_n": 10}
         orchestrator = SchemaGroundingOrchestrator(
-            llm_provider=fake_llm_provider,
+            llm_provider=llm_provider,
             grounding_adapter=mock_grounding_adapter,
             scorer=grounding_scorer,
             config=config,
@@ -235,7 +266,7 @@ class TestQualitySchemaNodeGrounding:
                     pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
                     input_data=fixture,
                     current_status=PipelineRunStatus.PENDING,
-                    llm_provider=fake_llm_provider,
+                    llm_provider=llm_provider,
                 )
 
                 result_state = await orchestrator.execute(state)
@@ -253,22 +284,30 @@ class TestQualitySchemaNodeGrounding:
                 all_top3_scores.append(metrics.top3_precision)
                 all_mrr_scores.append(metrics.mrr)
 
-                # Emit per-fixture metrics
-                emitter.emit(
-                    pipeline_type="schema_node_grounding",
-                    fixture_id=scenario,
-                    model="test",
-                    config_ref="grounding-default",
-                    config_version=1,
-                    metrics={
-                        "top1_precision": metrics.top1_precision,
-                        "top3_precision": metrics.top3_precision,
-                        "mrr": metrics.mrr,
-                    },
-                    mode="cassette",
-                    source="automated",
-                )
+                # Emit per-fixture metrics (with explicit exception handling)
+                try:
+                    emitter.emit(
+                        pipeline_type="schema_node_grounding",
+                        fixture_id=scenario,
+                        model="test",
+                        config_ref="grounding-default",
+                        config_version=1,
+                        metrics={
+                            "top1_precision": metrics.top1_precision,
+                            "top3_precision": metrics.top3_precision,
+                            "mrr": metrics.mrr,
+                        },
+                        mode="cassette",
+                        source="automated",
+                    )
+                except IOError as emit_err:
+                    # Metrics emission failure should not prevent test completion
+                    print(f"Warning: Failed to emit metrics for {scenario}: {emit_err}")
 
+            except FileNotFoundError as e:
+                failed_scenarios.append((scenario, f"Fixture not found: {e}"))
+            except KeyError as e:
+                failed_scenarios.append((scenario, f"Invalid fixture structure: {e}"))
             except Exception as e:
                 failed_scenarios.append((scenario, str(e)))
                 # Continue with other scenarios instead of failing immediately
@@ -283,29 +322,32 @@ class TestQualitySchemaNodeGrounding:
         avg_top3 = sum(all_top3_scores) / len(all_top3_scores) if all_top3_scores else 0.0
         avg_mrr = sum(all_mrr_scores) / len(all_mrr_scores) if all_mrr_scores else 0.0
 
-        # Define floor gates for grounding pipeline
-        # Adjusted to account for test environment with mock data
+        # Define floor gates per issue specification
+        # top-1 ≥ 0.50, top-3 ≥ 0.70, MRR ≥ 0.60
         floors = {
-            "top1_precision": 0.30,
-            "top3_precision": 0.40,
-            "mrr": 0.30,
+            "top1_precision": 0.50,
+            "top3_precision": 0.70,
+            "mrr": 0.60,
         }
 
-        # Emit aggregate metrics
-        emitter.emit(
-            pipeline_type="schema_node_grounding",
-            fixture_id="aggregate",
-            model="test",
-            config_ref="grounding-default",
-            config_version=1,
-            metrics={
-                "top1_precision": round(avg_top1, 4),
-                "top3_precision": round(avg_top3, 4),
-                "mrr": round(avg_mrr, 4),
-            },
-            mode="cassette",
-            source="automated",
-        )
+        # Emit aggregate metrics with explicit exception handling (symmetric with per-fixture)
+        try:
+            emitter.emit(
+                pipeline_type="schema_node_grounding",
+                fixture_id="aggregate",
+                model="test",
+                config_ref="grounding-default",
+                config_version=1,
+                metrics={
+                    "top1_precision": round(avg_top1, 4),
+                    "top3_precision": round(avg_top3, 4),
+                    "mrr": round(avg_mrr, 4),
+                },
+                mode="cassette",
+                source="automated",
+            )
+        except IOError as emit_err:
+            print(f"Warning: Failed to emit aggregate metrics: {emit_err}")
 
         # Assert metrics meet floor gates
         floor_gate = FloorGate(floors)
