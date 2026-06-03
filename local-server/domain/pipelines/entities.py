@@ -49,7 +49,6 @@ class PipelineType(str, Enum):
     SCHEMA_NODE_GROUNDING = "schema_node_grounding"
     SCHEMA_NODE_DEFINITION_REFINEMENT = "schema_node_definition_refinement"
     SCHEMA_NODE_CONNECTION_REFINEMENT = "schema_node_connection_refinement"
-    E2E_CHAIN = "_e2e_chain"
 
 
 @dataclass(frozen=True)

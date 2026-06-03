@@ -120,7 +120,7 @@ To join automated metrics with human-eval metrics in DuckDB:
 
 ```sql
 -- Load automated and human-eval metrics
-automated AS (
+WITH automated AS (
   SELECT * FROM read_json_auto('_metrics/schema_node_definition_refinement.jsonl')
   WHERE source = 'automated'
 ),
@@ -218,8 +218,8 @@ If no runs are found:
 ### Metadata Fetch Failures
 
 If run metadata cannot be fetched from API:
-1. Use `--skip-metadata` to aggregate without config info (may be less useful)
-2. Manually add config info to ratings before aggregating
+1. Verify the API is running and accessible
+2. Check pipeline runs are completed and have output_summary data
 
 ## API Reference
 

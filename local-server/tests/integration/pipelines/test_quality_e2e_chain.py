@@ -31,7 +31,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
-from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
@@ -82,10 +81,6 @@ from domain.pipelines.schema_node_connection_refinement import (
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
-from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.fakes.fake_llm_provider import FakeLLMProvider
-from tests.fakes.fake_nlp_processor import FakeNLPProcessor
-from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
@@ -168,15 +163,6 @@ def registered_pipelines(session_factory):
     config_registry = PipelineConfigurationRegistry()
     impl_registry = PipelineImplementationRegistry()
 
-    # Load configuration files if available
-    fixtures_dir = Path(__file__).parent.parent / "integration" / "fixtures"
-    wave_a_config_file = fixtures_dir / "wave_a_extraction_configs.json"
-    if wave_a_config_file.exists():
-        with open(wave_a_config_file, "r") as f:
-            configs = json.load(f)
-            for config_name, config_data in configs.items():
-                config_registry.register(config_name, config_data)
-
     # Register all pipeline implementations
     register_schema_extraction(impl_registry, config_registry)
     register_individual_extraction(impl_registry, config_registry)
@@ -195,9 +181,10 @@ def metrics_emitter(tmp_path):
 
 
 @pytest.fixture
-def cassette_dir(tmp_path):
-    """Create a cassette directory for LLM recordings."""
-    return tmp_path / "_e2e_chain_cassettes"
+def cassette_dir():
+    """Cassette directory for LLM recordings (repo-relative)."""
+    cassette_path = Path(__file__).parent.parent.parent / "_e2e_chain"
+    return cassette_path
 
 
 class TestQualityE2EChain:
@@ -291,9 +278,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 2: Apply Schema Extraction =====
         schema_ext_apply = SchemaExtractionApplyService(ontology_repo)
-        schema_ext_apply_result = schema_ext_apply.apply(
-            schema_ext_run, concept_scheme_id, taxonomy_id
-        )
+        schema_ext_apply.apply(schema_ext_run, concept_scheme_id, taxonomy_id)
 
         # ===== STAGE 3: Individual Extraction =====
         llm_provider = CassetteLLMProvider(cassette_paths[1])
@@ -329,9 +314,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 4: Apply Individual Extraction =====
         indiv_ext_apply = IndividualExtractionApplyService(ontology_repo)
-        indiv_ext_apply_result = indiv_ext_apply.apply(
-            indiv_ext_run, concept_scheme_id, taxonomy_id
-        )
+        indiv_ext_apply.apply(indiv_ext_run, concept_scheme_id, taxonomy_id)
 
         # ===== STAGE 5: Schema Node Grounding =====
         llm_provider = CassetteLLMProvider(cassette_paths[2])
@@ -368,7 +351,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 6: Apply Schema Node Grounding =====
         grounding_apply = SchemaGroundingApplyService(ontology_repo)
-        grounding_apply_result = grounding_apply.apply(grounding_run)
+        grounding_apply.apply(grounding_run)
 
         # ===== STAGE 7: Definition Refinement =====
         embedding_service = SentenceTransformerEmbedding(
@@ -405,7 +388,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 8: Apply Definition Refinement =====
         def_refine_apply = SchemaDefinitionRefinementApplyService(ontology_repo)
-        def_refine_apply_result = def_refine_apply.apply(def_refine_run)
+        def_refine_apply.apply(def_refine_run)
 
         # ===== STAGE 9: Connection Refinement =====
         llm_provider = CassetteLLMProvider(cassette_paths[4])
@@ -439,7 +422,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 10: Apply Connection Refinement =====
         conn_refine_apply = SchemaConnectionRefinementApplyService(ontology_repo)
-        conn_refine_apply_result = conn_refine_apply.apply(conn_refine_run)
+        conn_refine_apply.apply(conn_refine_run)
 
         # ===== Compute Quality Metrics =====
         final_classes = ontology_repo.list_classes()
@@ -459,11 +442,21 @@ class TestQualityE2EChain:
         final_property_labels = {p.label for p in final_properties}
         expected_property_labels = {p.get("label", "") for p in expected_properties}
 
-        final_relationship_tuples = {
-            (r.source_id, r.property_id, r.target_id) for r in final_relationships
-        }
+        # Build id→label mappings for relationship matching
+        id_to_class_label = {c.id: c.title for c in final_classes}
+        id_to_property_label = {p.id: p.label for p in final_properties}
+
+        # Match relationships by labels instead of IDs
+        final_relationship_tuples = set()
+        for r in final_relationships:
+            source_label = id_to_class_label.get(r.source_id, "")
+            property_label = id_to_property_label.get(r.property_definition_id, "")
+            target_label = id_to_class_label.get(r.target_id, "")
+            if source_label and property_label and target_label:
+                final_relationship_tuples.add((source_label, property_label, target_label))
+
         expected_relationship_tuples = {
-            (r.get("subject_id", ""), r.get("predicate", ""), r.get("object_id", ""))
+            (r.get("subject_label", ""), r.get("predicate", ""), r.get("object_label", ""))
             for r in expected_relationships
         }
 
@@ -506,9 +499,10 @@ class TestQualityE2EChain:
 
         # Compute external reference top-3 match
         ref_top3_matches = []
-        for class_id, expected_refs in expected_references.items():
+        for class_label, expected_refs in expected_references.items():
+            # Match classes by label, not by fixture ID
             final_class = next(
-                (c for c in final_classes if c.id == class_id), None
+                (c for c in final_classes if c.title == class_label), None
             )
             if final_class and expected_refs:
                 final_refs = [
