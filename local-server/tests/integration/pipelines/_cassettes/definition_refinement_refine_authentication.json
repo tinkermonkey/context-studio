@@ -1,0 +1,9 @@
+{
+  "c40e12f85b7546ec340657d03be17455d222f3b6ed730c4c0a911c975c8afcb8": {
+    "content": "[{\"definition\": \"A security process that verifies the identity of users and systems through credentials such as passwords, tokens, or certificates.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

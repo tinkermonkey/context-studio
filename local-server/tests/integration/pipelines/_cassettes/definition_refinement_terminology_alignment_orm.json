@@ -1,9 +1,9 @@
 {
-  "3a8c5d9e2b1f4a7c9e3d1b5f8a2c4e6d9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b": {
-    "content": "[{\"definition\": \"A refined and clarified description of the architectural pattern.\", \"confidence\": 0.88}]",
-    "tokens_in": 150,
-    "tokens_out": 50,
+  "9965757a0c398a75374a99cce00bebe4d7f351b7739cbf5a9b28eb6350045347": {
+    "content": "[{\"definition\": \"A programming pattern that abstracts database tables and rows as object instances, providing automatic persistence and query generation for domain entities.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
     "model": "claude-opus-4-7",
-    "finish_reason": "end_turn"
+    "finish_reason": "stop"
   }
 }

@@ -1,0 +1,9 @@
+{
+  "aa5b44b9deb1e338fe30bcaebfa273f1b8e661f7e7aefa426ae8ea9ef23c749c": {
+    "content": "[{\"definition\": \"A security mechanism that determines what authenticated users and systems are permitted to access or modify based on defined policies and roles.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

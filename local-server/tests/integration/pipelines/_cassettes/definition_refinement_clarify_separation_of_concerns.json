@@ -1,0 +1,9 @@
+{
+  "665e332a4d778922be933d6f53d7453eb619a621477fe93cf8fcb5bd1fc75c97": {
+    "content": "[{\"definition\": \"A design principle that advocates partitioning a system into distinct, independent subsystems each addressing a specific concern or responsibility.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

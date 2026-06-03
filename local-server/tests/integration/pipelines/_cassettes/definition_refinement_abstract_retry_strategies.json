@@ -1,0 +1,9 @@
+{
+  "6b52cb5c10fbcada22a900663f8b1049f8b906a42d1072095eff26ad8b80dcb5": {
+    "content": "[{\"definition\": \"A resilience pattern that automatically retries failed operations with configurable delays and backoff strategies to handle transient failures gracefully.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

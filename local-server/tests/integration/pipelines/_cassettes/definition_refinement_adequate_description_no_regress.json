@@ -1,0 +1,9 @@
+{
+  "ea70f7cfa40efc1f7d3a6bea9fccec4176ace5b87323d0d47627a34afea689e6": {
+    "content": "[]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "3902f492da73a3af4c01687fbb3aab65d1e9b8280229502c08e4c382db134ea9": {
+    "content": "[{\"definition\": \"A monitoring technique that follows individual requests across distributed system components to understand execution paths and identify performance bottlenecks.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

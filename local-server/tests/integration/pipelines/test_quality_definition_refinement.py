@@ -171,6 +171,7 @@ class TestQualityDefinitionRefinement:
     """Quality test suite for schema_node_definition_refinement pipeline."""
 
     @pytest.mark.asyncio
+    @pytest.mark.external_network
     @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
     async def test_quality_scenario_with_metrics(
         self,
@@ -276,7 +277,7 @@ class TestQualityDefinitionRefinement:
         result_state = await orchestrator.execute(state)
 
         # Extract best candidate and expected description
-        candidates = result_state.result.get("definitions", []) if result_state.result else []
+        candidates = result_state.result.get("candidates", []) if result_state.result else []
         expected_description = expected_output.get("result", {}).get("expected_description", "")
 
         # Compute similarity metrics
@@ -344,6 +345,7 @@ class TestQualityDefinitionRefinement:
             )
 
     @pytest.mark.asyncio
+    @pytest.mark.external_network
     async def test_definition_refinement_apply_roundtrip(
         self,
         ontology_repo,

@@ -1,9 +1,9 @@
 {
-  "3a8c5d9e2b1f4a7c9e3d1b5f8a2c4e6d9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b": {
-    "content": "[{\"operation\": \"add\", \"subject\": \"Target\", \"predicate\": \"related\", \"object\": \"Source\", \"confidence\": 0.85}]",
-    "tokens_in": 150,
-    "tokens_out": 50,
+  "b6eaf34b46943b2033d4fed8488b0b06d3d5e0ad9ad27948b8df576e76c619f2": {
+    "content": "[{\"operation\": \"remove\", \"subject\": \"Modern Architecture\", \"predicate\": \"uses\", \"object\": \"Legacy Pattern\", \"confidence\": 0.8}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
     "model": "claude-opus-4-7",
-    "finish_reason": "end_turn"
+    "finish_reason": "stop"
   }
 }

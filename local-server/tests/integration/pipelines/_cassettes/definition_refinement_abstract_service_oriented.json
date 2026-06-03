@@ -1,0 +1,9 @@
+{
+  "1647c592aba4b8aa775d8cbf5ba7ab13054445bdea9832fba6d471bcdd044e20": {
+    "content": "[{\"definition\": \"An architectural paradigm that organizes applications as a set of interoperable business services with standardized interfaces and contracts.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

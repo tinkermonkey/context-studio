@@ -196,6 +196,7 @@ class TestQualityConnectionRefinement:
     """Quality test suite for schema_node_connection_refinement pipeline."""
 
     @pytest.mark.asyncio
+    @pytest.mark.external_network
     @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
     async def test_quality_scenario_with_metrics(
         self,
@@ -436,6 +437,7 @@ class TestQualityConnectionRefinement:
             ), f"Delta F1 {overall_metrics.f1:.4f} below floor 0.40 for scenario {scenario}"
 
     @pytest.mark.asyncio
+    @pytest.mark.external_network
     async def test_connection_refinement_apply_roundtrip_with_modify(
         self,
         ontology_repo,
@@ -499,14 +501,16 @@ class TestQualityConnectionRefinement:
         )
         ontology_repo.save_class(cls_b)
 
-        # Create property definitions
-        inherits_prop = PropertyDefinition(
-            id=str(uuid4()),
-            identifier="inherits_from",
-            title="Inherits From",
-            description="Inheritance relationship",
-        )
-        ontology_repo.save_property_definition(inherits_prop)
+        # Get or create property definitions
+        inherits_prop = ontology_repo.get_property_definition_by_identifier("inherits_from")
+        if not inherits_prop:
+            inherits_prop = PropertyDefinition(
+                id=str(uuid4()),
+                identifier="inherits_from",
+                title="Inherits From",
+                description="Inheritance relationship",
+            )
+            ontology_repo.save_property_definition(inherits_prop)
 
         # Create initial relationship that will be subject to modify
         initial_rel = Relationship(
@@ -517,7 +521,8 @@ class TestQualityConnectionRefinement:
         )
         ontology_repo.save_relationship(initial_rel)
 
-        # Create mock LLM response with add, remove, and modify operations
+        # Create mock LLM response with add, modify, and remove operations
+        # Order: add (new), modify (existing), remove (existing after modify)
         llm_response = {
             "deltas": [
                 {
@@ -528,18 +533,18 @@ class TestQualityConnectionRefinement:
                     "confidence": 0.9,
                 },
                 {
-                    "operation": "remove",
-                    "subject": "Test Scope",
-                    "predicate": "inherits_from",
-                    "object": "Class A",
-                    "confidence": 0.8,
-                },
-                {
                     "operation": "modify",
                     "subject": "Test Scope",
                     "predicate": "inherits_from",
                     "object": "Class A",
                     "confidence": 0.7,
+                },
+                {
+                    "operation": "remove",
+                    "subject": "Test Scope",
+                    "predicate": "inherits_from",
+                    "object": "Class A",
+                    "confidence": 0.8,
                 },
             ]
         }
