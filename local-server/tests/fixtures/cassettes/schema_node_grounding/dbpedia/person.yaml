@@ -1,7 +1,7 @@
 interactions:
   - request:
       method: GET
-      uri: "http://lookup.dbpedia.org/api/search?query=Person"
+      uri: "https://lookup.dbpedia.org/api/search?query=Person&format=json&maxResults=10"
       headers:
         User-Agent: ["httpx"]
     response:

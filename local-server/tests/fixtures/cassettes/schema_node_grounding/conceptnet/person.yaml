@@ -1,7 +1,7 @@
 interactions:
   - request:
       method: GET
-      uri: "http://api.conceptnet.io/c/en/person"
+      uri: "https://api.conceptnet.io/query?text=Person&limit=10"
       headers:
         User-Agent: ["httpx"]
     response:
@@ -12,24 +12,24 @@ interactions:
         {
           "edges": [
             {
-              "start": {"label": "person"},
-              "end": {"label": "person"},
-              "uri": "http://conceptnet.io/c/en/person",
-              "weight": 5.0,
-              "sources": []
-            },
-            {
-              "start": {"label": "person"},
-              "end": {"label": "human"},
+              "start": {"@id": "/c/en/person", "label": "person"},
+              "end": {"@id": "/c/en/human", "label": "human"},
               "uri": "http://conceptnet.io/c/en/human",
               "weight": 3.0,
               "sources": []
             },
             {
-              "start": {"label": "person"},
-              "end": {"label": "individual"},
+              "start": {"@id": "/c/en/person", "label": "person"},
+              "end": {"@id": "/c/en/individual", "label": "individual"},
               "uri": "http://conceptnet.io/c/en/individual",
               "weight": 2.0,
+              "sources": []
+            },
+            {
+              "start": {"@id": "/c/en/person", "label": "person"},
+              "end": {"@id": "/c/en/agent", "label": "agent"},
+              "uri": "http://conceptnet.io/c/en/agent",
+              "weight": 1.5,
               "sources": []
             }
           ]

@@ -1,7 +1,7 @@
 interactions:
   - request:
       method: GET
-      uri: "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Person&format=json"
+      uri: "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Person&language=en&limit=10&format=json"
       headers:
         User-Agent: ["httpx"]
     response:

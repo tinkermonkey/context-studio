@@ -1,0 +1,50 @@
+interactions:
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://lookup.dbpedia.org/api/search?query=Color&format=json&maxResults=10
+    response:
+      body:
+        string: '{"results": [{"uri": "http://dbpedia.org/resource/Color", "label": "Color", "description": "", "score": 0.99}]}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://api.conceptnet.io/query?text=Color&limit=10
+    response:
+      body:
+        string: '{"edges": [{"start": {"@id": "/c/en/color", "label": "color"}, "end": {"@id": "/c/en/color", "label": "color"}, "uri": "http://conceptnet.io/c/en/color", "weight": 5.0, "sources": []}]}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Color&language=en&limit=10&format=json
+    response:
+      body:
+        string: '{"search": [{"id": "Q1", "label": "Color", "description": "", "match": {"type": "label", "language": "en", "text": "Color"}}], "success": 1}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+version: 1

@@ -1,0 +1,50 @@
+interactions:
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://lookup.dbpedia.org/api/search?query=Atom&format=json&maxResults=10
+    response:
+      body:
+        string: '{"results": [{"uri": "http://dbpedia.org/resource/Atom", "label": "Atom", "description": "", "score": 0.99}]}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://api.conceptnet.io/query?text=Atom&limit=10
+    response:
+      body:
+        string: '{"edges": [{"start": {"@id": "/c/en/atom", "label": "atom"}, "end": {"@id": "/c/en/atom", "label": "atom"}, "uri": "http://conceptnet.io/c/en/atom", "weight": 5.0, "sources": []}]}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+  - request:
+      body: null
+      headers:
+        User-Agent:
+          - httpx
+      method: GET
+      uri: https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Atom&language=en&limit=10&format=json
+    response:
+      body:
+        string: '{"search": [{"id": "Q1", "label": "Atom", "description": "", "match": {"type": "label", "language": "en", "text": "Atom"}}], "success": 1}'
+      headers:
+        content-type:
+          - application/json
+      status:
+        code: 200
+        message: OK
+version: 1
