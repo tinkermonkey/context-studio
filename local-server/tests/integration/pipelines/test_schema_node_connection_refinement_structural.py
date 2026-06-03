@@ -123,7 +123,8 @@ class TestSchemaNodeConnectionRefinementStructural:
         assert hasattr(result, "relationships_skipped")
 
         # Verify they are distinct and can track separate operation types
-        # Operations that don't create entities (removed, modified, skipped) can be set independently
+        # Operations that don't create entities (removed, modified, skipped)
+        # can be set independently
         result.relationships_removed = 2
         result.relationships_modified = 3
         result.relationships_skipped = 1
