@@ -253,6 +253,11 @@ class TestQualitySchemaNodeGrounding:
                 skipped_scenarios.append((scenario, str(e)))
                 continue
 
+        # Assert minimum scenarios evaluated before computing metrics
+        assert (
+            metrics.total_scenarios >= 30
+        ), f"Only {metrics.total_scenarios}/{len(scenarios)} scenarios evaluated (need cassettes for all 38+ scenarios)"
+
         # Compute aggregate metrics
         agg_metrics = metrics.compute_metrics()
 
