@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "eliminate",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "data_synchronization",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: microservices_architecture"
+        "note": "microservices do NOT eliminate data synchronization — they require it across distributed services"
       }
     ]
   },

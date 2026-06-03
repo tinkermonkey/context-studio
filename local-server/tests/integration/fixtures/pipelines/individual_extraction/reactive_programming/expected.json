@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "blocks",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "caller_thread",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: reactive_programming"
+        "note": "observable does NOT block the caller — it enables asynchronous non-blocking operations"
       }
     ]
   },

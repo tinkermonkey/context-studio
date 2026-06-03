@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "covers",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "integration_issues",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: testing_strategies"
+        "note": "unit_test does NOT cover integration issues — it focuses on isolated component behavior"
       }
     ]
   },

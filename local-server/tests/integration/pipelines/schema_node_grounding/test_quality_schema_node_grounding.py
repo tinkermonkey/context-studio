@@ -13,13 +13,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from adapters.llm.provider_router import LLMProviderRouter
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding.adapter import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
-from config import get_settings
 from domain.ontology.entities import Class
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_grounding.apply_service import (
@@ -221,7 +219,7 @@ class TestQualitySchemaNodeGrounding:
                     assert hasattr(candidate, "source"), f"Candidate missing source for {node_label}"
                     assert hasattr(candidate, "confidence"), f"Candidate missing confidence for {node_label}"
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 # Skip this scenario if source query fails (network may be unavailable)
                 pytest.skip(f"Source query failed for {scenario}: {e}")
 

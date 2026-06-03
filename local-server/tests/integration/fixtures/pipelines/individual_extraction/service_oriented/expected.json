@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "removes",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "service_communication",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: service_oriented"
+        "note": "soa does NOT remove the need for service communication — it requires explicit well-defined interfaces"
       }
     ]
   },

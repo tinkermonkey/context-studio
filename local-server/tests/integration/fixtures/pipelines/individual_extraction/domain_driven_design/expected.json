@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "eliminates",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "subdomain_communication",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: domain_driven_design"
+        "note": "bounded_context does NOT eliminate subdomain communication — it defines clear boundaries for interaction"
       }
     ]
   },

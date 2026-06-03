@@ -39,6 +39,7 @@ from domain.pipelines.schema_node_definition_refinement.apply_service import (
 from domain.pipelines.schema_node_definition_refinement.bootstrap import (
     register_schema_node_definition_refinement,
 )
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
     DefinitionRefinementState,
@@ -547,8 +548,6 @@ class TestQualityDefinitionRefinement:
             ontology_repo.save_class(cls)
 
         # Create orchestrator and execute pipeline
-        from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
-
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm_provider,

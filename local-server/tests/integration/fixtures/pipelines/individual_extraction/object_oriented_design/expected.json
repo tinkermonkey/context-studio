@@ -130,15 +130,14 @@
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "eliminates",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "diamond_problem",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: object_oriented_design"
+        "note": "inheritance does NOT eliminate the diamond problem — it is a known challenge in multiple inheritance"
       }
     ]
   },

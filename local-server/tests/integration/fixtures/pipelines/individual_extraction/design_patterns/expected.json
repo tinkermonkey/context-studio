@@ -141,19 +141,18 @@
     "excluded": [
       {
         "subject": {
-          "label": "design_patterns",
+          "label": "singleton_pattern",
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "allows",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "multiple_instances",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: design_patterns"
+        "note": "singleton_pattern does NOT allow multiple instances — it restricts instantiation to one"
       }
     ]
   },

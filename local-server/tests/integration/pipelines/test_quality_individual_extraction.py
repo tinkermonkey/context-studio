@@ -184,8 +184,6 @@ def compute_quality_metrics(
         confidence = extract_confidence(triple)
         if key in expected_set:
             label = 1
-        elif key in excluded_set:
-            label = 0
         else:
             label = 0
         brier_probs.append(confidence)

@@ -126,19 +126,18 @@
     "excluded": [
       {
         "subject": {
-          "label": "consensus_algorithm",
+          "label": "replication",
           "kind": "individual"
         },
         "predicate": {
-          "label": "contradicts",
+          "label": "ensures",
           "kind": "property"
         },
         "object": {
-          "label": "expected_meaning",
+          "label": "immediate_consistency",
           "kind": "individual"
         },
-        "confidence": 0.15,
-        "note": "Negative example: distributed_systems"
+        "note": "replication does NOT ensure immediate consistency — it provides eventual consistency in distributed systems"
       }
     ]
   },
