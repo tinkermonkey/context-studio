@@ -12,7 +12,6 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -273,7 +272,7 @@ class TestQualitySchemaNodeGrounding:
         ))
         for row in jsonl_rows:
             print(json.dumps(row))
-        print(f"\n=== Aggregate Metrics ===")
+        print("\n=== Aggregate Metrics ===")
         print(json.dumps(agg_metrics))
 
         # Assert metric floors
