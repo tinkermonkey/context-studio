@@ -169,16 +169,16 @@ def registered_pipelines(session_factory):
 
 
 @pytest.fixture
-def metrics_emitter(tmp_path):
+def metrics_emitter():
     """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = tmp_path / "_metrics"
+    metrics_dir = Path(__file__).parent.parent.parent.parent / "_metrics"
     return MetricsEmitter(metrics_dir)
 
 
 @pytest.fixture
 def cassette_dir():
     """Cassette directory for LLM recordings (repo-relative)."""
-    cassette_path = Path(__file__).parent.parent.parent / "_e2e_chain"
+    cassette_path = Path(__file__).parent.parent / "fixtures" / "cassettes" / "e2e_chain"
     return cassette_path
 
 

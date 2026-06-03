@@ -180,9 +180,9 @@ def registered_connection_refinement(session_factory):
 
 
 @pytest.fixture
-def metrics_emitter(tmp_path):
+def metrics_emitter():
     """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = tmp_path / "_metrics"
+    metrics_dir = Path(__file__).parent.parent.parent.parent / "_metrics"
     return MetricsEmitter(metrics_dir)
 
 

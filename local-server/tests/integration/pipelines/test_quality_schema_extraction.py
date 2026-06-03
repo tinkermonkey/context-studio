@@ -304,16 +304,16 @@ def registered_schema_extraction(session_factory):
 
 
 @pytest.fixture
-def metrics_emitter(tmp_path):
+def metrics_emitter():
     """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = tmp_path / "_metrics"
+    metrics_dir = Path(__file__).parent.parent.parent.parent / "_metrics"
     return MetricsEmitter(metrics_dir)
 
 
 @pytest.fixture
-def cassette_dir(tmp_path):
+def cassette_dir():
     """Create a cassette directory for LLM recordings."""
-    return tmp_path / "_cassettes"
+    return Path(__file__).parent.parent / "fixtures" / "cassettes" / "schema_extraction"
 
 
 class TestQualitySchemaExtraction:

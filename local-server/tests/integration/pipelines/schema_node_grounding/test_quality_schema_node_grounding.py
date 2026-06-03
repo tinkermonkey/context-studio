@@ -35,6 +35,7 @@ from tests.fixtures.pipeline_fixtures import (
     load_expected_output,
     load_fixture,
 )
+from tests.integration.pipelines._harness.report import MetricsEmitter
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
@@ -115,6 +116,12 @@ class TestQualitySchemaNodeGrounding:
             config={"top_n": 10},
         )
 
+    @pytest.fixture
+    def metrics_emitter(self):
+        """Create a MetricsEmitter for JSONL output."""
+        metrics_dir = Path(__file__).parent.parent.parent.parent.parent / "_metrics"
+        return MetricsEmitter(metrics_dir)
+
     def test_all_adapters_wired(self, grounding_adapter):
         """Verify all four source adapters are wired and operational."""
         # Check all sources are registered
@@ -185,7 +192,7 @@ class TestQualitySchemaNodeGrounding:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
     @pytest.mark.asyncio
-    async def test_quality_metrics_computation(self, grounding_orchestrator, recorded_vcr):
+    async def test_quality_metrics_computation(self, grounding_orchestrator, recorded_vcr, metrics_emitter):
         """Test quality metrics computation across all 38+ fixture scenarios."""
         scenarios = _list_fixture_scenarios()
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
@@ -256,7 +263,24 @@ class TestQualitySchemaNodeGrounding:
                 metrics.distractor_precision_sum += distractor_precision
                 metrics.total_scenarios += 1
 
-                # Emit JSONL row
+                # Emit JSONL row via MetricsEmitter
+                scenario_metrics = {
+                    "top1_precision": top1_hit,
+                    "top3_precision": top3_hit,
+                    "mrr": mrr,
+                    "distractor_precision": distractor_precision,
+                }
+                metrics_emitter.emit(
+                    pipeline_type="schema_node_grounding",
+                    scenario=scenario,
+                    model="test-model",
+                    config_ref="default",
+                    config_version=1,
+                    metrics=scenario_metrics,
+                    mode="cassette",
+                )
+
+                # Also collect for old output format
                 jsonl_row = {
                     "pipeline_type": "schema_node_grounding",
                     "scenario": scenario,
@@ -281,22 +305,28 @@ class TestQualitySchemaNodeGrounding:
         # Compute aggregate metrics
         agg_metrics = metrics.compute_metrics()
 
+        # Emit aggregate metrics via MetricsEmitter
+        metrics_emitter.emit(
+            pipeline_type="schema_node_grounding_aggregate",
+            scenario="all",
+            model="test-model",
+            config_ref="default",
+            config_version=1,
+            metrics=agg_metrics,
+            mode="cassette",
+        )
+
         # Log skipped scenarios
         if skipped_scenarios:
-            print(f"\n=== Skipped {len(skipped_scenarios)} scenarios ===")
+            _logger.info(f"Skipped {len(skipped_scenarios)} scenarios:")
             for scenario, error in skipped_scenarios:
-                print(f"  {scenario}: {error}")
+                _logger.info(f"  {scenario}: {error}")
 
-        # Emit JSONL results
-        print(
-            "\n=== Grounding Quality Metrics ({}/{} scenarios) ===".format(
-                len(jsonl_rows), len(scenarios)
-            )
+        # Log results
+        _logger.info(
+            f"Grounding Quality Metrics ({len(jsonl_rows)}/{len(scenarios)} scenarios)"
         )
-        for row in jsonl_rows:
-            print(json.dumps(row))
-        print("\n=== Aggregate Metrics ===")
-        print(json.dumps(agg_metrics))
+        _logger.info(f"Aggregate metrics: {agg_metrics}")
 
         # Assert metric floors
         assert (
