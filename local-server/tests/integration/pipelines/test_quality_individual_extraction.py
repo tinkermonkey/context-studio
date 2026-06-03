@@ -437,15 +437,16 @@ class TestQualityIndividualExtraction:
 
         # Create a mock PipelineRun for apply service
         mock_run1 = PipelineRun(
-            run_id=run_id,
+            id=run_id,
+            batch_run_id="test-batch",
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             output_summary=result_state1.result or {},
         )
 
         # Apply results to ontology
         apply_result1 = apply_service.apply(mock_run1)
-        created_individual_ids_1 = []
-        created_relationship_ids_1 = []
+        created_individual_ids_1 = apply_result1.created_individual_ids
+        created_relationship_ids_1 = apply_result1.created_relationship_ids
 
         # Snapshot ontology state after first apply
         individuals_after_apply1 = [
@@ -467,8 +468,8 @@ class TestQualityIndividualExtraction:
 
         # Second execution: re-apply with same run output
         apply_result2 = apply_service.apply(mock_run1)
-        created_individual_ids_2 = []
-        created_relationship_ids_2 = []
+        created_individual_ids_2 = apply_result2.created_individual_ids
+        created_relationship_ids_2 = apply_result2.created_relationship_ids
 
         # Snapshot ontology state after second apply
         individuals_after_apply2 = [

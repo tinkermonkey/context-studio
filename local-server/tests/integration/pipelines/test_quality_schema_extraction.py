@@ -452,7 +452,8 @@ class TestQualitySchemaExtraction:
 
         # Create a mock PipelineRun for apply service
         mock_run = PipelineRun(
-            run_id=run_id,
+            id=run_id,
+            batch_run_id="test-batch",
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             output_summary=result_state1.result or {},
         )
@@ -475,14 +476,14 @@ class TestQualitySchemaExtraction:
         ]
 
         # Revert: delete created classes and properties
-        if apply_result1.classes_created:
-            for cls_id in apply_result1.classes_created:
+        if apply_result1.created_class_ids:
+            for cls_id in apply_result1.created_class_ids:
                 ontology_repo.delete_class(cls_id)
-        if apply_result1.properties_created:
-            for prop_id in apply_result1.properties_created:
+        if apply_result1.created_property_definition_ids:
+            for prop_id in apply_result1.created_property_definition_ids:
                 ontology_repo.delete_property_definition(prop_id)
-        if apply_result1.relationships_created:
-            for rel_id in apply_result1.relationships_created:
+        if apply_result1.created_relationship_ids:
+            for rel_id in apply_result1.created_relationship_ids:
                 ontology_repo.delete_relationship(rel_id)
 
         # Second execution: re-apply with same run output
