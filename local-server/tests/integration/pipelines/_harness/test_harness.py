@@ -1,6 +1,5 @@
 """Test suite for A/B testing harness (runner.py and report.py)."""
 
-
 import pytest
 
 from tests.integration.pipelines._harness.report import ABReport

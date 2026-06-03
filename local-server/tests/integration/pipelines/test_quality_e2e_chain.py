@@ -145,6 +145,7 @@ def _get_llm_provider_for_cassette(cassette_path: Path, refresh_cassettes: bool)
         f"Cassette not found at {cassette_path} and --refresh-cassettes not set."
     )
 
+
 # Metric floors for E2E chain quality
 METRIC_FLOORS = {
     "class_set_match": 1.0,
@@ -253,6 +254,7 @@ def http_cassette_path(cassette_dir):
 @pytest.fixture
 def http_client_factory(http_cassette_path, request):
     """Factory for creating httpx.AsyncClient with cassette support."""
+
     async def create_client():
         refresh_cassettes = request.config.getoption("--refresh-cassettes", default=False)
 
@@ -479,9 +481,7 @@ class TestQualityE2EChain:
                                 grounding_result_dict["groundings"].extend(groundings)
                     except Exception as e:
                         grounding_failures += 1
-                        _logger.warning(
-                            f"Grounding failed for class '{class_obj.title}': {e}"
-                        )
+                        _logger.warning(f"Grounding failed for class '{class_obj.title}': {e}")
 
             # If all classes failed grounding, this indicates infrastructure failure
             if grounding_failures == len(class_ids):

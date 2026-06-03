@@ -184,9 +184,7 @@ class RankingMetrics:
     mrr: float
 
 
-def mean_reciprocal_rank(
-    expected_list: list[str], ranked_list: list[str]
-) -> float:
+def mean_reciprocal_rank(expected_list: list[str], ranked_list: list[str]) -> float:
     """
     Compute Mean Reciprocal Rank (MRR) across a set of expected items.
 
@@ -242,9 +240,7 @@ def ranking_precision_at_k(expected: list[str], ranked_list: list[str], k: int) 
     return round(matches / len(expected), 4)
 
 
-def ranking_metrics(
-    expected: list[str], ranked_list: list[str]
-) -> RankingMetrics:
+def ranking_metrics(expected: list[str], ranked_list: list[str]) -> RankingMetrics:
     """
     Compute complete ranking metrics (top-1, top-3, MRR).
 

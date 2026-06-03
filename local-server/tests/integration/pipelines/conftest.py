@@ -225,6 +225,7 @@ def quality_llm_provider_factory(request):
         cassette_dir: directory containing cassettes
         cassette_prefix: prefix for cassette filename (e.g., "individual_extraction_")
     """
+
     def _make_provider(scenario: str, cassette_dir: Path, cassette_prefix: str):
         cassette_path = cassette_dir / f"{cassette_prefix}{scenario}.json"
         refresh_cassettes = request.config.getoption("--refresh-cassettes")
@@ -258,8 +259,7 @@ def quality_llm_provider_factory(request):
         # Cassette mode: require cassette to exist
         if not cassette_path.exists():
             pytest.skip(
-                f"Cassette not found at {cassette_path}. "
-                "Run with --refresh-cassettes to record."
+                f"Cassette not found at {cassette_path}. " "Run with --refresh-cassettes to record."
             )
 
         return CassetteLLMProvider(cassette_path)

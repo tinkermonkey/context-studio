@@ -14,8 +14,7 @@ from pathlib import Path
 def load_expected_uris(fixture_scenario: str) -> dict[str, str]:
     """Load expected URIs from expected.json file, indexed by source."""
     fixtures_dir = (
-        Path(__file__).parent.parent
-        / "tests/integration/fixtures/pipelines/schema_node_grounding"
+        Path(__file__).parent.parent / "tests/integration/fixtures/pipelines/schema_node_grounding"
     )
     expected_file = fixtures_dir / fixture_scenario / "expected.json"
 
@@ -108,15 +107,17 @@ def main():
     cassette_path.parent.mkdir(parents=True, exist_ok=True)
 
     fixtures_dir = (
-        Path(__file__).parent.parent
-        / "tests/integration/fixtures/pipelines/schema_node_grounding"
+        Path(__file__).parent.parent / "tests/integration/fixtures/pipelines/schema_node_grounding"
     )
 
     # Get all fixture scenarios
-    fixture_scenarios = sorted([
-        d.name for d in fixtures_dir.iterdir()
-        if d.is_dir() and (d / "input.json").exists() and d.name != ".gitkeep"
-    ])
+    fixture_scenarios = sorted(
+        [
+            d.name
+            for d in fixtures_dir.iterdir()
+            if d.is_dir() and (d / "input.json").exists() and d.name != ".gitkeep"
+        ]
+    )
 
     interactions = []
 
@@ -133,58 +134,66 @@ def main():
 
         # DBpedia interaction
         dbpedia_uri = uris_by_source.get("DBpedia")
-        interactions.append({
-            "request": {
-                "method": "GET",
-                "url": (
-                    f"https://lookup.dbpedia.org/api/search"
-                    f"?query={label}&format=json&maxResults=10"
-                ),
-                "headers": {},
-                "body": None,
-            },
-            "response": {
-                "status_code": 200,
-                "headers": {"content-type": "application/json"},
-                "body": generate_dbpedia_response(label, dbpedia_uri),
-            },
-        })
+        interactions.append(
+            {
+                "request": {
+                    "method": "GET",
+                    "url": (
+                        f"https://lookup.dbpedia.org/api/search"
+                        f"?query={label}&format=json&maxResults=10"
+                    ),
+                    "headers": {},
+                    "body": None,
+                },
+                "response": {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": generate_dbpedia_response(label, dbpedia_uri),
+                },
+            }
+        )
 
         # ConceptNet interaction
         conceptnet_uri = uris_by_source.get("ConceptNet")
-        interactions.append({
-            "request": {
-                "method": "GET",
-                "url": f"https://api.conceptnet.io/c/en/{label.lower().replace(' ', '_')}?limit=10",
-                "headers": {},
-                "body": None,
-            },
-            "response": {
-                "status_code": 200,
-                "headers": {"content-type": "application/json"},
-                "body": generate_conceptnet_response(label, conceptnet_uri),
-            },
-        })
+        interactions.append(
+            {
+                "request": {
+                    "method": "GET",
+                    "url": (
+                        f"https://api.conceptnet.io/c/en/{label.lower().replace(' ', '_')}?limit=10"
+                    ),
+                    "headers": {},
+                    "body": None,
+                },
+                "response": {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": generate_conceptnet_response(label, conceptnet_uri),
+                },
+            }
+        )
 
         # Wikidata interaction
         wikidata_uri = uris_by_source.get("Wikidata")
-        interactions.append({
-            "request": {
-                "method": "GET",
-                "url": (
-                    f"https://www.wikidata.org/w/api.php"
-                    f"?action=wbsearchentities&search={label}"
-                    f"&language=en&format=json&limit=10"
-                ),
-                "headers": {},
-                "body": None,
-            },
-            "response": {
-                "status_code": 200,
-                "headers": {"content-type": "application/json"},
-                "body": generate_wikidata_response(label, uri=wikidata_uri),
-            },
-        })
+        interactions.append(
+            {
+                "request": {
+                    "method": "GET",
+                    "url": (
+                        f"https://www.wikidata.org/w/api.php"
+                        f"?action=wbsearchentities&search={label}"
+                        f"&language=en&format=json&limit=10"
+                    ),
+                    "headers": {},
+                    "body": None,
+                },
+                "response": {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": generate_wikidata_response(label, uri=wikidata_uri),
+                },
+            }
+        )
 
     # Write cassette
     cassette = {"interactions": interactions}

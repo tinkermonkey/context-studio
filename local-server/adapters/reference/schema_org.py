@@ -71,9 +71,7 @@ class SchemaOrgSource:
     This is always available and never makes network requests.
     """
 
-    def __init__(
-        self, timeout: int = 10, async_client: httpx.AsyncClient | None = None
-    ):
+    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
         """
         Initialize the schema.org source adapter.
 

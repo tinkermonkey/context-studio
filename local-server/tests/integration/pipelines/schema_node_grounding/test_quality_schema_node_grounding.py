@@ -55,10 +55,9 @@ def _list_fixture_scenarios() -> list[str]:
     fixtures_dir = _get_fixtures_dir()
     if not fixtures_dir.exists():
         return []
-    return sorted([
-        d.name for d in fixtures_dir.iterdir()
-        if d.is_dir() and (d / "input.json").exists()
-    ])
+    return sorted(
+        [d.name for d in fixtures_dir.iterdir() if d.is_dir() and (d / "input.json").exists()]
+    )
 
 
 def _get_metrics_dir() -> Path:
@@ -83,13 +82,9 @@ class TestQualitySchemaNodeGrounding:
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
 
         # Verify different domains represented
-        biology_classes = {
-            "animal", "plant", "cell", "protein", "dna", "bacteria", "virus"
-        }
+        biology_classes = {"animal", "plant", "cell", "protein", "dna", "bacteria", "virus"}
         technology_classes = {"software", "network", "algorithm", "database"}
-        social_classes = {
-            "person", "organization", "artist", "university", "government"
-        }
+        social_classes = {"person", "organization", "artist", "university", "government"}
 
         scenario_set = set(scenarios)
         assert len(scenario_set & biology_classes) >= 3, "Should have ≥3 biology classes"
@@ -111,9 +106,9 @@ class TestQualitySchemaNodeGrounding:
             for source in ["DBpedia", "ConceptNet", "Wikidata", "schema.org"]:
                 if source in distractors:
                     count = len(distractors[source])
-                    assert 0 <= count <= 5, (
-                        f"Fixture {scenario} {source} has {count} distractors, expected 0-5"
-                    )
+                    assert (
+                        0 <= count <= 5
+                    ), f"Fixture {scenario} {source} has {count} distractors, expected 0-5"
                     if count >= 3:
                         has_sufficient_distractors = True
             assert (
@@ -129,6 +124,7 @@ class TestQualitySchemaNodeGrounding:
         enabling meaningful ranking metrics computation. The ranking algorithm must
         distinguish correct from incorrect candidates.
         """
+
         async def mock_query_sources(label: str, sources: list[str] | None = None):
             """Mock query_sources that returns expected URIs + distractors based on fixture data."""
             # Try to find a matching fixture scenario by label
@@ -211,9 +207,9 @@ class TestQualitySchemaNodeGrounding:
         scenarios = _list_fixture_scenarios()
         quality_scenarios = [s for s in scenarios if s != "basic"]
 
-        assert len(quality_scenarios) >= 30, (
-            f"Expected ≥30 quality fixtures for grounding, got {len(quality_scenarios)}"
-        )
+        assert (
+            len(quality_scenarios) >= 30
+        ), f"Expected ≥30 quality fixtures for grounding, got {len(quality_scenarios)}"
 
         # Wire cassette-based LLM provider for deterministic testing (FR-H5)
         cassette_path = (
@@ -224,8 +220,7 @@ class TestQualitySchemaNodeGrounding:
         )
         if not cassette_path.exists():
             pytest.skip(
-                f"Cassette not found at {cassette_path}. "
-                f"Run with real LLM to record cassette."
+                f"Cassette not found at {cassette_path}. " f"Run with real LLM to record cassette."
             )
 
         llm_provider = CassetteLLMProvider(cassette_path)
@@ -271,9 +266,7 @@ class TestQualitySchemaNodeGrounding:
                 result_state = await orchestrator.execute(state)
 
                 # Extract ranked results from groundings
-                ranked_uris = [
-                    g.uri for g in result_state.groundings
-                ]
+                ranked_uris = [g.uri for g in result_state.groundings]
 
                 # Compute ranking metrics
                 metrics = ranking_metrics(expected_uris, ranked_uris)
@@ -464,9 +457,7 @@ class TestQualitySchemaNodeGrounding:
         assert len(updated_cls.external_references) == 2
         state_after_apply = [
             (ref.identifier, ref.uri, ref.source)
-            for ref in sorted(
-                updated_cls.external_references, key=lambda r: r.uri
-            )
+            for ref in sorted(updated_cls.external_references, key=lambda r: r.uri)
         ]
 
         # Step 2: Re-apply same grounding (idempotency check)
@@ -484,7 +475,7 @@ class TestQualitySchemaNodeGrounding:
             for ref in sorted(final_cls.external_references, key=lambda r: r.uri)
         ]
 
-        assert state_after_apply == state_after_reapply, (
-            "Ontology state should be identical after re-applying the same grounding"
-        )
+        assert (
+            state_after_apply == state_after_reapply
+        ), "Ontology state should be identical after re-applying the same grounding"
         assert len(final_cls.external_references) == 2, "Should still have 2 external references"

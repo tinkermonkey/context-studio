@@ -209,9 +209,7 @@ class ABReport:
 
         config_refs = list(config_results.keys())
         if len(config_refs) < 2:
-            raise ValueError(
-                f"Multi-config comparison requires ≥2 configs; got {len(config_refs)}"
-            )
+            raise ValueError(f"Multi-config comparison requires ≥2 configs; got {len(config_refs)}")
 
         lines = [f"\nMulti-Config A/B Comparison ({len(config_refs)} configs)\n"]
 
@@ -236,10 +234,7 @@ class ABReport:
                 header_parts.append(delta_label.ljust(14))
 
         lines.append(" ".join(header_parts))
-        lines.append(
-            "-"
-            * (25 + 20 + (12 * len(config_refs)) + (14 * (len(config_refs) - 1)) + 10)
-        )
+        lines.append("-" * (25 + 20 + (12 * len(config_refs)) + (14 * (len(config_refs) - 1)) + 10))
 
         for scenario in all_scenarios:
             for metric_name in all_metrics:
