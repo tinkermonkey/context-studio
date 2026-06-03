@@ -175,7 +175,7 @@ def compute_quality_metrics(
     # For triples in excluded set: predicted confidence should be ~0.0
     # For triples not in either: penalize if high confidence
     expected_set = set(expected_keys)
-    excluded_set = set(excluded_keys)
+    set(excluded_keys)
     brier_probs = []
     brier_labels = []
 

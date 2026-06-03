@@ -5,7 +5,6 @@ Validates source adapter registration and applies roundtrip idempotency.
 Also verifies fixture corpus coverage and distractor presence.
 """
 
-import json
 import os
 import sys
 from pathlib import Path

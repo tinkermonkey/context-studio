@@ -607,7 +607,7 @@ class TestQualityE2EChain:
         ontology_repo.save_concept_scheme(scheme)
 
         # Execute pipelines in sequence
-        traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
+        SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
 
         # Schema extraction
         register_schema_extraction(impl_registry, config_registry)

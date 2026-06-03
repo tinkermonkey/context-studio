@@ -29,6 +29,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from config import get_settings
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineType
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -39,7 +40,6 @@ from domain.pipelines.schema_node_definition_refinement.apply_service import (
 from domain.pipelines.schema_node_definition_refinement.bootstrap import (
     register_schema_node_definition_refinement,
 )
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
     DefinitionRefinementState,

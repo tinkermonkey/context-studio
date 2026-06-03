@@ -37,11 +37,11 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.pipelines.entities import PipelineRun, PipelineType
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
