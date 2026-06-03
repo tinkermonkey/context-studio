@@ -259,8 +259,6 @@ class TestQualityDefinitionRefinement:
             cls = existing_cls
 
         # Create orchestrator and execute pipeline
-        from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
-
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm_provider,
