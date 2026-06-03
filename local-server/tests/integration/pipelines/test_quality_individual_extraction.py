@@ -195,6 +195,12 @@ def compute_quality_metrics(
             brier_probs.append(0.0)
             brier_labels.append(1)
 
+    # Reward not extracting excluded triples
+    for key in excluded_set:
+        if key not in set(actual_keys):
+            brier_probs.append(0.0)
+            brier_labels.append(0)
+
     brier = brier_score(brier_probs, brier_labels) if brier_probs else 0.0
 
     # Per-category breakdown

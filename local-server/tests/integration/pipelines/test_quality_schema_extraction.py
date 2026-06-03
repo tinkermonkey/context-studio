@@ -190,18 +190,23 @@ def compute_quality_metrics(
     # For expected classes: predicted confidence should be ~1.0
     # For non-expected classes (including distractors): predicted confidence should be ~0.0
     expected_class_set = set(expected_class_labels)
+    distractor_class_labels = {c.get("label", "") for c in distractors.get("classes", [])}
+    actual_class_labels_set = set(actual_class_labels)
     brier_probs = []
     brier_labels = []
 
     for class_dict in actual_classes:
         label = class_dict.get("label", "")
         confidence = extract_confidence(class_dict)
-        if label in expected_class_set:
-            is_expected = 1
-        else:
-            is_expected = 0
+        is_expected = 1 if label in expected_class_set else 0
         brier_probs.append(confidence)
         brier_labels.append(is_expected)
+
+    # Reward not extracting distractor classes
+    for label in distractor_class_labels:
+        if label not in actual_class_labels_set:
+            brier_probs.append(0.0)
+            brier_labels.append(0)
 
     brier = brier_score(brier_probs, brier_labels) if brier_probs else 0.0
 
