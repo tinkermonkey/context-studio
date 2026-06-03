@@ -142,6 +142,37 @@ ORDER BY timestamp DESC
 LIMIT 20;
 ```
 
+### Combining Automated and Human-Eval Metrics
+
+Human evaluation ratings are aggregated into metrics by `scripts/human_eval/aggregate.py` and written to `_metrics/human_eval.jsonl`. To combine automated metrics with human-eval ratings:
+
+```sql
+-- Join automated metrics with human-eval consensus
+WITH automated AS (
+  SELECT * FROM read_json_auto('_metrics/*.jsonl')
+  WHERE source = 'automated'
+),
+human_eval AS (
+  SELECT * FROM read_json_auto('_metrics/human_eval.jsonl')
+  WHERE source = 'human_eval'
+)
+SELECT
+  a.config_ref,
+  a.config_version,
+  a.pipeline_type,
+  a.timestamp AS auto_timestamp,
+  h.timestamp AS human_timestamp,
+  CAST(a.metrics->>'mean_cosine' AS FLOAT) AS auto_metric,
+  CAST(h.metrics->>'accept_rate' AS FLOAT) AS human_accept_rate,
+  CAST(h.metrics->>'revise_rate' AS FLOAT) AS human_revise_rate,
+  CAST(h.metrics->>'reject_rate' AS FLOAT) AS human_reject_rate
+FROM automated a
+LEFT JOIN human_eval h
+  ON a.config_ref = h.config_ref
+  AND a.config_version = h.config_version
+ORDER BY a.config_version DESC;
+```
+
 ### jq
 
 ```bash
@@ -305,6 +336,34 @@ def test_quality_individual_extraction_across_corpus(
     aggregate = aggregate_metrics(all_metrics)
     floor_gate.assert_metrics(aggregate, "individual_extraction")
 ```
+
+## End-to-End Chain Testing
+
+The E2E chain test (`test_quality_e2e_chain.py`) exercises all 5 pipelines in sequence with a shared temp SQLite database:
+
+1. schema_extraction → apply
+2. individual_extraction → apply
+3. schema_node_grounding → apply
+4. schema_node_definition_refinement → apply
+5. schema_node_connection_refinement → apply
+
+**Fixtures:** Located at `tests/integration/fixtures/pipelines/e2e_chain/{scenario}/`
+- `input.json`: 3-5 curated documents
+- `expected.json`: Hand-curated final ontology with classes, properties, relationships, and external references
+
+**Cassettes:** Per-stage LLM recordings at `_e2e_chain/{scenario}/cassettes/`
+- `e2e_chain_{scenario}_schema_extraction.json`
+- `e2e_chain_{scenario}_individual_extraction.json`
+- `e2e_chain_{scenario}_schema_node_grounding.json`
+- `e2e_chain_{scenario}_definition_refinement.json`
+- `e2e_chain_{scenario}_connection_refinement.json`
+
+**Metrics:**
+- Class/property/relationship set match (binary: 1.0 if exact match, 0.0 otherwise)
+- Mean description cosine similarity (≥ 0.75)
+- External reference top-3 mean reciprocal rank (≥ 0.80)
+
+**JSONL rows carry `pipeline_type = "_e2e_chain"` to distinguish from per-pipeline rows.**
 
 ## Network Blocking
 
