@@ -1,6 +1,0 @@
-{
-  "text": "Distributed systems must handle challenges of network latency, failures, and asynchrony. Consensus algorithms like Raft ensure agreement on state. Replication improves availability and fault tolerance. Partitioning distributes data across nodes. Consistency models trade off between safety and performance. Strong consistency guarantees immediate visibility of updates. Eventual consistency allows temporary divergence.",
-  "ontology_id": "test-ontology-123",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0
-}

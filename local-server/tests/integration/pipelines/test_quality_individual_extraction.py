@@ -29,7 +29,8 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineType, PipelineRun
+from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -251,15 +252,17 @@ def extraction_service(ontology_repo, session_factory):
     event_publisher = InProcessEventPublisher()
     extraction_repo = SQLiteExtractionRepository(session_factory)
     extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+    llm_provider = FakeLLMProvider()
 
     return ExtractionService(
         ontology_repo=ontology_repo,
+        embedding_service=embedding_service,
+        llm=llm_provider,
+        nlp=FakeNLPProcessor(),
+        reference_sources=[FakeReferenceSource()],
+        event_publisher=event_publisher,
         extraction_repo=extraction_repo,
         extraction_run_repo=extraction_run_repo,
-        embedding_service=embedding_service,
-        event_publisher=event_publisher,
-        nlp_processor=FakeNLPProcessor(),
-        reference_source=FakeReferenceSource(),
     )
 
 
@@ -401,9 +404,10 @@ class TestQualityIndividualExtraction:
         self,
         extraction_service,
         registered_extraction,
+        ontology_repo,
     ):
         """
-        Test apply round-trip: run -> apply -> revert -> re-apply -> assert idempotent.
+        Test apply round-trip: run -> apply -> snapshot -> revert -> re-apply -> assert idempotent.
 
         Verifies that applying an extraction result is idempotent and
         produces consistent ontology state across multiple cycles.
@@ -417,45 +421,72 @@ class TestQualityIndividualExtraction:
             extraction_service=extraction_service,
         )
 
+        apply_service = IndividualExtractionApplyService(ontology_repo)
+
         # Use a simple fixture for round-trip testing
         fixture_input = load_fixture("individual_extraction", "async_patterns")
+        run_id = str(uuid4())
 
-        # First execution
+        # First execution: run -> apply -> snapshot
         state1 = IndividualExtractionState(
-            run_id=str(uuid4()),
+            run_id=run_id,
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             input_data=fixture_input,
         )
         result_state1 = await orchestrator.execute(state1)
-        triples1 = result_state1.result.get("triples", [])
 
-        # Second execution with same input should produce same triples
-        state2 = IndividualExtractionState(
-            run_id=str(uuid4()),
+        # Create a mock PipelineRun for apply service
+        mock_run1 = PipelineRun(
+            run_id=run_id,
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture_input,
+            output_summary=result_state1.result or {},
         )
-        result_state2 = await orchestrator.execute(state2)
-        triples2 = result_state2.result.get("triples", [])
 
-        # Verify idempotence: same triples extracted
-        triple_keys1 = {
-            (
-                t.get("subject", {}).get("label", ""),
-                t.get("predicate", {}).get("label", ""),
-                t.get("object", {}).get("label", ""),
-            )
-            for t in triples1
-        }
-        triple_keys2 = {
-            (
-                t.get("subject", {}).get("label", ""),
-                t.get("predicate", {}).get("label", ""),
-                t.get("object", {}).get("label", ""),
-            )
-            for t in triples2
-        }
+        # Apply results to ontology
+        apply_result1 = apply_service.apply(mock_run1)
+        created_individual_ids_1 = []
+        created_relationship_ids_1 = []
 
-        assert (
-            triple_keys1 == triple_keys2
-        ), f"Extraction not idempotent: {triple_keys1} != {triple_keys2}"
+        # Snapshot ontology state after first apply
+        individuals_after_apply1 = [
+            (ind.id, ind.title, tuple(sorted(ind.class_ids)))
+            for ind in ontology_repo.list_individuals()
+            if ind.id not in created_individual_ids_1
+        ]
+        relationships_after_apply1 = [
+            (rel.id, rel.source_id, rel.property_id, rel.target_id)
+            for rel in ontology_repo.list_relationships()
+            if rel.id not in created_relationship_ids_1
+        ]
+
+        # Revert: delete created entities
+        for ind_id in created_individual_ids_1:
+            ontology_repo.delete_individual(ind_id)
+        for rel_id in created_relationship_ids_1:
+            ontology_repo.delete_relationship(rel_id)
+
+        # Second execution: re-apply with same run output
+        apply_result2 = apply_service.apply(mock_run1)
+        created_individual_ids_2 = []
+        created_relationship_ids_2 = []
+
+        # Snapshot ontology state after second apply
+        individuals_after_apply2 = [
+            (ind.id, ind.title, tuple(sorted(ind.class_ids)))
+            for ind in ontology_repo.list_individuals()
+            if ind.id not in created_individual_ids_2
+        ]
+        relationships_after_apply2 = [
+            (rel.id, rel.source_id, rel.property_id, rel.target_id)
+            for rel in ontology_repo.list_relationships()
+            if rel.id not in created_relationship_ids_2
+        ]
+
+        # Assert idempotence: same entities created (excluding IDs)
+        assert len(individuals_after_apply1) == len(
+            individuals_after_apply2
+        ), f"Individual count mismatch: {len(individuals_after_apply1)} != {len(individuals_after_apply2)}"
+
+        assert len(relationships_after_apply1) == len(
+            relationships_after_apply2
+        ), f"Relationship count mismatch: {len(relationships_after_apply1)} != {len(relationships_after_apply2)}"

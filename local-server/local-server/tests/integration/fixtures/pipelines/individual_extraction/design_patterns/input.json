@@ -1,6 +1,0 @@
-{
-  "text": "Design patterns are reusable solutions to common software design problems. The Factory pattern abstracts object creation. The Observer pattern enables loose coupling between objects. The Strategy pattern allows behavior to vary at runtime. The Singleton pattern restricts instantiation to a single instance. Singletons do NOT allow multiple instances. The Adapter pattern makes incompatible interfaces work together. The Decorator pattern adds responsibilities to objects dynamically. The Template Method pattern defines an algorithm skeleton. Each pattern has trade-offs between flexibility and complexity. Design patterns communicate intent and facilitate maintainability.",
-  "ontology_id": "test-ontology-123",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0
-}

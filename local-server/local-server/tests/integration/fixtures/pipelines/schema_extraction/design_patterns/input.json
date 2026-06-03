@@ -1,6 +1,0 @@
-{
-  "text": "Design patterns are reusable solutions to common software design problems. The Factory pattern abstracts object creation. The Observer pattern enables loose coupling between objects. The Strategy pattern allows behavior to vary at runtime. The Singleton pattern restricts instantiation to a single instance. Creational patterns deal with object creation. Structural patterns deal with object composition. Behavioral patterns focus on communication between objects.",
-  "ontology_id": "test-ontology-123",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0
-}

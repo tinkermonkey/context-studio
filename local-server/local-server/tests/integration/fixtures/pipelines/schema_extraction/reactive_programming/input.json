@@ -1,6 +1,0 @@
-{
-  "text": "Reactive programming uses data streams and propagation of changes. Observables represent data sources that emit values over time. Streams are sequences of asynchronous events. Operators transform streams: map, filter, flatMap, etc. Subscriptions connect observers to observables. Backpressure allows consumers to control the rate of emission.",
-  "ontology_id": "test-ontology-123",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0
-}

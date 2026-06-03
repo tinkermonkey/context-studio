@@ -225,6 +225,60 @@ Fixture tests extraction of testing concepts including unit, integration, and en
             ("regression_test", "prevents", "bug_reintroduction", 0.84),
         ],
     },
+    "async_patterns": {
+        "readme": """# Async Patterns Fixture
+
+**Source:** Python async/await documentation and coroutine patterns
+**License:** Educational use, fair use for testing
+**Curator:** JD
+
+## Overview
+Fixture tests extraction of async patterns including coroutines, event loops, and futures.
+
+## Annotation Notes
+- Includes negation: "coroutines are NOT regular functions"
+- Key entities: coroutine, event_loop, task, future, callback
+- Relationships capture async execution and orchestration patterns
+""",
+        "text": "Async programming enables concurrent execution using coroutines. Coroutines are NOT regular functions; they use async/await syntax. The event loop schedules and manages coroutine execution. Tasks wrap coroutines for the event loop. Futures represent eventual results of asynchronous operations. Await suspends execution until a coroutine completes. The event loop polls I/O and executes ready callbacks. Callbacks handle completion of asynchronous operations. Multiple coroutines can run concurrently on a single thread. Async context managers manage resources in async code. Async generators yield values asynchronously.",
+        "triples": [
+            ("async_programming", "enables", "concurrent_execution", 0.92),
+            ("coroutine", "uses", "async_await_syntax", 0.91),
+            ("event_loop", "schedules", "coroutine", 0.90),
+            ("task", "wraps", "coroutine", 0.89),
+            ("future", "represents", "eventual_result", 0.88),
+            ("await", "suspends", "execution", 0.87),
+            ("callback", "handles", "completion", 0.86),
+            ("async_generator", "yields", "value", 0.85),
+        ],
+    },
+    "clean_code": {
+        "readme": """# Clean Code Fixture
+
+**Source:** "Clean Code: A Handbook of Agile Software Craftsmanship" - Robert C. Martin (2008)
+**License:** Educational use, fair use for testing
+**Curator:** BN
+
+## Overview
+Fixture tests extraction of clean code principles including naming, functions, and error handling.
+
+## Annotation Notes
+- Includes negation: "comments do NOT make up for bad code"
+- Key entities: meaningful_name, small_function, dry, single_responsibility, error_handling
+- Relationships capture code quality practices
+""",
+        "text": "Clean code is readable, maintainable, and understandable by other developers. Use meaningful names that reveal intent and context. Functions should be small and focused on a single responsibility. Avoid code duplication; follow the DRY principle. Comments should explain why, not what. Comments do NOT make up for bad code. Error handling should not obscure logic. Limit function parameters to three or fewer. Keep functions at a single level of abstraction. Use consistent naming conventions throughout the codebase. Minimize side effects in functions. Format code consistently with the team standards.",
+        "triples": [
+            ("clean_code", "is", "readable", 0.92),
+            ("meaningful_name", "reveals", "intent", 0.91),
+            ("small_function", "focuses_on", "single_responsibility", 0.90),
+            ("dry_principle", "avoids", "duplication", 0.89),
+            ("comment", "explains", "why", 0.88),
+            ("error_handling", "should_not_obscure", "logic", 0.87),
+            ("function_parameter", "limited_to", "three_or_fewer", 0.86),
+            ("code", "should_follow", "consistent_style", 0.85),
+        ],
+    },
 }
 
 def create_individual_extraction_fixtures():

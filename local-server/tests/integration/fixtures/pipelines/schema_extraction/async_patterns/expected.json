@@ -47,10 +47,6 @@
       {
         "label": "polls",
         "confidence": 0.8
-      },
-      {
-        "label": "awaits",
-        "confidence": 0.8
       }
     ],
     "extracted_relationships": [

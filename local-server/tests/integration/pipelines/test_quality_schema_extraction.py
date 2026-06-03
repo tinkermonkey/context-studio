@@ -34,7 +34,8 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineType, PipelineRun
+from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -98,17 +99,23 @@ def extract_connection_tuples(relationships: list[dict]) -> list[tuple]:
     """
     Extract (subject_class, predicate, object_class) tuples from relationships.
 
+    Handles both formats:
+    - Expected (fixture): subject_class, predicate, object_class
+    - Actual (orchestrator): subject_ref, predicate, object_ref
+
     Returns list of tuples for comparison.
     """
-    return [
-        (
-            rel.get("subject_class", ""),
-            rel.get("predicate", ""),
-            rel.get("object_class", ""),
-        )
-        for rel in relationships
-        if rel.get("subject_class") and rel.get("predicate") and rel.get("object_class")
-    ]
+    tuples = []
+    for rel in relationships:
+        # Try fixture format first
+        subject = rel.get("subject_class") or rel.get("subject_ref", "")
+        predicate = rel.get("predicate", "")
+        obj = rel.get("object_class") or rel.get("object_ref", "")
+
+        if subject and predicate and obj:
+            tuples.append((subject, predicate, obj))
+
+    return tuples
 
 
 def extract_confidence(item: dict, default: float = 0.5) -> float:
@@ -128,14 +135,22 @@ def compute_quality_metrics(
     expected_result = expected_output.get("result", {})
     actual_result = actual_output.get("result", {})
 
+    # Handle expected output format (from fixtures)
     expected_classes = expected_result.get("extracted_classes", [])
-    actual_classes = actual_result.get("extracted_classes", [])
-
     expected_properties = expected_result.get("extracted_properties", [])
-    actual_properties = actual_result.get("extracted_properties", [])
-
     expected_relationships = expected_result.get("extracted_relationships", [])
-    actual_relationships = actual_result.get("extracted_relationships", [])
+
+    # Handle actual output format (from orchestrator)
+    # Orchestrator produces "candidates" (classes and properties) and "connections"
+    actual_candidates = actual_result.get("candidates", [])
+    actual_connections = actual_result.get("connections", [])
+
+    # Split candidates into classes and properties
+    actual_classes = [c for c in actual_candidates if c.get("kind") == "class"]
+    actual_properties = [c for c in actual_candidates if c.get("kind") == "property_definition"]
+
+    # Convert connections to relationship format for comparison
+    actual_relationships = actual_connections
 
     # Class Jaccard: set overlap of class labels
     expected_class_labels = extract_class_labels(expected_classes)
@@ -249,15 +264,17 @@ def extraction_service(ontology_repo, session_factory):
     event_publisher = InProcessEventPublisher()
     extraction_repo = SQLiteExtractionRepository(session_factory)
     extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+    llm_provider = FakeLLMProvider()
 
     return ExtractionService(
         ontology_repo=ontology_repo,
+        embedding_service=embedding_service,
+        llm=llm_provider,
+        nlp=FakeNLPProcessor(),
+        reference_sources=[FakeReferenceSource()],
+        event_publisher=event_publisher,
         extraction_repo=extraction_repo,
         extraction_run_repo=extraction_run_repo,
-        embedding_service=embedding_service,
-        event_publisher=event_publisher,
-        nlp_processor=FakeNLPProcessor(),
-        reference_source=FakeReferenceSource(),
     )
 
 
@@ -335,18 +352,23 @@ class TestQualitySchemaExtraction:
 
         orchestrator = SchemaExtractionOrchestrator(
             llm_provider=llm_provider,
-            extraction_service=extraction_service,
+            ontology_repo=None,
         )
 
         # Load fixture
         fixture_input = load_fixture("schema_extraction", scenario)
         expected_output = load_expected_output("schema_extraction", scenario)
 
+        # Convert input format: wrap text in documents array if needed
+        pipeline_input = fixture_input.copy()
+        if "text" in pipeline_input and "documents" not in pipeline_input:
+            pipeline_input["documents"] = [pipeline_input.pop("text")]
+
         # Run pipeline
         state = SchemaExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data=fixture_input,
+            input_data=pipeline_input,
         )
         result_state = await orchestrator.execute(state)
 
@@ -384,11 +406,11 @@ class TestQualitySchemaExtraction:
     @pytest.mark.asyncio
     async def test_schema_extraction_apply_roundtrip(
         self,
-        extraction_service,
+        ontology_repo,
         registered_schema_extraction,
     ):
         """
-        Test apply round-trip: run -> apply -> revert -> re-apply -> assert idempotent.
+        Test apply round-trip: run -> apply -> snapshot -> revert -> re-apply -> assert idempotent.
 
         Verifies that applying a schema extraction result is idempotent and
         produces consistent schema state across multiple cycles.
@@ -399,42 +421,96 @@ class TestQualitySchemaExtraction:
         llm_provider = FakeLLMProvider()
         orchestrator = SchemaExtractionOrchestrator(
             llm_provider=llm_provider,
-            extraction_service=extraction_service,
+            ontology_repo=None,
         )
+
+        apply_service = SchemaExtractionApplyService(ontology_repo)
 
         # Use a simple fixture for round-trip testing
         fixture_input = load_fixture("schema_extraction", "async_patterns")
 
-        # First execution
+        # Convert input format: wrap text in documents array if needed
+        pipeline_input = fixture_input.copy()
+        if "text" in pipeline_input and "documents" not in pipeline_input:
+            pipeline_input["documents"] = [pipeline_input.pop("text")]
+
+        # Get concept scheme for apply service
+        schemes = ontology_repo.list_concept_schemes()
+        concept_scheme_id = schemes[0].id if schemes else str(uuid4())
+
+        taxonomies = ontology_repo.list_taxonomies()
+        taxonomy_id = taxonomies[0].id if taxonomies else str(uuid4())
+
+        # First execution: run -> apply -> snapshot
+        run_id = str(uuid4())
         state1 = SchemaExtractionState(
-            run_id=str(uuid4()),
+            run_id=run_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data=fixture_input,
+            input_data=pipeline_input,
         )
         result_state1 = await orchestrator.execute(state1)
-        schema1 = result_state1.result or {}
 
-        # Second execution with same input should produce same schema
-        state2 = SchemaExtractionState(
-            run_id=str(uuid4()),
+        # Create a mock PipelineRun for apply service
+        mock_run = PipelineRun(
+            run_id=run_id,
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data=fixture_input,
+            output_summary=result_state1.result or {},
         )
-        result_state2 = await orchestrator.execute(state2)
-        schema2 = result_state2.result or {}
 
-        # Verify idempotence: same classes extracted
-        classes1 = extract_class_labels(schema1.get("extracted_classes", []))
-        classes2 = extract_class_labels(schema2.get("extracted_classes", []))
+        # Apply results to ontology
+        apply_result1 = apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
 
-        assert (
-            set(classes1) == set(classes2)
-        ), f"Schema extraction not idempotent: {set(classes1)} != {set(classes2)}"
+        # Snapshot ontology state after first apply
+        classes_after_apply1 = [
+            (cls.id, cls.title, cls.identifier)
+            for cls in ontology_repo.list_classes()
+        ]
+        properties_after_apply1 = [
+            (prop.id, prop.label, prop.identifier)
+            for prop in ontology_repo.list_property_definitions()
+        ]
+        relationships_after_apply1 = [
+            (rel.id, rel.source_id, rel.property_id, rel.target_id)
+            for rel in ontology_repo.list_relationships()
+        ]
 
-        # Verify same connections
-        connections1 = set(extract_connection_tuples(schema1.get("extracted_relationships", [])))
-        connections2 = set(extract_connection_tuples(schema2.get("extracted_relationships", [])))
+        # Revert: delete created classes and properties
+        if apply_result1.classes_created:
+            for cls_id in apply_result1.classes_created:
+                ontology_repo.delete_class(cls_id)
+        if apply_result1.properties_created:
+            for prop_id in apply_result1.properties_created:
+                ontology_repo.delete_property_definition(prop_id)
+        if apply_result1.relationships_created:
+            for rel_id in apply_result1.relationships_created:
+                ontology_repo.delete_relationship(rel_id)
 
-        assert (
-            connections1 == connections2
-        ), f"Connection extraction not idempotent: {connections1} != {connections2}"
+        # Second execution: re-apply with same run output
+        apply_result2 = apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
+
+        # Snapshot ontology state after second apply
+        classes_after_apply2 = [
+            (cls.id, cls.title, cls.identifier)
+            for cls in ontology_repo.list_classes()
+        ]
+        properties_after_apply2 = [
+            (prop.id, prop.label, prop.identifier)
+            for prop in ontology_repo.list_property_definitions()
+        ]
+        relationships_after_apply2 = [
+            (rel.id, rel.source_id, rel.property_id, rel.target_id)
+            for rel in ontology_repo.list_relationships()
+        ]
+
+        # Assert idempotence: same entities created (excluding IDs)
+        assert len(classes_after_apply1) == len(
+            classes_after_apply2
+        ), f"Class count mismatch: {len(classes_after_apply1)} != {len(classes_after_apply2)}"
+
+        assert len(properties_after_apply1) == len(
+            properties_after_apply2
+        ), f"Property count mismatch: {len(properties_after_apply1)} != {len(properties_after_apply2)}"
+
+        assert len(relationships_after_apply1) == len(
+            relationships_after_apply2
+        ), f"Relationship count mismatch: {len(relationships_after_apply1)} != {len(relationships_after_apply2)}"
