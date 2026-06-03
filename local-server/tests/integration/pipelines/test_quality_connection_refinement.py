@@ -27,7 +27,13 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Relationship, Taxonomy
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    PropertyDefinition,
+    Relationship,
+    Taxonomy,
+)
 from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -451,8 +457,8 @@ class TestQualityConnectionRefinement:
         """
         config_registry, impl_registry = registered_connection_refinement
 
-        from tests.fakes.fake_llm_provider import FakeLLMProvider
         from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+        from tests.fakes.fake_llm_provider import FakeLLMProvider
 
         # Get concept scheme and taxonomy
         schemes = ontology_repo.list_concept_schemes()
@@ -607,7 +613,7 @@ class TestQualityConnectionRefinement:
         )
 
         # Second apply: verify idempotence
-        apply_result2 = apply_service.apply(mock_run)
+        apply_service.apply(mock_run)
 
         relationships_after_apply2 = list(ontology_repo.list_relationships(source_id=scope_id))
         rel_tuples_2 = [

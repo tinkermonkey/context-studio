@@ -360,8 +360,8 @@ class TestQualityDefinitionRefinement:
         """
         config_registry, impl_registry = registered_definition_refinement
 
-        from tests.fakes.fake_llm_provider import FakeLLMProvider
         from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+        from tests.fakes.fake_llm_provider import FakeLLMProvider
 
         llm_provider = FakeLLMProvider(
             response_content=json.dumps(
@@ -425,7 +425,7 @@ class TestQualityDefinitionRefinement:
         )
 
         # Apply result
-        apply_result1 = apply_service.apply(mock_run)
+        apply_service.apply(mock_run)
 
         # Snapshot class after apply
         cls_after_apply1 = ontology_repo.get_class(node_id)
