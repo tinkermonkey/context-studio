@@ -8,12 +8,13 @@ Reads JSONL ratings from multiple raters and computes:
 - reject_rate: Percentage of candidates rated as 'reject'
 - n: Total number of rated candidates
 
-Metrics are computed per (config_ref, config_version) and written to _metrics/
-with source: "human_eval" using the standard envelope.
+Metrics are computed per (config_ref, config_version) and written to
+tests/integration/fixtures/pipelines/_human_eval/ with source: "human_eval"
+using the standard envelope.
 
 Usage:
-    python aggregate.py --ratings _ratings/human_eval.jsonl --pipeline definition_refinement
-    python aggregate.py --ratings _ratings/human_eval.jsonl --output _metrics/human_eval.jsonl
+    python aggregate.py --pipeline definition_refinement
+    python aggregate.py --pipeline connection_refinement --output custom_metrics.jsonl
 """
 
 import argparse
@@ -243,8 +244,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--pipeline",
-        default="schema_node_definition_refinement",
-        help="Pipeline type for metrics (default: schema_node_definition_refinement)",
+        default="definition_refinement",
+        choices=["definition_refinement", "connection_refinement"],
+        help="Pipeline type to aggregate (default: definition_refinement)",
     )
     parser.add_argument(
         "--api-url",
@@ -259,11 +261,13 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    pipeline_type = f"schema_node_{args.pipeline}"
+
     fixture_dir = Path("tests/integration/fixtures/pipelines/_human_eval")
     if args.ratings is None:
-        args.ratings = fixture_dir / f"{args.pipeline}.jsonl"
+        args.ratings = fixture_dir / f"{pipeline_type}.jsonl"
     if args.output is None:
-        args.output = fixture_dir / f"{args.pipeline}_metrics.jsonl"
+        args.output = fixture_dir / f"{pipeline_type}_metrics.jsonl"
 
     setup_logging(args.verbose)
 
@@ -280,7 +284,7 @@ def main() -> int:
 
         # Fetch run metadata
         _logger.info("Fetching run metadata from API...")
-        run_metadata = fetch_run_metadata(ratings, args.api_url, args.pipeline)
+        run_metadata = fetch_run_metadata(ratings, args.api_url, pipeline_type)
 
         # Aggregate ratings
         _logger.info("Aggregating ratings...")
@@ -294,7 +298,7 @@ def main() -> int:
 
         # Emit metrics
         _logger.info(f"Writing metrics to {args.output}")
-        emit_metrics_jsonl(args.output, aggregated, args.pipeline)
+        emit_metrics_jsonl(args.output, aggregated, pipeline_type)
 
         _logger.info("Done")
         return 0
