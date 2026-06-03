@@ -1,0 +1,23 @@
+{
+  "5550a68689ca77ee13b896ab8f0751c55ffa02f99a93f18438293bd48d3b6584": {
+    "content": "{\"classes\": [{\"label\": \"Service\", \"confidence\": 0.85}, {\"label\": \"Contract\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Orchestration\", \"confidence\": 0.85}, {\"label\": \"Governance\", \"confidence\": 0.85}, {\"label\": \"ServiceRegistry\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"exposes\", \"confidence\": 0.8}, {\"label\": \"orchestrates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"coordinates\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Service\", \"predicate\": \"exposes\", \"object_class\": \"Contract\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"orchestrates\", \"object_class\": \"Service\", \"confidence\": 0.82}, {\"subject_class\": \"ServiceRegistry\", \"predicate\": \"enables\", \"object_class\": \"Discovery\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "d36477ba2e05e12219106f28038b14a026cbead11c273c18fd7674cdafcbf567": {
+    "content": "{\"classes\": [{\"label\": \"Service\", \"confidence\": 0.85}, {\"label\": \"Contract\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Orchestration\", \"confidence\": 0.85}, {\"label\": \"Governance\", \"confidence\": 0.85}, {\"label\": \"ServiceRegistry\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"exposes\", \"confidence\": 0.8}, {\"label\": \"orchestrates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"coordinates\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Service\", \"predicate\": \"exposes\", \"object_class\": \"Contract\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"orchestrates\", \"object_class\": \"Service\", \"confidence\": 0.82}, {\"subject_class\": \"ServiceRegistry\", \"predicate\": \"enables\", \"object_class\": \"Discovery\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "6ba04e046506e6beb68b44017b91f8a335e9edaa93a245e6c9d00439210b8118": {
+    "content": "{\"classes\": [{\"label\": \"Service\", \"confidence\": 0.85}, {\"label\": \"Contract\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Orchestration\", \"confidence\": 0.85}, {\"label\": \"Governance\", \"confidence\": 0.85}, {\"label\": \"ServiceRegistry\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"exposes\", \"confidence\": 0.8}, {\"label\": \"orchestrates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"coordinates\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Service\", \"predicate\": \"exposes\", \"object_class\": \"Contract\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"orchestrates\", \"object_class\": \"Service\", \"confidence\": 0.82}, {\"subject_class\": \"ServiceRegistry\", \"predicate\": \"enables\", \"object_class\": \"Discovery\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

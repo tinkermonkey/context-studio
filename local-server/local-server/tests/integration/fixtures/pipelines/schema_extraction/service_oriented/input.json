@@ -1,0 +1,6 @@
+{
+  "text": "Service-Oriented Architecture structures systems as collections of services. Services expose contracts that define functionality and interfaces. Composition orchestrates multiple services to fulfill business processes. Orchestration uses workflows to coordinate services. Governance manages service versioning and quality. Services are loosely coupled and independently deployable.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

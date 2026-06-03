@@ -1,0 +1,6 @@
+{
+  "text": "Object-oriented design uses inheritance to model hierarchies. Composition favors flexible design over rigid inheritance. Encapsulation hides internal implementation details. Polymorphism allows objects to be treated uniformly despite different types. Interfaces define contracts without specifying implementation. The Liskov Substitution Principle ensures derived classes can substitute base classes.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

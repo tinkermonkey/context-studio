@@ -1,0 +1,23 @@
+{
+  "27c98da0bf55ad5c4105167b0eaba4e13195c94ec5f680d85ca85feeaa7f32dc": {
+    "content": "{\"classes\": [{\"label\": \"Inheritance\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Encapsulation\", \"confidence\": 0.85}, {\"label\": \"Polymorphism\", \"confidence\": 0.85}, {\"label\": \"Interface\", \"confidence\": 0.85}, {\"label\": \"LiskovSubstitution\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"models\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}, {\"label\": \"hides\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"defines\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Inheritance\", \"predicate\": \"models\", \"object_class\": \"Hierarchy\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"enables\", \"object_class\": \"Flexibility\", \"confidence\": 0.82}, {\"subject_class\": \"Interface\", \"predicate\": \"defines\", \"object_class\": \"Contract\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "b740c5d7d749ba5e6f048ce230e79677e3d93e8c20fb8c775d281bc759e3649b": {
+    "content": "{\"classes\": [{\"label\": \"Inheritance\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Encapsulation\", \"confidence\": 0.85}, {\"label\": \"Polymorphism\", \"confidence\": 0.85}, {\"label\": \"Interface\", \"confidence\": 0.85}, {\"label\": \"LiskovSubstitution\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"models\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}, {\"label\": \"hides\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"defines\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Inheritance\", \"predicate\": \"models\", \"object_class\": \"Hierarchy\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"enables\", \"object_class\": \"Flexibility\", \"confidence\": 0.82}, {\"subject_class\": \"Interface\", \"predicate\": \"defines\", \"object_class\": \"Contract\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "165de15454fb2c60110ba5f6a330df068cf99d365b65cf0d688d9c61d38e4d1a": {
+    "content": "{\"classes\": [{\"label\": \"Inheritance\", \"confidence\": 0.85}, {\"label\": \"Composition\", \"confidence\": 0.85}, {\"label\": \"Encapsulation\", \"confidence\": 0.85}, {\"label\": \"Polymorphism\", \"confidence\": 0.85}, {\"label\": \"Interface\", \"confidence\": 0.85}, {\"label\": \"LiskovSubstitution\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"models\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}, {\"label\": \"hides\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"defines\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Inheritance\", \"predicate\": \"models\", \"object_class\": \"Hierarchy\", \"confidence\": 0.82}, {\"subject_class\": \"Composition\", \"predicate\": \"enables\", \"object_class\": \"Flexibility\", \"confidence\": 0.82}, {\"subject_class\": \"Interface\", \"predicate\": \"defines\", \"object_class\": \"Contract\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

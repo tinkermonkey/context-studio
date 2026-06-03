@@ -1,0 +1,23 @@
+{
+  "9189f9122ad24a70a224efccf90f4029dbf37aabab6fcbab2340622313a5615b": {
+    "content": "{\"classes\": [{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"routes\", \"confidence\": 0.8}, {\"label\": \"facilitates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"prevents\", \"confidence\": 0.8}, {\"label\": \"owns\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"APIGateway\", \"predicate\": \"routes_to\", \"object_class\": \"Microservice\", \"confidence\": 0.82}, {\"subject_class\": \"Microservice\", \"predicate\": \"communicates_via\", \"object_class\": \"EventBus\", \"confidence\": 0.82}, {\"subject_class\": \"CircuitBreaker\", \"predicate\": \"protects\", \"object_class\": \"Microservice\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "67cef72e734b57939a86c261cf7e3030147fa67ee51939f04fa8672c6414b7e5": {
+    "content": "{\"classes\": [{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"routes\", \"confidence\": 0.8}, {\"label\": \"facilitates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"prevents\", \"confidence\": 0.8}, {\"label\": \"owns\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"APIGateway\", \"predicate\": \"routes_to\", \"object_class\": \"Microservice\", \"confidence\": 0.82}, {\"subject_class\": \"Microservice\", \"predicate\": \"communicates_via\", \"object_class\": \"EventBus\", \"confidence\": 0.82}, {\"subject_class\": \"CircuitBreaker\", \"predicate\": \"protects\", \"object_class\": \"Microservice\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "0ded61f6b9ca381d9915ea777a98334b32b2c88990e7cb21abad8e6ccdb36f6a": {
+    "content": "{\"classes\": [{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"routes\", \"confidence\": 0.8}, {\"label\": \"facilitates\", \"confidence\": 0.8}, {\"label\": \"manages\", \"confidence\": 0.8}, {\"label\": \"prevents\", \"confidence\": 0.8}, {\"label\": \"owns\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"APIGateway\", \"predicate\": \"routes_to\", \"object_class\": \"Microservice\", \"confidence\": 0.82}, {\"subject_class\": \"Microservice\", \"predicate\": \"communicates_via\", \"object_class\": \"EventBus\", \"confidence\": 0.82}, {\"subject_class\": \"CircuitBreaker\", \"predicate\": \"protects\", \"object_class\": \"Microservice\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

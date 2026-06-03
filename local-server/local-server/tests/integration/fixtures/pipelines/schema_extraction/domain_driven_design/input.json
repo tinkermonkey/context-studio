@@ -1,0 +1,6 @@
+{
+  "text": "Domain-Driven Design focuses on modeling the business domain. Bounded contexts define clear boundaries around models. Entities have identity and lifecycle. Value objects are immutable and defined by their attributes. Aggregates group related entities with a root entity. Repositories abstract persistence concerns. Ubiquitous language ensures consistent terminology.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

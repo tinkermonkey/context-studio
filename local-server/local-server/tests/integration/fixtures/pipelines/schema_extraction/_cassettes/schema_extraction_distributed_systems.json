@@ -1,0 +1,23 @@
+{
+  "b203eb325e67a81606542506185f9a6e35366225ea1cdfb5ac0d209c717716f5": {
+    "content": "{\"classes\": [{\"label\": \"ConsensusAlgorithm\", \"confidence\": 0.85}, {\"label\": \"Replication\", \"confidence\": 0.85}, {\"label\": \"ConsistencyModel\", \"confidence\": 0.85}, {\"label\": \"StrongConsistency\", \"confidence\": 0.85}, {\"label\": \"EventualConsistency\", \"confidence\": 0.85}, {\"label\": \"Partition\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"ensures\", \"confidence\": 0.8}, {\"label\": \"improves\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"guarantees\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"StrongConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"EventualConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"Consensus\", \"predicate\": \"achieves\", \"object_class\": \"Agreement\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "a7505c0969bd18e6fe94519f9892f73bbebe3dbd71ed4ea8887ea034b1ff5fdd": {
+    "content": "{\"classes\": [{\"label\": \"ConsensusAlgorithm\", \"confidence\": 0.85}, {\"label\": \"Replication\", \"confidence\": 0.85}, {\"label\": \"ConsistencyModel\", \"confidence\": 0.85}, {\"label\": \"StrongConsistency\", \"confidence\": 0.85}, {\"label\": \"EventualConsistency\", \"confidence\": 0.85}, {\"label\": \"Partition\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"ensures\", \"confidence\": 0.8}, {\"label\": \"improves\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"guarantees\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"StrongConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"EventualConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"Consensus\", \"predicate\": \"achieves\", \"object_class\": \"Agreement\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "a400fdd2ea9ab8b2ec44648d0aa13d2505aec8ad052fa7729de0ef39ff2a354e": {
+    "content": "{\"classes\": [{\"label\": \"ConsensusAlgorithm\", \"confidence\": 0.85}, {\"label\": \"Replication\", \"confidence\": 0.85}, {\"label\": \"ConsistencyModel\", \"confidence\": 0.85}, {\"label\": \"StrongConsistency\", \"confidence\": 0.85}, {\"label\": \"EventualConsistency\", \"confidence\": 0.85}, {\"label\": \"Partition\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"ensures\", \"confidence\": 0.8}, {\"label\": \"improves\", \"confidence\": 0.8}, {\"label\": \"allows\", \"confidence\": 0.8}, {\"label\": \"guarantees\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"StrongConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"EventualConsistency\", \"predicate\": \"is_a\", \"object_class\": \"ConsistencyModel\", \"confidence\": 0.82}, {\"subject_class\": \"Consensus\", \"predicate\": \"achieves\", \"object_class\": \"Agreement\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "text": "Distributed systems must handle challenges of network latency, failures, and asynchrony. Consensus algorithms like Raft ensure agreement on state. Replication improves availability and fault tolerance. Partitioning distributes data across nodes. Consistency models trade off between safety and performance. Strong consistency guarantees immediate visibility of updates. Eventual consistency allows temporary divergence. Eventual consistency does NOT guarantee strong consistency. The CAP theorem states a system cannot guarantee all three: consistency, availability, and partition tolerance. Fault tolerance requires redundancy and recovery mechanisms. Monitoring and alerting detect failures quickly.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

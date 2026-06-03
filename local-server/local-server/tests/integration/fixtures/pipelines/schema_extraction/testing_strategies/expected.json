@@ -1,0 +1,76 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "UnitTest",
+        "confidence": 0.85
+      },
+      {
+        "label": "IntegrationTest",
+        "confidence": 0.85
+      },
+      {
+        "label": "E2ETest",
+        "confidence": 0.85
+      },
+      {
+        "label": "Mock",
+        "confidence": 0.85
+      },
+      {
+        "label": "Stub",
+        "confidence": 0.85
+      },
+      {
+        "label": "CodeCoverage",
+        "confidence": 0.85
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "verifies",
+        "confidence": 0.8
+      },
+      {
+        "label": "validates",
+        "confidence": 0.8
+      },
+      {
+        "label": "simulates",
+        "confidence": 0.8
+      },
+      {
+        "label": "provides",
+        "confidence": 0.8
+      },
+      {
+        "label": "measures",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "UnitTest",
+        "predicate": "verifies",
+        "object_class": "Component",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "IntegrationTest",
+        "predicate": "verifies",
+        "object_class": "Interaction",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Mock",
+        "predicate": "simulates",
+        "object_class": "Dependency",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

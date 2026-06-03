@@ -1,0 +1,76 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "Inheritance",
+        "confidence": 0.85
+      },
+      {
+        "label": "Composition",
+        "confidence": 0.85
+      },
+      {
+        "label": "Encapsulation",
+        "confidence": 0.85
+      },
+      {
+        "label": "Polymorphism",
+        "confidence": 0.85
+      },
+      {
+        "label": "Interface",
+        "confidence": 0.85
+      },
+      {
+        "label": "LiskovSubstitution",
+        "confidence": 0.85
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "models",
+        "confidence": 0.8
+      },
+      {
+        "label": "enables",
+        "confidence": 0.8
+      },
+      {
+        "label": "hides",
+        "confidence": 0.8
+      },
+      {
+        "label": "allows",
+        "confidence": 0.8
+      },
+      {
+        "label": "defines",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "Inheritance",
+        "predicate": "models",
+        "object_class": "Hierarchy",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Composition",
+        "predicate": "enables",
+        "object_class": "Flexibility",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Interface",
+        "predicate": "defines",
+        "object_class": "Contract",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

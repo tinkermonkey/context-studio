@@ -1,0 +1,129 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "microservices",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "decompose",
+          "kind": "property"
+        },
+        "object": {
+          "label": "system",
+          "kind": "individual"
+        },
+        "confidence": 0.91
+      },
+      {
+        "subject": {
+          "label": "service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "owns",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "api_gateway",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "routes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "requests",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "communicates_via",
+          "kind": "property"
+        },
+        "object": {
+          "label": "rest",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "event_bus",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "enables",
+          "kind": "property"
+        },
+        "object": {
+          "label": "loose_coupling",
+          "kind": "individual"
+        },
+        "confidence": 0.86
+      },
+      {
+        "subject": {
+          "label": "service_mesh",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "manages",
+          "kind": "property"
+        },
+        "object": {
+          "label": "communication",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "circuit_breaker",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "prevents",
+          "kind": "property"
+        },
+        "object": {
+          "label": "cascading_failures",
+          "kind": "individual"
+        },
+        "confidence": 0.89
+      },
+      {
+        "subject": {
+          "label": "service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "can_be",
+          "kind": "property"
+        },
+        "object": {
+          "label": "deployed_independently",
+          "kind": "individual"
+        },
+        "confidence": 0.92
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

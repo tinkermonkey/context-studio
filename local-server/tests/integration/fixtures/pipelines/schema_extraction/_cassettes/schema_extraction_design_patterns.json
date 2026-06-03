@@ -1,0 +1,23 @@
+{
+  "6e5b044b220791fe0f1cbb2db5f300a2aee3a843defbb78e51e8e4700b79c4de": {
+    "content": "{\"classes\": [{\"label\": \"DesignPattern\", \"confidence\": 0.85}, {\"label\": \"CreationalPattern\", \"confidence\": 0.85}, {\"label\": \"StructuralPattern\", \"confidence\": 0.85}, {\"label\": \"BehavioralPattern\", \"confidence\": 0.85}, {\"label\": \"Factory\", \"confidence\": 0.85}, {\"label\": \"Observer\", \"confidence\": 0.85}, {\"label\": \"Strategy\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"categorizes\", \"confidence\": 0.8}, {\"label\": \"solves\", \"confidence\": 0.8}, {\"label\": \"abstracts\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Factory\", \"predicate\": \"is_a\", \"object_class\": \"CreationalPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Observer\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Strategy\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "c0b8a0bb2f37948a9e4015a20cf6daf4d2f96988b9534b1e24a332edf677402d": {
+    "content": "{\"classes\": [{\"label\": \"DesignPattern\", \"confidence\": 0.85}, {\"label\": \"CreationalPattern\", \"confidence\": 0.85}, {\"label\": \"StructuralPattern\", \"confidence\": 0.85}, {\"label\": \"BehavioralPattern\", \"confidence\": 0.85}, {\"label\": \"Factory\", \"confidence\": 0.85}, {\"label\": \"Observer\", \"confidence\": 0.85}, {\"label\": \"Strategy\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"categorizes\", \"confidence\": 0.8}, {\"label\": \"solves\", \"confidence\": 0.8}, {\"label\": \"abstracts\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Factory\", \"predicate\": \"is_a\", \"object_class\": \"CreationalPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Observer\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Strategy\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  },
+  "1a2a4ed1e4b068b5717cfb0086b099c6341a075c24c6a15739d39a35bc03ae40": {
+    "content": "{\"classes\": [{\"label\": \"DesignPattern\", \"confidence\": 0.85}, {\"label\": \"CreationalPattern\", \"confidence\": 0.85}, {\"label\": \"StructuralPattern\", \"confidence\": 0.85}, {\"label\": \"BehavioralPattern\", \"confidence\": 0.85}, {\"label\": \"Factory\", \"confidence\": 0.85}, {\"label\": \"Observer\", \"confidence\": 0.85}, {\"label\": \"Strategy\", \"confidence\": 0.85}], \"properties\": [{\"label\": \"categorizes\", \"confidence\": 0.8}, {\"label\": \"solves\", \"confidence\": 0.8}, {\"label\": \"abstracts\", \"confidence\": 0.8}, {\"label\": \"enables\", \"confidence\": 0.8}], \"relationships\": [{\"subject_class\": \"Factory\", \"predicate\": \"is_a\", \"object_class\": \"CreationalPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Observer\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}, {\"subject_class\": \"Strategy\", \"predicate\": \"is_a\", \"object_class\": \"BehavioralPattern\", \"confidence\": 0.82}]}",
+    "tokens_in": 500,
+    "tokens_out": 400,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

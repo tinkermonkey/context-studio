@@ -1,0 +1,19 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "bounded_context",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "contradicts",
+        "kind": "property"
+      },
+      "object": {
+        "label": "expected_meaning",
+        "kind": "individual"
+      },
+      "confidence": 0.15
+    }
+  ]
+}

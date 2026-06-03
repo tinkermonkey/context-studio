@@ -1,0 +1,15 @@
+{
+  "classes": [
+    {
+      "label": "UnnecessaryClass",
+      "source": "off-topic_paragraph",
+      "confidence": 0.1
+    }
+  ],
+  "properties": [
+    {
+      "label": "spurious_property",
+      "confidence": 0.12
+    }
+  ]
+}
