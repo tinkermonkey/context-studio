@@ -19,22 +19,23 @@ from uuid import uuid4
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import tempfile
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
-from domain.pipelines.schema_node_definition_refinement.orchestrator import (
-    DefinitionRefinementOrchestrator,
-    DefinitionRefinementState,
-)
+from domain.pipelines.entities import PipelineType
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement.orchestrator import (
     ConnectionRefinementOrchestrator,
     ConnectionRefinementState,
 )
-from domain.pipelines.entities import PipelineType
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+from domain.pipelines.schema_node_definition_refinement.orchestrator import (
+    DefinitionRefinementOrchestrator,
+    DefinitionRefinementState,
+)
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 

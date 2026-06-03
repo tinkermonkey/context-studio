@@ -343,7 +343,7 @@ def main() -> int:
                     _logger.info("User quit")
                     break
 
-        _logger.info(f"\n=== Summary ===")
+        _logger.info("\n=== Summary ===")
         _logger.info(f"Rated: {total_rated}")
         _logger.info(f"Skipped: {total_skipped}")
         _logger.info(f"Output: {args.output}")

@@ -20,7 +20,6 @@ against a hand-curated expected ontology with metrics:
 - Top-3 match on external references
 """
 
-import json
 import logging
 import tempfile
 from pathlib import Path
@@ -33,8 +32,16 @@ from sqlalchemy.orm import sessionmaker
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
+from domain.pipelines.individual_extraction import (
+    IndividualExtractionOrchestrator,
+    IndividualExtractionState,
+    register_individual_extraction,
+)
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -47,23 +54,13 @@ from domain.pipelines.schema_extraction import (
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
-from domain.pipelines.individual_extraction import (
-    IndividualExtractionOrchestrator,
-    IndividualExtractionState,
-    register_individual_extraction,
+from domain.pipelines.schema_node_connection_refinement import (
+    ConnectionRefinementOrchestrator,
+    ConnectionRefinementState,
+    register_schema_node_connection_refinement,
 )
-from domain.pipelines.individual_extraction.apply_service import (
-    IndividualExtractionApplyService,
-)
-from domain.pipelines.schema_node_grounding import (
-    register_schema_node_grounding,
-)
-from domain.pipelines.schema_node_grounding.orchestrator import (
-    SchemaGroundingOrchestrator,
-    SchemaGroundingState,
-)
-from domain.pipelines.schema_node_grounding.apply_service import (
-    SchemaGroundingApplyService,
+from domain.pipelines.schema_node_connection_refinement.apply_service import (
+    SchemaConnectionRefinementApplyService,
 )
 from domain.pipelines.schema_node_definition_refinement import (
     DefinitionRefinementOrchestrator,
@@ -73,21 +70,22 @@ from domain.pipelines.schema_node_definition_refinement import (
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,
 )
-from domain.pipelines.schema_node_connection_refinement import (
-    ConnectionRefinementOrchestrator,
-    ConnectionRefinementState,
-    register_schema_node_connection_refinement,
+from domain.pipelines.schema_node_grounding import (
+    register_schema_node_grounding,
 )
-from domain.pipelines.schema_node_connection_refinement.apply_service import (
-    SchemaConnectionRefinementApplyService,
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
 )
-from tests.fixtures.pipeline_fixtures import load_fixture, load_expected_output
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+    SchemaGroundingState,
+)
+from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
 )
 from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
-    jaccard_similarity,
     mean_reciprocal_rank,
 )
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter

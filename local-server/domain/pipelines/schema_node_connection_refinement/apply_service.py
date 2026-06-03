@@ -73,7 +73,7 @@ class SchemaConnectionRefinementApplyService:
         for cls in self._repo.list_classes(limit=None):
             title_to_class_id[cls.title.lower()] = cls.id
 
-        scope_id = run.output_summary.get("scope_id", "")
+        run.output_summary.get("scope_id", "")
 
         for delta in deltas:
             confidence = delta.get("confidence", 0.0)

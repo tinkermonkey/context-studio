@@ -10,7 +10,6 @@ implementation and records mock LLM responses from expected.json files.
 import json
 import sys
 from pathlib import Path
-from uuid import uuid4
 
 # Add local-server to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
