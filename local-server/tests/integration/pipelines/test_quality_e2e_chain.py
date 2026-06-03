@@ -103,12 +103,10 @@ def _get_llm_provider_for_cassette(cassette_path: Path, refresh_cassettes: bool)
     """
     Get the appropriate LLM provider for a cassette path.
 
-    Returns CassetteLLMProvider if cassette exists, RecordingLLMProvider if recording,
+    Returns RecordingLLMProvider if recording, CassetteLLMProvider if cassette exists,
     otherwise raises FileNotFoundError.
     """
-    if cassette_path.exists():
-        return CassetteLLMProvider(cassette_path)
-
+    # Check refresh_cassettes first so we can re-record existing cassettes
     if refresh_cassettes:
         settings = get_settings()
         llm_config = settings.llm
@@ -128,6 +126,9 @@ def _get_llm_provider_for_cassette(cassette_path: Path, refresh_cassettes: bool)
             openrouter_api_key=llm_config.openrouter_api_key,
         )
         return RecordingLLMProvider(real_llm_provider, cassette_path)
+
+    if cassette_path.exists():
+        return CassetteLLMProvider(cassette_path)
 
     raise FileNotFoundError(
         f"Cassette not found at {cassette_path} and --refresh-cassettes not set."
