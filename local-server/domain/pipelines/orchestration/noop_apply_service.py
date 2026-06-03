@@ -44,4 +44,5 @@ class NoOpApplyService:
         # Track the created taxonomy ID
         result.created_taxonomy_ids.append(sentinel_taxonomy.id)
 
+        result.validate()
         return result

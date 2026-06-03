@@ -81,4 +81,5 @@ class SchemaGroundingApplyService:
         if result.external_references_created > 0:
             self._repo.save_class(cls)
 
+        result.validate()
         return result

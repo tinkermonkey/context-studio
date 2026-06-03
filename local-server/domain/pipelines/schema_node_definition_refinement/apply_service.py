@@ -58,6 +58,7 @@ class SchemaDefinitionRefinementApplyService:
         qualifying = [c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold]
         if not qualifying:
             result.classes_skipped += 1
+            result.validate()
             return result
 
         # Pick highest-confidence candidate
@@ -65,9 +66,11 @@ class SchemaDefinitionRefinementApplyService:
         new_definition = (best.get("definition") or "").strip()
         if not new_definition:
             result.classes_skipped += 1
+            result.validate()
             return result
 
         cls.description = new_definition
         self._repo.save_class(cls)
         result.classes_updated += 1
+        result.validate()
         return result

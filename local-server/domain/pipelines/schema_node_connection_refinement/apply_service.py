@@ -152,6 +152,7 @@ class SchemaConnectionRefinementApplyService:
             else:
                 result.relationships_skipped += 1
 
+        result.validate()
         return result
 
     def _resolve_class_id(self, ref: str, title_to_class_id: dict[str, str]) -> str | None:

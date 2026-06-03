@@ -180,4 +180,5 @@ class SchemaExtractionApplyService:
             result.relationships_created += 1
             result.created_relationship_ids.append(new_rel.id)
 
+        result.validate()
         return result

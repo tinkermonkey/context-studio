@@ -124,6 +124,7 @@ class IndividualExtractionApplyService:
                     result=result,
                 )
 
+        result.validate()
         return result
 
     def _resolve_individual_id(

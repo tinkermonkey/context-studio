@@ -28,6 +28,10 @@ class ApplyResult:
     created_taxonomy_ids: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        self.validate()
+
+    def validate(self) -> None:
+        """Validate that all counts match their corresponding ID list lengths."""
         if self.classes_created != len(self.created_class_ids):
             raise ValueError(
                 f"classes_created ({self.classes_created}) and "
