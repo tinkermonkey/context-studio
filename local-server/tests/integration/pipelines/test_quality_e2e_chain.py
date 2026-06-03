@@ -106,6 +106,15 @@ METRIC_FLOORS = {
     "pct_references_top3": 0.80,
 }
 
+# Live test metric floors (excludes pct_references_top3 since external references
+# are only populated by stage 3 grounding, which is skipped in the live test)
+LIVE_METRIC_FLOORS = {
+    "class_set_match": 1.0,
+    "property_set_match": 1.0,
+    "relationship_set_match": 1.0,
+    "mean_description_cosine": 0.75,
+}
+
 
 @pytest.fixture
 def temp_db():
@@ -523,7 +532,6 @@ class TestQualityE2EChain:
     async def test_live_e2e_chain_executes_all_stages(
         self,
         scenario: str,
-        embedding_service,
         ontology_repo,
         registered_pipelines,
         metrics_emitter,
@@ -563,6 +571,9 @@ class TestQualityE2EChain:
 
         if not fixture_input or not expected_output:
             pytest.skip(f"Fixture not found for scenario {scenario}")
+
+        # Initialize embedding service for description similarity metrics
+        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
 
         # Initialize registries
         config_registry, impl_registry = registered_pipelines
@@ -748,5 +759,5 @@ class TestQualityE2EChain:
         )
 
         # Assert metrics against floors
-        gate = FloorGate(METRIC_FLOORS)
+        gate = FloorGate(LIVE_METRIC_FLOORS)
         gate.assert_metrics(metrics, pipeline_type=f"e2e_chain/{scenario}")
