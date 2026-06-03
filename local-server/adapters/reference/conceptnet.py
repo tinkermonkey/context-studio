@@ -73,6 +73,31 @@ class ConceptNetSource:
             logger.error(f"Unexpected error during ConceptNet availability check: {e}")
             return False
 
+    def _parse_search_response(self, data: dict, limit: int) -> list[ReferenceResult]:
+        """Parse ConceptNet search response into ReferenceResult objects."""
+        results = []
+        if "edges" in data:
+            seen_uris = set()
+            for edge in data["edges"]:
+                start = edge.get("start", {})
+                uri = start.get("@id", "")
+                label = start.get("label", "")
+
+                if uri and uri not in seen_uris:
+                    seen_uris.add(uri)
+                    results.append(
+                        ReferenceResult(
+                            uri=uri,
+                            label=label,
+                            description=None,
+                            source=self.source_name,
+                        )
+                    )
+
+                if len(results) >= limit:
+                    break
+        return results
+
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """
         Search for concepts matching a term in ConceptNet.
@@ -91,33 +116,8 @@ class ConceptNetSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            # Parse ConceptNet API response
-            if "edges" in data:
-                seen_uris = set()
-                for edge in data["edges"]:
-                    start = edge.get("start", {})
-                    uri = start.get("@id", "")
-                    label = start.get("label", "")
-
-                    if uri and uri not in seen_uris:
-                        seen_uris.add(uri)
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=None,
-                                source=self.source_name,
-                            )
-                        )
-
-                    if len(results) >= limit:
-                        break
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"ConceptNet search timed out for '{term}': {e}")
             return []
@@ -234,32 +234,8 @@ class ConceptNetSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            if "edges" in data:
-                seen_uris = set()
-                for edge in data["edges"]:
-                    start = edge.get("start", {})
-                    uri = start.get("@id", "")
-                    label = start.get("label", "")
-
-                    if uri and uri not in seen_uris:
-                        seen_uris.add(uri)
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=None,
-                                source=self.source_name,
-                            )
-                        )
-
-                    if len(results) >= limit:
-                        break
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"ConceptNet search timed out for '{term}': {e}")
             return []

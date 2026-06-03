@@ -44,20 +44,22 @@ def http_cassette_mode(request) -> str:
 
 
 @pytest.fixture
-def http_client(http_cassette_mode, http_cassette_path) -> httpx.AsyncClient:
+async def http_client(http_cassette_mode, http_cassette_path) -> httpx.AsyncClient:
     """Create an httpx.AsyncClient with optional cassette recording/replay.
 
     Returns:
     - Client with RecordingHTTPTransport if record mode
     - Client with ReplayHTTPTransport if replay mode and cassette exists
     - Client with default transport if live mode
+
+    Properly closes the client on teardown, ensuring cassettes are flushed to disk.
     """
     if http_cassette_mode == "record":
         transport = RecordingHTTPTransport(
             delegate=httpx.AsyncHTTPTransport(),
             cassette_path=http_cassette_path,
         )
-        return httpx.AsyncClient(transport=transport)
+        client = httpx.AsyncClient(transport=transport)
     elif http_cassette_mode == "replay":
         if not http_cassette_path.exists():
             raise FileNotFoundError(
@@ -65,9 +67,12 @@ def http_client(http_cassette_mode, http_cassette_path) -> httpx.AsyncClient:
                 f"Run with --refresh-cassettes to record, or mark test with @pytest.mark.real_http"
             )
         transport = ReplayHTTPTransport(cassette_path=http_cassette_path)
-        return httpx.AsyncClient(transport=transport)
+        client = httpx.AsyncClient(transport=transport)
     else:
-        return httpx.AsyncClient()
+        client = httpx.AsyncClient()
+
+    yield client
+    await client.aclose()
 
 
 @pytest.fixture

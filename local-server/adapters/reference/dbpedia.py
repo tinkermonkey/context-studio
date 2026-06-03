@@ -67,6 +67,26 @@ class DBpediaSource:
             logger.error(f"Unexpected error during DBpedia availability check: {e}")
             return False
 
+    def _parse_search_response(self, data: dict, limit: int) -> list[ReferenceResult]:
+        """Parse DBpedia search response into ReferenceResult objects."""
+        results = []
+        if "results" in data:
+            for result in data["results"][:limit]:
+                uri = result.get("uri", "")
+                label = result.get("label", "")
+                description = result.get("description", None)
+
+                if uri:
+                    results.append(
+                        ReferenceResult(
+                            uri=uri,
+                            label=label,
+                            description=description,
+                            source=self.source_name,
+                        )
+                    )
+        return results
+
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """
         Search for entities matching a term in DBpedia.
@@ -89,28 +109,8 @@ class DBpediaSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            # Parse DBpedia Lookup API response
-            if "results" in data:
-                for result in data["results"][:limit]:
-                    uri = result.get("uri", "")
-                    label = result.get("label", "")
-                    description = result.get("description", None)
-
-                    if uri:
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=description,
-                                source=self.source_name,
-                            )
-                        )
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"DBpedia search timed out for '{term}': {e}")
             return []
@@ -188,27 +188,8 @@ class DBpediaSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            if "results" in data:
-                for result in data["results"][:limit]:
-                    uri = result.get("uri", "")
-                    label = result.get("label", "")
-                    description = result.get("description", None)
-
-                    if uri:
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=description,
-                                source=self.source_name,
-                            )
-                        )
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"DBpedia search timed out for '{term}': {e}")
             return []

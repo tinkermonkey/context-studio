@@ -38,7 +38,7 @@ def _compute_prompt_hash(
 
 
 class RecordingHTTPTransport(httpx.AsyncBaseTransport):
-    """Intercepts httpx.AsyncClient calls and records them to disk via respx.
+    """Intercepts httpx.AsyncClient calls at the transport layer and records them to disk.
 
     Records HTTP interactions (request/response pairs) to a JSON cassette file,
     enabling deterministic replay in tests without network access.
@@ -62,6 +62,9 @@ class RecordingHTTPTransport(httpx.AsyncBaseTransport):
     ) -> httpx.Response:
         """Handle an async request and record the interaction."""
         response = await self._delegate.handle_async_request(request)
+
+        # Explicitly read the response body to handle streaming responses safely
+        await response.aread()
 
         interaction = {
             "request": {

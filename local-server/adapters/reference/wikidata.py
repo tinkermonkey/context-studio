@@ -71,6 +71,27 @@ class WikidataSource:
             logger.error(f"Unexpected error during Wikidata availability check: {e}")
             return False
 
+    def _parse_search_response(self, data: dict, limit: int) -> list[ReferenceResult]:
+        """Parse Wikidata search response into ReferenceResult objects."""
+        results = []
+        if "search" in data:
+            for item in data["search"][:limit]:
+                entity_id = item.get("id", "")
+                label = item.get("label", "")
+                description = item.get("description", None)
+
+                if entity_id:
+                    uri = f"http://www.wikidata.org/entity/{entity_id}"
+                    results.append(
+                        ReferenceResult(
+                            uri=uri,
+                            label=label,
+                            description=description,
+                            source=self.source_name,
+                        )
+                    )
+        return results
+
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """
         Search for entities matching a term in Wikidata.
@@ -95,29 +116,8 @@ class WikidataSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            # Parse Wikidata API response
-            if "search" in data:
-                for item in data["search"][:limit]:
-                    entity_id = item.get("id", "")
-                    label = item.get("label", "")
-                    description = item.get("description", None)
-
-                    if entity_id:
-                        uri = f"http://www.wikidata.org/entity/{entity_id}"
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=description,
-                                source=self.source_name,
-                            )
-                        )
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"Wikidata search timed out for '{term}': {e}")
             return []
@@ -263,28 +263,8 @@ class WikidataSource:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-
             data = response.json()
-            results = []
-
-            if "search" in data:
-                for item in data["search"][:limit]:
-                    entity_id = item.get("id", "")
-                    label = item.get("label", "")
-                    description = item.get("description", None)
-
-                    if entity_id:
-                        uri = f"http://www.wikidata.org/entity/{entity_id}"
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=description,
-                                source=self.source_name,
-                            )
-                        )
-
-            return results
+            return self._parse_search_response(data, limit)
         except httpx.TimeoutException as e:
             logger.warning(f"Wikidata search timed out for '{term}': {e}")
             return []
