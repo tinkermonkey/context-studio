@@ -208,7 +208,14 @@ class FakeLLMProvider:
         seed: int | None = None,
     ) -> LLMResponse:
         return self.complete(
-            system_prompt, user_prompt, model, temperature, max_tokens, response_format, timeout, seed
+            system_prompt,
+            user_prompt,
+            model,
+            temperature,
+            max_tokens,
+            response_format,
+            timeout,
+            seed,
         )
 
     def is_model_available(self, model: str) -> bool:
