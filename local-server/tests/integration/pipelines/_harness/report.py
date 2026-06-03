@@ -171,10 +171,13 @@ class ABReport:
             delta = value_b - value_a if not has_nan else float("nan")
             delta_str = f"{delta:+.4f}" if not has_nan else "N/A"
 
+            value_a_str = f"{value_a:.4f}" if not math.isnan(value_a) else "N/A"
+            value_b_str = f"{value_b:.4f}" if not math.isnan(value_b) else "N/A"
+
             lines.append(
                 f"{metric_name.ljust(20)}"
-                f"{value_a:<15.4f}"
-                f"{value_b:<15.4f}"
+                f"{value_a_str:<15}"
+                f"{value_b_str:<15}"
                 f"{delta_str}"
             )
 
