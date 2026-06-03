@@ -13,7 +13,10 @@ from pathlib import Path
 
 def load_expected_uris(fixture_scenario: str) -> dict[str, str]:
     """Load expected URIs from expected.json file, indexed by source."""
-    fixtures_dir = Path(__file__).parent.parent / "tests/integration/fixtures/pipelines/schema_node_grounding"
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests/integration/fixtures/pipelines/schema_node_grounding"
+    )
     expected_file = fixtures_dir / fixture_scenario / "expected.json"
 
     uris_by_source = {}
@@ -70,7 +73,9 @@ def generate_conceptnet_response(label: str, uri: str | None = None) -> str:
     return json.dumps(response)
 
 
-def generate_wikidata_response(label: str, entity_id: str | None = None, uri: str | None = None) -> str:
+def generate_wikidata_response(
+    label: str, entity_id: str | None = None, uri: str | None = None
+) -> str:
     """Generate a Wikidata response matching the adapter's expected format."""
     if uri:
         # Extract entity ID from URI
@@ -92,16 +97,20 @@ def generate_wikidata_response(label: str, entity_id: str | None = None, uri: st
 
 
 def main():
-    cassette_path = Path(
-        __file__
-    ).parent.parent / (
-        "tests/integration/pipelines/schema_node_grounding/"
-        "_cassettes/test_quality_schema_node_grounding/test_quality_metrics_computation_all_fixtures.json"
+    cassette_path = (
+        Path(__file__).parent.parent
+        / "tests/integration/pipelines/schema_node_grounding"
+        / "_cassettes"
+        / "test_quality_schema_node_grounding"
+        / "test_quality_metrics_computation_all_fixtures.json"
     )
 
     cassette_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fixtures_dir = Path(__file__).parent.parent / "tests/integration/fixtures/pipelines/schema_node_grounding"
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests/integration/fixtures/pipelines/schema_node_grounding"
+    )
 
     # Get all fixture scenarios
     fixture_scenarios = sorted([
@@ -127,7 +136,10 @@ def main():
         interactions.append({
             "request": {
                 "method": "GET",
-                "url": f"https://lookup.dbpedia.org/api/search?query={label}&format=json&maxResults=10",
+                "url": (
+                    f"https://lookup.dbpedia.org/api/search"
+                    f"?query={label}&format=json&maxResults=10"
+                ),
                 "headers": {},
                 "body": None,
             },
@@ -159,7 +171,11 @@ def main():
         interactions.append({
             "request": {
                 "method": "GET",
-                "url": f"https://www.wikidata.org/w/api.php?action=wbsearchentities&search={label}&language=en&format=json&limit=10",
+                "url": (
+                    f"https://www.wikidata.org/w/api.php"
+                    f"?action=wbsearchentities&search={label}"
+                    f"&language=en&format=json&limit=10"
+                ),
                 "headers": {},
                 "body": None,
             },

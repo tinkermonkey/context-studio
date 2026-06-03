@@ -216,9 +216,17 @@ class TestQualitySchemaNodeGrounding:
         )
 
         # Wire cassette-based LLM provider for deterministic testing (FR-H5)
-        cassette_path = Path(__file__).parent / "_cassettes" / "test_quality_schema_node_grounding" / "test_quality_metrics_computation_all_fixtures.json"
+        cassette_path = (
+            Path(__file__).parent
+            / "_cassettes"
+            / "test_quality_schema_node_grounding"
+            / "test_quality_metrics_computation_all_fixtures.json"
+        )
         if not cassette_path.exists():
-            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record cassette.")
+            pytest.skip(
+                f"Cassette not found at {cassette_path}. "
+                f"Run with real LLM to record cassette."
+            )
 
         llm_provider = CassetteLLMProvider(cassette_path)
 
@@ -455,7 +463,10 @@ class TestQualitySchemaNodeGrounding:
         updated_cls = ontology_repo.get_class(cls.id)
         assert len(updated_cls.external_references) == 2
         state_after_apply = [
-            (ref.identifier, ref.uri, ref.source) for ref in sorted(updated_cls.external_references, key=lambda r: r.uri)
+            (ref.identifier, ref.uri, ref.source)
+            for ref in sorted(
+                updated_cls.external_references, key=lambda r: r.uri
+            )
         ]
 
         # Step 2: Re-apply same grounding (idempotency check)
@@ -469,7 +480,8 @@ class TestQualitySchemaNodeGrounding:
         # Verify idempotent state
         final_cls = ontology_repo.get_class(cls.id)
         state_after_reapply = [
-            (ref.identifier, ref.uri, ref.source) for ref in sorted(final_cls.external_references, key=lambda r: r.uri)
+            (ref.identifier, ref.uri, ref.source)
+            for ref in sorted(final_cls.external_references, key=lambda r: r.uri)
         ]
 
         assert state_after_apply == state_after_reapply, (
