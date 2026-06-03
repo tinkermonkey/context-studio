@@ -9,8 +9,8 @@ Reads JSONL ratings from multiple raters and computes:
 - n: Total number of rated candidates
 
 Metrics are computed per (config_ref, config_version) and written to
-tests/integration/fixtures/pipelines/_human_eval/ with source: "human_eval"
-using the standard envelope.
+tests/integration/fixtures/pipelines/_metrics/ with source: "human_eval"
+using the standard envelope (co-queryable with automated metrics).
 
 Usage:
     python aggregate.py --pipeline definition_refinement
@@ -245,7 +245,7 @@ def main() -> int:
         default=None,
         help=(
             "Output JSONL file for metrics "
-            "(default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>_metrics.jsonl)"
+            "(default: tests/integration/fixtures/pipelines/_metrics/<pipeline>_human_eval.jsonl)"
         ),
     )
     parser.add_argument(
@@ -269,11 +269,13 @@ def main() -> int:
 
     pipeline_type = f"schema_node_{args.pipeline}"
 
-    fixture_dir = Path("tests/integration/fixtures/pipelines/_human_eval")
+    ratings_dir = Path("tests/integration/fixtures/pipelines/_human_eval")
+    metrics_dir = Path("tests/integration/fixtures/pipelines/_metrics")
+
     if args.ratings is None:
-        args.ratings = fixture_dir / f"{pipeline_type}.jsonl"
+        args.ratings = ratings_dir / f"{pipeline_type}.jsonl"
     if args.output is None:
-        args.output = fixture_dir / f"{pipeline_type}_metrics.jsonl"
+        args.output = metrics_dir / f"{pipeline_type}_human_eval.jsonl"
 
     setup_logging(args.verbose)
 

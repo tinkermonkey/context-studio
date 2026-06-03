@@ -50,13 +50,13 @@ After ratings have been collected, aggregate them into metrics:
 ```bash
 python scripts/human_eval/aggregate.py \
   --ratings _ratings/human_eval.jsonl \
-  --pipeline schema_node_definition_refinement \
-  --output _metrics/human_eval.jsonl
+  --pipeline definition_refinement \
+  --output _metrics/schema_node_definition_refinement_human_eval.jsonl
 ```
 
 Options:
-- `--ratings`: Input JSONL file with ratings (default: `_ratings/human_eval.jsonl`)
-- `--output`: Output JSONL file for metrics (default: `_metrics/human_eval.jsonl`)
+- `--ratings`: Input JSONL file with ratings (default: `tests/integration/fixtures/pipelines/_human_eval/{pipeline_type}.jsonl`)
+- `--output`: Output JSONL file for metrics (default: `tests/integration/fixtures/pipelines/_metrics/{pipeline_type}_human_eval.jsonl`)
 - `--pipeline`: Pipeline type to aggregate for (default: `schema_node_definition_refinement`)
 - `--api-url`: Base URL of the API for fetching run metadata (default: `http://localhost:8000`)
 - `--verbose`: Verbose logging
@@ -125,7 +125,7 @@ WITH automated AS (
   WHERE source = 'automated'
 ),
 human_eval AS (
-  SELECT * FROM read_json_auto('_metrics/human_eval.jsonl')
+  SELECT * FROM read_json_auto('_metrics/schema_node_definition_refinement_human_eval.jsonl')
   WHERE source = 'human_eval'
 )
 
@@ -167,8 +167,8 @@ python scripts/human_eval/rate.py \
 # 3. Aggregate all ratings
 python scripts/human_eval/aggregate.py \
   --ratings _ratings/human_eval.jsonl \
-  --pipeline schema_node_definition_refinement \
-  --output _metrics/human_eval.jsonl
+  --pipeline definition_refinement \
+  --output _metrics/schema_node_definition_refinement_human_eval.jsonl
 
 # 4. Query combined metrics
 duckdb <<EOF
@@ -177,7 +177,7 @@ WITH automated AS (
   WHERE source = 'automated'
 ),
 human_eval AS (
-  SELECT * FROM read_json_auto('_metrics/human_eval.jsonl')
+  SELECT * FROM read_json_auto('_metrics/schema_node_definition_refinement_human_eval.jsonl')
   WHERE source = 'human_eval'
 )
 SELECT a.config_version, a.metrics.mean_cosine, h.metrics.accept_rate

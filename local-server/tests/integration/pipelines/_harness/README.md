@@ -144,7 +144,7 @@ LIMIT 20;
 
 ### Combining Automated and Human-Eval Metrics
 
-Human evaluation ratings are aggregated into metrics by `scripts/human_eval/aggregate.py` and written to `_metrics/human_eval.jsonl`. To combine automated metrics with human-eval ratings:
+Human evaluation ratings are aggregated into metrics by `scripts/human_eval/aggregate.py` and written to `_metrics/{pipeline_type}_human_eval.jsonl`. To combine automated metrics with human-eval ratings:
 
 ```sql
 -- Join automated metrics with human-eval consensus
@@ -153,7 +153,7 @@ WITH automated AS (
   WHERE source = 'automated'
 ),
 human_eval AS (
-  SELECT * FROM read_json_auto('_metrics/human_eval.jsonl')
+  SELECT * FROM read_json_auto('_metrics/*_human_eval.jsonl')
   WHERE source = 'human_eval'
 )
 SELECT
