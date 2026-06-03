@@ -57,7 +57,7 @@ python scripts/human_eval/aggregate.py \
 Options:
 - `--ratings`: Input JSONL file with ratings (default: `tests/integration/fixtures/pipelines/_human_eval/{pipeline_type}.jsonl`)
 - `--output`: Output JSONL file for metrics (default: `tests/integration/fixtures/pipelines/_metrics/{pipeline_type}_human_eval.jsonl`)
-- `--pipeline`: Pipeline type to aggregate for (default: `schema_node_definition_refinement`)
+- `--pipeline`: Pipeline type to aggregate for (default: `definition_refinement`)
 - `--api-url`: Base URL of the API for fetching run metadata (default: `http://localhost:8000`)
 - `--verbose`: Verbose logging
 
