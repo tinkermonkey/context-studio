@@ -558,10 +558,20 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         sample_scope_id,
     ):
         """Classes with same title in different schemes resolve to correct scheme."""
+        # Create the scope class (this is the node being refined)
+        scheme_id = "concept-scheme-1"
+        scope_class = Class(
+            id=sample_scope_id,
+            concept_scheme_id=scheme_id,
+            taxonomy_id="tax-1",
+            title="Scope",
+            description="The scope class being refined",
+        )
+
         # Create two classes with the same title in different concept schemes
         class_in_scope = Class(
             id="class-scope-1",
-            concept_scheme_id=sample_scope_id,
+            concept_scheme_id=scheme_id,
             taxonomy_id="tax-1",
             title="Service",
             description="Service in the target scheme",
@@ -575,7 +585,7 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         )
         class_in_scope_2 = Class(
             id="class-scope-2",
-            concept_scheme_id=sample_scope_id,
+            concept_scheme_id=scheme_id,
             taxonomy_id="tax-1",
             title="API",
             description="API in the target scheme",
@@ -583,7 +593,9 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
 
         def get_class_side_effect(ref):
             # ID-based lookup
-            if ref == "class-scope-1":
+            if ref == sample_scope_id:
+                return scope_class
+            elif ref == "class-scope-1":
                 return class_in_scope
             elif ref == "class-scope-2":
                 return class_in_scope_2
@@ -595,13 +607,14 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
             sample_property_definition
         )
+
         # When filtering by concept_scheme_id, return only classes in that scheme
         def list_classes_side_effect(concept_scheme_id=None, limit=None, **kwargs):
-            if concept_scheme_id == sample_scope_id:
-                return [class_in_scope, class_in_scope_2]
+            if concept_scheme_id == scheme_id:
+                return [scope_class, class_in_scope, class_in_scope_2]
             elif concept_scheme_id == "other-scheme-id":
                 return [class_in_other_scheme]
-            return [class_in_scope, class_in_scope_2, class_in_other_scheme]
+            return [scope_class, class_in_scope, class_in_scope_2, class_in_other_scheme]
 
         mock_ontology_repo.list_classes.side_effect = list_classes_side_effect
 
@@ -632,10 +645,8 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         # Should create relationship using class_in_scope (not class_in_other_scheme)
         assert result.relationships_created == 1
         assert result.relationships_skipped == 0
-        # Verify list_classes was called with the scope_id
-        mock_ontology_repo.list_classes.assert_called_with(
-            concept_scheme_id=sample_scope_id, limit=None
-        )
+        # Verify list_classes was called with the scope's concept_scheme_id
+        mock_ontology_repo.list_classes.assert_called_with(concept_scheme_id=scheme_id, limit=None)
         # Verify the relationship was created with the correct classes
         saved_rel_call = mock_ontology_repo.save_relationship.call_args
         saved_rel = saved_rel_call[0][0]
@@ -687,9 +698,7 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         # Should still work (backward compatible)
         assert result.relationships_created == 1
         # Verify list_classes was called with concept_scheme_id=None
-        mock_ontology_repo.list_classes.assert_called_with(
-            concept_scheme_id=None, limit=None
-        )
+        mock_ontology_repo.list_classes.assert_called_with(concept_scheme_id=None, limit=None)
 
 
 class TestSchemaConnectionRefinementApplyServiceEdgeCases:

@@ -8,7 +8,7 @@ are wired and operational.
 Includes apply round-trip test ensuring idempotent ontology state.
 """
 
-import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -41,6 +41,8 @@ _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
 _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
 sys.path.insert(0, _root_dir)
+
+_logger = logging.getLogger(__name__)
 
 
 def _get_fixtures_dir() -> Path:
@@ -192,7 +194,9 @@ class TestQualitySchemaNodeGrounding:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
     @pytest.mark.asyncio
-    async def test_quality_metrics_computation(self, grounding_orchestrator, recorded_vcr, metrics_emitter):
+    async def test_quality_metrics_computation(
+        self, grounding_orchestrator, recorded_vcr, metrics_emitter
+    ):
         """Test quality metrics computation across all 38+ fixture scenarios."""
         scenarios = _list_fixture_scenarios()
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
@@ -206,7 +210,7 @@ class TestQualitySchemaNodeGrounding:
                 expected = load_expected_output("schema_node_grounding", scenario)
                 distractors = load_distractors("schema_node_grounding", scenario)
 
-                node_label = fixture.get("node_label", "")
+                fixture.get("node_label", "")
                 expected_uris = {
                     ref["uri"] for ref in expected.get("expected_external_references", [])
                 }
