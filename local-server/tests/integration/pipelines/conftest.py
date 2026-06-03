@@ -6,6 +6,7 @@ Provides common infrastructure for testing the pipeline framework:
 - Mock LLM provider with canned responses
 - Database and repository fixtures
 - Event publisher for change event tracking
+- Quality testing fixtures (cassettes, refresh mode)
 """
 
 import tempfile
@@ -31,6 +32,10 @@ from domain.pipelines.registry import (
 )
 from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.integration.pipelines._harness.cassettes import (
+    CassetteLLMProvider,
+    RecordingLLMProvider,
+)
 
 
 @pytest.fixture
@@ -146,3 +151,59 @@ def client(pipeline_run_repo, batch_repo, impl_registry, config_registry, llm_pr
     app.state.llm_router = llm_provider
 
     return TestClient(app)
+
+
+def pytest_addoption(parser):
+    """Register custom pytest command-line options for quality testing."""
+    parser.addoption(
+        "--refresh-cassettes",
+        action="store_true",
+        default=False,
+        help="Re-record all cassettes against live providers",
+    )
+
+
+@pytest.fixture
+def cassette_path(request):
+    """Compute cassette path based on test module and function."""
+    test_file = Path(request.node.fspath)
+    test_module = request.node.name
+
+    cassette_dir = (
+        test_file.parent / "_cassettes" / test_file.stem
+    )
+    cassette_dir.mkdir(parents=True, exist_ok=True)
+
+    return cassette_dir / f"{test_module}.json"
+
+
+@pytest.fixture
+def llm_provider_mode(request):
+    """Determine execution mode: 'cassette' (default) or 'live'."""
+    if request.node.get_closest_marker("real_llm"):
+        return "live"
+    return "cassette"
+
+
+@pytest.fixture
+def quality_llm_provider(request, llm_provider_mode, cassette_path, llm_provider):
+    """Provide appropriate LLM provider based on execution mode.
+
+    Returns:
+    - CassetteLLMProvider if cassette mode and cassette exists
+    - RecordingLLMProvider if refresh-cassettes is requested
+    - Real llm_provider if live mode
+    """
+    if llm_provider_mode == "cassette":
+        if cassette_path.exists() and not request.config.getoption("--refresh-cassettes"):
+            return CassetteLLMProvider(cassette_path)
+        elif request.config.getoption("--refresh-cassettes"):
+            return RecordingLLMProvider(llm_provider, cassette_path)
+        else:
+            raise FileNotFoundError(
+                f"Cassette not found at {cassette_path}. "
+                f"Run with --refresh-cassettes to record, or mark test with @pytest.mark.real_llm"
+            )
+    else:
+        # Live mode
+        return llm_provider
