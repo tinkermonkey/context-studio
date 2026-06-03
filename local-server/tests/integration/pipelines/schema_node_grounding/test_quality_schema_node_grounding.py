@@ -41,7 +41,6 @@ from tests.integration.pipelines._harness import (
     ranking_metrics,
 )
 from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
-from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
@@ -74,11 +73,6 @@ def _get_metrics_dir() -> Path:
 
 class TestQualitySchemaNodeGrounding:
     """Quality test suite for schema node grounding with ranking metrics."""
-
-    @pytest.fixture
-    def fake_llm_provider(self):
-        """Create a fake LLM provider for testing."""
-        return FakeLLMProvider(response_content="test response")
 
     @pytest.fixture
     def grounding_scorer(self):
@@ -174,9 +168,9 @@ class TestQualitySchemaNodeGrounding:
                         source_score=0.9,  # High confidence for correct candidates
                     )
                     candidates.append(candidate)
-            except Exception as e:
-                # Log but continue - fixtures may not have expected URIs
-                pass
+            except (FileNotFoundError, KeyError) as e:
+                # Fixtures may not have expected URIs
+                print(f"Warning: Failed to load expected URIs for {matching_scenario}: {e}")
 
             # Load and add distractors (incorrect answers) to create ranking challenge
             try:
@@ -192,9 +186,9 @@ class TestQualitySchemaNodeGrounding:
                                 source_score=0.5,  # Lower confidence for distractors
                             )
                             candidates.append(candidate)
-            except Exception as e:
-                # Log but continue - fixtures may not have distractors
-                pass
+            except (FileNotFoundError, KeyError) as e:
+                # Fixtures may not have distractors
+                print(f"Warning: Failed to load distractors for {matching_scenario}: {e}")
 
             return candidates
 
@@ -327,8 +321,9 @@ class TestQualitySchemaNodeGrounding:
         # Current achievable with cassette-recorded LLM and mixed distractors:
         # top-1 ≈ 0.33, top-3 ≈ 0.99, MRR ≈ 0.61
         # Floors set to validated achievable levels to ensure CI passes while
-        # maintaining meaningful regression detection. Future improvements to the
-        # scoring algorithm should target the original spec floors.
+        # maintaining meaningful regression detection. Note: top-1 precision floor
+        # set to 0.30 (actual: 0.33) — a known gap of 34% vs spec 0.50 pending
+        # improvements to the scoring algorithm. Top-3 and MRR meet or exceed spec.
         floors = {
             "top1_precision": 0.30,
             "top3_precision": 0.95,
