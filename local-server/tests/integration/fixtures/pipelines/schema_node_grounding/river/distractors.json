@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Stream",
+    "http://dbpedia.org/resource/Waterbody",
+    "http://dbpedia.org/resource/Creek"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/stream",
+    "http://conceptnet.io/c/en/water"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q47521",
+    "http://www.wikidata.org/entity/Q35702"
+  ],
+  "schema.org": []
+}

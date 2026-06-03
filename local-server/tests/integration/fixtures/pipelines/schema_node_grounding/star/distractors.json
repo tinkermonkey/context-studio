@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Planet",
+    "http://dbpedia.org/resource/Celestial",
+    "http://dbpedia.org/resource/Sun"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/planet",
+    "http://conceptnet.io/c/en/sun"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q634",
+    "http://www.wikidata.org/entity/Q11019"
+  ],
+  "schema.org": []
+}

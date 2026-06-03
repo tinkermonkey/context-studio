@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Space",
+      "source": "DBpedia",
+      "rationale": "Spatial dimension"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1922563",
+      "source": "Wikidata",
+      "rationale": "Wikidata space"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

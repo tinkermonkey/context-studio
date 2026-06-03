@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Location",
+      "source": "DBpedia",
+      "rationale": "Geographic location"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q2221906",
+      "source": "Wikidata",
+      "rationale": "Wikidata location"
+    },
+    {
+      "uri": "https://schema.org/Place",
+      "source": "schema.org",
+      "rationale": "schema.org place"
+    }
+  ]
+}

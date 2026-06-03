@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Company",
+    "http://dbpedia.org/resource/Institution",
+    "http://dbpedia.org/resource/Foundation"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/company",
+    "http://conceptnet.io/c/en/group"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q6881115",
+    "http://www.wikidata.org/entity/Q33971"
+  ],
+  "schema.org": []
+}

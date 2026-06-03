@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Atom",
+    "http://dbpedia.org/resource/Substance",
+    "http://dbpedia.org/resource/Material"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/atom",
+    "http://conceptnet.io/c/en/substance"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q125885",
+    "http://www.wikidata.org/entity/Q11472"
+  ],
+  "schema.org": []
+}

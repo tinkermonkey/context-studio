@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Chemical_compound",
+      "source": "DBpedia",
+      "rationale": "Substance"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q11173",
+      "source": "Wikidata",
+      "rationale": "Wikidata chemical"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Ocean",
+      "source": "DBpedia",
+      "rationale": "Large water body"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q9430",
+      "source": "Wikidata",
+      "rationale": "Wikidata ocean"
+    },
+    {
+      "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+      "source": "schema.org",
+      "rationale": "Water body"
+    }
+  ]
+}

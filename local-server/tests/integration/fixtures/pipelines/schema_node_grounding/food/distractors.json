@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Cuisine",
+    "http://dbpedia.org/resource/Meal",
+    "http://dbpedia.org/resource/Ingredient"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/meal",
+    "http://conceptnet.io/c/en/cuisine"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q28840",
+    "http://www.wikidata.org/entity/Q29960"
+  ],
+  "schema.org": []
+}

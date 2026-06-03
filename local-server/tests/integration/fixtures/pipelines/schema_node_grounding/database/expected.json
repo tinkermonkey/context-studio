@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Database",
+      "source": "DBpedia",
+      "rationale": "Data storage"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q27302918",
+      "source": "Wikidata",
+      "rationale": "Wikidata database"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

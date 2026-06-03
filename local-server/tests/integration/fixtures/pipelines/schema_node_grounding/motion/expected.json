@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Motion",
+      "source": "DBpedia",
+      "rationale": "Change of position"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q11465",
+      "source": "Wikidata",
+      "rationale": "Wikidata motion"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

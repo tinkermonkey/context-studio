@@ -1,0 +1,10 @@
+{
+  "node_label": "ChemicalCompound",
+  "node_type": "Class",
+  "sources": [
+    "DBpedia",
+    "ConceptNet",
+    "Wikidata",
+    "schema.org"
+  ]
+}

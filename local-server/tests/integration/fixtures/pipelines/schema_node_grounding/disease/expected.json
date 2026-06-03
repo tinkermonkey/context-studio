@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Disease",
+      "source": "DBpedia",
+      "rationale": "Medical condition"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q12136",
+      "source": "Wikidata",
+      "rationale": "Wikidata disease"
+    },
+    {
+      "uri": "https://schema.org/MedicalCondition",
+      "source": "schema.org",
+      "rationale": "schema.org medical condition"
+    }
+  ]
+}

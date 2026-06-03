@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/School",
+    "http://dbpedia.org/resource/College",
+    "http://dbpedia.org/resource/Institution"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/school",
+    "http://conceptnet.io/c/en/college"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q13424603",
+    "http://www.wikidata.org/entity/Q33506"
+  ],
+  "schema.org": []
+}

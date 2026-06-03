@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/River",
+      "source": "DBpedia",
+      "rationale": "Water body"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q4022",
+      "source": "Wikidata",
+      "rationale": "Wikidata river"
+    },
+    {
+      "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+      "source": "schema.org",
+      "rationale": "Geographic feature"
+    }
+  ]
+}

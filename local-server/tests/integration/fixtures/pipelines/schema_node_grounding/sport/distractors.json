@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Game",
+    "http://dbpedia.org/resource/Competition",
+    "http://dbpedia.org/resource/Athletics"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/game",
+    "http://conceptnet.io/c/en/competition"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q14462",
+    "http://www.wikidata.org/entity/Q488188"
+  ],
+  "schema.org": []
+}

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Song",
+    "http://dbpedia.org/resource/Composer",
+    "http://dbpedia.org/resource/Sound"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/song",
+    "http://conceptnet.io/c/en/sound"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q557",
+    "http://www.wikidata.org/entity/Q36834"
+  ],
+  "schema.org": []
+}

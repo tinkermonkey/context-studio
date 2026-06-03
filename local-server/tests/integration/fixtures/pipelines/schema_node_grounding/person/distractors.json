@@ -1,0 +1,19 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Individual",
+    "http://dbpedia.org/resource/Human",
+    "http://dbpedia.org/resource/Man"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/human",
+    "http://conceptnet.io/c/en/individual"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q43229",
+    "http://www.wikidata.org/entity/Q7725634"
+  ],
+  "schema.org": [
+    "https://schema.org/Agent",
+    "https://schema.org/Thing"
+  ]
+}

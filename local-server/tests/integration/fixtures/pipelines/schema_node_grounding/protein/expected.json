@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Protein",
+      "source": "DBpedia",
+      "rationale": "Biomolecule"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q8054",
+      "source": "Wikidata",
+      "rationale": "Wikidata protein"
+    },
+    {
+      "uri": "https://schema.org/BioChemEntity",
+      "source": "schema.org",
+      "rationale": "Biochemical entity"
+    }
+  ]
+}

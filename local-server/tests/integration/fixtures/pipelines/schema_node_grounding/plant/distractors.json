@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Vegetation",
+    "http://dbpedia.org/resource/Flora",
+    "http://dbpedia.org/resource/Tree"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/vegetation",
+    "http://conceptnet.io/c/en/flora"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q10884",
+    "http://www.wikidata.org/entity/Q42295"
+  ],
+  "schema.org": []
+}

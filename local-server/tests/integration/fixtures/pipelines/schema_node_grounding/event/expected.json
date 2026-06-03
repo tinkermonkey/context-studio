@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Event",
+      "source": "DBpedia",
+      "rationale": "Occurrence or incident"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1656682",
+      "source": "Wikidata",
+      "rationale": "Wikidata event"
+    },
+    {
+      "uri": "https://schema.org/Event",
+      "source": "schema.org",
+      "rationale": "schema.org event"
+    }
+  ]
+}

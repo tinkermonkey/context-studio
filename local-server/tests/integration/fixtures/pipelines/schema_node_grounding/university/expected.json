@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/University",
+      "source": "DBpedia",
+      "rationale": "Educational institution"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q3918",
+      "source": "Wikidata",
+      "rationale": "Wikidata university"
+    },
+    {
+      "uri": "https://schema.org/EducationalOrganization",
+      "source": "schema.org",
+      "rationale": "schema.org organization"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/House",
+    "http://dbpedia.org/resource/Structure",
+    "http://dbpedia.org/resource/Construction"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/structure",
+    "http://conceptnet.io/c/en/construction"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q3947",
+    "http://www.wikidata.org/entity/Q11755"
+  ],
+  "schema.org": []
+}

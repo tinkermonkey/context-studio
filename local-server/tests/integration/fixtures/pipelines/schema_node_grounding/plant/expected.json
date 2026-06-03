@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Plant",
+      "source": "DBpedia",
+      "rationale": "Botanical organism"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q756",
+      "source": "Wikidata",
+      "rationale": "Wikidata plant"
+    },
+    {
+      "uri": "https://schema.org/BioChemEntity",
+      "source": "schema.org",
+      "rationale": "Bio entity"
+    }
+  ]
+}

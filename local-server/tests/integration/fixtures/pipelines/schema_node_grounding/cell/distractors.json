@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Tissue",
+    "http://dbpedia.org/resource/Organism",
+    "http://dbpedia.org/resource/Biology"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/tissue",
+    "http://conceptnet.io/c/en/organism"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q42861",
+    "http://www.wikidata.org/entity/Q7239"
+  ],
+  "schema.org": []
+}

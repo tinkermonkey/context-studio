@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Chemical_element",
+      "source": "DBpedia",
+      "rationale": "Element in periodic table"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q11344",
+      "source": "Wikidata",
+      "rationale": "Wikidata chemical element"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

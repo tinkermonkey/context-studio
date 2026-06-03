@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Hill",
+    "http://dbpedia.org/resource/Peak",
+    "http://dbpedia.org/resource/Landform"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/hill",
+    "http://conceptnet.io/c/en/peak"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q33837",
+    "http://www.wikidata.org/entity/Q1028494"
+  ],
+  "schema.org": []
+}

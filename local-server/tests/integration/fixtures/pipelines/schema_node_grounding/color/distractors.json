@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Hue",
+    "http://dbpedia.org/resource/Shade",
+    "http://dbpedia.org/resource/Pigment"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/hue",
+    "http://conceptnet.io/c/en/shade"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q4353169",
+    "http://www.wikidata.org/entity/Q1353674"
+  ],
+  "schema.org": []
+}

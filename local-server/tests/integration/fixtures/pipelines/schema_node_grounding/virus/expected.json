@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Virus",
+      "source": "DBpedia",
+      "rationale": "Infectious agent"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q10876",
+      "source": "Wikidata",
+      "rationale": "Wikidata virus"
+    },
+    {
+      "uri": "https://schema.org/BioChemEntity",
+      "source": "schema.org",
+      "rationale": "Living entity"
+    }
+  ]
+}

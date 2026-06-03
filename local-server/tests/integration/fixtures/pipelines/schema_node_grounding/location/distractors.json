@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Place",
+    "http://dbpedia.org/resource/Region",
+    "http://dbpedia.org/resource/Area"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/place",
+    "http://conceptnet.io/c/en/area"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q27096213",
+    "http://www.wikidata.org/entity/Q1221156"
+  ],
+  "schema.org": []
+}

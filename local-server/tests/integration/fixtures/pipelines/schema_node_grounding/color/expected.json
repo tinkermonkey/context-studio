@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Color",
+      "source": "DBpedia",
+      "rationale": "Visual property"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1075",
+      "source": "Wikidata",
+      "rationale": "Wikidata color"
+    },
+    {
+      "uri": "https://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic schema.org thing"
+    }
+  ]
+}

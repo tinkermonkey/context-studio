@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Movement",
+    "http://dbpedia.org/resource/Velocity",
+    "http://dbpedia.org/resource/Speed"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/movement",
+    "http://conceptnet.io/c/en/velocity"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q1541",
+    "http://www.wikidata.org/entity/Q11465"
+  ],
+  "schema.org": []
+}

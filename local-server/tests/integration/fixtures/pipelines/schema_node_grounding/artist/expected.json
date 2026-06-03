@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Artist",
+      "source": "DBpedia",
+      "rationale": "Creative professional"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q483501",
+      "source": "Wikidata",
+      "rationale": "Wikidata artist"
+    },
+    {
+      "uri": "https://schema.org/Artist",
+      "source": "schema.org",
+      "rationale": "schema.org artist"
+    }
+  ]
+}

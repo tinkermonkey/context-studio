@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Building",
+      "source": "DBpedia",
+      "rationale": "Structure"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q41176",
+      "source": "Wikidata",
+      "rationale": "Wikidata building"
+    },
+    {
+      "uri": "https://schema.org/Place",
+      "source": "schema.org",
+      "rationale": "schema.org place"
+    }
+  ]
+}

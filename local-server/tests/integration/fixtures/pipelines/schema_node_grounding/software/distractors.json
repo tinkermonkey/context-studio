@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Application",
+    "http://dbpedia.org/resource/Program",
+    "http://dbpedia.org/resource/System"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/application",
+    "http://conceptnet.io/c/en/program"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q189123",
+    "http://www.wikidata.org/entity/Q9135"
+  ],
+  "schema.org": []
+}
