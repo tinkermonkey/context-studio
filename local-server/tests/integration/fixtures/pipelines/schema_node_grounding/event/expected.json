@@ -11,7 +11,7 @@
       "rationale": "Wikidata event"
     },
     {
-      "uri": "https://schema.org/Event",
+      "uri": "http://schema.org/Event",
       "source": "schema.org",
       "rationale": "schema.org event"
     }

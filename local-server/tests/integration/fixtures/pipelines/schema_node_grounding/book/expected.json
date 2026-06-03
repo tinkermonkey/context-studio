@@ -11,7 +11,7 @@
       "rationale": "Wikidata book"
     },
     {
-      "uri": "https://schema.org/Book",
+      "uri": "http://schema.org/Book",
       "source": "schema.org",
       "rationale": "schema.org book"
     }

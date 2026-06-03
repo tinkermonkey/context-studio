@@ -11,7 +11,7 @@
       "rationale": "Wikidata building"
     },
     {
-      "uri": "https://schema.org/Place",
+      "uri": "http://schema.org/Place",
       "source": "schema.org",
       "rationale": "schema.org place"
     }

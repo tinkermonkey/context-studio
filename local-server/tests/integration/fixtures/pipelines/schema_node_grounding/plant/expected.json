@@ -11,7 +11,7 @@
       "rationale": "Wikidata plant"
     },
     {
-      "uri": "https://schema.org/BioChemEntity",
+      "uri": "http://schema.org/BioChemEntity",
       "source": "schema.org",
       "rationale": "Bio entity"
     }

@@ -15,11 +15,15 @@ from .cassettes import (
 )
 from .metrics import (
     PrecisionRecallF1,
+    RankingMetrics,
     brier_score,
     cosine_similarity,
     delta_set_overlap,
     jaccard_similarity,
+    mean_reciprocal_rank,
     precision_recall_f1,
+    ranking_metrics,
+    ranking_precision_at_k,
     reciprocal_rank,
 )
 from .report import ABReport, FloorGate, MetricsEmitter
@@ -40,4 +44,8 @@ __all__ = [
     "brier_score",
     "cosine_similarity",
     "delta_set_overlap",
+    "RankingMetrics",
+    "ranking_metrics",
+    "ranking_precision_at_k",
+    "mean_reciprocal_rank",
 ]

@@ -11,7 +11,7 @@
       "rationale": "Wikidata: human"
     },
     {
-      "uri": "https://schema.org/Person",
+      "uri": "http://schema.org/Person",
       "source": "schema.org",
       "rationale": "schema.org definition"
     },

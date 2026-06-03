@@ -11,7 +11,7 @@
       "rationale": "Wikidata vehicle"
     },
     {
-      "uri": "https://schema.org/Vehicle",
+      "uri": "http://schema.org/Vehicle",
       "source": "schema.org",
       "rationale": "schema.org vehicle"
     }

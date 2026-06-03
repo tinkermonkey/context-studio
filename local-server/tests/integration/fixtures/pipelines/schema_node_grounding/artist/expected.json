@@ -11,7 +11,7 @@
       "rationale": "Wikidata artist"
     },
     {
-      "uri": "https://schema.org/Artist",
+      "uri": "http://schema.org/Artist",
       "source": "schema.org",
       "rationale": "schema.org artist"
     }

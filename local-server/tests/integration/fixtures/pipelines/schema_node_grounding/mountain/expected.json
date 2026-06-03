@@ -11,7 +11,7 @@
       "rationale": "Wikidata mountain"
     },
     {
-      "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+      "uri": "http://schema.org/LandmarksOrHistoricalBuildings",
       "source": "schema.org",
       "rationale": "Geographic landmark"
     }

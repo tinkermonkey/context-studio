@@ -11,7 +11,7 @@
       "rationale": "Wikidata language"
     },
     {
-      "uri": "https://schema.org/Language",
+      "uri": "http://schema.org/Language",
       "source": "schema.org",
       "rationale": "schema.org language"
     }

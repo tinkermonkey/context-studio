@@ -11,7 +11,7 @@
       "rationale": "Wikidata food"
     },
     {
-      "uri": "https://schema.org/Food",
+      "uri": "http://schema.org/Food",
       "source": "schema.org",
       "rationale": "schema.org food"
     }

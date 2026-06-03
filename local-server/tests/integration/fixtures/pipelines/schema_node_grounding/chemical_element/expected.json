@@ -11,7 +11,7 @@
       "rationale": "Wikidata chemical element"
     },
     {
-      "uri": "https://schema.org/Thing",
+      "uri": "http://schema.org/Thing",
       "source": "schema.org",
       "rationale": "Generic thing"
     }

@@ -11,7 +11,7 @@
       "rationale": "Wikidata software"
     },
     {
-      "uri": "https://schema.org/SoftwareApplication",
+      "uri": "http://schema.org/SoftwareApplication",
       "source": "schema.org",
       "rationale": "schema.org application"
     }

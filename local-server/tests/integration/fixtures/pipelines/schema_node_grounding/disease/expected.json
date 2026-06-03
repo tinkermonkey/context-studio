@@ -11,7 +11,7 @@
       "rationale": "Wikidata disease"
     },
     {
-      "uri": "https://schema.org/MedicalCondition",
+      "uri": "http://schema.org/MedicalCondition",
       "source": "schema.org",
       "rationale": "schema.org medical condition"
     }

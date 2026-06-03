@@ -173,3 +173,90 @@ def delta_set_overlap(
 
     metrics = precision_recall_f1(list(expected_delta), list(actual_delta))
     return metrics.f1
+
+
+@dataclass
+class RankingMetrics:
+    """Ranking metrics: top-1, top-3, MRR."""
+
+    top1_precision: float
+    top3_precision: float
+    mrr: float
+
+
+def mean_reciprocal_rank(
+    expected_list: list[str], ranked_list: list[str]
+) -> float:
+    """
+    Compute Mean Reciprocal Rank (MRR) across a set of expected items.
+
+    Averages the reciprocal rank of the first match for each expected item
+    in the ranked list. Used for evaluating ranking quality.
+
+    Args:
+        expected_list: List of correct item identifiers
+        ranked_list: List of candidates in rank order
+
+    Returns:
+        MRR in [0, 1], averaged across all expected items
+    """
+    if not expected_list:
+        return 1.0
+
+    expected_set = set(expected_list)
+    rr_sum = 0.0
+
+    for expected_item in expected_list:
+        found = False
+        for rank, item in enumerate(ranked_list, start=1):
+            if item == expected_item:
+                rr_sum += 1.0 / rank
+                found = True
+                break
+        if not found:
+            # No match found; this expected item contributes 0 to RR sum
+            pass
+
+    return round(rr_sum / len(expected_list), 4)
+
+
+def ranking_precision_at_k(expected: list[str], ranked_list: list[str], k: int) -> float:
+    """
+    Compute precision@k: fraction of expected items in top k.
+
+    Args:
+        expected: List of correct item identifiers
+        ranked_list: List of candidates in rank order (full list)
+        k: Cutoff rank (1 for top-1, 3 for top-3)
+
+    Returns:
+        Precision@k in [0, 1]
+    """
+    if not expected:
+        return 1.0
+
+    expected_set = set(expected)
+    top_k = set(ranked_list[:k])
+
+    matches = len(expected_set & top_k)
+    return round(matches / len(expected), 4)
+
+
+def ranking_metrics(
+    expected: list[str], ranked_list: list[str]
+) -> RankingMetrics:
+    """
+    Compute complete ranking metrics (top-1, top-3, MRR).
+
+    Args:
+        expected: List of correct URIs or identifiers
+        ranked_list: List of candidate URIs in rank order
+
+    Returns:
+        RankingMetrics dataclass with all three metrics
+    """
+    top1 = ranking_precision_at_k(expected, ranked_list, 1)
+    top3 = ranking_precision_at_k(expected, ranked_list, 3)
+    mrr = mean_reciprocal_rank(expected, ranked_list)
+
+    return RankingMetrics(top1_precision=top1, top3_precision=top3, mrr=mrr)

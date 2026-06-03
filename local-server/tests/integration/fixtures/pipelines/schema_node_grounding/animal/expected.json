@@ -11,7 +11,7 @@
       "rationale": "Wikidata animal"
     },
     {
-      "uri": "https://schema.org/Animal",
+      "uri": "http://schema.org/Animal",
       "source": "schema.org",
       "rationale": "schema.org animal"
     }

@@ -11,7 +11,7 @@
       "rationale": "Wikidata organization"
     },
     {
-      "uri": "https://schema.org/Organization",
+      "uri": "http://schema.org/Organization",
       "source": "schema.org",
       "rationale": "schema.org organization"
     }

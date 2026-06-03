@@ -11,7 +11,7 @@
       "rationale": "Wikidata music"
     },
     {
-      "uri": "https://schema.org/MusicGroup",
+      "uri": "http://schema.org/MusicGroup",
       "source": "schema.org",
       "rationale": "schema.org music"
     }

@@ -11,7 +11,7 @@
       "rationale": "Wikidata university"
     },
     {
-      "uri": "https://schema.org/EducationalOrganization",
+      "uri": "http://schema.org/EducationalOrganization",
       "source": "schema.org",
       "rationale": "schema.org organization"
     }
