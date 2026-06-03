@@ -48,7 +48,8 @@ class GroundingAdapter:
             conceptnet: ConceptNet source adapter (creates default if None)
             wikidata: Wikidata source adapter (creates default if None)
             schema_org: schema.org source adapter (creates default if None)
-            http_client: Optional httpx.AsyncClient to pass to sources (e.g., for cassette recording)
+            http_client: Optional httpx.AsyncClient for sources
+                (e.g., for cassette recording)
         """
         self._dbpedia = dbpedia or DBpediaSource(async_client=http_client)
         self._conceptnet = conceptnet or ConceptNetSource(async_client=http_client)

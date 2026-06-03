@@ -5,6 +5,7 @@ source adapters (DBpedia, ConceptNet, Wikidata, schema.org) without requiring
 live network access.
 """
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
 import httpx
@@ -44,7 +45,9 @@ def http_cassette_mode(request) -> str:
 
 
 @pytest.fixture
-async def http_client(http_cassette_mode, http_cassette_path) -> httpx.AsyncClient:
+async def http_client(
+    http_cassette_mode, http_cassette_path
+) -> AsyncGenerator[httpx.AsyncClient, None]:
     """Create an httpx.AsyncClient with optional cassette recording/replay.
 
     Returns:
@@ -54,6 +57,7 @@ async def http_client(http_cassette_mode, http_cassette_path) -> httpx.AsyncClie
 
     Properly closes the client on teardown, ensuring cassettes are flushed to disk.
     """
+    transport: httpx.AsyncBaseTransport
     if http_cassette_mode == "record":
         transport = RecordingHTTPTransport(
             delegate=httpx.AsyncHTTPTransport(),
