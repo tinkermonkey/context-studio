@@ -79,13 +79,21 @@ class TestQualitySchemaNodeGrounding:
     """Quality test suite for schema node grounding."""
 
     @pytest.fixture
-    def grounding_adapter(self):
-        """Create a GroundingAdapter with all sources."""
+    def grounding_adapter(self, recorded_vcr):
+        """Create a GroundingAdapter with all sources using recorded cassettes."""
+        with recorded_vcr.use_cassette("schema_node_grounding/dbpedia/person"):
+            dbpedia = DBpediaSource()
+        with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
+            conceptnet = ConceptNetSource()
+        with recorded_vcr.use_cassette("schema_node_grounding/wikidata/person"):
+            wikidata = WikidataSource()
+        schema_org = SchemaOrgSource()
+
         return GroundingAdapter(
-            dbpedia=DBpediaSource(),
-            conceptnet=ConceptNetSource(),
-            wikidata=WikidataSource(),
-            schema_org=SchemaOrgSource(),
+            dbpedia=dbpedia,
+            conceptnet=conceptnet,
+            wikidata=wikidata,
+            schema_org=schema_org,
         )
 
     @pytest.fixture
@@ -376,6 +384,8 @@ class TestQualitySchemaNodeGrounding:
 
         # Extract groundings and verify they are ranked
         groundings = result_state.result.get("groundings", [])
+        assert len(groundings) > 0, "Orchestrator should return at least one grounding"
+
         grounded_uris = [g["uri"] for g in groundings]
 
         # Verify that expected references rank higher than distractors
@@ -392,6 +402,8 @@ class TestQualitySchemaNodeGrounding:
                 correct_rank = rank
                 break
 
+        assert correct_rank is not None, "Expected reference should be present in ranked groundings"
+
         # Find first distractor rank
         distractor_rank = None
         for rank, uri in enumerate(grounded_uris, 1):
@@ -400,7 +412,7 @@ class TestQualitySchemaNodeGrounding:
                 break
 
         # Distractors may not be present if expected refs are ranked first
-        if correct_rank is not None and distractor_rank is not None:
+        if distractor_rank is not None:
             assert correct_rank <= distractor_rank, (
                 f"Expected reference should rank before distractors "
                 f"(correct at {correct_rank}, distractor at {distractor_rank})"
@@ -437,8 +449,8 @@ class TestQualitySchemaNodeGrounding:
             distractors = load_distractors("schema_node_grounding", scenario)
             assert distractors is not None, f"Fixture {scenario} should have distractors"
 
-            # Verify structure: each source has 0-5 distractors
-            has_distractors = False
+            # Verify structure: at least one source has ≥3 distractors (FR-P3.4 compliance)
+            has_sufficient_distractors = False
             for source in ["DBpedia", "ConceptNet", "Wikidata", "schema.org"]:
                 if source in distractors:
                     count = len(distractors[source])
@@ -446,9 +458,9 @@ class TestQualitySchemaNodeGrounding:
                         f"Fixture {scenario} {source} has {count} distractors, "
                         f"expected 0-5"
                     )
-                    if count > 0:
-                        has_distractors = True
-            assert has_distractors, f"Fixture {scenario} should have ≥1 distractor across all sources"
+                    if count >= 3:
+                        has_sufficient_distractors = True
+            assert has_sufficient_distractors, f"Fixture {scenario} should have ≥3 distractors from at least one source"
 
     def test_fixture_has_required_fields(self):
         """Verify fixtures have all required fields."""
