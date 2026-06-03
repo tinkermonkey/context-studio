@@ -360,7 +360,6 @@ class TestQualityDefinitionRefinement:
         """
         config_registry, impl_registry = registered_definition_refinement
 
-        from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
         from tests.fakes.fake_llm_provider import FakeLLMProvider
 
         llm_provider = FakeLLMProvider(
