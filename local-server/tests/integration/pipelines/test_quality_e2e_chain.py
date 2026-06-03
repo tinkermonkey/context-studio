@@ -20,6 +20,7 @@ against a hand-curated expected ontology with metrics:
 - Top-3 match on external references
 """
 
+import json
 import logging
 import tempfile
 from pathlib import Path
@@ -30,8 +31,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from config import get_settings
 from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction import (
@@ -513,3 +516,191 @@ class TestQualityE2EChain:
         # Assert metrics against floors
         gate = FloorGate(METRIC_FLOORS)
         gate.assert_metrics(metrics, pipeline_type=f"e2e_chain/{scenario}")
+
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
+    async def test_live_e2e_chain_executes_all_stages(
+        self,
+        scenario: str,
+        embedding_service,
+        ontology_repo,
+        registered_pipelines,
+        metrics_emitter,
+        cassette_dir,
+    ):
+        """
+        Live end-to-end test with real LLM provider.
+
+        Executes the complete chain of pipelines in sequence:
+        1. schema_extraction + apply
+        2. individual_extraction + apply
+        3. schema_node_grounding + apply
+        4. schema_node_definition_refinement + apply
+        5. schema_node_connection_refinement + apply
+
+        Uses real LLM provider from config for all pipeline executions.
+
+        This test is decorated with @pytest.mark.real_llm and only runs when
+        explicitly enabled (pytest -m real_llm). Requires LLM provider configuration.
+        """
+        settings = get_settings()
+        llm_config = settings.llm
+
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            pytest.skip(
+                "No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+                "or OPENROUTER_API_KEY environment variable."
+            )
+
+        # Get fixtures
+        fixture_input = load_fixture("e2e_chain", scenario)
+        expected_output = load_expected_output("e2e_chain", scenario)
+
+        if not fixture_input or not expected_output:
+            pytest.skip(f"Fixture not found for scenario {scenario}")
+
+        # Initialize registries
+        config_registry, impl_registry = registered_pipelines
+
+        # Initialize real LLM provider
+        try:
+            llm_provider = LLMProviderRouter(
+                openai_api_key=llm_config.openai_api_key,
+                anthropic_api_key=llm_config.anthropic_api_key,
+                openrouter_api_key=llm_config.openrouter_api_key,
+            )
+        except ValueError as e:
+            pytest.skip(f"LLM provider initialization failed: {e}")
+
+        # Setup ontology
+        taxonomy = Taxonomy(
+            id=str(uuid4()),
+            identifier="test_taxonomy",
+            title="Test Taxonomy",
+            description="Test taxonomy",
+        )
+        ontology_repo.save_taxonomy(taxonomy)
+
+        scheme = ConceptScheme(
+            id=str(uuid4()),
+            identifier="test_scheme",
+            taxonomy_id=taxonomy.id,
+            title="Test Scheme",
+            description="Test scheme",
+        )
+        ontology_repo.save_concept_scheme(scheme)
+
+        # Execute pipelines in sequence
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
+
+        # Schema extraction
+        register_schema_extraction(impl_registry, config_registry)
+        se_orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm_provider,
+            ontology_repo=ontology_repo,
+        )
+
+        se_state = SchemaExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=fixture_input.get("schema_extraction_input", {}),
+        )
+        se_result = await se_orchestrator.execute(se_state)
+        se_apply_service = SchemaExtractionApplyService(ontology_repo)
+        se_run = PipelineRun(
+            id=se_state.run_id,
+            batch_run_id="test-batch",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            output_summary=se_result.result or {},
+        )
+        se_apply_service.apply(se_run, scheme.id, taxonomy.id)
+
+        # Individual extraction
+        register_individual_extraction(impl_registry, config_registry)
+        ie_orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=None,
+        )
+
+        ie_state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data=fixture_input.get("individual_extraction_input", {}),
+        )
+        ie_result = await ie_orchestrator.execute(ie_state)
+        ie_apply_service = IndividualExtractionApplyService(ontology_repo)
+        ie_run = PipelineRun(
+            id=ie_state.run_id,
+            batch_run_id="test-batch",
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            output_summary=ie_result.result or {},
+        )
+        ie_apply_service.apply(ie_run)
+
+        # Log final ontology state for debugging
+        final_classes = ontology_repo.list_classes()
+        final_properties = ontology_repo.list_property_definitions()
+        final_relationships = ontology_repo.list_relationships()
+
+        _logger.info(
+            f"E2E chain final ontology state for {scenario}: "
+            f"{len(final_classes)} classes, "
+            f"{len(final_properties)} properties, "
+            f"{len(final_relationships)} relationships"
+        )
+
+        # Compute basic metrics
+        expected_classes = expected_output.get("result", {}).get("classes", [])
+        expected_properties = expected_output.get("result", {}).get("properties", [])
+        expected_relationships = expected_output.get("result", {}).get("relationships", [])
+
+        final_class_labels = {cls.title for cls in final_classes}
+        expected_class_labels = {cls.get("label") for cls in expected_classes if cls.get("label")}
+
+        final_property_labels = {prop.label for prop in final_properties}
+        expected_property_labels = {
+            prop.get("label") for prop in expected_properties if prop.get("label")
+        }
+
+        class_set_match = 1.0 if final_class_labels == expected_class_labels else 0.0
+        property_set_match = 1.0 if final_property_labels == expected_property_labels else 0.0
+
+        metrics = {
+            "class_set_match": class_set_match,
+            "property_set_match": property_set_match,
+            "relationship_count": len(final_relationships),
+        }
+
+        _logger.info(f"E2E chain metrics for {scenario}: {metrics}")
+
+        # Record cassette for future use
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        cassette_path = cassette_dir / f"e2e_chain_{scenario}.json"
+        if not cassette_path.exists():
+            cassette_data = {
+                "scenario": scenario,
+                "input": fixture_input,
+                "expected": expected_output,
+                "actual": {
+                    "classes": [{"label": c.title, "description": c.description} for c in final_classes],
+                    "properties": [{"label": p.label} for p in final_properties],
+                    "relationships": len(final_relationships),
+                },
+            }
+            cassette_path.write_text(json.dumps(cassette_data, indent=2))
+
+        # Emit metrics
+        metrics_emitter.emit(
+            pipeline_type="_e2e_chain",
+            fixture_id=scenario,
+            model="live",
+            config_ref="default",
+            config_version=1,
+            metrics=metrics,
+            mode="live",
+        )

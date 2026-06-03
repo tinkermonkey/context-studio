@@ -25,8 +25,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from config import get_settings
 from domain.ontology.entities import (
     Class,
     ConceptScheme,
@@ -39,6 +41,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
@@ -626,6 +629,259 @@ class TestQualityConnectionRefinement:
             f"{len(rel_tuples_1)} rels after 1st apply, "
             f"{len(rel_tuples_2)} rels after 2nd apply"
         )
+
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS[:5])
+    async def test_live_quality_scenario(
+        self,
+        scenario: str,
+        ontology_repo,
+        registered_connection_refinement,
+        metrics_emitter,
+        cassette_dir,
+    ):
+        """
+        Live test for connection refinement quality with real LLM provider.
+
+        - Load fixture (input + expected output)
+        - Run pipeline with real LLM provider from config
+        - Record cassette for future deterministic testing
+        - Compute per-operation precision and recall on delta tuples
+        - Assert metrics meet floors
+        - Emit JSONL row with metrics
+
+        This test is decorated with @pytest.mark.real_llm and only runs when
+        explicitly enabled (pytest -m real_llm). Requires LLM provider configuration.
+
+        Note: only tests first 5 scenarios to avoid excessive LLM API usage.
+        """
+        settings = get_settings()
+        llm_config = settings.llm
+
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            pytest.skip(
+                "No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+                "or OPENROUTER_API_KEY environment variable."
+            )
+
+        config_registry, impl_registry = registered_connection_refinement
+
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        cassette_path = cassette_dir / f"connection_refinement_{scenario}.json"
+
+        try:
+            llm_provider = LLMProviderRouter(
+                openai_api_key=llm_config.openai_api_key,
+                anthropic_api_key=llm_config.anthropic_api_key,
+                openrouter_api_key=llm_config.openrouter_api_key,
+            )
+        except ValueError as e:
+            pytest.skip(f"LLM provider initialization failed: {e}")
+
+        # Load fixture from pipelines/fixtures directory
+        fixture_base = Path(__file__).parent.parent / "fixtures" / "pipelines"
+        fixture_dir = fixture_base / "schema_node_connection_refinement" / scenario
+        input_file = fixture_dir / "input.json"
+        expected_file = fixture_dir / "expected.json"
+
+        if not input_file.exists() or not expected_file.exists():
+            pytest.skip(
+                f"Fixture not found for scenario {scenario}. "
+                f"Expected: {input_file}, {expected_file}"
+            )
+
+        with open(input_file) as f:
+            fixture_input = json.load(f)
+        with open(expected_file) as f:
+            expected_output = json.load(f)
+
+        # Setup ontology: create scope class and candidate relationships
+        scope_id = fixture_input.get("scope_id", str(uuid4()))
+
+        # Get concept scheme and taxonomy
+        schemes = ontology_repo.list_concept_schemes()
+        concept_scheme_id = schemes[0].id if schemes else str(uuid4())
+        taxonomies = ontology_repo.list_taxonomies()
+        taxonomy_id = taxonomies[0].id if taxonomies else str(uuid4())
+
+        # Create or fetch scope class
+        existing_scope = ontology_repo.get_class(scope_id)
+        if not existing_scope:
+            scope_cls = Class(
+                id=scope_id,
+                identifier=fixture_input.get("scope_identifier", f"test_{scenario}"),
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=taxonomy_id,
+                title=fixture_input.get("scope_title", scenario),
+                description=fixture_input.get("scope_description", ""),
+            )
+            ontology_repo.save_class(scope_cls)
+
+        # Create candidate classes and relationships from fixture
+        before_relationships = fixture_input.get("before_relationships", [])
+        candidate_classes = fixture_input.get("candidate_classes", [])
+
+        class_id_map = {scope_id: scope_id}
+
+        # Create candidate classes
+        for class_info in candidate_classes:
+            class_id = class_info.get("id", str(uuid4()))
+            if class_id not in class_id_map:
+                cls = Class(
+                    id=class_id,
+                    identifier=class_info.get("identifier", class_id[:8]),
+                    concept_scheme_id=concept_scheme_id,
+                    taxonomy_id=taxonomy_id,
+                    title=class_info.get("title", class_id[:8]),
+                    description="",
+                )
+                ontology_repo.save_class(cls)
+                class_id_map[class_id] = cls.id
+
+        # Create before relationships
+        for rel_info in before_relationships:
+            subject_id = rel_info.get("subject_id", scope_id)
+            object_id = rel_info.get("object_id")
+            predicate = rel_info.get("predicate", "related_to")
+
+            if not object_id:
+                continue
+
+            # Resolve predicate to property definition
+            prop_def = ontology_repo.get_property_definition_by_identifier(
+                predicate.lower().replace(" ", "_")
+            )
+            if not prop_def:
+                # Create if doesn't exist
+                prop_def = PropertyDefinition(
+                    id=str(uuid4()),
+                    identifier=predicate.lower().replace(" ", "_"),
+                    title=predicate,
+                    description=f"Property: {predicate}",
+                )
+                ontology_repo.save_property_definition(prop_def)
+
+            src_id = class_id_map.get(subject_id, subject_id)
+            tgt_id = class_id_map.get(object_id, object_id)
+
+            rel = Relationship(
+                id=str(uuid4()),
+                source_id=src_id,
+                target_id=tgt_id,
+                property_definition_id=prop_def.id,
+            )
+            ontology_repo.save_relationship(rel)
+
+        # Create orchestrator and execute pipeline
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm_provider,
+            traversal=traversal,
+        )
+
+        state = ConnectionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+            input_data={
+                "scope_id": scope_id,
+                "candidates": fixture_input.get("candidates", []),
+                "model": fixture_input.get("model", "claude-opus-4-7"),
+                "temperature": fixture_input.get("temperature", 0.0),
+            },
+        )
+        result_state = await orchestrator.execute(state)
+
+        # Extract actual and expected deltas
+        actual_deltas = result_state.result.get("deltas", []) if result_state.result else []
+        expected_deltas = expected_output.get("result", {}).get("deltas", [])
+
+        actual_delta_tuples = extract_delta_tuples(actual_deltas)
+        expected_delta_tuples = extract_delta_tuples(expected_deltas)
+
+        # Compute per-operation metrics
+        add_metrics = precision_recall_f1(expected_delta_tuples["add"], actual_delta_tuples["add"])
+        remove_metrics = precision_recall_f1(
+            expected_delta_tuples["remove"], actual_delta_tuples["remove"]
+        )
+        modify_metrics = precision_recall_f1(
+            expected_delta_tuples["modify"], actual_delta_tuples["modify"]
+        )
+
+        # Compute overall delta F1
+        all_expected_deltas = (
+            expected_delta_tuples["add"]
+            + expected_delta_tuples["remove"]
+            + expected_delta_tuples["modify"]
+        )
+        all_actual_deltas = (
+            actual_delta_tuples["add"]
+            + actual_delta_tuples["remove"]
+            + actual_delta_tuples["modify"]
+        )
+        overall_metrics = precision_recall_f1(all_expected_deltas, all_actual_deltas)
+
+        # Record cassette for future use
+        if not cassette_path.exists():
+            cassette_data = {
+                "scenario": scenario,
+                "input": fixture_input,
+                "expected": expected_output,
+                "actual": {
+                    "status": "completed",
+                    "result": {"deltas": actual_deltas},
+                },
+            }
+            cassette_path.write_text(json.dumps(cassette_data, indent=2))
+
+        _logger.info(
+            f"Connection refinement metrics for {scenario}: "
+            f"delta_f1={overall_metrics.f1:.4f}, "
+            f"add_recall={add_metrics.recall:.4f}, "
+            f"remove_recall={remove_metrics.recall:.4f}, "
+            f"modify_recall={modify_metrics.recall:.4f}"
+        )
+
+        # Emit JSONL row with per-operation metrics
+        metrics_emitter.emit(
+            pipeline_type="connection_refinement",
+            fixture_id=scenario,
+            model=fixture_input.get("model", "claude-opus-4-7"),
+            config_ref="default",
+            config_version=1,
+            metrics={
+                "delta_f1": overall_metrics.f1,
+                "add_recall": add_metrics.recall,
+                "remove_recall": remove_metrics.recall,
+                "modify_recall": modify_metrics.recall,
+                "add_precision": add_metrics.precision,
+                "remove_precision": remove_metrics.precision,
+                "modify_precision": modify_metrics.precision,
+            },
+            mode="live",
+        )
+
+        # Assert per-operation recall floors
+        assert (
+            add_metrics.recall >= 0.30 or len(expected_delta_tuples["add"]) == 0
+        ), f"Add recall {add_metrics.recall:.4f} below floor 0.30 for scenario {scenario}"
+
+        assert (
+            remove_metrics.recall >= 0.30 or len(expected_delta_tuples["remove"]) == 0
+        ), f"Remove recall {remove_metrics.recall:.4f} below floor 0.30 for scenario {scenario}"
+
+        assert (
+            modify_metrics.recall >= 0.30 or len(expected_delta_tuples["modify"]) == 0
+        ), f"Modify recall {modify_metrics.recall:.4f} below floor 0.30 for scenario {scenario}"
+
+        # Assert overall delta F1 floor
+        assert (
+            overall_metrics.f1 >= 0.40
+        ), f"Delta F1 {overall_metrics.f1:.4f} below floor 0.40 for scenario {scenario}"
 
 
 class TestQualityConnectionRefinementAggregation:

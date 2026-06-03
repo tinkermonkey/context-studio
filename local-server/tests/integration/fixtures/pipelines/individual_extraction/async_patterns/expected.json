@@ -38,6 +38,26 @@
         "object": {"label": "eventual_value", "kind": "individual"},
         "confidence": 0.78
       }
+    ],
+    "excluded": [
+      {
+        "subject": {"label": "async/await", "kind": "individual"},
+        "predicate": {"label": "runs_in", "kind": "property"},
+        "object": {"label": "parallel_threads", "kind": "individual"},
+        "note": "async/await does NOT run in parallel threads — it is single-threaded"
+      },
+      {
+        "subject": {"label": "event_loop", "kind": "individual"},
+        "predicate": {"label": "blocks", "kind": "property"},
+        "object": {"label": "execution", "kind": "individual"},
+        "note": "event loop does NOT block execution — it enables concurrent execution"
+      },
+      {
+        "subject": {"label": "callback", "kind": "individual"},
+        "predicate": {"label": "replaces", "kind": "property"},
+        "object": {"label": "asyncio.gather", "kind": "individual"},
+        "note": "callbacks do NOT replace asyncio.gather — they serve different purposes"
+      }
     ]
   },
   "created_individual_ids": [],

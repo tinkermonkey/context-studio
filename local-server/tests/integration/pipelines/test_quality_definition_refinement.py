@@ -23,8 +23,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from config import get_settings
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.registry import (
@@ -448,6 +450,178 @@ class TestQualityDefinitionRefinement:
         assert (
             description_after_apply1 == description_after_apply2
         ), f"Description mismatch: '{description_after_apply1}' != '{description_after_apply2}'"
+
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS[:5])
+    async def test_live_quality_scenario(
+        self,
+        scenario: str,
+        embedding_service,
+        ontology_repo,
+        registered_definition_refinement,
+        metrics_emitter,
+        cassette_dir,
+    ):
+        """
+        Live test for definition refinement quality with real LLM provider.
+
+        - Load fixture (input + expected output)
+        - Run pipeline with real LLM provider from config
+        - Record cassette for future deterministic testing
+        - Compute embedding cosine similarity between best candidate and expected
+        - Assert metrics meet floors
+        - Emit JSONL row with metrics
+
+        This test is decorated with @pytest.mark.real_llm and only runs when
+        explicitly enabled (pytest -m real_llm). Requires LLM provider configuration.
+
+        Note: only tests first 5 scenarios to avoid excessive LLM API usage.
+        """
+        settings = get_settings()
+        llm_config = settings.llm
+
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            pytest.skip(
+                "No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+                "or OPENROUTER_API_KEY environment variable."
+            )
+
+        config_registry, impl_registry = registered_definition_refinement
+
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        cassette_path = cassette_dir / f"definition_refinement_{scenario}.json"
+
+        try:
+            llm_provider = LLMProviderRouter(
+                openai_api_key=llm_config.openai_api_key,
+                anthropic_api_key=llm_config.anthropic_api_key,
+                openrouter_api_key=llm_config.openrouter_api_key,
+            )
+        except ValueError as e:
+            pytest.skip(f"LLM provider initialization failed: {e}")
+
+        # Load fixture from pipelines/fixtures directory
+        fixture_base = Path(__file__).parent.parent / "fixtures" / "pipelines"
+        fixture_dir = fixture_base / "schema_node_definition_refinement" / scenario
+        input_file = fixture_dir / "input.json"
+        expected_file = fixture_dir / "expected.json"
+
+        if not input_file.exists() or not expected_file.exists():
+            pytest.skip(
+                f"Fixture not found for scenario {scenario}. "
+                f"Expected: {input_file}, {expected_file}"
+            )
+
+        with open(input_file) as f:
+            fixture_input = json.load(f)
+        with open(expected_file) as f:
+            expected_output = json.load(f)
+
+        # Create class in ontology if needed
+        node_id = fixture_input.get("node_id", str(uuid4()))
+        current_description = fixture_input.get("current_description", "")
+        is_no_regress = fixture_input.get("is_no_regress", False)
+
+        # Get concept scheme and taxonomy
+        schemes = ontology_repo.list_concept_schemes()
+        concept_scheme_id = schemes[0].id if schemes else str(uuid4())
+        taxonomies = ontology_repo.list_taxonomies()
+        taxonomy_id = taxonomies[0].id if taxonomies else str(uuid4())
+
+        # Create or fetch the class
+        existing_cls = ontology_repo.get_class(node_id)
+        if not existing_cls:
+            cls = Class(
+                id=node_id,
+                identifier=fixture_input.get("identifier", f"test_{scenario}"),
+                concept_scheme_id=concept_scheme_id,
+                taxonomy_id=taxonomy_id,
+                title=fixture_input.get("title", scenario),
+                description=current_description,
+            )
+            ontology_repo.save_class(cls)
+
+        # Create orchestrator and execute pipeline
+        from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=llm_provider,
+            traversal=traversal,
+        )
+
+        state = DefinitionRefinementState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            input_data={
+                "node_id": node_id,
+                "current_definition": current_description,
+                "model": fixture_input.get("model", "claude-opus-4-7"),
+                "temperature": fixture_input.get("temperature", 0.0),
+            },
+        )
+        result_state = await orchestrator.execute(state)
+
+        # Extract best candidate and expected description
+        candidates = result_state.result.get("candidates", []) if result_state.result else []
+        expected_description = expected_output.get("result", {}).get("expected_description", "")
+
+        # Compute similarity metrics
+        if not candidates or not expected_description:
+            candidate_cosine = 0.0
+        else:
+            best_candidate = max(candidates, key=lambda c: c.get("confidence", 0.0))
+            candidate_text = best_candidate.get("definition", "")
+
+            # Embed both texts using the pinned model
+            candidate_embedding = embedding_service.embed(candidate_text)
+            expected_embedding = embedding_service.embed(expected_description)
+            candidate_cosine = cosine_similarity(candidate_embedding, expected_embedding)
+
+        # Record cassette for future use
+        if not cassette_path.exists():
+            cassette_data = {
+                "scenario": scenario,
+                "input": fixture_input,
+                "expected": expected_output,
+                "actual": {
+                    "status": "completed",
+                    "result": {"candidates": candidates},
+                },
+            }
+            cassette_path.write_text(json.dumps(cassette_data, indent=2))
+
+        _logger.info(f"Definition refinement cosine for {scenario}: {candidate_cosine:.4f}")
+
+        # Emit JSONL row
+        metrics_emitter.emit(
+            pipeline_type="definition_refinement",
+            fixture_id=scenario,
+            model=fixture_input.get("model", "claude-opus-4-7"),
+            config_ref="default",
+            config_version=1,
+            metrics={
+                "cosine": candidate_cosine,
+                "is_no_regress": 1 if is_no_regress else 0,
+            },
+            mode="live",
+        )
+
+        # Assert floor: cosine >= 0.60 for normal fixtures
+        if not is_no_regress:
+            assert (
+                candidate_cosine >= 0.60
+            ), f"Cosine {candidate_cosine:.4f} below floor 0.60 for scenario {scenario}"
+        else:
+            # No-regress fixtures must achieve >= 0.85 to maintain quality
+            assert (
+                candidate_cosine >= 0.85
+            ), f"No-regress cosine {candidate_cosine:.4f} below floor 0.85 for scenario {scenario}"
 
 
 class TestQualityDefinitionRefinementAggregation:

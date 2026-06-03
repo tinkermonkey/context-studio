@@ -122,6 +122,24 @@
         },
         "confidence": 0.92
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "microservices",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: microservices_architecture"
+      }
     ]
   },
   "created_individual_ids": [],

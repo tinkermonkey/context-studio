@@ -122,6 +122,24 @@
         },
         "confidence": 0.85
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "consensus_algorithm",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: distributed_systems"
+      }
     ]
   },
   "created_individual_ids": [],

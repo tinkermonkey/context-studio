@@ -23,12 +23,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
 )
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from config import get_settings
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineType
@@ -147,32 +149,53 @@ def compute_per_category_metrics(
 def compute_quality_metrics(
     expected_triples: list[dict],
     actual_triples: list[dict],
+    excluded_triples: list[dict] | None = None,
 ) -> dict:
     """
     Compute aggregate quality metrics for individual extraction.
 
+    Handles both positive triples (expected) and negative triples (excluded).
+    Measures precision, recall, F1 on positive examples, and penalizes over-extraction
+    by including excluded triples in Brier score computation.
+
     Returns dict with keys: precision, recall, f1, brier, per_category_breakdown.
     """
+    excluded_triples = excluded_triples or []
+
     # Convert to comparable keys
     expected_keys = [extract_triple_key(t) for t in expected_triples]
     actual_keys = [extract_triple_key(t) for t in actual_triples]
+    excluded_keys = [extract_triple_key(t) for t in excluded_triples]
 
-    # Compute precision, recall, F1
+    # Compute precision, recall, F1 on positive examples only
     metrics = precision_recall_f1(expected_keys, actual_keys)
 
     # Compute Brier score on confidence calibration
     # For triples in expected set: predicted confidence should be ~1.0
-    # For triples NOT in expected set: predicted confidence should be ~0.0
+    # For triples in excluded set: predicted confidence should be ~0.0
+    # For triples not in either: penalize if high confidence
     expected_set = set(expected_keys)
+    excluded_set = set(excluded_keys)
     brier_probs = []
     brier_labels = []
 
     for triple in actual_triples:
         key = extract_triple_key(triple)
         confidence = extract_confidence(triple)
-        label = 1 if key in expected_set else 0
+        if key in expected_set:
+            label = 1
+        elif key in excluded_set:
+            label = 0
+        else:
+            label = 0
         brier_probs.append(confidence)
         brier_labels.append(label)
+
+    # Also include expected triples not found with label 1 but 0 confidence
+    for key in expected_set:
+        if key not in actual_keys:
+            brier_probs.append(0.0)
+            brier_labels.append(1)
 
     brier = brier_score(brier_probs, brier_labels) if brier_probs else 0.0
 
@@ -357,10 +380,12 @@ class TestQualityIndividualExtraction:
 
         # Extract triples from result
         actual_triples = (result_state.result or {}).get("triples", [])
-        expected_triples = expected_output.get("result", {}).get("triples", [])
+        expected_output_result = expected_output.get("result", {})
+        expected_triples = expected_output_result.get("triples", [])
+        excluded_triples = expected_output_result.get("excluded", [])
 
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_triples, actual_triples)
+        metrics = compute_quality_metrics(expected_triples, actual_triples, excluded_triples)
 
         # Extract aggregate metrics for floor assertion
         aggregate_metrics = {
@@ -491,3 +516,127 @@ class TestQualityIndividualExtraction:
         assert (
             count1_rel == count2_rel
         ), f"Relationship count mismatch: {count1_rel} != {count2_rel}"
+
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
+    async def test_live_quality_scenario(
+        self,
+        scenario: str,
+        extraction_service,
+        registered_extraction,
+        metrics_emitter,
+        cassette_dir,
+    ):
+        """
+        Live test for individual extraction quality with real LLM provider.
+
+        - Load fixture (input + expected output)
+        - Run pipeline with real LLM provider from config
+        - Record cassette for future deterministic testing
+        - Compute precision, recall, F1, and Brier score
+        - Assert metrics meet floors
+        - Emit JSONL row with metrics
+
+        This test is decorated with @pytest.mark.real_llm and only runs when
+        explicitly enabled (pytest -m real_llm). Requires LLM provider configuration.
+        """
+        settings = get_settings()
+        llm_config = settings.llm
+
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            pytest.skip(
+                "No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+                "or OPENROUTER_API_KEY environment variable."
+            )
+
+        config_registry, impl_registry = registered_extraction
+        register_individual_extraction(impl_registry, config_registry)
+
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        cassette_path = cassette_dir / f"individual_extraction_{scenario}.json"
+
+        try:
+            llm_provider = LLMProviderRouter(
+                openai_api_key=llm_config.openai_api_key,
+                anthropic_api_key=llm_config.anthropic_api_key,
+                openrouter_api_key=llm_config.openrouter_api_key,
+            )
+        except ValueError as e:
+            pytest.skip(f"LLM provider initialization failed: {e}")
+
+        orchestrator = IndividualExtractionOrchestrator(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+        )
+
+        # Load fixture
+        fixture_input = load_fixture("individual_extraction", scenario)
+        expected_output = load_expected_output("individual_extraction", scenario)
+
+        # Run pipeline with real LLM
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data=fixture_input,
+        )
+        result_state = await orchestrator.execute(state)
+
+        # Extract triples from result
+        actual_triples = (result_state.result or {}).get("triples", [])
+        expected_output_result = expected_output.get("result", {})
+        expected_triples = expected_output_result.get("triples", [])
+        excluded_triples = expected_output_result.get("excluded", [])
+
+        # Record cassette for future use (optional - can be stored in VCS)
+        if not cassette_path.exists():
+            cassette_data = {
+                "scenario": scenario,
+                "input": fixture_input,
+                "expected": expected_output,
+                "actual": {
+                    "status": "completed",
+                    "result": {"triples": actual_triples},
+                },
+            }
+            cassette_path.write_text(json.dumps(cassette_data, indent=2))
+
+        # Compute quality metrics
+        metrics = compute_quality_metrics(expected_triples, actual_triples, excluded_triples)
+
+        # Extract aggregate metrics for floor assertion
+        aggregate_metrics = {
+            "precision": metrics["precision"],
+            "recall": metrics["recall"],
+            "f1": metrics["f1"],
+            "brier": metrics["brier"],
+        }
+
+        # Log per-category breakdown for debugging
+        if metrics["per_category_breakdown"]:
+            _logger.info(
+                f"Per-category breakdown for {scenario}:\n"
+                + "\n".join(
+                    f"  {cat}: {breakdown}"
+                    for cat, breakdown in metrics["per_category_breakdown"].items()
+                )
+            )
+
+        # Emit JSONL row
+        metrics_emitter.emit(
+            pipeline_type="individual_extraction",
+            fixture_id=scenario,
+            model="live",
+            config_ref="default",
+            config_version=1,
+            metrics=aggregate_metrics,
+            mode="live",
+        )
+
+        # Assert metrics against floors
+        gate = FloorGate(METRIC_FLOORS)
+        gate.assert_metrics(aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}")

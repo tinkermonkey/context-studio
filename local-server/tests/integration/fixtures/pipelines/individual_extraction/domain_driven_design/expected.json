@@ -122,6 +122,24 @@
         },
         "confidence": 0.84
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "bounded_context",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: domain_driven_design"
+      }
     ]
   },
   "created_individual_ids": [],

@@ -122,6 +122,24 @@
         },
         "confidence": 0.84
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "observable",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: reactive_programming"
+      }
     ]
   },
   "created_individual_ids": [],

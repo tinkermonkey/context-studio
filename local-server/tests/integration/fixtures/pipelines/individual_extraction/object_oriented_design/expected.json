@@ -122,6 +122,24 @@
         },
         "confidence": 0.84
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "inheritance",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: object_oriented_design"
+      }
     ]
   },
   "created_individual_ids": [],

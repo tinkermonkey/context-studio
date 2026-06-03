@@ -28,12 +28,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
 )
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from config import get_settings
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineType
@@ -516,3 +518,114 @@ class TestQualitySchemaExtraction:
         assert (
             count1_rel == count2_rel
         ), f"Relationship count mismatch: {count1_rel} != {count2_rel}"
+
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
+    async def test_live_quality_scenario(
+        self,
+        scenario: str,
+        ontology_repo,
+        registered_schema_extraction,
+        metrics_emitter,
+        cassette_dir,
+    ):
+        """
+        Live test for schema extraction quality with real LLM provider.
+
+        - Load fixture (input + expected output)
+        - Run pipeline with real LLM provider from config
+        - Record cassette for future deterministic testing
+        - Compute class Jaccard, property Jaccard, and connection overlap
+        - Assert metrics meet floors
+        - Emit JSONL row with metrics
+
+        This test is decorated with @pytest.mark.real_llm and only runs when
+        explicitly enabled (pytest -m real_llm). Requires LLM provider configuration.
+        """
+        settings = get_settings()
+        llm_config = settings.llm
+
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            pytest.skip(
+                "No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+                "or OPENROUTER_API_KEY environment variable."
+            )
+
+        config_registry, impl_registry = registered_schema_extraction
+        register_schema_extraction(impl_registry, config_registry)
+
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        cassette_path = cassette_dir / f"schema_extraction_{scenario}.json"
+
+        try:
+            llm_provider = LLMProviderRouter(
+                openai_api_key=llm_config.openai_api_key,
+                anthropic_api_key=llm_config.anthropic_api_key,
+                openrouter_api_key=llm_config.openrouter_api_key,
+            )
+        except ValueError as e:
+            pytest.skip(f"LLM provider initialization failed: {e}")
+
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm_provider,
+            ontology_repo=ontology_repo,
+        )
+
+        # Load fixture
+        fixture_input = load_fixture("schema_extraction", scenario)
+        expected_output = load_expected_output("schema_extraction", scenario)
+
+        # Convert input format: wrap text in documents array if needed
+        pipeline_input = fixture_input.copy()
+        if "text" in pipeline_input and "documents" not in pipeline_input:
+            pipeline_input["documents"] = [pipeline_input.pop("text")]
+
+        # Run pipeline with real LLM
+        state = SchemaExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=pipeline_input,
+        )
+        result_state = await orchestrator.execute(state)
+
+        # Build actual output dict
+        actual_output = {
+            "status": result_state.current_status.value,
+            "result": result_state.result or {},
+        }
+
+        # Record cassette for future use (optional - can be stored in VCS)
+        if not cassette_path.exists():
+            cassette_data = {
+                "scenario": scenario,
+                "input": pipeline_input,
+                "expected": expected_output,
+                "actual": actual_output,
+            }
+            cassette_path.write_text(json.dumps(cassette_data, indent=2))
+
+        # Compute quality metrics
+        metrics = compute_quality_metrics(expected_output, actual_output)
+
+        # Log metrics for debugging
+        _logger.info(f"Schema extraction metrics for {scenario}: {metrics}")
+
+        # Emit JSONL row
+        metrics_emitter.emit(
+            pipeline_type="schema_extraction",
+            fixture_id=scenario,
+            model="live",
+            config_ref="default",
+            config_version=1,
+            metrics=metrics,
+            mode="live",
+        )
+
+        # Assert metrics against floors
+        gate = FloorGate(METRIC_FLOORS)
+        gate.assert_metrics(metrics, pipeline_type=f"schema_extraction/{scenario}")

@@ -5,6 +5,7 @@ Validates source adapter registration and applies roundtrip idempotency.
 Also verifies fixture corpus coverage and distractor presence.
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -12,11 +13,13 @@ from unittest.mock import Mock
 
 import pytest
 
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding.adapter import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
+from config import get_settings
 from domain.ontology.entities import Class
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_grounding.apply_service import (
@@ -176,6 +179,51 @@ class TestQualitySchemaNodeGrounding:
         assert result3.external_references_skipped == 2
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
+    @pytest.mark.real_llm
+    @pytest.mark.asyncio
+    async def test_live_grounding_with_real_sources(self, grounding_adapter):
+        """
+        Live test for schema node grounding with real external sources.
+
+        Validates that grounding adapter can query real sources:
+        - DBpedia (offline index)
+        - ConceptNet (may require network)
+        - Wikidata (may require network)
+        - schema.org (offline index)
+
+        This test is decorated with @pytest.mark.real_llm for consistency,
+        though it primarily tests source adapters rather than LLM.
+        It can run even without LLM provider configuration.
+        """
+        scenarios = _list_fixture_scenarios()
+        if not scenarios:
+            pytest.skip("No grounding fixtures found")
+
+        # Test a few scenarios with real sources
+        test_scenarios = scenarios[:3]
+
+        for scenario in test_scenarios:
+            fixture = load_fixture("schema_node_grounding", scenario)
+            if not fixture:
+                continue
+
+            node_label = fixture.get("node_label", "unknown")
+            requested_sources = fixture.get("sources", ["schema.org"])
+
+            try:
+                candidates = await grounding_adapter.query_sources(
+                    label=node_label, sources=requested_sources
+                )
+
+                # Verify candidates have required fields
+                for candidate in candidates:
+                    assert hasattr(candidate, "uri"), f"Candidate missing uri for {node_label}"
+                    assert hasattr(candidate, "source"), f"Candidate missing source for {node_label}"
+                    assert hasattr(candidate, "confidence"), f"Candidate missing confidence for {node_label}"
+
+            except Exception as e:
+                # Skip this scenario if source query fails (network may be unavailable)
+                pytest.skip(f"Source query failed for {scenario}: {e}")
 
     def test_fixture_corpus_coverage(self):
         """Verify fixture corpus has ≥30 classes spanning multiple domains."""

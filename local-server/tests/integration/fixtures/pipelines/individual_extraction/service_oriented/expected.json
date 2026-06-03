@@ -122,6 +122,24 @@
         },
         "confidence": 0.86
       }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "soa",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contradicts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "expected_meaning",
+          "kind": "individual"
+        },
+        "confidence": 0.15,
+        "note": "Negative example: service_oriented"
+      }
     ]
   },
   "created_individual_ids": [],
