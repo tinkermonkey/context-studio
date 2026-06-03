@@ -5,6 +5,7 @@ metric history and A/B comparison aggregation.
 """
 
 import json
+import math
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -166,11 +167,9 @@ class ABReport:
             value_a = metrics_a.get(metric_name, float("nan"))
             value_b = metrics_b.get(metric_name, float("nan"))
 
-            delta = value_b - value_a if not (
-                float("nan") in (value_a, value_b)
-            ) else float("nan")
-
-            delta_str = f"{delta:+.4f}" if not (float("nan") in (value_a, value_b)) else "N/A"
+            has_nan = math.isnan(value_a) or math.isnan(value_b)
+            delta = value_b - value_a if not has_nan else float("nan")
+            delta_str = f"{delta:+.4f}" if not has_nan else "N/A"
 
             lines.append(
                 f"{metric_name.ljust(20)}"

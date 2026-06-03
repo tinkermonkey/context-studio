@@ -196,9 +196,11 @@ def quality_llm_provider(request, llm_provider_mode, cassette_path, llm_provider
     """
     if llm_provider_mode == "cassette":
         if cassette_path.exists() and not request.config.getoption("--refresh-cassettes"):
-            return CassetteLLMProvider(cassette_path)
+            yield CassetteLLMProvider(cassette_path)
         elif request.config.getoption("--refresh-cassettes"):
-            return RecordingLLMProvider(llm_provider, cassette_path)
+            provider = RecordingLLMProvider(llm_provider, cassette_path)
+            yield provider
+            provider.flush()
         else:
             raise FileNotFoundError(
                 f"Cassette not found at {cassette_path}. "
@@ -206,4 +208,4 @@ def quality_llm_provider(request, llm_provider_mode, cassette_path, llm_provider
             )
     else:
         # Live mode
-        return llm_provider
+        yield llm_provider

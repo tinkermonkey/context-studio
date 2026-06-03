@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from tests.fixtures.pipeline_fixtures import (
+    load_distractors,
     load_expected_output,
     load_fixture,
 )
@@ -86,21 +87,7 @@ class QualityRunner:
         Returns:
             Parsed JSON dict if distractors exist, None otherwise
         """
-        # Try to load per-scenario directory layout first
-        from tests.fixtures.pipeline_fixtures import _get_fixtures_dir
-
-        fixtures_dir = _get_fixtures_dir()
-        distractor_path = (
-            fixtures_dir / pipeline_type / scenario / "distractors.json"
-        )
-
-        if distractor_path.exists():
-            import json
-
-            with open(distractor_path, "r") as f:
-                return json.load(f)
-
-        return None
+        return load_distractors(pipeline_type, scenario)
 
     def get_llm_provider(self) -> Any:
         """Get the current LLM provider."""

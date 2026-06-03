@@ -13,6 +13,24 @@ from typing import Any, Literal
 from domain.pipelines.ports import LLMResponse
 
 
+def _compute_prompt_hash(
+    system_prompt: str,
+    user_prompt: str,
+    model: str,
+    temperature: float,
+    seed: int | None,
+) -> str:
+    """Compute a stable hash key for a prompt.
+
+    The hash is based on semantic content (prompts and model) and parameters
+    that affect LLM behavior. It survives SDK version changes and transport-layer
+    modifications, enabling cassette replay consistency.
+    """
+    seed_part = str(seed) if seed is not None else "none"
+    payload = f"{system_prompt}|{user_prompt}|{model}|{temperature}|{seed_part}"
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
 class CassetteStaleError(Exception):
     """Raised when a cassette lacks a recorded response for a prompt hash.
 
@@ -42,19 +60,6 @@ class RecordingLLMProvider:
         self._cassette_path = Path(cassette_path)
         self._recordings: dict[str, dict[str, Any]] = {}
 
-    def _hash_key(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float,
-        seed: int | None,
-    ) -> str:
-        """Compute a stable hash key for a prompt."""
-        seed_part = str(seed) if seed is not None else "none"
-        payload = f"{system_prompt}|{user_prompt}|{model}|{temperature}|{seed_part}"
-        return hashlib.sha256(payload.encode()).hexdigest()
-
     def complete(
         self,
         system_prompt: str,
@@ -67,7 +72,7 @@ class RecordingLLMProvider:
         seed: int | None = None,
     ) -> LLMResponse:
         """Request a completion and record the response."""
-        key = self._hash_key(system_prompt, user_prompt, model, temperature, seed)
+        key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
         response = self._delegate.complete(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
@@ -99,7 +104,7 @@ class RecordingLLMProvider:
         seed: int | None = None,
     ) -> LLMResponse:
         """Request a completion (async) and record the response."""
-        key = self._hash_key(system_prompt, user_prompt, model, temperature, seed)
+        key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
         response = await self._delegate.complete_async(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
@@ -134,44 +139,6 @@ class RecordingLLMProvider:
             json.dump(self._recordings, f, indent=2)
 
 
-class RecordingHTTPTransport:
-    """Records and replays HTTP interactions for grounding sources.
-
-    This stub will be extended in Phase B.3 when grounding source adapters
-    (DBpedia, ConceptNet, Wikidata) are integrated with quality testing.
-
-    Records `(request_signature → response)` pairs using respx mocking at the
-    httpx.AsyncClient transport layer.
-    """
-
-    def __init__(self, cassette_path: Path | None = None) -> None:
-        """
-        Initialize HTTP transport recording.
-
-        Args:
-            cassette_path: Path to HTTP cassette file (future use)
-        """
-        self._cassette_path = cassette_path
-        self._recordings: dict[str, dict[str, Any]] = {}
-
-    def record_call(self, request_sig: str, response_data: dict[str, Any]) -> None:
-        """
-        Record an HTTP request/response pair.
-
-        Args:
-            request_sig: Hash of request (method, URL, params)
-            response_data: Response body and metadata
-        """
-        self._recordings[request_sig] = response_data
-
-    def flush(self) -> None:
-        """Write HTTP cassette to disk (stub for Phase B.3)."""
-        if self._cassette_path:
-            self._cassette_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._cassette_path, "w") as f:
-                json.dump(self._recordings, f, indent=2)
-
-
 class CassetteLLMProvider:
     """Replays LLM responses from a recorded cassette file.
 
@@ -195,19 +162,6 @@ class CassetteLLMProvider:
         with open(self._cassette_path, "r") as f:
             self._cassette: dict[str, dict[str, Any]] = json.load(f)
 
-    def _hash_key(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float,
-        seed: int | None,
-    ) -> str:
-        """Compute a stable hash key for a prompt."""
-        seed_part = str(seed) if seed is not None else "none"
-        payload = f"{system_prompt}|{user_prompt}|{model}|{temperature}|{seed_part}"
-        return hashlib.sha256(payload.encode()).hexdigest()
-
     def complete(
         self,
         system_prompt: str,
@@ -220,7 +174,7 @@ class CassetteLLMProvider:
         seed: int | None = None,
     ) -> LLMResponse:
         """Replay a response from the cassette."""
-        key = self._hash_key(system_prompt, user_prompt, model, temperature, seed)
+        key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
 
         if key not in self._cassette:
             raise CassetteStaleError(
