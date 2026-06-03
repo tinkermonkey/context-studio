@@ -365,6 +365,169 @@ The E2E chain test (`test_quality_e2e_chain.py`) exercises all 5 pipelines in se
 
 **JSONL rows carry `pipeline_type = "_e2e_chain"` to distinguish from per-pipeline rows.**
 
+## A/B Testing (Phase B.6)
+
+The harness supports multi-model A/B comparison to evaluate LLM or configuration changes without separate test passes.
+
+### Running A/B Comparison Across Multiple Configs
+
+To compare two or more LLM configurations or models side-by-side:
+
+#### 1. Record cassettes for each config
+
+If your A/B test uses different LLM providers or configurations, record cassettes for each separately:
+
+```bash
+# Record for config A (e.g., Claude Sonnet 4.6)
+pytest tests/integration/pipelines/test_quality_individual_extraction.py \
+  --refresh-cassettes
+
+# Record for config B (e.g., GPT-4 Turbo) with different cassette path
+pytest tests/integration/pipelines/test_quality_individual_extraction.py \
+  --refresh-cassettes \
+  -k "gpt4"
+```
+
+For production A/B runs, commit both cassette sets to version control.
+
+#### 2. Implement an A/B test
+
+Use `QualityRunner.run_ab()` to orchestrate the comparison:
+
+```python
+import pytest
+from pathlib import Path
+from tests.integration.pipelines._harness.runner import QualityRunner
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
+from tests.integration.pipelines._harness.report import ABReport, FloorGate
+from tests.integration.pipelines._harness.metrics import precision_recall_f1
+
+SCENARIOS = ["fielding_rest", "shapiro_crdt", "cloud_provisioning", ...]
+METRIC_FLOORS = {
+    "precision": 0.60,
+    "recall": 0.50,
+    "f1": 0.50,
+}
+
+async def extract_individual_candidates(llm_provider, fixture_input):
+    """Execute extraction pipeline, return output."""
+    # Pipeline-specific orchestration
+    orchestrator = IndividualExtractionOrchestrator(llm_provider=llm_provider)
+    return await orchestrator.execute(fixture_input)
+
+def compute_extraction_metrics(expected, actual):
+    """Compute precision/recall/F1 from expected and actual outputs."""
+    expected_ids = [e["id"] for e in expected.get("candidates", [])]
+    actual_ids = [a["id"] for a in actual.get("candidates", [])]
+    metrics = precision_recall_f1(expected_ids, actual_ids)
+    return {
+        "precision": metrics.precision,
+        "recall": metrics.recall,
+        "f1": metrics.f1,
+    }
+
+@pytest.mark.asyncio
+async def test_quality_individual_extraction_ab(quality_runner):
+    """Compare individual extraction across Claude Sonnet and GPT-4."""
+    cassette_dir = Path(__file__).parent / "_cassettes"
+    
+    config_specs = [
+        ("claude-sonnet-4.6", CassetteLLMProvider(cassette_dir / "individual_extraction_sonnet.json")),
+        ("gpt4-turbo", CassetteLLMProvider(cassette_dir / "individual_extraction_gpt4.json")),
+    ]
+    
+    results = await quality_runner.run_ab(
+        config_specs=config_specs,
+        scenario_list=SCENARIOS,
+        pipeline_type="individual_extraction",
+        executor_fn=extract_individual_candidates,
+        metrics_fn=compute_extraction_metrics,
+        cassette_dir=cassette_dir,
+        validate_cassettes=True,
+    )
+    
+    # Format and display comparison
+    floor_gate = FloorGate(METRIC_FLOORS)
+    report = ABReport.format_comparison_multi(results, floors=METRIC_FLOORS)
+    print(report)
+    
+    # Gate on aggregate metrics per config
+    for config_ref, scenario_metrics in results.items():
+        aggregate_metrics = aggregate_scenarios(scenario_metrics)
+        try:
+            floor_gate.assert_metrics(aggregate_metrics, f"individual_extraction/{config_ref}")
+        except AssertionError as e:
+            print(f"\n{config_ref} failed floor gate:\n{e}")
+            raise
+```
+
+#### 3. Review comparison output
+
+The A/B report displays:
+- Per-config metric columns
+- Deltas between first and each subsequent config
+- ✗ markers for metrics that miss configured floors
+
+Example output:
+```
+Multi-Config A/B Comparison (2 configs)
+
+Scenario              Metric               claude-sonnet-4.6 gpt4-turbo       Δ(claude - gpt4)
+-------------------------------------------------------------------------------------------------------
+fielding_rest        precision            0.8500           0.7800          +0.0700
+fielding_rest        recall               0.9200           0.8500          +0.0700
+fielding_rest        f1                   0.8800           0.8100          +0.0700
+shapiro_crdt         precision            0.7200✗          0.6900✗         +0.0300
+...
+```
+
+### Cassette Naming for A/B Runs
+
+When using multiple configs with cassettes, include the config identifier in the cassette path to avoid collisions:
+
+```python
+# For config A
+cassette_a = CassetteLLMProvider(
+    Path("_cassettes") / "individual_extraction_sonnet.json"
+)
+
+# For config B  
+cassette_b = CassetteLLMProvider(
+    Path("_cassettes") / "individual_extraction_gpt4.json"
+)
+```
+
+Cassettes are immutable once recorded, enabling bit-exact reproducibility and safe side-by-side comparison.
+
+### Querying A/B Results
+
+After an A/B run, query the JSONL metrics by `config_ref`:
+
+```bash
+# Compare latest results by config
+cat tests/integration/fixtures/pipelines/_metrics/individual_extraction.jsonl | jq -s '
+  group_by(.config_ref) |
+  map({
+    config: .[0].config_ref,
+    latest_run: (sort_by(.timestamp) | reverse[0]),
+    avg_f1: (map(.metrics.f1) | add / length)
+  })
+'
+```
+
+```sql
+-- DuckDB: per-scenario comparison
+SELECT
+  config_ref,
+  scenario,
+  CAST(metrics->>"f1" AS FLOAT) as f1,
+  CAST(metrics->>"precision" AS FLOAT) as precision,
+  timestamp
+FROM read_json_auto('_metrics/individual_extraction.jsonl')
+WHERE pipeline_type = 'individual_extraction'
+ORDER BY config_ref, scenario, timestamp DESC;
+```
+
 ## Network Blocking
 
 The `block_network` fixture (in parent conftest) is autouse — it blocks all network calls by default.

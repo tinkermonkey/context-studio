@@ -1,0 +1,60 @@
+name: Pipeline Quality Tests
+
+"on":
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'local-server/**'
+      - '.github/workflows/pipeline-quality-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'local-server/**'
+      - '.github/workflows/pipeline-quality-tests.yml'
+
+jobs:
+  quality-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: 'local-server/requirements.txt'
+
+    - name: Install dependencies
+      working-directory: local-server
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run pipeline quality tests (cassette mode)
+      working-directory: local-server
+      run: |
+        pytest tests/integration/pipelines/ \
+          -m "not real_llm" \
+          --tb=short \
+          -v
+      env:
+        PYTHONPATH: .
+
+    - name: Generate metrics report
+      if: always()
+      working-directory: local-server
+      run: |
+        # Optional: Generate a summary report from JSONL metrics
+        # This can be extended to post results to a dashboard or artifact
+        ls -la tests/integration/fixtures/pipelines/_metrics/ 2>/dev/null || echo "No metrics generated"
+
+    - name: Upload metrics artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-metrics
+        path: local-server/tests/integration/fixtures/pipelines/_metrics/
+        retention-days: 30

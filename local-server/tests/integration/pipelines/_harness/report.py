@@ -174,3 +174,113 @@ class ABReport:
             )
 
         return "\n".join(lines)
+
+    @staticmethod
+    def format_comparison_multi(
+        config_results: dict[str, dict[str, dict[str, float]]],
+        floors: dict[str, float] | None = None,
+    ) -> str:
+        """
+        Format multi-config (≥2) A/B comparison as human-readable text.
+
+        Shows per-config metric columns, deltas between first config and each
+        subsequent config, and failure markers (✗) for metrics that miss floors.
+
+        Args:
+            config_results: Dict mapping config_ref → scenario → metrics:
+                           {
+                               "config-a": {
+                                   "scenario-1": {"metric_a": 0.85, ...},
+                                   "scenario-2": {"metric_a": 0.90, ...},
+                               },
+                               "config-b": {...},
+                           }
+            floors: Optional dict of metric_name → floor_value pairs.
+                   If provided, floors are checked and failures marked with ✗.
+
+        Returns:
+            Formatted multi-config comparison string
+        """
+        if not config_results:
+            return "\nNo configurations to compare.\n"
+
+        config_refs = list(config_results.keys())
+        if len(config_refs) < 2:
+            raise ValueError(
+                f"Multi-config comparison requires ≥2 configs; got {len(config_refs)}"
+            )
+
+        lines = [f"\nMulti-Config A/B Comparison ({len(config_refs)} configs)\n"]
+
+        all_scenarios = set()
+        for scenario_metrics in config_results.values():
+            all_scenarios.update(scenario_metrics.keys())
+        all_scenarios = sorted(all_scenarios)
+
+        all_metrics = set()
+        for scenario_metrics in config_results.values():
+            for metrics in scenario_metrics.values():
+                all_metrics.update(metrics.keys())
+        all_metrics = sorted(all_metrics)
+
+        header_parts = ["Scenario".ljust(25), "Metric".ljust(20)]
+        for config_ref in config_refs:
+            header_parts.append(config_ref.ljust(12))
+
+        if len(config_refs) > 1:
+            for i in range(1, len(config_refs)):
+                delta_label = f"Δ({config_refs[0]} - {config_refs[i]})"
+                header_parts.append(delta_label.ljust(14))
+
+        lines.append(" ".join(header_parts))
+        lines.append(
+            "-"
+            * (25 + 20 + (12 * len(config_refs)) + (14 * (len(config_refs) - 1)) + 10)
+        )
+
+        for scenario in all_scenarios:
+            for metric_name in all_metrics:
+                row_parts = []
+
+                if metric_name == all_metrics[0]:
+                    row_parts.append(scenario.ljust(25))
+                else:
+                    row_parts.append("".ljust(25))
+
+                row_parts.append(metric_name.ljust(20))
+
+                values = {}
+                for config_ref in config_refs:
+                    value = config_results[config_ref].get(scenario, {}).get(metric_name)
+                    values[config_ref] = value
+
+                    if value is None or math.isnan(value):
+                        row_parts.append("N/A".ljust(12))
+                    else:
+                        floor_marker = ""
+                        if floors and metric_name in floors:
+                            floor = floors[metric_name]
+                            is_lower_better = metric_name == "brier"
+                            passed = (value <= floor) if is_lower_better else (value >= floor)
+                            floor_marker = " " if passed else "✗"
+
+                        value_str = f"{value:.4f}{floor_marker}"
+                        row_parts.append(value_str.ljust(12))
+
+                if len(config_refs) > 1:
+                    base_value = values.get(config_refs[0])
+                    for i in range(1, len(config_refs)):
+                        other_value = values.get(config_refs[i])
+                        if base_value is None or other_value is None:
+                            row_parts.append("N/A".ljust(14))
+                        elif math.isnan(base_value) or math.isnan(other_value):
+                            row_parts.append("N/A".ljust(14))
+                        else:
+                            delta = other_value - base_value
+                            row_parts.append(f"{delta:+.4f}".ljust(14))
+
+                lines.append(" ".join(row_parts))
+
+            lines.append("")
+
+        return "\n".join(lines)
