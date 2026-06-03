@@ -26,6 +26,7 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import httpx
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -34,6 +35,9 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.reference.conceptnet import ConceptNetSource
+from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.grounding.adapter import GroundingAdapter
 from config import get_settings
 from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
@@ -80,10 +84,17 @@ from domain.pipelines.schema_node_grounding import (
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+    SchemaGroundingState,
+)
+from domain.pipelines.schema_node_grounding.scoring import GroundingScorer, NodeType
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
+    RecordingHTTPTransport,
     RecordingLLMProvider,
+    ReplayHTTPTransport,
 )
 from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
@@ -231,6 +242,36 @@ def cassette_dir():
     return cassette_path
 
 
+@pytest.fixture
+def http_cassette_path(cassette_dir):
+    """Compute HTTP cassette path for grounding adapter calls."""
+    cassette_dir.mkdir(parents=True, exist_ok=True)
+    return cassette_dir / "grounding_http_cassette.json"
+
+
+@pytest.fixture
+def http_client_factory(http_cassette_path, request):
+    """Factory for creating httpx.AsyncClient with cassette support."""
+    async def create_client():
+        refresh_cassettes = request.config.getoption("--refresh-cassettes", default=False)
+
+        if refresh_cassettes:
+            transport = RecordingHTTPTransport(
+                delegate=httpx.AsyncHTTPTransport(),
+                cassette_path=http_cassette_path,
+            )
+            return httpx.AsyncClient(transport=transport)
+        elif http_cassette_path.exists():
+            transport = ReplayHTTPTransport(cassette_path=http_cassette_path)
+            return httpx.AsyncClient(transport=transport)
+        else:
+            raise FileNotFoundError(
+                f"HTTP cassette not found at {http_cassette_path} and --refresh-cassettes not set."
+            )
+
+    return create_client
+
+
 class TestQualityE2EChain:
     """E2E chain quality test suite."""
 
@@ -243,6 +284,7 @@ class TestQualityE2EChain:
         registered_pipelines,
         metrics_emitter,
         cassette_dir,
+        http_client_factory,
         request,
     ):
         """
@@ -272,13 +314,14 @@ class TestQualityE2EChain:
             pytest.skip(f"Fixture not found for e2e_chain/{scenario}")
 
         # Check if all required cassettes exist before proceeding
+        # Note: schema_node_grounding uses HTTP cassettes for reference sources (separate from LLM)
         cassette_paths = [
             cassette_dir / f"e2e_chain_{scenario}_schema_extraction.json",
             cassette_dir / f"e2e_chain_{scenario}_individual_extraction.json",
-            cassette_dir / f"e2e_chain_{scenario}_schema_node_grounding.json",
             cassette_dir / f"e2e_chain_{scenario}_definition_refinement.json",
             cassette_dir / f"e2e_chain_{scenario}_connection_refinement.json",
         ]
+        http_cassette_path = cassette_dir / "grounding_http_cassette.json"
 
         refresh_cassettes = request.config.getoption("--refresh-cassettes")
         missing_cassettes = [p for p in cassette_paths if not p.exists()]
@@ -378,12 +421,65 @@ class TestQualityE2EChain:
         classes = ontology_repo.list_classes()
         class_ids = [c.id for c in classes]
 
-        # Note: SchemaGroundingOrchestrator instantiation requires grounding_adapter
-        # and scorer which are not available in this test. Skipping orchestrator
-        # instantiation and creating a mock run result instead.
-        grounding_result_dict: dict[str, list[dict[str, str]]] = {
-            "groundings": [],
-        }
+        # Create HTTP client for grounding adapter
+        try:
+            http_client = await http_client_factory()
+        except FileNotFoundError as e:
+            pytest.skip(str(e))
+
+        # Create grounding adapter with HTTP cassette support
+        grounding_adapter = GroundingAdapter(
+            dbpedia=DBpediaSource(async_client=http_client),
+            conceptnet=ConceptNetSource(async_client=http_client),
+        )
+
+        # Create grounding scorer with embedding service
+        def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
+            _logger.warning(
+                f"Failed to compute embedding similarity for '{node_label}' vs "
+                f"'{candidate_label}': {error}"
+            )
+
+        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+        grounding_scorer = GroundingScorer(
+            embedding_service=embedding_service,
+            error_callback=log_embedding_error,
+        )
+
+        # Create and execute grounding orchestrator
+        grounding_orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=llm_provider,
+            grounding_adapter=grounding_adapter,
+            scorer=grounding_scorer,
+            config={"top_n": 10},
+        )
+
+        # Ground all classes
+        grounding_result_dict: dict[str, list[dict[str, str]]] = {"groundings": []}
+        if class_ids:
+            for class_id in class_ids:
+                class_obj = next((c for c in classes if c.id == class_id), None)
+                if class_obj:
+                    try:
+                        grounding_state = SchemaGroundingState(
+                            run_id=str(uuid4()),
+                            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+                            input_data={
+                                "node_label": class_obj.title,
+                                "node_type": NodeType.CLASS.value,
+                                "sources": ["DBpedia", "ConceptNet"],
+                            },
+                        )
+                        grounding_result = await grounding_orchestrator.execute(grounding_state)
+                        if grounding_result.result:
+                            groundings = grounding_result.result.get("groundings", [])
+                            if groundings:
+                                grounding_result_dict["groundings"].extend(groundings)
+                    except Exception as e:
+                        _logger.warning(
+                            f"Grounding failed for class '{class_obj.title}': {e}"
+                        )
+
         grounding_run = PipelineRun(
             id=str(uuid4()),
             batch_run_id="e2e-batch",
@@ -402,7 +498,7 @@ class TestQualityE2EChain:
 
         # ===== STAGE 7: Definition Refinement =====
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
-        llm_provider = _get_llm_provider_for_cassette(cassette_paths[3], refresh_cassettes)
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[2], refresh_cassettes)
         if isinstance(llm_provider, RecordingLLMProvider):
             recording_providers.append(llm_provider)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
@@ -438,7 +534,7 @@ class TestQualityE2EChain:
         def_refine_apply.apply(def_refine_run)
 
         # ===== STAGE 9: Connection Refinement =====
-        llm_provider = _get_llm_provider_for_cassette(cassette_paths[4], refresh_cassettes)
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[3], refresh_cassettes)
         if isinstance(llm_provider, RecordingLLMProvider):
             recording_providers.append(llm_provider)
         conn_traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
@@ -473,7 +569,12 @@ class TestQualityE2EChain:
         conn_refine_apply = SchemaConnectionRefinementApplyService(ontology_repo)
         conn_refine_apply.apply(conn_refine_run)
 
-        # Flush all recording providers
+        # Close HTTP client and flush all recording providers
+        try:
+            await http_client.aclose()
+        except Exception:
+            pass
+
         for provider in recording_providers:
             provider.flush()
 
