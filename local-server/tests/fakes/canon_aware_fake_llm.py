@@ -86,7 +86,9 @@ class CanonAwareFakeLLMProvider:
 
         paper_files = sorted(self._canon_dir.glob("paper_*.json"))
         if not paper_files:
-            raise FileNotFoundError(f"No paper_*.json fixtures found under {self._canon_dir}")
+            raise FileNotFoundError(
+                f"No paper_*.json fixtures found under {self._canon_dir}"
+            )
 
         for path in paper_files:
             paper = json.loads(path.read_text(encoding="utf-8"))
@@ -243,7 +245,9 @@ class CanonAwareFakeLLMProvider:
                     },
                     "object": object_payload,
                     "confidence": 0.95,
-                    "provenance": self._provenance_for(source_text, subj_meta, obj_meta),
+                    "provenance": self._provenance_for(
+                        source_text, subj_meta, obj_meta
+                    ),
                 }
             )
 

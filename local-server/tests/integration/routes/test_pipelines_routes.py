@@ -32,7 +32,9 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
 )
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+)
 
 # Constant for mocking the orchestrator creation function
 ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
@@ -164,7 +166,9 @@ class TestPipelineImplementationEndpoints:
 
     def test_list_implementations_no_implementations_returns_empty_list(self, client):
         """GET implementations endpoint returns empty list when none registered."""
-        response = client.get("/api/pipelines/types/individual_extraction/implementations")
+        response = client.get(
+            "/api/pipelines/types/individual_extraction/implementations"
+        )
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert isinstance(body, list)
@@ -540,7 +544,9 @@ class TestPipelineRunEndpoints:
 class TestPipelineErrorHandling:
     """Test error handling in pipeline routes."""
 
-    def test_create_returns_500_when_repo_raises_storage_error(self, client, registries):
+    def test_create_returns_500_when_repo_raises_storage_error(
+        self, client, registries
+    ):
         """Test that PipelineStorageError during create returns 500 with generic message."""
         # Register a test implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -576,7 +582,9 @@ class TestPipelineErrorHandling:
         assert "table" not in body["detail"].lower()
         assert "constraint" not in body["detail"].lower()
 
-    def test_orchestrator_raises_pipeline_input_error_returns_400(self, client, registries):
+    def test_orchestrator_raises_pipeline_input_error_returns_400(
+        self, client, registries
+    ):
         """Test that PipelineInputError from orchestrator returns 400."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -591,7 +599,9 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise PipelineInputError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineInputError("Invalid documents format")
+        mock_orchestrator.execute.side_effect = PipelineInputError(
+            "Invalid documents format"
+        )
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -609,7 +619,9 @@ class TestPipelineErrorHandling:
         assert "detail" in body
         assert "Invalid documents format" in body["detail"]
 
-    def test_orchestrator_raises_external_service_error_returns_503(self, client, registries):
+    def test_orchestrator_raises_external_service_error_returns_503(
+        self, client, registries
+    ):
         """Test that PipelineExternalServiceError from orchestrator returns 503."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -659,7 +671,9 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineExecutionError("Internal logic failed")
+        mock_orchestrator.execute.side_effect = PipelineExecutionError(
+            "Internal logic failed"
+        )
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -677,7 +691,9 @@ class TestPipelineErrorHandling:
         assert "detail" in body
         assert body["detail"] == "Pipeline execution failed"
 
-    def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
+    def test_orchestrator_raises_generic_pipeline_error_returns_500(
+        self, client, registries
+    ):
         """Test that generic PipelineExecutionError from orchestrator returns 500."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -692,7 +708,9 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise generic PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineExecutionError("Generic pipeline error")
+        mock_orchestrator.execute.side_effect = PipelineExecutionError(
+            "Generic pipeline error"
+        )
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -1019,7 +1037,9 @@ class TestRunStatusLifecycle:
             or "Unexpected orchestrator failure" in run.failure_reason
         )
 
-    def test_run_transition_writes_started_at_before_orchestrator(self, client, registries):
+    def test_run_transition_writes_started_at_before_orchestrator(
+        self, client, registries
+    ):
         """RUNNING status and started_at timestamp are written before orchestrator executes."""
         registries["implementation_registry"].register_impl(
             PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
@@ -1081,6 +1101,7 @@ class TestRunStatusLifecycle:
             """Mock orchestrator that signals when execution begins."""
             # Simulate the orchestrator writing RUNNING status (like real orchestrators do)
             from datetime import datetime, timezone
+
             repo.update_running_status(state.run_id, datetime.now(timezone.utc))
 
             # Signal that execution has started
@@ -1122,7 +1143,9 @@ class TestRunStatusLifecycle:
         thread.start()
 
         # Wait for the orchestrator to start (status is RUNNING at this point)
-        assert orchestrator_started_event.wait(timeout=5.0), "Orchestrator did not start"
+        assert orchestrator_started_event.wait(
+            timeout=5.0
+        ), "Orchestrator did not start"
 
         # Now query the runs to find the one we just created
         # (run_id is not available yet, so we query by list)
@@ -1139,7 +1162,9 @@ class TestRunStatusLifecycle:
 
         # Wait for the request to complete
         thread.join(timeout=5.0)
-        assert exception_in_thread is None, f"Exception in thread: {exception_in_thread}"
+        assert (
+            exception_in_thread is None
+        ), f"Exception in thread: {exception_in_thread}"
 
         # After completion, verify the run status is COMPLETED
         final_run = repo.get(mid_execution_run.id)
@@ -1232,9 +1257,7 @@ class TestRevertEndpoint:
 
     def test_revert_nonexistent_run_returns_404(self, revert_client):
         """POST /api/pipelines/runs/{run_id}/revert for nonexistent run returns 404."""
-        response = revert_client.post(
-            "/api/pipelines/runs/nonexistent-run-id/revert"
-        )
+        response = revert_client.post("/api/pipelines/runs/nonexistent-run-id/revert")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_revert_empty_run_returns_200_with_zero_reverted(
@@ -1253,9 +1276,7 @@ class TestRevertEndpoint:
             configuration_version=1,
         )
 
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["run_id"] == run.id
@@ -1312,9 +1333,7 @@ class TestRevertEndpoint:
         assert ontology_repo.get_class("cls-1") is not None
 
         # Revert
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["run_id"] == run.id
@@ -1364,9 +1383,7 @@ class TestRevertEndpoint:
         )
 
         # Try to revert - should get 500 with generic error message
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         body = response.json()
 
@@ -1414,9 +1431,7 @@ class TestRevertEndpoint:
         assert len([r for r in batch_runs if r.batch_run_id == batch_id]) == 2
 
         # Try to revert the first run - should fail with 422 because batch has multiple runs
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run1.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run1.id}/revert")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         body = response.json()
 
@@ -1424,9 +1439,7 @@ class TestRevertEndpoint:
         assert "detail" in body
         assert "multi" in body["detail"].lower() or "multiple" in body["detail"].lower()
 
-    def test_revert_single_run_batch_succeeds(
-        self, revert_client, pipeline_run_repo
-    ):
+    def test_revert_single_run_batch_succeeds(self, revert_client, pipeline_run_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in single-run batch succeeds."""
         from domain.pipelines.entities import PipelineType
 
@@ -1443,9 +1456,7 @@ class TestRevertEndpoint:
         )
 
         # Revert should succeed with 200
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
 

@@ -543,7 +543,9 @@ class TestMarkProcessedOperations:
 class TestAtomicUpdateOperations:
     """Test atomic update operations for changesets and proposals."""
 
-    def test_update_changeset_and_proposal_on_submit_persists_both(self, repository) -> None:
+    def test_update_changeset_and_proposal_on_submit_persists_both(
+        self, repository
+    ) -> None:
         """Test that both changeset and proposal are persisted in one operation."""
         # Create and persist a changeset
         changeset = Changeset(
@@ -584,7 +586,9 @@ class TestAtomicUpdateOperations:
         assert retrieved_prop is not None
         assert retrieved_prop.state == ProposalState.OPEN
 
-    def test_atomic_update_changeset_and_proposal_updates_both(self, repository) -> None:
+    def test_atomic_update_changeset_and_proposal_updates_both(
+        self, repository
+    ) -> None:
         """Test that both entities are updated atomically on approve/reject/merge."""
         # Create and persist both entities
         changeset = Changeset(

@@ -4,12 +4,15 @@
 import json
 from pathlib import Path
 
-FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
+FIXTURES_DIR = (
+    Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
+)
 
 # Fixture definitions for schema_extraction
 SCHEMA_EXTRACTION_FIXTURES = {
     "async_patterns": {
-        "readme": """# Async Patterns Schema Fixture
+        "readme": (
+            """# Async Patterns Schema Fixture
 
 **Source:** "Asynchronous Programming in Python" - Real Python article series (2023)
 **License:** CC BY-NC-SA 3.0
@@ -23,20 +26,37 @@ Fixture tests extraction of async programming schema including concepts, types, 
 - Key classes: Coroutine, EventLoop, Task, Future, Callback
 - Expected properties: manages, awaits, enables, handles
 - Connection relationships: Task-EventLoop, Future-Task, Coroutine-EventLoop
-""",
-        "text": "Asynchronous programming allows a program to perform tasks without" +
-                 "blocking execution. The async/await syntax in Python provides a" +
-                 "clean way to write coroutines. An event loop manages the execution" +
-                 "of tasks and futures. When a coroutine awaits another coroutine," +
-                 "control returns to the event loop. Multiple tasks can be gathered" +
-                 "together using asyncio.gather. Callbacks are registered with tasks" +
-                 "to handle completion. A future represents a value that may not be" +
-                 "available yet but will be eventually. To prepare for dessert after" +
-                 "dinner, ensure the kitchen is clean and ready. Event loops do NOT" +
-                 "run tasks in parallel threads. The event loop continuously polls" +
-                 "tasks for readiness.",
-        "expected_classes": ["Coroutine", "EventLoop", "Task", "Future", "Callback", "Gather"],
-        "expected_properties": ["manages", "awaits", "enables", "handles", "polls", "awaits"],
+"""
+        ),
+        "text": (
+            "Asynchronous programming allows a program to perform tasks without"
+            + "blocking execution. The async/await syntax in Python provides a"
+            + "clean way to write coroutines. An event loop manages the execution"
+            + "of tasks and futures. When a coroutine awaits another coroutine,"
+            + "control returns to the event loop. Multiple tasks can be gathered"
+            + "together using asyncio.gather. Callbacks are registered with tasks"
+            + "to handle completion. A future represents a value that may not be"
+            + "available yet but will be eventually. To prepare for dessert after"
+            + "dinner, ensure the kitchen is clean and ready. Event loops do NOT"
+            + "run tasks in parallel threads. The event loop continuously polls"
+            + "tasks for readiness."
+        ),
+        "expected_classes": [
+            "Coroutine",
+            "EventLoop",
+            "Task",
+            "Future",
+            "Callback",
+            "Gather",
+        ],
+        "expected_properties": [
+            "manages",
+            "awaits",
+            "enables",
+            "handles",
+            "polls",
+            "awaits",
+        ],
         "expected_connections": [
             ("EventLoop", "manages", "Task"),
             ("Task", "awaits", "Coroutine"),
@@ -45,7 +65,8 @@ Fixture tests extraction of async programming schema including concepts, types, 
         ],
     },
     "clean_code": {
-        "readme": """# Clean Code Schema Fixture
+        "readme": (
+            """# Clean Code Schema Fixture
 
 **Source:** "Clean Code: A Handbook of Agile Software Craftsmanship" - Robert C. Martin (2008)
 **License:** Educational use, fair use for testing
@@ -58,19 +79,30 @@ Fixture tests extraction of code design schema.
 - Key classes: Function, Class, Comment, Method, Variable
 - Expected properties: defines, implements, extends, encapsulates
 - Connection relationships capture design hierarchies
-""",
-        "text": "Clean code is readable and maintainable code. Functions should be" +
-                 "small and focused on a single responsibility. Classes should follow" +
-                 "the Single Responsibility Principle. Meaningful names are crucial" +
-                 "for code comprehension. Comments should explain why, not what." +
-                 "Methods implement class behavior. Variables store state. Meaningful" +
-                 "names do NOT consist of random characters or abbreviations.",
+"""
+        ),
+        "text": (
+            "Clean code is readable and maintainable code. Functions should be"
+            + "small and focused on a single responsibility. Classes should follow"
+            + "the Single Responsibility Principle. Meaningful names are crucial"
+            + "for code comprehension. Comments should explain why, not what."
+            + "Methods implement class behavior. Variables store state. Meaningful"
+            + "names do NOT consist of random characters or abbreviations."
+        ),
         "expected_classes": [
-            "Function", "Class", "Comment", "Variable", "Method",
-            "Responsibility"
+            "Function",
+            "Class",
+            "Comment",
+            "Variable",
+            "Method",
+            "Responsibility",
         ],
         "expected_properties": [
-            "defines", "implements", "extends", "encapsulates", "documents"
+            "defines",
+            "implements",
+            "extends",
+            "encapsulates",
+            "documents",
         ],
         "expected_connections": [
             ("Class", "contains", "Method"),
@@ -79,7 +111,8 @@ Fixture tests extraction of code design schema.
         ],
     },
     "design_patterns": {
-        "readme": """# Design Patterns Schema Fixture
+        "readme": (
+            """# Design Patterns Schema Fixture
 
 **Source:** "Design Patterns: Elements of Reusable Object-Oriented Software" - Gang of Four (1994)
 **License:** Educational use, fair use for testing
@@ -91,18 +124,26 @@ Fixture tests extraction of design pattern taxonomy and relationships.
 ## Annotation Notes
 - Key classes: Pattern, CreationalPattern, StructuralPattern, BehavioralPattern
 - Expected properties: categorizes, solves, implements
-""",
-        "text": "Design patterns are reusable solutions to common software design" +
-                 "problems. The Factory pattern abstracts object creation. The" +
-                 "Observer pattern enables loose coupling between objects. The" +
-                 "Strategy pattern allows behavior to vary at runtime. The Singleton" +
-                 "pattern restricts instantiation to a single instance. Creational" +
-                 "patterns deal with object creation. Structural patterns deal with" +
-                 "object composition. Behavioral patterns focus on communication" +
-                 "between objects.",
+"""
+        ),
+        "text": (
+            "Design patterns are reusable solutions to common software design"
+            + "problems. The Factory pattern abstracts object creation. The"
+            + "Observer pattern enables loose coupling between objects. The"
+            + "Strategy pattern allows behavior to vary at runtime. The Singleton"
+            + "pattern restricts instantiation to a single instance. Creational"
+            + "patterns deal with object creation. Structural patterns deal with"
+            + "object composition. Behavioral patterns focus on communication"
+            + "between objects."
+        ),
         "expected_classes": [
-            "DesignPattern", "CreationalPattern", "StructuralPattern",
-            "BehavioralPattern", "Factory", "Observer", "Strategy"
+            "DesignPattern",
+            "CreationalPattern",
+            "StructuralPattern",
+            "BehavioralPattern",
+            "Factory",
+            "Observer",
+            "Strategy",
         ],
         "expected_properties": ["categorizes", "solves", "abstracts", "enables"],
         "expected_connections": [
@@ -112,7 +153,8 @@ Fixture tests extraction of design pattern taxonomy and relationships.
         ],
     },
     "distributed_systems": {
-        "readme": """# Distributed Systems Schema Fixture
+        "readme": (
+            """# Distributed Systems Schema Fixture
 
 **Source:** "Designing Data-Intensive Applications" - Martin Kleppmann (2017)
 **License:** Educational use, fair use for testing
@@ -124,17 +166,24 @@ Fixture tests extraction of distributed systems concepts and trade-offs.
 ## Annotation Notes
 - Key classes: ConsensusAlgorithm, ReplicationStrategy, ConsistencyModel, Availability
 - Expected properties: ensures, improves, constrains
-""",
-        "text": "Distributed systems must handle challenges of network latency," +
-                 "failures, and asynchrony. Consensus algorithms like Raft ensure" +
-                 "agreement on state. Replication improves availability and fault" +
-                 "tolerance. Partitioning distributes data across nodes. Consistency" +
-                 "models trade off between safety and performance. Strong consistency" +
-                 "guarantees immediate visibility of updates. Eventual consistency" +
-                 "allows temporary divergence.",
+"""
+        ),
+        "text": (
+            "Distributed systems must handle challenges of network latency,"
+            + "failures, and asynchrony. Consensus algorithms like Raft ensure"
+            + "agreement on state. Replication improves availability and fault"
+            + "tolerance. Partitioning distributes data across nodes. Consistency"
+            + "models trade off between safety and performance. Strong consistency"
+            + "guarantees immediate visibility of updates. Eventual consistency"
+            + "allows temporary divergence."
+        ),
         "expected_classes": [
-            "ConsensusAlgorithm", "Replication", "ConsistencyModel",
-            "StrongConsistency", "EventualConsistency", "Partition"
+            "ConsensusAlgorithm",
+            "Replication",
+            "ConsistencyModel",
+            "StrongConsistency",
+            "EventualConsistency",
+            "Partition",
         ],
         "expected_properties": ["ensures", "improves", "allows", "guarantees"],
         "expected_connections": [
@@ -144,7 +193,8 @@ Fixture tests extraction of distributed systems concepts and trade-offs.
         ],
     },
     "domain_driven_design": {
-        "readme": """# Domain Driven Design Schema Fixture
+        "readme": (
+            """# Domain Driven Design Schema Fixture
 
 **Source:** "Domain-Driven Design: Tackling Complexity in the Heart of Software" - Eric Evans (2003)
 **License:** Educational use, fair use for testing
@@ -156,18 +206,31 @@ Fixture tests extraction of DDD building blocks and relationships.
 ## Annotation Notes
 - Key classes: BoundedContext, Entity, ValueObject, Aggregate, Repository
 - Expected properties: defines, contains, protects
-""",
-        "text": "Domain-Driven Design focuses on modeling the business domain. Bounded" +
-                 "contexts define clear boundaries around models. Entities have" +
-                 "identity and lifecycle. Value objects are immutable and defined by" +
-                 "their attributes. Aggregates group related entities with a root" +
-                 "entity. Repositories abstract persistence concerns. Ubiquitous" +
-                 "language ensures consistent terminology.",
+"""
+        ),
+        "text": (
+            "Domain-Driven Design focuses on modeling the business domain. Bounded"
+            + "contexts define clear boundaries around models. Entities have"
+            + "identity and lifecycle. Value objects are immutable and defined by"
+            + "their attributes. Aggregates group related entities with a root"
+            + "entity. Repositories abstract persistence concerns. Ubiquitous"
+            + "language ensures consistent terminology."
+        ),
         "expected_classes": [
-            "BoundedContext", "Entity", "ValueObject", "Aggregate",
-            "Repository", "UbiquitousLanguage"
+            "BoundedContext",
+            "Entity",
+            "ValueObject",
+            "Aggregate",
+            "Repository",
+            "UbiquitousLanguage",
         ],
-        "expected_properties": ["defines", "contains", "protects", "abstracts", "groups"],
+        "expected_properties": [
+            "defines",
+            "contains",
+            "protects",
+            "abstracts",
+            "groups",
+        ],
         "expected_connections": [
             ("Aggregate", "contains", "Entity"),
             ("Repository", "manages", "Aggregate"),
@@ -175,7 +238,8 @@ Fixture tests extraction of DDD building blocks and relationships.
         ],
     },
     "microservices_architecture": {
-        "readme": """# Microservices Architecture Schema Fixture
+        "readme": (
+            """# Microservices Architecture Schema Fixture
 
 **Source:** "Building Microservices" - Sam Newman (2015)
 **License:** Educational use, fair use for testing
@@ -187,17 +251,24 @@ Fixture tests extraction of microservices architecture patterns.
 ## Annotation Notes
 - Key classes: Microservice, APIGateway, EventBus, ServiceMesh, CircuitBreaker
 - Expected properties: routes, facilitates, manages, prevents
-""",
-        "text": "Microservices architecture decomposes systems into independently" +
-                 "deployable services. Each service owns its data and exposes APIs. An" +
-                 "API gateway routes requests to appropriate services. Services" +
-                 "communicate synchronously via REST or gRPC, or asynchronously via" +
-                 "events. An event bus facilitates loose coupling. Service mesh" +
-                 "manages inter-service communication. Circuit breakers prevent" +
-                 "cascading failures.",
+"""
+        ),
+        "text": (
+            "Microservices architecture decomposes systems into independently"
+            + "deployable services. Each service owns its data and exposes APIs. An"
+            + "API gateway routes requests to appropriate services. Services"
+            + "communicate synchronously via REST or gRPC, or asynchronously via"
+            + "events. An event bus facilitates loose coupling. Service mesh"
+            + "manages inter-service communication. Circuit breakers prevent"
+            + "cascading failures."
+        ),
         "expected_classes": [
-            "Microservice", "APIGateway", "EventBus", "ServiceMesh",
-            "CircuitBreaker", "RESTInterface"
+            "Microservice",
+            "APIGateway",
+            "EventBus",
+            "ServiceMesh",
+            "CircuitBreaker",
+            "RESTInterface",
         ],
         "expected_properties": ["routes", "facilitates", "manages", "prevents", "owns"],
         "expected_connections": [
@@ -207,7 +278,8 @@ Fixture tests extraction of microservices architecture patterns.
         ],
     },
     "object_oriented_design": {
-        "readme": """# Object Oriented Design Schema Fixture
+        "readme": (
+            """# Object Oriented Design Schema Fixture
 
 **Source:** "Head First Design Patterns" - Freeman & Freeman (2004)
 **License:** Educational use, fair use for testing
@@ -219,17 +291,24 @@ Fixture tests extraction of OOP principles and relationships.
 ## Annotation Notes
 - Key classes: Inheritance, Composition, Encapsulation, Polymorphism, Interface
 - Expected properties: models, enables, hides, allows
-""",
-        "text": "Object-oriented design uses inheritance to model hierarchies." +
-                 "Composition favors flexible design over rigid inheritance." +
-                 "Encapsulation hides internal implementation details. Polymorphism" +
-                 "allows objects to be treated uniformly despite different types." +
-                 "Interfaces define contracts without specifying implementation. The" +
-                 "Liskov Substitution Principle ensures derived classes can substitute" +
-                 "base classes.",
+"""
+        ),
+        "text": (
+            "Object-oriented design uses inheritance to model hierarchies."
+            + "Composition favors flexible design over rigid inheritance."
+            + "Encapsulation hides internal implementation details. Polymorphism"
+            + "allows objects to be treated uniformly despite different types."
+            + "Interfaces define contracts without specifying implementation. The"
+            + "Liskov Substitution Principle ensures derived classes can substitute"
+            + "base classes."
+        ),
         "expected_classes": [
-            "Inheritance", "Composition", "Encapsulation", "Polymorphism",
-            "Interface", "LiskovSubstitution"
+            "Inheritance",
+            "Composition",
+            "Encapsulation",
+            "Polymorphism",
+            "Interface",
+            "LiskovSubstitution",
         ],
         "expected_properties": ["models", "enables", "hides", "allows", "defines"],
         "expected_connections": [
@@ -239,7 +318,8 @@ Fixture tests extraction of OOP principles and relationships.
         ],
     },
     "reactive_programming": {
-        "readme": """# Reactive Programming Schema Fixture
+        "readme": (
+            """# Reactive Programming Schema Fixture
 
 **Source:** "The Reactive Manifesto" and "Reactive Programming" resources
 **License:** CC BY 4.0
@@ -251,18 +331,31 @@ Fixture tests extraction of reactive programming concepts.
 ## Annotation Notes
 - Key classes: Observable, Stream, Operator, Subscription, Backpressure
 - Expected properties: emits, transforms, controls
-""",
-        "text": "Reactive programming uses data streams and propagation of changes." +
-                 "Observables represent data sources that emit values over time." +
-                 "Streams are sequences of asynchronous events. Operators transform" +
-                 "streams: map, filter, flatMap, etc. Subscriptions connect observers" +
-                 "to observables. Backpressure allows consumers to control the rate of" +
-                 "emission.",
+"""
+        ),
+        "text": (
+            "Reactive programming uses data streams and propagation of changes."
+            + "Observables represent data sources that emit values over time."
+            + "Streams are sequences of asynchronous events. Operators transform"
+            + "streams: map, filter, flatMap, etc. Subscriptions connect observers"
+            + "to observables. Backpressure allows consumers to control the rate of"
+            + "emission."
+        ),
         "expected_classes": [
-            "Observable", "Stream", "Operator", "Subscription",
-            "Backpressure", "Observer"
+            "Observable",
+            "Stream",
+            "Operator",
+            "Subscription",
+            "Backpressure",
+            "Observer",
         ],
-        "expected_properties": ["emits", "transforms", "connects", "controls", "propagates"],
+        "expected_properties": [
+            "emits",
+            "transforms",
+            "connects",
+            "controls",
+            "propagates",
+        ],
         "expected_connections": [
             ("Observable", "emits", "Stream"),
             ("Operator", "transforms", "Stream"),
@@ -270,7 +363,8 @@ Fixture tests extraction of reactive programming concepts.
         ],
     },
     "service_oriented": {
-        "readme": """# Service Oriented Architecture Schema Fixture
+        "readme": (
+            """# Service Oriented Architecture Schema Fixture
 
 **Source:** "Service Oriented Architecture: Concepts, Technology, and Design" - Thomas Erl (2005)
 **License:** Educational use, fair use for testing
@@ -282,16 +376,23 @@ Fixture tests extraction of SOA concepts and relationships.
 ## Annotation Notes
 - Key classes: Service, Contract, Composition, Orchestration, Governance
 - Expected properties: exposes, orchestrates, manages
-""",
-        "text": "Service-Oriented Architecture structures systems as collections of" +
-                 "services. Services expose contracts that define functionality and" +
-                 "interfaces. Composition orchestrates multiple services to fulfill" +
-                 "business processes. Orchestration uses workflows to coordinate" +
-                 "services. Governance manages service versioning and quality." +
-                 "Services are loosely coupled and independently deployable.",
+"""
+        ),
+        "text": (
+            "Service-Oriented Architecture structures systems as collections of"
+            + "services. Services expose contracts that define functionality and"
+            + "interfaces. Composition orchestrates multiple services to fulfill"
+            + "business processes. Orchestration uses workflows to coordinate"
+            + "services. Governance manages service versioning and quality."
+            + "Services are loosely coupled and independently deployable."
+        ),
         "expected_classes": [
-            "Service", "Contract", "Composition", "Orchestration",
-            "Governance", "ServiceRegistry"
+            "Service",
+            "Contract",
+            "Composition",
+            "Orchestration",
+            "Governance",
+            "ServiceRegistry",
         ],
         "expected_properties": ["exposes", "orchestrates", "manages", "coordinates"],
         "expected_connections": [
@@ -301,7 +402,8 @@ Fixture tests extraction of SOA concepts and relationships.
         ],
     },
     "testing_strategies": {
-        "readme": """# Testing Strategies Schema Fixture
+        "readme": (
+            """# Testing Strategies Schema Fixture
 
 **Source:** "Test Driven Development: By Example" - Kent Beck (2002)
 **License:** Educational use, fair use for testing
@@ -313,19 +415,32 @@ Fixture tests extraction of testing concepts and taxonomy.
 ## Annotation Notes
 - Key classes: UnitTest, IntegrationTest, E2ETest, Mock, Stub
 - Expected properties: verifies, validates, simulates
-""",
-        "text": "Testing ensures software correctness and quality. Unit tests verify" +
-                 "individual components in isolation. Integration tests verify" +
-                 "components work together. End-to-end tests validate full user" +
-                 "workflows. Mocks simulate dependencies for unit testing. Stubs" +
-                 "provide canned responses. Test-driven development writes tests" +
-                 "before implementation. Code coverage measures how much code is" +
-                 "tested.",
+"""
+        ),
+        "text": (
+            "Testing ensures software correctness and quality. Unit tests verify"
+            + "individual components in isolation. Integration tests verify"
+            + "components work together. End-to-end tests validate full user"
+            + "workflows. Mocks simulate dependencies for unit testing. Stubs"
+            + "provide canned responses. Test-driven development writes tests"
+            + "before implementation. Code coverage measures how much code is"
+            + "tested."
+        ),
         "expected_classes": [
-            "UnitTest", "IntegrationTest", "E2ETest", "Mock", "Stub",
-            "CodeCoverage"
+            "UnitTest",
+            "IntegrationTest",
+            "E2ETest",
+            "Mock",
+            "Stub",
+            "CodeCoverage",
         ],
-        "expected_properties": ["verifies", "validates", "simulates", "provides", "measures"],
+        "expected_properties": [
+            "verifies",
+            "validates",
+            "simulates",
+            "provides",
+            "measures",
+        ],
         "expected_connections": [
             ("UnitTest", "verifies", "Component"),
             ("IntegrationTest", "verifies", "Interaction"),
@@ -333,6 +448,7 @@ Fixture tests extraction of testing concepts and taxonomy.
         ],
     },
 }
+
 
 def create_schema_extraction_fixtures():
     """Create schema extraction quality fixtures."""
@@ -351,15 +467,14 @@ def create_schema_extraction_fixtures():
             "text": scenario_data["text"],
             "ontology_id": "test-ontology-123",
             "model": "claude-opus-4-7",
-            "temperature": 0.0
+            "temperature": 0.0,
         }
         input_path = scenario_dir / "input.json"
         input_path.write_text(json.dumps(input_data, indent=2))
 
         # Write expected.json
         classes = [
-            {"label": c, "confidence": 0.85}
-            for c in scenario_data["expected_classes"]
+            {"label": c, "confidence": 0.85} for c in scenario_data["expected_classes"]
         ]
         properties = [
             {"label": p, "confidence": 0.80}
@@ -370,7 +485,7 @@ def create_schema_extraction_fixtures():
                 "subject_class": subj,
                 "predicate": pred,
                 "object_class": obj,
-                "confidence": 0.82
+                "confidence": 0.82,
             }
             for subj, pred, obj in scenario_data["expected_connections"]
         ]
@@ -380,11 +495,11 @@ def create_schema_extraction_fixtures():
             "result": {
                 "extracted_classes": classes,
                 "extracted_properties": properties,
-                "extracted_relationships": connections
+                "extracted_relationships": connections,
             },
             "created_class_ids": [],
             "created_property_ids": [],
-            "created_relationship_ids": []
+            "created_relationship_ids": [],
         }
         expected_path = scenario_dir / "expected.json"
         expected_path.write_text(json.dumps(expected_data, indent=2))
@@ -392,16 +507,19 @@ def create_schema_extraction_fixtures():
         # Write distractors.json (for schema extraction, these could be noise-derived classes)
         distractors_data = {
             "classes": [
-                {"label": "UnnecessaryClass", "source": "off-topic_paragraph", "confidence": 0.10}
+                {
+                    "label": "UnnecessaryClass",
+                    "source": "off-topic_paragraph",
+                    "confidence": 0.10,
+                }
             ],
-            "properties": [
-                {"label": "spurious_property", "confidence": 0.12}
-            ]
+            "properties": [{"label": "spurious_property", "confidence": 0.12}],
         }
         distractors_path = scenario_dir / "distractors.json"
         distractors_path.write_text(json.dumps(distractors_data, indent=2))
 
         print(f"Created {scenario_name} schema fixture")
+
 
 if __name__ == "__main__":
     create_schema_extraction_fixtures()

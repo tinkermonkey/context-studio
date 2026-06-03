@@ -97,19 +97,30 @@ class ProcessingMetrics:
     def __post_init__(self) -> None:
         """Validate processing metrics invariants."""
         if self.duration_ms < 0:
-            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+            raise ValueError(
+                f"duration_ms must be non-negative, got {self.duration_ms}"
+            )
         if self.tokens_processed < 0:
-            raise ValueError(f"tokens_processed must be non-negative, got {self.tokens_processed}")
+            raise ValueError(
+                f"tokens_processed must be non-negative, got {self.tokens_processed}"
+            )
         if self.entities_found < 0:
-            raise ValueError(f"entities_found must be non-negative, got {self.entities_found}")
+            raise ValueError(
+                f"entities_found must be non-negative, got {self.entities_found}"
+            )
         if self.relationships_found < 0:
             raise ValueError(
-                "relationships_found must be non-negative, got" f" {self.relationships_found}"
+                "relationships_found must be non-negative, got"
+                f" {self.relationships_found}"
             )
         if self.error_count < 0:
-            raise ValueError(f"error_count must be non-negative, got {self.error_count}")
+            raise ValueError(
+                f"error_count must be non-negative, got {self.error_count}"
+            )
         if self.skipped_count < 0:
-            raise ValueError(f"skipped_count must be non-negative, got {self.skipped_count}")
+            raise ValueError(
+                f"skipped_count must be non-negative, got {self.skipped_count}"
+            )
 
 
 @dataclass
@@ -199,11 +210,17 @@ class ExtractionRun:
     def __post_init__(self) -> None:
         """Validate extraction run invariants."""
         if not 0.0 <= self.temperature <= 2.0:
-            raise ValueError(f"temperature must be between 0.0 and 2.0, got {self.temperature}")
+            raise ValueError(
+                f"temperature must be between 0.0 and 2.0, got {self.temperature}"
+            )
         if self.tokens_used < 0:
-            raise ValueError(f"tokens_used must be non-negative, got {self.tokens_used}")
+            raise ValueError(
+                f"tokens_used must be non-negative, got {self.tokens_used}"
+            )
         if self.duration_ms < 0:
-            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+            raise ValueError(
+                f"duration_ms must be non-negative, got {self.duration_ms}"
+            )
         if self.triples_extracted < 0:
             raise ValueError(
                 f"triples_extracted must be non-negative, got {self.triples_extracted}"

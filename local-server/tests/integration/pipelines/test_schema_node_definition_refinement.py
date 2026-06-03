@@ -110,7 +110,9 @@ class TestDefinitionRefinementRegistration:
     def test_orchestrator_registered_with_implementation_registry(self):
         impl_registry = PipelineImplementationRegistry()
         register_schema_node_definition_refinement(impl_registry, None)
-        impl_class = impl_registry.get(PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, "default")
+        impl_class = impl_registry.get(
+            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, "default"
+        )
         assert impl_class is DefinitionRefinementOrchestrator
 
     def test_default_configuration_registered(self):
@@ -187,7 +189,9 @@ class TestDefinitionRefinementExecution:
             },
         ]
         orchestrator = DefinitionRefinementOrchestrator(
-            llm_provider=FakeLLMProvider(response_content=_refinement_response(canon_definitions)),
+            llm_provider=FakeLLMProvider(
+                response_content=_refinement_response(canon_definitions)
+            ),
             traversal=traversal,
         )
         state = DefinitionRefinementState(
@@ -196,7 +200,9 @@ class TestDefinitionRefinementExecution:
             input_data={
                 "node_id": rest_cls.id,
                 "current_definition": rest_cls.description,
-                "groundings": [{"label": "Representational State Transfer", "description": "..."}],
+                "groundings": [
+                    {"label": "Representational State Transfer", "description": "..."}
+                ],
                 "extraction_usages": [],
             },
         )
@@ -231,19 +237,26 @@ class TestDefinitionRefinementExecution:
             for i in range(7)
         ]
         orchestrator = DefinitionRefinementOrchestrator(
-            llm_provider=FakeLLMProvider(response_content=_refinement_response(too_many)),
+            llm_provider=FakeLLMProvider(
+                response_content=_refinement_response(too_many)
+            ),
             traversal=traversal,
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-            input_data={"node_id": rest_cls.id, "current_definition": rest_cls.description},
+            input_data={
+                "node_id": rest_cls.id,
+                "current_definition": rest_cls.description,
+            },
         )
         result_state = asyncio.run(orchestrator.execute(state))
         candidates = result_state.result.get("candidates", [])
         assert len(candidates) <= 3
 
-    def test_wrapped_definitions_object_is_also_parsed(self, traversal, ontology_with_rest_class):
+    def test_wrapped_definitions_object_is_also_parsed(
+        self, traversal, ontology_with_rest_class
+    ):
         """The orchestrator accepts both bare arrays and `{"definitions": [...]}` wrapping."""
         _, rest_cls = ontology_with_rest_class
         wrapped = {
@@ -263,7 +276,10 @@ class TestDefinitionRefinementExecution:
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-            input_data={"node_id": rest_cls.id, "current_definition": rest_cls.description},
+            input_data={
+                "node_id": rest_cls.id,
+                "current_definition": rest_cls.description,
+            },
         )
         result_state = asyncio.run(orchestrator.execute(state))
         assert result_state.current_status == PipelineRunStatus.COMPLETED
@@ -281,10 +297,14 @@ class TestDefinitionRefinementViaHarness:
         )
 
         llm_response = (
-            '{"definitions": ' '[{"label": "Microservice", ' '"definition": "A small service"}]}'
+            '{"definitions": '
+            '[{"label": "Microservice", '
+            '"definition": "A small service"}]}'
         )
         llm_provider = FakeLLMProvider(response_content=llm_response)
-        orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=llm_provider, traversal=None
+        )
 
         actual, expected = await run_pipeline_against_fixture(
             orchestrator,

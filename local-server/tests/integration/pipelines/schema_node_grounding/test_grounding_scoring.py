@@ -16,7 +16,9 @@ from domain.pipelines.schema_node_grounding.scoring import (
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+_root_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(_test_dir)))
+)
 sys.path.insert(0, _root_dir)
 
 
@@ -60,19 +62,25 @@ class TestMatchRationale:
 
     def test_strong_match(self):
         """Test strong match rationale."""
-        rationale = build_match_rationale(label_match=0.9, semantic_sim=0.85, source_score=0.9)
+        rationale = build_match_rationale(
+            label_match=0.9, semantic_sim=0.85, source_score=0.9
+        )
         assert "strong label match" in rationale
         assert "high semantic similarity" in rationale
         assert "high source confidence" in rationale
 
     def test_weak_match(self):
         """Test weak match rationale."""
-        rationale = build_match_rationale(label_match=0.2, semantic_sim=0.3, source_score=0.3)
+        rationale = build_match_rationale(
+            label_match=0.2, semantic_sim=0.3, source_score=0.3
+        )
         assert "weak" in rationale or "low" in rationale
 
     def test_empty_rationale(self):
         """Test zero scores produce low confidence message."""
-        rationale = build_match_rationale(label_match=0.0, semantic_sim=0.0, source_score=0.0)
+        rationale = build_match_rationale(
+            label_match=0.0, semantic_sim=0.0, source_score=0.0
+        )
         assert "low confidence" in rationale
 
 
@@ -211,7 +219,9 @@ class TestGroundingScorer:
     async def test_weights_normalized_when_embedding_unavailable(self):
         """Test that weights are normalized when embedding service fails."""
         mock_embedding_service = AsyncMock()
-        mock_embedding_service.similarity = AsyncMock(side_effect=ValueError("Service down"))
+        mock_embedding_service.similarity = AsyncMock(
+            side_effect=ValueError("Service down")
+        )
 
         scorer = GroundingScorer(
             weights={

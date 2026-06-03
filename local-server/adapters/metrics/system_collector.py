@@ -117,7 +117,9 @@ class SystemMetricsCollector:
             logger.warning(f"Failed to check LLM providers: {e}")
             raise
 
-        return ServiceMetrics(uptime_seconds=uptime, llm_providers_available=tuple(llm_providers))
+        return ServiceMetrics(
+            uptime_seconds=uptime, llm_providers_available=tuple(llm_providers)
+        )
 
     def get_embedding_model_status(self) -> ComponentStatus:
         """
@@ -128,11 +130,15 @@ class SystemMetricsCollector:
         """
         try:
             loaded = self._embedding.is_loaded()
-            details = "Embedding model loaded" if loaded else "Embedding model not loaded"
+            details = (
+                "Embedding model loaded" if loaded else "Embedding model not loaded"
+            )
             return ComponentStatus(available=loaded, details=details)
         except Exception as e:
             logger.warning(f"Failed to check embedding model: {e}")
-            return ComponentStatus(available=False, details=f"Error checking embedding model: {e}")
+            return ComponentStatus(
+                available=False, details=f"Error checking embedding model: {e}"
+            )
 
     def get_nlp_pipeline_status(self) -> ComponentStatus:
         """
@@ -147,7 +153,9 @@ class SystemMetricsCollector:
             return ComponentStatus(available=ready, details=details)
         except Exception as e:
             logger.warning(f"Failed to check NLP pipeline: {e}")
-            return ComponentStatus(available=False, details=f"Error checking NLP pipeline: {e}")
+            return ComponentStatus(
+                available=False, details=f"Error checking NLP pipeline: {e}"
+            )
 
     def get_background_task_summary(self) -> BackgroundTaskSummary:
         """

@@ -27,7 +27,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -299,7 +301,9 @@ class TestExtractionRoutes:
 
     def test_extract_deduplicates_entities(self, client):
         """POST /api/extract deduplicates similar entities across layers."""
-        response = client.post("/api/extract", json={"text": "SQLite database SQLite engine."})
+        response = client.post(
+            "/api/extract", json={"text": "SQLite database SQLite engine."}
+        )
         assert response.status_code == status.HTTP_200_OK
         # If deduplication works, similar entities should be merged
 

@@ -171,7 +171,9 @@ class FakeNLPProcessor:
 class FakeReferenceSource:
     """Fake reference source with configurable results."""
 
-    def __init__(self, source_name_val="TestSource", results_map=None, should_fail=False):
+    def __init__(
+        self, source_name_val="TestSource", results_map=None, should_fail=False
+    ):
         self._source_name = source_name_val
         self.results_map = results_map or {}
         self.should_fail = should_fail
@@ -251,7 +253,9 @@ class TestLayer0KGContext:
             "entity1": {
                 "title": "Apple Inc.",
                 "node_type": "Organization",
-                "embedding": text_embedding,  # Same embedding ensures high similarity (1.0)
+                "embedding": (
+                    text_embedding
+                ),  # Same embedding ensures high similarity (1.0)
                 "description": "Tech company",
                 "external_references": [{"uri": "https://apple.com"}],
             }
@@ -454,7 +458,8 @@ class TestLayer1LLMExtract:
     def test_llm_extract_with_text_before_json(self):
         """JSON preceded by text is extracted correctly."""
         json_response = (
-            'Here are the entities:\n[{"label": "Apple", "type": "ORG", "confidence":' " 0.95}]"
+            'Here are the entities:\n[{"label": "Apple", "type": "ORG", "confidence":'
+            " 0.95}]"
         )
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
@@ -583,7 +588,9 @@ class TestLayer2NLPGapFilling:
         """Deduplication normalizes whitespace."""
         prior_entity = ExtractedEntity(label="Apple Inc.", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8),
+            NLPEntity(
+                text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8
+            ),
         ]
         input_data = LayerInput(
             text="  Apple Inc.  company",
@@ -774,7 +781,9 @@ class TestLayer3ReferenceEnrichment:
         )
 
         # First source raises, second source returns a valid result
-        failing_source = FakeReferenceSource(source_name_val="FailingSource", should_fail=True)
+        failing_source = FakeReferenceSource(
+            source_name_val="FailingSource", should_fail=True
+        )
         working_source = FakeReferenceSource(
             source_name_val="WorkingSource",
             results_map={"Apple": [ref_result]},

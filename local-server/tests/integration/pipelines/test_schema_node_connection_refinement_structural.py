@@ -84,7 +84,9 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
+def ontology_service(
+    change_recorder, ontology_repo, embedding_service, event_publisher
+):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 
@@ -184,7 +186,9 @@ class TestSchemaNodeConnectionRefinementViaHarness:
         # per-pipeline test file ensures run_pipeline_against_fixture is called
         assert run_pipeline_against_fixture is not None
 
-    def test_apply_distinguishes_all_relationship_operations(self, ontology_service, ontology_repo):
+    def test_apply_distinguishes_all_relationship_operations(
+        self, ontology_service, ontology_repo
+    ):
         """Apply service must produce distinct added, removed, modified, skipped counts."""
 
         run_id = str(uuid4())

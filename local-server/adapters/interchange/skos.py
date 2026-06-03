@@ -114,7 +114,9 @@ class SKOSSerializer(OntologySerializer):
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
                     if scope.taxonomy_id is None:
-                        raise ValueError("TAXONOMY scope requires taxonomy_id to be set")
+                        raise ValueError(
+                            "TAXONOMY scope requires taxonomy_id to be set"
+                        )
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
                     if scope.scheme_id is None:
@@ -148,7 +150,9 @@ class SKOSSerializer(OntologySerializer):
 
         self._add_taxonomy_to_graph(taxonomy)
 
-    def _serialize_scheme(self, scheme_id: str, include_descendants: bool = True) -> None:
+    def _serialize_scheme(
+        self, scheme_id: str, include_descendants: bool = True
+    ) -> None:
         """Serialize a single concept scheme and optionally its classes.
 
         Args:
@@ -260,7 +264,9 @@ class SKOSSerializer(OntologySerializer):
         self.graph.add((class_uri, RDF.type, SKOS.Concept))
         self.graph.add((class_uri, SKOS.prefLabel, Literal(class_entity.title)))
         if class_entity.description:
-            self.graph.add((class_uri, SKOS.definition, Literal(class_entity.description)))
+            self.graph.add(
+                (class_uri, SKOS.definition, Literal(class_entity.description))
+            )
 
         # Link to concept scheme
         scheme_uri = self._entity_uri(class_entity.concept_scheme_id)
@@ -307,7 +313,9 @@ class SKOSSerializer(OntologySerializer):
         if prop.description:
             self.graph.add((prop_uri, SKOS.definition, Literal(prop.description)))
 
-    def _add_external_reference(self, subject_uri: URIRef, ext_ref: ExternalReference) -> None:
+    def _add_external_reference(
+        self, subject_uri: URIRef, ext_ref: ExternalReference
+    ) -> None:
         """
         Add external references in multiple formats for round-tripping and backwards compatibility.
 
@@ -428,7 +436,9 @@ class SKOSDeserializer(OntologyDeserializer):
                 # All formats failed - build error message from all attempts
                 if format_errors:
                     error_parts = [f"{fmt}: {str(e)}" for fmt, e in format_errors]
-                    error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(error_parts)
+                    error_msg = "Failed to parse SKOS RDF in any format. " + "; ".join(
+                        error_parts
+                    )
                     raise ValueError(error_msg) from format_errors[-1][1]
 
             # Extract entities from RDF
@@ -653,7 +663,9 @@ class SKOSDeserializer(OntologyDeserializer):
                     }
                 )
             except (json.JSONDecodeError, TypeError):
-                self.warnings.append(f"Class {uri} has malformed LOCAL:externalReferences JSON")
+                self.warnings.append(
+                    f"Class {uri} has malformed LOCAL:externalReferences JSON"
+                )
 
         # If no JSON references found, fall back to legacy dct:source and skos:exactMatch
         if not external_references:
@@ -714,7 +726,8 @@ class SKOSDeserializer(OntologyDeserializer):
         for predicate in unhandled:
             if list(self.graph.objects(uri, predicate)):
                 self.warnings.append(
-                    f"Concept {uri} has unhandled predicate {predicate}; value(s)" " ignored"
+                    f"Concept {uri} has unhandled predicate {predicate}; value(s)"
+                    " ignored"
                 )
 
     def _uri_to_id(self, uri: Node) -> Optional[str]:
@@ -748,7 +761,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return entity_id
 
-    def _parse_external_reference_uri(self, uri_str: str) -> tuple[Optional[str], Optional[str]]:
+    def _parse_external_reference_uri(
+        self, uri_str: str
+    ) -> tuple[Optional[str], Optional[str]]:
         """
         Parse an external reference URI to extract source name and identifier.
 
@@ -836,7 +851,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = ImportConflict.derive_default_resolution(match_kind)
+                default_resolution = ImportConflict.derive_default_resolution(
+                    match_kind
+                )
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -854,7 +871,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return conflicts
 
-    def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
+    def _find_by_external_reference(
+        self, source: str, identifier: str
+    ) -> Optional[str]:
         """Find an existing entity by external reference (searches classes and individuals)."""
         if self._classes_cache is None:
             self._classes_cache = self.ontology_repo.list_classes()
@@ -875,9 +894,13 @@ class SKOSDeserializer(OntologyDeserializer):
 
         return None
 
-    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
+    def _find_class_by_title(
+        self, title: str, concept_scheme_id: Optional[str]
+    ) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id
+        )
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

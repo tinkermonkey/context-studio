@@ -187,14 +187,18 @@ class SQLiteDatasetRepository:
             with self.session_factory() as session:
                 # Deactivate all other datasets
                 session.execute(
-                    update(DatasetModel).where(DatasetModel.is_active).values(is_active=False)
+                    update(DatasetModel)
+                    .where(DatasetModel.is_active)
+                    .values(is_active=False)
                 )
                 # Activate the target dataset
                 dataset_row = session.execute(
                     select(DatasetModel).where(DatasetModel.id == dataset_id)
                 ).scalar_one_or_none()
                 if dataset_row is None:
-                    raise DatasetNotFoundError(f"Dataset with ID {dataset_id} not found")
+                    raise DatasetNotFoundError(
+                        f"Dataset with ID {dataset_id} not found"
+                    )
                 dataset_row.is_active = True
                 session.commit()
                 return self._to_domain(dataset_row)
@@ -252,7 +256,9 @@ class SQLiteDatasetRepository:
                     )
                     or 0
                 )
-                relationships = session.scalar(select(func.count(RelationshipModel.id))) or 0
+                relationships = (
+                    session.scalar(select(func.count(RelationshipModel.id))) or 0
+                )
 
             return DatasetMetrics(
                 layers_count=taxonomies,
@@ -262,7 +268,9 @@ class SQLiteDatasetRepository:
                 individuals_count=individuals,
             )
         except SQLAlchemyError as e:
-            logger.error(f"Database error computing metrics for dataset {dataset_id}: {e}")
+            logger.error(
+                f"Database error computing metrics for dataset {dataset_id}: {e}"
+            )
             raise RuntimeError(f"Failed to compute metrics: {str(e)}") from e
 
     def _to_domain(self, row: DatasetModel) -> Dataset:

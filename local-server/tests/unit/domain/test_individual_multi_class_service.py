@@ -44,7 +44,9 @@ def sample_ontology(service):
         "Database System",
         description="A system for data storage and retrieval",
     )
-    class2 = svc.create_class(scheme.id, "SQL Dialect", description="A SQL database implementation")
+    class2 = svc.create_class(
+        scheme.id, "SQL Dialect", description="A SQL database implementation"
+    )
     class3 = svc.create_class(
         scheme.id, "Open Source Software", description="Software with open source code"
     )
@@ -151,7 +153,9 @@ class TestIndividualMultiClassOperations:
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
         ind = svc.create_individual([class1.id, class2.id, class3.id], "PostgreSQL")
-        updated = svc.reorder_individual_classes(ind.id, [class3.id, class1.id, class2.id])
+        updated = svc.reorder_individual_classes(
+            ind.id, [class3.id, class1.id, class2.id]
+        )
 
         assert updated.class_ids == [class3.id, class1.id, class2.id]
 
@@ -181,7 +185,9 @@ class TestIndividualMultiClassOperations:
         assert any(p.property_identifier == "version" for p in props)
         assert any(p.property_identifier == "license" for p in props)
 
-    def test_get_individual_properties_multiple_classes_no_conflict(self, sample_ontology):
+    def test_get_individual_properties_multiple_classes_no_conflict(
+        self, sample_ontology
+    ):
         """Get properties for individual with multiple classes, no property conflicts."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 
@@ -256,7 +262,9 @@ class TestIndividualMultiClassOperations:
         prop = next(p for p in props if p.property_identifier == "release_type")
         assert prop.value == "stable"
 
-    def test_get_individual_properties_nonexistent_individual_raises(self, sample_ontology):
+    def test_get_individual_properties_nonexistent_individual_raises(
+        self, sample_ontology
+    ):
         """Get properties for nonexistent individual raises EntityNotFoundError."""
         svc, repo, tax, scheme, class1, class2, class3 = sample_ontology
 

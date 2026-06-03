@@ -33,7 +33,9 @@ class OntologyRepository(Protocol):
     """
 
     # Identifier lookup across schema-tier entities
-    def get_by_identifier(self, identifier: str) -> Taxonomy | ConceptScheme | Class | None:
+    def get_by_identifier(
+        self, identifier: str
+    ) -> Taxonomy | ConceptScheme | Class | None:
         """
         Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique
         slug identifier.
@@ -380,7 +382,9 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
+    def get_property_definition_by_identifier(
+        self, identifier: str
+    ) -> PropertyDefinition | None:
         """
         Retrieve a property definition by its machine-readable identifier.
 
@@ -527,7 +531,9 @@ class OntologyRepository(Protocol):
     # Bulk operations
     def get_all_entities_and_relationships(
         self,
-    ) -> tuple[Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]]:
+    ) -> tuple[
+        Sequence[Taxonomy | ConceptScheme | Class | Individual], Sequence[Relationship]
+    ]:
         """
         Retrieve all entities and relationships for graph building.
 

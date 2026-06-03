@@ -50,7 +50,9 @@ def upgrade() -> None:
             short = entity_id.replace("-", "")[:8]
             slug = f"{prefix}_{short}"
             conn.execute(
-                sa.text("UPDATE ontology_entities SET identifier = :slug WHERE id = :entity_id"),
+                sa.text(
+                    "UPDATE ontology_entities SET identifier = :slug WHERE id = :entity_id"
+                ),
                 {"slug": slug, "entity_id": entity_id},
             )
 

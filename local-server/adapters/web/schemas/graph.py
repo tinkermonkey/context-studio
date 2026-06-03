@@ -57,7 +57,9 @@ class KnowledgeGraphResponse(BaseModel):
     node_count: int = Field(..., description="Number of nodes in the graph")
     edge_count: int = Field(..., description="Number of edges in the graph")
     is_directed: bool = Field(..., description="Whether the graph is directed")
-    timestamp: datetime = Field(..., description="Timestamp when the graph was last built")
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the graph was last built"
+    )
 
 
 class GraphMetricsResponse(BaseModel):
@@ -68,13 +70,19 @@ class GraphMetricsResponse(BaseModel):
     density: float = Field(..., description="Edge density of the graph")
     average_degree: float = Field(..., description="Average degree of nodes")
     connected_components: int = Field(..., description="Number of connected components")
-    degree_distribution: dict[str, int] = Field(..., description="Distribution of node degrees")
-    centrality: dict[str, float] = Field(..., description="Centrality scores for all nodes")
+    degree_distribution: dict[str, int] = Field(
+        ..., description="Distribution of node degrees"
+    )
+    centrality: dict[str, float] = Field(
+        ..., description="Centrality scores for all nodes"
+    )
     communities: list[list[str]] = Field(
         ..., description="Detected communities as lists of node IDs"
     )
     algorithm: str = Field(..., description="Name of the centrality algorithm used")
-    computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
+    computed_at: datetime = Field(
+        ..., description="Timestamp when metrics were computed"
+    )
 
 
 class PathResultResponse(BaseModel):
@@ -96,7 +104,9 @@ class PathResultResponse(BaseModel):
         serialization_alias="distance",
         description="Number of edges in the path",
     )
-    relationships: list[str] = Field(..., description="Relationship types traversed along the path")
+    relationships: list[str] = Field(
+        ..., description="Relationship types traversed along the path"
+    )
 
 
 class CentralityResponse(BaseModel):
@@ -105,7 +115,9 @@ class CentralityResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     algorithm: str = Field(..., description="Name of the centrality algorithm")
-    scores: dict[str, float] = Field(..., description="Centrality scores mapped by node ID")
+    scores: dict[str, float] = Field(
+        ..., description="Centrality scores mapped by node ID"
+    )
 
 
 class CommunitiesResponse(BaseModel):
@@ -114,7 +126,9 @@ class CommunitiesResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     algorithm: str = Field(..., description="Name of the community detection algorithm")
-    communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
+    communities: list[list[str]] = Field(
+        ..., description="Communities as sorted lists of node IDs"
+    )
 
 
 class NeighborsResponse(BaseModel):
@@ -126,8 +140,12 @@ class NeighborsResponse(BaseModel):
     direction: Literal["in", "out", "both"] = Field(
         ..., description="Direction of traversal: 'in', 'out', or 'both'"
     )
-    incoming: list[str] = Field(..., description="List of nodes with edges pointing to this node")
-    outgoing: list[str] = Field(..., description="List of nodes this node has edges pointing to")
+    incoming: list[str] = Field(
+        ..., description="List of nodes with edges pointing to this node"
+    )
+    outgoing: list[str] = Field(
+        ..., description="List of nodes this node has edges pointing to"
+    )
 
 
 class CycleCheckResponse(BaseModel):
@@ -181,8 +199,12 @@ class DegreeDistributionResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    in_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their in-degrees")
-    out_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their out-degrees")
+    in_degree: dict[str, int] = Field(
+        ..., description="Mapping of node IDs to their in-degrees"
+    )
+    out_degree: dict[str, int] = Field(
+        ..., description="Mapping of node IDs to their out-degrees"
+    )
 
 
 class SubgraphDataResponse(BaseModel):

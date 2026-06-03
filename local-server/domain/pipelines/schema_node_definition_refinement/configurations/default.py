@@ -17,7 +17,9 @@ def get_default_config() -> dict:
         Configuration dict with LLM settings and generation parameters
     """
     return {
-        "description": "Default schema node definition refinement with OpenRouter Gemini 3 Flash",
+        "description": (
+            "Default schema node definition refinement with OpenRouter Gemini 3 Flash"
+        ),
         "llm_provider": "openrouter",
         "model": "google/gemini-3-flash-preview",
         "temperature": 0.0,

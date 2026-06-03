@@ -66,7 +66,8 @@ class PipelineRunRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     implementation_id: str = Field(
-        default="default", description="Implementation identifier (defaults to 'default')"
+        default="default",
+        description="Implementation identifier (defaults to 'default')",
     )
     configuration_ref: str = Field(
         default="default", description="Configuration reference (defaults to 'default')"
@@ -90,8 +91,12 @@ class SchemaExtractionRunRequest(PipelineRunRequest):
 class SchemaGroundingRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_grounding pipeline."""
 
-    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to ground")
-    sources: list[str] = Field(..., min_length=1, description="External knowledge sources")
+    nodes: list[dict[str, Any]] = Field(
+        ..., min_length=1, description="Schema nodes to ground"
+    )
+    sources: list[str] = Field(
+        ..., min_length=1, description="External knowledge sources"
+    )
 
 
 class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
@@ -110,7 +115,9 @@ class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
 class SchemaConnectionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_connection_refinement pipeline."""
 
-    scope_id: str = Field(..., min_length=1, description="Schema node ID to refine connections for")
+    scope_id: str = Field(
+        ..., min_length=1, description="Schema node ID to refine connections for"
+    )
     current_connections: list[dict[str, Any]] = Field(
         ..., description="Current connections for the scope"
     )
@@ -143,11 +150,15 @@ class PipelineRunResponse(BaseModel):
     configuration_ref: str = Field(..., description="Configuration reference")
     configuration_slug: str = Field(..., description="Configuration slug")
     configuration_version: int = Field(..., description="Configuration version")
-    input_summary: dict[str, Any] = Field(default_factory=dict, description="Input metadata")
+    input_summary: dict[str, Any] = Field(
+        default_factory=dict, description="Input metadata"
+    )
     output_summary: dict[str, Any] = Field(
         default_factory=dict, description="Output counts/metrics"
     )
-    llm_metadata: dict[str, Any] = Field(default_factory=dict, description="LLM execution metadata")
+    llm_metadata: dict[str, Any] = Field(
+        default_factory=dict, description="LLM execution metadata"
+    )
     status: str = Field(..., description="Current status")
     created_at: Optional[datetime] = Field(
         None, description="Creation timestamp (reserved for future use)"
@@ -158,7 +169,9 @@ class PipelineRunResponse(BaseModel):
     started_at: Optional[datetime] = Field(
         None, description="Timestamp when run transitioned to RUNNING"
     )
-    failure_reason: Optional[str] = Field(None, description="Failure reason if status=FAILED")
+    failure_reason: Optional[str] = Field(
+        None, description="Failure reason if status=FAILED"
+    )
 
 
 class ApplyRunResponse(BaseModel):
@@ -168,18 +181,31 @@ class ApplyRunResponse(BaseModel):
     pipeline_type: str = Field(..., description="Pipeline type that was applied")
     classes_created: int = Field(default=0, description="Class entities created")
     classes_updated: int = Field(default=0, description="Class entities updated")
-    classes_skipped: int = Field(default=0, description="Class candidates skipped (already exist)")
-    properties_created: int = Field(default=0, description="PropertyDefinition entities created")
+    classes_skipped: int = Field(
+        default=0, description="Class candidates skipped (already exist)"
+    )
+    properties_created: int = Field(
+        default=0, description="PropertyDefinition entities created"
+    )
     properties_skipped: int = Field(
         default=0, description="PropertyDefinition candidates skipped (already exist)"
     )
-    relationships_created: int = Field(default=0, description="Relationship entities created")
-    relationships_removed: int = Field(default=0, description="Relationship entities removed")
-    relationships_modified: int = Field(default=0, description="Relationship entities modified")
-    relationships_skipped: int = Field(
-        default=0, description="Relationship candidates skipped (already exist or unresolvable)"
+    relationships_created: int = Field(
+        default=0, description="Relationship entities created"
     )
-    individuals_created: int = Field(default=0, description="Individual entities created")
+    relationships_removed: int = Field(
+        default=0, description="Relationship entities removed"
+    )
+    relationships_modified: int = Field(
+        default=0, description="Relationship entities modified"
+    )
+    relationships_skipped: int = Field(
+        default=0,
+        description="Relationship candidates skipped (already exist or unresolvable)",
+    )
+    individuals_created: int = Field(
+        default=0, description="Individual entities created"
+    )
     individuals_skipped: int = Field(
         default=0, description="Individual candidates skipped (already exist)"
     )
@@ -225,10 +251,18 @@ class CandidateResponse(BaseModel):
 
     uri: str = Field(..., description="Candidate URI or identifier")
     label: str = Field(..., description="Human-readable candidate label")
-    description: str = Field(default="", description="Candidate description or definition")
-    source: str = Field(default="", description="Source or database where candidate originates")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
-    provenance: str = Field(default="", description="Rationale or provenance for the candidate")
+    description: str = Field(
+        default="", description="Candidate description or definition"
+    )
+    source: str = Field(
+        default="", description="Source or database where candidate originates"
+    )
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
+    )
+    provenance: str = Field(
+        default="", description="Rationale or provenance for the candidate"
+    )
 
 
 class RunCountsResponse(BaseModel):
@@ -253,9 +287,7 @@ class BatchResponse(BaseModel):
         ...,
         description="Status: pending, running, completed, failed, or cancelled",
     )
-    created_at: datetime = Field(
-        ..., description="UTC timestamp of batch creation"
-    )
+    created_at: datetime = Field(..., description="UTC timestamp of batch creation")
     started_at: Optional[datetime] = Field(
         None, description="UTC timestamp when batch started"
     )
@@ -264,7 +296,9 @@ class BatchResponse(BaseModel):
     )
     last_updated: datetime = Field(..., description="UTC timestamp of last update")
     run_count: int = Field(..., ge=0, description="Total number of runs in batch")
-    run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
+    run_counts: RunCountsResponse = Field(
+        ..., description="Breakdown of runs by status"
+    )
 
 
 class EnqueueBatchRunsRequest(BaseModel):

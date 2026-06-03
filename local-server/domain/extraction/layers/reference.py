@@ -52,7 +52,9 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
     if not input.existing_entities:
         return LayerOutput(
             entities=tuple(entities),
-            metadata=MappingProxyType({"reason": "no_prior_entities", "enriched_count": 0}),
+            metadata=MappingProxyType(
+                {"reason": "no_prior_entities", "enriched_count": 0}
+            ),
         )
 
     # Filter to available sources

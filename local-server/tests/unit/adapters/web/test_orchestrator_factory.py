@@ -9,13 +9,19 @@ from unittest.mock import Mock
 
 import pytest
 
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import (
+    create_orchestrator,
+    create_pipeline_state,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
@@ -146,7 +152,9 @@ class TestCreateOrchestratorIndividualExtraction:
         assert orchestrator._llm_provider is mock_llm_provider
         assert orchestrator._extraction_service is mock_extraction_service
 
-    def test_raises_value_error_when_extraction_service_missing(self, mock_llm_provider):
+    def test_raises_value_error_when_extraction_service_missing(
+        self, mock_llm_provider
+    ):
         """Test that ValueError is raised when extraction_service is missing."""
         with pytest.raises(ValueError) as exc_info:
             create_orchestrator(
@@ -170,7 +178,9 @@ class TestCreateOrchestratorIndividualExtraction:
 
         assert "extraction_service is required" in str(exc_info.value)
 
-    def test_raises_value_error_when_extraction_service_empty_string(self, mock_llm_provider):
+    def test_raises_value_error_when_extraction_service_empty_string(
+        self, mock_llm_provider
+    ):
         """Test that ValueError is raised when extraction_service is empty string."""
         services = {"extraction_service": ""}
 

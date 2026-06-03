@@ -37,7 +37,9 @@ def _create_test_taxonomy_and_scheme(service: OntologyService) -> tuple[str, str
         Tuple of (taxonomy_id, scheme_id)
     """
     taxonomy = service.create_taxonomy("Test Taxonomy", "Test description")
-    scheme = service.create_scheme(taxonomy.id, "Test Scheme", "Test scheme description")
+    scheme = service.create_scheme(
+        taxonomy.id, "Test Scheme", "Test scheme description"
+    )
     return taxonomy.id, scheme.id
 
 

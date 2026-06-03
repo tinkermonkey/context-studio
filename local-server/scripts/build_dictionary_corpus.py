@@ -852,8 +852,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "A platform for building, shipping, and running "
-                    "containers"
+                    "A platform for building, shipping, and running " "containers"
                 ),
                 "context": (
                     "Industry-standard containerization tool; enables "
@@ -1000,9 +999,7 @@ DICTIONARY_TERMS = [
                     "production environments (blue and green) and switches "
                     "between them"
                 ),
-                "context": (
-                    "Enables instant rollback and zero-downtime deployments"
-                ),
+                "context": "Enables instant rollback and zero-downtime deployments",
             }
         ],
         "cross_references": ["rolling_update", "deployment"],
@@ -1128,8 +1125,7 @@ DICTIONARY_TERMS = [
                     "protocol for transmitting hypermedia documents and data"
                 ),
                 "context": (
-                    "Stateless, request-response protocol; foundation for "
-                    "REST APIs"
+                    "Stateless, request-response protocol; foundation for " "REST APIs"
                 ),
             }
         ],
@@ -1200,8 +1196,7 @@ DICTIONARY_TERMS = [
                     "querying and manipulating relational databases"
                 ),
                 "context": (
-                    "Used for CRUD operations and complex queries on "
-                    "structured data"
+                    "Used for CRUD operations and complex queries on " "structured data"
                 ),
             }
         ],
@@ -1217,7 +1212,9 @@ DICTIONARY_TERMS = [
                     "A request to retrieve, insert, update, or delete data "
                     "from a database"
                 ),
-                "context": "Can be simple (single table) or complex (joins, aggregations)",
+                "context": (
+                    "Can be simple (single table) or complex (joins, aggregations)"
+                ),
             }
         ],
         "cross_references": ["database", "sql"],
@@ -1269,8 +1266,7 @@ DICTIONARY_TERMS = [
                     "Atomicity, Consistency, Isolation, Durability"
                 ),
                 "context": (
-                    "Ensures reliable transaction processing and data "
-                    "integrity"
+                    "Ensures reliable transaction processing and data " "integrity"
                 ),
             }
         ],
@@ -1399,8 +1395,7 @@ DICTIONARY_TERMS = [
                     "can make within a time window"
                 ),
                 "context": (
-                    "Protects services from overload; prevents cascading "
-                    "failures"
+                    "Protects services from overload; prevents cascading " "failures"
                 ),
             }
         ],
@@ -1413,8 +1408,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "Actively slowing down requests when they exceed "
-                    "defined limits"
+                    "Actively slowing down requests when they exceed " "defined limits"
                 ),
                 "context": (
                     "Graceful degradation; clients back off to prevent "
@@ -1521,8 +1515,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "The process of verifying the identity of a user or "
-                    "service"
+                    "The process of verifying the identity of a user or " "service"
                 ),
                 "context": (
                     "First line of defense; enables identification and "
@@ -1561,8 +1554,7 @@ DICTIONARY_TERMS = [
                     "secure communication over networks"
                 ),
                 "context": (
-                    "Provides encryption and authentication for network "
-                    "connections"
+                    "Provides encryption and authentication for network " "connections"
                 ),
             }
         ],
@@ -1961,12 +1953,12 @@ def build_dictionary_corpus(output_dir: str) -> None:
             "Software Engineering Institute (SEI) Glossary",
             "Martin Kleppmann's 'Designing Data-Intensive Applications'",
             "CNCF Cloud-Native Glossary",
-            "Common distributed systems and microservices patterns"
+            "Common distributed systems and microservices patterns",
         ],
         "licenses": [
             "SEI glossary: CC BY 4.0",
             "Kleppmann's DDIA: Chapter glossaries used for reference",
-            "CNCF Glossary: CC BY 4.0"
+            "CNCF Glossary: CC BY 4.0",
         ],
         "build_timestamp": datetime.now(timezone.utc).isoformat(),
         "term_count": len(DICTIONARY_TERMS),
@@ -1975,10 +1967,10 @@ def build_dictionary_corpus(output_dir: str) -> None:
                 "id": term["id"],
                 "surface_label": term["surface_label"],
                 "sense_count": len(term["senses"]),
-                "source": term["source"]
+                "source": term["source"],
             }
             for term in DICTIONARY_TERMS
-        ]
+        ],
     }
 
     index_file = corpus_dir / "index.json"
@@ -1991,5 +1983,7 @@ def build_dictionary_corpus(output_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    output_dir = Path(__file__).parent.parent / "datafiles" / "validation" / "dictionary"
+    output_dir = (
+        Path(__file__).parent.parent / "datafiles" / "validation" / "dictionary"
+    )
     build_dictionary_corpus(str(output_dir))

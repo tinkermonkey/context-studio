@@ -48,14 +48,18 @@ class SchemaDefinitionRefinementApplyService:
         result = ApplyResult()
         node_id = run.output_summary.get("node_id", "")
         if not node_id:
-            raise ValueError("node_id missing from output_summary — cannot apply definition")
+            raise ValueError(
+                "node_id missing from output_summary — cannot apply definition"
+            )
 
         cls = self._repo.get_class(node_id)
         if cls is None:
             raise ValueError(f"Class {node_id} not found")
 
         candidates = run.output_summary.get("candidates", [])
-        qualifying = [c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold]
+        qualifying = [
+            c for c in candidates if c.get("confidence", 0.0) >= confidence_threshold
+        ]
         if not qualifying:
             result.classes_skipped += 1
             return result

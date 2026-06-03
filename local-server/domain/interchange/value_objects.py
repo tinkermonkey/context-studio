@@ -89,23 +89,30 @@ class SerializationScope:
             case SerializationScopeType.WHOLE_GRAPH:
                 if self.taxonomy_id or self.scheme_id or self.entity_ids:
                     raise ValueError(
-                        "WHOLE_GRAPH scope must not have taxonomy_id, scheme_id, or" " entity_ids"
+                        "WHOLE_GRAPH scope must not have taxonomy_id, scheme_id, or"
+                        " entity_ids"
                     )
             case SerializationScopeType.TAXONOMY:
                 if not self.taxonomy_id:
                     raise ValueError("TAXONOMY scope requires taxonomy_id")
                 if self.scheme_id or self.entity_ids:
-                    raise ValueError("TAXONOMY scope must not have scheme_id or entity_ids")
+                    raise ValueError(
+                        "TAXONOMY scope must not have scheme_id or entity_ids"
+                    )
             case SerializationScopeType.SCHEME:
                 if not self.scheme_id:
                     raise ValueError("SCHEME scope requires scheme_id")
                 if self.taxonomy_id or self.entity_ids:
-                    raise ValueError("SCHEME scope must not have taxonomy_id or entity_ids")
+                    raise ValueError(
+                        "SCHEME scope must not have taxonomy_id or entity_ids"
+                    )
             case SerializationScopeType.ENTITY_SET:
                 if not self.entity_ids:
                     raise ValueError("ENTITY_SET scope requires entity_ids")
                 if self.taxonomy_id or self.scheme_id:
-                    raise ValueError("ENTITY_SET scope must not have taxonomy_id or scheme_id")
+                    raise ValueError(
+                        "ENTITY_SET scope must not have taxonomy_id or scheme_id"
+                    )
 
 
 @dataclass(frozen=True)
@@ -197,7 +204,9 @@ class ImportPlan:
     def __post_init__(self) -> None:
         """Validate plan invariants at construction time."""
         if self.new_entity_count < 0:
-            raise ValueError(f"new_entity_count must be non-negative, got {self.new_entity_count}")
+            raise ValueError(
+                f"new_entity_count must be non-negative, got {self.new_entity_count}"
+            )
 
 
 @dataclass(frozen=True)

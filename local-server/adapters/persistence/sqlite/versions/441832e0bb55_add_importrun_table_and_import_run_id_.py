@@ -39,7 +39,9 @@ def upgrade() -> None:
 
     # Add import_run_id column to change_events using batch mode for SQLite
     with op.batch_alter_table("change_events", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("import_run_id", sa.String(length=36), nullable=True))
+        batch_op.add_column(
+            sa.Column("import_run_id", sa.String(length=36), nullable=True)
+        )
         batch_op.create_foreign_key(
             "fk_change_events_import_run_id",
             "import_runs",

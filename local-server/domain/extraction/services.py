@@ -89,7 +89,8 @@ class ExtractionService:
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
-                "similarity_threshold must be between 0.0 and 1.0, got" f" {similarity_threshold}"
+                "similarity_threshold must be between 0.0 and 1.0, got"
+                f" {similarity_threshold}"
             )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
@@ -400,7 +401,9 @@ class ExtractionService:
                     raise ValueError(f"Ontology {ontology_id} not found")
 
                 # Call LLM to extract triples
-                system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
+                system_prompt, user_prompt = self._build_triple_extraction_prompt(
+                    text, ontology
+                )
                 llm_response = self._llm.complete(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
@@ -543,7 +546,9 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             triples = []
             for triple_data in triples_data:
                 try:
-                    triple = self._build_triple_from_llm_output(triple_data, text, ontology_id)
+                    triple = self._build_triple_from_llm_output(
+                        triple_data, text, ontology_id
+                    )
                     triples.append(triple)
                 except Exception as e:
                     _logger.warning(f"Failed to parse triple: {e}")
@@ -555,7 +560,9 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             _logger.error(f"Failed to parse LLM JSON response: {e}")
             return []
 
-    def _build_triple_from_llm_output(self, triple_data: dict, text: str, ontology_id: str) -> dict:
+    def _build_triple_from_llm_output(
+        self, triple_data: dict, text: str, ontology_id: str
+    ) -> dict:
         """
         Build a triple dict from LLM-extracted data.
 
@@ -764,7 +771,9 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
             )
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(entities=tuple(), metadata=MappingProxyType({"error": error_msg}))
+            return LayerOutput(
+                entities=tuple(), metadata=MappingProxyType({"error": error_msg})
+            )
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """
@@ -840,7 +849,9 @@ Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
                     used_indices.add(j)
                     continue
 
-                label_similarity = self._normalized_similarity(entity.label, other.label)
+                label_similarity = self._normalized_similarity(
+                    entity.label, other.label
+                )
 
                 if label_similarity >= self._similarity_threshold:
                     # Mark as used; higher-priority entity is kept

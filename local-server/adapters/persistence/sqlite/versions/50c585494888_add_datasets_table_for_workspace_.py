@@ -37,7 +37,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_is_active", "datasets", ["is_active"], unique=False)
-    op.create_index(op.f("ix_datasets_is_active"), "datasets", ["is_active"], unique=False)
+    op.create_index(
+        op.f("ix_datasets_is_active"), "datasets", ["is_active"], unique=False
+    )
     op.create_index(op.f("ix_datasets_title"), "datasets", ["title"], unique=False)
     # ### end Alembic commands ###
 

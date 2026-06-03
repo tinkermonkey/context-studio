@@ -112,7 +112,9 @@ class TestConnectionRefinementRegistration:
     def test_orchestrator_registered_with_implementation_registry(self):
         impl_registry = PipelineImplementationRegistry()
         register_schema_node_connection_refinement(impl_registry, None)
-        impl_class = impl_registry.get(PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default")
+        impl_class = impl_registry.get(
+            PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT, "default"
+        )
         assert impl_class is ConnectionRefinementOrchestrator
 
     def test_default_configuration_registered(self):
@@ -191,7 +193,9 @@ class TestConnectionRefinementExecution:
             },
         ]
         orchestrator = ConnectionRefinementOrchestrator(
-            llm_provider=FakeLLMProvider(response_content=_deltas_response(canon_deltas)),
+            llm_provider=FakeLLMProvider(
+                response_content=_deltas_response(canon_deltas)
+            ),
             traversal=traversal,
         )
         state = ConnectionRefinementState(
@@ -303,7 +307,9 @@ class TestConnectionRefinementViaHarness:
             '"object": "Database"}]}'
         )
         llm_provider = FakeLLMProvider(response_content=llm_response)
-        orchestrator = ConnectionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+        orchestrator = ConnectionRefinementOrchestrator(
+            llm_provider=llm_provider, traversal=None
+        )
 
         actual, expected = await run_pipeline_against_fixture(
             orchestrator,

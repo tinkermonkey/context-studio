@@ -83,7 +83,9 @@ class FakeConfigurationStore:
         for section_name, section_updates in updates.items():
             if hasattr(updated_config, section_name):
                 current_section = getattr(updated_config, section_name)
-                if isinstance(current_section, dict) and isinstance(section_updates, dict):
+                if isinstance(current_section, dict) and isinstance(
+                    section_updates, dict
+                ):
                     current_section.update(section_updates)
                 else:
                     setattr(updated_config, section_name, section_updates)

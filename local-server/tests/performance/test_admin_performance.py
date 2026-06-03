@@ -204,7 +204,9 @@ def test_bulk_configuration_updates(num_updates: int, max_time: float) -> None:
 
     start = time.perf_counter()
     for i in range(num_updates):
-        service.update_configuration(section="embedding", updates={"model_name": f"model-{i % 3}"})
+        service.update_configuration(
+            section="embedding", updates={"model_name": f"model-{i % 3}"}
+        )
     elapsed = time.perf_counter() - start
 
     print(

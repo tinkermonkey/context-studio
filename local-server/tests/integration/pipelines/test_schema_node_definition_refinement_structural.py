@@ -8,7 +8,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -79,7 +78,9 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
+def ontology_service(
+    change_recorder, ontology_repo, embedding_service, event_publisher
+):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 

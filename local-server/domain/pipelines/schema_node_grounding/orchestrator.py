@@ -119,7 +119,9 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         if not node_label:
             exc = PipelineInputError("node_label is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -127,10 +129,15 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             node_type = NodeType(node_type_str) if node_type_str else NodeType.CLASS
         except ValueError as exc:
             valid_types = ", ".join([t.value for t in NodeType])
-            error_msg = f"Invalid node_type '{node_type_str}'. " f"Must be one of: {valid_types}"
+            error_msg = (
+                f"Invalid node_type '{node_type_str}'. "
+                f"Must be one of: {valid_types}"
+            )
             input_error = PipelineInputError(error_msg)
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": error_msg}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": error_msg},
             )
             raise input_error from exc
 
@@ -193,11 +200,15 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
-            _logger.error(f"Unexpected error during schema node grounding: {exc}", exc_info=True)
+            _logger.error(
+                f"Unexpected error during schema node grounding: {exc}", exc_info=True
+            )
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": "Schema node grounding encountered an unexpected error"},
+                result={
+                    "error": "Schema node grounding encountered an unexpected error"
+                },
             )
             raise PipelineExecutionError(
                 "Schema node grounding encountered an unexpected error"

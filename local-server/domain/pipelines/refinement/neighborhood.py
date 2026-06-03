@@ -203,11 +203,15 @@ class SchemaNeighborhoodTraversal:
             # Get neighborhoods from the first few classes using this property
             domain_classes = set(r.source_id for r in relationships_using_prop)
             if domain_classes:
-                domain_neighborhood = self.get_class_neighborhood(next(iter(domain_classes)))
+                domain_neighborhood = self.get_class_neighborhood(
+                    next(iter(domain_classes))
+                )
 
             range_classes = set(r.target_id for r in relationships_using_prop)
             if range_classes:
-                range_neighborhood = self.get_class_neighborhood(next(iter(range_classes)))
+                range_neighborhood = self.get_class_neighborhood(
+                    next(iter(range_classes))
+                )
 
             # Get sibling properties from the domain class
             if domain_classes:

@@ -24,7 +24,9 @@ def upgrade() -> None:
         sa.Column("text", sa.Text(), nullable=False),
         sa.Column("extracted_entities", sa.JSON(), nullable=False, server_default="[]"),
         sa.Column("layers_executed", sa.JSON(), nullable=False, server_default="[]"),
-        sa.Column("total_duration_ms", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "total_duration_ms", sa.Integer(), nullable=False, server_default="0"
+        ),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -34,7 +36,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name="pk_extraction_results"),
     )
     # Create index on created_at for efficient sorting
-    op.create_index("idx_created_at", "extraction_results", ["created_at"], unique=False)
+    op.create_index(
+        "idx_created_at", "extraction_results", ["created_at"], unique=False
+    )
 
 
 def downgrade() -> None:

@@ -96,7 +96,9 @@ class FakeChangeRepository:
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
         """Retrieve change events by their IDs."""
-        return [self._change_events[eid] for eid in event_ids if eid in self._change_events]
+        return [
+            self._change_events[eid] for eid in event_ids if eid in self._change_events
+        ]
 
     def mark_processed(self, event_ids: list[str]) -> None:
         """
@@ -111,7 +113,9 @@ class FakeChangeRepository:
         # Check all IDs exist first
         missing_ids = [eid for eid in event_ids if eid not in self._change_events]
         if missing_ids:
-            raise VersionNotFoundError(f"Change events not found: {', '.join(sorted(missing_ids))}")
+            raise VersionNotFoundError(
+                f"Change events not found: {', '.join(sorted(missing_ids))}"
+            )
 
         # Mark all as processed
         for event_id in event_ids:
@@ -130,7 +134,9 @@ class FakeChangeRepository:
         # Check all IDs exist first
         missing_ids = [eid for eid in event_ids if eid not in self._change_events]
         if missing_ids:
-            raise VersionNotFoundError(f"Change events not found: {', '.join(sorted(missing_ids))}")
+            raise VersionNotFoundError(
+                f"Change events not found: {', '.join(sorted(missing_ids))}"
+            )
 
         # Delete all
         for event_id in event_ids:
@@ -159,14 +165,18 @@ class FakeChangeRepository:
 
     def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]:
         """Retrieve the latest version of an entity."""
-        matching = [v for (eid, _), v in self._entity_versions.items() if eid == entity_id]
+        matching = [
+            v for (eid, _), v in self._entity_versions.items() if eid == entity_id
+        ]
         if not matching:
             return None
         return max(matching, key=lambda v: v.version)
 
     def list_versions(self, entity_id: str) -> list[EntityVersion]:
         """Retrieve all versions of an entity."""
-        versions = [v for (eid, _), v in self._entity_versions.items() if eid == entity_id]
+        versions = [
+            v for (eid, _), v in self._entity_versions.items() if eid == entity_id
+        ]
         versions.sort(key=lambda v: v.version)
         return versions
 
@@ -268,7 +278,9 @@ class FakeChangeRepository:
         self._changesets[changeset.id] = deepcopy(changeset)
         self._proposals[proposal.id] = deepcopy(proposal)
         for version in versions:
-            self._entity_versions[(version.entity_id, version.version)] = deepcopy(version)
+            self._entity_versions[(version.entity_id, version.version)] = deepcopy(
+                version
+            )
         return deepcopy(changeset), deepcopy(proposal)
 
     def save_conflict_resolutions(
@@ -283,7 +295,9 @@ class FakeChangeRepository:
         """
         self._conflict_resolutions[proposal_id] = deepcopy(resolutions)
 
-    def get_conflict_resolutions(self, proposal_id: str) -> dict[str, dict[str, object]]:
+    def get_conflict_resolutions(
+        self, proposal_id: str
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

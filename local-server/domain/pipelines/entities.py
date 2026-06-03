@@ -141,9 +141,7 @@ class PipelineRun:
         if self.configuration_version <= 0:
             raise ValueError("configuration_version must be greater than 0")
         if self.status == PipelineRunStatus.PENDING and self.failure_reason is not None:
-            raise ValueError(
-                "status=PENDING is incompatible with a set failure_reason"
-            )
+            raise ValueError("status=PENDING is incompatible with a set failure_reason")
 
 
 @dataclass(frozen=True)
@@ -179,7 +177,9 @@ class IndividualExtractionRun(PipelineRun):
         All pipeline-shared fields (pipeline_type, implementation_id, configuration_ref, etc.)
     """
 
-    pipeline_type: PipelineType = field(default=PipelineType.INDIVIDUAL_EXTRACTION, init=False)
+    pipeline_type: PipelineType = field(
+        default=PipelineType.INDIVIDUAL_EXTRACTION, init=False
+    )
     source_text_hash: str = ""
     source_document_uri: str | None = None
 
@@ -241,7 +241,9 @@ class SchemaExtractionRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_EXTRACTION, init=False)
+    pipeline_type: PipelineType = field(
+        default=PipelineType.SCHEMA_EXTRACTION, init=False
+    )
 
     @classmethod
     def create(
@@ -281,7 +283,9 @@ class SchemaGroundingRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_GROUNDING, init=False)
+    pipeline_type: PipelineType = field(
+        default=PipelineType.SCHEMA_NODE_GROUNDING, init=False
+    )
 
     @classmethod
     def create(

@@ -94,7 +94,9 @@ class LLMProviderRouter:
             error_details = "; ".join(
                 f"{name}: {type(e).__name__}: {e}" for name, e in init_errors.items()
             )
-            raise ValueError(f"No LLM providers could be initialized. Errors: {error_details}")
+            raise ValueError(
+                f"No LLM providers could be initialized. Errors: {error_details}"
+            )
 
     def complete(
         self,

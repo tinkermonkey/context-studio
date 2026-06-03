@@ -106,7 +106,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         if not node_id:
             exc = PipelineInputError("node_id is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -122,7 +124,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             try:
                 neighborhood = self._traversal.get_class_neighborhood(node_id)
             except ValueError as exc:
-                raise PipelineInputError(f"Node with id '{node_id}' not found or invalid") from exc
+                raise PipelineInputError(
+                    f"Node with id '{node_id}' not found or invalid"
+                ) from exc
             state = replace(state, node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
@@ -163,11 +167,15 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
-            _logger.error(f"Unexpected error during definition refinement: {exc}", exc_info=True)
+            _logger.error(
+                f"Unexpected error during definition refinement: {exc}", exc_info=True
+            )
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": "Definition refinement encountered an unexpected error"},
+                result={
+                    "error": "Definition refinement encountered an unexpected error"
+                },
             )
             raise PipelineExecutionError(
                 "Definition refinement encountered an unexpected error"
@@ -211,11 +219,15 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             )
 
         if neighborhood.sibling_classes:
-            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
+            sibling_info = ", ".join(
+                [f"{s.title}" for s in neighborhood.sibling_classes[:3]]
+            )
             context_parts.append(f"Sibling classes: {sibling_info}")
 
         if neighborhood.property_definitions:
-            props_info = ", ".join([p.title for p in neighborhood.property_definitions[:3]])
+            props_info = ", ".join(
+                [p.title for p in neighborhood.property_definitions[:3]]
+            )
             context_parts.append(f"Properties: {props_info}")
 
         if groundings:
@@ -225,7 +237,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"External groundings:\n{groundings_text}")
 
         if extraction_usages:
-            usages_text = "\n".join([f"- {u.get('extracted_text')}" for u in extraction_usages[:2]])
+            usages_text = "\n".join(
+                [f"- {u.get('extracted_text')}" for u in extraction_usages[:2]]
+            )
             context_parts.append(f"Extraction usages:\n{usages_text}")
 
         context_str = "\n".join(context_parts)
@@ -276,12 +290,16 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                     c["confidence"] = 0.5
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-            error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
+            error_type = (
+                "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
+            )
             _logger.error(
                 f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
-            sanitized_msg = f"LLM response validation failed for {neighborhood.class_label}"
+            sanitized_msg = (
+                f"LLM response validation failed for {neighborhood.class_label}"
+            )
             raise PipelineExecutionError(sanitized_msg) from exc
         except Exception as exc:
             _logger.error(

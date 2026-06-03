@@ -122,7 +122,9 @@ class TestReferenceSearchEndpoint:
         assert "results" in data
         assert len(data["results"]) > 0
 
-    def test_reference_search_aggregates_results_from_multiple_sources(self, client_with_sources):
+    def test_reference_search_aggregates_results_from_multiple_sources(
+        self, client_with_sources
+    ):
         """Search endpoint aggregates results from all available sources."""
         request_body = {"term": "test", "limit": 10}
         response = client_with_sources.post("/api/reference/search", json=request_body)
@@ -162,7 +164,9 @@ class TestReferenceSearchEndpoint:
         # Should not search other sources
         assert "source-2" not in data["sources_searched"]
 
-    def test_reference_search_invalid_source_name_returns_400(self, client_with_sources):
+    def test_reference_search_invalid_source_name_returns_400(
+        self, client_with_sources
+    ):
         """Search endpoint returns 400 if requested sources don't exist."""
         request_body = {
             "term": "test",
@@ -214,7 +218,9 @@ class TestReferenceRelationsEndpoint:
     def test_reference_relations_returns_relations(self, client_with_sources):
         """Relations endpoint returns relationships for a URI."""
         request_body = {"uri": "fake://apple", "limit": 10}
-        response = client_with_sources.post("/api/reference/relations", json=request_body)
+        response = client_with_sources.post(
+            "/api/reference/relations", json=request_body
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -226,7 +232,9 @@ class TestReferenceRelationsEndpoint:
     def test_reference_relations_tracks_queried_sources(self, client_with_sources):
         """Relations endpoint tracks which sources were queried."""
         request_body = {"uri": "fake://test", "limit": 10}
-        response = client_with_sources.post("/api/reference/relations", json=request_body)
+        response = client_with_sources.post(
+            "/api/reference/relations", json=request_body
+        )
 
         data = response.json()
         assert "sources_queried" in data
@@ -236,7 +244,9 @@ class TestReferenceRelationsEndpoint:
     def test_reference_relations_tracks_failed_sources(self, client_with_sources):
         """Relations endpoint tracks which sources failed or were unavailable."""
         request_body = {"uri": "fake://test", "limit": 10}
-        response = client_with_sources.post("/api/reference/relations", json=request_body)
+        response = client_with_sources.post(
+            "/api/reference/relations", json=request_body
+        )
 
         data = response.json()
         assert "sources_failed" in data
@@ -245,21 +255,27 @@ class TestReferenceRelationsEndpoint:
     def test_reference_relations_filters_by_source_names(self, client_with_sources):
         """Relations endpoint respects source filter in request."""
         request_body = {"uri": "fake://test", "limit": 10, "sources": ["source-1"]}
-        response = client_with_sources.post("/api/reference/relations", json=request_body)
+        response = client_with_sources.post(
+            "/api/reference/relations", json=request_body
+        )
 
         data = response.json()
         assert response.status_code == status.HTTP_200_OK
         assert "source-1" in data["sources_queried"]
         assert "source-2" not in data["sources_queried"]
 
-    def test_reference_relations_invalid_source_name_returns_400(self, client_with_sources):
+    def test_reference_relations_invalid_source_name_returns_400(
+        self, client_with_sources
+    ):
         """Relations endpoint returns 400 if requested sources don't exist."""
         request_body = {
             "uri": "fake://test",
             "limit": 10,
             "sources": ["nonexistent-source"],
         }
-        response = client_with_sources.post("/api/reference/relations", json=request_body)
+        response = client_with_sources.post(
+            "/api/reference/relations", json=request_body
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -279,7 +295,9 @@ class TestReferenceRelationsEndpoint:
         # Clean up dependency override
         app.dependency_overrides.clear()
 
-    def test_reference_relations_handles_source_failure_gracefully(self, app_with_sources):
+    def test_reference_relations_handles_source_failure_gracefully(
+        self, app_with_sources
+    ):
         """Relations endpoint continues when a source fails."""
         # Make one source fail
         sources = app_with_sources.state.reference_sources

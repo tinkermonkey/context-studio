@@ -43,7 +43,9 @@ def session_factory(temp_db):
 class TestWaveARegression:
     """Test Wave A extraction functionality and change_event lineage."""
 
-    def test_individual_extraction_run_maintains_change_event_lineage(self, session_factory):
+    def test_individual_extraction_run_maintains_change_event_lineage(
+        self, session_factory
+    ):
         """
         Verify IndividualExtractionRun maintains change_event lineage through batch_run_id.
 
@@ -84,7 +86,10 @@ class TestWaveARegression:
             operation="create",
             timestamp=datetime.now(timezone.utc),
             batch_run_id=run.id,
-            new_state={"label": "ExtractedClass1", "uri": "http://example.org/ExtractedClass1"},
+            new_state={
+                "label": "ExtractedClass1",
+                "uri": "http://example.org/ExtractedClass1",
+            },
         )
         event2 = ChangeEvent(
             id=str(uuid4()),

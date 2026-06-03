@@ -221,12 +221,16 @@ class RDFLibQueryEngine:
         else:
             # Try to match as URIRef first
             object_uri = URIRef(object)
-            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_uri)):
+            for s, p, o in self._graph.triples(
+                (subject_uri, predicate_uri, object_uri)
+            ):
                 results.append((str(s), str(p), str(o)))
 
             # Then try to match as Literal
             object_literal = Literal(object)
-            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_literal)):
+            for s, p, o in self._graph.triples(
+                (subject_uri, predicate_uri, object_literal)
+            ):
                 # Check if this triple is already in results to avoid duplicates
                 triple_str = (str(s), str(p), str(o))
                 if triple_str not in results:

@@ -93,7 +93,9 @@ class TestLLMProviderRouter:
         with pytest.raises(ValueError) as exc_info:
             LLMProviderRouter()
 
-        assert "At least one LLM provider API key must be configured" in str(exc_info.value)
+        assert "At least one LLM provider API key must be configured" in str(
+            exc_info.value
+        )
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
     def test_router_init_with_valid_openai_key(self, mock_openai_class):

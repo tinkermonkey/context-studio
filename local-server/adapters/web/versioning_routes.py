@@ -105,7 +105,9 @@ async def get_change_history_all(
     try:
         result = await run_sync_in_executor(service.get_change_history, limit=limit)
         return ChangeHistoryResponse(
-            events=[VersioningChangeEventResponse.model_validate(e) for e in result.events],
+            events=[
+                VersioningChangeEventResponse.model_validate(e) for e in result.events
+            ],
             total=result.total,
         )
     except Exception as exc:
@@ -138,7 +140,9 @@ async def get_change_history_by_entity(
             service.get_change_history, entity_id=entity_id, limit=limit
         )
         return ChangeHistoryResponse(
-            events=[VersioningChangeEventResponse.model_validate(e) for e in result.events],
+            events=[
+                VersioningChangeEventResponse.model_validate(e) for e in result.events
+            ],
             total=result.total,
         )
     except Exception as exc:
@@ -146,7 +150,9 @@ async def get_change_history_by_entity(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}", response_model=list[EntityVersionResponse])
+@router.get(
+    "/versioning/versions/{entity_id}", response_model=list[EntityVersionResponse]
+)
 async def list_versions(
     entity_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -172,7 +178,9 @@ async def list_versions(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}/{version}", response_model=EntityVersionResponse)
+@router.get(
+    "/versioning/versions/{entity_id}/{version}", response_model=EntityVersionResponse
+)
 async def get_entity_version(
     entity_id: str,
     version: int,
@@ -193,7 +201,9 @@ async def get_entity_version(
         HTTPException: 404 if version not found, 500 for internal errors
     """
     try:
-        entity_version = await run_sync_in_executor(service.get_entity_version, entity_id, version)
+        entity_version = await run_sync_in_executor(
+            service.get_entity_version, entity_id, version
+        )
         return EntityVersionResponse.model_validate(entity_version)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -290,7 +300,9 @@ async def get_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/changesets/{changeset_id}/stage", response_model=ChangesetResponse)
+@router.post(
+    "/versioning/changesets/{changeset_id}/stage", response_model=ChangesetResponse
+)
 async def stage_changeset(
     changeset_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -316,7 +328,9 @@ async def stage_changeset(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/changesets/{changeset_id}/submit", response_model=ProposalResponse)
+@router.post(
+    "/versioning/changesets/{changeset_id}/submit", response_model=ProposalResponse
+)
 async def submit_proposal(
     changeset_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -344,7 +358,9 @@ async def submit_proposal(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/changesets/{changeset_id}/apply", response_model=ProposalResponse)
+@router.post(
+    "/versioning/changesets/{changeset_id}/apply", response_model=ProposalResponse
+)
 async def apply_changeset(
     changeset_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -376,7 +392,9 @@ async def apply_changeset(
 # ==================== Proposal Workflow Endpoints ====================
 
 
-@router.post("/versioning/proposals/{proposal_id}/approve", response_model=ProposalResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/approve", response_model=ProposalResponse
+)
 async def approve_proposal(
     proposal_id: str,
     service: VersioningService = Depends(get_versioning_service),
@@ -405,7 +423,9 @@ async def approve_proposal(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/reject", response_model=ProposalResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/reject", response_model=ProposalResponse
+)
 async def reject_proposal(
     proposal_id: str,
     request: RejectProposalRequest,
@@ -429,7 +449,9 @@ async def reject_proposal(
         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
     """
     try:
-        proposal = await run_sync_in_executor(service.reject_proposal, proposal_id, request.reason)
+        proposal = await run_sync_in_executor(
+            service.reject_proposal, proposal_id, request.reason
+        )
         return ProposalResponse.model_validate(proposal)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -535,7 +557,9 @@ async def auto_resolve_conflicts(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/resolve", response_model=ConflictReportResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/resolve", response_model=ConflictReportResponse
+)
 async def resolve_conflicts(
     proposal_id: str,
     request: ResolveConflictsRequest,
@@ -583,7 +607,9 @@ async def resolve_conflicts(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/versioning/proposals/{proposal_id}/merge", response_model=MergeResultResponse)
+@router.post(
+    "/versioning/proposals/{proposal_id}/merge", response_model=MergeResultResponse
+)
 async def merge_proposal(
     proposal_id: str,
     service: VersioningService = Depends(get_versioning_service),

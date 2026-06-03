@@ -64,7 +64,11 @@ def _score_set(produced: set[str], expected: set[str], node_type: str) -> F1Metr
     fn = len(expected - produced)
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+    f1 = (
+        (2 * precision * recall / (precision + recall))
+        if (precision + recall) > 0
+        else 0.0
+    )
     return F1Metrics(
         node_type=node_type,
         precision=precision,
@@ -334,11 +338,7 @@ def aggregate_canon_metrics(
         Nested dict with the canon-specific metric block.
     """
     per_type = compute_per_node_type_f1(produced_by_type, expected_by_type)
-    avg_f1 = (
-        sum(m.f1 for m in per_type.values()) / len(per_type)
-        if per_type
-        else 0.0
-    )
+    avg_f1 = sum(m.f1 for m in per_type.values()) / len(per_type) if per_type else 0.0
 
     classes_list = list(produced_classes)
 

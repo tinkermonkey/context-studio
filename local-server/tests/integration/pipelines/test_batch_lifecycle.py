@@ -416,7 +416,7 @@ class TestBatchLifecycle:
                 "id": "evil-run-id",
                 "status": "completed",
                 "batch_id": "evil-batch-id",
-            }
+            },
         }
 
         response = client.post(

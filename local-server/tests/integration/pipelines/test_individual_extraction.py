@@ -24,7 +24,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
@@ -55,12 +57,17 @@ from tests.utils.canon_assertions import (
 )
 
 # Fixture loading utilities
-FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_extraction"
+FIXTURES_DIR = (
+    Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_extraction"
+)
 
 # Canon (software-architecture gold corpus) shared between the test cycle and
 # the demo dataset loader.
 CANON_DIR = (
-    Path(__file__).parent.parent.parent.parent / "datafiles" / "canon" / "software_architecture"
+    Path(__file__).parent.parent.parent.parent
+    / "datafiles"
+    / "canon"
+    / "software_architecture"
 )
 
 
@@ -247,7 +254,9 @@ def pipeline_run_repo(session_factory):
 class TestIndividualExtractionRegistration:
     """Test pipeline registration and configuration."""
 
-    def test_orchestrator_registered_with_implementation_registry(self, registered_extraction):
+    def test_orchestrator_registered_with_implementation_registry(
+        self, registered_extraction
+    ):
         """IndividualExtractionOrchestrator is registered as 'default' implementation."""
         impl_registry, _ = registered_extraction
 
@@ -300,7 +309,9 @@ class TestIndividualExtractionRegistration:
 class TestOrchestratorExecution:
     """Test orchestrator.execute() direct method invocation."""
 
-    def test_orchestrator_execute_with_valid_state(self, extraction_service, ontology_repo):
+    def test_orchestrator_execute_with_valid_state(
+        self, extraction_service, ontology_repo
+    ):
         """IndividualExtractionOrchestrator.execute() processes state and returns triples."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -356,7 +367,9 @@ class TestOrchestratorExecution:
         with pytest.raises(PipelineInputError, match="text is required"):
             asyncio.run(orchestrator.execute(state))
 
-    def test_orchestrator_execute_populates_metadata(self, extraction_service, ontology_repo):
+    def test_orchestrator_execute_populates_metadata(
+        self, extraction_service, ontology_repo
+    ):
         """IndividualExtractionOrchestrator.execute() includes model and token metadata."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -476,7 +489,9 @@ class TestCrossPaperConsistency:
     def test_cross_paper_fixtures_loaded(self):
         """Verify all hand-authored fixtures are available."""
         fixtures = load_all_fixtures()
-        assert len(fixtures) >= 5, f"Expected at least 5 fixtures, found {len(fixtures)}"
+        assert (
+            len(fixtures) >= 5
+        ), f"Expected at least 5 fixtures, found {len(fixtures)}"
 
         fixture_names = [f["name"] for f in fixtures]
         assert "paper_1" in fixture_names
@@ -504,7 +519,9 @@ class TestCrossPaperConsistency:
 class TestCorpusDerivedFixtures:
     """Test individual extraction with corpus-derived fixtures."""
 
-    def test_corpus_cloud_provisioning_extraction(self, extraction_service, ontology_repo):
+    def test_corpus_cloud_provisioning_extraction(
+        self, extraction_service, ontology_repo
+    ):
         """Extract from corpus-derived cloud provisioning paper fixture."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -565,7 +582,9 @@ class TestCorpusDerivedFixtures:
         assert result_state.source_text_hash != ""
         assert result_state.extracted_triples is not None
 
-    def test_corpus_kubernetes_energy_extraction(self, extraction_service, ontology_repo):
+    def test_corpus_kubernetes_energy_extraction(
+        self, extraction_service, ontology_repo
+    ):
         """Extract from corpus-derived Kubernetes energy monitoring fixture."""
         llm_provider = FakeLLMProvider()
         orchestrator = IndividualExtractionOrchestrator(
@@ -599,7 +618,9 @@ class TestCorpusDerivedFixtures:
 class TestIndividualExtractionRunPersistence:
     """Test IndividualExtractionRun persistence with correct fields."""
 
-    def test_individual_extraction_run_created_with_source_text_hash(self, pipeline_run_repo):
+    def test_individual_extraction_run_created_with_source_text_hash(
+        self, pipeline_run_repo
+    ):
         """IndividualExtractionRun can be created with source_text_hash field."""
         batch_run_id = str(uuid4())
         source_text = "John Doe works for ACME Corp."
@@ -771,8 +792,7 @@ class TestIndividualExtractionAgainstCanon:
         """At least the seminal 5 papers must be present; 15 is the full Phase 1 target."""
         papers_found = len(canon_bundle.papers)
         assert papers_found >= 5, (
-            f"Canon corpus underpopulated: found {papers_found} papers, "
-            f"expected ≥5"
+            f"Canon corpus underpopulated: found {papers_found} papers, " f"expected ≥5"
         )
         # Sanity check on master slice integrity.
         assert len(canon_bundle.canon["taxonomies"]) >= 1
@@ -838,9 +858,7 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert (
-            metrics.f1 == 1.0
-        ), (
+        assert metrics.f1 == 1.0, (
             f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
             f"(p={metrics.precision}, r={metrics.recall})"
         )
@@ -859,9 +877,7 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert (
-            metrics.f1 == 1.0
-        ), (
+        assert metrics.f1 == 1.0, (
             f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
             f"(p={metrics.precision}, r={metrics.recall})"
         )
@@ -892,7 +908,9 @@ class TestIndividualExtractionAgainstCanon:
                 produced=result_state.extracted_triples or [],
                 expected=paper["expected_relationships"],
             )
-            per_paper_metrics.append((name, metrics.precision, metrics.recall, metrics.f1))
+            per_paper_metrics.append(
+                (name, metrics.precision, metrics.recall, metrics.f1)
+            )
             if metrics.f1 != 1.0:
                 regressions.append(
                     f"{name}: p={metrics.precision:.4f} r={metrics.recall:.4f} f1={metrics.f1:.4f} "
@@ -904,10 +922,9 @@ class TestIndividualExtractionAgainstCanon:
         for name, prec, rec, f1 in sorted(per_paper_metrics):
             print(f"  {name}: precision={prec:.2f} recall={rec:.2f} f1={f1:.2f}")
 
-        assert (
-            not regressions
-        ), "Canon-fake rollup expects F1=1.0 on every paper. Regressions:\n  " + "\n  ".join(
-            regressions
+        assert not regressions, (
+            "Canon-fake rollup expects F1=1.0 on every paper. Regressions:\n  "
+            + "\n  ".join(regressions)
         )
 
     def test_cross_paper_term_service_appears_across_corpus(self, canon_bundle):

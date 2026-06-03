@@ -46,5 +46,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index(op.f("ix_relationships_source_run_id"), table_name="relationships")
     op.drop_column("relationships", "source_run_id")
-    op.drop_index(op.f("ix_ontology_entities_source_run_id"), table_name="ontology_entities")
+    op.drop_index(
+        op.f("ix_ontology_entities_source_run_id"), table_name="ontology_entities"
+    )
     op.drop_column("ontology_entities", "source_run_id")

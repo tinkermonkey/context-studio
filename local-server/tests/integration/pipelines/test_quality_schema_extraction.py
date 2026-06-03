@@ -29,7 +29,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -44,7 +46,9 @@ from domain.pipelines.schema_extraction import (
     SchemaExtractionState,
     register_schema_extraction,
 )
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
@@ -146,7 +150,9 @@ def compute_quality_metrics(
 
     # Split candidates into classes and properties
     actual_classes = [c for c in actual_candidates if c.get("kind") == "class"]
-    actual_properties = [c for c in actual_candidates if c.get("kind") == "property_definition"]
+    actual_properties = [
+        c for c in actual_candidates if c.get("kind") == "property_definition"
+    ]
 
     # Convert connections to relationship format for comparison
     actual_relationships = actual_connections
@@ -159,7 +165,9 @@ def compute_quality_metrics(
     # Property Jaccard: set overlap of property labels
     expected_property_labels = extract_property_labels(expected_properties)
     actual_property_labels = extract_property_labels(actual_properties)
-    property_jaccard = jaccard_similarity(expected_property_labels, actual_property_labels)
+    property_jaccard = jaccard_similarity(
+        expected_property_labels, actual_property_labels
+    )
 
     # Connection set overlap: F1 on (subject, predicate, object) tuples
     expected_connections = set(extract_connection_tuples(expected_relationships))
@@ -342,7 +350,9 @@ class TestQualitySchemaExtraction:
 
         # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
         if not cassette_path.exists():
-            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
+            pytest.skip(
+                f"Cassette not found at {cassette_path}. Run with real LLM to record."
+            )
 
         # Use cassette provider for deterministic quality testing
         llm_provider = CassetteLLMProvider(cassette_path)
@@ -456,8 +466,7 @@ class TestQualitySchemaExtraction:
 
         # Snapshot ontology state after first apply
         classes_after_apply1 = [
-            (cls.id, cls.title, cls.identifier)
-            for cls in ontology_repo.list_classes()
+            (cls.id, cls.title, cls.identifier) for cls in ontology_repo.list_classes()
         ]
         properties_after_apply1 = [
             (prop.id, prop.label, prop.identifier)
@@ -484,8 +493,7 @@ class TestQualitySchemaExtraction:
 
         # Snapshot ontology state after second apply
         classes_after_apply2 = [
-            (cls.id, cls.title, cls.identifier)
-            for cls in ontology_repo.list_classes()
+            (cls.id, cls.title, cls.identifier) for cls in ontology_repo.list_classes()
         ]
         properties_after_apply2 = [
             (prop.id, prop.label, prop.identifier)
@@ -499,18 +507,18 @@ class TestQualitySchemaExtraction:
         # Assert idempotence: same entities created (excluding IDs)
         count1_class = len(classes_after_apply1)
         count2_class = len(classes_after_apply2)
-        assert count1_class == count2_class, (
-            f"Class count mismatch: {count1_class} != {count2_class}"
-        )
+        assert (
+            count1_class == count2_class
+        ), f"Class count mismatch: {count1_class} != {count2_class}"
 
         count1_prop = len(properties_after_apply1)
         count2_prop = len(properties_after_apply2)
-        assert count1_prop == count2_prop, (
-            f"Property count mismatch: {count1_prop} != {count2_prop}"
-        )
+        assert (
+            count1_prop == count2_prop
+        ), f"Property count mismatch: {count1_prop} != {count2_prop}"
 
         count1_rel = len(relationships_after_apply1)
         count2_rel = len(relationships_after_apply2)
-        assert count1_rel == count2_rel, (
-            f"Relationship count mismatch: {count1_rel} != {count2_rel}"
-        )
+        assert (
+            count1_rel == count2_rel
+        ), f"Relationship count mismatch: {count1_rel} != {count2_rel}"

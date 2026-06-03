@@ -124,16 +124,22 @@ def build_comparison_matrix(
         if not dataset_results:
             continue
 
-        precisions = [r["precision"] for r in dataset_results if r["precision"] is not None]
+        precisions = [
+            r["precision"] for r in dataset_results if r["precision"] is not None
+        ]
         recalls = [r["recall"] for r in dataset_results if r["recall"] is not None]
         f1s = [r["f1"] for r in dataset_results if r["f1"] is not None]
-        conformances = [r["conformance"] for r in dataset_results if r["conformance"] is not None]
+        conformances = [
+            r["conformance"] for r in dataset_results if r["conformance"] is not None
+        ]
 
         ds_stats: dict[str, Any] = {
             "avg_precision": sum(precisions) / len(precisions) if precisions else 0.0,
             "avg_recall": sum(recalls) / len(recalls) if recalls else 0.0,
             "avg_f1": sum(f1s) / len(f1s) if f1s else 0.0,
-            "avg_conformance": sum(conformances) / len(conformances) if conformances else 0.0,
+            "avg_conformance": (
+                sum(conformances) / len(conformances) if conformances else 0.0
+            ),
             "total_samples": results.get("samples_processed", 0),
             "total_cost_usd": results.get("total_cost_usd", 0.0),
             "ontologies_count": results.get("ontologies_count", 0),
@@ -206,7 +212,9 @@ def save_markdown_comparison(
         ]
     )
 
-    for dataset_name, stats in comparison.get("aggregate_stats", {}).get("by_dataset", {}).items():
+    for dataset_name, stats in (
+        comparison.get("aggregate_stats", {}).get("by_dataset", {}).items()
+    ):
         lines.extend(
             [
                 f"### {dataset_name}",
@@ -264,7 +272,10 @@ def save_markdown_comparison(
             "- **Precision:** Proportion of predicted triples that match ground truth",
             "- **Recall:** Proportion of ground truth triples that were predicted",
             "- **F1:** Harmonic mean of precision and recall",
-            ("- **Conformance:** Proportion of triples with valid format and" " confidence (0-1)"),
+            (
+                "- **Conformance:** Proportion of triples with valid format and"
+                " confidence (0-1)"
+            ),
             "",
             "---",
             f"*Cross-dataset comparison generated on {timestamp}*",
@@ -280,7 +291,9 @@ def save_markdown_comparison(
 
 def main():
     """Command-line interface for benchmark comparison."""
-    parser = argparse.ArgumentParser(description="Compare benchmark results across datasets")
+    parser = argparse.ArgumentParser(
+        description="Compare benchmark results across datasets"
+    )
     parser.add_argument(
         "--results",
         type=str,
@@ -292,7 +305,10 @@ def main():
         "--out",
         type=str,
         default=None,
-        help=("Output path for comparison report (default:" " reports/comparison-YYYY-MM-DD.json)"),
+        help=(
+            "Output path for comparison report (default:"
+            " reports/comparison-YYYY-MM-DD.json)"
+        ),
     )
 
     args = parser.parse_args()
@@ -312,7 +328,9 @@ def main():
             dataset_name = results.get("dataset", Path(result_file).stem)
             results_by_dataset[dataset_name] = results
 
-        _logger.info(f"Building comparison matrix across {len(results_by_dataset)} datasets")
+        _logger.info(
+            f"Building comparison matrix across {len(results_by_dataset)} datasets"
+        )
         comparison = build_comparison_matrix(results_by_dataset)
 
         # Save reports

@@ -211,7 +211,9 @@ class TestGetExtractionResult:
 
         assert len(retrieved.layers_executed) == len(saved.layers_executed)
 
-        for retrieved_layer, saved_layer in zip(retrieved.layers_executed, saved.layers_executed):
+        for retrieved_layer, saved_layer in zip(
+            retrieved.layers_executed, saved.layers_executed
+        ):
             assert retrieved_layer.layer_number == saved_layer.layer_number
             assert retrieved_layer.layer_name == saved_layer.layer_name
             assert retrieved_layer.entities_found == saved_layer.entities_found

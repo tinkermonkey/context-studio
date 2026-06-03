@@ -148,7 +148,9 @@ class SchemaConnectionRefinementApplyService:
 
         return result
 
-    def _resolve_class_id(self, ref: str, title_to_class_id: dict[str, str]) -> str | None:
+    def _resolve_class_id(
+        self, ref: str, title_to_class_id: dict[str, str]
+    ) -> str | None:
         """Resolve a class reference (ID or label) to an entity ID."""
         if not ref:
             return None

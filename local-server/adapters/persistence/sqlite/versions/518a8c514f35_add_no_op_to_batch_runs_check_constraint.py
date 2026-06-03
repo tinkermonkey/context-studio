@@ -59,7 +59,9 @@ def downgrade() -> None:
         )
     """)
 
-    op.execute("INSERT INTO batch_runs_new SELECT * FROM batch_runs WHERE run_type != 'no_op'")
+    op.execute(
+        "INSERT INTO batch_runs_new SELECT * FROM batch_runs WHERE run_type != 'no_op'"
+    )
     op.execute("DROP TABLE batch_runs")
     op.execute("ALTER TABLE batch_runs_new RENAME TO batch_runs")
 

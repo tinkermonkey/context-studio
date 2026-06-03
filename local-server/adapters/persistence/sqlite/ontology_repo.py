@@ -80,7 +80,9 @@ class SQLiteOntologyRepository:
 
     # ==================== Taxonomy CRUD ====================
 
-    def get_taxonomy(self, taxonomy_id: str, session: Session | None = None) -> Optional[Taxonomy]:
+    def get_taxonomy(
+        self, taxonomy_id: str, session: Session | None = None
+    ) -> Optional[Taxonomy]:
         """
         Retrieve a taxonomy by ID.
 
@@ -136,7 +138,9 @@ class SQLiteOntologyRepository:
             Sequence of Taxonomy entities
         """
         with self.session_factory() as session:
-            q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.TAXONOMY)
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.TAXONOMY
+            )
 
             if query:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
@@ -171,7 +175,9 @@ class SQLiteOntologyRepository:
             Total count of taxonomies
         """
         with self.session_factory() as session:
-            q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.TAXONOMY)
+            q = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.TAXONOMY
+            )
 
             if query:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
@@ -469,7 +475,9 @@ class SQLiteOntologyRepository:
 
     # ==================== Class CRUD ====================
 
-    def get_class(self, class_id: str, session: Session | None = None) -> Optional[Class]:
+    def get_class(
+        self, class_id: str, session: Session | None = None
+    ) -> Optional[Class]:
         """
         Retrieve a class by ID.
 
@@ -523,10 +531,14 @@ class SQLiteOntologyRepository:
             Sequence of Class entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
+            query = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.CLASS
+            )
 
             if concept_scheme_id is not None:
-                query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
+                query = query.filter(
+                    OntologyEntity.concept_scheme_id == concept_scheme_id
+                )
 
             if parent_class_id is not None:
                 query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
@@ -552,10 +564,14 @@ class SQLiteOntologyRepository:
             Number of matching Class entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
+            query = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.CLASS
+            )
 
             if concept_scheme_id is not None:
-                query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
+                query = query.filter(
+                    OntologyEntity.concept_scheme_id == concept_scheme_id
+                )
 
             if parent_class_id is not None:
                 query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
@@ -585,7 +601,9 @@ class SQLiteOntologyRepository:
             # Verify parent concept scheme exists (same session)
             parent_scheme = self.get_concept_scheme(cls.concept_scheme_id, session)
             if parent_scheme is None:
-                raise ValueError(f"Parent concept scheme {cls.concept_scheme_id} does not exist")
+                raise ValueError(
+                    f"Parent concept scheme {cls.concept_scheme_id} does not exist"
+                )
 
             # Verify parent taxonomy exists (same session)
             parent_taxonomy = self.get_taxonomy(cls.taxonomy_id, session)
@@ -599,20 +617,26 @@ class SQLiteOntologyRepository:
 
                 parent_class = self.get_class(cls.parent_class_id, session)
                 if parent_class is None:
-                    raise ValueError(f"Parent class {cls.parent_class_id} does not exist")
+                    raise ValueError(
+                        f"Parent class {cls.parent_class_id} does not exist"
+                    )
 
                 # Check for cycles in hierarchy (same session)
                 if self._would_create_cycle(cls.id, cls.parent_class_id, session):
                     raise ValueError(
-                        f"Setting parent class {cls.parent_class_id} would create a" " cycle"
+                        f"Setting parent class {cls.parent_class_id} would create a"
+                        " cycle"
                     )
 
             # Verify structural property if set (same session)
             if cls.structural_property_id is not None:
-                struct_prop = self.get_property_definition(cls.structural_property_id, session)
+                struct_prop = self.get_property_definition(
+                    cls.structural_property_id, session
+                )
                 if struct_prop is None:
                     raise ValueError(
-                        f"Structural property {cls.structural_property_id} does not" " exist"
+                        f"Structural property {cls.structural_property_id} does not"
+                        " exist"
                     )
 
             orm_entity = (
@@ -699,7 +723,9 @@ class SQLiteOntologyRepository:
             Sequence of matching Class entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
+            query = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.CLASS
+            )
 
             # Text search
             if criteria.query:
@@ -714,7 +740,9 @@ class SQLiteOntologyRepository:
             # Filter by node types (always CLASS for this method, but support future)
             if criteria.node_types:
                 query = query.filter(
-                    OntologyEntity.node_type.in_([nt.value for nt in criteria.node_types])
+                    OntologyEntity.node_type.in_(
+                        [nt.value for nt in criteria.node_types]
+                    )
                 )
 
             # Filter by taxonomy
@@ -723,11 +751,15 @@ class SQLiteOntologyRepository:
 
             # Filter by concept scheme
             if criteria.concept_scheme_id:
-                query = query.filter(OntologyEntity.concept_scheme_id == criteria.concept_scheme_id)
+                query = query.filter(
+                    OntologyEntity.concept_scheme_id == criteria.concept_scheme_id
+                )
 
             # Filter by parent
             if criteria.parent_id:
-                query = query.filter(OntologyEntity.parent_class_id == criteria.parent_id)
+                query = query.filter(
+                    OntologyEntity.parent_class_id == criteria.parent_id
+                )
 
             # Apply pagination
             query = query.limit(criteria.limit).offset(criteria.offset)
@@ -813,7 +845,8 @@ class SQLiteOntologyRepository:
 
             # Build individuals from ORM entities using helper
             individuals = [
-                self._build_individual_from_orm(orm_entity, session) for orm_entity in orm_entities
+                self._build_individual_from_orm(orm_entity, session)
+                for orm_entity in orm_entities
             ]
 
             return individuals
@@ -905,7 +938,9 @@ class SQLiteOntologyRepository:
             # Reload with populated class_ids
             result = self.get_individual(individual.id, session)
             if result is None:
-                raise RuntimeError(f"Failed to reload individual {individual.id} after save")
+                raise RuntimeError(
+                    f"Failed to reload individual {individual.id} after save"
+                )
             return result
 
     def delete_individual(self, individual_id: str) -> bool:
@@ -1026,7 +1061,9 @@ class SQLiteOntologyRepository:
             if limit is not None:
                 q = q.limit(limit)
             orm_entities = q.offset(offset).all()
-            return [cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities]
+            return [
+                cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities
+            ]
 
     def count_property_definitions(
         self, is_relevant: Optional[bool] = None, query: Optional[str] = None
@@ -1054,7 +1091,9 @@ class SQLiteOntologyRepository:
 
             return q.count()
 
-    def get_by_identifier(self, identifier: str) -> Optional[Taxonomy | ConceptScheme | Class]:
+    def get_by_identifier(
+        self, identifier: str
+    ) -> Optional[Taxonomy | ConceptScheme | Class]:
         """
         Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique slug.
 
@@ -1148,7 +1187,8 @@ class SQLiteOntologyRepository:
             )
             if existing is not None:
                 raise ValueError(
-                    f"PropertyDefinition with identifier {prop.identifier} already" " exists"
+                    f"PropertyDefinition with identifier {prop.identifier} already"
+                    " exists"
                 )
 
             orm_entity = (
@@ -1273,7 +1313,9 @@ class SQLiteOntologyRepository:
         """
         with self.session_factory() as session:
             orm_rel = (
-                session.query(RelationshipORM).filter(RelationshipORM.id == relationship_id).first()
+                session.query(RelationshipORM)
+                .filter(RelationshipORM.id == relationship_id)
+                .first()
             )
 
             if orm_rel is None:
@@ -1388,14 +1430,18 @@ class SQLiteOntologyRepository:
         with self.session_factory() as session:
             # Verify source exists (same session)
             source = (
-                session.query(OntologyEntity).filter(OntologyEntity.id == rel.source_id).first()
+                session.query(OntologyEntity)
+                .filter(OntologyEntity.id == rel.source_id)
+                .first()
             )
             if source is None:
                 raise ValueError(f"Source entity {rel.source_id} does not exist")
 
             # Verify target exists (same session)
             target = (
-                session.query(OntologyEntity).filter(OntologyEntity.id == rel.target_id).first()
+                session.query(OntologyEntity)
+                .filter(OntologyEntity.id == rel.target_id)
+                .first()
             )
             if target is None:
                 raise ValueError(f"Target entity {rel.target_id} does not exist")
@@ -1403,9 +1449,15 @@ class SQLiteOntologyRepository:
             # Verify property definition exists (same session)
             prop_def = self.get_property_definition(rel.property_definition_id, session)
             if prop_def is None:
-                raise ValueError(f"Property definition {rel.property_definition_id} does not exist")
+                raise ValueError(
+                    f"Property definition {rel.property_definition_id} does not exist"
+                )
 
-            orm_rel = session.query(RelationshipORM).filter(RelationshipORM.id == rel.id).first()
+            orm_rel = (
+                session.query(RelationshipORM)
+                .filter(RelationshipORM.id == rel.id)
+                .first()
+            )
 
             if orm_rel is None:
                 # Create new (always create, never update, due to immutable created_at)
@@ -1434,7 +1486,9 @@ class SQLiteOntologyRepository:
         """
         with self.session_factory() as session:
             orm_rel = (
-                session.query(RelationshipORM).filter(RelationshipORM.id == relationship_id).first()
+                session.query(RelationshipORM)
+                .filter(RelationshipORM.id == relationship_id)
+                .first()
             )
 
             if orm_rel is None:
@@ -1495,7 +1549,9 @@ class SQLiteOntologyRepository:
             .order_by(IndividualClass.position)
             .all()
         )
-        class_ids: list[str] = [cast(str, membership.class_id) for membership in class_memberships]
+        class_ids: list[str] = [
+            cast(str, membership.class_id) for membership in class_memberships
+        ]
 
         # Create Individual directly with loaded class_ids
         return Individual(
@@ -1602,7 +1658,9 @@ class SQLiteOntologyRepository:
         """
         return await run_sync_in_executor(self.delete_taxonomy, taxonomy_id)
 
-    async def get_concept_scheme_async(self, concept_scheme_id: str) -> Optional[ConceptScheme]:
+    async def get_concept_scheme_async(
+        self, concept_scheme_id: str
+    ) -> Optional[ConceptScheme]:
         """
         Retrieve a concept scheme by ID (async version).
 
@@ -1702,7 +1760,9 @@ class SQLiteOntologyRepository:
         Returns:
             Number of matching Class entities
         """
-        return await run_sync_in_executor(self.count_classes, concept_scheme_id, parent_class_id)
+        return await run_sync_in_executor(
+            self.count_classes, concept_scheme_id, parent_class_id
+        )
 
     async def save_class_async(self, cls: Class) -> Class:
         """
@@ -1769,7 +1829,9 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of Individual entities
         """
-        return await run_sync_in_executor(self.list_individuals, class_id, limit, offset)
+        return await run_sync_in_executor(
+            self.list_individuals, class_id, limit, offset
+        )
 
     async def save_individual_async(self, individual: Individual) -> Individual:
         """
@@ -1795,7 +1857,9 @@ class SQLiteOntologyRepository:
         """
         return await run_sync_in_executor(self.delete_individual, individual_id)
 
-    async def get_property_definition_async(self, property_id: str) -> Optional[PropertyDefinition]:
+    async def get_property_definition_async(
+        self, property_id: str
+    ) -> Optional[PropertyDefinition]:
         """
         Retrieve a property definition by ID (async version).
 
@@ -1840,9 +1904,13 @@ class SQLiteOntologyRepository:
         Returns:
             PropertyDefinition entity if found, None otherwise
         """
-        return await run_sync_in_executor(self.get_property_definition_by_identifier, identifier)
+        return await run_sync_in_executor(
+            self.get_property_definition_by_identifier, identifier
+        )
 
-    async def save_property_definition_async(self, prop: PropertyDefinition) -> PropertyDefinition:
+    async def save_property_definition_async(
+        self, prop: PropertyDefinition
+    ) -> PropertyDefinition:
         """
         Create or update a property definition (async version).
 
@@ -1866,7 +1934,9 @@ class SQLiteOntologyRepository:
         """
         return await run_sync_in_executor(self.delete_property_definition, property_id)
 
-    async def get_relationship_async(self, relationship_id: str) -> Optional[Relationship]:
+    async def get_relationship_async(
+        self, relationship_id: str
+    ) -> Optional[Relationship]:
         """
         Retrieve a relationship by ID (async version).
 

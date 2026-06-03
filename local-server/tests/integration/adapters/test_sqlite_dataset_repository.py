@@ -179,7 +179,9 @@ class TestActiveDataset:
         retrieved_first = repository.get_dataset(sample_dataset.id)
         assert retrieved_first.is_active is False
 
-    def test_set_active_dataset_nonexistent_raises_error(self, repository, sample_dataset):
+    def test_set_active_dataset_nonexistent_raises_error(
+        self, repository, sample_dataset
+    ):
         """
         Setting nonexistent dataset as active raises DatasetNotFoundError with message.
 

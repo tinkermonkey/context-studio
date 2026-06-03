@@ -9,7 +9,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -22,7 +21,9 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.events import ClassCreated, PropertyDefinitionCreated
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture
@@ -68,7 +69,9 @@ def change_recorder(change_repo, event_publisher):
     """Create and wire up the change event recorder."""
     recorder = ChangeEventRecorder(change_repo)
     event_publisher.subscribe(ClassCreated, recorder.on_class_created)
-    event_publisher.subscribe(PropertyDefinitionCreated, recorder.on_property_definition_created)
+    event_publisher.subscribe(
+        PropertyDefinitionCreated, recorder.on_property_definition_created
+    )
     return recorder
 
 
@@ -79,7 +82,9 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
+def ontology_service(
+    change_recorder, ontology_repo, embedding_service, event_publisher
+):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 

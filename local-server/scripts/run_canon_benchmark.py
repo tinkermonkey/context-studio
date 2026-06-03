@@ -143,9 +143,7 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
         "taxonomy": [t.identifier for t in taxonomies if t.identifier],
         "concept_scheme": [s.identifier for s in concept_schemes if s.identifier],
         "class": [c.identifier for c in classes if c.identifier],
-        "property_definition": [
-            p.identifier for p in property_defs if p.identifier
-        ],
+        "property_definition": [p.identifier for p in property_defs if p.identifier],
         "individual": [str(i.id) for i in individuals],
     }
 
@@ -170,7 +168,9 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
         produced_classes_dicts.append(
             {
                 "identifier": c.identifier,
-                "external_references": list(getattr(c, "external_references", []) or []),
+                "external_references": list(
+                    getattr(c, "external_references", []) or []
+                ),
                 "embedding": getattr(c, "embedding", None),
             }
         )
@@ -203,7 +203,9 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------- #
 
 
-def _shape_result_record(canon_block: dict[str, Any], dataset_name: str) -> dict[str, Any]:
+def _shape_result_record(
+    canon_block: dict[str, Any], dataset_name: str
+) -> dict[str, Any]:
     """
     Map the canon metric block into a record shape compatible with the
     Text2KGBench benchmark output, plus a `canon` sub-block holding the rich
@@ -213,7 +215,9 @@ def _shape_result_record(canon_block: dict[str, Any], dataset_name: str) -> dict
     # Average F1 across node types as the headline "f1" value so the existing
     # diff_benchmarks summary surfaces it next to TekGen/WebNLG F1.
     f1 = canon_block["avg_node_type_f1"]
-    precision_avg = sum(m["precision"] for m in per_type.values()) / max(1, len(per_type))
+    precision_avg = sum(m["precision"] for m in per_type.values()) / max(
+        1, len(per_type)
+    )
     recall_avg = sum(m["recall"] for m in per_type.values()) / max(1, len(per_type))
     conformance = canon_block["identifier_slug_validity"]["rate"]
 
@@ -231,8 +235,10 @@ def _shape_result_record(canon_block: dict[str, Any], dataset_name: str) -> dict
         "cost_usd": 0.0,
         "extraction_run_ids": [],
         "total_duration_ms": 0,
-        "samples_processed": canon_block["per_node_type_f1"]["class"]["true_positives"]
-        + canon_block["per_node_type_f1"]["class"]["false_negatives"],
+        "samples_processed": (
+            canon_block["per_node_type_f1"]["class"]["true_positives"]
+            + canon_block["per_node_type_f1"]["class"]["false_negatives"]
+        ),
         "total_error_count": 0,
         "errors": [],
         "canon": canon_block,
@@ -302,7 +308,9 @@ def main() -> int:
         canon=canon,
     )
 
-    result_record = _shape_result_record(canon_block, dataset_name="canon-software-architecture")
+    result_record = _shape_result_record(
+        canon_block, dataset_name="canon-software-architecture"
+    )
     duration_ms = int((time.time() - start) * 1000)
     result_record["total_duration_ms"] = duration_ms
 

@@ -40,12 +40,16 @@ class TestSyncConfigAdapterValidation:
 
     def test_uppercase_adapter_type_converted_to_lowercase(self) -> None:
         """Test that uppercase adapter types are converted to lowercase."""
-        config = SyncConfig(adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket")
+        )
         assert config.adapter == SyncAdapterType.S3
 
     def test_mixed_case_adapter_type_converted(self) -> None:
         """Test that mixed case adapter types are converted to lowercase."""
-        config = SyncConfig(adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp")
+        )
         assert config.adapter == SyncAdapterType.DUCKDB
 
     def test_all_valid_adapter_types_case_insensitive(self) -> None:
@@ -55,11 +59,15 @@ class TestSyncConfigAdapterValidation:
         assert config.adapter == SyncAdapterType.NONE
 
         # Test S3 adapter with config
-        config = SyncConfig(adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket")
+        )
         assert config.adapter == SyncAdapterType.S3
 
         # Test DUCKDB adapter with config
-        config = SyncConfig(adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp")
+        )
         assert config.adapter == SyncAdapterType.DUCKDB
 
     def test_invalid_adapter_type_rejected(self) -> None:
@@ -114,7 +122,9 @@ class TestDuckDBConfigValidation:
 
     def test_duckdb_config_is_optional_in_sync_config(self) -> None:
         """Test that DuckDBConfig is optional in SyncConfig when using different adapter."""
-        config = SyncConfig(adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3, s3=S3Config(s3_bucket="test-bucket")
+        )
         assert config.duckdb is None
 
 
@@ -138,7 +148,9 @@ class TestS3ConfigValidation:
 
     def test_s3_config_is_optional_in_sync_config(self) -> None:
         """Test that S3Config is optional in SyncConfig."""
-        config = SyncConfig(adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp"))
+        config = SyncConfig(
+            adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp")
+        )
         assert config.s3 is None
 
 

@@ -18,9 +18,7 @@ class PrecisionRecallF1:
     f1: float
 
 
-def precision_recall_f1(
-    expected: list[Any], actual: list[Any]
-) -> PrecisionRecallF1:
+def precision_recall_f1(expected: list[Any], actual: list[Any]) -> PrecisionRecallF1:
     """
     Compute precision, recall, and F1 score.
 
@@ -115,8 +113,7 @@ def brier_score(expected_probs: list[float], actual_labels: list[int]) -> float:
         return 0.0
 
     squared_errors = [
-        (prob - label) ** 2
-        for prob, label in zip(expected_probs, actual_labels)
+        (prob - label) ** 2 for prob, label in zip(expected_probs, actual_labels)
     ]
 
     return round(sum(squared_errors) / len(squared_errors), 4)

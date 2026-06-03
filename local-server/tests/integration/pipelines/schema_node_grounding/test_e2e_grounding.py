@@ -7,7 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+)
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingCandidate,
     GroundingScorer,
@@ -15,7 +17,9 @@ from domain.pipelines.schema_node_grounding.scoring import (
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+_root_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(_test_dir)))
+)
 sys.path.insert(0, _root_dir)
 
 
@@ -86,7 +90,9 @@ class TestE2ESchemaNodeGrounding:
 
         # Create mock adapter
         mock_adapter = AsyncMock()
-        all_candidates = fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        all_candidates = (
+            fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        )
         candidates = [GroundingCandidate(**c) for c in all_candidates]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 
@@ -133,7 +139,9 @@ class TestE2ESchemaNodeGrounding:
         fixture = grounding_fixtures["property_knows"]
 
         mock_adapter = AsyncMock()
-        all_candidates = fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        all_candidates = (
+            fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        )
         candidates = [GroundingCandidate(**c) for c in all_candidates]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 
@@ -169,7 +177,9 @@ class TestE2ESchemaNodeGrounding:
         fixture = grounding_fixtures["class_person"]
 
         mock_adapter = AsyncMock()
-        all_candidates = fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        all_candidates = (
+            fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        )
         candidates = [GroundingCandidate(**c) for c in all_candidates]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 
@@ -204,7 +214,9 @@ class TestE2ESchemaNodeGrounding:
         fixture = grounding_fixtures["class_person"]
 
         mock_adapter = AsyncMock()
-        candidates = [GroundingCandidate(**c) for c in fixture["dbpedia_candidates"][:1]]
+        candidates = [
+            GroundingCandidate(**c) for c in fixture["dbpedia_candidates"][:1]
+        ]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 
         scorer = GroundingScorer()
@@ -274,7 +286,9 @@ class TestE2ESchemaNodeGrounding:
         fixture = grounding_fixtures["class_person"]
 
         mock_adapter = AsyncMock()
-        all_candidates = fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        all_candidates = (
+            fixture["dbpedia_candidates"] + fixture["conceptnet_candidates"]
+        )
         candidates = [GroundingCandidate(**c) for c in all_candidates]
         mock_adapter.query_sources = AsyncMock(return_value=candidates)
 

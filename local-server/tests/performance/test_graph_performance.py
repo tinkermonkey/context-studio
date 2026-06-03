@@ -44,15 +44,22 @@ def _setup_graph_service(
     repository = FakeOntologyRepository()
 
     # Create taxonomy and concept scheme
-    taxonomy = Taxonomy(id=str(uuid4()), identifier="test_taxonomy", title="Test Taxonomy")
+    taxonomy = Taxonomy(
+        id=str(uuid4()), identifier="test_taxonomy", title="Test Taxonomy"
+    )
     scheme = ConceptScheme(
-        id=str(uuid4()), taxonomy_id=taxonomy.id, identifier="test_scheme", title="Test Scheme"
+        id=str(uuid4()),
+        taxonomy_id=taxonomy.id,
+        identifier="test_scheme",
+        title="Test Scheme",
     )
     repository.save_taxonomy(taxonomy)
     repository.save_concept_scheme(scheme)
 
     # Create a property definition for relationships
-    prop_def = PropertyDefinition(id=str(uuid4()), identifier="relates_to", title="Relates To")
+    prop_def = PropertyDefinition(
+        id=str(uuid4()), identifier="relates_to", title="Relates To"
+    )
     repository.save_property_definition(prop_def)
 
     # Create classes

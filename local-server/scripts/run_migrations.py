@@ -62,7 +62,9 @@ def run_local_migrations(args: list[str], local_db_url: str | None = None) -> in
     return subprocess.run(cmd, cwd=str(LOCAL_SERVER_ROOT)).returncode
 
 
-def run_operations_migrations(args: list[str], operations_db_url: str | None = None) -> int:
+def run_operations_migrations(
+    args: list[str], operations_db_url: str | None = None
+) -> int:
     """Run migrations for operations.db using Alembic Python API."""
     import argparse
 
@@ -75,10 +77,14 @@ def run_operations_migrations(args: list[str], operations_db_url: str | None = N
 
         # Set cmd_opts so env.py can detect this is for operations database
         db_url = operations_db_url or "sqlite:///./operations.db"
-        config.cmd_opts = argparse.Namespace(x=["db=operations", f"operations_db_url={db_url}"])
+        config.cmd_opts = argparse.Namespace(
+            x=["db=operations", f"operations_db_url={db_url}"]
+        )
 
         # Set version locations to operations directory only
-        config.set_main_option("version_locations", str(SQLITE_DIR / "operations" / "versions"))
+        config.set_main_option(
+            "version_locations", str(SQLITE_DIR / "operations" / "versions")
+        )
 
         # Set database URL
         config.set_main_option("sqlalchemy.url", db_url)
@@ -138,7 +144,10 @@ def run_operations_migrations(args: list[str], operations_db_url: str | None = N
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python scripts/run_migrations.py [local|operations|all]" " <alembic-args>")
+        print(
+            "Usage: python scripts/run_migrations.py [local|operations|all]"
+            " <alembic-args>"
+        )
         print()
         print("Examples:")
         print("  python scripts/run_migrations.py local upgrade head")
@@ -190,7 +199,9 @@ def main():
             return ret_local
         print()
         print("Running migrations for operations.db...")
-        ret_ops = run_migrations("operations", alembic_args, operations_db_url=operations_db_url)
+        ret_ops = run_migrations(
+            "operations", alembic_args, operations_db_url=operations_db_url
+        )
         if ret_ops != 0:
             print(
                 "Error: operations.db migrations failed with exit code",

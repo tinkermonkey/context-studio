@@ -8,7 +8,9 @@ import os
 import sys
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
 )
 
 from unittest.mock import MagicMock
@@ -18,7 +20,9 @@ import pytest
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ---------------------------------------------------------------------------
@@ -33,7 +37,9 @@ CLASS_ID = "cls-person"
 @pytest.fixture()
 def repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
+    r.save_taxonomy(
+        Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy")
+    )
     r.save_concept_scheme(
         ConceptScheme(
             id=SCHEME_ID,
@@ -88,8 +94,15 @@ def _make_triple(
         "confidence": confidence,
     }
     if predicate_prop_id:
-        triple["predicate"] = {"property_definition_id": predicate_prop_id, "label": "test-pred"}
-        triple["object"] = {"kind": obj_kind, "id": obj_id or "tgt-id", "label": "Target"}
+        triple["predicate"] = {
+            "property_definition_id": predicate_prop_id,
+            "label": "test-pred",
+        }
+        triple["object"] = {
+            "kind": obj_kind,
+            "id": obj_id or "tgt-id",
+            "label": "Target",
+        }
     return triple
 
 
@@ -132,7 +145,9 @@ class TestIndividualCreation:
 
     def test_skips_individual_when_class_not_found(self, svc, repo):
         """Individuals with non-existent class_ids should be skipped."""
-        run = _make_run(triples=[_make_triple("Bob", class_ids=["nonexistent-class-id"])])
+        run = _make_run(
+            triples=[_make_triple("Bob", class_ids=["nonexistent-class-id"])]
+        )
         result = svc.apply(run)
         assert result.individuals_created == 0
         assert result.individuals_skipped == 1
@@ -201,14 +216,20 @@ class TestRelationshipCreation:
         prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
         repo.save_property_definition(prop)
         target_cls = Class(
-            id="cls-org", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Org"
+            id="cls-org",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Org",
         )
         repo.save_class(target_cls)
 
         run = _make_run(
             triples=[
                 _make_triple(
-                    "Alice", predicate_prop_id="prop-knows", obj_id="cls-org", obj_kind="class"
+                    "Alice",
+                    predicate_prop_id="prop-knows",
+                    obj_id="cls-org",
+                    obj_kind="class",
                 ),
             ]
         )

@@ -19,7 +19,9 @@ class FakeEventPublisher:
 
     def __init__(self) -> None:
         self._events: list[DomainEvent] = []
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
+            {}
+        )
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
@@ -73,7 +75,9 @@ class FakeEventPublisher:
         Returns:
             List of events of the specified type with proper type preservation.
         """
-        return cast(list[EventT], [e for e in self._events if isinstance(e, event_type)])
+        return cast(
+            list[EventT], [e for e in self._events if isinstance(e, event_type)]
+        )
 
     def clear(self) -> None:
         self._events.clear()

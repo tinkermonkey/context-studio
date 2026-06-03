@@ -107,7 +107,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         if not scope_id:
             exc = PipelineInputError("scope_id is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -169,11 +171,15 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
-            _logger.error(f"Unexpected error during connection refinement: {exc}", exc_info=True)
+            _logger.error(
+                f"Unexpected error during connection refinement: {exc}", exc_info=True
+            )
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": "Connection refinement encountered an unexpected error"},
+                result={
+                    "error": "Connection refinement encountered an unexpected error"
+                },
             )
             raise PipelineExecutionError(
                 "Connection refinement encountered an unexpected error"
@@ -213,11 +219,15 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"Parent class: {neighborhood.parent_class.title}")
 
         if neighborhood.sibling_classes:
-            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
+            sibling_info = ", ".join(
+                [f"{s.title}" for s in neighborhood.sibling_classes[:3]]
+            )
             context_parts.append(f"Sibling classes: {sibling_info}")
 
         if neighborhood.child_classes:
-            children_info = ", ".join([f"{c.title}" for c in neighborhood.child_classes[:3]])
+            children_info = ", ".join(
+                [f"{c.title}" for c in neighborhood.child_classes[:3]]
+            )
             context_parts.append(f"Child classes: {children_info}")
 
         # Current connections
@@ -235,7 +245,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             context_parts.append(f"External groundings:\n{groundings_text}")
 
         if extraction_usages:
-            usages_text = "\n".join([f"- {u.get('extracted_text')}" for u in extraction_usages[:2]])
+            usages_text = "\n".join(
+                [f"- {u.get('extracted_text')}" for u in extraction_usages[:2]]
+            )
             context_parts.append(f"Extraction usages:\n{usages_text}")
 
         context_str = "\n".join(context_parts)
@@ -290,12 +302,16 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
                     d["confidence"] = 0.5
 
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-            error_type = "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
+            error_type = (
+                "parse" if isinstance(exc, json.JSONDecodeError) else "structure"
+            )
             _logger.error(
                 f"Failed to {error_type} LLM response for node {neighborhood.class_label}: {exc}",
                 exc_info=True,
             )
-            sanitized_msg = f"LLM response validation failed for {neighborhood.class_label}"
+            sanitized_msg = (
+                f"LLM response validation failed for {neighborhood.class_label}"
+            )
             raise PipelineExecutionError(sanitized_msg) from exc
         except Exception as exc:
             _logger.error(

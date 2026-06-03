@@ -41,7 +41,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["id"], ["batch_runs.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("idx_pipeline_impl_id", "pipeline_runs", ["implementation_id"], unique=False)
+    op.create_index(
+        "idx_pipeline_impl_id", "pipeline_runs", ["implementation_id"], unique=False
+    )
     op.create_table(
         "individual_extraction_runs",
         sa.Column("id", sa.String(length=36), nullable=False),

@@ -121,19 +121,25 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         if not text or not text.strip():
             exc = PipelineInputError("text is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
         if not ontology_id:
             exc = PipelineInputError("ontology_id is required")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
         if not model:
             exc = PipelineInputError("model is required")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -178,11 +184,15 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
-            _logger.error(f"Unexpected error during individual extraction: {exc}", exc_info=True)
+            _logger.error(
+                f"Unexpected error during individual extraction: {exc}", exc_info=True
+            )
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
-                result={"error": "Individual extraction encountered an unexpected error"},
+                result={
+                    "error": "Individual extraction encountered an unexpected error"
+                },
             )
             raise PipelineExecutionError(
                 "Individual extraction encountered an unexpected error"

@@ -16,7 +16,10 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 
 
 class BlockingFakeLLMProvider:
@@ -189,7 +192,9 @@ class TestRunningStatusObservation:
         await asyncio.sleep(0.2)
 
         # Query database to verify RUNNING status is written mid-flight
-        assert blocking_llm_provider.call_count > 0, "LLM provider should have been called"
+        assert (
+            blocking_llm_provider.call_count > 0
+        ), "LLM provider should have been called"
 
         # Check that the run status in the database is RUNNING
         db_run_mid_execution = pipeline_repo.get(run_id)
@@ -213,6 +218,7 @@ class TestRunningStatusObservation:
         self, blocking_llm_provider
     ):
         """Blocking provider correctly blocks and unblocks."""
+
         async def call_provider():
             return await blocking_llm_provider.complete_async(
                 system_prompt="test",

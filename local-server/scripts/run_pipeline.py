@@ -50,12 +50,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import (
+    create_orchestrator,
+    create_pipeline_state,
+)
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -163,12 +168,16 @@ def main() -> int:
         # Verify implementation is registered
         impl_class = impl_registry.get(ptype, args.implementation)
         if impl_class is None:
-            _logger.error(f"Implementation not found: {ptype.value}:{args.implementation}")
+            _logger.error(
+                f"Implementation not found: {ptype.value}:{args.implementation}"
+            )
             return 1
         _logger.info(f"Implementation class: {impl_class.__name__}")
 
         # Verify configuration is registered
-        config_version = config_registry.get_latest(ptype, args.implementation, args.config)
+        config_version = config_registry.get_latest(
+            ptype, args.implementation, args.config
+        )
         if config_version is None:
             _logger.error(
                 f"Configuration not found: {ptype.value}:{args.implementation}:{args.config}"
@@ -244,11 +253,14 @@ def main() -> int:
             "scorer": GroundingScorer(embedding_service=embedding_service),
             "grounding_config": {
                 "top_n": config_version.config.get("top_n", 10),
-                "weights": config_version.config.get("weights", {
-                    "source_score": 0.3,
-                    "label_match": 0.3,
-                    "semantic_similarity": 0.4,
-                }),
+                "weights": config_version.config.get(
+                    "weights",
+                    {
+                        "source_score": 0.3,
+                        "label_match": 0.3,
+                        "semantic_similarity": 0.4,
+                    },
+                ),
             },
             "refinement_config": config_version.config,
         }
@@ -303,7 +315,11 @@ def main() -> int:
         _logger.error(f"Pipeline execution failed: {exc}", exc_info=exc)
 
         # Log the error if iteration logging is enabled and required variables are available
-        if args.log_iteration is not None and ptype is not None and input_data is not None:
+        if (
+            args.log_iteration is not None
+            and ptype is not None
+            and input_data is not None
+        ):
             try:
                 _append_iteration_log(
                     ptype=ptype,
@@ -342,7 +358,9 @@ def _append_iteration_log(
         log_path: Path to log file (default: logs/pipeline-iteration-log.md)
     """
     if log_path is None:
-        log_path = str(Path(__file__).parent.parent / "logs" / "pipeline-iteration-log.md")
+        log_path = str(
+            Path(__file__).parent.parent / "logs" / "pipeline-iteration-log.md"
+        )
 
     log_path_obj = Path(log_path)
     log_path_obj.parent.mkdir(parents=True, exist_ok=True)
@@ -351,7 +369,9 @@ def _append_iteration_log(
     if not log_path_obj.exists():
         with open(log_path_obj, "w") as f:
             f.write("# Pipeline Iteration Log\n\n")
-            f.write("Append-only execution log for pipeline iterations during development.\n")
+            f.write(
+                "Append-only execution log for pipeline iterations during development.\n"
+            )
             f.write("Organized by pipeline type.\n\n")
 
     # Build entry
@@ -371,7 +391,9 @@ def _append_iteration_log(
     if error:
         entry_parts.append(f"\n### Error\n\n```\n{error}\n```\n")
     elif result:
-        entry_parts.append(f"\n### Output\n\n```json\n{json.dumps(result, indent=2)}\n```\n")
+        entry_parts.append(
+            f"\n### Output\n\n```json\n{json.dumps(result, indent=2)}\n```\n"
+        )
 
     entry_parts.append("\n---\n")
 

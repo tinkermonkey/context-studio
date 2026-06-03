@@ -244,7 +244,9 @@ class TestOWLEmptyDatabaseRoundTrip:
 
         assert exported is not None
         assert isinstance(exported, bytes)
-        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        exported_str = (
+            exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        )
 
         # Verify OWL structure in serialized output
         assert "owl" in exported_str.lower()
@@ -258,7 +260,9 @@ class TestOWLEmptyDatabaseRoundTrip:
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
-        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        exported_str = (
+            exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        )
         assert "dbpedia.org" in exported_str
         assert "wikidata.org" in exported_str
 
@@ -308,7 +312,11 @@ class TestOWLEmptyDatabaseRoundTrip:
         original_classes = ontology_repo.list_classes()
         original_class_count = len(list(original_classes))
         imported_class_count = len(
-            [e for e in deserializer.incoming_entities.values() if e.get("type") == "class"]
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "class"
+            ]
         )
 
         # Should have exact same structure (no duplicates on roundtrip)
@@ -328,7 +336,8 @@ class TestOWLEmptyDatabaseRoundTrip:
                 )
                 for orig_ref in original_class.external_references:
                     assert any(
-                        r["source"] == orig_ref.source and r["identifier"] == orig_ref.identifier
+                        r["source"] == orig_ref.source
+                        and r["identifier"] == orig_ref.identifier
                         for r in matching_incoming["external_references"]
                     )
 
@@ -348,12 +357,18 @@ class TestOWLIdempotentReimport:
         deserializer.deserialize(exported, dry_run=True)
 
         # The plan should match entities by UUID or external reference
-        original_dog = next((c for c in ontology_repo.list_classes() if c.title == "Dog"), None)
+        original_dog = next(
+            (c for c in ontology_repo.list_classes() if c.title == "Dog"), None
+        )
         assert original_dog is not None
 
         # Should find matching entity in incoming with same UUID
         matching_entity = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
             None,
         )
         assert matching_entity is not None
@@ -380,7 +395,11 @@ class TestOWLIdempotentReimport:
 
         # Find Fido (multi-class individual)
         fido_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
             None,
         )
 
@@ -413,7 +432,9 @@ class TestOWLFormatSupport:
         scope = SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
         exported = serializer.serialize(scope)
 
-        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        exported_str = (
+            exported.decode("utf-8") if isinstance(exported, bytes) else exported
+        )
 
         # TBox (class definitions)
         assert "class" in exported_str.lower()

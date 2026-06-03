@@ -167,7 +167,9 @@ class TestDeduplication:
         )
 
         # Deduplication should keep layer 1 (highest priority)
-        deduplicated = service._deduplicate([entity_layer_0, entity_layer_1, entity_layer_3])
+        deduplicated = service._deduplicate(
+            [entity_layer_0, entity_layer_1, entity_layer_3]
+        )
 
         assert len(deduplicated) == 1
         assert deduplicated[0].source_layer == 1
@@ -230,8 +232,12 @@ class TestDeduplication:
             extraction_run_repo=FakeExtractionRunRepository(),
         )
 
-        entity_a = ExtractedEntity(label="Apple Inc.", entity_type="ORG", source_layer=0)
-        entity_b = ExtractedEntity(label="  Apple Inc.  ", entity_type="ORG", source_layer=1)
+        entity_a = ExtractedEntity(
+            label="Apple Inc.", entity_type="ORG", source_layer=0
+        )
+        entity_b = ExtractedEntity(
+            label="  Apple Inc.  ", entity_type="ORG", source_layer=1
+        )
 
         deduplicated = service._deduplicate([entity_a, entity_b])
 
@@ -556,14 +562,18 @@ class TestEnrichFromReferences:
 
     def test_enrich_from_references_empty_text_raises(self, service):
         """Enrich with empty text raises ExtractionError."""
-        input_entities = [ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)]
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
 
         with pytest.raises(ExtractionError, match="empty"):
             service.enrich_from_references("", input_entities)
 
     def test_enrich_from_references_whitespace_text_raises(self, service):
         """Enrich with whitespace-only text raises ExtractionError."""
-        input_entities = [ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)]
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
 
         with pytest.raises(ExtractionError, match="empty"):
             service.enrich_from_references("   ", input_entities)
@@ -605,7 +615,9 @@ class TestEnrichFromReferences:
 
     def test_enrich_from_references_emits_completion_event(self, service):
         """Enrich from references emits ExtractionCompleted event."""
-        input_entities = [ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)]
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
 
         result = service.enrich_from_references("Apple", input_entities)
 
@@ -622,7 +634,9 @@ class TestEnrichFromReferences:
 
     def test_enrich_from_references_measures_duration(self, service):
         """Enrich from references records execution time."""
-        input_entities = [ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)]
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
 
         result = service.enrich_from_references("Apple", input_entities)
 
@@ -698,7 +712,9 @@ class TestExceptionHandling:
 
         # LLM provider that returns valid JSON entities
         llm_provider = FakeLLMProvider(
-            response_content=('[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]')
+            response_content=(
+                '[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]'
+            )
         )
 
         service = ExtractionService(

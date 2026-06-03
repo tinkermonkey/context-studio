@@ -227,7 +227,9 @@ class ChangeRepository(Protocol):
         """
         ...
 
-    def get_conflict_resolutions(self, proposal_id: str) -> dict[str, dict[str, object]]:
+    def get_conflict_resolutions(
+        self, proposal_id: str
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

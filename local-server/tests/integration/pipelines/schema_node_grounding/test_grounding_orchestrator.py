@@ -19,7 +19,9 @@ from domain.pipelines.schema_node_grounding.scoring import (
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+_root_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(_test_dir)))
+)
 sys.path.insert(0, _root_dir)
 
 
@@ -107,7 +109,9 @@ class TestSchemaGroundingOrchestrator:
         assert len(result.result["groundings"]) == 2
 
     @pytest.mark.asyncio
-    async def test_execute_no_candidates(self, mock_adapter, mock_scorer, mock_llm_provider):
+    async def test_execute_no_candidates(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
         """Test execution with no candidates found."""
         mock_adapter.query_sources = AsyncMock(return_value=[])
         orchestrator = SchemaGroundingOrchestrator(
@@ -130,7 +134,9 @@ class TestSchemaGroundingOrchestrator:
         assert len(result.result["groundings"]) == 0
 
     @pytest.mark.asyncio
-    async def test_execute_missing_label(self, mock_adapter, mock_scorer, mock_llm_provider):
+    async def test_execute_missing_label(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
         """Test execution with missing node_label."""
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=mock_llm_provider,
@@ -148,7 +154,9 @@ class TestSchemaGroundingOrchestrator:
             await orchestrator.execute(state)
 
     @pytest.mark.asyncio
-    async def test_execute_invalid_node_type(self, mock_adapter, mock_scorer, mock_llm_provider):
+    async def test_execute_invalid_node_type(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
         """Test execution with invalid node_type raises PipelineInputError."""
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=mock_llm_provider,
@@ -169,7 +177,9 @@ class TestSchemaGroundingOrchestrator:
             await orchestrator.execute(state)
 
     @pytest.mark.asyncio
-    async def test_execute_truncates_to_top_n(self, mock_adapter, mock_scorer, mock_llm_provider):
+    async def test_execute_truncates_to_top_n(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
         """Test that results are truncated to top_n."""
         candidates = [
             GroundingCandidate(
@@ -219,7 +229,9 @@ class TestSchemaGroundingOrchestrator:
         assert len(result.groundings) == 5
 
     @pytest.mark.asyncio
-    async def test_build_graph_returns_none(self, mock_adapter, mock_scorer, mock_llm_provider):
+    async def test_build_graph_returns_none(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
         """Test that build_graph returns None (single-node implementation)."""
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=mock_llm_provider,

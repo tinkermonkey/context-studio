@@ -233,7 +233,9 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         assert "Cat" in exported_str
         assert "Mammal" in exported_str
 
-    def test_import_creates_import_plan_with_no_conflicts(self, ontology_repo, sample_data):
+    def test_import_creates_import_plan_with_no_conflicts(
+        self, ontology_repo, sample_data
+    ):
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -286,7 +288,11 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         original_properties = ontology_repo.list_property_definitions()
 
         imported_class_count = len(
-            [e for e in deserializer.incoming_entities.values() if e.get("type") == "class"]
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "class"
+            ]
         )
         imported_scheme_count = len(
             [
@@ -296,10 +302,18 @@ class TestGraphMLEmptyDatabaseRoundTrip:
             ]
         )
         imported_taxonomy_count = len(
-            [e for e in deserializer.incoming_entities.values() if e.get("type") == "taxonomy"]
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "taxonomy"
+            ]
         )
         imported_individual_count = len(
-            [e for e in deserializer.incoming_entities.values() if e.get("type") == "individual"]
+            [
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("type") == "individual"
+            ]
         )
         imported_property_count = len(
             [
@@ -344,7 +358,11 @@ class TestGraphMLMultiClassIndividual:
 
         # Verify that Fido's class ordering is preserved in the incoming entities
         fido_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
             None,
         )
         assert fido_incoming is not None
@@ -420,7 +438,11 @@ class TestGraphMLExternalReferences:
 
         # Verify external references were extracted
         dog_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
             None,
         )
         assert dog_incoming is not None
@@ -451,7 +473,11 @@ class TestGraphMLExternalReferences:
 
         # Verify Fido's external references
         fido_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
             None,
         )
         assert fido_incoming is not None
@@ -506,7 +532,11 @@ class TestGraphMLExternalReferences:
         # Verify external_references survive through the round-trip
         # Check Dog's external references (DBpedia and Wikidata)
         dog_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Dog"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Dog"
+            ),
             None,
         )
         assert dog_incoming is not None
@@ -522,7 +552,11 @@ class TestGraphMLExternalReferences:
 
         # Verify Individual's external references survive
         fido_incoming = next(
-            (e for e in deserializer.incoming_entities.values() if e.get("title") == "Fido"),
+            (
+                e
+                for e in deserializer.incoming_entities.values()
+                if e.get("title") == "Fido"
+            ),
             None,
         )
         assert fido_incoming is not None
@@ -646,7 +680,9 @@ class TestGraphMLExternalReferences:
                 "cs:external_references": '[{"invalid"',  # Malformed JSON
             },
         )
-        G.add_edge("individual1", "class1", kind="class_membership", **{"cs:class_order": "0"})
+        G.add_edge(
+            "individual1", "class1", kind="class_membership", **{"cs:class_order": "0"}
+        )
 
         output = io.BytesIO()
         nx.write_graphml(G, output)
@@ -671,7 +707,9 @@ class TestGraphMLExternalReferences:
 class TestGraphMLIdempotentReimport:
     """Test that reimporting produces idempotent results."""
 
-    def test_reimport_with_matching_external_references(self, ontology_repo, sample_data):
+    def test_reimport_with_matching_external_references(
+        self, ontology_repo, sample_data
+    ):
         """Test that reimporting entities with matching external refs detects conflicts."""
         # Export
         serializer = GraphMLSerializer(ontology_repo)
@@ -770,5 +808,7 @@ class TestGraphMLLayoutCoordinates:
         # Should not raise exception and should not have x/y in warnings
         assert plan is not None
         # x, y should not produce warnings since they're in the ignored set
-        coord_warnings = [w for w in plan.warnings if "x" in w.lower() or "y" in w.lower()]
+        coord_warnings = [
+            w for w in plan.warnings if "x" in w.lower() or "y" in w.lower()
+        ]
         assert len(coord_warnings) == 0

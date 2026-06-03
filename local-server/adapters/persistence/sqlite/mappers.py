@@ -383,7 +383,9 @@ def map_domain_to_orm(
             taxonomy_id=entity.taxonomy_id,
             parent_class_id=entity.parent_class_id,
             structural_property_id=entity.structural_property_id,
-            external_references=serialize_external_references(entity.external_references),
+            external_references=serialize_external_references(
+                entity.external_references
+            ),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
             embedding=_serialize_embedding(entity.embedding),
@@ -397,7 +399,9 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
             data_properties=serialize_data_properties(entity.data_properties),
-            external_references=serialize_external_references(entity.external_references),
+            external_references=serialize_external_references(
+                entity.external_references
+            ),
             source_run_id=entity.source_run_id,
         )
 

@@ -48,7 +48,9 @@ class NLPEntity:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(f"confidence must be 0.0-1.0, got {self.confidence}")
         if self.end < self.start:
-            raise ValueError(f"end must be >= start, got start={self.start}, end={self.end}")
+            raise ValueError(
+                f"end must be >= start, got start={self.start}, end={self.end}"
+            )
 
 
 @dataclass(frozen=True)
@@ -234,7 +236,9 @@ class ReferenceSource(Protocol):
         """
         ...
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI asynchronously.
 

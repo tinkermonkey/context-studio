@@ -40,18 +40,14 @@ class ApplyResult:
                 f"created_individual_ids ({len(self.created_individual_ids)} "
                 "items) must be consistent"
             )
-        if (self.relationships_created > 0) != bool(
-            self.created_relationship_ids
-        ):
+        if (self.relationships_created > 0) != bool(self.created_relationship_ids):
             raise ValueError(
                 f"relationships_created ({self.relationships_created}) and "
                 f"created_relationship_ids "
                 f"({len(self.created_relationship_ids)} items) must be "
                 "consistent"
             )
-        if (self.properties_created > 0) != bool(
-            self.created_property_definition_ids
-        ):
+        if (self.properties_created > 0) != bool(self.created_property_definition_ids):
             raise ValueError(
                 f"properties_created ({self.properties_created}) and "
                 f"created_property_definition_ids "

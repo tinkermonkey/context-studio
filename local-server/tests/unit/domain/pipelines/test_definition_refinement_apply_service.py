@@ -90,7 +90,9 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
 
-        result = service.apply(sample_pipeline_run_with_candidates, confidence_threshold=0.9)
+        result = service.apply(
+            sample_pipeline_run_with_candidates, confidence_threshold=0.9
+        )
 
         assert result.classes_updated == 1
         assert result.classes_skipped == 0
@@ -106,7 +108,9 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
 
-        result = service.apply(sample_pipeline_run_with_candidates, confidence_threshold=0.99)
+        result = service.apply(
+            sample_pipeline_run_with_candidates, confidence_threshold=0.99
+        )
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
@@ -184,7 +188,9 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
 class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
     """Edge case tests for definition refinement apply service."""
 
-    def test_whitespace_only_definition_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_whitespace_only_definition_is_skipped(
+        self, mock_ontology_repo, sample_class
+    ):
         """Definitions with only whitespace are treated as empty."""
         run = PipelineRun(
             id="run-ws-def",
@@ -212,7 +218,9 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_missing_definition_field_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_missing_definition_field_is_skipped(
+        self, mock_ontology_repo, sample_class
+    ):
         """Candidates without definition field are skipped."""
         run = PipelineRun(
             id="run-no-def-field",
@@ -240,7 +248,9 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_missing_confidence_field_defaults_to_zero(self, mock_ontology_repo, sample_class):
+    def test_missing_confidence_field_defaults_to_zero(
+        self, mock_ontology_repo, sample_class
+    ):
         """Missing confidence field defaults to 0.0."""
         run = PipelineRun(
             id="run-no-conf",

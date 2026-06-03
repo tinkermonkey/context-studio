@@ -14,7 +14,10 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_extraction.orchestrator import (
@@ -38,7 +41,9 @@ from utils.logger import get_logger
 _logger = get_logger(__name__)
 
 
-def _build_noop(llm_provider: LLMProvider, services: dict[str, Any]) -> PipelineOrchestrator:
+def _build_noop(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
     return NoOpPipelineOrchestrator(
         llm_provider=llm_provider,
         run_id=services.get("run_id"),
@@ -51,7 +56,9 @@ def _build_individual_extraction(
 ) -> PipelineOrchestrator:
     extraction_service = services.get("extraction_service")
     if not extraction_service:
-        raise ValueError("extraction_service is required for IndividualExtractionOrchestrator")
+        raise ValueError(
+            "extraction_service is required for IndividualExtractionOrchestrator"
+        )
     return IndividualExtractionOrchestrator(
         llm_provider=llm_provider,
         extraction_service=extraction_service,
@@ -76,7 +83,9 @@ def _build_schema_grounding(
 ) -> PipelineOrchestrator:
     grounding_adapter = services.get("grounding_adapter")
     if not grounding_adapter:
-        raise ValueError("grounding_adapter is required for SchemaGroundingOrchestrator")
+        raise ValueError(
+            "grounding_adapter is required for SchemaGroundingOrchestrator"
+        )
     scorer = services.get("scorer")
     if not scorer:
         raise ValueError("scorer is required for SchemaGroundingOrchestrator")
@@ -95,7 +104,9 @@ def _build_definition_refinement(
 ) -> PipelineOrchestrator:
     ontology_repo = services.get("ontology_repo")
     if not ontology_repo:
-        raise ValueError("ontology_repo is required for DefinitionRefinementOrchestrator")
+        raise ValueError(
+            "ontology_repo is required for DefinitionRefinementOrchestrator"
+        )
     extraction_repo = services.get("extraction_repo")
     traversal = SchemaNeighborhoodTraversal(
         ontology_repo=ontology_repo,
@@ -115,7 +126,9 @@ def _build_connection_refinement(
 ) -> PipelineOrchestrator:
     ontology_repo = services.get("ontology_repo")
     if not ontology_repo:
-        raise ValueError("ontology_repo is required for ConnectionRefinementOrchestrator")
+        raise ValueError(
+            "ontology_repo is required for ConnectionRefinementOrchestrator"
+        )
     extraction_repo = services.get("extraction_repo")
     traversal = SchemaNeighborhoodTraversal(
         ontology_repo=ontology_repo,
@@ -131,7 +144,8 @@ def _build_connection_refinement(
 
 
 _ORCHESTRATOR_BUILDERS: dict[
-    Type[PipelineOrchestrator], Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator]
+    Type[PipelineOrchestrator],
+    Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
 ] = {
     NoOpPipelineOrchestrator: _build_noop,
     IndividualExtractionOrchestrator: _build_individual_extraction,
@@ -199,7 +213,9 @@ def create_pipeline_state(
     """
     state_class = _PIPELINE_TYPE_TO_STATE.get(pipeline_type)
     if state_class is None:
-        raise ValueError(f"No state class registered for pipeline type: {pipeline_type.value}")
+        raise ValueError(
+            f"No state class registered for pipeline type: {pipeline_type.value}"
+        )
     return state_class(
         run_id=run_id,
         pipeline_type=pipeline_type,
@@ -229,7 +245,9 @@ def build_run_specific_data(
     """
     if pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         text = input_data.get("text", "")
-        specific: dict[str, Any] = {"source_text_hash": sha256(text.encode()).hexdigest()}
+        specific: dict[str, Any] = {
+            "source_text_hash": sha256(text.encode()).hexdigest()
+        }
         source_document_uri = input_data.get("source_document_uri")
         if source_document_uri:
             specific["source_document_uri"] = source_document_uri

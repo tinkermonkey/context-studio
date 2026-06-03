@@ -56,9 +56,7 @@ class QualityRunner:
         """
         return load_fixture(pipeline_type, scenario)
 
-    def load_expected_output(
-        self, pipeline_type: str, scenario: str
-    ) -> dict[str, Any]:
+    def load_expected_output(self, pipeline_type: str, scenario: str) -> dict[str, Any]:
         """
         Load the expected output fixture for a pipeline.
 

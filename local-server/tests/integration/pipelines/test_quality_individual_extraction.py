@@ -24,7 +24,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -35,7 +37,9 @@ from domain.pipelines.individual_extraction import (
     IndividualExtractionState,
     register_individual_extraction,
 )
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -329,7 +333,9 @@ class TestQualityIndividualExtraction:
 
         # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
         if not cassette_path.exists():
-            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
+            pytest.skip(
+                f"Cassette not found at {cassette_path}. Run with real LLM to record."
+            )
 
         # Use cassette provider for deterministic quality testing
         llm_provider = CassetteLLMProvider(cassette_path)
@@ -389,7 +395,9 @@ class TestQualityIndividualExtraction:
 
         # Assert metrics against floors
         gate = FloorGate(METRIC_FLOORS)
-        gate.assert_metrics(aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}")
+        gate.assert_metrics(
+            aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}"
+        )
 
     @pytest.mark.asyncio
     async def test_individual_extraction_apply_roundtrip(
@@ -478,12 +486,12 @@ class TestQualityIndividualExtraction:
         # Assert idempotence: same entities created (excluding IDs)
         count1_indiv = len(individuals_after_apply1)
         count2_indiv = len(individuals_after_apply2)
-        assert count1_indiv == count2_indiv, (
-            f"Individual count mismatch: {count1_indiv} != {count2_indiv}"
-        )
+        assert (
+            count1_indiv == count2_indiv
+        ), f"Individual count mismatch: {count1_indiv} != {count2_indiv}"
 
         count1_rel = len(relationships_after_apply1)
         count2_rel = len(relationships_after_apply2)
-        assert count1_rel == count2_rel, (
-            f"Relationship count mismatch: {count1_rel} != {count2_rel}"
-        )
+        assert (
+            count1_rel == count2_rel
+        ), f"Relationship count mismatch: {count1_rel} != {count2_rel}"

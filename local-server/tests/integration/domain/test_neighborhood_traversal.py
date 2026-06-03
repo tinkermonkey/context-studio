@@ -15,7 +15,9 @@ from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 def sample_schema(ontology_service):
     """Create a sample schema hierarchy."""
     # Create taxonomy
-    taxonomy = ontology_service.create_taxonomy(title="Test Taxonomy", description="Testing")
+    taxonomy = ontology_service.create_taxonomy(
+        title="Test Taxonomy", description="Testing"
+    )
 
     # Create concept scheme
     scheme = ontology_service.create_scheme(
@@ -149,7 +151,9 @@ class TestClassNeighborhood:
 
     def test_isolated_node_with_no_neighborhood(self, ontology_service, traversal):
         """Should handle isolated classes with no neighbors."""
-        taxonomy = ontology_service.create_taxonomy(title="Isolated Taxonomy", description="")
+        taxonomy = ontology_service.create_taxonomy(
+            title="Isolated Taxonomy", description=""
+        )
         scheme = ontology_service.create_scheme(
             taxonomy_id=taxonomy.id,
             title="Isolated Scheme",

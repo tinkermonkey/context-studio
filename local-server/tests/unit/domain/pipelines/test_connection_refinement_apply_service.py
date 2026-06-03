@@ -78,12 +78,21 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
     """Basic functionality tests for connection refinement apply service."""
 
     def test_add_operation_creates_new_relationship(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Add operation creates a new relationship."""
+
         # Setup mocks
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -121,7 +130,11 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         mock_ontology_repo.save_relationship.assert_called_once()
 
     def test_remove_operation_deletes_existing_relationship(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Remove operation deletes an existing relationship."""
         existing_rel = Relationship(
@@ -133,7 +146,11 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         )
 
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -171,7 +188,11 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         mock_ontology_repo.delete_relationship.assert_called_once_with("rel-1")
 
     def test_modify_operation_tracks_without_applying(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Modify operation tracks count but doesn't apply (structure incomplete)."""
         existing_rel = Relationship(
@@ -183,7 +204,11 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         )
 
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -223,9 +248,14 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         mock_ontology_repo.delete_relationship.assert_not_called()
 
     def test_self_loop_prevention(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Self-loops are prevented (source == target)."""
+
         def get_class_side_effect(ref):
             if ref.lower() == "microservice":
                 return sample_classes["microservice"]
@@ -265,11 +295,20 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         mock_ontology_repo.save_relationship.assert_not_called()
 
     def test_confidence_threshold_filtering(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Deltas below confidence threshold are skipped."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -310,9 +349,14 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
     """Tests for class and property resolution."""
 
     def test_class_resolution_by_id(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Class references resolved by ID take precedence."""
+
         def get_class_side_effect(ref):
             if ref == "class-1":
                 return sample_classes["microservice"]
@@ -354,9 +398,14 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         assert result.relationships_created == 1
 
     def test_class_resolution_by_label(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Class references resolved by label when ID lookup fails."""
+
         def get_class_side_effect(ref):
             # First attempt (direct ID) fails
             return None
@@ -396,11 +445,20 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         assert result.relationships_created == 1
 
     def test_property_definition_resolution_via_slugification(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Property definition resolved via slugification of predicate label."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -422,7 +480,9 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
                     {
                         "operation": "add",
                         "subject": "Microservice",
-                        "predicate": "Depends On",  # Should be slugified to "depends_on"
+                        "predicate": (
+                            "Depends On"
+                        ),  # Should be slugified to "depends_on"
                         "object": "Service",
                         "confidence": 0.95,
                     },
@@ -477,8 +537,13 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         self, mock_ontology_repo, sample_classes, sample_scope_id
     ):
         """Delta skipped if property definition cannot be resolved."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = None
@@ -515,7 +580,11 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
     """Edge case tests for connection refinement apply service."""
 
     def test_add_existing_relationship_skipped(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Adding an already-existing relationship is skipped (idempotent)."""
         existing_rel = Relationship(
@@ -527,7 +596,11 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         )
 
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -564,11 +637,20 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         mock_ontology_repo.save_relationship.assert_not_called()
 
     def test_remove_nonexistent_relationship_skipped(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Removing a non-existent relationship is skipped (idempotent)."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -605,11 +687,20 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         mock_ontology_repo.delete_relationship.assert_not_called()
 
     def test_missing_confidence_defaults_to_zero(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Missing confidence field defaults to 0.0."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
@@ -644,11 +735,20 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         assert result.relationships_skipped == 1
 
     def test_invalid_operation_type_skipped(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Unknown operation type is skipped."""
+
         def get_class_side_effect(ref):
-            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+            return (
+                sample_classes.get(ref.lower())
+                if ref.lower() in sample_classes
+                else None
+            )
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (

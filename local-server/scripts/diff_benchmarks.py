@@ -97,7 +97,8 @@ def print_metric_diff(
         )
     else:
         print(
-            f"  {metric_name:20s} {baseline:7.4f} → {current:7.4f} ({direction}" f" {delta:+7.4f})"
+            f"  {metric_name:20s} {baseline:7.4f} → {current:7.4f} ({direction}"
+            f" {delta:+7.4f})"
         )
 
 
@@ -156,9 +157,7 @@ def _print_canon_block(
             base_f1 = None
             if baseline:
                 base_f1 = (
-                    baseline.get("per_node_type_f1", {})
-                    .get(node_type, {})
-                    .get("f1")
+                    baseline.get("per_node_type_f1", {}).get(node_type, {}).get("f1")
                 )
             if base_f1 is None:
                 print(f"      {node_type:22s} {cur_f1:.4f}")
@@ -187,7 +186,9 @@ def print_summary_diff(
     print("=" * 80)
 
     if baseline is None:
-        print("\nℹ️  No baseline found. This is the first run or baseline not available.")
+        print(
+            "\nℹ️  No baseline found. This is the first run or baseline not available."
+        )
         print("   Current results will be used as reference for future iterations.\n")
         print("Current Results:")
         print("-" * 80)
@@ -218,8 +219,12 @@ def print_summary_diff(
             print(f"  Avg Precision:     {current_stats.get('avg_precision', 0.0):.4f}")
             print(f"  Avg Recall:        {current_stats.get('avg_recall', 0.0):.4f}")
             print(f"  Avg F1:            {current_stats.get('avg_f1', 0.0):.4f}")
-            print(f"  Avg Conformance:   {current_stats.get('avg_conformance', 0.0):.4f}")
-            print(f"  Total Cost:        ${current_stats.get('total_cost_usd', 0.0):.2f}")
+            print(
+                f"  Avg Conformance:   {current_stats.get('avg_conformance', 0.0):.4f}"
+            )
+            print(
+                f"  Total Cost:        ${current_stats.get('total_cost_usd', 0.0):.2f}"
+            )
         else:
             # Compare with baseline
             print_metric_diff(
@@ -290,7 +295,9 @@ def print_summary_diff(
                     " for regressions"
                 )
             elif f1_delta > -0.05:
-                print(f"⚠️  F1 declined by {abs(f1_delta):.4f} — investigate regression")
+                print(
+                    f"⚠️  F1 declined by {abs(f1_delta):.4f} — investigate regression"
+                )
             else:
                 print(f"❌ F1 declined significantly ({f1_delta:.4f}) — do not promote")
         else:
@@ -361,7 +368,8 @@ def print_json_diff(
                         - baseline_stats.get("avg_precision", 0.0)
                     ),
                     "recall": (
-                        current_stats.get("avg_recall", 0.0) - baseline_stats.get("avg_recall", 0.0)
+                        current_stats.get("avg_recall", 0.0)
+                        - baseline_stats.get("avg_recall", 0.0)
                     ),
                     "cost_usd": (
                         current_stats.get("total_cost_usd", 0.0)
@@ -385,7 +393,9 @@ def print_json_diff(
 
 def main():
     """Command-line interface for benchmark diffing."""
-    parser = argparse.ArgumentParser(description="Diff current benchmark results against baseline")
+    parser = argparse.ArgumentParser(
+        description="Diff current benchmark results against baseline"
+    )
     parser.add_argument(
         "--current",
         type=str,
@@ -417,7 +427,9 @@ def main():
         _logger.error(f"Invalid JSON in current comparison file: {e}", exc_info=True)
         return 1
     except PermissionError as e:
-        _logger.error(f"Permission denied reading current comparison file: {e}", exc_info=True)
+        _logger.error(
+            f"Permission denied reading current comparison file: {e}", exc_info=True
+        )
         return 1
 
     try:
@@ -425,13 +437,16 @@ def main():
         baseline = load_comparison(args.baseline)
         if not baseline:
             _logger.info(
-                f"No baseline found at {args.baseline} — running in" " baseline-establishment mode"
+                f"No baseline found at {args.baseline} — running in"
+                " baseline-establishment mode"
             )
     except json.JSONDecodeError as e:
         _logger.error(f"Invalid JSON in baseline comparison file: {e}", exc_info=True)
         return 1
     except PermissionError as e:
-        _logger.error(f"Permission denied reading baseline comparison file: {e}", exc_info=True)
+        _logger.error(
+            f"Permission denied reading baseline comparison file: {e}", exc_info=True
+        )
         return 1
 
     # Print human-readable summary

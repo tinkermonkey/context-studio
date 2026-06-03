@@ -214,7 +214,11 @@ class TestMaskCredentialsFunction:
 
     def test_masks_deeply_nested_credentials(self):
         """Test masking credentials in deeply nested structures."""
-        section = {"level1": {"level2": {"openai_api_key": "sk-test1234567890", "model": "gpt-4"}}}
+        section = {
+            "level1": {
+                "level2": {"openai_api_key": "sk-test1234567890", "model": "gpt-4"}
+            }
+        }
 
         result = _mask_credentials(section)
 

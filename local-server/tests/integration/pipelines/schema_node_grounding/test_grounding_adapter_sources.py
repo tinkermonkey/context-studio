@@ -52,7 +52,9 @@ class TestGroundingAdapterSourceCoverage:
     async def test_schema_org_returns_candidates_with_required_fields(self, adapter):
         """Verify schema.org returns results with uri, label, description, source."""
         candidates = await adapter.query_sources(label="Person", sources=["schema.org"])
-        assert len(candidates) > 0, "schema.org should return at least one candidate for 'Person'"
+        assert (
+            len(candidates) > 0
+        ), "schema.org should return at least one candidate for 'Person'"
 
         for candidate in candidates:
             assert hasattr(candidate, "uri"), "Candidate must have uri"
@@ -68,9 +70,9 @@ class TestGroundingAdapterSourceCoverage:
         sources = {c.source for c in candidates}
 
         expected_sources = {"DBpedia", "ConceptNet", "Wikidata", "schema.org"}
-        assert sources & expected_sources, (
-            "At least some of the default sources should return results for 'thing'"
-        )
+        assert (
+            sources & expected_sources
+        ), "At least some of the default sources should return results for 'thing'"
 
     @pytest.mark.asyncio
     async def test_unknown_source_raises_pipeline_input_error(self, adapter):
@@ -86,7 +88,9 @@ class TestGroundingAdapterSourceCoverage:
     async def test_mixed_known_and_unknown_sources_raises_error(self, adapter):
         """Verify mixing known and unknown sources raises PipelineInputError."""
         with pytest.raises(PipelineInputError) as exc_info:
-            await adapter.query_sources(label="test", sources=["DBpedia", "InvalidSource"])
+            await adapter.query_sources(
+                label="test", sources=["DBpedia", "InvalidSource"]
+            )
 
         error_msg = str(exc_info.value)
         assert "InvalidSource" in error_msg
@@ -96,7 +100,9 @@ class TestGroundingAdapterSourceCoverage:
     async def test_multiple_unknown_sources_all_reported(self, adapter):
         """Verify all unknown sources are listed in the error message."""
         with pytest.raises(PipelineInputError) as exc_info:
-            await adapter.query_sources(label="test", sources=["BadSource1", "BadSource2"])
+            await adapter.query_sources(
+                label="test", sources=["BadSource1", "BadSource2"]
+            )
 
         error_msg = str(exc_info.value)
         assert "BadSource1" in error_msg

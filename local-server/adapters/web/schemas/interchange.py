@@ -30,10 +30,16 @@ class SerializationScopeRequest(BaseModel):
     scope_type: Literal["whole_graph", "taxonomy", "scheme", "entity_set"] = Field(
         ..., description="Scope type: whole_graph, taxonomy, scheme, or entity_set"
     )
-    taxonomy_id: Optional[str] = Field(None, description="Taxonomy ID for taxonomy scope")
+    taxonomy_id: Optional[str] = Field(
+        None, description="Taxonomy ID for taxonomy scope"
+    )
     scheme_id: Optional[str] = Field(None, description="Scheme ID for scheme scope")
-    include_descendants: bool = Field(False, description="Include descendants for scheme scope")
-    entity_ids: Optional[List[str]] = Field(None, description="Entity IDs for entity_set scope")
+    include_descendants: bool = Field(
+        False, description="Include descendants for scheme scope"
+    )
+    entity_ids: Optional[List[str]] = Field(
+        None, description="Entity IDs for entity_set scope"
+    )
 
 
 class SerializationScopeResponse(BaseModel):
@@ -59,7 +65,8 @@ class ExportRequest(BaseModel):
     split_mode: bool = Field(
         False,
         description=(
-            "For OWL format: if true, export only TBox (schema) without ABox" " (individuals)"
+            "For OWL format: if true, export only TBox (schema) without ABox"
+            " (individuals)"
         ),
     )
 
@@ -75,12 +82,14 @@ class ImportConflictResponse(BaseModel):
     )
     incoming: dict[str, Any] = Field(..., description="Incoming entity data")
     existing: Optional[str] = Field(None, description="Reference to existing entity")
-    default_resolution: Optional[Literal["skip", "overwrite", "merge", "rename", "abort"]] = Field(
+    default_resolution: Optional[
+        Literal["skip", "overwrite", "merge", "rename", "abort"]
+    ] = Field(
         None, description="Default resolution strategy (None means user must choose)"
     )
-    available_resolutions: List[Literal["skip", "overwrite", "merge", "rename", "abort"]] = Field(
-        ..., description="Available resolutions"
-    )
+    available_resolutions: List[
+        Literal["skip", "overwrite", "merge", "rename", "abort"]
+    ] = Field(..., description="Available resolutions")
 
 
 class ResolutionRecordResponse(BaseModel):
@@ -101,11 +110,17 @@ class ImportPlanResponse(BaseModel):
     conflicts: List[ImportConflictResponse] = Field(
         default_factory=list, description="Detected conflicts"
     )
-    new_entity_count: int = Field(..., description="Number of new entities to be created")
+    new_entity_count: int = Field(
+        ..., description="Number of new entities to be created"
+    )
     import_run_id: Optional[str] = Field(None, description="Prospective import run ID")
     warnings: List[str] = Field(default_factory=list, description="Warning messages")
-    source_hash: Optional[str] = Field(None, description="SHA256 hash of imported bytes")
-    scope: Optional[SerializationScopeResponse] = Field(None, description="Import scope")
+    source_hash: Optional[str] = Field(
+        None, description="SHA256 hash of imported bytes"
+    )
+    scope: Optional[SerializationScopeResponse] = Field(
+        None, description="Import scope"
+    )
 
 
 # ==================== Import Run Schemas ====================
@@ -119,7 +134,9 @@ class ImportRunResponse(BaseModel):
     id: str = Field(..., description="Unique identifier")
     created_at: datetime = Field(..., description="Creation timestamp")
     created_by: Optional[str] = Field(None, description="User who initiated the import")
-    format: Literal["skos", "owl", "graphml"] = Field(..., description="Format of imported file")
+    format: Literal["skos", "owl", "graphml"] = Field(
+        ..., description="Format of imported file"
+    )
     source_uri: Optional[str] = Field(None, description="URI or filename of source")
     source_hash: str = Field(..., description="SHA256 hash of imported bytes")
     scope: SerializationScopeResponse = Field(..., description="Import scope")
@@ -150,7 +167,9 @@ class InterchangeChangeEventResponse(BaseModel):
     entity_id: str = Field(..., description="Entity that changed")
     entity_type: str = Field(..., description="Type of entity")
     operation: ChangeOperation = Field(..., description="Operation performed")
-    new_state: Optional[dict[str, Any]] = Field(None, description="New state after change")
+    new_state: Optional[dict[str, Any]] = Field(
+        None, description="New state after change"
+    )
     previous_state: Optional[dict[str, Any]] = Field(
         None, description="Previous state before change"
     )

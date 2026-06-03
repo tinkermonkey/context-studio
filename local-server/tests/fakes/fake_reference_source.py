@@ -110,7 +110,9 @@ class FakeReferenceSource:
         """
         return self.search(term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Async get relationships connected to a URI.
 

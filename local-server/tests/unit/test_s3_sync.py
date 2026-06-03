@@ -69,7 +69,9 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test that pull() raises RuntimeError when get_object raises ClientError."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
+        mock_page = {
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
+        }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -97,7 +99,9 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test that pull() raises RuntimeError when JSON parsing fails."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
+        mock_page = {
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
+        }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 
@@ -151,7 +155,9 @@ class TestS3SyncAdapterClientErrorHandling:
         """Test successful pull operation with valid JSON."""
         # Mock paginator and list response
         mock_paginator = Mock()
-        mock_page = {"Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]}
+        mock_page = {
+            "Contents": [{"Key": "test-prefix/changes/2026-01-15/uuid-1.jsonl"}]
+        }
         mock_paginator.paginate.return_value = [mock_page]
         adapter._s3_client.get_paginator.return_value = mock_paginator
 

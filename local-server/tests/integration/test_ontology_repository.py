@@ -258,7 +258,9 @@ class TestClassCRUD:
         assert len(saved.external_references) == 1
         assert saved.external_references[0].source == "wikidata"
 
-    def test_save_class_with_data_properties(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_save_class_with_data_properties(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test saving a class with data properties."""
         prop = DataPropertyValue(
             property_identifier="common_name",
@@ -303,7 +305,9 @@ class TestClassCRUD:
         assert len(children) == 1
         assert children[0].id == "child"
 
-    def test_class_self_parent_validation(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_class_self_parent_validation(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test that a class cannot be its own parent."""
         cls = Class(
             id="class-1",
@@ -365,7 +369,9 @@ class TestClassCRUD:
         assert len(results) == 1
         assert results[0].title == "Dog"
 
-    def test_search_classes_by_description(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_search_classes_by_description(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test searching for classes by description."""
         repo.save_class(
             Class(
@@ -469,7 +475,9 @@ class TestIndividualCRUD:
         repo.save_class(class2)
 
         # Create individual with single class
-        repo.save_individual(Individual(id="ind-1", class_ids=[sample_class.id], title="I1"))
+        repo.save_individual(
+            Individual(id="ind-1", class_ids=[sample_class.id], title="I1")
+        )
         # Create individual with multiple classes including sample_class
         repo.save_individual(
             Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2")
@@ -587,8 +595,12 @@ class TestPropertyDefinitionCRUD:
 
     def test_list_property_definitions(self, repo):
         """Test listing all property definitions."""
-        repo.save_property_definition(PropertyDefinition(id="p1", identifier="id1", title="P1"))
-        repo.save_property_definition(PropertyDefinition(id="p2", identifier="id2", title="P2"))
+        repo.save_property_definition(
+            PropertyDefinition(id="p1", identifier="id1", title="P1")
+        )
+        repo.save_property_definition(
+            PropertyDefinition(id="p2", identifier="id2", title="P2")
+        )
 
         props = repo.list_property_definitions()
         assert len(props) == 2
@@ -602,7 +614,9 @@ class TestPropertyDefinitionCRUD:
 class TestRelationshipCRUD:
     """Tests for Relationship CRUD operations."""
 
-    def test_save_and_get_relationship(self, repo, sample_class, sample_property_definition):
+    def test_save_and_get_relationship(
+        self, repo, sample_class, sample_property_definition
+    ):
         """Test creating and retrieving a relationship."""
         # Create two classes for relationship
         class2 = Class(
@@ -696,7 +710,9 @@ class TestStatusPersistence:
     def test_taxonomy_status_persisted_on_update(self, repo):
         """Test that taxonomy status is persisted when updating."""
         # Create taxonomy with default draft status
-        taxonomy = Taxonomy(id="tax-status-1", identifier="tax_test", title="Test Taxonomy")
+        taxonomy = Taxonomy(
+            id="tax-status-1", identifier="tax_test", title="Test Taxonomy"
+        )
         saved = repo.save_taxonomy(taxonomy)
         assert saved.status == Status.DRAFT
 
@@ -731,7 +747,9 @@ class TestStatusPersistence:
         assert retrieved is not None
         assert retrieved.status == Status.PUBLISHED
 
-    def test_class_status_persisted_on_update(self, repo, sample_concept_scheme, sample_taxonomy):
+    def test_class_status_persisted_on_update(
+        self, repo, sample_concept_scheme, sample_taxonomy
+    ):
         """Test that class status is persisted when updating."""
         # Create class with default draft status
         cls = Class(

@@ -38,9 +38,13 @@ from domain.versioning.value_objects import (
 class ChangesetCreateRequest(BaseModel):
     """Request to create a new changeset"""
 
-    name: str = Field(..., min_length=1, description="Human-readable name for the changeset")
+    name: str = Field(
+        ..., min_length=1, description="Human-readable name for the changeset"
+    )
     description: Optional[str] = Field(default=None, description="Detailed description")
-    event_ids: list[str] = Field(default_factory=list, description="Change event IDs to include")
+    event_ids: list[str] = Field(
+        default_factory=list, description="Change event IDs to include"
+    )
 
 
 class RejectProposalRequest(BaseModel):
@@ -80,11 +84,15 @@ class VersioningChangeEventResponse(BaseModel):
     operation: ChangeOperation = Field(
         ..., description="Type of operation (create, update, delete)"
     )
-    new_state: dict = Field(..., description="New state of the entity after this change")
+    new_state: dict = Field(
+        ..., description="New state of the entity after this change"
+    )
     timestamp: datetime = Field(..., description="When the change occurred")
     processed: bool = Field(..., description="Whether change has been synced to remote")
     user_id: Optional[str] = Field(default=None, description="User who made the change")
-    change_reason: Optional[str] = Field(default=None, description="Why the change was made")
+    change_reason: Optional[str] = Field(
+        default=None, description="Why the change was made"
+    )
     previous_state: Optional[dict] = Field(
         default=None, description="Previous state of the entity before this change"
     )
@@ -113,11 +121,15 @@ class ChangeHistoryResponse(BaseModel):
 
     events: list[VersioningChangeEventResponse] = Field(
         ...,
-        description=("List of change events matching the query (limited by limit parameter)"),
+        description=(
+            "List of change events matching the query (limited by limit parameter)"
+        ),
     )
     total: int = Field(
         ...,
-        description=("Total count of all events matching the query (without limit applied)"),
+        description=(
+            "Total count of all events matching the query (without limit applied)"
+        ),
     )
 
 
@@ -151,7 +163,9 @@ class ProposalResponse(BaseModel):
     reviewed_at: Optional[datetime] = Field(
         default=None, description="When the proposal was reviewed"
     )
-    reviewer_notes: Optional[str] = Field(default=None, description="Notes from reviewer")
+    reviewer_notes: Optional[str] = Field(
+        default=None, description="Notes from reviewer"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -163,7 +177,9 @@ class ConflictResponse(BaseModel):
     field_name: str = Field(..., description="Name of the field in conflict")
     base_value: Any = Field(..., description="Value from the base changeset")
     incoming_value: Any = Field(..., description="Value from the incoming changeset")
-    is_resolved: bool = Field(..., description="Whether this conflict has been resolved")
+    is_resolved: bool = Field(
+        ..., description="Whether this conflict has been resolved"
+    )
     resolved_value: Optional[Any] = Field(
         default=None, description="The resolved value if conflict is resolved"
     )
@@ -176,7 +192,9 @@ class ConflictReportResponse(BaseModel):
     """Response with conflict detection results"""
 
     proposal_id: str = Field(..., description="ID of the proposal")
-    conflicts: list[ConflictResponse] = Field(default_factory=list, description="List of conflicts")
+    conflicts: list[ConflictResponse] = Field(
+        default_factory=list, description="List of conflicts"
+    )
     has_conflicts: bool = Field(..., description="Whether any conflicts were detected")
 
 
@@ -195,12 +213,15 @@ class MergeResultResponse(BaseModel):
 class SyncStatusResponse(BaseModel):
     """Response with synchronization status"""
 
-    unprocessed_count: int = Field(..., description="Number of unprocessed (unsynced) changes")
+    unprocessed_count: int = Field(
+        ..., description="Number of unprocessed (unsynced) changes"
+    )
     is_configured: bool = Field(..., description="Whether remote sync is configured")
     is_degraded: bool = Field(
         default=False,
         description=(
-            "Whether sync status is degraded due to errors (unprocessed_count may be" " unreliable)"
+            "Whether sync status is degraded due to errors (unprocessed_count may be"
+            " unreliable)"
         ),
     )
     last_pushed_at: Optional[datetime] = Field(
@@ -218,7 +239,9 @@ class SyncResultResponse(BaseModel):
 
     pushed: int = Field(..., description="Number of events pushed")
     pulled: int = Field(..., description="Number of events pulled")
-    errors: list[str] = Field(default_factory=list, description="Any errors encountered")
+    errors: list[str] = Field(
+        default_factory=list, description="Any errors encountered"
+    )
     started_at: Optional[datetime] = Field(
         default=None, description="ISO timestamp when sync operation started"
     )

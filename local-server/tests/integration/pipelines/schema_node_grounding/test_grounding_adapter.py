@@ -13,7 +13,9 @@ from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
+_root_dir = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(_test_dir)))
+)
 sys.path.insert(0, _root_dir)
 
 
@@ -109,7 +111,9 @@ class TestGroundingAdapter:
         assert "UnknownSource" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_query_sources_single_source_exception(self, mock_dbpedia, mock_conceptnet):
+    async def test_query_sources_single_source_exception(
+        self, mock_dbpedia, mock_conceptnet
+    ):
         """Test exception handling when one source query fails."""
         mock_dbpedia.search_async = AsyncMock(side_effect=Exception("DBpedia error"))
         adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)
@@ -127,7 +131,9 @@ class TestGroundingAdapter:
     async def test_query_sources_all_sources_fail(self, mock_dbpedia, mock_conceptnet):
         """Test exception raised when all sources fail."""
         mock_dbpedia.search_async = AsyncMock(side_effect=Exception("DBpedia error"))
-        mock_conceptnet.search_async = AsyncMock(side_effect=Exception("ConceptNet error"))
+        mock_conceptnet.search_async = AsyncMock(
+            side_effect=Exception("ConceptNet error")
+        )
         adapter = GroundingAdapter(dbpedia=mock_dbpedia, conceptnet=mock_conceptnet)
 
         with pytest.raises(PipelineExternalServiceError) as exc_info:

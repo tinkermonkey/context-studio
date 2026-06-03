@@ -256,7 +256,9 @@ class GroundingScorer:
                 + weights["semantic_similarity"] * semantic_sim
             )
 
-            rationale = build_match_rationale(label_match, semantic_sim, candidate.source_score)
+            rationale = build_match_rationale(
+                label_match, semantic_sim, candidate.source_score
+            )
             if not has_embedding_score:
                 rationale += "; semantic similarity unavailable"
 

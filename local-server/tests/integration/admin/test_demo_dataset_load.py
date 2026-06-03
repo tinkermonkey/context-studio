@@ -22,7 +22,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
 )
 
 from adapters.demo import CanonDemoDatasetLoader
@@ -94,7 +96,9 @@ class TestListDemoDatasets:
 class TestLoadDemoDataset:
     """Tests for POST /api/v1/admin/demo-datasets/{name}/load."""
 
-    def test_load_software_architecture_creates_canon_ontology(self, client, ontology_repo):
+    def test_load_software_architecture_creates_canon_ontology(
+        self, client, ontology_repo
+    ):
         """Loading the dataset materializes the gold ontology slice."""
         response = client.post("/api/v1/admin/demo-datasets/software-architecture/load")
         assert response.status_code == 201, response.text
@@ -117,7 +121,9 @@ class TestLoadDemoDataset:
 
         # The canon-assertion helpers run cleanly on the materialized DB
         assert_identifier_slugs_populated(ontology_repo)
-        assert_color_present(ontology_repo, for_node_types=["taxonomy", "concept_scheme"])
+        assert_color_present(
+            ontology_repo, for_node_types=["taxonomy", "concept_scheme"]
+        )
 
         # source_run_id is stamped on a sample class
         rest_class = ontology_repo.get_by_identifier("rest")
@@ -152,7 +158,9 @@ class TestLoadDemoDataset:
         second = client.post("/api/v1/admin/demo-datasets/software-architecture/load")
         assert second.status_code == 409
 
-    def test_source_run_id_lineage_propagates_to_every_persisted_class(self, client, ontology_repo):
+    def test_source_run_id_lineage_propagates_to_every_persisted_class(
+        self, client, ontology_repo
+    ):
         """
         Provenance contract: every class in the loaded ontology must carry the
         run's `source_run_id`. Catches regressions where the loader stamps
@@ -181,7 +189,9 @@ class TestLoadDemoDataset:
         # the test fragile.
         assert_external_references_populated(ontology_repo, min_coverage=0.15)
 
-    def test_multi_sense_lexical_senses_distinguish_service_term(self, client, ontology_repo):
+    def test_multi_sense_lexical_senses_distinguish_service_term(
+        self, client, ontology_repo
+    ):
         """
         Multi-sense disambiguation contract: the canon's `service` property
         definition declares 3 distinct lexical_senses (offering / microservice
@@ -197,6 +207,10 @@ class TestLoadDemoDataset:
         assert response.status_code == 201
 
         # `service` has 3 distinct senses in canon.json's property_definitions.
-        assert_lexical_senses_distinguish(ontology_repo, "service", expected_sense_count=3)
+        assert_lexical_senses_distinguish(
+            ontology_repo, "service", expected_sense_count=3
+        )
         # `clock` has 2 distinct senses (logical vs physical).
-        assert_lexical_senses_distinguish(ontology_repo, "clock", expected_sense_count=2)
+        assert_lexical_senses_distinguish(
+            ontology_repo, "clock", expected_sense_count=2
+        )

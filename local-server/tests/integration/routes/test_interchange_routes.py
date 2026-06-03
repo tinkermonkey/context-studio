@@ -54,7 +54,9 @@ class FakeDeserializer:
         self.interchange_repo = interchange_repo
         self.format = format or SerializationFormat.SKOS
 
-    def deserialize(self, source: bytes, dry_run: bool = True, resolutions: list | None = None):
+    def deserialize(
+        self, source: bytes, dry_run: bool = True, resolutions: list | None = None
+    ):
         """Return a minimal ImportPlan."""
         plan = ImportPlan(
             conflicts=(),
@@ -306,7 +308,9 @@ class TestImportEndpoint:
         """Import endpoint correctly parses multipart form data."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"<rdf:RDF>test data</rdf:RDF>"
@@ -325,7 +329,9 @@ class TestImportEndpoint:
         """Import with dry_run=true returns ImportPlanResponse."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"<rdf:RDF>test data</rdf:RDF>"
@@ -379,7 +385,9 @@ class TestImportEndpoint:
         """Import endpoint converts dry_run string 'true' to boolean correctly."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"test data"
@@ -399,7 +407,9 @@ class TestImportEndpoint:
         """Import endpoint handles dry_run='false' correctly."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"test data"
@@ -418,7 +428,9 @@ class TestImportEndpoint:
         """Import endpoint defaults dry_run to true when not provided."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"test data"
@@ -468,7 +480,9 @@ class TestImportEndpoint:
         """Import endpoint parses resolutions JSON parameter correctly."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"test data"
@@ -506,7 +520,9 @@ class TestImportEndpoint:
         """Import endpoint accepts all supported formats."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         file_content = b"test data"
@@ -523,7 +539,9 @@ class TestImportEndpoint:
         """Import endpoint returns 413 Payload Too Large when file exceeds size limit."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         # Mock MAX_UPLOAD_SIZE for testing
@@ -553,7 +571,9 @@ class TestImportEndpoint:
         """Import endpoint accepts files at the exact size limit."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         # Create a file at exactly the limit (500 MB)
@@ -583,7 +603,9 @@ class TestImportEndpoint:
         """Import endpoint rejects files just over the size limit."""
         monkeypatch.setattr(
             "adapters.web.interchange_routes._get_deserializer",
-            lambda fmt, onto_repo, int_repo: FakeDeserializer(client.app.state.interchange_repo),
+            lambda fmt, onto_repo, int_repo: FakeDeserializer(
+                client.app.state.interchange_repo
+            ),
         )
 
         # Mock MAX_UPLOAD_SIZE for testing
@@ -733,7 +755,9 @@ class TestListImportRunsEndpoint:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_list_import_runs_returns_import_run_structure(self, client, interchange_repo):
+    def test_list_import_runs_returns_import_run_structure(
+        self, client, interchange_repo
+    ):
         """List endpoint returns proper ImportRunResponse structure."""
         run = ImportRun(
             id=str(uuid4()),
@@ -858,7 +882,9 @@ class TestGetChangeEventsEndpoint:
     def test_get_change_events_returns_404_for_nonexistent_run(self, client):
         """Change events endpoint returns 404 for non-existent run."""
         nonexistent_id = str(uuid4())
-        response = client.get(f"/api/v1/interchange/runs/{nonexistent_id}/change-events")
+        response = client.get(
+            f"/api/v1/interchange/runs/{nonexistent_id}/change-events"
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
@@ -967,7 +993,9 @@ class TestGetChangeEventsEndpoint:
                 },
             )
 
-        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?offset=1&limit=2")
+        response = client.get(
+            f"/api/v1/interchange/runs/{run.id}/change-events?offset=1&limit=2"
+        )
 
         data = response.json()
         assert data["offset"] == 1
@@ -1017,7 +1045,9 @@ class TestGetChangeEventsEndpoint:
             },
         )
 
-        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?entity_type=Class")
+        response = client.get(
+            f"/api/v1/interchange/runs/{run.id}/change-events?entity_type=Class"
+        )
 
         data = response.json()
         assert data["total"] == 1
@@ -1065,13 +1095,17 @@ class TestGetChangeEventsEndpoint:
             },
         )
 
-        response = client.get(f"/api/v1/interchange/runs/{run.id}/change-events?change_type=update")
+        response = client.get(
+            f"/api/v1/interchange/runs/{run.id}/change-events?change_type=update"
+        )
 
         data = response.json()
         assert data["total"] == 1
         assert data["items"][0]["operation"] == "update"
 
-    def test_get_change_events_combined_filters_and_pagination(self, client, interchange_repo):
+    def test_get_change_events_combined_filters_and_pagination(
+        self, client, interchange_repo
+    ):
         """Change events endpoint handles combined filters and pagination."""
         run = ImportRun(
             id=str(uuid4()),

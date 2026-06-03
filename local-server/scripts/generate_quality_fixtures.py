@@ -4,12 +4,15 @@
 import json
 from pathlib import Path
 
-FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
+FIXTURES_DIR = (
+    Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
+)
 
 # Fixture definitions for individual_extraction
 INDIVIDUAL_EXTRACTION_FIXTURES = {
     "design_patterns": {
-        "readme": """# Design Patterns Fixture
+        "readme": (
+            """# Design Patterns Fixture
 
 **Source:** "Design Patterns: Elements of Reusable Object-Oriented Software" - Gang of Four (1994)
 **License:** Educational use, fair use for testing
@@ -23,18 +26,21 @@ behavioral patterns.
 - Includes negation: "singletons do NOT allow multiple instances"
 - Key entities: factory, observer, strategy, singleton, adapter
 - Relationships capture pattern intent and applicability
-""",
-        "text": "Design patterns are reusable solutions to common software design" +
-                 "problems. The Factory pattern abstracts object creation. The" +
-                 "Observer pattern enables loose coupling between objects. The" +
-                 "Strategy pattern allows behavior to vary at runtime. The Singleton" +
-                 "pattern restricts instantiation to a single instance. Singletons do" +
-                 "NOT allow multiple instances. The Adapter pattern makes incompatible" +
-                 "interfaces work together. The Decorator pattern adds" +
-                 "responsibilities to objects dynamically. The Template Method pattern" +
-                 "defines an algorithm skeleton. Each pattern has trade-offs between" +
-                 "flexibility and complexity. Design patterns communicate intent and" +
-                 "facilitate maintainability.",
+"""
+        ),
+        "text": (
+            "Design patterns are reusable solutions to common software design"
+            + "problems. The Factory pattern abstracts object creation. The"
+            + "Observer pattern enables loose coupling between objects. The"
+            + "Strategy pattern allows behavior to vary at runtime. The Singleton"
+            + "pattern restricts instantiation to a single instance. Singletons do"
+            + "NOT allow multiple instances. The Adapter pattern makes incompatible"
+            + "interfaces work together. The Decorator pattern adds"
+            + "responsibilities to objects dynamically. The Template Method pattern"
+            + "defines an algorithm skeleton. Each pattern has trade-offs between"
+            + "flexibility and complexity. Design patterns communicate intent and"
+            + "facilitate maintainability."
+        ),
         "triples": [
             ("design_patterns", "provide", "reusable_solutions", 0.93),
             ("factory_pattern", "abstracts", "object_creation", 0.91),
@@ -48,7 +54,8 @@ behavioral patterns.
         ],
     },
     "distributed_systems": {
-        "readme": """# Distributed Systems Fixture
+        "readme": (
+            """# Distributed Systems Fixture
 
 **Source:** "Designing Data-Intensive Applications" - Martin Kleppmann (2017)
 **License:** Educational use, fair use for testing
@@ -62,18 +69,21 @@ availability, and fault tolerance.
 - Includes negation: "eventual consistency does NOT guarantee strong consistency"
 - Key entities: consensus, replication, partitioning, consistency, availability
 - Relationships capture trade-offs and dependencies
-""",
-        "text": "Distributed systems must handle challenges of network latency," +
-                 "failures, and asynchrony. Consensus algorithms like Raft ensure" +
-                 "agreement on state. Replication improves availability and fault" +
-                 "tolerance. Partitioning distributes data across nodes. Consistency" +
-                 "models trade off between safety and performance. Strong consistency" +
-                 "guarantees immediate visibility of updates. Eventual consistency" +
-                 "allows temporary divergence. Eventual consistency does NOT guarantee" +
-                 "strong consistency. The CAP theorem states a system cannot guarantee" +
-                 "all three: consistency, availability, and partition tolerance. Fault" +
-                 "tolerance requires redundancy and recovery mechanisms. Monitoring" +
-                 "and alerting detect failures quickly.",
+"""
+        ),
+        "text": (
+            "Distributed systems must handle challenges of network latency,"
+            + "failures, and asynchrony. Consensus algorithms like Raft ensure"
+            + "agreement on state. Replication improves availability and fault"
+            + "tolerance. Partitioning distributes data across nodes. Consistency"
+            + "models trade off between safety and performance. Strong consistency"
+            + "guarantees immediate visibility of updates. Eventual consistency"
+            + "allows temporary divergence. Eventual consistency does NOT guarantee"
+            + "strong consistency. The CAP theorem states a system cannot guarantee"
+            + "all three: consistency, availability, and partition tolerance. Fault"
+            + "tolerance requires redundancy and recovery mechanisms. Monitoring"
+            + "and alerting detect failures quickly."
+        ),
         "triples": [
             ("consensus_algorithm", "ensures", "state_agreement", 0.92),
             ("replication", "improves", "availability", 0.90),
@@ -86,7 +96,8 @@ availability, and fault tolerance.
         ],
     },
     "domain_driven_design": {
-        "readme": """# Domain Driven Design Fixture
+        "readme": (
+            """# Domain Driven Design Fixture
 
 **Source:** "Domain-Driven Design: Tackling Complexity in the Heart of Software" - Eric Evans (2003)
 **License:** Educational use, fair use for testing
@@ -99,17 +110,20 @@ Fixture tests extraction of DDD concepts including bounded contexts, entities, a
 - Includes negation: "bounded contexts do NOT share internal models"
 - Key entities: bounded_context, entity, value_object, repository, aggregate
 - Relationships capture domain modeling principles
-""",
-        "text": "Domain-Driven Design focuses on modeling the business domain. Bounded" +
-                 "contexts define clear boundaries around models. Entities have" +
-                 "identity and lifecycle. Value objects are immutable and defined by" +
-                 "their attributes. Aggregates group related entities with a root" +
-                 "entity. Repositories abstract persistence concerns. Bounded contexts" +
-                 "do NOT share internal models; they communicate through defined" +
-                 "interfaces. Ubiquitous language ensures consistent terminology." +
-                 "Event sourcing captures all changes as events. Domain events" +
-                 "represent significant occurrences. Anti-corruption layers protect" +
-                 "against external model pollution.",
+"""
+        ),
+        "text": (
+            "Domain-Driven Design focuses on modeling the business domain. Bounded"
+            + "contexts define clear boundaries around models. Entities have"
+            + "identity and lifecycle. Value objects are immutable and defined by"
+            + "their attributes. Aggregates group related entities with a root"
+            + "entity. Repositories abstract persistence concerns. Bounded contexts"
+            + "do NOT share internal models; they communicate through defined"
+            + "interfaces. Ubiquitous language ensures consistent terminology."
+            + "Event sourcing captures all changes as events. Domain events"
+            + "represent significant occurrences. Anti-corruption layers protect"
+            + "against external model pollution."
+        ),
         "triples": [
             ("bounded_context", "defines", "model_boundary", 0.92),
             ("entity", "has", "identity", 0.91),
@@ -122,7 +136,8 @@ Fixture tests extraction of DDD concepts including bounded contexts, entities, a
         ],
     },
     "microservices_architecture": {
-        "readme": """# Microservices Architecture Fixture
+        "readme": (
+            """# Microservices Architecture Fixture
 
 **Source:** "Building Microservices" - Sam Newman (2015)
 **License:** Educational use, fair use for testing
@@ -135,18 +150,21 @@ Fixture tests extraction of microservices patterns including service boundaries 
 - Includes negation: "microservices do NOT eliminate complexity; they distribute it"
 - Key entities: service, api_gateway, event_bus, service_mesh, circuit_breaker
 - Relationships capture deployment and communication patterns
-""",
-        "text": "Microservices architecture decomposes systems into independently" +
-                 "deployable services. Each service owns its data and exposes APIs. An" +
-                 "API gateway routes requests to appropriate services. Services" +
-                 "communicate synchronously via REST or gRPC, or asynchronously via" +
-                 "events. An event bus facilitates loose coupling. Service mesh" +
-                 "manages inter-service communication. Circuit breakers prevent" +
-                 "cascading failures. Microservices do NOT eliminate complexity; they" +
-                 "distribute it. Independent deployment enables faster iteration." +
-                 "Services should be designed to be deployed independently. Shared" +
-                 "libraries can lead to tight coupling. Database per service pattern" +
-                 "avoids shared databases.",
+"""
+        ),
+        "text": (
+            "Microservices architecture decomposes systems into independently"
+            + "deployable services. Each service owns its data and exposes APIs. An"
+            + "API gateway routes requests to appropriate services. Services"
+            + "communicate synchronously via REST or gRPC, or asynchronously via"
+            + "events. An event bus facilitates loose coupling. Service mesh"
+            + "manages inter-service communication. Circuit breakers prevent"
+            + "cascading failures. Microservices do NOT eliminate complexity; they"
+            + "distribute it. Independent deployment enables faster iteration."
+            + "Services should be designed to be deployed independently. Shared"
+            + "libraries can lead to tight coupling. Database per service pattern"
+            + "avoids shared databases."
+        ),
         "triples": [
             ("microservices", "decompose", "system", 0.91),
             ("service", "owns", "data", 0.90),
@@ -159,7 +177,8 @@ Fixture tests extraction of microservices patterns including service boundaries 
         ],
     },
     "object_oriented_design": {
-        "readme": """# Object Oriented Design Fixture
+        "readme": (
+            """# Object Oriented Design Fixture
 
 **Source:** "Head First Design Patterns" - Freeman & Freeman (2004)
 **License:** Educational use, fair use for testing
@@ -172,18 +191,21 @@ Fixture tests extraction of OOP principles including inheritance, composition, a
 - Includes negation: "classes should NOT have multiple reasons to change"
 - Key entities: inheritance, composition, encapsulation, polymorphism, interface
 - Relationships capture design principles
-""",
-        "text": "Object-oriented design uses inheritance to model hierarchies." +
-                 "Composition favors flexible design over rigid inheritance." +
-                 "Encapsulation hides internal implementation details. Polymorphism" +
-                 "allows objects to be treated uniformly despite different types." +
-                 "Interfaces define contracts without specifying implementation. The" +
-                 "Liskov Substitution Principle ensures derived classes can substitute" +
-                 "base classes. Classes should NOT have multiple reasons to change." +
-                 "Inheritance should model \"is-a\" relationships. Composition should" +
-                 "model \"has-a\" relationships. Deep inheritance hierarchies can be" +
-                 "difficult to maintain. Favor composition over inheritance for" +
-                 "flexibility.",
+"""
+        ),
+        "text": (
+            "Object-oriented design uses inheritance to model hierarchies."
+            + "Composition favors flexible design over rigid inheritance."
+            + "Encapsulation hides internal implementation details. Polymorphism"
+            + "allows objects to be treated uniformly despite different types."
+            + "Interfaces define contracts without specifying implementation. The"
+            + "Liskov Substitution Principle ensures derived classes can substitute"
+            + "base classes. Classes should NOT have multiple reasons to change."
+            + 'Inheritance should model "is-a" relationships. Composition should'
+            + 'model "has-a" relationships. Deep inheritance hierarchies can be'
+            + "difficult to maintain. Favor composition over inheritance for"
+            + "flexibility."
+        ),
         "triples": [
             ("inheritance", "models", "hierarchies", 0.89),
             ("composition", "enables", "flexibility", 0.88),
@@ -196,7 +218,8 @@ Fixture tests extraction of OOP principles including inheritance, composition, a
         ],
     },
     "reactive_programming": {
-        "readme": """# Reactive Programming Fixture
+        "readme": (
+            """# Reactive Programming Fixture
 
 **Source:** "The Reactive Manifesto" and "Reactive Programming" resources
 **License:** CC BY 4.0
@@ -210,17 +233,20 @@ streams, and backpressure.
 - Includes negation: "push-based systems do NOT pull data from sources"
 - Key entities: observable, stream, operator, subscription, backpressure
 - Relationships capture reactive composition patterns
-""",
-        "text": "Reactive programming uses data streams and propagation of changes." +
-                 "Observables represent data sources that emit values over time." +
-                 "Streams are sequences of asynchronous events. Operators transform" +
-                 "streams: map, filter, flatMap, etc. Subscriptions connect observers" +
-                 "to observables. Backpressure allows consumers to control the rate of" +
-                 "emission. Push-based systems do NOT pull data from sources; sources" +
-                 "push to consumers. Functional composition chains operators together." +
-                 "Error handling uses error channels or catch operators. Completion" +
-                 "signals the end of a stream. Reactive systems are responsive," +
-                 "resilient, and scalable.",
+"""
+        ),
+        "text": (
+            "Reactive programming uses data streams and propagation of changes."
+            + "Observables represent data sources that emit values over time."
+            + "Streams are sequences of asynchronous events. Operators transform"
+            + "streams: map, filter, flatMap, etc. Subscriptions connect observers"
+            + "to observables. Backpressure allows consumers to control the rate of"
+            + "emission. Push-based systems do NOT pull data from sources; sources"
+            + "push to consumers. Functional composition chains operators together."
+            + "Error handling uses error channels or catch operators. Completion"
+            + "signals the end of a stream. Reactive systems are responsive,"
+            + "resilient, and scalable."
+        ),
         "triples": [
             ("observable", "emits", "values", 0.92),
             ("stream", "is", "event_sequence", 0.90),
@@ -233,7 +259,8 @@ streams, and backpressure.
         ],
     },
     "service_oriented": {
-        "readme": """# Service Oriented Architecture Fixture
+        "readme": (
+            """# Service Oriented Architecture Fixture
 
 **Source:** "Service Oriented Architecture: Concepts, Technology, and Design" - Thomas Erl (2005)
 **License:** Educational use, fair use for testing
@@ -246,17 +273,20 @@ Fixture tests extraction of SOA concepts including services, contracts, and comp
 - Includes negation: "SOA does NOT eliminate the need for integration testing"
 - Key entities: service, contract, composition, orchestration, governance
 - Relationships capture service integration patterns
-""",
-        "text": "Service-Oriented Architecture structures systems as collections of" +
-                 "services. Services expose contracts that define functionality and" +
-                 "interfaces. Composition orchestrates multiple services to fulfill" +
-                 "business processes. Orchestration uses workflows to coordinate" +
-                 "services. Governance manages service versioning and quality." +
-                 "Services are loosely coupled and independently deployable. Service" +
-                 "registries enable dynamic discovery. SOA does NOT eliminate the need" +
-                 "for integration testing. Shared data can lead to coupling. Service" +
-                 "contracts must be maintained for backward compatibility. Enterprise" +
-                 "Service Bus can mediate service communication.",
+"""
+        ),
+        "text": (
+            "Service-Oriented Architecture structures systems as collections of"
+            + "services. Services expose contracts that define functionality and"
+            + "interfaces. Composition orchestrates multiple services to fulfill"
+            + "business processes. Orchestration uses workflows to coordinate"
+            + "services. Governance manages service versioning and quality."
+            + "Services are loosely coupled and independently deployable. Service"
+            + "registries enable dynamic discovery. SOA does NOT eliminate the need"
+            + "for integration testing. Shared data can lead to coupling. Service"
+            + "contracts must be maintained for backward compatibility. Enterprise"
+            + "Service Bus can mediate service communication."
+        ),
         "triples": [
             ("soa", "structures", "system_as_services", 0.90),
             ("service", "exposes", "contract", 0.92),
@@ -269,7 +299,8 @@ Fixture tests extraction of SOA concepts including services, contracts, and comp
         ],
     },
     "testing_strategies": {
-        "readme": """# Testing Strategies Fixture
+        "readme": (
+            """# Testing Strategies Fixture
 
 **Source:** "Test Driven Development: By Example" - Kent Beck (2002)
 **License:** Educational use, fair use for testing
@@ -282,16 +313,19 @@ Fixture tests extraction of testing concepts including unit, integration, and en
 - Includes negation: "unit tests do NOT replace integration tests"
 - Key entities: unit_test, integration_test, e2e_test, mock, stub
 - Relationships capture testing patterns and dependencies
-""",
-        "text": "Testing ensures software correctness and quality. Unit tests verify" +
-                 "individual components in isolation. Integration tests verify" +
-                 "components work together. End-to-end tests validate full user" +
-                 "workflows. Mocks simulate dependencies for unit testing. Stubs" +
-                 "provide canned responses. Unit tests do NOT replace integration" +
-                 "tests. Test-driven development writes tests before implementation." +
-                 "Code coverage measures how much code is tested. Regression tests" +
-                 "prevent reintroduction of fixed bugs. Performance tests verify speed" +
-                 "and scalability. Security tests identify vulnerabilities.",
+"""
+        ),
+        "text": (
+            "Testing ensures software correctness and quality. Unit tests verify"
+            + "individual components in isolation. Integration tests verify"
+            + "components work together. End-to-end tests validate full user"
+            + "workflows. Mocks simulate dependencies for unit testing. Stubs"
+            + "provide canned responses. Unit tests do NOT replace integration"
+            + "tests. Test-driven development writes tests before implementation."
+            + "Code coverage measures how much code is tested. Regression tests"
+            + "prevent reintroduction of fixed bugs. Performance tests verify speed"
+            + "and scalability. Security tests identify vulnerabilities."
+        ),
         "triples": [
             ("unit_test", "verifies", "component", 0.91),
             ("integration_test", "verifies", "component_interaction", 0.90),
@@ -304,7 +338,8 @@ Fixture tests extraction of testing concepts including unit, integration, and en
         ],
     },
     "async_patterns": {
-        "readme": """# Async Patterns Fixture
+        "readme": (
+            """# Async Patterns Fixture
 
 **Source:** Python async/await documentation and coroutine patterns
 **License:** Educational use, fair use for testing
@@ -317,17 +352,20 @@ Fixture tests extraction of async patterns including coroutines, event loops, an
 - Includes negation: "coroutines are NOT regular functions"
 - Key entities: coroutine, event_loop, task, future, callback
 - Relationships capture async execution and orchestration patterns
-""",
-        "text": "Async programming enables concurrent execution using coroutines." +
-                 "Coroutines are NOT regular functions; they use async/await syntax." +
-                 "The event loop schedules and manages coroutine execution. Tasks wrap" +
-                 "coroutines for the event loop. Futures represent eventual results of" +
-                 "asynchronous operations. Await suspends execution until a coroutine" +
-                 "completes. The event loop polls I/O and executes ready callbacks." +
-                 "Callbacks handle completion of asynchronous operations. Multiple" +
-                 "coroutines can run concurrently on a single thread. Async context" +
-                 "managers manage resources in async code. Async generators yield" +
-                 "values asynchronously.",
+"""
+        ),
+        "text": (
+            "Async programming enables concurrent execution using coroutines."
+            + "Coroutines are NOT regular functions; they use async/await syntax."
+            + "The event loop schedules and manages coroutine execution. Tasks wrap"
+            + "coroutines for the event loop. Futures represent eventual results of"
+            + "asynchronous operations. Await suspends execution until a coroutine"
+            + "completes. The event loop polls I/O and executes ready callbacks."
+            + "Callbacks handle completion of asynchronous operations. Multiple"
+            + "coroutines can run concurrently on a single thread. Async context"
+            + "managers manage resources in async code. Async generators yield"
+            + "values asynchronously."
+        ),
         "triples": [
             ("async_programming", "enables", "concurrent_execution", 0.92),
             ("coroutine", "uses", "async_await_syntax", 0.91),
@@ -340,7 +378,8 @@ Fixture tests extraction of async patterns including coroutines, event loops, an
         ],
     },
     "clean_code": {
-        "readme": """# Clean Code Fixture
+        "readme": (
+            """# Clean Code Fixture
 
 **Source:** "Clean Code: A Handbook of Agile Software Craftsmanship" - Robert C. Martin (2008)
 **License:** Educational use, fair use for testing
@@ -353,17 +392,20 @@ Fixture tests extraction of clean code principles including naming, functions, a
 - Includes negation: "comments do NOT make up for bad code"
 - Key entities: meaningful_name, small_function, dry, single_responsibility, error_handling
 - Relationships capture code quality practices
-""",
-        "text": "Clean code is readable, maintainable, and understandable by other" +
-                 "developers. Use meaningful names that reveal intent and context." +
-                 "Functions should be small and focused on a single responsibility." +
-                 "Avoid code duplication; follow the DRY principle. Comments should" +
-                 "explain why, not what. Comments do NOT make up for bad code. Error" +
-                 "handling should not obscure logic. Limit function parameters to" +
-                 "three or fewer. Keep functions at a single level of abstraction. Use" +
-                 "consistent naming conventions throughout the codebase. Minimize side" +
-                 "effects in functions. Format code consistently with the team" +
-                 "standards.",
+"""
+        ),
+        "text": (
+            "Clean code is readable, maintainable, and understandable by other"
+            + "developers. Use meaningful names that reveal intent and context."
+            + "Functions should be small and focused on a single responsibility."
+            + "Avoid code duplication; follow the DRY principle. Comments should"
+            + "explain why, not what. Comments do NOT make up for bad code. Error"
+            + "handling should not obscure logic. Limit function parameters to"
+            + "three or fewer. Keep functions at a single level of abstraction. Use"
+            + "consistent naming conventions throughout the codebase. Minimize side"
+            + "effects in functions. Format code consistently with the team"
+            + "standards."
+        ),
         "triples": [
             ("clean_code", "is", "readable", 0.92),
             ("meaningful_name", "reveals", "intent", 0.91),
@@ -376,6 +418,7 @@ Fixture tests extraction of clean code principles including naming, functions, a
         ],
     },
 }
+
 
 def create_individual_extraction_fixtures():
     """Create individual extraction quality fixtures."""
@@ -394,7 +437,7 @@ def create_individual_extraction_fixtures():
             "text": scenario_data["text"],
             "ontology_id": "test-ontology-123",
             "model": "claude-opus-4-7",
-            "temperature": 0.0
+            "temperature": 0.0,
         }
         input_path = scenario_dir / "input.json"
         input_path.write_text(json.dumps(input_data, indent=2))
@@ -402,18 +445,20 @@ def create_individual_extraction_fixtures():
         # Write expected.json
         triples = []
         for subject, predicate, obj, confidence in scenario_data["triples"]:
-            triples.append({
-                "subject": {"label": subject, "kind": "individual"},
-                "predicate": {"label": predicate, "kind": "property"},
-                "object": {"label": obj, "kind": "individual"},
-                "confidence": confidence
-            })
+            triples.append(
+                {
+                    "subject": {"label": subject, "kind": "individual"},
+                    "predicate": {"label": predicate, "kind": "property"},
+                    "object": {"label": obj, "kind": "individual"},
+                    "confidence": confidence,
+                }
+            )
 
         expected_data = {
             "status": "completed",
             "result": {"triples": triples},
             "created_individual_ids": [],
-            "created_relationship_ids": []
+            "created_relationship_ids": [],
         }
         expected_path = scenario_dir / "expected.json"
         expected_path.write_text(json.dumps(expected_data, indent=2))
@@ -422,10 +467,13 @@ def create_individual_extraction_fixtures():
         distractors_data = {
             "triples": [
                 {
-                    "subject": {"label": triples[0]["subject"]["label"], "kind": "individual"},
+                    "subject": {
+                        "label": triples[0]["subject"]["label"],
+                        "kind": "individual",
+                    },
                     "predicate": {"label": "contradicts", "kind": "property"},
                     "object": {"label": "expected_meaning", "kind": "individual"},
-                    "confidence": 0.15
+                    "confidence": 0.15,
                 }
             ]
         }
@@ -433,6 +481,7 @@ def create_individual_extraction_fixtures():
         distractors_path.write_text(json.dumps(distractors_data, indent=2))
 
         print(f"Created {scenario_name} fixture")
+
 
 if __name__ == "__main__":
     create_individual_extraction_fixtures()

@@ -48,7 +48,9 @@ class FakeMetricsCollector:
             nlp_status_error: Optional Exception to raise from get_nlp_pipeline_status().
             task_summary_error: Optional Exception to raise from get_background_task_summary().
         """
-        self._database_health = database_health or DatabaseHealth(connected=True, issues=())
+        self._database_health = database_health or DatabaseHealth(
+            connected=True, issues=()
+        )
         self._service_metrics = service_metrics or ServiceMetrics(
             uptime_seconds=0.0, llm_providers_available=()
         )
@@ -58,7 +60,9 @@ class FakeMetricsCollector:
         self._nlp_status = nlp_status or ComponentStatus(
             available=True, details="NLP pipeline ready"
         )
-        self._task_summary = task_summary or BackgroundTaskSummary(by_status=MappingProxyType({}))
+        self._task_summary = task_summary or BackgroundTaskSummary(
+            by_status=MappingProxyType({})
+        )
         self._database_health_error = database_health_error
         self._service_metrics_error = service_metrics_error
         self._embedding_status_error = embedding_status_error

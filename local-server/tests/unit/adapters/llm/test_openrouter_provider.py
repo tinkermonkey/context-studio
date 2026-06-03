@@ -44,7 +44,9 @@ class TestOpenRouterProviderInit:
 
     def test_init_requires_explicit_api_key(self):
         """Provider requires API key argument, does not read environment."""
-        with patch.dict("os.environ", {"OPENROUTER_API_KEY": "env-api-key"}, clear=False):
+        with patch.dict(
+            "os.environ", {"OPENROUTER_API_KEY": "env-api-key"}, clear=False
+        ):
             with pytest.raises(ValueError) as exc_info:
                 OpenRouterProvider(api_key="")
 
@@ -954,7 +956,9 @@ class TestOpenRouterValidation:
 
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"usage": {"prompt_tokens": 10, "completion_tokens": 20}}
+        mock_response.json.return_value = {
+            "usage": {"prompt_tokens": 10, "completion_tokens": 20}
+        }
         provider._client.post.return_value = mock_response
 
         with pytest.raises(RuntimeError) as exc_info:
@@ -985,7 +989,9 @@ class TestOpenRouterValidation:
                 model="gpt-4",
             )
 
-        assert "OpenRouter response 'choices' is empty or not a list" in str(exc_info.value)
+        assert "OpenRouter response 'choices' is empty or not a list" in str(
+            exc_info.value
+        )
 
     def test_validation_choices_empty_list(self):
         """Validation raises RuntimeError when 'choices' list is empty."""
@@ -1006,7 +1012,9 @@ class TestOpenRouterValidation:
                 model="gpt-4",
             )
 
-        assert "OpenRouter response 'choices' is empty or not a list" in str(exc_info.value)
+        assert "OpenRouter response 'choices' is empty or not a list" in str(
+            exc_info.value
+        )
 
     def test_validation_choice_missing_message(self):
         """Validation raises RuntimeError when choice is missing 'message' field."""
@@ -1027,7 +1035,9 @@ class TestOpenRouterValidation:
                 model="gpt-4",
             )
 
-        assert "OpenRouter response choice missing 'message' field" in str(exc_info.value)
+        assert "OpenRouter response choice missing 'message' field" in str(
+            exc_info.value
+        )
 
     def test_validation_choice_message_not_dict(self):
         """Validation raises RuntimeError when 'message' is not a dict."""
@@ -1048,7 +1058,9 @@ class TestOpenRouterValidation:
                 model="gpt-4",
             )
 
-        assert "OpenRouter response message missing 'content' field" in str(exc_info.value)
+        assert "OpenRouter response message missing 'content' field" in str(
+            exc_info.value
+        )
 
     def test_validation_message_missing_content(self):
         """Validation raises RuntimeError when message is missing 'content' field."""
@@ -1069,7 +1081,9 @@ class TestOpenRouterValidation:
                 model="gpt-4",
             )
 
-        assert "OpenRouter response message missing 'content' field" in str(exc_info.value)
+        assert "OpenRouter response message missing 'content' field" in str(
+            exc_info.value
+        )
 
     def test_validation_missing_usage_field(self):
         """Validation raises RuntimeError when 'usage' field is missing."""

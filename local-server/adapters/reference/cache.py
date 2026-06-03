@@ -210,7 +210,9 @@ class CachedReferenceSource(ReferenceSource):
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+    async def get_relations_async(
+        self, uri: str, limit: int = 10
+    ) -> list[ReferenceRelation]:
         """
         Get relationships for a URI asynchronously, using cache if available.
 
@@ -378,7 +380,8 @@ class CachedReferenceSource(ReferenceSource):
 
             with sqlite3.connect(self._cache_db_path) as conn:
                 conn.execute(
-                    f"INSERT OR REPLACE INTO {table} (key, value, cached_at) VALUES (?," " ?, ?)",
+                    f"INSERT OR REPLACE INTO {table} (key, value, cached_at) VALUES (?,"
+                    " ?, ?)",
                     (key, value_json, cached_at),
                 )
                 conn.commit()

@@ -166,7 +166,9 @@ async def search_references(
         if not sources_to_query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(f"None of the requested sources are available: {request.sources}"),
+                detail=(
+                    f"None of the requested sources are available: {request.sources}"
+                ),
             )
 
     async def search_single_source(
@@ -179,7 +181,9 @@ async def search_references(
             if not is_available:
                 return [], source.source_name, False
 
-            source_results = await source.search_async(request.term, limit=request.limit)
+            source_results = await source.search_async(
+                request.term, limit=request.limit
+            )
 
             results = [
                 ReferenceResultSchema(
@@ -193,11 +197,15 @@ async def search_references(
             ]
             return results, source.source_name, True
         except Exception as e:
-            logger.error(f"Error searching {source.source_name} for '{request.term}': {e}")
+            logger.error(
+                f"Error searching {source.source_name} for '{request.term}': {e}"
+            )
             return [], source.source_name, False
 
     # Run all searches concurrently
-    search_results = await asyncio.gather(*[search_single_source(s) for s in sources_to_query])
+    search_results = await asyncio.gather(
+        *[search_single_source(s) for s in sources_to_query]
+    )
 
     results = []
     sources_searched = []
@@ -260,7 +268,9 @@ async def get_reference_relations(
         if not sources_to_query:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(f"None of the requested sources are available: {request.sources}"),
+                detail=(
+                    f"None of the requested sources are available: {request.sources}"
+                ),
             )
 
     async def get_relations_from_source(
@@ -273,7 +283,9 @@ async def get_reference_relations(
             if not is_available:
                 return [], source.source_name, False
 
-            source_relations = await source.get_relations_async(request.uri, limit=request.limit)
+            source_relations = await source.get_relations_async(
+                request.uri, limit=request.limit
+            )
 
             relations = [
                 ReferenceRelationSchema(
@@ -288,7 +300,8 @@ async def get_reference_relations(
             return relations, source.source_name, True
         except Exception as e:
             logger.error(
-                f"Error getting relations from {source.source_name} for" f" '{request.uri}': {e}"
+                f"Error getting relations from {source.source_name} for"
+                f" '{request.uri}': {e}"
             )
             return [], source.source_name, False
 
@@ -329,7 +342,9 @@ def _workflow_to_response(workflow: GroundingWorkflow) -> GroundingWorkflowRespo
         source=cast(str, workflow.source),
         class_scope=cast(list[str], workflow.class_scope or []),
         status=cast(str, workflow.status),
-        last_run=cast(str | None, workflow.last_run.isoformat() if workflow.last_run else None),
+        last_run=cast(
+            str | None, workflow.last_run.isoformat() if workflow.last_run else None
+        ),
         last_run_record_count=cast(int | None, workflow.last_run_record_count),
     )
 
@@ -385,7 +400,9 @@ async def get_grounding_workflow(
     Raises:
         HTTPException: 404 if workflow not found
     """
-    workflow = db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    )
     if workflow is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -449,7 +466,9 @@ async def update_grounding_workflow(
     Raises:
         HTTPException: 404 if workflow not found
     """
-    workflow = db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    )
     if workflow is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -490,7 +509,9 @@ async def delete_grounding_workflow(
     Raises:
         HTTPException: 404 if workflow not found
     """
-    workflow = db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    )
     if workflow is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -524,7 +545,9 @@ async def run_grounding_workflow(
     Raises:
         HTTPException: 404 if workflow not found
     """
-    workflow = db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    )
     if workflow is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -570,7 +593,9 @@ async def list_workflow_runs(
     Raises:
         HTTPException: 404 if workflow not found
     """
-    workflow = db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    workflow = (
+        db.query(GroundingWorkflow).filter(GroundingWorkflow.id == workflow_id).first()
+    )
     if workflow is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

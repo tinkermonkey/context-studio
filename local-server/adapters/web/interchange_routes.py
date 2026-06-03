@@ -161,7 +161,9 @@ def _import_plan_to_response(plan) -> ImportPlanResponse:
     )
 
 
-def _import_run_to_response(import_run, warnings: Optional[list[str]] = None) -> ImportRunResponse:
+def _import_run_to_response(
+    import_run, warnings: Optional[list[str]] = None
+) -> ImportRunResponse:
     """Convert domain ImportRun to response, optionally with warnings from commit."""
     return ImportRunResponse(
         id=import_run.id,
@@ -227,7 +229,9 @@ async def export_ontology(
         enum_format = SerializationFormat(request.format)
 
         # Get serializer with split_mode for OWL
-        serializer = _get_serializer(enum_format, ontology_repo, split_mode=request.split_mode)
+        serializer = _get_serializer(
+            enum_format, ontology_repo, split_mode=request.split_mode
+        )
 
         # Serialize in executor to avoid blocking
         data = await run_sync_in_executor(lambda: serializer.serialize(scope))
@@ -236,7 +240,9 @@ async def export_ontology(
         return StreamingResponse(
             iter([data]),
             media_type="application/octet-stream",
-            headers={"Content-Disposition": f'attachment; filename="export.{request.format}"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="export.{request.format}"'
+            },
         )
 
     except ValueError as e:
@@ -257,7 +263,9 @@ async def export_ontology(
 async def import_ontology(
     format: str = Form(..., description="Import format"),
     file: UploadFile = File(..., description="File to import"),
-    dry_run: str = Form("true", description="If 'true', returns plan without committing"),
+    dry_run: str = Form(
+        "true", description="If 'true', returns plan without committing"
+    ),
     resolutions: Optional[str] = Form(
         None, description="JSON-encoded conflict resolutions to apply on commit"
     ),
@@ -375,7 +383,9 @@ async def import_ontology(
         try:
             _get_serializer(enum_format, ontology_repo)
         except ValueError as e:
-            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e))
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST, detail=str(e)
+            )
 
         # Get deserializer
         deserializer = _get_deserializer(enum_format, ontology_repo, interchange_repo)
@@ -394,17 +404,23 @@ async def import_ontology(
             # When dry_run=False, the deserializer commits the import and returns
             # an ImportPlan with the import_run_id. Fetch the actual ImportRun.
             if not import_plan.import_run_id:
-                raise ValueError("Expected import_run_id in plan after non-dry-run deserialize")
+                raise ValueError(
+                    "Expected import_run_id in plan after non-dry-run deserialize"
+                )
 
             import_run = await run_sync_in_executor(
                 lambda: interchange_repo.get(import_plan.import_run_id)
             )
 
             if not import_run:
-                raise RuntimeError(f"ImportRun {import_plan.import_run_id} not found after commit")
+                raise RuntimeError(
+                    f"ImportRun {import_plan.import_run_id} not found after commit"
+                )
 
             # Pass warnings from the commit operation to the response
-            return _import_run_to_response(import_run, warnings=list(import_plan.warnings))
+            return _import_run_to_response(
+                import_run, warnings=list(import_plan.warnings)
+            )
 
     except HTTPException:
         raise
@@ -575,7 +591,9 @@ async def get_run_change_events(
         # Apply filters if provided
         filtered_events = events
         if entity_type:
-            filtered_events = [e for e in filtered_events if e.entity_type == entity_type]
+            filtered_events = [
+                e for e in filtered_events if e.entity_type == entity_type
+            ]
         if change_type:
             filtered_events = [e for e in filtered_events if e.operation == change_type]
 

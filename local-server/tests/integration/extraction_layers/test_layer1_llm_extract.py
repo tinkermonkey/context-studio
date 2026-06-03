@@ -87,7 +87,9 @@ def test_array_wrapped_in_prose_is_still_extracted():
     """The parser fishes the JSON array out of a prose-wrapped response."""
     payload = (
         "Here are the entities I found:\n"
-        + _array_response([{"label": "Paxos", "type": "ConsensusProtocol", "confidence": 0.9}])
+        + _array_response(
+            [{"label": "Paxos", "type": "ConsensusProtocol", "confidence": 0.9}]
+        )
         + "\nLet me know if you need more."
     )
     fake = FakeLLMProvider(response_content=payload)
@@ -112,9 +114,14 @@ def test_prior_entities_propagate_into_user_prompt():
     fake = FakeLLMProvider(response_content="[]")
     prior = (
         ExtractedEntity(
-            label="REST", entity_type="ArchitecturalStyle", source_layer=0, confidence=0.9
+            label="REST",
+            entity_type="ArchitecturalStyle",
+            source_layer=0,
+            confidence=0.9,
         ),
-        ExtractedEntity(label="HATEOAS", entity_type="Concept", source_layer=0, confidence=0.85),
+        ExtractedEntity(
+            label="HATEOAS", entity_type="Concept", source_layer=0, confidence=0.85
+        ),
     )
     llm_extract.execute(_input(prior=prior), fake)
 

@@ -175,7 +175,9 @@ class TestImportRunResolutions:
             scope=scope,
         )
 
-        run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
+        run.add_resolution(
+            MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+        )
         run.add_resolution(MatchKind.TITLE, "entity-2", ResolutionKind.SKIP)
         run.add_resolution(MatchKind.UUID, "entity-3", ResolutionKind.OVERWRITE)
 
@@ -196,7 +198,9 @@ class TestImportRunResolutions:
         )
 
         with pytest.raises(ValueError, match="terminal state"):
-            run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
 
     def test_add_resolution_terminal_failed(self):
         """Cannot add resolution to a failed run."""
@@ -213,7 +217,9 @@ class TestImportRunResolutions:
         )
 
         with pytest.raises(ValueError, match="terminal state"):
-            run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
 
     def test_add_resolution_terminal_rolled_back(self):
         """Cannot add resolution to a rolled back run."""
@@ -230,7 +236,9 @@ class TestImportRunResolutions:
         )
 
         with pytest.raises(ValueError, match="terminal state"):
-            run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
+            run.add_resolution(
+                MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+            )
 
 
 class TestImportRunAffectedEntities:
@@ -338,7 +346,9 @@ class TestImportRunAffectedEntities:
             scope=scope,
         )
 
-        run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
+        run.add_resolution(
+            MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
+        )
 
         # Returned resolutions is a tuple (immutable)
         assert isinstance(run.resolutions, tuple)

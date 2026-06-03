@@ -12,7 +12,9 @@ import pytest
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
+)
 
 
 @pytest.fixture
@@ -162,7 +164,9 @@ class TestSchemaGroundingApplyServiceBasic:
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaGroundingApplyService(mock_ontology_repo)
 
-        result = service.apply(sample_pipeline_run, sample_class.id, confidence_threshold=0.90)
+        result = service.apply(
+            sample_pipeline_run, sample_class.id, confidence_threshold=0.90
+        )
 
         # Only groundings with confidence >= 0.90 should be created (first and second)
         assert result.external_references_created == 1
@@ -275,7 +279,9 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert result.external_references_created == 0
         assert result.external_references_skipped == 1
 
-    def test_missing_confidence_defaults_to_zero(self, mock_ontology_repo, sample_class):
+    def test_missing_confidence_defaults_to_zero(
+        self, mock_ontology_repo, sample_class
+    ):
         """Missing confidence field defaults to 0.0."""
         run = PipelineRun(
             id="run-no-conf",
@@ -333,7 +339,9 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert result.external_references_created == 1
         assert result.external_references_skipped == 0
 
-    def test_missing_source_field_defaults_to_unknown(self, mock_ontology_repo, sample_class):
+    def test_missing_source_field_defaults_to_unknown(
+        self, mock_ontology_repo, sample_class
+    ):
         """Missing source field defaults to 'unknown'."""
         run = PipelineRun(
             id="run-no-source",
@@ -361,7 +369,9 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert result.external_references_created == 1
         # Verify the created reference has the default source
         saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        new_refs = [ref for ref in saved_class.external_references if ref.source == "unknown"]
+        new_refs = [
+            ref for ref in saved_class.external_references if ref.source == "unknown"
+        ]
         assert len(new_refs) > 0
 
     def test_apply_result_created_ids_tracking(
@@ -374,16 +384,26 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         result = service.apply(sample_pipeline_run, sample_class.id)
 
         assert len(result.created_external_reference_ids) == 3
-        assert "https://www.wikidata.org/wiki/Q123" in result.created_external_reference_ids
-        assert "https://dbpedia.org/resource/Service" in result.created_external_reference_ids
+        assert (
+            "https://www.wikidata.org/wiki/Q123"
+            in result.created_external_reference_ids
+        )
+        assert (
+            "https://dbpedia.org/resource/Service"
+            in result.created_external_reference_ids
+        )
         assert "https://schema.org/Service" in result.created_external_reference_ids
 
-    def test_threshold_exact_boundary(self, mock_ontology_repo, sample_class, sample_pipeline_run):
+    def test_threshold_exact_boundary(
+        self, mock_ontology_repo, sample_class, sample_pipeline_run
+    ):
         """Threshold exact boundary: >= threshold included, < threshold excluded."""
         mock_ontology_repo.get_class.return_value = sample_class
         service = SchemaGroundingApplyService(mock_ontology_repo)
 
-        result = service.apply(sample_pipeline_run, sample_class.id, confidence_threshold=0.85)
+        result = service.apply(
+            sample_pipeline_run, sample_class.id, confidence_threshold=0.85
+        )
 
         # confidence 0.95 (included), 0.85 (included), 0.75 (excluded)
         assert result.external_references_created == 2

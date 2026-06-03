@@ -125,9 +125,7 @@ class TestMeanReciprocalRank:
 
     def test_third_position(self):
         """Correct answer is third."""
-        mrr = mean_reciprocal_rank(
-            ["correct"], ["wrong1", "wrong2", "correct"]
-        )
+        mrr = mean_reciprocal_rank(["correct"], ["wrong1", "wrong2", "correct"])
         assert mrr == pytest.approx(0.3333, abs=0.001)
 
     def test_not_found(self):

@@ -103,7 +103,9 @@ class TestPipelineRunRequestExtraFieldPreservation:
         assert "sources" in dumped
         assert dumped["sources"] == sources
 
-    def test_schema_definition_refinement_node_id_field_survives_model_dump(self) -> None:
+    def test_schema_definition_refinement_node_id_field_survives_model_dump(
+        self,
+    ) -> None:
         """Test that node_id field is preserved for SchemaDefinitionRefinementRunRequest."""
         request = SchemaDefinitionRefinementRunRequest(
             node_id="def_node1",

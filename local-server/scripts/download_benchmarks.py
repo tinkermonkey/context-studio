@@ -93,7 +93,9 @@ def download_benchmark_dataset(
 
 def main():
     """Command-line interface for downloading benchmark datasets."""
-    parser = argparse.ArgumentParser(description="Download benchmark datasets from HuggingFace")
+    parser = argparse.ArgumentParser(
+        description="Download benchmark datasets from HuggingFace"
+    )
     parser.add_argument(
         "--dataset",
         type=str,

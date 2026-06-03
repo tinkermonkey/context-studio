@@ -99,7 +99,9 @@ def test_empty_repo_returns_no_entities(session_factory, embedding_service):
     assert out.metadata.get("matches_found") == 0
 
 
-def test_class_above_threshold_yields_layer_0_entity(ontology_with_canon_class, embedding_service):
+def test_class_above_threshold_yields_layer_0_entity(
+    ontology_with_canon_class, embedding_service
+):
     repo, seed_text, rest_cls = ontology_with_canon_class
     out = kg_context.execute(seed_text, repo, embedding_service)
 
@@ -121,7 +123,9 @@ def test_class_without_embedding_is_skipped(session_factory, embedding_service):
     repo = SQLiteOntologyRepository(session_factory)
     tax = Taxonomy(id=str(uuid4()), identifier="tax", title="T")
     repo.save_taxonomy(tax)
-    scheme = ConceptScheme(id=str(uuid4()), identifier="sch", taxonomy_id=tax.id, title="S")
+    scheme = ConceptScheme(
+        id=str(uuid4()), identifier="sch", taxonomy_id=tax.id, title="S"
+    )
     repo.save_concept_scheme(scheme)
     repo.save_class(
         Class(
@@ -152,7 +156,9 @@ def test_metadata_includes_threshold_and_entities_checked(
     assert out.metadata["matches_found"] >= 1
 
 
-def test_threshold_filters_unrelated_query_text(ontology_with_canon_class, embedding_service):
+def test_threshold_filters_unrelated_query_text(
+    ontology_with_canon_class, embedding_service
+):
     """
     Layer 0 must drop class matches whose similarity falls below 0.7.
 

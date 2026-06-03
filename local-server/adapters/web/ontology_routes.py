@@ -100,7 +100,9 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
 # ==================== Taxonomy Endpoints ====================
 
 
-@router.post("/taxonomies", response_model=TaxonomyResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/taxonomies", response_model=TaxonomyResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_taxonomy(
     request: TaxonomyCreateRequest,
     service: OntologyService = Depends(get_ontology_service),
@@ -140,7 +142,9 @@ async def list_taxonomies(
         pattern="^(title|created_at|last_modified)$",
         description="Field to sort by (title, created_at, last_modified)",
     ),
-    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    sort_order: str = Query(
+        "asc", pattern="^(asc|desc)$", description="Sort direction"
+    ),
     q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[TaxonomyResponse]:
@@ -360,7 +364,9 @@ async def create_concept_scheme(
 
 @router.get("/schemes", response_model=ListResponse[ConceptSchemeResponse])
 async def list_concept_schemes(
-    taxonomy_id: Optional[str] = Query(None, description="Optional taxonomy ID to filter by"),
+    taxonomy_id: Optional[str] = Query(
+        None, description="Optional taxonomy ID to filter by"
+    ),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
@@ -368,7 +374,9 @@ async def list_concept_schemes(
         pattern="^(title|created_at|last_modified)$",
         description="Field to sort by (title, created_at, last_modified)",
     ),
-    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    sort_order: str = Query(
+        "asc", pattern="^(asc|desc)$", description="Sort direction"
+    ),
     q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[ConceptSchemeResponse]:
@@ -736,8 +744,12 @@ async def create_relationship(
 
 @router.get("/relationships", response_model=ListResponse[RelationshipResponse])
 async def list_relationships(
-    source_id: Optional[str] = Query(None, description="Optional source entity ID to filter by"),
-    target_id: Optional[str] = Query(None, description="Optional target entity ID to filter by"),
+    source_id: Optional[str] = Query(
+        None, description="Optional source entity ID to filter by"
+    ),
+    target_id: Optional[str] = Query(
+        None, description="Optional target entity ID to filter by"
+    ),
     property_id: Optional[str] = Query(
         None, description="Optional property definition ID to filter by"
     ),
@@ -746,7 +758,9 @@ async def list_relationships(
     sort_by: Optional[str] = Query(
         None, pattern="^created_at$", description="Field to sort by (created_at)"
     ),
-    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    sort_order: str = Query(
+        "asc", pattern="^(asc|desc)$", description="Sort direction"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
@@ -820,7 +834,9 @@ async def get_relationship(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.delete("/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_relationship(
     relationship_id: str,
     service: OntologyService = Depends(get_ontology_service),
@@ -891,7 +907,9 @@ async def list_property_definitions(
         pattern="^(title|created_at|last_modified)$",
         description="Field to sort by (title, created_at, last_modified)",
     ),
-    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    sort_order: str = Query(
+        "asc", pattern="^(asc|desc)$", description="Sort direction"
+    ),
     q: Optional[str] = Query(None, description="Text search query on title"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[PropertyDefinitionResponse]:

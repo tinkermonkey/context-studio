@@ -227,7 +227,9 @@ async def test_schema_extraction_microservices_fixture():
             assert isinstance(
                 definition, str
             ), f"proposed_definition must be a string, got {type(definition)}"
-            assert len(definition) > 0, "proposed_definition must not be empty for classes"
+            assert (
+                len(definition) > 0
+            ), "proposed_definition must not be empty for classes"
             # Verify it's not a JSON object (should be human-readable text)
             assert not definition.strip().startswith(
                 "{"
@@ -329,7 +331,9 @@ async def test_schema_extraction_disambiguation():
 
     # Look for disambiguated terms (marked with rationale)
     disambiguated_candidates = [
-        c for c in result_state.result["candidates"] if c.get("disambiguation_rationale")
+        c
+        for c in result_state.result["candidates"]
+        if c.get("disambiguation_rationale")
     ]
 
     # Verify the acceptance criterion: multi-sense disambiguation works
@@ -594,7 +598,9 @@ async def test_parse_warnings_disambiguation_invalid_json():
     assert result_state.current_status == "completed"
 
     # Verify parse_warnings contains disambiguation failure
-    disamb_warnings = [w for w in result_state.parse_warnings if w["stage"] == "disambiguation"]
+    disamb_warnings = [
+        w for w in result_state.parse_warnings if w["stage"] == "disambiguation"
+    ]
     assert len(disamb_warnings) > 0
     warning = disamb_warnings[0]
     assert "JSON parse error" in warning["error"]
@@ -705,7 +711,9 @@ async def test_parse_warnings_definition_synthesis_invalid_json():
     assert result_state.current_status == "completed"
 
     # Warning must be recorded for the failed parse
-    defn_warnings = [w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"]
+    defn_warnings = [
+        w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"
+    ]
     assert len(defn_warnings) > 0
     assert "JSON parse error" in defn_warnings[0]["error"]
     assert defn_warnings[0]["fallback_action"] == "generic definition per candidate"
@@ -767,7 +775,9 @@ async def test_parse_warnings_definition_synthesis_missing_keys():
     assert result_state.current_status == "completed"
 
     # A warning must be recorded listing the missing labels
-    defn_warnings = [w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"]
+    defn_warnings = [
+        w for w in result_state.parse_warnings if w["stage"] == "definition_synthesis"
+    ]
     assert len(defn_warnings) > 0
     warning = defn_warnings[0]
     assert "missing" in warning["error"].lower()
@@ -775,7 +785,9 @@ async def test_parse_warnings_definition_synthesis_missing_keys():
     assert len(warning["missing_labels"]) > 0
 
     # The missing labels get generic fallback definitions, not empty strings
-    class_candidates = [c for c in result_state.result["candidates"] if c["kind"] == "class"]
+    class_candidates = [
+        c for c in result_state.result["candidates"] if c["kind"] == "class"
+    ]
     for candidate in class_candidates:
         assert len(candidate["proposed_definition"]) > 0
 
@@ -792,7 +804,9 @@ async def test_connection_proposal_skips_incomplete_relationships():
 
             self.call_count += 1
             if "Return a JSON object mapping each label" in system_prompt:
-                content = '{"Microservice": "A small service.", "Service": "A service unit."}'
+                content = (
+                    '{"Microservice": "A small service.", "Service": "A service unit."}'
+                )
             elif "disambiguation" in system_prompt.lower():
                 content = '{"ambiguous_terms": []}'
             elif "relationships and properties" in user_prompt.lower():

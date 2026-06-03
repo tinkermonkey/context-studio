@@ -127,9 +127,8 @@ class FloorGate:
                     )
 
         if failures:
-            error_msg = (
-                f"Quality gate failed for {pipeline_type}:\n"
-                + "\n".join(f"  - {f}" for f in failures)
+            error_msg = f"Quality gate failed for {pipeline_type}:\n" + "\n".join(
+                f"  - {f}" for f in failures
             )
             raise AssertionError(error_msg)
 
@@ -157,7 +156,9 @@ class ABReport:
             Formatted comparison string
         """
         lines = [f"\nA/B Comparison: {config_a} vs {config_b}\n"]
-        lines.append("Metric".ljust(20) + config_a.ljust(15) + config_b.ljust(15) + "Delta")
+        lines.append(
+            "Metric".ljust(20) + config_a.ljust(15) + config_b.ljust(15) + "Delta"
+        )
         lines.append("-" * 65)
 
         all_metrics = sorted(set(metrics_a.keys()) | set(metrics_b.keys()))

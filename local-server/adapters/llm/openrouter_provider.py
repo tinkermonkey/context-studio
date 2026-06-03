@@ -157,7 +157,9 @@ class OpenRouterProvider:
 
             choices = data["choices"]
             if not isinstance(choices, list) or len(choices) == 0:
-                raise RuntimeError("OpenRouter response 'choices' is empty or not a list")
+                raise RuntimeError(
+                    "OpenRouter response 'choices' is empty or not a list"
+                )
 
             choice = choices[0]
             if not isinstance(choice, dict) or "message" not in choice:
@@ -165,7 +167,9 @@ class OpenRouterProvider:
 
             message = choice["message"]
             if not isinstance(message, dict) or "content" not in message:
-                raise RuntimeError("OpenRouter response message missing 'content' field")
+                raise RuntimeError(
+                    "OpenRouter response message missing 'content' field"
+                )
 
             content = message["content"]
 
@@ -207,7 +211,9 @@ class OpenRouterProvider:
             elif e.response.status_code == 429:
                 raise RuntimeError("OpenRouter rate limit exceeded")
             else:
-                logger.error(f"OpenRouter API error: {e.response.status_code} {e.response.text}")
+                logger.error(
+                    f"OpenRouter API error: {e.response.status_code} {e.response.text}"
+                )
                 raise RuntimeError(f"OpenRouter API error: {e.response.status_code}")
         except (httpx.TimeoutException, httpx.ConnectError) as e:
             raise PipelineExternalServiceError(

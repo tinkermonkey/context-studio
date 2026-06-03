@@ -164,7 +164,9 @@ class TestImportConflictDefaultResolution:
 
     def test_external_reference_defaults_to_merge(self):
         """EXTERNAL_REFERENCE matches default to MERGE."""
-        resolution = ImportConflict.derive_default_resolution(MatchKind.EXTERNAL_REFERENCE)
+        resolution = ImportConflict.derive_default_resolution(
+            MatchKind.EXTERNAL_REFERENCE
+        )
         assert resolution == ResolutionKind.MERGE
 
     def test_uuid_has_no_default(self):

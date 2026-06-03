@@ -18,5 +18,7 @@ def get_default_config() -> dict:
         "temperature": 0.0,
         "max_tokens": 2000,
         "confidence_threshold": 0.5,
-        "description": "Default schema extraction pipeline with OpenRouter Gemini 3 Flash",
+        "description": (
+            "Default schema extraction pipeline with OpenRouter Gemini 3 Flash"
+        ),
     }

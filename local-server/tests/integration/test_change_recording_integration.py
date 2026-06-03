@@ -103,9 +103,15 @@ def change_recorder(change_repo, event_publisher):
     event_publisher.subscribe(ClassMoved, recorder.on_class_moved)
     event_publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
     event_publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
-    event_publisher.subscribe(PropertyDefinitionCreated, recorder.on_property_definition_created)
-    event_publisher.subscribe(PropertyDefinitionUpdated, recorder.on_property_definition_updated)
-    event_publisher.subscribe(PropertyDefinitionDeleted, recorder.on_property_definition_deleted)
+    event_publisher.subscribe(
+        PropertyDefinitionCreated, recorder.on_property_definition_created
+    )
+    event_publisher.subscribe(
+        PropertyDefinitionUpdated, recorder.on_property_definition_updated
+    )
+    event_publisher.subscribe(
+        PropertyDefinitionDeleted, recorder.on_property_definition_deleted
+    )
     event_publisher.subscribe(TaxonomyUpdated, recorder.on_taxonomy_updated)
     event_publisher.subscribe(TaxonomyDeleted, recorder.on_taxonomy_deleted)
     event_publisher.subscribe(SchemeUpdated, recorder.on_scheme_updated)
@@ -117,7 +123,9 @@ def change_recorder(change_repo, event_publisher):
 
 
 @pytest.fixture
-def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
+def ontology_service(
+    change_recorder, ontology_repo, embedding_service, event_publisher
+):
     """
     Create the ontology service with all dependencies.
 
@@ -229,7 +237,9 @@ class TestChangeRecordingIntegration:
         assert change_event.new_state["title"] == "Mammal"
         assert change_event.change_reason == "Class created"
 
-    def test_class_hierarchy_change_records_class_moved(self, ontology_service, session_factory):
+    def test_class_hierarchy_change_records_class_moved(
+        self, ontology_service, session_factory
+    ):
         """Test that moving a class in the hierarchy records a ClassMoved event."""
         # Setup hierarchy
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -299,7 +309,9 @@ class TestChangeRecordingIntegration:
         finally:
             session.close()
 
-    def test_property_definition_creation_records_change(self, ontology_service, session):
+    def test_property_definition_creation_records_change(
+        self, ontology_service, session
+    ):
         """Test that creating a property definition produces a change event."""
         # Create property definition
         prop_def = ontology_service.create_property_definition(
@@ -325,7 +337,9 @@ class TestChangeRecordingIntegration:
         assert change_event.new_state["identifier"] == "hasChild"
         assert change_event.change_reason == "Property definition created"
 
-    def test_relationship_creation_records_change(self, ontology_service, session_factory):
+    def test_relationship_creation_records_change(
+        self, ontology_service, session_factory
+    ):
         """Test that creating a relationship produces a change event."""
         # Setup: create entities and property definition
         taxonomy = ontology_service.create_taxonomy("Biology")

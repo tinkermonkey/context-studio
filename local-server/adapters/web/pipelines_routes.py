@@ -87,13 +87,19 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     if isinstance(exc, PipelineStorageError):
         _logger.error(f"Pipeline storage error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to persist pipeline state")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Failed to persist pipeline state",
+        )
     elif isinstance(exc, PipelineInputError):
         _logger.warning(f"Pipeline input error: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, PipelineExternalServiceError):
         _logger.error(f"External service error: {exc}", exc_info=exc)
-        return (http_status.HTTP_503_SERVICE_UNAVAILABLE, "External service unavailable")
+        return (
+            http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            "External service unavailable",
+        )
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
         return (
@@ -105,7 +111,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
     else:
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "An unexpected error occurred",
+        )
 
 
 def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -217,11 +226,14 @@ async def list_implementations(
             detail=f"Invalid pipeline type: {pipeline_type}",
         )
 
-    impl_registry: PipelineImplementationRegistry = request.app.state.implementation_registry
+    impl_registry: PipelineImplementationRegistry = (
+        request.app.state.implementation_registry
+    )
     impls = impl_registry.list_by_type(ptype)
 
     return [
-        ImplementationResponse(id=impl_id, pipeline_type=ptype.value) for impl_id in impls.keys()
+        ImplementationResponse(id=impl_id, pipeline_type=ptype.value)
+        for impl_id in impls.keys()
     ]
 
 
@@ -256,7 +268,9 @@ async def list_configurations(
             detail=f"Invalid pipeline type: {pipeline_type}",
         )
 
-    impl_registry: PipelineImplementationRegistry = request.app.state.implementation_registry
+    impl_registry: PipelineImplementationRegistry = (
+        request.app.state.implementation_registry
+    )
     config_registry: PipelineConfigurationRegistry = request.app.state.config_registry
 
     impl = impl_registry.get(ptype, impl_id)
@@ -379,7 +393,10 @@ async def run_pipeline(
         run_id = run.id  # Use the actual run ID returned by repo.create()
         # Mark this configuration version as referenced by this run
         config_registry.mark_version_referenced(
-            ptype, request_body.implementation_id, config_version.config_ref, config_version.version
+            ptype,
+            request_body.implementation_id,
+            config_version.config_ref,
+            config_version.version,
         )
         # Update batch started_at timestamp
         batch_repo.update_started_at(batch_id)
@@ -430,23 +447,37 @@ async def run_pipeline(
     ) as exc:
         status_code, message = _handle_domain_error(exc)
         try:
-            repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
+            repo.update_failure_info(
+                run_id, str(exc), output_summary={"error": message}
+            )
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
-            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
+            batch_repo.update_status(
+                batch_id, batch_repo.compute_aggregate_status(batch_id)
+            )
         except PipelineStorageError as db_err:
-            _logger.error(f"Failed to update run status after execution error: {db_err}")
+            _logger.error(
+                f"Failed to update run status after execution error: {db_err}"
+            )
         raise HTTPException(status_code=status_code, detail=message) from exc
     except Exception as exc:
-        domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
+        domain_exc = PipelineExecutionError(
+            f"Unexpected orchestrator failure: {str(exc)}"
+        )
         status_code, message = _handle_domain_error(domain_exc)
         try:
-            repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
+            repo.update_failure_info(
+                run_id, str(exc), output_summary={"error": str(exc)}
+            )
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
-            batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
+            batch_repo.update_status(
+                batch_id, batch_repo.compute_aggregate_status(batch_id)
+            )
         except PipelineStorageError as db_err:
-            _logger.error(f"Failed to update run status after execution error: {db_err}")
+            _logger.error(
+                f"Failed to update run status after execution error: {db_err}"
+            )
         raise HTTPException(status_code=status_code, detail=message) from exc
 
     # Update run with execution results (including any parse warnings)
@@ -585,8 +616,12 @@ async def get_pipeline_candidates(
                 "label": cand.get("label") or cand.get("name") or "",
                 "description": cand.get("description") or "",
                 "source": cand.get("source") or cand.get("source_uri") or "",
-                "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
-                "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
+                "confidence": float(
+                    cand.get("confidence") or cand.get("match_confidence") or 0.0
+                ),
+                "provenance": (
+                    cand.get("provenance") or cand.get("match_rationale") or ""
+                ),
             }
         )
         for cand in candidates_data
@@ -598,9 +633,15 @@ async def list_pipeline_runs(
     request: Request,
     pipeline_type: Optional[str] = Query(None, description="Filter by pipeline type"),
     status: Optional[str] = Query(None, description="Filter by status"),
-    implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
-    start_date: Optional[str] = Query(None, description="Filter by start date (ISO 8601 format)"),
-    end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
+    implementation_id: Optional[str] = Query(
+        None, description="Filter by implementation ID"
+    ),
+    start_date: Optional[str] = Query(
+        None, description="Filter by start date (ISO 8601 format)"
+    ),
+    end_date: Optional[str] = Query(
+        None, description="Filter by end date (ISO 8601 format)"
+    ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
 ) -> ListResponse[PipelineRunResponse]:
@@ -779,7 +820,9 @@ async def apply_pipeline_run(
 
             elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
                 svc = request.app.state.individual_extraction_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run, confidence_threshold=confidence_threshold
+                )
 
             elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
                 if not node_id:
@@ -796,11 +839,15 @@ async def apply_pipeline_run(
 
             elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
                 svc = request.app.state.schema_definition_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run, confidence_threshold=confidence_threshold
+                )
 
             elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
                 svc = request.app.state.schema_connection_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run, confidence_threshold=confidence_threshold
+                )
 
             else:
                 # NO_OP and any future types return empty result
@@ -816,7 +863,9 @@ async def apply_pipeline_run(
         except (PipelineStorageError, IntegrityError, OperationalError) as exc:
             _logger.error(f"Storage/database error applying run {run_id}: {exc}")
             status_code, message = _handle_domain_error(
-                exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
+                exc
+                if isinstance(exc, PipelineStorageError)
+                else PipelineStorageError(str(exc))
             )
             raise HTTPException(status_code=status_code, detail=message) from exc
         except KeyError as exc:
@@ -896,8 +945,8 @@ async def revert_pipeline_run(
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot revert single run from multi-run batch. "
-                   f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
-                   f"Use batch revert endpoint instead.",
+            f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
+            f"Use batch revert endpoint instead.",
         )
 
     revert_svc = request.app.state.revert_service
@@ -944,7 +993,13 @@ async def create_batch(request: Request) -> dict[str, Any]:
             "completed_at": batch.completed_at,
             "last_updated": batch.last_updated,
             "run_count": 0,
-            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0, "cancelled": 0},
+            "run_counts": {
+                "pending": 0,
+                "running": 0,
+                "completed": 0,
+                "failed": 0,
+                "cancelled": 0,
+            },
         }
     except Exception as e:
         status_code, message = _handle_domain_error(e)
@@ -1070,7 +1125,9 @@ async def enqueue_batch_runs(
                     detail=f"Configuration not found: {config_ref}",
                 )
 
-            specific_data = build_run_specific_data(ptype, run_data.get("specific_data") or {})
+            specific_data = build_run_specific_data(
+                ptype, run_data.get("specific_data") or {}
+            )
             run = pipeline_run_repo.create(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
@@ -1158,7 +1215,9 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
         return {
             "batch_id": batch_id,
             "cancelled_count": cancelled_count,
-            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "status": (
+                updated_batch.status.value if updated_batch else batch.status.value
+            ),
             "run_counts": run_counts,
         }
     except Exception as e:
@@ -1215,7 +1274,9 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
         return {
             "batch_id": batch_id,
             "resumed_count": resumed_count,
-            "status": updated_batch.status.value if updated_batch else batch.status.value,
+            "status": (
+                updated_batch.status.value if updated_batch else batch.status.value
+            ),
             "run_counts": run_counts,
         }
     except Exception as e:

@@ -193,7 +193,9 @@ class TestReferenceGroundingRate:
 
 class TestIdentifierSlugValidity:
     def test_perfect_validity(self):
-        out = compute_identifier_slug_validity(["rest", "microservices_architecture", "crdt"])
+        out = compute_identifier_slug_validity(
+            ["rest", "microservices_architecture", "crdt"]
+        )
         assert out["rate"] == 1.0
         assert out["invalid_examples"] == []
 
