@@ -1,7 +1,5 @@
 """Test suite for A/B testing harness (runner.py and report.py)."""
 
-import math
-from typing import Any
 
 import pytest
 
@@ -171,7 +169,7 @@ class TestRunAB:
     @pytest.mark.asyncio
     async def test_run_ab_basic_execution(self):
         """Test run_ab executes across multiple configs and scenarios."""
-        from unittest.mock import AsyncMock, MagicMock
+        from unittest.mock import MagicMock
 
         llm_provider_a = MagicMock()
         llm_provider_b = MagicMock()
@@ -219,7 +217,7 @@ class TestRunAB:
     @pytest.mark.asyncio
     async def test_run_ab_returns_correct_structure(self):
         """Test that run_ab returns the documented nested dict structure."""
-        from unittest.mock import AsyncMock, MagicMock
+        from unittest.mock import MagicMock
 
         llm_provider = MagicMock()
         runner = QualityRunner(llm_provider)
@@ -375,8 +373,9 @@ class TestRunABIntegration:
     @pytest.mark.asyncio
     async def test_run_ab_with_floor_gating(self):
         """Test run_ab output integrates with FloorGate."""
-        from tests.integration.pipelines._harness.report import FloorGate
         from unittest.mock import MagicMock
+
+        from tests.integration.pipelines._harness.report import FloorGate
 
         llm_provider = MagicMock()
         runner = QualityRunner(llm_provider)

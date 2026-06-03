@@ -212,16 +212,16 @@ class ABReport:
 
         lines = [f"\nMulti-Config A/B Comparison ({len(config_refs)} configs)\n"]
 
-        all_scenarios = set()
+        all_scenarios_set: set[str] = set()
         for scenario_metrics in config_results.values():
-            all_scenarios.update(scenario_metrics.keys())
-        all_scenarios = sorted(all_scenarios)
+            all_scenarios_set.update(scenario_metrics.keys())
+        all_scenarios = sorted(all_scenarios_set)
 
-        all_metrics = set()
+        all_metrics_set: set[str] = set()
         for scenario_metrics in config_results.values():
             for metrics in scenario_metrics.values():
-                all_metrics.update(metrics.keys())
-        all_metrics = sorted(all_metrics)
+                all_metrics_set.update(metrics.keys())
+        all_metrics = sorted(all_metrics_set)
 
         header_parts = ["Scenario".ljust(25), "Metric".ljust(20)]
         for config_ref in config_refs:
