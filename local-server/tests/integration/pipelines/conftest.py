@@ -18,7 +18,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.batch_repo import BatchRepository

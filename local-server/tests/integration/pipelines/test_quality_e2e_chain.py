@@ -116,7 +116,7 @@ def _get_llm_provider_for_cassette(cassette_path: Path, refresh_cassettes: bool)
             and not llm_config.openrouter_api_key
         ):
             raise ValueError(
-                f"No real LLM provider configured. To record cassettes, set "
+                "No real LLM provider configured. To record cassettes, set "
                 "OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY."
             )
 
