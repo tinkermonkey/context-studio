@@ -225,8 +225,8 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("_ratings/human_eval.jsonl"),
-        help="Output JSONL file for ratings (default: _ratings/human_eval.jsonl)",
+        default=None,
+        help="Output JSONL file for ratings (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)",
     )
     parser.add_argument(
         "--rater",
@@ -253,6 +253,10 @@ def main() -> int:
     setup_logging(args.verbose)
 
     pipeline_type = args.pipeline_type or f"schema_node_{args.pipeline}"
+
+    if args.output is None:
+        fixture_dir = Path("tests/integration/fixtures/pipelines/_human_eval")
+        args.output = fixture_dir / f"{pipeline_type}.jsonl"
 
     try:
         # Ensure output directory exists

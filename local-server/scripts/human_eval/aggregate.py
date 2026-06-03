@@ -46,11 +46,10 @@ def load_ratings(ratings_file: Path) -> list[dict[str, Any]]:
         ratings_file: Path to JSONL file
 
     Returns:
-        List of rating dictionaries
+        List of rating dictionaries (empty list if file doesn't exist)
 
     Raises:
-        FileNotFoundError: If file doesn't exist
-        json.JSONDecodeError: If file is malformed
+        json.JSONDecodeError: If file contains malformed JSON
     """
     if not ratings_file.exists():
         _logger.warning(f"Ratings file not found: {ratings_file}")
@@ -106,7 +105,7 @@ def fetch_run_metadata(
                     "config_version": run.get("configuration_version"),
                     "implementation_id": run.get("implementation_id"),
                 }
-            except Exception as e:
+            except requests.RequestException as e:
                 _logger.warning(f"Failed to fetch metadata for {run_id}: {e}")
 
         return metadata
@@ -233,14 +232,14 @@ def main() -> int:
     parser.add_argument(
         "--ratings",
         type=Path,
-        default=Path("_ratings/human_eval.jsonl"),
-        help="Input JSONL file with ratings (default: _ratings/human_eval.jsonl)",
+        default=None,
+        help="Input JSONL file with ratings (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("_metrics/human_eval.jsonl"),
-        help="Output JSONL file for metrics (default: _metrics/human_eval.jsonl)",
+        default=None,
+        help="Output JSONL file for metrics (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>_metrics.jsonl)",
     )
     parser.add_argument(
         "--pipeline",
@@ -259,6 +258,13 @@ def main() -> int:
     )
 
     args = parser.parse_args()
+
+    fixture_dir = Path("tests/integration/fixtures/pipelines/_human_eval")
+    if args.ratings is None:
+        args.ratings = fixture_dir / f"{args.pipeline}.jsonl"
+    if args.output is None:
+        args.output = fixture_dir / f"{args.pipeline}_metrics.jsonl"
+
     setup_logging(args.verbose)
 
     try:
