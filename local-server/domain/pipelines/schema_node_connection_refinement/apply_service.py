@@ -73,7 +73,8 @@ class SchemaConnectionRefinementApplyService:
         # Scoping by concept_scheme_id prevents title collisions across schemes from
         # resolving to incorrect classes.
         title_to_class_id: dict[str, str] = {}
-        for cls in self._repo.list_classes(concept_scheme_id=scope_id if scope_id else None, limit=None):
+        scheme_id = scope_id if scope_id else None
+        for cls in self._repo.list_classes(concept_scheme_id=scheme_id, limit=None):
             title_to_class_id[cls.title.lower()] = cls.id
 
         for delta in deltas:
