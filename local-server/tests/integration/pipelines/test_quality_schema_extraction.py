@@ -58,6 +58,7 @@ from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
+    RecordingLLMProvider,
 )
 from tests.integration.pipelines._harness.metrics import (
     brier_score,
@@ -318,6 +319,46 @@ def cassette_dir():
     return Path(__file__).parent.parent / "fixtures" / "cassettes" / "schema_extraction"
 
 
+@pytest.fixture
+def quality_llm_provider_factory(cassette_dir):
+    """Factory to create quality LLM providers for schema extraction tests."""
+    def _make_provider(scenario: str, request, llm_provider):
+        cassette_path = cassette_dir / f"schema_extraction_{scenario}.json"
+        refresh_cassettes = request.config.getoption("--refresh-cassettes")
+
+        if cassette_path.exists():
+            return CassetteLLMProvider(cassette_path)
+
+        if refresh_cassettes:
+            # Check if a real LLM provider is available
+            settings = get_settings()
+            llm_config = settings.llm
+            if (
+                not llm_config.openai_api_key
+                and not llm_config.anthropic_api_key
+                and not llm_config.openrouter_api_key
+            ):
+                pytest.skip(
+                    f"Cassette not found at {cassette_path} and no real LLM provider configured. "
+                    f"To record cassettes, set OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY."
+                )
+
+            try:
+                real_llm_provider = LLMProviderRouter(
+                    openai_api_key=llm_config.openai_api_key,
+                    anthropic_api_key=llm_config.anthropic_api_key,
+                    openrouter_api_key=llm_config.openrouter_api_key,
+                )
+            except ValueError as e:
+                pytest.skip(f"Failed to initialize LLM provider: {e}")
+
+            return RecordingLLMProvider(real_llm_provider, cassette_path)
+
+        pytest.skip(f"Cassette not found at {cassette_path}. Run with --refresh-cassettes to record.")
+
+    return _make_provider
+
+
 class TestQualitySchemaExtraction:
     """Quality test suite for schema_extraction pipeline."""
 
@@ -330,6 +371,9 @@ class TestQualitySchemaExtraction:
         registered_schema_extraction,
         metrics_emitter,
         cassette_dir,
+        quality_llm_provider_factory,
+        request,
+        llm_provider,
     ):
         """
         Test schema extraction quality on a specific scenario.
@@ -344,17 +388,15 @@ class TestQualitySchemaExtraction:
         register_schema_extraction(impl_registry, config_registry)
 
         cassette_dir.mkdir(parents=True, exist_ok=True)
-        cassette_path = cassette_dir / f"schema_extraction_{scenario}.json"
 
-        # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
-        if not cassette_path.exists():
-            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
+        # Use quality_llm_provider_factory to get appropriate provider
+        quality_provider = quality_llm_provider_factory(scenario, request, llm_provider)
 
-        # Use cassette provider for deterministic quality testing
-        llm_provider = CassetteLLMProvider(cassette_path)
+        # If it's a recording provider, we need to flush it after execution
+        is_recording = isinstance(quality_provider, RecordingLLMProvider)
 
         orchestrator = SchemaExtractionOrchestrator(
-            llm_provider=llm_provider,
+            llm_provider=quality_provider,
             ontology_repo=None,
         )
 
@@ -374,6 +416,10 @@ class TestQualitySchemaExtraction:
             input_data=pipeline_input,
         )
         result_state = await orchestrator.execute(state)
+
+        # Flush recording provider if needed
+        if is_recording:
+            quality_provider.flush()
 
         # Build actual output dict
         actual_output = {

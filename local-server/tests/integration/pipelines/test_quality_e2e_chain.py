@@ -83,6 +83,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
+    RecordingLLMProvider,
 )
 from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
@@ -206,6 +207,7 @@ class TestQualityE2EChain:
         registered_pipelines,
         metrics_emitter,
         cassette_dir,
+        request,
     ):
         """
         Test complete pipeline chain execution.
@@ -221,7 +223,7 @@ class TestQualityE2EChain:
         9. Emit JSONL row with metrics
 
         Runs in cassette mode (zero network calls); cassettes must exist or test
-        will be skipped. To record cassettes, run with @pytest.mark.real_llm.
+        will be skipped. To record cassettes, run with --refresh-cassettes.
         """
         config_registry, impl_registry = registered_pipelines
         cassette_dir.mkdir(parents=True, exist_ok=True)
@@ -242,12 +244,13 @@ class TestQualityE2EChain:
             cassette_dir / f"e2e_chain_{scenario}_connection_refinement.json",
         ]
 
+        refresh_cassettes = request.config.getoption("--refresh-cassettes")
         missing_cassettes = [p for p in cassette_paths if not p.exists()]
-        if missing_cassettes:
+        if missing_cassettes and not refresh_cassettes:
             pytest.skip(
                 f"Cassettes not found for {scenario}. Missing: "
                 f"{[p.name for p in missing_cassettes]}. "
-                f"Run with @pytest.mark.real_llm to record cassettes."
+                f"Run with --refresh-cassettes to record cassettes."
             )
 
         # Extract taxonomy and scheme IDs

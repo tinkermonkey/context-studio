@@ -37,6 +37,27 @@ def _compute_prompt_hash(
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
+SENSITIVE_HEADERS = {
+    "authorization",
+    "x-api-key",
+    "x-auth-token",
+    "api-key",
+    "access-token",
+    "x-access-token",
+}
+
+
+def _sanitize_headers(headers: dict) -> dict:
+    """Sanitize sensitive headers to prevent exposing credentials in cassettes."""
+    sanitized = {}
+    for key, value in headers.items():
+        if key.lower() in SENSITIVE_HEADERS:
+            sanitized[key] = "***REDACTED***"
+        else:
+            sanitized[key] = value
+    return sanitized
+
+
 class RecordingHTTPTransport(httpx.AsyncBaseTransport):
     """Intercepts httpx.AsyncClient calls at the transport layer and records them to disk.
 
@@ -70,12 +91,12 @@ class RecordingHTTPTransport(httpx.AsyncBaseTransport):
             "request": {
                 "method": request.method,
                 "url": str(request.url),
-                "headers": dict(request.headers),
+                "headers": _sanitize_headers(dict(request.headers)),
                 "body": request.content.decode() if request.content else None,
             },
             "response": {
                 "status_code": response.status_code,
-                "headers": dict(response.headers),
+                "headers": _sanitize_headers(dict(response.headers)),
                 "body": response.text,
             },
         }
