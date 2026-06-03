@@ -203,7 +203,7 @@ def mean_reciprocal_rank(
     if not expected_list:
         return 1.0
 
-    expected_set = set(expected_list)
+    set(expected_list)
     rr_sum = 0.0
 
     for expected_item in expected_list:

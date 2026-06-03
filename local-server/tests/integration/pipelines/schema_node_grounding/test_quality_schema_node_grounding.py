@@ -6,12 +6,10 @@ Executes 30+ fixtures through the grounding orchestrator, computes ranking metri
 idempotency and source adapter coverage.
 """
 
-import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy import create_engine
@@ -20,8 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.reference.grounding.adapter import GroundingAdapter
 from domain.ontology.entities import Class
-from domain.pipelines.entities import PipelineType, PipelineRunStatus
-from domain.pipelines.orchestration.base import PipelineState
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
@@ -29,7 +26,7 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
 )
-from domain.pipelines.schema_node_grounding.scoring import GroundingScorer, NodeType, ScoredCandidate, GroundingCandidate
+from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate, GroundingScorer
 from tests.fixtures.pipeline_fixtures import (
     load_distractors,
     load_expected_output,
@@ -368,10 +365,10 @@ class TestQualitySchemaNodeGrounding:
     @pytest.mark.asyncio
     async def test_apply_roundtrip_idempotent(self, temp_local_db):
         """Test apply round-trip: run → apply → revert → re-apply → verify idempotent state."""
-        from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+
         from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-        from domain.ontology.entities import Taxonomy, ConceptScheme
-        from uuid import uuid4
+        from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+        from domain.ontology.entities import ConceptScheme, Taxonomy
 
         # Create session factory from temp database
         engine = create_engine(temp_local_db)
@@ -380,7 +377,7 @@ class TestQualitySchemaNodeGrounding:
 
         # Create repositories
         ontology_repo = SQLiteOntologyRepository(SessionLocal)
-        change_repo = SQLiteChangeRepository(SessionLocal)
+        SQLiteChangeRepository(SessionLocal)
 
         # Create taxonomy and concept scheme first
         taxonomy = Taxonomy(
