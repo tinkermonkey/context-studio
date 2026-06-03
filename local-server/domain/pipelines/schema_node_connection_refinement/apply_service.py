@@ -66,14 +66,15 @@ class SchemaConnectionRefinementApplyService:
         """
         result = ApplyResult()
         deltas = run.output_summary.get("deltas", [])
+        scope_id = run.output_summary.get("scope_id", "")
 
-        # Build title→id lookup from all classes for label-based resolution.
+        # Build title→id lookup from classes scoped to the refinement's concept scheme.
         # Connection refinement deltas use class labels (not IDs) in subject/object fields.
+        # Scoping by concept_scheme_id prevents title collisions across schemes from
+        # resolving to incorrect classes.
         title_to_class_id: dict[str, str] = {}
-        for cls in self._repo.list_classes(limit=None):
+        for cls in self._repo.list_classes(concept_scheme_id=scope_id if scope_id else None, limit=None):
             title_to_class_id[cls.title.lower()] = cls.id
-
-        run.output_summary.get("scope_id", "")
 
         for delta in deltas:
             confidence = delta.get("confidence", 0.0)

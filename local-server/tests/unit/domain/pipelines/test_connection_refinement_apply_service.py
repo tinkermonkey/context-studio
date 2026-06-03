@@ -548,6 +548,150 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         assert result.relationships_skipped == 1
 
 
+class TestSchemaConnectionRefinementApplyServiceScoping:
+    """Tests for scope-based class resolution."""
+
+    def test_scoped_class_lookup_prevents_title_collision(
+        self,
+        mock_ontology_repo,
+        sample_property_definition,
+        sample_scope_id,
+    ):
+        """Classes with same title in different schemes resolve to correct scheme."""
+        # Create two classes with the same title in different concept schemes
+        class_in_scope = Class(
+            id="class-scope-1",
+            concept_scheme_id=sample_scope_id,
+            taxonomy_id="tax-1",
+            title="Service",
+            description="Service in the target scheme",
+        )
+        class_in_other_scheme = Class(
+            id="class-other-1",
+            concept_scheme_id="other-scheme-id",
+            taxonomy_id="tax-1",
+            title="Service",  # Same title, different scheme
+            description="Service in a different scheme",
+        )
+        class_in_scope_2 = Class(
+            id="class-scope-2",
+            concept_scheme_id=sample_scope_id,
+            taxonomy_id="tax-1",
+            title="API",
+            description="API in the target scheme",
+        )
+
+        def get_class_side_effect(ref):
+            # ID-based lookup
+            if ref == "class-scope-1":
+                return class_in_scope
+            elif ref == "class-scope-2":
+                return class_in_scope_2
+            # Label-based lookup would need a different mechanism
+            return None
+
+        mock_ontology_repo.get_class.side_effect = get_class_side_effect
+        mock_ontology_repo.list_relationships.return_value = []
+        mock_ontology_repo.get_property_definition_by_identifier.return_value = (
+            sample_property_definition
+        )
+        # When filtering by concept_scheme_id, return only classes in that scheme
+        def list_classes_side_effect(concept_scheme_id=None, limit=None, **kwargs):
+            if concept_scheme_id == sample_scope_id:
+                return [class_in_scope, class_in_scope_2]
+            elif concept_scheme_id == "other-scheme-id":
+                return [class_in_other_scheme]
+            return [class_in_scope, class_in_scope_2, class_in_other_scheme]
+
+        mock_ontology_repo.list_classes.side_effect = list_classes_side_effect
+
+        run = PipelineRun(
+            id="run-scope-collision",
+            batch_run_id="batch-scope-collision",
+            implementation_id="default",
+            configuration_slug="connection-default",
+            configuration_version=1,
+            status=PipelineRunStatus.COMPLETED,
+            output_summary={
+                "scope_id": sample_scope_id,
+                "deltas": [
+                    {
+                        "operation": "add",
+                        "subject": "Service",  # Same title in both schemes
+                        "predicate": "depends on",
+                        "object": "API",
+                        "confidence": 0.95,
+                    },
+                ],
+            },
+        )
+
+        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        result = service.apply(run)
+
+        # Should create relationship using class_in_scope (not class_in_other_scheme)
+        assert result.relationships_created == 1
+        assert result.relationships_skipped == 0
+        # Verify list_classes was called with the scope_id
+        mock_ontology_repo.list_classes.assert_called_with(
+            concept_scheme_id=sample_scope_id, limit=None
+        )
+        # Verify the relationship was created with the correct classes
+        saved_rel_call = mock_ontology_repo.save_relationship.call_args
+        saved_rel = saved_rel_call[0][0]
+        assert saved_rel.source_id == class_in_scope.id
+        assert saved_rel.target_id == class_in_scope_2.id
+
+    def test_unscoped_lookup_without_scope_id(
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+    ):
+        """When scope_id is missing, list_classes is called without scope filter."""
+
+        def get_class_side_effect(ref):
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
+
+        mock_ontology_repo.get_class.side_effect = get_class_side_effect
+        mock_ontology_repo.list_relationships.return_value = []
+        mock_ontology_repo.get_property_definition_by_identifier.return_value = (
+            sample_property_definition
+        )
+        mock_ontology_repo.list_classes.return_value = list(sample_classes.values())
+
+        run = PipelineRun(
+            id="run-no-scope",
+            batch_run_id="batch-no-scope",
+            implementation_id="default",
+            configuration_slug="connection-default",
+            configuration_version=1,
+            status=PipelineRunStatus.COMPLETED,
+            output_summary={
+                # No scope_id provided
+                "deltas": [
+                    {
+                        "operation": "add",
+                        "subject": "Microservice",
+                        "predicate": "depends on",
+                        "object": "Service",
+                        "confidence": 0.95,
+                    },
+                ],
+            },
+        )
+
+        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        result = service.apply(run)
+
+        # Should still work (backward compatible)
+        assert result.relationships_created == 1
+        # Verify list_classes was called with concept_scheme_id=None
+        mock_ontology_repo.list_classes.assert_called_with(
+            concept_scheme_id=None, limit=None
+        )
+
+
 class TestSchemaConnectionRefinementApplyServiceEdgeCases:
     """Edge case tests for connection refinement apply service."""
 
