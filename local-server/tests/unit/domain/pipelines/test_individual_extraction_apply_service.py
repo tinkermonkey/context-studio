@@ -8,9 +8,7 @@ import os
 import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 from unittest.mock import MagicMock
@@ -37,9 +35,7 @@ CLASS_ID = "cls-person"
 @pytest.fixture()
 def repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(
-        Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy")
-    )
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
     r.save_concept_scheme(
         ConceptScheme(
             id=SCHEME_ID,
@@ -145,9 +141,7 @@ class TestIndividualCreation:
 
     def test_skips_individual_when_class_not_found(self, svc, repo):
         """Individuals with non-existent class_ids should be skipped."""
-        run = _make_run(
-            triples=[_make_triple("Bob", class_ids=["nonexistent-class-id"])]
-        )
+        run = _make_run(triples=[_make_triple("Bob", class_ids=["nonexistent-class-id"])])
         result = svc.apply(run)
         assert result.individuals_created == 0
         assert result.individuals_skipped == 1

@@ -495,9 +495,7 @@ class TestImportRunServiceCreateWithResolutionsAndPersist:
         for i, expected_res in enumerate(resolutions):
             assert run.resolutions[i].entity_id == expected_res.entity_id
             assert run.resolutions[i].match_kind == expected_res.match_kind
-            assert (
-                run.resolutions[i].resolution_chosen == expected_res.resolution_chosen
-            )
+            assert run.resolutions[i].resolution_chosen == expected_res.resolution_chosen
 
     def test_create_with_different_formats(self):
         """create_with_resolutions_and_persist works with all SerializationFormats."""

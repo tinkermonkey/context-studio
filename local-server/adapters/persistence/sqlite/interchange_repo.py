@@ -184,9 +184,7 @@ class SQLiteInterchangeRepository:
                 count = session.execute(query).scalar()
                 return count or 0
         except SQLAlchemyError as e:
-            raise RuntimeError(
-                f"Failed to count import runs by status: {str(e)}"
-            ) from e
+            raise RuntimeError(f"Failed to count import runs by status: {str(e)}") from e
 
     def update(self, import_run: ImportRun) -> ImportRun:
         """
@@ -209,9 +207,7 @@ class SQLiteInterchangeRepository:
 
                 # Update fields
                 orm_run.status = import_run.status.value
-                orm_run.resolutions = self._serialize_resolutions(
-                    import_run.resolutions
-                )
+                orm_run.resolutions = self._serialize_resolutions(import_run.resolutions)
                 orm_run.affected_entity_ids = import_run.affected_entity_ids
 
                 session.commit()
@@ -251,9 +247,7 @@ class SQLiteInterchangeRepository:
                     for e in orm_events
                 ]
         except SQLAlchemyError as e:
-            raise RuntimeError(
-                f"Failed to get change events for import run: {str(e)}"
-            ) from e
+            raise RuntimeError(f"Failed to get change events for import run: {str(e)}") from e
 
     # Helper methods
 
@@ -291,20 +285,15 @@ class SQLiteInterchangeRepository:
             taxonomy_id=cast(str | None, orm_run.scope_taxonomy_id),
             scheme_id=cast(str | None, orm_run.scope_scheme_id),
             include_descendants=cast(bool, orm_run.scope_include_descendants or False),
-            entity_ids=(
-                tuple(orm_run.scope_entity_ids) if orm_run.scope_entity_ids else None
-            ),
+            entity_ids=(tuple(orm_run.scope_entity_ids) if orm_run.scope_entity_ids else None),
         )
 
         # Reconstruct resolutions with error handling for corrupted data
         try:
-            resolutions = self._deserialize_resolutions(
-                cast(list[dict], orm_run.resolutions or [])
-            )
+            resolutions = self._deserialize_resolutions(cast(list[dict], orm_run.resolutions or []))
         except ValueError as e:
             raise RuntimeError(
-                f"Failed to deserialize resolutions for import run {orm_run.id}:"
-                f" {str(e)}"
+                f"Failed to deserialize resolutions for import run {orm_run.id}:" f" {str(e)}"
             ) from e
 
         return ImportRun(
@@ -353,12 +342,10 @@ class SQLiteInterchangeRepository:
                 )
             except KeyError as e:
                 raise ValueError(
-                    f"Corrupted resolution record at index {i}: missing required field"
-                    f" {str(e)}"
+                    f"Corrupted resolution record at index {i}: missing required field" f" {str(e)}"
                 ) from e
             except ValueError as e:
                 raise ValueError(
-                    f"Corrupted resolution record at index {i}: invalid enum value in"
-                    f" {str(e)}"
+                    f"Corrupted resolution record at index {i}: invalid enum value in" f" {str(e)}"
                 ) from e
         return result

@@ -64,22 +64,12 @@ def upgrade() -> None:
         "changeset_events",
         sa.Column("changeset_id", sa.String(36), nullable=False),
         sa.Column("change_event_id", sa.String(36), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["changeset_id"], ["changesets.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["change_event_id"], ["change_events.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint(
-            "changeset_id", "change_event_id", name="pk_changeset_events"
-        ),
+        sa.ForeignKeyConstraint(["changeset_id"], ["changesets.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["change_event_id"], ["change_events.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("changeset_id", "change_event_id", name="pk_changeset_events"),
     )
-    op.create_index(
-        "ix_changeset_events_changeset_id", "changeset_events", ["changeset_id"]
-    )
-    op.create_index(
-        "ix_changeset_events_change_event_id", "changeset_events", ["change_event_id"]
-    )
+    op.create_index("ix_changeset_events_changeset_id", "changeset_events", ["changeset_id"])
+    op.create_index("ix_changeset_events_change_event_id", "changeset_events", ["change_event_id"])
     op.create_table(
         "proposals",
         sa.Column("id", sa.String(36), nullable=False),
@@ -93,9 +83,7 @@ def upgrade() -> None:
         ),
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("reviewer_notes", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["changeset_id"], ["changesets.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["changeset_id"], ["changesets.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id", name="pk_proposals"),
     )
     op.create_index("ix_proposals_changeset_id", "proposals", ["changeset_id"])

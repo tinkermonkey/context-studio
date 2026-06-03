@@ -153,9 +153,7 @@ class TestImportRunPersistence:
             scope=scope,
         )
 
-        import_run.add_resolution(
-            MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE
-        )
+        import_run.add_resolution(MatchKind.EXTERNAL_REFERENCE, "entity-1", ResolutionKind.MERGE)
         import_run.add_resolution(MatchKind.TITLE, "entity-2", ResolutionKind.SKIP)
 
         repository.create(import_run)
@@ -364,9 +362,7 @@ class TestImportRunPersistence:
         assert import_run.status == ImportRunStatus.ROLLED_BACK
 
         # Try to roll back again — should raise
-        with pytest.raises(
-            ValueError, match="Cannot transition.*ROLLED_BACK.*to ROLLED_BACK"
-        ):
+        with pytest.raises(ValueError, match="Cannot transition.*ROLLED_BACK.*to ROLLED_BACK"):
             import_run.mark_rolled_back()
 
     def test_cannot_directly_assign_status(self):

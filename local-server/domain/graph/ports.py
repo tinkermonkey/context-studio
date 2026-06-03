@@ -73,9 +73,7 @@ class GraphEngine(Protocol):
         """
         ...
 
-    def all_paths(
-        self, source_id: str, target_id: str, max_depth: int = 5
-    ) -> list[list[str]]:
+    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
@@ -165,9 +163,7 @@ class GraphEngine(Protocol):
         """
         ...
 
-    def neighbors(
-        self, node_id: str, direction: str = "both", depth: int = 1
-    ) -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
 

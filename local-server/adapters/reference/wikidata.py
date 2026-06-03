@@ -124,8 +124,7 @@ class WikidataSource:
             return []
         except httpx.HTTPStatusError as e:
             logger.warning(
-                f"Wikidata HTTP {e.response.status_code} error during search for"
-                f" '{term}': {e}"
+                f"Wikidata HTTP {e.response.status_code} error during search for" f" '{term}': {e}"
             )
             return []
         except httpx.HTTPError as e:
@@ -185,16 +184,13 @@ class WikidataSource:
                             if "mainsnak" in claim:
                                 mainsnak = claim["mainsnak"]
                                 if mainsnak.get("snaktype") == "value":
-                                    value = mainsnak.get("datavalue", {}).get(
-                                        "value", {}
-                                    )
-                                    if (
-                                        isinstance(value, dict)
-                                        and "entity-type" in value
-                                    ):
+                                    value = mainsnak.get("datavalue", {}).get("value", {})
+                                    if isinstance(value, dict) and "entity-type" in value:
                                         target_id = value.get("id", "")
                                         if target_id and target_id.startswith("Q"):
-                                            object_uri = f"http://www.wikidata.org/entity/{target_id}"
+                                            object_uri = (
+                                                f"http://www.wikidata.org/entity/{target_id}"
+                                            )
                                             relations.append(
                                                 ReferenceRelation(
                                                     subject_uri=uri,
@@ -210,9 +206,7 @@ class WikidataSource:
             logger.warning(f"Wikidata get_relations timed out for '{uri}': {e}")
             return []
         except httpx.NetworkError as e:
-            logger.warning(
-                f"Wikidata network error during get_relations for '{uri}': {e}"
-            )
+            logger.warning(f"Wikidata network error during get_relations for '{uri}': {e}")
             return []
         except httpx.HTTPStatusError as e:
             logger.warning(
@@ -224,9 +218,7 @@ class WikidataSource:
             logger.warning(f"Wikidata HTTP error during get_relations for '{uri}': {e}")
             return []
         except ValueError as e:
-            logger.warning(
-                f"Wikidata JSON parse error during get_relations for '{uri}': {e}"
-            )
+            logger.warning(f"Wikidata JSON parse error during get_relations for '{uri}': {e}")
             return []
 
     async def is_available_async(self) -> bool:
@@ -255,9 +247,7 @@ class WikidataSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in Wikidata (async version).
 

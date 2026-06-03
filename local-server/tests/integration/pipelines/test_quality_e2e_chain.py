@@ -42,6 +42,7 @@ from domain.pipelines.individual_extraction import (
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
+from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -70,16 +71,11 @@ from domain.pipelines.schema_node_definition_refinement import (
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,
 )
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_node_grounding import (
     register_schema_node_grounding,
 )
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
-)
-from domain.pipelines.schema_node_grounding.orchestrator import (
-    SchemaGroundingOrchestrator,
-    SchemaGroundingState,
 )
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
@@ -282,13 +278,9 @@ class TestQualityE2EChain:
         # ===== STAGE 3: Individual Extraction =====
         llm_provider = CassetteLLMProvider(cassette_paths[1])
         # Get extraction service from configuration registry
-        extraction_impl = impl_registry.get_implementation(
-            PipelineType.INDIVIDUAL_EXTRACTION
-        )
+        extraction_impl = impl_registry.get_implementation(PipelineType.INDIVIDUAL_EXTRACTION)
         if not extraction_impl:
-            pytest.skip(
-                "Individual extraction implementation not registered"
-            )
+            pytest.skip("Individual extraction implementation not registered")
         indiv_ext_orchestrator = IndividualExtractionOrchestrator(
             llm_provider=llm_provider,
             extraction_service=extraction_impl,
@@ -351,9 +343,7 @@ class TestQualityE2EChain:
             grounding_apply.apply(grounding_run, class_ids[0])
 
         # ===== STAGE 7: Definition Refinement =====
-        embedding_service = SentenceTransformerEmbedding(
-            model_name="all-MiniLM-L12-v2"
-        )
+        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         llm_provider = CassetteLLMProvider(cassette_paths[3])
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         def_refine_orchestrator = DefinitionRefinementOrchestrator(
@@ -459,9 +449,7 @@ class TestQualityE2EChain:
 
         # Compute set match metrics
         class_set_match = 1.0 if final_class_labels == expected_class_labels else 0.0
-        property_set_match = (
-            1.0 if final_property_labels == expected_property_labels else 0.0
-        )
+        property_set_match = 1.0 if final_property_labels == expected_property_labels else 0.0
         relationship_set_match = (
             1.0 if final_relationship_tuples == expected_relationship_tuples else 0.0
         )
@@ -472,46 +460,33 @@ class TestQualityE2EChain:
             if final_class.description:
                 # Find expected class with same label
                 for expected_class in expected_classes:
-                    if (
-                        expected_class.get("label") == final_class.title
-                        and expected_class.get("description")
+                    if expected_class.get("label") == final_class.title and expected_class.get(
+                        "description"
                     ):
                         # Compute embedding cosine
-                        final_embedding = embedding_service.embed(
-                            final_class.description
-                        )
-                        expected_embedding = embedding_service.embed(
-                            expected_class["description"]
-                        )
+                        final_embedding = embedding_service.embed(final_class.description)
+                        expected_embedding = embedding_service.embed(expected_class["description"])
                         if final_embedding and expected_embedding:
                             cosine = cosine_similarity(final_embedding, expected_embedding)
                             description_cosines.append(cosine)
                         break
 
         mean_description_cosine = (
-            sum(description_cosines) / len(description_cosines)
-            if description_cosines
-            else 0.0
+            sum(description_cosines) / len(description_cosines) if description_cosines else 0.0
         )
 
         # Compute external reference top-3 match
         ref_top3_matches = []
         for class_label, expected_refs in expected_references.items():
             # Match classes by label, not by fixture ID
-            final_class = next(
-                (c for c in final_classes if c.title == class_label), None
-            )
+            final_class = next((c for c in final_classes if c.title == class_label), None)
             if final_class and expected_refs:
-                final_refs = [
-                    ref.get("uri", "") for ref in (final_class.external_references or [])
-                ]
+                final_refs = [ref.get("uri", "") for ref in final_class.external_references or []]
                 mrr = mean_reciprocal_rank(expected_refs[:3], final_refs)
                 ref_top3_matches.append(mrr)
 
         pct_references_top3 = (
-            sum(ref_top3_matches) / len(ref_top3_matches)
-            if ref_top3_matches
-            else 0.0
+            sum(ref_top3_matches) / len(ref_top3_matches) if ref_top3_matches else 0.0
         )
 
         metrics = {

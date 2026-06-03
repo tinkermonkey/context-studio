@@ -269,8 +269,7 @@ class ChangeEventRecorder:
                 "parent_id": event.old_parent_id,
             },
             change_reason=(
-                f"Class moved from parent {event.old_parent_id} to"
-                f" {event.new_parent_id}"
+                f"Class moved from parent {event.old_parent_id} to" f" {event.new_parent_id}"
             ),
         )
 

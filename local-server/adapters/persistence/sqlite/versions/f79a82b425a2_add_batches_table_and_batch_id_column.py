@@ -27,16 +27,12 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        op.f("ix_batches_created_at"), "batches", ["created_at"], unique=False
-    )
+    op.create_index(op.f("ix_batches_created_at"), "batches", ["created_at"], unique=False)
     op.create_index(op.f("ix_batches_status"), "batches", ["status"], unique=False)
 
     with op.batch_alter_table("batch_runs", schema=None) as batch_op:
         batch_op.add_column(sa.Column("batch_id", sa.String(length=36), nullable=True))
-        batch_op.create_index(
-            op.f("ix_batch_runs_batch_id"), ["batch_id"], unique=False
-        )
+        batch_op.create_index(op.f("ix_batch_runs_batch_id"), ["batch_id"], unique=False)
         batch_op.create_foreign_key(
             "fk_batch_runs_batch_id",
             "batches",

@@ -205,16 +205,12 @@ def append_rating_jsonl(
     with open(output_file, "a") as f:
         f.write(json.dumps(row) + "\n")
 
-    _logger.info(
-        f"Appended rating: {run_id}/{candidate_id} = {rating} by {rater}"
-    )
+    _logger.info(f"Appended rating: {run_id}/{candidate_id} = {rating} by {rater}")
 
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Rate pipeline candidates for human evaluation"
-    )
+    parser = argparse.ArgumentParser(description="Rate pipeline candidates for human evaluation")
     parser.add_argument(
         "--pipeline",
         required=True,
@@ -314,9 +310,7 @@ def main() -> int:
                 if args.skip_duplicate:
                     key = (run_id, candidate_id)
                     if key in existing_ratings:
-                        _logger.info(
-                            f"Skipping {candidate_id} (already rated by {args.rater})"
-                        )
+                        _logger.info(f"Skipping {candidate_id} (already rated by {args.rater})")
                         total_skipped += 1
                         continue
 

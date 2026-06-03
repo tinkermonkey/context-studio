@@ -12,9 +12,7 @@ import os
 import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 import pytest
@@ -296,9 +294,7 @@ def test_revert_restores_ontology_after_apply(ontology_repo, change_repo, revert
 # ============================================================================
 
 
-def test_revert_emits_change_events_with_batch_run_id(
-    ontology_repo, change_repo, revert_svc
-):
+def test_revert_emits_change_events_with_batch_run_id(ontology_repo, change_repo, revert_svc):
     """Revert emits new change_events tagged with originating run_id."""
     cls = Class(
         id="cls-1",
@@ -321,9 +317,7 @@ def test_revert_emits_change_events_with_batch_run_id(
 
     # Check that new events were recorded
     history = change_repo.get_changes(limit=None)
-    revert_events = [
-        e for e in history.events if "_reverted_" in (e.change_reason or "")
-    ]
+    revert_events = [e for e in history.events if "_reverted_" in (e.change_reason or "")]
     assert len(revert_events) > 0
     assert all(e.batch_run_id == "run-1" for e in revert_events)
 
@@ -483,9 +477,7 @@ def test_connection_refinement_roundtrip(ontology_repo, change_repo, revert_svc)
     assert ontology_repo.get_relationship("rel-1") is None
 
 
-def test_schema_node_definition_refinement_roundtrip(
-    ontology_repo, change_repo, revert_svc
-):
+def test_schema_node_definition_refinement_roundtrip(ontology_repo, change_repo, revert_svc):
     """Simulate schema node definition refinement: update class, then revert."""
     # Create a class first
     cls = Class(
@@ -514,18 +506,14 @@ def test_schema_node_definition_refinement_roundtrip(
     )
 
     # Verify class has refined description
-    assert (
-        ontology_repo.get_class("cls-microservice").description == refined_description
-    )
+    assert ontology_repo.get_class("cls-microservice").description == refined_description
 
     # Revert
     events_reverted = revert_svc.revert("run-definition-refinement")
     assert events_reverted == 1
 
     # Verify class has original description
-    assert (
-        ontology_repo.get_class("cls-microservice").description == original_description
-    )
+    assert ontology_repo.get_class("cls-microservice").description == original_description
 
 
 def test_schema_node_grounding_roundtrip(ontology_repo, change_repo, revert_svc):
@@ -833,9 +821,7 @@ def test_inverse_delete_multiple_entities(ontology_repo, change_repo, revert_svc
     assert ontology_repo.get_individual("ind-del-1") is not None
 
 
-def test_inverse_delete_with_missing_state_raises_error(
-    ontology_repo, change_repo, revert_svc
-):
+def test_inverse_delete_with_missing_state_raises_error(ontology_repo, change_repo, revert_svc):
     """Test _inverse_delete raises error when new_state is missing."""
     # Record a DELETE event with empty new_state
     change_repo.record_change(
@@ -908,9 +894,5 @@ def test_independent_entity_deletion_no_op(ontology_repo, change_repo, revert_sv
     # Verify that no revert change event was recorded
     # (this is the critical fix for Issue #1 - no false audit trail entry)
     history = change_repo.get_changes(limit=None)
-    revert_events = [
-        e for e in history.events if "_reverted_" in (e.change_reason or "")
-    ]
-    assert (
-        len(revert_events) == 0
-    ), "Should not record a revert event for skipped operation"
+    revert_events = [e for e in history.events if "_reverted_" in (e.change_reason or "")]
+    assert len(revert_events) == 0, "Should not record a revert event for skipped operation"

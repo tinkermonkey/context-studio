@@ -233,9 +233,7 @@ class CanonDemoDatasetLoader:
         # ---- Step 4: Classes (topologically sorted by parent_class_identifier) #
         external_refs_by_class_slug = self._collect_external_refs(papers)
 
-        sorted_classes = self._topological_sort_classes(
-            canon.get("class_hierarchy", [])
-        )
+        sorted_classes = self._topological_sort_classes(canon.get("class_hierarchy", []))
         class_slug_to_id: dict[str, str] = {}
         external_refs_attached = 0
         for cls_data in sorted_classes:
@@ -271,9 +269,7 @@ class CanonDemoDatasetLoader:
                 color=cls_data.get("color"),
                 parent_class_id=parent_id,
                 external_references=ext_refs,
-                lexical_senses=self._coerce_lexical_senses(
-                    cls_data.get("lexical_senses")
-                ),
+                lexical_senses=self._coerce_lexical_senses(cls_data.get("lexical_senses")),
                 status=Status.PUBLISHED,
                 source_run_id=run_id,
             )
@@ -314,10 +310,7 @@ class CanonDemoDatasetLoader:
             return []
         result: list[LexicalSense] = []
         for entry in value:
-            if (
-                isinstance(entry, dict)
-                and {"label", "language_code", "sense_type"} <= entry.keys()
-            ):
+            if isinstance(entry, dict) and {"label", "language_code", "sense_type"} <= entry.keys():
                 result.append(
                     LexicalSense(
                         label=entry["label"],
@@ -359,9 +352,7 @@ class CanonDemoDatasetLoader:
         Deduplicates by (source, identifier) so the same external reference
         mentioned in multiple papers is attached once.
         """
-        accumulator: dict[str, dict[tuple[str, str], ExternalReference]] = defaultdict(
-            dict
-        )
+        accumulator: dict[str, dict[tuple[str, str], ExternalReference]] = defaultdict(dict)
         for paper in papers.values():
             for ref in paper.get("expected_external_refs", []):
                 class_slug = ref.get("class_identifier") or ref.get("class_title")
@@ -376,9 +367,7 @@ class CanonDemoDatasetLoader:
                     identifier=identifier,
                     uri=ref.get("uri"),
                     metadata=(
-                        MappingProxyType(dict(metadata))
-                        if isinstance(metadata, dict)
-                        else None
+                        MappingProxyType(dict(metadata)) if isinstance(metadata, dict) else None
                     ),
                 )
                 accumulator[class_slug][key] = external_ref

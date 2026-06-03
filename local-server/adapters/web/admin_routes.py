@@ -199,9 +199,7 @@ async def get_embedding_status(
         HTTPException: 500 for internal errors
     """
     try:
-        component_status = await run_sync_in_executor(
-            service.get_embedding_model_status
-        )
+        component_status = await run_sync_in_executor(service.get_embedding_model_status)
         return ComponentStatusResponse.model_validate(component_status)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
@@ -306,9 +304,7 @@ async def update_configuration(
         HTTPException 400: If the section does not exist
     """
     try:
-        config = await run_sync_in_executor(
-            service.update_configuration, section, request.updates
-        )
+        config = await run_sync_in_executor(service.update_configuration, section, request.updates)
         return AppConfigurationResponse.from_domain(config)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
@@ -391,9 +387,7 @@ async def get_task(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post(
-    "/datasets", response_model=DatasetResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/datasets", response_model=DatasetResponse, status_code=status.HTTP_201_CREATED)
 async def create_dataset(
     request: DatasetCreateRequest,
     service: AdminService = Depends(get_admin_service),
@@ -551,9 +545,7 @@ async def activate_dataset(
 
 @router.get("/stats/trends", response_model=StatsTrendsResponse)
 async def get_stats_trends(
-    days: int = Query(
-        default=7, ge=1, le=90, description="Number of calendar days to include"
-    ),
+    days: int = Query(default=7, ge=1, le=90, description="Number of calendar days to include"),
     local_db: Session = Depends(get_local_db_session),
     ops_db: Session = Depends(get_operations_db_session),
 ) -> StatsTrendsResponse:

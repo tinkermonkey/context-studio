@@ -28,23 +28,13 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=20), nullable=False),
         sa.Column("affected_entity_ids", sa.JSON(), nullable=False),
         sa.Column("run_type", sa.String(length=20), nullable=False),
-        sa.CheckConstraint(
-            "run_type IN ('import', 'extraction')", name="check_valid_run_type"
-        ),
+        sa.CheckConstraint("run_type IN ('import', 'extraction')", name="check_valid_run_type"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "idx_run_type_status", "batch_runs", ["run_type", "status"], unique=False
-    )
-    op.create_index(
-        op.f("ix_batch_runs_created_at"), "batch_runs", ["created_at"], unique=False
-    )
-    op.create_index(
-        op.f("ix_batch_runs_run_type"), "batch_runs", ["run_type"], unique=False
-    )
-    op.create_index(
-        op.f("ix_batch_runs_status"), "batch_runs", ["status"], unique=False
-    )
+    op.create_index("idx_run_type_status", "batch_runs", ["run_type", "status"], unique=False)
+    op.create_index(op.f("ix_batch_runs_created_at"), "batch_runs", ["created_at"], unique=False)
+    op.create_index(op.f("ix_batch_runs_run_type"), "batch_runs", ["run_type"], unique=False)
+    op.create_index(op.f("ix_batch_runs_status"), "batch_runs", ["status"], unique=False)
 
     # Step 2: Migrate data from import_runs to batch_runs with integrity verification
     # First, count existing import_runs for validation
@@ -83,18 +73,12 @@ def upgrade() -> None:
 
     # Step 4-6: Update change_events to use batch_run_id
     # First, add the new column and copy data over
-    op.add_column(
-        "change_events", sa.Column("batch_run_id", sa.String(length=36), nullable=True)
-    )
+    op.add_column("change_events", sa.Column("batch_run_id", sa.String(length=36), nullable=True))
 
     # Count change_events that have import_run_id before migration
     events_with_import_run = (
         op.get_bind()
-        .execute(
-            sa.text(
-                "SELECT COUNT(*) FROM change_events WHERE import_run_id IS NOT NULL"
-            )
-        )
+        .execute(sa.text("SELECT COUNT(*) FROM change_events WHERE import_run_id IS NOT NULL"))
         .scalar()
     )
 
@@ -112,9 +96,7 @@ def upgrade() -> None:
     # Now use batch mode to drop the old column and update constraints
     with op.batch_alter_table("change_events", schema=None) as batch_op:
         batch_op.drop_index("idx_import_run_id")
-        batch_op.create_index(
-            "ix_change_events_batch_run_id", ["batch_run_id"], unique=False
-        )
+        batch_op.create_index("ix_change_events_batch_run_id", ["batch_run_id"], unique=False)
         batch_op.drop_constraint("fk_change_events_import_run_id", type_="foreignkey")
         batch_op.create_foreign_key(
             "fk_change_events_batch_run_id",
@@ -149,14 +131,10 @@ def downgrade() -> None:
 
     # Restore import_runs columns with batch mode
     with op.batch_alter_table("import_runs", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("created_by", sa.VARCHAR(length=36), nullable=True)
-        )
+        batch_op.add_column(sa.Column("created_by", sa.VARCHAR(length=36), nullable=True))
         batch_op.add_column(sa.Column("status", sa.VARCHAR(length=20), nullable=False))
         batch_op.add_column(sa.Column("created_at", sa.DATETIME(), nullable=False))
-        batch_op.add_column(
-            sa.Column("affected_entity_ids", sqlite.JSON(), nullable=False)
-        )
+        batch_op.add_column(sa.Column("affected_entity_ids", sqlite.JSON(), nullable=False))
         batch_op.drop_constraint("fk_import_runs_batch_runs_id", type_="foreignkey")
 
     # Migrate data back to import_runs (restore from batch_runs)
@@ -189,9 +167,7 @@ def downgrade() -> None:
     # Restore change_events columns with batch mode
     # Step 1: Add import_run_id column back
     with op.batch_alter_table("change_events", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("import_run_id", sa.VARCHAR(length=36), nullable=True)
-        )
+        batch_op.add_column(sa.Column("import_run_id", sa.VARCHAR(length=36), nullable=True))
 
     # Step 2: Copy data back from batch_run_id to import_run_id while both columns exist
     op.get_bind().execute(sa.text("""

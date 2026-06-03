@@ -76,9 +76,7 @@ def _expected_identifiers_by_type(canon: dict) -> dict[str, list[str]]:
         "taxonomy": [t["identifier"] for t in canon.get("taxonomies", [])],
         "concept_scheme": [s["identifier"] for s in canon.get("concept_schemes", [])],
         "class": [c["identifier"] for c in canon.get("class_hierarchy", [])],
-        "property_definition": [
-            p["identifier"] for p in canon.get("property_definitions", [])
-        ],
+        "property_definition": [p["identifier"] for p in canon.get("property_definitions", [])],
         "individual": [],  # canon doesn't enumerate individuals at the master level
     }
 
@@ -168,9 +166,7 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
         produced_classes_dicts.append(
             {
                 "identifier": c.identifier,
-                "external_references": list(
-                    getattr(c, "external_references", []) or []
-                ),
+                "external_references": list(getattr(c, "external_references", []) or []),
                 "embedding": getattr(c, "embedding", None),
             }
         )
@@ -203,9 +199,7 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------- #
 
 
-def _shape_result_record(
-    canon_block: dict[str, Any], dataset_name: str
-) -> dict[str, Any]:
+def _shape_result_record(canon_block: dict[str, Any], dataset_name: str) -> dict[str, Any]:
     """
     Map the canon metric block into a record shape compatible with the
     Text2KGBench benchmark output, plus a `canon` sub-block holding the rich
@@ -215,9 +209,7 @@ def _shape_result_record(
     # Average F1 across node types as the headline "f1" value so the existing
     # diff_benchmarks summary surfaces it next to TekGen/WebNLG F1.
     f1 = canon_block["avg_node_type_f1"]
-    precision_avg = sum(m["precision"] for m in per_type.values()) / max(
-        1, len(per_type)
-    )
+    precision_avg = sum(m["precision"] for m in per_type.values()) / max(1, len(per_type))
     recall_avg = sum(m["recall"] for m in per_type.values()) / max(1, len(per_type))
     conformance = canon_block["identifier_slug_validity"]["rate"]
 
@@ -308,9 +300,7 @@ def main() -> int:
         canon=canon,
     )
 
-    result_record = _shape_result_record(
-        canon_block, dataset_name="canon-software-architecture"
-    )
+    result_record = _shape_result_record(canon_block, dataset_name="canon-software-architecture")
     duration_ms = int((time.time() - start) * 1000)
     result_record["total_duration_ms"] = duration_ms
 
@@ -353,10 +343,7 @@ def main() -> int:
         f"({canon_block['reference_grounding_rate']['classes_grounded']}/"
         f"{canon_block['reference_grounding_rate']['classes_total']})"
     )
-    print(
-        f"  Identifier slug validity : "
-        f"{canon_block['identifier_slug_validity']['rate']:.4f}"
-    )
+    print(f"  Identifier slug validity : " f"{canon_block['identifier_slug_validity']['rate']:.4f}")
     print(
         f"  Color presence (class)   : "
         f"{canon_block['color_presence_rate'].get('class', {}).get('rate', 0.0):.4f}"

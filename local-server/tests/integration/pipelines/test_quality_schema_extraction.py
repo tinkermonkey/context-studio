@@ -150,9 +150,7 @@ def compute_quality_metrics(
 
     # Split candidates into classes and properties
     actual_classes = [c for c in actual_candidates if c.get("kind") == "class"]
-    actual_properties = [
-        c for c in actual_candidates if c.get("kind") == "property_definition"
-    ]
+    actual_properties = [c for c in actual_candidates if c.get("kind") == "property_definition"]
 
     # Convert connections to relationship format for comparison
     actual_relationships = actual_connections
@@ -165,9 +163,7 @@ def compute_quality_metrics(
     # Property Jaccard: set overlap of property labels
     expected_property_labels = extract_property_labels(expected_properties)
     actual_property_labels = extract_property_labels(actual_properties)
-    property_jaccard = jaccard_similarity(
-        expected_property_labels, actual_property_labels
-    )
+    property_jaccard = jaccard_similarity(expected_property_labels, actual_property_labels)
 
     # Connection set overlap: F1 on (subject, predicate, object) tuples
     expected_connections = set(extract_connection_tuples(expected_relationships))
@@ -350,9 +346,7 @@ class TestQualitySchemaExtraction:
 
         # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
         if not cassette_path.exists():
-            pytest.skip(
-                f"Cassette not found at {cassette_path}. Run with real LLM to record."
-            )
+            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
 
         # Use cassette provider for deterministic quality testing
         llm_provider = CassetteLLMProvider(cassette_path)

@@ -70,9 +70,7 @@ class TestOntologyRepositoryProtocol:
         ]
         repo = FakeOntologyRepository()
         for method_name in expected_methods:
-            assert hasattr(
-                repo, method_name
-            ), f"Repository missing method: {method_name}"
+            assert hasattr(repo, method_name), f"Repository missing method: {method_name}"
 
     def test_ontology_repository_fake_taxonomy_operations(self):
         """FakeOntologyRepository implements taxonomy operations."""

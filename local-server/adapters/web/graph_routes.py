@@ -84,9 +84,7 @@ def _handle_graph_error(exc: Exception) -> tuple[int, str]:
     """
     if isinstance(exc, NodeNotFoundError):
         return (status.HTTP_404_NOT_FOUND, str(exc))
-    elif isinstance(
-        exc, (InvalidAlgorithmError, SPARQLValidationError, CommunityDetectionError)
-    ):
+    elif isinstance(exc, (InvalidAlgorithmError, SPARQLValidationError, CommunityDetectionError)):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, GraphError):
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
@@ -157,9 +155,7 @@ async def get_metrics(
         metrics = service.get_metrics(algorithm=algorithm)
         # Convert communities from sets to sorted lists for JSON serialization
         metrics_dict = asdict(metrics)
-        metrics_dict["communities"] = [
-            sorted(list(community)) for community in metrics.communities
-        ]
+        metrics_dict["communities"] = [sorted(list(community)) for community in metrics.communities]
         return GraphMetricsResponse.model_validate(metrics_dict)
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)
@@ -242,9 +238,7 @@ async def get_shortest_path(
 async def get_all_paths(
     source_id: str = Query(..., description="ID of the starting node"),
     target_id: str = Query(..., description="ID of the ending node"),
-    max_depth: int = Query(
-        5, description="Maximum path length to explore", ge=1, le=20
-    ),
+    max_depth: int = Query(5, description="Maximum path length to explore", ge=1, le=20),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> list[PathResultResponse]:
     """
@@ -304,9 +298,7 @@ async def get_centrality(
 
 @router.get("/communities", response_model=CommunitiesResponse)
 async def get_communities(
-    algorithm: str = Query(
-        "louvain", description="Community detection algorithm to use"
-    ),
+    algorithm: str = Query("louvain", description="Community detection algorithm to use"),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> CommunitiesResponse:
     """
@@ -327,9 +319,7 @@ async def get_communities(
         communities = service.get_communities(algorithm)
         # Convert communities (list of sets) to list of sorted lists for JSON serialization
         communities_as_lists = [sorted(list(community)) for community in communities]
-        return CommunitiesResponse(
-            algorithm=algorithm, communities=communities_as_lists
-        )
+        return CommunitiesResponse(algorithm=algorithm, communities=communities_as_lists)
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -344,9 +334,7 @@ async def get_neighbors(
     direction: Literal["in", "out", "both"] = Query(
         "both", description="Direction: 'in', 'out', or 'both'"
     ),
-    depth: int = Query(
-        1, description="Maximum traversal depth from center node", ge=1, le=10
-    ),
+    depth: int = Query(1, description="Maximum traversal depth from center node", ge=1, le=10),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> NeighborsResponse:
     """
@@ -371,13 +359,9 @@ async def get_neighbors(
         outgoing = []
 
         if direction in ("in", "both"):
-            incoming = sorted(
-                list(service.get_neighbors(node_id, direction="in", depth=depth))
-            )
+            incoming = sorted(list(service.get_neighbors(node_id, direction="in", depth=depth)))
         if direction in ("out", "both"):
-            outgoing = sorted(
-                list(service.get_neighbors(node_id, direction="out", depth=depth))
-            )
+            outgoing = sorted(list(service.get_neighbors(node_id, direction="out", depth=depth)))
 
         return NeighborsResponse(
             node_id=node_id,
@@ -395,9 +379,7 @@ async def get_neighbors(
 
 @router.get("/subgraph", response_model=SubgraphDataResponse)
 async def get_subgraph(
-    nodes: str = Query(
-        ..., description="Comma-separated list of node IDs to extract subgraph for"
-    ),
+    nodes: str = Query(..., description="Comma-separated list of node IDs to extract subgraph for"),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> SubgraphDataResponse:
     """
@@ -446,9 +428,7 @@ async def get_subgraph(
 @router.get("/nodes/{node_id}/subgraph", response_model=SubgraphResultResponse)
 async def get_subgraph_by_depth(
     node_id: str,
-    depth: int = Query(
-        1, description="Maximum traversal depth from center node", ge=1, le=10
-    ),
+    depth: int = Query(1, description="Maximum traversal depth from center node", ge=1, le=10),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> SubgraphResultResponse:
     """
@@ -558,9 +538,7 @@ async def execute_sparql(
 @router.get("/rdf/triples", response_model=TriplesResponse)
 async def get_rdf_triples(
     subject: Optional[str] = Query(None, description="Optional RDF subject to filter"),
-    predicate: Optional[str] = Query(
-        None, description="Optional RDF predicate to filter"
-    ),
+    predicate: Optional[str] = Query(None, description="Optional RDF predicate to filter"),
     object_param: Optional[str] = Query(
         None, alias="object", description="Optional RDF object to filter"
     ),
@@ -583,9 +561,7 @@ async def get_rdf_triples(
     """
     try:
         triples = service.get_triples(subject, predicate, object_param)
-        triple_responses = [
-            TripleResponse(subject=s, predicate=p, object=o) for s, p, o in triples
-        ]
+        triple_responses = [TripleResponse(subject=s, predicate=p, object=o) for s, p, o in triples]
         return TriplesResponse(triples=triple_responses, count=len(triple_responses))
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)

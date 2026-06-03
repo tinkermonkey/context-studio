@@ -430,9 +430,7 @@ class TestProcessingMetrics:
 
     def test_processing_metrics_invalid_negative_relationships(self):
         """ProcessingMetrics raises ValueError if relationships_found is negative."""
-        with pytest.raises(
-            ValueError, match="relationships_found must be non-negative"
-        ):
+        with pytest.raises(ValueError, match="relationships_found must be non-negative"):
             ProcessingMetrics(
                 layer_name="Test",
                 duration_ms=100,

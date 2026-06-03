@@ -180,9 +180,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
 
         assert exported is not None
         assert isinstance(exported, bytes)
-        exported_str = (
-            exported.decode("utf-8") if isinstance(exported, bytes) else exported
-        )
+        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
 
         assert "Concept" in exported_str or "concept" in exported_str.lower()
         assert "Dog" in exported_str
@@ -202,15 +200,11 @@ class TestSKOSEmptyDatabaseRoundTrip:
         exported = serializer.serialize(scope)
 
         # Verify DBpedia and Wikidata references in output
-        exported_str = (
-            exported.decode("utf-8") if isinstance(exported, bytes) else exported
-        )
+        exported_str = exported.decode("utf-8") if isinstance(exported, bytes) else exported
         assert "dbpedia.org" in exported_str
         assert "wikidata.org" in exported_str
 
-    def test_import_creates_import_plan_with_no_conflicts(
-        self, ontology_repo, sample_data
-    ):
+    def test_import_creates_import_plan_with_no_conflicts(self, ontology_repo, sample_data):
         """Test importing against an empty database produces valid plan with no conflicts."""
         # Export
         serializer = SKOSSerializer(ontology_repo)
@@ -258,11 +252,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
         # Count classes in both
         original_class_count = len([c for c in original_classes])
         imported_class_count = len(
-            [
-                e
-                for e in deserializer.incoming_entities.values()
-                if e.get("type") == "class"
-            ]
+            [e for e in deserializer.incoming_entities.values() if e.get("type") == "class"]
         )
 
         # Should have exact same structure (no duplicates on roundtrip)
@@ -282,8 +272,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
                 )
                 for orig_ref in original_class.external_references:
                     assert any(
-                        r["source"] == orig_ref.source
-                        and r["identifier"] == orig_ref.identifier
+                        r["source"] == orig_ref.source and r["identifier"] == orig_ref.identifier
                         for r in matching_incoming["external_references"]
                     )
 
@@ -291,9 +280,7 @@ class TestSKOSEmptyDatabaseRoundTrip:
 class TestSKOSIdempotentReimport:
     """Test that reimporting produces idempotent results."""
 
-    def test_reimport_with_matching_external_references(
-        self, ontology_repo, sample_data
-    ):
+    def test_reimport_with_matching_external_references(self, ontology_repo, sample_data):
         """Test that reimporting entities with matching external refs merges by default."""
         # Export
         serializer = SKOSSerializer(ontology_repo)

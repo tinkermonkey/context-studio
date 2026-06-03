@@ -14,9 +14,7 @@ import re
 import pytest
 
 LOSSINESS_DOC_PATH = os.path.join(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
     "documentation",
     "interchange-lossiness.md",
 )
@@ -118,9 +116,7 @@ class TestLossinessDocumentation:
         ]
 
         for subsection in required_subsections:
-            assert (
-                subsection in graphml_section
-            ), f"GraphML section missing '{subsection}'"
+            assert subsection in graphml_section, f"GraphML section missing '{subsection}'"
 
     def test_external_references_in_critical_section(self, lossiness_doc_content):
         """Test that external_references is mentioned in Critical section."""
@@ -220,15 +216,12 @@ class TestLossinessDocumentation:
         ), "external_references not marked as critical"
 
         assert (
-            "identity" in critical_section.lower()
-            or "hierarchy" in critical_section.lower()
+            "identity" in critical_section.lower() or "hierarchy" in critical_section.lower()
         ), "Structural relationships not marked as critical"
 
     def test_document_is_not_empty(self, lossiness_doc_content):
         """Test that documentation has substantial content."""
-        assert (
-            len(lossiness_doc_content) > 1000
-        ), "Documentation is too short (likely incomplete)"
+        assert len(lossiness_doc_content) > 1000, "Documentation is too short (likely incomplete)"
 
     def test_all_formats_have_content(self, lossiness_doc_content):
         """Test that each format section has substantive content."""
@@ -243,6 +236,4 @@ class TestLossinessDocumentation:
             assert fmt_match, f"Could not extract {fmt} section"
 
             fmt_section = fmt_match.group(1)
-            assert (
-                len(fmt_section) > 200
-            ), f"{fmt} section is too short (likely incomplete)"
+            assert len(fmt_section) > 200, f"{fmt} section is too short (likely incomplete)"

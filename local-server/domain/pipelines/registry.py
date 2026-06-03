@@ -64,9 +64,7 @@ class PipelineTypeRegistry:
                 "ontology_id": "str (required) — target ontology identifier",
             },
             output_contract={
-                "triples": (
-                    "list[dict] — extracted triples with subject, predicate, object"
-                ),
+                "triples": "list[dict] — extracted triples with subject, predicate, object",
                 "warnings": "list[str] — validation issues during extraction",
             },
         ),
@@ -109,18 +107,12 @@ class PipelineTypeRegistry:
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             description="Refine connections between schema nodes",
             input_contract={
-                "scope_id": (
-                    "str (required) — UUID of the scope containing the connections"
-                ),
-                "current_connections": (
-                    "list[dict] (optional) — current connections to refine"
-                ),
+                "scope_id": "str (required) — UUID of the scope containing the connections",
+                "current_connections": "list[dict] (optional) — current connections to refine",
                 "strategy": "str (optional) — refinement strategy",
             },
             output_contract={
-                "refined_connections": (
-                    "list[dict] — refined connections with updated properties"
-                ),
+                "refined_connections": "list[dict] — refined connections with updated properties",
             },
         ),
     }
@@ -197,9 +189,7 @@ class PipelineImplementationRegistry:
         """
         key = (pipeline_type, impl_id)
         if key in self._implementations:
-            raise ValueError(
-                f"Implementation already registered: {pipeline_type.value}:{impl_id}"
-            )
+            raise ValueError(f"Implementation already registered: {pipeline_type.value}:{impl_id}")
         self._implementations[key] = impl_class
 
     def get(self, pipeline_type: PipelineType, impl_id: str) -> type[Any] | None:
@@ -286,9 +276,7 @@ class PipelineConfigurationRegistry:
     def __init__(self) -> None:
         """Initialize the configuration registry."""
         # Map: (type, impl_id, config_ref) → list of versions (oldest first)
-        self._configs: dict[
-            tuple[PipelineType, str, str], list[ConfigurationVersion]
-        ] = {}
+        self._configs: dict[tuple[PipelineType, str, str], list[ConfigurationVersion]] = {}
         # Set of (type, impl_id, config_ref, version) pairs that are referenced by runs
         # Used to document the immutability contract and enable testing of the
         # architectural constraint that version-referenced configs cannot change

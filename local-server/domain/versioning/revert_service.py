@@ -29,9 +29,7 @@ class RevertService:
     Emits new change_events tagged with the originating batch_run_id for auditability.
     """
 
-    def __init__(
-        self, change_repo: ChangeRepository, ontology_repo: OntologyRepository
-    ) -> None:
+    def __init__(self, change_repo: ChangeRepository, ontology_repo: OntologyRepository) -> None:
         """
         Initialize the RevertService.
 
@@ -62,9 +60,7 @@ class RevertService:
             raise ValueError("batch_run_id is required for revert")
 
         # Filter by batch_run_id at query level to avoid memory overhead
-        events_result = self._change_repo.get_changes(
-            batch_run_id=batch_run_id, limit=None
-        )
+        events_result = self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None)
         events = list(events_result.events)
 
         if not events:
@@ -94,9 +90,7 @@ class RevertService:
         normalized_entity_type = self._normalize_entity_type(event.entity_type)
 
         for existing_event in all_events:
-            normalized_existing_type = self._normalize_entity_type(
-                existing_event.entity_type
-            )
+            normalized_existing_type = self._normalize_entity_type(existing_event.entity_type)
             if (
                 existing_event.entity_id == event.entity_id
                 and existing_event.operation == inverse_op
@@ -127,9 +121,7 @@ class RevertService:
                     entity_id, entity_type, event.previous_state
                 )
             elif operation == ChangeOperation.DELETE:
-                operation_applied = self._inverse_delete(
-                    entity_id, entity_type, event.new_state
-                )
+                operation_applied = self._inverse_delete(entity_id, entity_type, event.new_state)
 
             if operation_applied:
                 self._change_repo.record_change(
@@ -245,9 +237,7 @@ class RevertService:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
 
-    def _inverse_delete(
-        self, entity_id: str, entity_type: str, new_state: dict
-    ) -> bool:
+    def _inverse_delete(self, entity_id: str, entity_type: str, new_state: dict) -> bool:
         """
         Inverse of DELETE: recreate the entity from new_state.
 
@@ -327,14 +317,10 @@ class RevertService:
                 )
                 self._ontology_repo.save_property_definition(prop)
             else:
-                raise ValueError(
-                    f"Unknown entity type for delete revert: {entity_type}"
-                )
+                raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
             return True
         except Exception as exc:
-            _logger.error(
-                f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc
-            )
+            _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)
             raise
 
     def _restore_entity_state(self, entity, state: dict) -> None:
@@ -346,9 +332,7 @@ class RevertService:
                 setattr(entity, key, value)
             except Exception as exc:
                 entity_type = type(entity).__name__
-                raise ValueError(
-                    f"Could not restore field {key} on {entity_type}: {exc}"
-                ) from exc
+                raise ValueError(f"Could not restore field {key} on {entity_type}: {exc}") from exc
 
     @staticmethod
     def _normalize_entity_type(entity_type: str) -> str:

@@ -37,9 +37,7 @@ class TestFullExtractionPipeline:
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
             llm=FakeLLMProvider(
-                response_content=(
-                    '[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
-                )
+                response_content=('[{"label": "Apple", "type": "ORG", "confidence": 0.95}]')
             ),
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource("TestSource")],
@@ -69,9 +67,7 @@ class TestFullExtractionPipeline:
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
             llm=FakeLLMProvider(
-                response_content=(
-                    '[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]'
-                )
+                response_content=('[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]')
             ),
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
@@ -146,9 +142,7 @@ class TestEntityDeduplication:
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
             llm=FakeLLMProvider(
-                response_content=(
-                    '[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
-                )
+                response_content=('[{"label": "Apple", "type": "ORG", "confidence": 0.95}]')
             ),
             nlp=FakeNLPProcessor(),
             reference_sources=[],
@@ -242,18 +236,10 @@ class TestLayerPriority:
 
         # Same entity from all layers
         entities = [
-            ExtractedEntity(
-                label="Entity", entity_type="ORG", source_layer=0, confidence=0.5
-            ),
-            ExtractedEntity(
-                label="Entity", entity_type="ORG", source_layer=1, confidence=0.9
-            ),
-            ExtractedEntity(
-                label="Entity", entity_type="ORG", source_layer=2, confidence=0.7
-            ),
-            ExtractedEntity(
-                label="Entity", entity_type="ORG", source_layer=3, confidence=0.6
-            ),
+            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=0, confidence=0.5),
+            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=1, confidence=0.9),
+            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=2, confidence=0.7),
+            ExtractedEntity(label="Entity", entity_type="ORG", source_layer=3, confidence=0.6),
         ]
 
         deduplicated = service._deduplicate(entities)
@@ -456,9 +442,7 @@ class TestErrorHandling:
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
             llm=FakeLLMProvider(
-                response_content=(
-                    '[{"label": "Entity", "type": "ORG", "confidence": 0.9}]'
-                )
+                response_content=('[{"label": "Entity", "type": "ORG", "confidence": 0.9}]')
             ),
             nlp=NotReadyNLPProcessor(),
             reference_sources=[FakeReferenceSource()],

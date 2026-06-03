@@ -69,24 +69,18 @@ class SystemHealthResponse(BaseModel):
         ..., description='Overall health status: "healthy", "degraded", or "unhealthy"'
     )
     database_connected: bool = Field(..., description="Whether database is accessible")
-    nlp_pipeline_ready: bool = Field(
-        ..., description="Whether spaCy NLP model is loaded and ready"
-    )
+    nlp_pipeline_ready: bool = Field(..., description="Whether spaCy NLP model is loaded and ready")
     embedding_model_loaded: bool = Field(
         ..., description="Whether embedding model is loaded in memory"
     )
     llm_providers_available: list[str] = Field(
         default_factory=list, description="List of available LLM provider names"
     )
-    uptime_seconds: float = Field(
-        ..., description="System uptime in seconds since startup"
-    )
+    uptime_seconds: float = Field(..., description="System uptime in seconds since startup")
     issues: list[str] = Field(
         default_factory=list, description="List of identified health issues (if any)"
     )
-    checked_at: datetime = Field(
-        ..., description="Timestamp when health check was performed"
-    )
+    checked_at: datetime = Field(..., description="Timestamp when health check was performed")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -105,9 +99,7 @@ class DatabaseHealthResponse(BaseModel):
 class ServiceMetricsResponse(BaseModel):
     """Response containing service-level metrics."""
 
-    uptime_seconds: float = Field(
-        ..., description="System uptime in seconds since startup"
-    )
+    uptime_seconds: float = Field(..., description="System uptime in seconds since startup")
     llm_providers_available: list[str] = Field(
         default_factory=list, description="List of available LLM provider names"
     )
@@ -119,9 +111,7 @@ class ComponentStatusResponse(BaseModel):
     """Response containing individual component status."""
 
     available: bool = Field(..., description="Whether the component is available/ready")
-    details: str = Field(
-        default="", description="Human-readable detail about component status"
-    )
+    details: str = Field(default="", description="Human-readable detail about component status")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -137,9 +127,7 @@ class BackgroundTaskSummaryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     @classmethod
-    def from_domain(
-        cls, summary: BackgroundTaskSummary
-    ) -> "BackgroundTaskSummaryResponse":
+    def from_domain(cls, summary: BackgroundTaskSummary) -> "BackgroundTaskSummaryResponse":
         """
         Convert domain BackgroundTaskSummary to response, converting enum keys to strings.
 
@@ -162,9 +150,7 @@ class BackgroundTaskSummaryResponse(BaseModel):
 class ConfigSectionUpdateRequest(BaseModel):
     """Request to update a configuration section."""
 
-    updates: dict = Field(
-        ..., description="Dictionary of key-value pairs to update in the section"
-    )
+    updates: dict = Field(..., description="Dictionary of key-value pairs to update in the section")
 
 
 class AppConfigurationResponse(BaseModel):
@@ -218,9 +204,7 @@ class BackgroundTaskResponse(BaseModel):
     completed_at: Optional[datetime] = Field(
         default=None, description="Timestamp when task finished"
     )
-    error: Optional[str] = Field(
-        default=None, description="Error message if task failed"
-    )
+    error: Optional[str] = Field(default=None, description="Error message if task failed")
     result: Optional[dict] = Field(
         default=None, description="Result data if task completed successfully"
     )
@@ -281,31 +265,19 @@ class StatsTrendsResponse(BaseModel):
 
     taxonomies: list[int] = Field(..., description="Daily create counts for taxonomies")
     classes: list[int] = Field(..., description="Daily create counts for classes")
-    individuals: list[int] = Field(
-        ..., description="Daily create counts for individuals"
-    )
-    pipelines: list[int] = Field(
-        ..., description="Daily create counts for pipeline configurations"
-    )
+    individuals: list[int] = Field(..., description="Daily create counts for individuals")
+    pipelines: list[int] = Field(..., description="Daily create counts for pipeline configurations")
 
 
 class DemoDatasetDescriptorResponse(BaseModel):
     """Metadata describing a demo dataset users can load into a fresh workspace."""
 
-    name: str = Field(
-        ..., description="Stable machine-readable name, e.g. 'software-architecture'"
-    )
+    name: str = Field(..., description="Stable machine-readable name, e.g. 'software-architecture'")
     title: str = Field(..., description="Human-readable title")
     description: str = Field(..., description="One-paragraph description")
-    paper_count: int = Field(
-        ..., description="Number of source paper fixtures backing the canon"
-    )
-    taxonomy_count: int = Field(
-        ..., description="Number of taxonomies the dataset will create"
-    )
-    class_count: int = Field(
-        ..., description="Number of classes the dataset will materialize"
-    )
+    paper_count: int = Field(..., description="Number of source paper fixtures backing the canon")
+    taxonomy_count: int = Field(..., description="Number of taxonomies the dataset will create")
+    class_count: int = Field(..., description="Number of classes the dataset will materialize")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -313,22 +285,16 @@ class DemoDatasetDescriptorResponse(BaseModel):
 class DemoDatasetLoadResponse(BaseModel):
     """Counts of entities persisted by a demo dataset load."""
 
-    dataset_name: str = Field(
-        ..., description="Stable name of the dataset that was loaded"
-    )
+    dataset_name: str = Field(..., description="Stable name of the dataset that was loaded")
     source_run_id: str = Field(
         ..., description="Synthetic provenance id stamped on every created entity"
     )
     taxonomies: int = Field(..., description="Number of taxonomies created")
     concept_schemes: int = Field(..., description="Number of concept schemes created")
     classes: int = Field(..., description="Number of classes created")
-    property_definitions: int = Field(
-        ..., description="Number of property definitions created"
-    )
+    property_definitions: int = Field(..., description="Number of property definitions created")
     individuals: int = Field(..., description="Number of individuals created")
     relationships: int = Field(..., description="Number of relationships created")
-    external_references: int = Field(
-        ..., description="Number of external references attached"
-    )
+    external_references: int = Field(..., description="Number of external references attached")
 
     model_config = ConfigDict(from_attributes=True)

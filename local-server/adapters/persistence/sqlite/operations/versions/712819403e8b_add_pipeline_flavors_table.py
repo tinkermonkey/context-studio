@@ -27,9 +27,7 @@ def upgrade() -> None:
         sa.Column("last_updated", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "ix_pipeline_flavors_name", "pipeline_flavors", ["name"], unique=True
-    )
+    op.create_index("ix_pipeline_flavors_name", "pipeline_flavors", ["name"], unique=True)
 
 
 def downgrade() -> None:

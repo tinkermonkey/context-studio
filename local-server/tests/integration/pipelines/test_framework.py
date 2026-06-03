@@ -297,9 +297,7 @@ class TestPipelineTypeEnumeration:
         body = response.json()
 
         # Find individual_extraction type
-        ind_ext = next(
-            (t for t in body if t["pipeline_type"] == "individual_extraction"), None
-        )
+        ind_ext = next((t for t in body if t["pipeline_type"] == "individual_extraction"), None)
         assert ind_ext is not None
 
         # Verify contract structure
@@ -338,9 +336,7 @@ class TestConfigurationRegistry:
 
     def test_list_configurations_for_noop_default(self, client):
         """GET configurations for no_op/default returns registered configs."""
-        response = client.get(
-            "/api/pipelines/types/no_op/implementations/default/configurations"
-        )
+        response = client.get("/api/pipelines/types/no_op/implementations/default/configurations")
         assert response.status_code == status.HTTP_200_OK
 
         body = response.json()
@@ -351,9 +347,7 @@ class TestConfigurationRegistry:
 
     def test_configuration_response_structure(self, client):
         """Configuration response has correct structure."""
-        response = client.get(
-            "/api/pipelines/types/no_op/implementations/default/configurations"
-        )
+        response = client.get("/api/pipelines/types/no_op/implementations/default/configurations")
         body = response.json()
 
         assert len(body) > 0

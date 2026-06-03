@@ -472,16 +472,13 @@ class TestCrossFormatRoundTrip:
 
         # Verify incoming entities contain expected types
         assert any(
-            e.get("type") == "taxonomy"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in skos_deserializer.incoming_entities.values()
         ), "No taxonomies in SKOS import"
         assert any(
-            e.get("type") == "concept_scheme"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "concept_scheme" for e in skos_deserializer.incoming_entities.values()
         ), "No concept schemes in SKOS import"
         assert any(
-            e.get("type") == "class"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in skos_deserializer.incoming_entities.values()
         ), "No classes in SKOS import"
 
         # Verify external_references preserved
@@ -519,20 +516,16 @@ class TestCrossFormatRoundTrip:
 
         # Verify core entity types in incoming_entities
         assert any(
-            e.get("type") == "taxonomy"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in owl_deserializer.incoming_entities.values()
         ), "OWL lost taxonomies"
         assert any(
-            e.get("type") == "concept_scheme"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "concept_scheme" for e in owl_deserializer.incoming_entities.values()
         ), "OWL lost concept schemes"
         assert any(
-            e.get("type") == "class"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in owl_deserializer.incoming_entities.values()
         ), "OWL lost classes"
         assert any(
-            e.get("type") == "individual"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "individual" for e in owl_deserializer.incoming_entities.values()
         ), "OWL lost individuals"
 
         # Verify external_references preserved
@@ -570,20 +563,17 @@ class TestCrossFormatRoundTrip:
 
         # Verify core entity types in incoming_entities
         assert any(
-            e.get("type") == "taxonomy"
-            for e in graphml_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML lost taxonomies"
         assert any(
             e.get("type") == "concept_scheme"
             for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML lost concept schemes"
         assert any(
-            e.get("type") == "class"
-            for e in graphml_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML lost classes"
         assert any(
-            e.get("type") == "individual"
-            for e in graphml_deserializer.incoming_entities.values()
+            e.get("type") == "individual" for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML lost individuals"
 
     def test_external_references_survive_skos_leg(
@@ -593,8 +583,7 @@ class TestCrossFormatRoundTrip:
         # Store original external refs as full tuples
         original_dog = representative_graph["classes"]["dog"]
         original_refs = {
-            (ref.source, ref.identifier, ref.uri)
-            for ref in original_dog.external_references
+            (ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references
         }
 
         # Export and re-import
@@ -618,11 +607,7 @@ class TestCrossFormatRoundTrip:
 
         # Verify external refs in incoming_entities
         dog_entity = next(
-            (
-                e
-                for e in skos_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in skos_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity is not None, "Dog class not found in SKOS import"
@@ -646,8 +631,7 @@ class TestCrossFormatRoundTrip:
         """Test that external_references survive OWL export/import with full tuple comparison."""
         original_dog = representative_graph["classes"]["dog"]
         original_refs = {
-            (ref.source, ref.identifier, ref.uri)
-            for ref in original_dog.external_references
+            (ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references
         }
 
         owl_serializer = OWLSerializer(ontology_repo)
@@ -669,11 +653,7 @@ class TestCrossFormatRoundTrip:
         owl_deserializer.deserialize(owl_bytes)
 
         dog_entity = next(
-            (
-                e
-                for e in owl_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in owl_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity is not None
@@ -698,8 +678,7 @@ class TestCrossFormatRoundTrip:
         comparison."""
         original_dog = representative_graph["classes"]["dog"]
         original_refs = {
-            (ref.source, ref.identifier, ref.uri)
-            for ref in original_dog.external_references
+            (ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references
         }
 
         graphml_serializer = GraphMLSerializer(ontology_repo)
@@ -721,17 +700,11 @@ class TestCrossFormatRoundTrip:
         graphml_deserializer.deserialize(graphml_bytes, dry_run=True)
 
         dog_entity = next(
-            (
-                e
-                for e in graphml_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in graphml_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity is not None
-        assert dog_entity.get(
-            "external_references"
-        ), "External references lost in GraphML"
+        assert dog_entity.get("external_references"), "External references lost in GraphML"
         assert len(dog_entity["external_references"]) == len(original_refs), (
             "External reference count mismatch:"
             f" {len(dog_entity['external_references'])} != {len(original_refs)}"
@@ -772,19 +745,14 @@ class TestCrossFormatRoundTrip:
 
         # Find the Fido individual in incoming_entities
         fido_entity = next(
-            (
-                e
-                for e in owl_deserializer.incoming_entities.values()
-                if e.get("title") == "Fido"
-            ),
+            (e for e in owl_deserializer.incoming_entities.values() if e.get("title") == "Fido"),
             None,
         )
         assert fido_entity is not None
         assert fido_entity.get("type") == "individual"
         assert fido_entity.get("class_ids"), "Multi-class membership lost"
         assert len(fido_entity["class_ids"]) == len(original_order), (
-            f"Expected {len(original_order)} classes, got"
-            f" {len(fido_entity['class_ids'])}"
+            f"Expected {len(original_order)} classes, got" f" {len(fido_entity['class_ids'])}"
         )
         # Verify ordering is preserved (not just count)
         assert fido_entity["class_ids"] == original_order, (
@@ -815,8 +783,7 @@ class TestCrossFormatRoundTrip:
 
         original_dog = representative_graph["classes"]["dog"]
         original_dog_refs = {
-            (ref.source, ref.identifier, ref.uri)
-            for ref in original_dog.external_references
+            (ref.source, ref.identifier, ref.uri) for ref in original_dog.external_references
         }
 
         # LEG 1: Export original ontology to SKOS, then import SKOS into fresh_repo1
@@ -837,24 +804,17 @@ class TestCrossFormatRoundTrip:
 
         # Verify SKOS leg - SKOS doesn't support individuals
         assert any(
-            e.get("type") == "taxonomy"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in skos_deserializer.incoming_entities.values()
         ), "SKOS leg: Lost taxonomies"
         assert any(
-            e.get("type") == "concept_scheme"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "concept_scheme" for e in skos_deserializer.incoming_entities.values()
         ), "SKOS leg: Lost concept schemes"
         assert any(
-            e.get("type") == "class"
-            for e in skos_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in skos_deserializer.incoming_entities.values()
         ), "SKOS leg: Lost classes"
 
         dog_entity_skos = next(
-            (
-                e
-                for e in skos_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in skos_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity_skos is not None, "SKOS leg: Dog class not found"
@@ -862,9 +822,7 @@ class TestCrossFormatRoundTrip:
             (ref["source"], ref["identifier"], ref["uri"])
             for ref in dog_entity_skos["external_references"]
         }
-        assert (
-            skos_dog_refs == original_dog_refs
-        ), "SKOS leg: External references corrupted"
+        assert skos_dog_refs == original_dog_refs, "SKOS leg: External references corrupted"
 
         # CRITICAL: Persist the SKOS-imported entities into fresh_repo1 before re-exporting
         persist_incoming_entities(fresh_repo1, skos_deserializer.incoming_entities)
@@ -888,24 +846,17 @@ class TestCrossFormatRoundTrip:
 
         # Verify OWL leg
         assert any(
-            e.get("type") == "taxonomy"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in owl_deserializer.incoming_entities.values()
         ), "OWL leg: Lost taxonomies"
         assert any(
-            e.get("type") == "concept_scheme"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "concept_scheme" for e in owl_deserializer.incoming_entities.values()
         ), "OWL leg: Lost concept schemes"
         assert any(
-            e.get("type") == "class"
-            for e in owl_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in owl_deserializer.incoming_entities.values()
         ), "OWL leg: Lost classes"
 
         dog_entity_owl = next(
-            (
-                e
-                for e in owl_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in owl_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity_owl is not None, "OWL leg: Dog class not found"
@@ -913,9 +864,7 @@ class TestCrossFormatRoundTrip:
             (ref["source"], ref["identifier"], ref["uri"])
             for ref in dog_entity_owl["external_references"]
         }
-        assert (
-            owl_dog_refs == original_dog_refs
-        ), "OWL leg: External references corrupted"
+        assert owl_dog_refs == original_dog_refs, "OWL leg: External references corrupted"
 
         # CRITICAL: Persist the OWL-imported entities into fresh_repo2 before re-exporting
         persist_incoming_entities(fresh_repo2, owl_deserializer.incoming_entities)
@@ -940,24 +889,18 @@ class TestCrossFormatRoundTrip:
 
         # Verify GraphML leg
         assert any(
-            e.get("type") == "taxonomy"
-            for e in graphml_deserializer.incoming_entities.values()
+            e.get("type") == "taxonomy" for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML leg: Lost taxonomies"
         assert any(
             e.get("type") == "concept_scheme"
             for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML leg: Lost concept schemes"
         assert any(
-            e.get("type") == "class"
-            for e in graphml_deserializer.incoming_entities.values()
+            e.get("type") == "class" for e in graphml_deserializer.incoming_entities.values()
         ), "GraphML leg: Lost classes"
 
         dog_entity_graphml = next(
-            (
-                e
-                for e in graphml_deserializer.incoming_entities.values()
-                if e.get("title") == "Dog"
-            ),
+            (e for e in graphml_deserializer.incoming_entities.values() if e.get("title") == "Dog"),
             None,
         )
         assert dog_entity_graphml is not None, "GraphML leg: Dog class not found"
@@ -965,9 +908,7 @@ class TestCrossFormatRoundTrip:
             (ref["source"], ref["identifier"], ref["uri"])
             for ref in dog_entity_graphml["external_references"]
         }
-        assert (
-            graphml_dog_refs == original_dog_refs
-        ), "GraphML leg: External references corrupted"
+        assert graphml_dog_refs == original_dog_refs, "GraphML leg: External references corrupted"
 
         # Final state verification: all three legs preserve the same external references
         assert (

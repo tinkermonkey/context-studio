@@ -55,9 +55,7 @@ class FakeReferenceSource:
         """Async search implementation."""
         return self.search(term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """Async get relations implementation."""
         return self.get_relations(uri, limit)
 

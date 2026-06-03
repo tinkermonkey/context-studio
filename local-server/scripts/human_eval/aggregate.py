@@ -90,11 +90,7 @@ def fetch_run_metadata(
     try:
         import requests
 
-        run_ids: set[str] = {
-            str(r.get("run_id"))
-            for r in ratings
-            if r.get("run_id")
-        }
+        run_ids: set[str] = {str(r.get("run_id")) for r in ratings if r.get("run_id")}
         if not run_ids:
             return {}
 
@@ -233,9 +229,7 @@ def emit_metrics_jsonl(
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Aggregate human evaluation ratings into metrics"
-    )
+    parser = argparse.ArgumentParser(description="Aggregate human evaluation ratings into metrics")
     parser.add_argument(
         "--ratings",
         type=Path,

@@ -43,9 +43,7 @@ def session_factory(temp_db):
 class TestWaveARegression:
     """Test Wave A extraction functionality and change_event lineage."""
 
-    def test_individual_extraction_run_maintains_change_event_lineage(
-        self, session_factory
-    ):
+    def test_individual_extraction_run_maintains_change_event_lineage(self, session_factory):
         """
         Verify IndividualExtractionRun maintains change_event lineage through batch_run_id.
 

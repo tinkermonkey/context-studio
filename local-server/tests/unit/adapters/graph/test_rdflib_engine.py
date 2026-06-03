@@ -371,9 +371,7 @@ class TestRDFLibQueryEngineTripleOperations:
         engine.load_ontology(nodes, [], [])
 
         # Query for triples with rdf:type predicate
-        triples = engine.get_triples(
-            predicate="http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        )
+        triples = engine.get_triples(predicate="http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
         assert len(triples) > 0
         # All returned triples should have this predicate
@@ -604,13 +602,9 @@ class TestRDFLibQueryEngineIntegration:
 
         # Should have different triple counts and first node should not be findable
         assert count2 > count1
-        triples = engine.get_triples(
-            subject="http://context-studio.local/entity/node-1"
-        )
+        triples = engine.get_triples(subject="http://context-studio.local/entity/node-1")
         assert len(triples) == 0
 
         # But second and third nodes should be findable
-        triples = engine.get_triples(
-            subject="http://context-studio.local/entity/node-2"
-        )
+        triples = engine.get_triples(subject="http://context-studio.local/entity/node-2")
         assert len(triples) > 0

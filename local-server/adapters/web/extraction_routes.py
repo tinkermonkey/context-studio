@@ -117,9 +117,7 @@ def _to_schema(result) -> ExtractionResultSchema:
 # ==================== Extraction Endpoints ====================
 
 
-@router.post(
-    "/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK
-)
+@router.post("/extract", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
 async def extract_entities(
     request: ExtractRequest,
     service: ExtractionService = Depends(get_extraction_service),

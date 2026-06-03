@@ -18,9 +18,7 @@ depends_on = None
 
 def upgrade() -> None:
     op.drop_index("ix_executions_config_timestamp", table_name="pipeline_executions")
-    op.drop_index(
-        "ix_pipeline_configurations_pipeline", table_name="pipeline_configurations"
-    )
+    op.drop_index("ix_pipeline_configurations_pipeline", table_name="pipeline_configurations")
     op.drop_index("ix_pipeline_flavors_name", table_name="pipeline_flavors")
     op.drop_table("pipeline_executions")
     op.drop_table("pipeline_configurations")
@@ -38,9 +36,7 @@ def downgrade() -> None:
         sa.Column("last_updated", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "ix_pipeline_flavors_name", "pipeline_flavors", ["name"], unique=True
-    )
+    op.create_index("ix_pipeline_flavors_name", "pipeline_flavors", ["name"], unique=True)
     op.create_table(
         "pipeline_configurations",
         sa.Column("id", sa.String(length=36), nullable=False),

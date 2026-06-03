@@ -20,11 +20,7 @@ from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 def regenerate_definition_cassettes():
     """Regenerate cassettes for definition refinement."""
     cassettes_dir = (
-        Path(__file__).parent.parent
-        / "tests"
-        / "integration"
-        / "pipelines"
-        / "_cassettes"
+        Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
     )
     fixtures_dir = (
         Path(__file__).parent.parent
@@ -115,11 +111,7 @@ def regenerate_definition_cassettes():
 def regenerate_connection_cassettes():
     """Regenerate cassettes for connection refinement."""
     cassettes_dir = (
-        Path(__file__).parent.parent
-        / "tests"
-        / "integration"
-        / "pipelines"
-        / "_cassettes"
+        Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
     )
     fixtures_dir = (
         Path(__file__).parent.parent

@@ -192,9 +192,7 @@ class TestRunningStatusObservation:
         await asyncio.sleep(0.2)
 
         # Query database to verify RUNNING status is written mid-flight
-        assert (
-            blocking_llm_provider.call_count > 0
-        ), "LLM provider should have been called"
+        assert blocking_llm_provider.call_count > 0, "LLM provider should have been called"
 
         # Check that the run status in the database is RUNNING
         db_run_mid_execution = pipeline_repo.get(run_id)
@@ -214,9 +212,7 @@ class TestRunningStatusObservation:
         assert result_state.current_status == PipelineRunStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_blocking_provider_allows_status_observation(
-        self, blocking_llm_provider
-    ):
+    async def test_blocking_provider_allows_status_observation(self, blocking_llm_provider):
         """Blocking provider correctly blocks and unblocks."""
 
         async def call_provider():

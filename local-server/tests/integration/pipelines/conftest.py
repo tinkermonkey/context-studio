@@ -108,9 +108,7 @@ def impl_registry():
         NoOpPipelineOrchestrator,
     )
     # Register schema extraction
-    register_schema_extraction(
-        registry, None
-    )  # config_registry param will be None here
+    register_schema_extraction(registry, None)  # config_registry param will be None here
     return registry
 
 
@@ -195,9 +193,7 @@ def quality_llm_provider(request, llm_provider_mode, cassette_path, llm_provider
     - Real llm_provider if live mode
     """
     if llm_provider_mode == "cassette":
-        if cassette_path.exists() and not request.config.getoption(
-            "--refresh-cassettes"
-        ):
+        if cassette_path.exists() and not request.config.getoption("--refresh-cassettes"):
             yield CassetteLLMProvider(cassette_path)
         elif request.config.getoption("--refresh-cassettes"):
             provider = RecordingLLMProvider(llm_provider, cassette_path)

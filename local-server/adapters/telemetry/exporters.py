@@ -62,9 +62,7 @@ def create_span_exporter(
             exporter = GRPCSpanExporter(endpoint=grpc_endpoint, timeout=5)
         return exporter
     except Exception as e:
-        _logger.warning(
-            f"Failed to create span exporter: {e}. Spans will not be exported."
-        )
+        _logger.warning(f"Failed to create span exporter: {e}. Spans will not be exported.")
         return None
 
 
@@ -93,23 +91,15 @@ def create_log_exporter(
     try:
         exporter: Optional["LogExporter"] = None
         if protocol.lower() == "grpc":
-            exporter = cast(
-                "LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5)
-            )
+            exporter = cast("LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5))
             _logger.debug(f"Created gRPC log exporter for {grpc_endpoint}")
         elif protocol.lower() == "http":
-            exporter = cast(
-                "LogExporter", HTTPLogExporter(endpoint=http_endpoint, timeout=5)
-            )
+            exporter = cast("LogExporter", HTTPLogExporter(endpoint=http_endpoint, timeout=5))
             _logger.debug(f"Created HTTP log exporter for {http_endpoint}")
         else:
             _logger.warning(f"Unknown protocol: {protocol}, defaulting to gRPC")
-            exporter = cast(
-                "LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5)
-            )
+            exporter = cast("LogExporter", GRPCLogExporter(endpoint=grpc_endpoint, timeout=5))
         return exporter
     except Exception as e:
-        _logger.warning(
-            f"Failed to create log exporter: {e}. Logs will not be exported to OTLP."
-        )
+        _logger.warning(f"Failed to create log exporter: {e}. Logs will not be exported to OTLP.")
         return None

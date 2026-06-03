@@ -18,9 +18,7 @@ class FakeGraphEngine:
         self._nodes: dict[str, dict[str, Any]] = {}
         self._edges: list[dict[str, Any]] = []
 
-    def build_from_data(
-        self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]
-    ) -> None:
+    def build_from_data(self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> None:
         """
         Construct the graph from node and edge data.
 
@@ -73,9 +71,7 @@ class FakeGraphEngine:
         # In a real implementation, this would use BFS/Dijkstra
         return [source_id, target_id]
 
-    def all_paths(
-        self, source_id: str, target_id: str, max_depth: int = 5
-    ) -> list[list[str]]:
+    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
@@ -262,9 +258,7 @@ class FakeGraphEngine:
         node_ids_set = set(node_ids)
 
         # Copy only the requested nodes using set-based filtering
-        subgraph_nodes = [
-            node for node in self._nodes.values() if node["id"] in node_ids_set
-        ]
+        subgraph_nodes = [node for node in self._nodes.values() if node["id"] in node_ids_set]
 
         # Copy only edges where both endpoints are in the subgraph
         subgraph_edges = [
@@ -276,9 +270,7 @@ class FakeGraphEngine:
         subgraph.build_from_data(subgraph_nodes, subgraph_edges)
         return subgraph
 
-    def neighbors(
-        self, node_id: str, direction: str = "both", depth: int = 1
-    ) -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with directional filtering.
 
@@ -313,18 +305,12 @@ class FakeGraphEngine:
 
             for current_node in current_level:
                 for edge in self._edges:
-                    if (
-                        direction in ("out", "both")
-                        and edge["source_id"] == current_node
-                    ):
+                    if direction in ("out", "both") and edge["source_id"] == current_node:
                         target = edge["target_id"]
                         if target not in visited:
                             next_level.add(target)
 
-                    if (
-                        direction in ("in", "both")
-                        and edge["target_id"] == current_node
-                    ):
+                    if direction in ("in", "both") and edge["target_id"] == current_node:
                         source = edge["source_id"]
                         if source not in visited:
                             next_level.add(source)
@@ -420,7 +406,5 @@ class FakeGraphEngine:
         for edge in self._edges:
             if edge["source_id"] == source_id and edge["target_id"] == target_id:
                 # Return a copy of all attributes except source/target
-                return {
-                    k: v for k, v in edge.items() if k not in ("source_id", "target_id")
-                }
+                return {k: v for k, v in edge.items() if k not in ("source_id", "target_id")}
         return {}

@@ -54,9 +54,7 @@ class ApplyResult:
                 f"({len(self.created_property_definition_ids)} items) must be "
                 "consistent"
             )
-        if (self.external_references_created > 0) != bool(
-            self.created_external_reference_ids
-        ):
+        if (self.external_references_created > 0) != bool(self.created_external_reference_ids):
             raise ValueError(
                 f"external_references_created "
                 f"({self.external_references_created}) and "

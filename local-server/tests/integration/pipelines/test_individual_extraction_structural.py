@@ -104,9 +104,7 @@ def extraction_run_repo(session_factory):
 
 
 @pytest.fixture
-def ontology_service(
-    change_recorder, ontology_repo, embedding_service, event_publisher
-):
+def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 
@@ -223,9 +221,7 @@ class TestIndividualExtractionViaHarness:
         # (test_individual_extraction.py) ensures that run_pipeline_against_fixture is called
         assert run_pipeline_against_fixture is not None
 
-    def test_apply_service_returns_correct_id_fields(
-        self, ontology_repo, ontology_service
-    ):
+    def test_apply_service_returns_correct_id_fields(self, ontology_repo, ontology_service):
         """ApplyService must return created_individual_ids and created_relationship_ids."""
 
         run_id = str(uuid4())
@@ -255,9 +251,7 @@ class TestIndividualExtractionViaHarness:
         finally:
             set_batch_run_context(None)
 
-    def test_counts_match_between_result_and_entities(
-        self, ontology_repo, ontology_service
-    ):
+    def test_counts_match_between_result_and_entities(self, ontology_repo, ontology_service):
         """Verify that counts in ApplyResult match actual entity counts."""
         from uuid import uuid4
 
@@ -293,12 +287,8 @@ class TestIndividualExtractionViaHarness:
             apply_result = apply_service.apply(run)
 
             # Verify count fields match ID list lengths
-            assert apply_result.individuals_created == len(
-                apply_result.created_individual_ids
-            )
-            assert apply_result.relationships_created == len(
-                apply_result.created_relationship_ids
-            )
+            assert apply_result.individuals_created == len(apply_result.created_individual_ids)
+            assert apply_result.relationships_created == len(apply_result.created_relationship_ids)
         finally:
             set_batch_run_context(None)
 

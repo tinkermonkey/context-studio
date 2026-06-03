@@ -8,9 +8,7 @@ import os
 import sys
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 from unittest.mock import MagicMock
@@ -36,9 +34,7 @@ SCHEME_ID = "cs-1"
 @pytest.fixture()
 def repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(
-        Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy")
-    )
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
     r.save_concept_scheme(
         ConceptScheme(
             id=SCHEME_ID,
@@ -140,12 +136,8 @@ class TestIdempotency:
         assert len(classes) == 1
 
     def test_case_insensitive_dedup(self, svc, repo):
-        run1 = _make_run(
-            candidates=[{"kind": "class", "label": "Service", "confidence": 0.9}]
-        )
-        run2 = _make_run(
-            candidates=[{"kind": "class", "label": "service", "confidence": 0.9}]
-        )
+        run1 = _make_run(candidates=[{"kind": "class", "label": "Service", "confidence": 0.9}])
+        run2 = _make_run(candidates=[{"kind": "class", "label": "service", "confidence": 0.9}])
         svc.apply(run1, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         result2 = svc.apply(run2, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
@@ -175,10 +167,7 @@ class TestConfidenceThreshold:
 
         assert result.classes_created == 1
         assert result.classes_skipped == 1
-        assert (
-            repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)[0].title
-            == "HighConf"
-        )
+        assert repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)[0].title == "HighConf"
 
     def test_zero_threshold_includes_all(self, svc, repo):
         run = _make_run(
@@ -245,9 +234,7 @@ class TestPropertyDefinitions:
 
 
 class TestRelationships:
-    def test_creates_relationship_when_subject_object_and_property_resolve(
-        self, svc, repo
-    ):
+    def test_creates_relationship_when_subject_object_and_property_resolve(self, svc, repo):
         # Pre-create classes and property so relationship can be resolved
         cls_a = Class(
             id="cls-a",
@@ -263,9 +250,7 @@ class TestRelationships:
         )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
-        prop = PropertyDefinition(
-            id="prop-1", identifier="sub_class_of", title="Sub Class Of"
-        )
+        prop = PropertyDefinition(id="prop-1", identifier="sub_class_of", title="Sub Class Of")
         repo.save_property_definition(prop)
 
         run = _make_run(
@@ -281,9 +266,7 @@ class TestRelationships:
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
 
         assert result.relationships_created == 1
-        rels = repo.list_relationships(
-            source_id="cls-a", target_id="cls-b", property_id="prop-1"
-        )
+        rels = repo.list_relationships(source_id="cls-a", target_id="cls-b", property_id="prop-1")
         assert len(rels) == 1
         assert rels[0].source_run_id == "run-abc"
 
@@ -333,9 +316,7 @@ class TestRelationships:
         )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
-        prop = PropertyDefinition(
-            id="prop-1", identifier="related_to", title="Related To"
-        )
+        prop = PropertyDefinition(id="prop-1", identifier="related_to", title="Related To")
         repo.save_property_definition(prop)
 
         run = _make_run(
@@ -354,9 +335,7 @@ class TestRelationships:
         assert result2.relationships_created == 0
         assert result2.relationships_skipped == 1
 
-    def test_classes_created_in_same_apply_are_available_for_relationships(
-        self, svc, repo
-    ):
+    def test_classes_created_in_same_apply_are_available_for_relationships(self, svc, repo):
         """Classes created during apply can be linked by connections in the same apply."""
         prop = PropertyDefinition(id="prop-1", identifier="uses", title="Uses")
         repo.save_property_definition(prop)

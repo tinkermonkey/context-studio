@@ -310,14 +310,10 @@ async def lifespan(app: FastAPI):
         # Create schema node grounding orchestrator
         grounding_adapter = GroundingAdapter(
             dbpedia=DBpediaSource(),
-            conceptnet=ConceptNetSource(
-                base_url=settings.reference.conceptnet_base_url
-            ),
+            conceptnet=ConceptNetSource(base_url=settings.reference.conceptnet_base_url),
         )
 
-        def log_embedding_error(
-            node_label: str, candidate_label: str, error: Exception
-        ) -> None:
+        def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
             logger.warning(
                 f"Failed to compute embedding similarity for '{node_label}' vs "
                 f"'{candidate_label}': {error}. Semantic similarity score set to "
@@ -396,8 +392,7 @@ async def lifespan(app: FastAPI):
                     raise
                 except Exception as e:
                     raise ConfigurationError(
-                        "Failed to initialize DuckDBSyncAdapter:"
-                        f" {type(e).__name__}: {e}"
+                        "Failed to initialize DuckDBSyncAdapter:" f" {type(e).__name__}: {e}"
                     ) from e
 
             elif adapter_type == SyncAdapterType.NONE:
@@ -429,9 +424,7 @@ async def lifespan(app: FastAPI):
             change_repo=change_repo,
             ontology_repo=ontology_repo,
         )
-        logger.info(
-            "RevertService created and wired with change and ontology repositories"
-        )
+        logger.info("RevertService created and wired with change and ontology repositories")
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
@@ -460,8 +453,7 @@ async def lifespan(app: FastAPI):
             dataset_repository=dataset_repo,
         )
         logger.info(
-            "AdminService created and wired with metrics, config store, and dataset"
-            " repository"
+            "AdminService created and wired with metrics, config store, and dataset" " repository"
         )
 
         # Demo dataset loader (canon-backed, offline)
@@ -477,75 +469,52 @@ async def lifespan(app: FastAPI):
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
         logger.info(
-            "Event subscription: GraphInvalidated ->"
-            " GraphAnalysisService.on_graph_invalidated"
+            "Event subscription: GraphInvalidated ->" " GraphAnalysisService.on_graph_invalidated"
         )
 
-        event_publisher.subscribe(
-            ExtractionCompleted, change_recorder.on_extraction_completed
-        )
+        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
         logger.info(
             "Event subscription: ExtractionCompleted ->"
             " ChangeEventRecorder.on_extraction_completed"
         )
 
-        event_publisher.subscribe(
-            ChangesetMerged, versioning_service.on_changeset_merged
-        )
+        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
         logger.info(
-            "Event subscription: ChangesetMerged ->"
-            " VersioningService.on_changeset_merged"
+            "Event subscription: ChangesetMerged ->" " VersioningService.on_changeset_merged"
         )
 
         event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
-        logger.info(
-            "Event subscription: SyncCompleted -> VersioningService.on_sync_completed"
-        )
+        logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
 
         # --- Ontology change event subscriptions ---
 
         event_publisher.subscribe(TaxonomyCreated, change_recorder.on_taxonomy_created)
         logger.info(
-            "Event subscription: TaxonomyCreated ->"
-            " ChangeEventRecorder.on_taxonomy_created"
+            "Event subscription: TaxonomyCreated ->" " ChangeEventRecorder.on_taxonomy_created"
         )
 
         event_publisher.subscribe(SchemeCreated, change_recorder.on_scheme_created)
-        logger.info(
-            "Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created"
-        )
+        logger.info("Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created")
 
         event_publisher.subscribe(ClassCreated, change_recorder.on_class_created)
-        logger.info(
-            "Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created"
-        )
+        logger.info("Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created")
 
         event_publisher.subscribe(ClassUpdated, change_recorder.on_class_updated)
-        logger.info(
-            "Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated"
-        )
+        logger.info("Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated")
 
         event_publisher.subscribe(ClassDeleted, change_recorder.on_class_deleted)
-        logger.info(
-            "Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted"
-        )
+        logger.info("Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted")
 
         event_publisher.subscribe(ClassMoved, change_recorder.on_class_moved)
-        logger.info(
-            "Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved"
-        )
+        logger.info("Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved")
 
-        event_publisher.subscribe(
-            RelationshipCreated, change_recorder.on_relationship_created
-        )
+        event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
         logger.info(
             "Event subscription: RelationshipCreated ->"
             " ChangeEventRecorder.on_relationship_created"
         )
 
-        event_publisher.subscribe(
-            RelationshipDeleted, change_recorder.on_relationship_deleted
-        )
+        event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)
         logger.info(
             "Event subscription: RelationshipDeleted ->"
             " ChangeEventRecorder.on_relationship_deleted"
@@ -577,56 +546,39 @@ async def lifespan(app: FastAPI):
 
         event_publisher.subscribe(TaxonomyUpdated, change_recorder.on_taxonomy_updated)
         logger.info(
-            "Event subscription: TaxonomyUpdated ->"
-            " ChangeEventRecorder.on_taxonomy_updated"
+            "Event subscription: TaxonomyUpdated ->" " ChangeEventRecorder.on_taxonomy_updated"
         )
 
         event_publisher.subscribe(TaxonomyDeleted, change_recorder.on_taxonomy_deleted)
         logger.info(
-            "Event subscription: TaxonomyDeleted ->"
-            " ChangeEventRecorder.on_taxonomy_deleted"
+            "Event subscription: TaxonomyDeleted ->" " ChangeEventRecorder.on_taxonomy_deleted"
         )
 
         event_publisher.subscribe(SchemeUpdated, change_recorder.on_scheme_updated)
-        logger.info(
-            "Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated"
-        )
+        logger.info("Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated")
 
         event_publisher.subscribe(SchemeDeleted, change_recorder.on_scheme_deleted)
-        logger.info(
-            "Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted"
-        )
+        logger.info("Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted")
 
-        event_publisher.subscribe(
-            ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated
-        )
+        event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
         logger.info(
             "Event subscription: ConceptSchemeUpdated ->"
             " ChangeEventRecorder.on_concept_scheme_updated"
         )
 
-        event_publisher.subscribe(
-            IndividualCreated, change_recorder.on_individual_created
-        )
+        event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
         logger.info(
-            "Event subscription: IndividualCreated ->"
-            " ChangeEventRecorder.on_individual_created"
+            "Event subscription: IndividualCreated ->" " ChangeEventRecorder.on_individual_created"
         )
 
-        event_publisher.subscribe(
-            IndividualUpdated, change_recorder.on_individual_updated
-        )
+        event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
         logger.info(
-            "Event subscription: IndividualUpdated ->"
-            " ChangeEventRecorder.on_individual_updated"
+            "Event subscription: IndividualUpdated ->" " ChangeEventRecorder.on_individual_updated"
         )
 
-        event_publisher.subscribe(
-            IndividualDeleted, change_recorder.on_individual_deleted
-        )
+        event_publisher.subscribe(IndividualDeleted, change_recorder.on_individual_deleted)
         logger.info(
-            "Event subscription: IndividualDeleted ->"
-            " ChangeEventRecorder.on_individual_deleted"
+            "Event subscription: IndividualDeleted ->" " ChangeEventRecorder.on_individual_deleted"
         )
 
         # --- Store services in app.state for dependency injection ---
@@ -653,15 +605,9 @@ async def lifespan(app: FastAPI):
         app.state.type_registry = type_registry
 
         # Pipeline apply services — materialize pipeline output into ontology entities
-        app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(
-            ontology_repo
-        )
-        app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
-            ontology_repo
-        )
-        app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(
-            ontology_repo
-        )
+        app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
+        app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
+        app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
         app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
             ontology_repo
         )

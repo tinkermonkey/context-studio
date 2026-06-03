@@ -38,20 +38,13 @@ from tests.fixtures.pipeline_fixtures import (
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
-_root_dir = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(_test_dir)))
-)
+_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
 sys.path.insert(0, _root_dir)
 
 
 def _get_fixtures_dir() -> Path:
     """Get the grounding fixtures directory."""
-    return (
-        Path(__file__).parent.parent.parent
-        / "fixtures"
-        / "pipelines"
-        / "schema_node_grounding"
-    )
+    return Path(__file__).parent.parent.parent / "fixtures" / "pipelines" / "schema_node_grounding"
 
 
 def _list_fixture_scenarios() -> list[str]:
@@ -59,11 +52,7 @@ def _list_fixture_scenarios() -> list[str]:
     fixtures_dir = _get_fixtures_dir()
     if not fixtures_dir.exists():
         return []
-    return [
-        d.name
-        for d in fixtures_dir.iterdir()
-        if d.is_dir() and (d / "input.json").exists()
-    ]
+    return [d.name for d in fixtures_dir.iterdir() if d.is_dir() and (d / "input.json").exists()]
 
 
 class QualityMetrics:
@@ -89,9 +78,7 @@ class QualityMetrics:
             "top1_precision": self.top1_hits / self.total_scenarios,
             "top3_precision": self.top3_hits / self.total_scenarios,
             "mrr": self.mrr_sum / self.total_scenarios,
-            "distractor_precision": (
-                self.distractor_precision_sum / self.total_scenarios
-            ),
+            "distractor_precision": self.distractor_precision_sum / self.total_scenarios,
         }
 
 
@@ -159,18 +146,14 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     @pytest.mark.external_network
-    async def test_conceptnet_adapter_operational(
-        self, grounding_adapter, recorded_vcr
-    ):
+    async def test_conceptnet_adapter_operational(self, grounding_adapter, recorded_vcr):
         """Verify ConceptNet adapter returns candidates (requires network/cassettes)."""
         try:
             with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
                 candidates = await grounding_adapter.query_sources(
                     label="Person", sources=["ConceptNet"]
                 )
-            assert (
-                len(candidates) > 0
-            ), "ConceptNet should return candidates for 'Person'"
+            assert len(candidates) > 0, "ConceptNet should return candidates for 'Person'"
             assert all(c.source == "ConceptNet" for c in candidates)
         except Exception as e:
             pytest.fail(f"ConceptNet adapter should be operational: {e}")
@@ -196,17 +179,13 @@ class TestQualitySchemaNodeGrounding:
             candidates = await grounding_adapter.query_sources(
                 label="Person", sources=["schema.org"]
             )
-            assert (
-                len(candidates) > 0
-            ), "schema.org should return candidates for 'Person'"
+            assert len(candidates) > 0, "schema.org should return candidates for 'Person'"
             assert all(c.source == "schema.org" for c in candidates)
         except Exception as e:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
     @pytest.mark.asyncio
-    async def test_quality_metrics_computation(
-        self, grounding_orchestrator, recorded_vcr
-    ):
+    async def test_quality_metrics_computation(self, grounding_orchestrator, recorded_vcr):
         """Test quality metrics computation across all 38+ fixture scenarios."""
         scenarios = _list_fixture_scenarios()
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
@@ -223,8 +202,7 @@ class TestQualitySchemaNodeGrounding:
 
                 node_label = fixture.get("node_label", "")
                 expected_uris = {
-                    ref["uri"]
-                    for ref in expected.get("expected_external_references", [])
+                    ref["uri"] for ref in expected.get("expected_external_references", [])
                 }
 
                 # Execute grounding with cassettes for all sources
@@ -236,12 +214,8 @@ class TestQualitySchemaNodeGrounding:
                     input_data=fixture,
                 )
                 # Wrap HTTP calls in nested cassette contexts for each source
-                with recorded_vcr.use_cassette(
-                    f"schema_node_grounding/dbpedia/{scenario}"
-                ):
-                    with recorded_vcr.use_cassette(
-                        f"schema_node_grounding/conceptnet/{scenario}"
-                    ):
+                with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
+                    with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
                         with recorded_vcr.use_cassette(
                             f"schema_node_grounding/wikidata/{scenario}"
                         ):
@@ -252,12 +226,8 @@ class TestQualitySchemaNodeGrounding:
                 grounded_uris = [g["uri"] for g in groundings]
 
                 # Compute metrics
-                top1_hit = (
-                    1 if (grounded_uris and grounded_uris[0] in expected_uris) else 0
-                )
-                top3_hit = (
-                    1 if any(uri in expected_uris for uri in grounded_uris[:3]) else 0
-                )
+                top1_hit = 1 if (grounded_uris and grounded_uris[0] in expected_uris) else 0
+                top3_hit = 1 if any(uri in expected_uris for uri in grounded_uris[:3]) else 0
 
                 # Compute MRR (Mean Reciprocal Rank)
                 mrr = 0.0
@@ -278,9 +248,7 @@ class TestQualitySchemaNodeGrounding:
                         distractor_matches = sum(
                             1 for uri in grounded_uris if uri in distractor_uris
                         )
-                        distractor_precision = 1.0 - (
-                            distractor_matches / len(grounded_uris)
-                        )
+                        distractor_precision = 1.0 - (distractor_matches / len(grounded_uris))
 
                 metrics.top1_hits += top1_hit
                 metrics.top3_hits += top3_hit
@@ -421,9 +389,7 @@ class TestQualitySchemaNodeGrounding:
         # Step 5: Apply again with same run (should deduplicate)
         result3 = apply_service.apply(grounding_run, cls.id)
 
-        assert (
-            result3.external_references_created == 0
-        ), "Re-applying should not create duplicates"
+        assert result3.external_references_created == 0, "Re-applying should not create duplicates"
         assert result3.external_references_skipped == 2
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
@@ -440,9 +406,7 @@ class TestQualitySchemaNodeGrounding:
 
         # Verify fixture structure
         assert distractors is not None, "Person fixture should have distractors"
-        assert (
-            len(distractors.get("DBpedia", [])) >= 3
-        ), "Should have ≥3 DBpedia distractors"
+        assert len(distractors.get("DBpedia", [])) >= 3, "Should have ≥3 DBpedia distractors"
 
         # Execute grounding to get ranked candidates with cassettes
         from domain.pipelines.orchestration.base import PipelineState
@@ -453,12 +417,8 @@ class TestQualitySchemaNodeGrounding:
             input_data=fixture,
         )
         with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
-            with recorded_vcr.use_cassette(
-                f"schema_node_grounding/conceptnet/{scenario}"
-            ):
-                with recorded_vcr.use_cassette(
-                    f"schema_node_grounding/wikidata/{scenario}"
-                ):
+            with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
+                with recorded_vcr.use_cassette(f"schema_node_grounding/wikidata/{scenario}"):
                     result_state = await grounding_orchestrator.execute(state)
 
         # Extract groundings and verify they are ranked
@@ -468,13 +428,9 @@ class TestQualitySchemaNodeGrounding:
         grounded_uris = [g["uri"] for g in groundings]
 
         # Verify that expected references rank higher than distractors
-        expected_uris = {
-            ref["uri"] for ref in expected.get("expected_external_references", [])
-        }
+        expected_uris = {ref["uri"] for ref in expected.get("expected_external_references", [])}
         all_distractor_uris = {
-            uri
-            for source_distractors in distractors.values()
-            for uri in source_distractors
+            uri for source_distractors in distractors.values() for uri in source_distractors
         }
 
         # Find first correct match rank
@@ -484,9 +440,7 @@ class TestQualitySchemaNodeGrounding:
                 correct_rank = rank
                 break
 
-        assert (
-            correct_rank is not None
-        ), "Expected reference should be present in ranked groundings"
+        assert correct_rank is not None, "Expected reference should be present in ranked groundings"
 
         # Find first distractor rank
         distractor_rank = None
@@ -527,12 +481,8 @@ class TestQualitySchemaNodeGrounding:
         }
 
         scenario_set = set(scenarios)
-        assert (
-            len(scenario_set & biology_classes) >= 3
-        ), "Should have ≥3 biology classes"
-        assert (
-            len(scenario_set & technology_classes) >= 2
-        ), "Should have ≥2 technology classes"
+        assert len(scenario_set & biology_classes) >= 3, "Should have ≥3 biology classes"
+        assert len(scenario_set & technology_classes) >= 2, "Should have ≥2 technology classes"
         assert len(scenario_set & social_classes) >= 2, "Should have ≥2 social classes"
 
     def test_each_fixture_has_distractors(self):
@@ -543,9 +493,7 @@ class TestQualitySchemaNodeGrounding:
 
         for scenario in quality_scenarios:  # Check all fixtures
             distractors = load_distractors("schema_node_grounding", scenario)
-            assert (
-                distractors is not None
-            ), f"Fixture {scenario} should have distractors"
+            assert distractors is not None, f"Fixture {scenario} should have distractors"
 
             # Verify structure: at least one source has ≥3 distractors (FR-P3.4 compliance)
             has_sufficient_distractors = False
@@ -553,8 +501,7 @@ class TestQualitySchemaNodeGrounding:
                 if source in distractors:
                     count = len(distractors[source])
                     assert 0 <= count <= 5, (
-                        f"Fixture {scenario} {source} has {count} distractors, "
-                        f"expected 0-5"
+                        f"Fixture {scenario} {source} has {count} distractors, " f"expected 0-5"
                     )
                     if count >= 3:
                         has_sufficient_distractors = True
@@ -618,6 +565,4 @@ class TestQualityMetricsIntegration:
         assert (
             len(quality_scenarios) >= 30
         ), f"Expected ≥30 quality fixtures, got {len(quality_scenarios)}"
-        assert (
-            failed == 0
-        ), f"Expected all quality scenarios to be valid, {failed} failed"
+        assert failed == 0, f"Expected all quality scenarios to be valid, {failed} failed"

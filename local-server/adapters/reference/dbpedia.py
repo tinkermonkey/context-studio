@@ -117,8 +117,7 @@ class DBpediaSource:
             return []
         except httpx.HTTPStatusError as e:
             logger.warning(
-                f"DBpedia HTTP {e.response.status_code} error during search for"
-                f" '{term}': {e}"
+                f"DBpedia HTTP {e.response.status_code} error during search for" f" '{term}': {e}"
             )
             return []
         except httpx.HTTPError as e:
@@ -175,9 +174,7 @@ class DBpediaSource:
         """
         return await run_sync_in_executor(self.search, term, limit)
 
-    async def get_relations_async(
-        self, uri: str, limit: int = 10
-    ) -> list[ReferenceRelation]:
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in DBpedia (async version).
 

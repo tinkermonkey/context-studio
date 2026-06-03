@@ -26,9 +26,7 @@ from .mocks import MockLLMProvider
 def sample_classes(ontology_service):
     """Create sample classes for testing."""
     taxonomy = ontology_service.create_taxonomy(title="Test Taxonomy", description="")
-    scheme = ontology_service.create_scheme(
-        taxonomy_id=taxonomy.id, title="Test Scheme"
-    )
+    scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Test Scheme")
 
     class1 = ontology_service.create_class(
         concept_scheme_id=scheme.id,
@@ -273,7 +271,5 @@ class TestConnectionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        with pytest.raises(
-            PipelineExecutionError, match="LLM response validation failed"
-        ):
+        with pytest.raises(PipelineExecutionError, match="LLM response validation failed"):
             asyncio.run(orchestrator.execute(state))

@@ -58,11 +58,7 @@ async def regenerate_definition_cassettes():
     print("Regenerating definition refinement cassettes...")
 
     cassettes_dir = (
-        Path(__file__).parent.parent
-        / "tests"
-        / "integration"
-        / "pipelines"
-        / "_cassettes"
+        Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
     )
     fixtures_dir = (
         Path(__file__).parent.parent
@@ -134,7 +130,9 @@ async def regenerate_definition_cassettes():
                 expected_defs = []
             else:
                 # Regular fixture: return expected description as candidate
-                expected_description = fixture_expected.get("result", {}).get("expected_description", "")
+                expected_description = fixture_expected.get("result", {}).get(
+                    "expected_description", ""
+                )
                 if expected_description:
                     expected_defs = [
                         {
@@ -184,11 +182,7 @@ async def regenerate_connection_cassettes():
     print("\nRegenerating connection refinement cassettes...")
 
     cassettes_dir = (
-        Path(__file__).parent.parent
-        / "tests"
-        / "integration"
-        / "pipelines"
-        / "_cassettes"
+        Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
     )
     fixtures_dir = (
         Path(__file__).parent.parent

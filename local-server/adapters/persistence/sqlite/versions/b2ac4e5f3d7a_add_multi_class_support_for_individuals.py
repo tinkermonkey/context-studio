@@ -30,15 +30,9 @@ def upgrade() -> None:
             nullable=False,
             doc="Zero-based position in ordered list",
         ),
-        sa.ForeignKeyConstraint(
-            ["individual_id"], ["ontology_entities.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["class_id"], ["ontology_entities.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint(
-            "individual_id", "class_id", name="pk_individual_classes"
-        ),
+        sa.ForeignKeyConstraint(["individual_id"], ["ontology_entities.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["class_id"], ["ontology_entities.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("individual_id", "class_id", name="pk_individual_classes"),
         sa.UniqueConstraint("individual_id", "position", name="uk_individual_position"),
     )
     op.create_index("idx_class_id", "individual_classes", ["class_id"], unique=False)

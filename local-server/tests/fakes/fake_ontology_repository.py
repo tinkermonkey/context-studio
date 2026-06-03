@@ -33,9 +33,7 @@ class FakeOntologyRepository:
 
     # Lookup operations
 
-    def get_by_identifier(
-        self, identifier: str
-    ) -> Taxonomy | ConceptScheme | Class | None:
+    def get_by_identifier(self, identifier: str) -> Taxonomy | ConceptScheme | Class | None:
         """Retrieve a Taxonomy, ConceptScheme, or Class by its identifier."""
         for tax in self._taxonomies.values():
             if tax.identifier == identifier:
@@ -69,9 +67,7 @@ class FakeOntologyRepository:
 
         if sort_by == "title":
             results.sort(key=lambda t: t.title, reverse=(sort_order == "desc"))
-        elif sort_by == "created_at" and hasattr(
-            results[0] if results else None, "created_at"
-        ):
+        elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
                 key=lambda t: getattr(t, "created_at", ""),
                 reverse=(sort_order == "desc"),
@@ -82,13 +78,8 @@ class FakeOntologyRepository:
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         for existing_taxonomy in self._taxonomies.values():
-            if (
-                existing_taxonomy.title == taxonomy.title
-                and existing_taxonomy.id != taxonomy.id
-            ):
-                raise DuplicateEntityError(
-                    f"Taxonomy with title '{taxonomy.title}' already exists"
-                )
+            if existing_taxonomy.title == taxonomy.title and existing_taxonomy.id != taxonomy.id:
+                raise DuplicateEntityError(f"Taxonomy with title '{taxonomy.title}' already exists")
         self._taxonomies[taxonomy.id] = taxonomy
         return taxonomy
 
@@ -122,9 +113,7 @@ class FakeOntologyRepository:
 
         if sort_by == "title":
             results.sort(key=lambda s: s.title, reverse=(sort_order == "desc"))
-        elif sort_by == "created_at" and hasattr(
-            results[0] if results else None, "created_at"
-        ):
+        elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
                 key=lambda s: getattr(s, "created_at", ""),
                 reverse=(sort_order == "desc"),
@@ -141,8 +130,7 @@ class FakeOntologyRepository:
                 and existing_scheme.taxonomy_id == scheme.taxonomy_id
             ):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{scheme.title}' already exists in this"
-                    " taxonomy"
+                    f"ConceptScheme with title '{scheme.title}' already exists in this" " taxonomy"
                 )
         self._schemes[scheme.id] = scheme
         return scheme
@@ -186,9 +174,7 @@ class FakeOntologyRepository:
             ]
 
         if criteria.concept_scheme_id:
-            results = [
-                c for c in results if c.concept_scheme_id == criteria.concept_scheme_id
-            ]
+            results = [c for c in results if c.concept_scheme_id == criteria.concept_scheme_id]
 
         if criteria.taxonomy_id:
             results = [c for c in results if c.taxonomy_id == criteria.taxonomy_id]
@@ -216,9 +202,7 @@ class FakeOntologyRepository:
     def count_classes(self, concept_scheme_id: str | None = None) -> int:
         if concept_scheme_id:
             return sum(
-                1
-                for c in self._classes.values()
-                if c.concept_scheme_id == concept_scheme_id
+                1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id
             )
         return len(self._classes)
 
@@ -265,9 +249,7 @@ class FakeOntologyRepository:
         if property_id is not None:
             results = [r for r in results if r.property_definition_id == property_id]
 
-        if sort_by == "created_at" and hasattr(
-            results[0] if results else None, "created_at"
-        ):
+        if sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
                 key=lambda r: getattr(r, "created_at", ""),
                 reverse=(sort_order == "desc"),
@@ -306,9 +288,7 @@ class FakeOntologyRepository:
     def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         return self._property_definitions.get(property_id)
 
-    def get_property_definition_by_identifier(
-        self, identifier: str
-    ) -> PropertyDefinition | None:
+    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
         for prop in self._property_definitions.values():
             if prop.identifier == identifier:
                 return prop
@@ -333,9 +313,7 @@ class FakeOntologyRepository:
 
         if sort_by == "title":
             results.sort(key=lambda p: p.title, reverse=(sort_order == "desc"))
-        elif sort_by == "created_at" and hasattr(
-            results[0] if results else None, "created_at"
-        ):
+        elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
                 key=lambda p: getattr(p, "created_at", ""),
                 reverse=(sort_order == "desc"),

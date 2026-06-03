@@ -47,9 +47,7 @@ class DuckDBSyncAdapter:
     SyncError domain exceptions.
     """
 
-    def __init__(
-        self, output_dir: str, change_repo: "ChangeRepository | None" = None
-    ) -> None:
+    def __init__(self, output_dir: str, change_repo: "ChangeRepository | None" = None) -> None:
         """
         Initialize the sync adapter.
 
@@ -62,14 +60,11 @@ class DuckDBSyncAdapter:
             RuntimeError: If sync directory cannot be created
         """
         if importlib.util.find_spec("duckdb") is None:
-            _logger.error(
-                "duckdb is required for sync adapter. Install with: pip install duckdb"
-            )
+            _logger.error("duckdb is required for sync adapter. Install with: pip install duckdb")
             raise ImportError("duckdb is required for sync adapter")
         if importlib.util.find_spec("pyarrow") is None:
             _logger.error(
-                "pyarrow is required for sync adapter. Install with: pip install"
-                " pyarrow"
+                "pyarrow is required for sync adapter. Install with: pip install" " pyarrow"
             )
             raise ImportError("pyarrow is required for sync adapter")
 
@@ -153,13 +148,9 @@ class DuckDBSyncAdapter:
                         "processed": event.processed,
                         "user_id": event.user_id,
                         "change_reason": event.change_reason,
-                        "new_state": (
-                            json.dumps(event.new_state) if event.new_state else None
-                        ),
+                        "new_state": json.dumps(event.new_state) if event.new_state else None,
                         "previous_state": (
-                            json.dumps(event.previous_state)
-                            if event.previous_state
-                            else None
+                            json.dumps(event.previous_state) if event.previous_state else None
                         ),
                     }
                     events_by_date[date_str].append(event_dict)
@@ -182,9 +173,7 @@ class DuckDBSyncAdapter:
                             "user_id": [e["user_id"] for e in date_events],
                             "change_reason": [e["change_reason"] for e in date_events],
                             "new_state": [e["new_state"] for e in date_events],
-                            "previous_state": [
-                                e["previous_state"] for e in date_events
-                            ],
+                            "previous_state": [e["previous_state"] for e in date_events],
                         }
                     )
 
@@ -255,9 +244,7 @@ class DuckDBSyncAdapter:
             try:
                 # List all date directories
                 if not self._changes_dir.exists():
-                    _logger.debug(
-                        "Changes directory does not exist: %s", self._changes_dir
-                    )
+                    _logger.debug("Changes directory does not exist: %s", self._changes_dir)
                     return events
 
                 for date_dir in sorted(self._changes_dir.iterdir()):
@@ -304,17 +291,13 @@ class DuckDBSyncAdapter:
 
                                 # Skip duplicate events
                                 if event_id in seen_ids:
-                                    _logger.debug(
-                                        "Skipping duplicate event %s", event_id
-                                    )
+                                    _logger.debug("Skipping duplicate event %s", event_id)
                                     continue
 
                                 seen_ids.add(event_id)
 
                                 # Filter by timestamp if since provided
-                                event_timestamp = datetime.fromisoformat(
-                                    row["timestamp"]
-                                )
+                                event_timestamp = datetime.fromisoformat(row["timestamp"])
                                 if since and event_timestamp < since:
                                     continue
 
@@ -334,9 +317,7 @@ class DuckDBSyncAdapter:
                                 previous_state = None
                                 if row["previous_state"]:
                                     try:
-                                        previous_state = json.loads(
-                                            row["previous_state"]
-                                        )
+                                        previous_state = json.loads(row["previous_state"])
                                     except (json.JSONDecodeError, TypeError) as e:
                                         error_msg = (
                                             "Failed to parse previous_state JSON for"
@@ -362,9 +343,7 @@ class DuckDBSyncAdapter:
                         except RuntimeError:
                             raise
                         except (ValueError, TypeError, KeyError, OSError) as e:
-                            error_msg = (
-                                f"Failed to read Parquet file {parquet_file}: {e}"
-                            )
+                            error_msg = f"Failed to read Parquet file {parquet_file}: {e}"
                             _logger.error(error_msg)
                             raise RuntimeError(error_msg) from e
 

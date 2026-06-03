@@ -333,9 +333,7 @@ class TestQualityIndividualExtraction:
 
         # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
         if not cassette_path.exists():
-            pytest.skip(
-                f"Cassette not found at {cassette_path}. Run with real LLM to record."
-            )
+            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
 
         # Use cassette provider for deterministic quality testing
         llm_provider = CassetteLLMProvider(cassette_path)
@@ -395,9 +393,7 @@ class TestQualityIndividualExtraction:
 
         # Assert metrics against floors
         gate = FloorGate(METRIC_FLOORS)
-        gate.assert_metrics(
-            aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}"
-        )
+        gate.assert_metrics(aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}")
 
     @pytest.mark.asyncio
     async def test_individual_extraction_apply_roundtrip(

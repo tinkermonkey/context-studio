@@ -78,9 +78,7 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(
-    change_recorder, ontology_repo, embedding_service, event_publisher
-):
+def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 

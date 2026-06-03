@@ -124,9 +124,7 @@ class TestConfigurationEndpoint:
     def test_get_configuration_masks_api_keys(self, client, config_store):
         """GET /api/v1/admin/configuration masks API keys."""
         # Ensure config has API keys
-        config_store.update_config(
-            {"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}}
-        )
+        config_store.update_config({"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}})
 
         # Get configuration
         response = client.get("/api/v1/admin/configuration")
@@ -134,9 +132,7 @@ class TestConfigurationEndpoint:
 
         # API key should be masked
         llm_section = body["sections"].get("llm", {})
-        assert (
-            "openai_api_key" in llm_section
-        ), "openai_api_key should be present in llm section"
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in llm section"
         masked = llm_section["openai_api_key"]
         assert masked.startswith("***"), "API key should be masked with ***"
         assert (
@@ -326,9 +322,7 @@ class TestTasksEndpoint:
         """GET /api/v1/admin/tasks/{task_id} includes result data."""
         # Register, run, and complete task
         task = admin_service.register_task("completion_test")
-        admin_service.update_task_status(
-            task.id, "completed", result={"output": "task completed"}
-        )
+        admin_service.update_task_status(task.id, "completed", result={"output": "task completed"})
 
         # Get the task
         response = client.get(f"/api/v1/admin/tasks/{task.id}")
@@ -468,9 +462,7 @@ class TestConfigurationResetEndpoint:
     def test_reset_configuration_masks_credentials(self, client, config_store):
         """POST /api/v1/admin/configuration/reset masks credential fields."""
         # Set up config with credentials
-        config_store.update_config(
-            {"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}}
-        )
+        config_store.update_config({"llm": {"openai_api_key": "sk-1234567890abcdef1234567890"}})
 
         # Reset configuration
         response = client.post("/api/v1/admin/configuration/reset")
@@ -478,15 +470,11 @@ class TestConfigurationResetEndpoint:
 
         # Credentials should be masked
         llm_section = body["sections"].get("llm", {})
-        assert (
-            "openai_api_key" in llm_section
-        ), "openai_api_key should be present in reset response"
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in reset response"
         masked = llm_section["openai_api_key"]
         assert masked.startswith("***"), "Credential should be masked"
 
-    def test_reset_configuration_restores_defaults(
-        self, client, config_store, admin_service
-    ):
+    def test_reset_configuration_restores_defaults(self, client, config_store, admin_service):
         """POST /api/v1/admin/configuration/reset restores default values."""
         # Get baseline config
         reset_config = admin_service.reset_configuration()
@@ -556,9 +544,7 @@ class TestAdminErrorHandling:
         def failing_update_config(section, updates):
             raise ConfigurationError(f"Invalid section: {section}")
 
-        monkeypatch.setattr(
-            admin_service, "update_configuration", failing_update_config
-        )
+        monkeypatch.setattr(admin_service, "update_configuration", failing_update_config)
 
         response = client.patch(
             "/api/v1/admin/configuration/invalid", json={"updates": {"key": "value"}}
@@ -589,20 +575,14 @@ class TestAdminErrorHandling:
         assert "detail" in body
         assert "not found" in body["detail"].lower()
 
-    def test_reset_configuration_error_returns_400(
-        self, client, admin_service, monkeypatch
-    ):
+    def test_reset_configuration_error_returns_400(self, client, admin_service, monkeypatch):
         """Test that ConfigurationError from reset_configuration returns 400 Bad Request."""
 
         # Mock the service method to raise a ConfigurationError
         def failing_reset_configuration():
-            raise ConfigurationError(
-                "Failed to reset configuration: Invalid default settings"
-            )
+            raise ConfigurationError("Failed to reset configuration: Invalid default settings")
 
-        monkeypatch.setattr(
-            admin_service, "reset_configuration", failing_reset_configuration
-        )
+        monkeypatch.setattr(admin_service, "reset_configuration", failing_reset_configuration)
 
         response = client.post("/api/v1/admin/configuration/reset")
 
@@ -814,9 +794,7 @@ class TestDatasetRoutes:
         )
         dataset_id = create_response.json()["id"]
 
-        response = client_with_datasets.post(
-            f"/api/v1/admin/datasets/{dataset_id}/activate"
-        )
+        response = client_with_datasets.post(f"/api/v1/admin/datasets/{dataset_id}/activate")
 
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
@@ -824,9 +802,7 @@ class TestDatasetRoutes:
 
     def test_activate_dataset_not_found_returns_404(self, client_with_datasets):
         """POST /api/v1/admin/datasets/{id}/activate with nonexistent ID returns 404 Not Found."""
-        response = client_with_datasets.post(
-            "/api/v1/admin/datasets/nonexistent-id/activate"
-        )
+        response = client_with_datasets.post("/api/v1/admin/datasets/nonexistent-id/activate")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         body = response.json()

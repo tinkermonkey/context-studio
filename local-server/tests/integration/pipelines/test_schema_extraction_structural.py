@@ -69,9 +69,7 @@ def change_recorder(change_repo, event_publisher):
     """Create and wire up the change event recorder."""
     recorder = ChangeEventRecorder(change_repo)
     event_publisher.subscribe(ClassCreated, recorder.on_class_created)
-    event_publisher.subscribe(
-        PropertyDefinitionCreated, recorder.on_property_definition_created
-    )
+    event_publisher.subscribe(PropertyDefinitionCreated, recorder.on_property_definition_created)
     return recorder
 
 
@@ -82,9 +80,7 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(
-    change_recorder, ontology_repo, embedding_service, event_publisher
-):
+def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 

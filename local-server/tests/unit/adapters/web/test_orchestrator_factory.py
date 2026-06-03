@@ -111,9 +111,7 @@ class TestCreateOrchestratorNoOp:
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
         assert orchestrator._llm_provider is mock_llm_provider
 
-    def test_passes_run_id_and_status_writer_to_noop(
-        self, mock_llm_provider, mock_status_writer
-    ):
+    def test_passes_run_id_and_status_writer_to_noop(self, mock_llm_provider, mock_status_writer):
         """Test that run_id and status_writer are set on orchestrator."""
         services = {
             "run_id": "test-run-456",
@@ -152,9 +150,7 @@ class TestCreateOrchestratorIndividualExtraction:
         assert orchestrator._llm_provider is mock_llm_provider
         assert orchestrator._extraction_service is mock_extraction_service
 
-    def test_raises_value_error_when_extraction_service_missing(
-        self, mock_llm_provider
-    ):
+    def test_raises_value_error_when_extraction_service_missing(self, mock_llm_provider):
         """Test that ValueError is raised when extraction_service is missing."""
         with pytest.raises(ValueError) as exc_info:
             create_orchestrator(
@@ -178,9 +174,7 @@ class TestCreateOrchestratorIndividualExtraction:
 
         assert "extraction_service is required" in str(exc_info.value)
 
-    def test_raises_value_error_when_extraction_service_empty_string(
-        self, mock_llm_provider
-    ):
+    def test_raises_value_error_when_extraction_service_empty_string(self, mock_llm_provider):
         """Test that ValueError is raised when extraction_service is empty string."""
         services = {"extraction_service": ""}
 

@@ -31,9 +31,7 @@ class FakeLLMProvider:
         self.call_count = 0
         self.last_call_args: dict[str, Any] | None = None
         self.should_raise_error = should_fail
-        self.error_to_raise = (
-            RuntimeError("LLM provider error") if should_fail else None
-        )
+        self.error_to_raise = RuntimeError("LLM provider error") if should_fail else None
         self.available_models = ["test-model", "gpt-4", "claude-opus"]
 
     def complete(

@@ -8,9 +8,7 @@ to verify the full apply flow without external dependencies.
 import os
 import sys
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import tempfile
 from pathlib import Path
@@ -73,9 +71,7 @@ def batch_repo(temp_db):
 @pytest.fixture()
 def ontology_repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(
-        Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Apply Test Taxonomy")
-    )
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Apply Test Taxonomy"))
     r.save_concept_scheme(
         ConceptScheme(
             id=SCHEME_ID,
@@ -100,16 +96,10 @@ def client(pipeline_repo, batch_repo, ontology_repo):
     app.state.ontology_repo = ontology_repo
 
     app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
-    app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
-        ontology_repo
-    )
+    app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
     app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
-    app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
-        ontology_repo
-    )
-    app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(
-        ontology_repo
-    )
+    app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
+    app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)
 
     return TestClient(app)
 
@@ -169,9 +159,7 @@ class TestApplyEndpointHappyPath:
         )
         assert response.status_code == status.HTTP_200_OK
 
-    def test_apply_schema_extraction_creates_classes(
-        self, client, pipeline_repo, ontology_repo
-    ):
+    def test_apply_schema_extraction_creates_classes(self, client, pipeline_repo, ontology_repo):
         run_id = _create_and_complete_schema_run(
             pipeline_repo,
             candidates=[
@@ -213,9 +201,7 @@ class TestApplyEndpointHappyPath:
 
 
 class TestApplyIdempotency:
-    def test_apply_twice_creates_no_duplicates(
-        self, client, pipeline_repo, ontology_repo
-    ):
+    def test_apply_twice_creates_no_duplicates(self, client, pipeline_repo, ontology_repo):
         run_id = _create_and_complete_schema_run(
             pipeline_repo,
             candidates=[
@@ -239,9 +225,7 @@ class TestApplyIdempotency:
         classes = ontology_repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)
         assert len(classes) == 1
 
-    def test_apply_with_confidence_threshold(
-        self, client, pipeline_repo, ontology_repo
-    ):
+    def test_apply_with_confidence_threshold(self, client, pipeline_repo, ontology_repo):
         run_id = _create_and_complete_schema_run(
             pipeline_repo,
             candidates=[
@@ -294,9 +278,7 @@ class TestApplyEndpointErrors:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_schema_extraction_missing_concept_scheme_id_returns_400(
-        self, client, pipeline_repo
-    ):
+    def test_schema_extraction_missing_concept_scheme_id_returns_400(self, client, pipeline_repo):
         run_id = _create_and_complete_schema_run(pipeline_repo)
         response = client.post(
             f"/api/pipelines/runs/{run_id}/apply",
@@ -304,9 +286,7 @@ class TestApplyEndpointErrors:
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_schema_extraction_missing_taxonomy_id_returns_400(
-        self, client, pipeline_repo
-    ):
+    def test_schema_extraction_missing_taxonomy_id_returns_400(self, client, pipeline_repo):
         run_id = _create_and_complete_schema_run(pipeline_repo)
         response = client.post(
             f"/api/pipelines/runs/{run_id}/apply",

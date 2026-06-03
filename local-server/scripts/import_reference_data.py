@@ -74,9 +74,7 @@ def import_schema_org(repo: LocalReferenceRepository, limit: int | None = None) 
     return count
 
 
-def import_conceptnet_sample(
-    repo: LocalReferenceRepository, limit: int | None = None
-) -> int:
+def import_conceptnet_sample(repo: LocalReferenceRepository, limit: int | None = None) -> int:
     """
     Import sample ConceptNet assertions into the repository.
 
@@ -154,9 +152,7 @@ def import_conceptnet_sample(
     return count
 
 
-def import_dbpedia_sample(
-    repo: LocalReferenceRepository, limit: int | None = None
-) -> int:
+def import_dbpedia_sample(repo: LocalReferenceRepository, limit: int | None = None) -> int:
     """
     Import sample DBpedia resources into the repository.
 

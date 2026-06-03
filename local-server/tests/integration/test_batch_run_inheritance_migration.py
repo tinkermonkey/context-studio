@@ -450,9 +450,7 @@ class TestPolymorphicQueries:
 
         # Query completed/pending runs
         completed_runs = (
-            session.query(BatchRun)
-            .filter(BatchRun.status.in_(["committed", "completed"]))
-            .all()
+            session.query(BatchRun).filter(BatchRun.status.in_(["committed", "completed"])).all()
         )
         assert len(completed_runs) == 2
 
@@ -685,9 +683,7 @@ class TestMixedBatchRunScenarios:
 
         # Verify status filtering across types
         completed = (
-            session.query(BatchRun)
-            .filter(BatchRun.status.in_(["committed", "completed"]))
-            .all()
+            session.query(BatchRun).filter(BatchRun.status.in_(["committed", "completed"])).all()
         )
         assert len(completed) == 2
 
@@ -804,10 +800,7 @@ class TestMigrationDataSurvival:
 
             # Verify batch_runs table has the migrated data
             batch_runs = session3.execute(
-                text(
-                    "SELECT id, status, run_type FROM batch_runs WHERE run_type ="
-                    " 'import'"
-                )
+                text("SELECT id, status, run_type FROM batch_runs WHERE run_type =" " 'import'")
             ).fetchall()
             assert len(batch_runs) == 2
             for run in batch_runs:

@@ -112,9 +112,7 @@ class SchemaExtractionState(PipelineState):
     candidate_concepts: list[str] = field(default_factory=list)
     classified_concepts: dict[str, bool] = field(default_factory=dict)
     candidate_classes: list[CandidateClass] = field(default_factory=list)
-    candidate_properties: list[CandidatePropertyDefinition] = field(
-        default_factory=list
-    )
+    candidate_properties: list[CandidatePropertyDefinition] = field(default_factory=list)
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
 
@@ -166,9 +164,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         # Extract documents from input
         documents = schema_state.input_data.get("documents", [])
-        if not documents or not any(
-            doc.strip() for doc in documents if isinstance(doc, str)
-        ):
+        if not documents or not any(doc.strip() for doc in documents if isinstance(doc, str)):
             exc = PipelineInputError(
                 "documents is required and must contain at least one non-empty document"
             )
@@ -214,19 +210,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             schema_state = await self._stage_finalize(schema_state)
 
         except PipelineInputError:
-            schema_state = replace(
-                schema_state, current_status=PipelineRunStatus.FAILED
-            )
+            schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
             raise
         except PipelineExecutionError:
-            schema_state = replace(
-                schema_state, current_status=PipelineRunStatus.FAILED
-            )
+            schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
             raise
         except Exception as exc:
-            _logger.error(
-                f"Unexpected error during schema extraction: {exc}", exc_info=True
-            )
+            _logger.error(f"Unexpected error during schema extraction: {exc}", exc_info=True)
             schema_state = replace(
                 schema_state,
                 current_status=PipelineRunStatus.FAILED,
@@ -299,9 +289,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     # Stages
     # ------------------------------------------------------------------
 
-    async def _stage_text_ingestion(
-        self, state: SchemaExtractionState
-    ) -> SchemaExtractionState:
+    async def _stage_text_ingestion(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 1: Normalize text and chunk if needed.
 
@@ -369,9 +357,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     "fallback_action": "regex extraction",
                 }
                 state = replace(state, parse_warnings=state.parse_warnings + [warning])
-                chunk_candidates = re.findall(
-                    r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk
-                )
+                chunk_candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", chunk)
 
             # Merge with global dedup (case-insensitive, keep first occurrence)
             for candidate in chunk_candidates:
@@ -386,9 +372,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             steps_completed=state.steps_completed + ["candidate_identification"],
         )
 
-    async def _stage_classification(
-        self, state: SchemaExtractionState
-    ) -> SchemaExtractionState:
+    async def _stage_classification(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 3: Classify each candidate as existing (True) or new (False).
 
@@ -403,8 +387,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             existing_labels = {cls.label.lower() for cls in classes}
 
         classified = {
-            concept: concept.lower() in existing_labels
-            for concept in state.candidate_concepts
+            concept: concept.lower() in existing_labels for concept in state.candidate_concepts
         }
 
         return replace(
@@ -423,9 +406,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         a hardcoded constant.
         """
         if not state.candidate_concepts:
-            return replace(
-                state, steps_completed=state.steps_completed + ["definition_synthesis"]
-            )
+            return replace(state, steps_completed=state.steps_completed + ["definition_synthesis"])
 
         labels = state.candidate_concepts
         label_list = ", ".join(f'"{label}"' for label in labels)
@@ -484,9 +465,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         candidates: list[CandidateClass] = []
         for concept in labels:
-            definition = (
-                definitions_dict.get(concept) or f"{concept}: a domain concept."
-            )
+            definition = definitions_dict.get(concept) or f"{concept}: a domain concept."
             provenance = self._find_provenance(concept, state.source_text)
             confidence = self._compute_confidence(concept, state.source_text)
             candidates.append(
@@ -514,9 +493,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         not from the predicate string.
         """
         if not state.candidate_classes:
-            return replace(
-                state, steps_completed=state.steps_completed + ["connection_proposal"]
-            )
+            return replace(state, steps_completed=state.steps_completed + ["connection_proposal"])
 
         connections: list[CandidateConnection] = []
         properties: list[CandidatePropertyDefinition] = []
@@ -577,9 +554,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     connections.append(conn)
 
                 for prop in parsed.get("properties", []):
-                    provenance = self._find_provenance(
-                        prop.get("name", ""), state.source_text
-                    )
+                    provenance = self._find_provenance(prop.get("name", ""), state.source_text)
                     prop_def = CandidatePropertyDefinition(
                         label=prop.get("name", ""),
                         proposed_domain=prop.get("domain"),
@@ -591,9 +566,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             else:
                 warning = {
                     "stage": "connection_proposal",
-                    "error": (
-                        f"Expected dict in JSON response, got {type(parsed).__name__}"
-                    ),
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
                     "response_preview": response.content[:200],
                     "fallback_action": "no connections extracted",
                 }
@@ -614,16 +587,12 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             steps_completed=state.steps_completed + ["connection_proposal"],
         )
 
-    async def _stage_disambiguation(
-        self, state: SchemaExtractionState
-    ) -> SchemaExtractionState:
+    async def _stage_disambiguation(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 6: Handle multi-sense terms by creating separate candidates with rationale.
         """
         if not state.candidate_classes:
-            return replace(
-                state, steps_completed=state.steps_completed + ["disambiguation"]
-            )
+            return replace(state, steps_completed=state.steps_completed + ["disambiguation"])
 
         system_prompt = (
             "You are an expert in word sense disambiguation. "
@@ -686,9 +655,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             else:
                 warning = {
                     "stage": "disambiguation",
-                    "error": (
-                        f"Expected dict in JSON response, got {type(parsed).__name__}"
-                    ),
+                    "error": f"Expected dict in JSON response, got {type(parsed).__name__}",
                     "response_preview": response.content[:200],
                     "fallback_action": "skipping disambiguation",
                 }
@@ -735,9 +702,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             steps_completed=state.steps_completed + ["confidence_scoring"],
         )
 
-    async def _stage_finalize(
-        self, state: SchemaExtractionState
-    ) -> SchemaExtractionState:
+    async def _stage_finalize(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
         Stage 8: Finalize and prepare output.
         """

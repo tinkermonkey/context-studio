@@ -189,9 +189,7 @@ class TestBatchLifecycle:
         assert response.json()["run_counts"]["completed"] == 1
         assert response.json()["run_counts"]["failed"] == 1
 
-    def test_cancel_batch_halts_only_pending_runs(
-        self, client, pipeline_run_repo, batch_repo
-    ):
+    def test_cancel_batch_halts_only_pending_runs(self, client, pipeline_run_repo, batch_repo):
         """Cancel operation halts only PENDING runs."""
         # Create a batch and enqueue 5 runs
         create_response = client.post("/api/pipelines/batches")
@@ -360,9 +358,7 @@ class TestBatchLifecycle:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid pipeline type" in response.json()["detail"]
 
-    def test_resume_batch_clears_failure_reason(
-        self, client, pipeline_run_repo, batch_repo
-    ):
+    def test_resume_batch_clears_failure_reason(self, client, pipeline_run_repo, batch_repo):
         """Resume operation clears failure_reason when resuming FAILED runs."""
         # Create a batch and enqueue runs
         create_response = client.post("/api/pipelines/batches")

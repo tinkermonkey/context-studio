@@ -112,9 +112,7 @@ def brier_score(expected_probs: list[float], actual_labels: list[int]) -> float:
     if len(expected_probs) == 0:
         return 0.0
 
-    squared_errors = [
-        (prob - label) ** 2 for prob, label in zip(expected_probs, actual_labels)
-    ]
+    squared_errors = [(prob - label) ** 2 for prob, label in zip(expected_probs, actual_labels)]
 
     return round(sum(squared_errors) / len(squared_errors), 4)
 

@@ -139,9 +139,7 @@ async def get_local_db_session(request: Request) -> AsyncGenerator[Session, None
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager = cast(
-        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
-    )
+    db_manager = cast(DatabaseManager | None, getattr(request.app.state, "db_manager", None))
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 
@@ -170,9 +168,7 @@ async def get_operations_db_session(request: Request) -> AsyncGenerator[Session,
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager = cast(
-        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
-    )
+    db_manager = cast(DatabaseManager | None, getattr(request.app.state, "db_manager", None))
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 

@@ -4,9 +4,7 @@
 import json
 from pathlib import Path
 
-FIXTURES_DIR = (
-    Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
-)
+FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
 
 # Fixture definitions for schema_extraction
 SCHEMA_EXTRACTION_FIXTURES = {
@@ -473,12 +471,9 @@ def create_schema_extraction_fixtures():
         input_path.write_text(json.dumps(input_data, indent=2))
 
         # Write expected.json
-        classes = [
-            {"label": c, "confidence": 0.85} for c in scenario_data["expected_classes"]
-        ]
+        classes = [{"label": c, "confidence": 0.85} for c in scenario_data["expected_classes"]]
         properties = [
-            {"label": p, "confidence": 0.80}
-            for p in scenario_data["expected_properties"]
+            {"label": p, "confidence": 0.80} for p in scenario_data["expected_properties"]
         ]
         connections = [
             {

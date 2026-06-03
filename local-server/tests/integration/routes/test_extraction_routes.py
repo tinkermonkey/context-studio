@@ -301,9 +301,7 @@ class TestExtractionRoutes:
 
     def test_extract_deduplicates_entities(self, client):
         """POST /api/extract deduplicates similar entities across layers."""
-        response = client.post(
-            "/api/extract", json={"text": "SQLite database SQLite engine."}
-        )
+        response = client.post("/api/extract", json={"text": "SQLite database SQLite engine."})
         assert response.status_code == status.HTTP_200_OK
         # If deduplication works, similar entities should be merged
 

@@ -140,9 +140,7 @@ def test_change_events_inside_import_have_batch_run_id(change_repo):
         retrieved_events = change_repo.get_changes(limit=10).events
         assert len(retrieved_events) > 0
         # Check that at least one event has the batch_run_id
-        events_with_import_run = [
-            e for e in retrieved_events if e.batch_run_id == import_run.id
-        ]
+        events_with_import_run = [e for e in retrieved_events if e.batch_run_id == import_run.id]
         assert len(events_with_import_run) > 0
     finally:
         # Clear the context

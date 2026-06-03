@@ -73,12 +73,8 @@ class ImportRun:
     source_hash: str
     scope: SerializationScope
     status: ImportRunStatus = ImportRunStatus.PENDING
-    _resolutions: list[ResolutionRecord] = field(
-        default_factory=list, init=False, repr=False
-    )
-    _affected_entity_ids: list[str] = field(
-        default_factory=list, init=False, repr=False
-    )
+    _resolutions: list[ResolutionRecord] = field(default_factory=list, init=False, repr=False)
+    _affected_entity_ids: list[str] = field(default_factory=list, init=False, repr=False)
 
     def __init__(
         self,
@@ -103,9 +99,7 @@ class ImportRun:
         self.scope = scope
         object.__setattr__(self, "status", status)
         object.__setattr__(self, "_resolutions", list(resolutions or []))
-        object.__setattr__(
-            self, "_affected_entity_ids", list(affected_entity_ids or [])
-        )
+        object.__setattr__(self, "_affected_entity_ids", list(affected_entity_ids or []))
 
     @property
     def resolutions(self) -> tuple[ResolutionRecord, ...]:
@@ -151,9 +145,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to COMMITTED (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to COMMITTED (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.COMMITTED)
 
     def mark_failed(self) -> None:
@@ -168,9 +160,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to FAILED (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to FAILED (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.FAILED)
 
     def mark_rolled_back(self) -> None:
@@ -185,9 +175,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot transition {self.status} to ROLLED_BACK (terminal state)"
-            )
+            raise ValueError(f"Cannot transition {self.status} to ROLLED_BACK (terminal state)")
         object.__setattr__(self, "status", ImportRunStatus.ROLLED_BACK)
 
     def add_resolution(
@@ -212,9 +200,7 @@ class ImportRun:
             ImportRunStatus.FAILED,
             ImportRunStatus.ROLLED_BACK,
         ):
-            raise ValueError(
-                f"Cannot add resolution to {self.status} import run (terminal state)"
-            )
+            raise ValueError(f"Cannot add resolution to {self.status} import run (terminal state)")
         self._resolutions.append(
             ResolutionRecord(
                 match_kind=match_kind,
@@ -239,8 +225,7 @@ class ImportRun:
             ImportRunStatus.ROLLED_BACK,
         ):
             raise ValueError(
-                f"Cannot add affected entity to {self.status} import run (terminal"
-                " state)"
+                f"Cannot add affected entity to {self.status} import run (terminal" " state)"
             )
         if entity_id not in tuple(self._affected_entity_ids):
             self._affected_entity_ids.append(entity_id)

@@ -60,8 +60,7 @@ DICTIONARY_TERMS = [
                     "coordinate their actions by passing messages"
                 ),
                 "context": (
-                    "Multiple autonomous computers working together to "
-                    "achieve a common goal"
+                    "Multiple autonomous computers working together to " "achieve a common goal"
                 ),
             }
         ],
@@ -254,8 +253,7 @@ DICTIONARY_TERMS = [
                     "and does not wait for an immediate response"
                 ),
                 "context": (
-                    "Enables loose coupling between services and improves "
-                    "system responsiveness"
+                    "Enables loose coupling between services and improves " "system responsiveness"
                 ),
             }
         ],
@@ -386,8 +384,7 @@ DICTIONARY_TERMS = [
                     "across multiple nodes in a distributed system"
                 ),
                 "context": (
-                    "Provides redundancy, improves availability, and "
-                    "enables read scaling"
+                    "Provides redundancy, improves availability, and " "enables read scaling"
                 ),
             }
         ],
@@ -424,8 +421,7 @@ DICTIONARY_TERMS = [
                     "a copy"
                 ),
                 "context": (
-                    "Common in high-availability systems; backup can take "
-                    "over if primary fails"
+                    "Common in high-availability systems; backup can take " "over if primary fails"
                 ),
             }
         ],
@@ -521,8 +517,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "The ability of a system to handle increasing load by "
-                    "adding resources"
+                    "The ability of a system to handle increasing load by " "adding resources"
                 ),
                 "context": (
                     "Key non-functional requirement; systems should scale "
@@ -543,8 +538,7 @@ DICTIONARY_TERMS = [
                     "even when some components fail"
                 ),
                 "context": (
-                    "Achieved through redundancy, replication, and "
-                    "automatic failover mechanisms"
+                    "Achieved through redundancy, replication, and " "automatic failover mechanisms"
                 ),
             }
         ],
@@ -657,8 +651,7 @@ DICTIONARY_TERMS = [
                     "whether a service or component is functioning correctly"
                 ),
                 "context": (
-                    "Essential for detecting failures and enabling "
-                    "automatic failover or restart"
+                    "Essential for detecting failures and enabling " "automatic failover or restart"
                 ),
             }
         ],
@@ -761,8 +754,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "The time delay between a request being sent and a "
-                    "response being received"
+                    "The time delay between a request being sent and a " "response being received"
                 ),
                 "context": (
                     "Critical performance metric; low latency is essential "
@@ -779,8 +771,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "The rate at which a system can process requests or data "
-                    "per unit time"
+                    "The rate at which a system can process requests or data " "per unit time"
                 ),
                 "context": (
                     "Key performance metric; measured in requests per "
@@ -851,9 +842,7 @@ DICTIONARY_TERMS = [
         "surface_label": "Docker",
         "senses": [
             {
-                "definition": (
-                    "A platform for building, shipping, and running " "containers"
-                ),
+                "definition": "A platform for building, shipping, and running " "containers",
                 "context": (
                     "Industry-standard containerization tool; enables "
                     "development of cloud-native applications"
@@ -873,8 +862,7 @@ DICTIONARY_TERMS = [
                     "application code, runtime, and dependencies"
                 ),
                 "context": (
-                    "Template from which containers are instantiated; "
-                    "immutable and portable"
+                    "Template from which containers are instantiated; " "immutable and portable"
                 ),
             }
         ],
@@ -887,8 +875,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "A repository service that stores and distributes "
-                    "container images"
+                    "A repository service that stores and distributes " "container images"
                 ),
                 "context": (
                     "Centralized storage for versioned container images; "
@@ -905,8 +892,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "Automated management of containerized applications "
-                    "across multiple machines"
+                    "Automated management of containerized applications " "across multiple machines"
                 ),
                 "context": (
                     "Handles deployment, scaling, networking, and failure "
@@ -927,8 +913,7 @@ DICTIONARY_TERMS = [
                     "automating deployment, scaling, and operations"
                 ),
                 "context": (
-                    "Industry-standard platform for managing containerized "
-                    "applications at scale"
+                    "Industry-standard platform for managing containerized " "applications at scale"
                 ),
             }
         ],
@@ -1035,8 +1020,7 @@ DICTIONARY_TERMS = [
                     "communicate"
                 ),
                 "context": (
-                    "Can be REST, RPC, GraphQL, or gRPC; enables loose "
-                    "coupling between services"
+                    "Can be REST, RPC, GraphQL, or gRPC; enables loose " "coupling between services"
                 ),
             }
         ],
@@ -1053,8 +1037,7 @@ DICTIONARY_TERMS = [
                     "style for designing networked applications"
                 ),
                 "context": (
-                    "Uses HTTP methods and stateless communication; "
-                    "dominant style for web APIs"
+                    "Uses HTTP methods and stateless communication; " "dominant style for web APIs"
                 ),
             }
         ],
@@ -1071,8 +1054,7 @@ DICTIONARY_TERMS = [
                     "methods to perform CRUD operations on resources"
                 ),
                 "context": (
-                    "Common architecture for web services and microservices "
-                    "communication"
+                    "Common architecture for web services and microservices " "communication"
                 ),
             }
         ],
@@ -1124,9 +1106,7 @@ DICTIONARY_TERMS = [
                     "HyperText Transfer Protocol, the application layer "
                     "protocol for transmitting hypermedia documents and data"
                 ),
-                "context": (
-                    "Stateless, request-response protocol; foundation for " "REST APIs"
-                ),
+                "context": "Stateless, request-response protocol; foundation for " "REST APIs",
             }
         ],
         "cross_references": ["rest", "rest_api"],
@@ -1195,9 +1175,7 @@ DICTIONARY_TERMS = [
                     "Structured Query Language, a standard language for "
                     "querying and manipulating relational databases"
                 ),
-                "context": (
-                    "Used for CRUD operations and complex queries on " "structured data"
-                ),
+                "context": "Used for CRUD operations and complex queries on " "structured data",
             }
         ],
         "cross_references": ["relational_database", "query"],
@@ -1209,12 +1187,9 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "A request to retrieve, insert, update, or delete data "
-                    "from a database"
+                    "A request to retrieve, insert, update, or delete data " "from a database"
                 ),
-                "context": (
-                    "Can be simple (single table) or complex (joins, aggregations)"
-                ),
+                "context": "Can be simple (single table) or complex (joins, aggregations)",
             }
         ],
         "cross_references": ["database", "sql"],
@@ -1247,10 +1222,7 @@ DICTIONARY_TERMS = [
                     "A sequence of database operations that is atomic, "
                     "consistent, isolated, and durable (ACID)"
                 ),
-                "context": (
-                    "Ensures data integrity; either all operations succeed "
-                    "or none do"
-                ),
+                "context": "Ensures data integrity; either all operations succeed " "or none do",
             }
         ],
         "cross_references": ["acid", "consistency"],
@@ -1265,9 +1237,7 @@ DICTIONARY_TERMS = [
                     "A set of properties for database transactions: "
                     "Atomicity, Consistency, Isolation, Durability"
                 ),
-                "context": (
-                    "Ensures reliable transaction processing and data " "integrity"
-                ),
+                "context": "Ensures reliable transaction processing and data " "integrity",
             }
         ],
         "cross_references": ["transaction", "consistency"],
@@ -1323,8 +1293,7 @@ DICTIONARY_TERMS = [
                     "contains the most recent write"
                 ),
                 "context": (
-                    "One of three guarantees in the CAP theorem; essential "
-                    "for always-on systems"
+                    "One of three guarantees in the CAP theorem; essential " "for always-on systems"
                 ),
             }
         ],
@@ -1341,8 +1310,7 @@ DICTIONARY_TERMS = [
                     "times has the same effect as performing it once"
                 ),
                 "context": (
-                    "Critical for handling retries in distributed systems "
-                    "without side effects"
+                    "Critical for handling retries in distributed systems " "without side effects"
                 ),
             }
         ],
@@ -1358,10 +1326,7 @@ DICTIONARY_TERMS = [
                     "A pattern for attempting an operation again when it "
                     "fails, typically with exponential backoff"
                 ),
-                "context": (
-                    "Handles transient failures; must be used with "
-                    "idempotent operations"
-                ),
+                "context": "Handles transient failures; must be used with " "idempotent operations",
             }
         ],
         "cross_references": ["idempotence", "exponential_backoff"],
@@ -1394,9 +1359,7 @@ DICTIONARY_TERMS = [
                     "Controlling the number of requests a client or service "
                     "can make within a time window"
                 ),
-                "context": (
-                    "Protects services from overload; prevents cascading " "failures"
-                ),
+                "context": "Protects services from overload; prevents cascading " "failures",
             }
         ],
         "cross_references": ["throttling", "quota"],
@@ -1407,13 +1370,8 @@ DICTIONARY_TERMS = [
         "surface_label": "Throttling",
         "senses": [
             {
-                "definition": (
-                    "Actively slowing down requests when they exceed " "defined limits"
-                ),
-                "context": (
-                    "Graceful degradation; clients back off to prevent "
-                    "system overload"
-                ),
+                "definition": "Actively slowing down requests when they exceed " "defined limits",
+                "context": "Graceful degradation; clients back off to prevent " "system overload",
             }
         ],
         "cross_references": ["rate_limiting", "quota"],
@@ -1425,12 +1383,10 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "A limit on the amount of resources a client or tenant "
-                    "can consume"
+                    "A limit on the amount of resources a client or tenant " "can consume"
                 ),
                 "context": (
-                    "Enforces fair usage and prevents single tenant from "
-                    "monopolizing resources"
+                    "Enforces fair usage and prevents single tenant from " "monopolizing resources"
                 ),
             }
         ],
@@ -1447,8 +1403,7 @@ DICTIONARY_TERMS = [
                     "storage layer to reduce latency"
                 ),
                 "context": (
-                    "Improves performance; must handle cache invalidation "
-                    "and consistency"
+                    "Improves performance; must handle cache invalidation " "and consistency"
                 ),
             }
         ],
@@ -1461,8 +1416,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "A high-speed data storage layer that enables faster "
-                    "retrieval of data"
+                    "A high-speed data storage layer that enables faster " "retrieval of data"
                 ),
                 "context": (
                     "Can be in-process, distributed, or at various layers "
@@ -1482,10 +1436,7 @@ DICTIONARY_TERMS = [
                     "The process of converting data into a coded format to "
                     "prevent unauthorized access"
                 ),
-                "context": (
-                    "Can be at rest (stored data) or in transit (network "
-                    "communication)"
-                ),
+                "context": "Can be at rest (stored data) or in transit (network " "communication)",
             }
         ],
         "cross_references": ["security", "tls"],
@@ -1501,8 +1452,7 @@ DICTIONARY_TERMS = [
                     "from unauthorized access or attacks"
                 ),
                 "context": (
-                    "Includes authentication, authorization, encryption, "
-                    "and audit logging"
+                    "Includes authentication, authorization, encryption, " "and audit logging"
                 ),
             }
         ],
@@ -1514,13 +1464,8 @@ DICTIONARY_TERMS = [
         "surface_label": "Authentication",
         "senses": [
             {
-                "definition": (
-                    "The process of verifying the identity of a user or " "service"
-                ),
-                "context": (
-                    "First line of defense; enables identification and "
-                    "audit of actions"
-                ),
+                "definition": "The process of verifying the identity of a user or " "service",
+                "context": "First line of defense; enables identification and " "audit of actions",
             }
         ],
         "cross_references": ["authorization", "security"],
@@ -1553,9 +1498,7 @@ DICTIONARY_TERMS = [
                     "Transport Layer Security, a cryptographic protocol for "
                     "secure communication over networks"
                 ),
-                "context": (
-                    "Provides encryption and authentication for network " "connections"
-                ),
+                "context": "Provides encryption and authentication for network " "connections",
             }
         ],
         "cross_references": ["encryption", "security"],
@@ -1567,8 +1510,7 @@ DICTIONARY_TERMS = [
         "senses": [
             {
                 "definition": (
-                    "In microservices: a small, independently deployable "
-                    "unit of functionality"
+                    "In microservices: a small, independently deployable " "unit of functionality"
                 ),
                 "context": (
                     "Core building block of microservices architecture; "
@@ -1581,8 +1523,7 @@ DICTIONARY_TERMS = [
                     "functionality through well-defined interfaces"
                 ),
                 "context": (
-                    "Service-oriented architecture; emphasizes reusability "
-                    "and composition"
+                    "Service-oriented architecture; emphasizes reusability " "and composition"
                 ),
             },
             {
@@ -1682,8 +1623,7 @@ DICTIONARY_TERMS = [
                     "them to backend servers, returning responses to clients"
                 ),
                 "context": (
-                    "Used for load balancing, caching, SSL termination, "
-                    "and request routing"
+                    "Used for load balancing, caching, SSL termination, " "and request routing"
                 ),
             }
         ],
@@ -1983,7 +1923,5 @@ def build_dictionary_corpus(output_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    output_dir = (
-        Path(__file__).parent.parent / "datafiles" / "validation" / "dictionary"
-    )
+    output_dir = Path(__file__).parent.parent / "datafiles" / "validation" / "dictionary"
     build_dictionary_corpus(str(output_dir))

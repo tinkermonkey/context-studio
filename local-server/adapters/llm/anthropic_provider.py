@@ -86,9 +86,7 @@ class AnthropicProvider:
             RuntimeError: If Anthropic client is not initialized or API call fails
         """
         if self._client is None:
-            raise RuntimeError(
-                "Anthropic client not initialized — package not installed"
-            )
+            raise RuntimeError("Anthropic client not initialized — package not installed")
 
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from Anthropic provider")

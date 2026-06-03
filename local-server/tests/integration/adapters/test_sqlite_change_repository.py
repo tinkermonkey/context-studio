@@ -276,9 +276,7 @@ class TestSQLiteChangeRepository:
         count = change_repo.count_unprocessed()
         assert count == 0
 
-    def test_save_conflict_resolutions_persists_resolutions(
-        self, change_repo, session_factory
-    ):
+    def test_save_conflict_resolutions_persists_resolutions(self, change_repo, session_factory):
         """Test that save_conflict_resolutions persists conflict resolution data."""
         proposal_id = self._create_proposal(session_factory)
         resolutions = {
@@ -296,11 +294,7 @@ class TestSQLiteChangeRepository:
         # Verify the resolutions were persisted
         session = session_factory()
         try:
-            records = (
-                session.query(ConflictResolution)
-                .filter_by(proposal_id=proposal_id)
-                .all()
-            )
+            records = session.query(ConflictResolution).filter_by(proposal_id=proposal_id).all()
 
             assert len(records) == 3
 
@@ -316,9 +310,7 @@ class TestSQLiteChangeRepository:
         finally:
             session.close()
 
-    def test_get_conflict_resolutions_retrieves_resolutions(
-        self, change_repo, session_factory
-    ):
+    def test_get_conflict_resolutions_retrieves_resolutions(self, change_repo, session_factory):
         """Test that get_conflict_resolutions retrieves persisted resolutions."""
         proposal_id = self._create_proposal(session_factory)
         resolutions = {
@@ -341,9 +333,7 @@ class TestSQLiteChangeRepository:
         assert retrieved["entity-1"]["field_b"] == "value_b"
         assert retrieved["entity-2"]["field_c"] == "value_c"
 
-    def test_save_conflict_resolutions_overwrites_existing(
-        self, change_repo, session_factory
-    ):
+    def test_save_conflict_resolutions_overwrites_existing(self, change_repo, session_factory):
         """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing
         resolutions."""
         proposal_id = self._create_proposal(session_factory)
@@ -498,18 +488,14 @@ class TestSQLiteChangeRepository:
             assert db_proposal.state == "merged"
 
             db_version = (
-                session.query(EntityVersion)
-                .filter_by(entity_id="entity-1", version=1)
-                .first()
+                session.query(EntityVersion).filter_by(entity_id="entity-1", version=1).first()
             )
             assert db_version is not None
             assert db_version.snapshot == {"data": "snapshot"}
         finally:
             session.close()
 
-    def test_mark_processed_raises_domain_exception_before_db_exception(
-        self, change_repo
-    ):
+    def test_mark_processed_raises_domain_exception_before_db_exception(self, change_repo):
         """Test that mark_processed raises VersionNotFoundError without catching it."""
         # This test verifies the defensive re-raise is in place
         with pytest.raises(VersionNotFoundError):
@@ -540,9 +526,7 @@ class TestSQLiteChangeRepository:
         with pytest.raises(VersionNotFoundError):
             change_repo.atomic_update_on_merge(domain_changeset, domain_proposal, [])
 
-    def test_update_changeset_raises_domain_exception_before_db_exception(
-        self, change_repo
-    ):
+    def test_update_changeset_raises_domain_exception_before_db_exception(self, change_repo):
         """Test that update_changeset raises VersionNotFoundError without catching it."""
         domain_changeset = DomainChangeset(
             id="nonexistent-changeset",
@@ -556,9 +540,7 @@ class TestSQLiteChangeRepository:
         with pytest.raises(VersionNotFoundError):
             change_repo.update_changeset(domain_changeset)
 
-    def test_update_proposal_raises_domain_exception_before_db_exception(
-        self, change_repo
-    ):
+    def test_update_proposal_raises_domain_exception_before_db_exception(self, change_repo):
         """Test that update_proposal raises VersionNotFoundError without catching it."""
         domain_proposal = DomainProposal(
             id="nonexistent-proposal",
@@ -592,9 +574,7 @@ class TestSQLiteChangeRepository:
         )
 
         with pytest.raises(VersionNotFoundError):
-            change_repo.update_changeset_and_proposal_on_submit(
-                domain_changeset, domain_proposal
-            )
+            change_repo.update_changeset_and_proposal_on_submit(domain_changeset, domain_proposal)
 
     def test_atomic_update_changeset_and_proposal_raises_domain_exception_before_db_exception(
         self, change_repo
@@ -618,9 +598,7 @@ class TestSQLiteChangeRepository:
         )
 
         with pytest.raises(VersionNotFoundError):
-            change_repo.atomic_update_changeset_and_proposal(
-                domain_changeset, domain_proposal
-            )
+            change_repo.atomic_update_changeset_and_proposal(domain_changeset, domain_proposal)
 
     def test_get_changes_filters_by_batch_run_id(self, change_repo):
         """Test that get_changes correctly filters by batch_run_id."""
@@ -691,14 +669,9 @@ class TestSQLiteChangeRepository:
         )
 
         # Filter by batch_run_id and entity_id
-        result = change_repo.get_changes(
-            batch_run_id="batch-1", entity_id="entity-1", limit=None
-        )
+        result = change_repo.get_changes(batch_run_id="batch-1", entity_id="entity-1", limit=None)
         assert len(result.events) == 2
-        assert all(
-            e.entity_id == "entity-1" and e.batch_run_id == "batch-1"
-            for e in result.events
-        )
+        assert all(e.entity_id == "entity-1" and e.batch_run_id == "batch-1" for e in result.events)
 
         # Filter by batch_run_id only
         result = change_repo.get_changes(batch_run_id="batch-1", limit=None)

@@ -22,9 +22,7 @@ x_args = context.get_x_argument(as_dictionary=True)
 
 if x_args.get("db") == "operations":
     # For operations database, only include operations migrations
-    config.set_main_option(
-        "version_locations", str(sqlite_dir / "operations" / "versions")
-    )
+    config.set_main_option("version_locations", str(sqlite_dir / "operations" / "versions"))
     operations_db_url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
     config.set_main_option("sqlalchemy.url", operations_db_url)
 

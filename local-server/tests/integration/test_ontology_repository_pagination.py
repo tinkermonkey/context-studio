@@ -194,9 +194,7 @@ class TestTaxonomyPagination:
         assert len(second_batch) == 5
         assert first_batch[0].id != second_batch[0].id
 
-    def test_list_taxonomies_pagination_beyond_total(
-        self, repo, large_taxonomy_dataset
-    ):
+    def test_list_taxonomies_pagination_beyond_total(self, repo, large_taxonomy_dataset):
         result = repo.list_taxonomies(limit=10, offset=50)
         assert len(result) == 0
 
@@ -223,19 +221,13 @@ class TestTaxonomySorting:
         assert titles == sorted(titles, reverse=True)
 
     def test_list_taxonomies_sort_by_created_at_asc(self, repo, large_taxonomy_dataset):
-        result = repo.list_taxonomies(
-            limit=None, sort_by="created_at", sort_order="asc"
-        )
+        result = repo.list_taxonomies(limit=None, sort_by="created_at", sort_order="asc")
         assert len(result) == 20
         for i in range(len(result) - 1):
             assert result[i].created_at <= result[i + 1].created_at
 
-    def test_list_taxonomies_sort_by_created_at_desc(
-        self, repo, large_taxonomy_dataset
-    ):
-        result = repo.list_taxonomies(
-            limit=None, sort_by="created_at", sort_order="desc"
-        )
+    def test_list_taxonomies_sort_by_created_at_desc(self, repo, large_taxonomy_dataset):
+        result = repo.list_taxonomies(limit=None, sort_by="created_at", sort_order="desc")
         assert len(result) == 20
         for i in range(len(result) - 1):
             assert result[i].created_at >= result[i + 1].created_at
@@ -258,9 +250,7 @@ class TestTaxonomySearch:
         assert len(result) >= 10
         assert all("ology" in t.title for t in result)
 
-    def test_list_taxonomies_search_case_insensitive(
-        self, repo, large_taxonomy_dataset
-    ):
+    def test_list_taxonomies_search_case_insensitive(self, repo, large_taxonomy_dataset):
         result_lower = repo.list_taxonomies(query="zoology")
         result_upper = repo.list_taxonomies(query="Zoology")
         result_mixed = repo.list_taxonomies(query="ZoOlOgY")
@@ -282,9 +272,7 @@ class TestTaxonomySearch:
         assert all("ology" in t.title for t in result)
 
     def test_list_taxonomies_search_with_sorting(self, repo, large_taxonomy_dataset):
-        result = repo.list_taxonomies(
-            query="ology", sort_by="title", sort_order="asc", limit=None
-        )
+        result = repo.list_taxonomies(query="ology", sort_by="title", sort_order="asc", limit=None)
         titles = [t.title for t in result]
         assert titles == sorted(titles)
 
@@ -309,24 +297,18 @@ class TestTaxonomyCount:
 class TestConceptSchemePagination:
     """Tests for concept scheme pagination."""
 
-    def test_list_concept_schemes_pagination_limit(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_pagination_limit(self, repo, large_concept_scheme_dataset):
         result = repo.list_concept_schemes(limit=5)
         assert len(result) == 5
 
-    def test_list_concept_schemes_pagination_offset(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_pagination_offset(self, repo, large_concept_scheme_dataset):
         first_batch = repo.list_concept_schemes(limit=5, offset=0)
         second_batch = repo.list_concept_schemes(limit=5, offset=5)
         assert len(first_batch) == 5
         assert len(second_batch) == 5
         assert first_batch[0].id != second_batch[0].id
 
-    def test_list_concept_schemes_pagination_none_limit(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_pagination_none_limit(self, repo, large_concept_scheme_dataset):
         result = repo.list_concept_schemes(limit=None)
         assert len(result) == 15
 
@@ -334,21 +316,13 @@ class TestConceptSchemePagination:
 class TestConceptSchemeSorting:
     """Tests for concept scheme sorting."""
 
-    def test_list_concept_schemes_sort_by_title_asc(
-        self, repo, large_concept_scheme_dataset
-    ):
-        result = repo.list_concept_schemes(
-            limit=None, sort_by="title", sort_order="asc"
-        )
+    def test_list_concept_schemes_sort_by_title_asc(self, repo, large_concept_scheme_dataset):
+        result = repo.list_concept_schemes(limit=None, sort_by="title", sort_order="asc")
         titles = [s.title for s in result]
         assert titles == sorted(titles)
 
-    def test_list_concept_schemes_sort_by_title_desc(
-        self, repo, large_concept_scheme_dataset
-    ):
-        result = repo.list_concept_schemes(
-            limit=None, sort_by="title", sort_order="desc"
-        )
+    def test_list_concept_schemes_sort_by_title_desc(self, repo, large_concept_scheme_dataset):
+        result = repo.list_concept_schemes(limit=None, sort_by="title", sort_order="desc")
         titles = [s.title for s in result]
         assert titles == sorted(titles, reverse=True)
 
@@ -356,25 +330,19 @@ class TestConceptSchemeSorting:
 class TestConceptSchemeSearch:
     """Tests for concept scheme text search."""
 
-    def test_list_concept_schemes_search_exact_match(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_search_exact_match(self, repo, large_concept_scheme_dataset):
         result = repo.list_concept_schemes(query="Animals")
         assert len(result) == 1
         assert result[0].title == "Animals"
 
-    def test_list_concept_schemes_search_partial_match(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_search_partial_match(self, repo, large_concept_scheme_dataset):
         result = repo.list_concept_schemes(query="sperm")
         assert len(result) == 2
         titles = [s.title for s in result]
         assert "Gymnosperms" in titles
         assert "Angiosperms" in titles
 
-    def test_list_concept_schemes_search_case_insensitive(
-        self, repo, large_concept_scheme_dataset
-    ):
+    def test_list_concept_schemes_search_case_insensitive(self, repo, large_concept_scheme_dataset):
         result_lower = repo.list_concept_schemes(query="animals")
         result_upper = repo.list_concept_schemes(query="Animals")
         result_mixed = repo.list_concept_schemes(query="AnImAlS")
@@ -404,9 +372,7 @@ class TestConceptSchemeCount:
     def test_count_concept_schemes_with_both_filters(
         self, repo, sample_taxonomy, large_concept_scheme_dataset
     ):
-        count = repo.count_concept_schemes(
-            taxonomy_id=sample_taxonomy.id, query="sperm"
-        )
+        count = repo.count_concept_schemes(taxonomy_id=sample_taxonomy.id, query="sperm")
         result = repo.list_concept_schemes(
             taxonomy_id=sample_taxonomy.id, query="sperm", limit=None
         )
@@ -550,9 +516,7 @@ class TestPropertyDefinitionList:
             )
             repo.save_property_definition(prop)
 
-        result = repo.list_property_definitions(
-            sort_by="title", sort_order="asc", limit=None
-        )
+        result = repo.list_property_definitions(sort_by="title", sort_order="asc", limit=None)
         titles = [p.title for p in result]
         assert titles == sorted(titles)
 

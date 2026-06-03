@@ -109,11 +109,7 @@ class SQLiteExtractionRunRepository:
         """
         session = self._get_session()
         try:
-            orm_run = (
-                session.query(ExtractionRunORM)
-                .filter(ExtractionRunORM.id == run_id)
-                .first()
-            )
+            orm_run = session.query(ExtractionRunORM).filter(ExtractionRunORM.id == run_id).first()
 
             if not orm_run:
                 return None
@@ -173,11 +169,7 @@ class SQLiteExtractionRunRepository:
         """
         session = self._get_session()
         try:
-            orm_run = (
-                session.query(ExtractionRunORM)
-                .filter(ExtractionRunORM.id == run.id)
-                .first()
-            )
+            orm_run = session.query(ExtractionRunORM).filter(ExtractionRunORM.id == run.id).first()
 
             if not orm_run:
                 raise ValueError(f"ExtractionRun with id {run.id} not found")
@@ -219,31 +211,19 @@ class SQLiteExtractionRunRepository:
         return ExtractionRun(
             id=str(orm_run.id) if orm_run.id else "",
             source_document_uri=cast(str | None, orm_run.source_document_uri),
-            source_text_hash=(
-                str(orm_run.source_text_hash) if orm_run.source_text_hash else ""
-            ),
+            source_text_hash=(str(orm_run.source_text_hash) if orm_run.source_text_hash else ""),
             pipeline_config_ref=(
                 str(orm_run.pipeline_config_ref) if orm_run.pipeline_config_ref else ""
             ),
             model=str(orm_run.model) if orm_run.model else "",
-            temperature=(
-                float(orm_run.temperature) if orm_run.temperature is not None else 0.0
-            ),
-            tokens_used=(
-                int(orm_run.tokens_used) if orm_run.tokens_used is not None else 0
-            ),
-            duration_ms=(
-                int(orm_run.duration_ms) if orm_run.duration_ms is not None else 0
-            ),
+            temperature=(float(orm_run.temperature) if orm_run.temperature is not None else 0.0),
+            tokens_used=(int(orm_run.tokens_used) if orm_run.tokens_used is not None else 0),
+            duration_ms=(int(orm_run.duration_ms) if orm_run.duration_ms is not None else 0),
             triples_extracted=(
-                int(orm_run.triples_extracted)
-                if orm_run.triples_extracted is not None
-                else 0
+                int(orm_run.triples_extracted) if orm_run.triples_extracted is not None else 0
             ),
             triples_committed=(
-                int(orm_run.triples_committed)
-                if orm_run.triples_committed is not None
-                else 0
+                int(orm_run.triples_committed) if orm_run.triples_committed is not None else 0
             ),
             status=status,
             batch_run_id=None,

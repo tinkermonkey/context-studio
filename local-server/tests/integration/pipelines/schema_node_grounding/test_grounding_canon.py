@@ -76,9 +76,7 @@ def canon_adapter_for(request):
     """
 
     def _build(class_identifier: str):
-        candidates = _candidates_from_canon_refs(
-            _canon_external_refs_for(class_identifier)
-        )
+        candidates = _candidates_from_canon_refs(_canon_external_refs_for(class_identifier))
         mock = AsyncMock()
         mock.query_sources = AsyncMock(return_value=candidates)
         return mock
@@ -153,9 +151,7 @@ class TestGroundingCanon:
             f"in groundings; got URIs={rest_uris}"
         )
 
-    def test_crdt_class_grounded_to_wikidata(
-        self, canon_adapter_for, passthrough_scorer
-    ):
+    def test_crdt_class_grounded_to_wikidata(self, canon_adapter_for, passthrough_scorer):
         adapter = canon_adapter_for("crdt")
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=MagicMock(),
@@ -163,9 +159,7 @@ class TestGroundingCanon:
             scorer=passthrough_scorer,
         )
         result_state = asyncio.run(
-            orchestrator.execute(
-                _state_for("Conflict-free Replicated Data Type", ["Wikidata"])
-            )
+            orchestrator.execute(_state_for("Conflict-free Replicated Data Type", ["Wikidata"]))
         )
         assert result_state.current_status == PipelineRunStatus.COMPLETED
 
@@ -184,9 +178,7 @@ class TestGroundingCanon:
             grounding_adapter=adapter,
             scorer=passthrough_scorer,
         )
-        result_state = asyncio.run(
-            orchestrator.execute(_state_for("REST", ["DBpedia"]))
-        )
+        result_state = asyncio.run(orchestrator.execute(_state_for("REST", ["DBpedia"])))
         groundings = (result_state.result or {}).get("groundings", [])
         assert groundings, "Expected at least one grounding for the REST canon class"
         for g in groundings:
@@ -194,9 +186,7 @@ class TestGroundingCanon:
             assert 0.0 <= g["match_confidence"] <= 1.0
             assert g.get("match_rationale"), f"Grounding missing rationale: {g}"
 
-    def test_empty_candidate_set_completes_with_empty_groundings(
-        self, passthrough_scorer
-    ):
+    def test_empty_candidate_set_completes_with_empty_groundings(self, passthrough_scorer):
         """If the adapter returns nothing, the pipeline completes cleanly with [] groundings."""
         empty_adapter = AsyncMock()
         empty_adapter.query_sources = AsyncMock(return_value=[])

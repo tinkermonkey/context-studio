@@ -64,9 +64,7 @@ def persist_incoming_entities(
             if resolution == ResolutionKind.SKIP:
                 continue
             if resolution == ResolutionKind.ABORT:
-                raise ValueError(
-                    f"Import aborted per user resolution for entity {entity_id}"
-                )
+                raise ValueError(f"Import aborted per user resolution for entity {entity_id}")
 
         # Persist the entity based on its type
         entity_type = entity_dict.get("type")
@@ -91,15 +89,13 @@ def persist_incoming_entities(
                 affected_entity_ids.append(entity_id)
             else:
                 warning_msg = (
-                    f"Entity type '{entity_type or 'unknown'}' not yet supported for"
-                    " persistence"
+                    f"Entity type '{entity_type or 'unknown'}' not yet supported for" " persistence"
                 )
                 logger.warning(warning_msg)
                 warnings.append(warning_msg)
         except Exception as e:
             warning_msg = (
-                f"Failed to persist {entity_type or 'unknown'} entity {entity_id}:"
-                f" {str(e)}"
+                f"Failed to persist {entity_type or 'unknown'} entity {entity_id}:" f" {str(e)}"
             )
             logger.error(warning_msg)
             warnings.append(warning_msg)

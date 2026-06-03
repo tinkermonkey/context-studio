@@ -185,9 +185,7 @@ local:class-new a owl:Class ;
 class TestOWLAdapterWarnings:
     """Test warning system in OWL deserializer."""
 
-    def test_warnings_for_entities_without_labels(
-        self, ontology_repo, interchange_repo
-    ):
+    def test_warnings_for_entities_without_labels(self, ontology_repo, interchange_repo):
         """Test that warnings are generated for entities without labels."""
         owl_turtle = b"""
 @prefix local: <http://context-studio.local/ontology/> .
@@ -287,17 +285,12 @@ class TestOWLAdapterConflictDetection:
         plan = deserializer.deserialize(exported_data, dry_run=True)
 
         # Should have conflicts for the existing entities (tax-1, scheme-1, class-1, individual-1)
-        assert (
-            len(plan.conflicts) > 0
-        ), "Expected conflicts when reimporting existing entities"
+        assert len(plan.conflicts) > 0, "Expected conflicts when reimporting existing entities"
 
         # Verify at least one conflict is detected
         conflict_ids = [c.incoming["id"] for c in plan.conflicts]
         # Should detect conflicts for the existing entities
-        assert any(
-            cid in conflict_ids
-            for cid in ["tax-1", "scheme-1", "class-1", "individual-1"]
-        )
+        assert any(cid in conflict_ids for cid in ["tax-1", "scheme-1", "class-1", "individual-1"])
 
     def test_conflict_cascade_external_reference(
         self, db_engine, session_factory, interchange_repo

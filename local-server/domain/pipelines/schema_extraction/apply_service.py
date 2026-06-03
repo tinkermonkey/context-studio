@@ -64,9 +64,7 @@ class SchemaExtractionApplyService:
             ValueError: If concept_scheme_id or taxonomy_id is empty
         """
         if not concept_scheme_id:
-            raise ValueError(
-                "concept_scheme_id is required for schema extraction apply"
-            )
+            raise ValueError("concept_scheme_id is required for schema extraction apply")
         if not taxonomy_id:
             raise ValueError("taxonomy_id is required for schema extraction apply")
 
@@ -75,12 +73,8 @@ class SchemaExtractionApplyService:
         connections = run.output_summary.get("connections", [])
 
         # --- Classes ---
-        existing_classes = self._repo.list_classes(
-            concept_scheme_id=concept_scheme_id, limit=None
-        )
-        existing_titles: dict[str, str] = {
-            c.title.lower(): c.id for c in existing_classes
-        }
+        existing_classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
+        existing_titles: dict[str, str] = {c.title.lower(): c.id for c in existing_classes}
         # Also collect newly created classes during this apply for relationship resolution
         all_class_title_to_id: dict[str, str] = dict(existing_titles)
 
@@ -110,9 +104,7 @@ class SchemaExtractionApplyService:
             result.created_class_ids.append(new_class.id)
 
         # --- Property Definitions ---
-        prop_candidates = [
-            c for c in candidates if c.get("kind") == "property_definition"
-        ]
+        prop_candidates = [c for c in candidates if c.get("kind") == "property_definition"]
         for candidate in prop_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)

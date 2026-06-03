@@ -69,9 +69,7 @@ class QualityRunner:
         """
         return load_expected_output(pipeline_type, scenario)
 
-    def load_distractors(
-        self, pipeline_type: str, scenario: str
-    ) -> dict[str, Any] | None:
+    def load_distractors(self, pipeline_type: str, scenario: str) -> dict[str, Any] | None:
         """
         Load distractor fixtures for a scenario (optional).
 

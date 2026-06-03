@@ -129,14 +129,10 @@ class TestDuckDBSyncAdapterPush:
 
         # Verify Parquet files exist in the date directories (UUID filenames)
         date_parquet_files = list((changes_dir / date_str).glob("*.parquet"))
-        tomorrow_parquet_files = list(
-            (changes_dir / tomorrow_date_str).glob("*.parquet")
-        )
+        tomorrow_parquet_files = list((changes_dir / tomorrow_date_str).glob("*.parquet"))
 
         assert len(date_parquet_files) > 0, f"No Parquet files in {date_str} directory"
-        assert (
-            len(tomorrow_parquet_files) > 0
-        ), f"No Parquet files in {tomorrow_date_str} directory"
+        assert len(tomorrow_parquet_files) > 0, f"No Parquet files in {tomorrow_date_str} directory"
 
     def test_push_events_with_complex_state(self, duckdb_adapter):
         """Test pushing events with complex nested state objects."""
@@ -294,9 +290,7 @@ class TestDuckDBSyncAdapterPull:
         assert pulled_event.change_reason is None
         assert pulled_event.previous_state is None
 
-    def test_pull_fails_on_malformed_json_in_new_state(
-        self, duckdb_adapter, temp_output_dir
-    ):
+    def test_pull_fails_on_malformed_json_in_new_state(self, duckdb_adapter, temp_output_dir):
         """Test that pull raises RuntimeError on malformed JSON in new_state instead of silently
         returning empty dict."""
         import pyarrow as pa
@@ -333,9 +327,7 @@ class TestDuckDBSyncAdapterPull:
 
         assert "Failed to parse new_state JSON" in str(exc_info.value)
 
-    def test_pull_fails_on_malformed_json_in_previous_state(
-        self, duckdb_adapter, temp_output_dir
-    ):
+    def test_pull_fails_on_malformed_json_in_previous_state(self, duckdb_adapter, temp_output_dir):
         """Test that pull raises RuntimeError on malformed JSON in previous_state instead of
         silently returning None."""
         import pyarrow as pa

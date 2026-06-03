@@ -79,9 +79,7 @@ def ontology_service(ontology_repo, embedding_service, event_publisher):
 @pytest.fixture
 def llm_provider():
     """Create a fake LLM provider with grounding response."""
-    llm_response = (
-        '{"groundings": [{"entity": "Microservice", "source": "wikidata", "id": "Q1"}]}'
-    )
+    llm_response = '{"groundings": [{"entity": "Microservice", "source": "wikidata", "id": "Q1"}]}'
     return FakeLLMProvider(
         response_content=llm_response,
         tokens_in=10,

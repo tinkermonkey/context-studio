@@ -32,9 +32,7 @@ class InProcessEventPublisher:
 
     def __init__(self) -> None:
         """Initialize the event publisher with empty handler registry."""
-        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = (
-            {}
-        )
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
     def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """

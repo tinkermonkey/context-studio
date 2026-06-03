@@ -67,9 +67,7 @@ class BackgroundTask:
     result: Optional[dict] = None
 
     # Valid state transitions for background tasks
-    _VALID_TRANSITIONS: ClassVar[
-        dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]
-    ] = {
+    _VALID_TRANSITIONS: ClassVar[dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]] = {
         BackgroundTaskStatus.PENDING: {
             BackgroundTaskStatus.RUNNING,
             BackgroundTaskStatus.COMPLETED,
@@ -119,8 +117,7 @@ class BackgroundTask:
         """
         if not self.can_transition_to(target_status):
             raise InvalidStateTransitionError(
-                f"Cannot transition task from {self.status.value} to"
-                f" {target_status.value}"
+                f"Cannot transition task from {self.status.value} to" f" {target_status.value}"
             )
 
         self.status = target_status

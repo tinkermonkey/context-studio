@@ -174,15 +174,12 @@ class PipelineRepository:
             session.commit()
             result = self._orm_to_domain(orm_obj)
             logger.info(
-                f"Created pipeline run {run_id} in batch {batch_run_id} "
-                f"({pipeline_type.value})"
+                f"Created pipeline run {run_id} in batch {batch_run_id} " f"({pipeline_type.value})"
             )
             return result
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when creating pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database integrity error when creating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to create pipeline run") from e
         except OperationalError as e:
             session.rollback()
@@ -212,16 +209,12 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if orm_obj:
                 return self._orm_to_domain(orm_obj)
             return None
         except OperationalError as e:
-            logger.error(
-                f"Database operational error when retrieving pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database operational error when retrieving pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to retrieve pipeline run") from e
         except SQLAlchemyError as e:
             logger.error(f"Database error when retrieving pipeline run {run_id}: {e}")
@@ -269,11 +262,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_objs = (
-                session.query(PipelineRun)
-                .filter(PipelineRun.status == status.value)
-                .all()
-            )
+            orm_objs = session.query(PipelineRun).filter(PipelineRun.status == status.value).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         except OperationalError as e:
             msg = (
@@ -283,10 +272,7 @@ class PipelineRepository:
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when listing pipeline runs "
-                f"by status {status.value}: {e}"
-            )
+            msg = "Database error when listing pipeline runs " f"by status {status.value}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by status") from e
         finally:
@@ -322,10 +308,7 @@ class PipelineRepository:
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when listing pipeline runs "
-                f"by type {pipeline_type.value}: {e}"
-            )
+            msg = "Database error when listing pipeline runs " f"by type {pipeline_type.value}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to list pipeline runs by type") from e
         finally:
@@ -347,11 +330,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_objs = (
-                session.query(PipelineRun)
-                .filter(PipelineRun.batch_id == batch_id)
-                .all()
-            )
+            orm_objs = session.query(PipelineRun).filter(PipelineRun.batch_id == batch_id).all()
             return [self._orm_to_domain(obj) for obj in orm_objs]
         except OperationalError as e:
             msg = f"Database operational error when listing runs for batch {batch_id}"
@@ -415,9 +394,7 @@ class PipelineRepository:
             orm_objs = q.offset(offset).limit(limit).all()
             return [self._orm_to_domain(obj) for obj in orm_objs], total
         except OperationalError as e:
-            logger.error(
-                f"Database operational error when listing filtered pipeline runs: {e}"
-            )
+            logger.error(f"Database operational error when listing filtered pipeline runs: {e}")
             raise PipelineStorageError("Failed to list pipeline runs") from e
         except SQLAlchemyError as e:
             logger.error(f"Database error when listing filtered pipeline runs: {e}")
@@ -445,9 +422,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
             orm_obj.status = status.value  # type: ignore[assignment]
@@ -459,15 +434,11 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to update pipeline run status") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to update pipeline run status") from e
         except SQLAlchemyError as e:
             session.rollback()
@@ -501,9 +472,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
 
@@ -520,15 +489,11 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to update pipeline run summaries") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
             raise PipelineStorageError("Failed to update pipeline run summaries") from e
         except SQLAlchemyError as e:
             session.rollback()
@@ -556,9 +521,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
             orm_obj.status = PipelineRunStatus.RUNNING.value  # type: ignore[assignment]
@@ -569,26 +532,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run running status"
-            ) from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run running status"
-            ) from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Database error when updating pipeline run {run_id}: {e}")
-            raise PipelineStorageError(
-                "Failed to update pipeline run running status"
-            ) from e
+            raise PipelineStorageError("Failed to update pipeline run running status") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -618,9 +571,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
             orm_obj.status = PipelineRunStatus.FAILED.value  # type: ignore[assignment]
@@ -633,26 +584,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure info"
-            ) from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure info"
-            ) from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Database error when updating pipeline run {run_id}: {e}")
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure info"
-            ) from e
+            raise PipelineStorageError("Failed to update pipeline run failure info") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -673,9 +614,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
             orm_obj.started_at = started_at  # type: ignore[assignment]
@@ -685,26 +624,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run started_at"
-            ) from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run started_at"
-            ) from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Database error when updating pipeline run {run_id}: {e}")
-            raise PipelineStorageError(
-                "Failed to update pipeline run started_at"
-            ) from e
+            raise PipelineStorageError("Failed to update pipeline run started_at") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -725,9 +654,7 @@ class PipelineRepository:
         """
         session = self._get_session()
         try:
-            orm_obj = (
-                session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
-            )
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
             if not orm_obj:
                 return False
             orm_obj.failure_reason = failure_reason  # type: ignore[assignment]
@@ -737,26 +664,16 @@ class PipelineRepository:
             return True
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                f"Database integrity error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure_reason"
-            ) from e
+            logger.error(f"Database integrity error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
         except OperationalError as e:
             session.rollback()
-            logger.error(
-                f"Database operational error when updating pipeline run {run_id}: {e}"
-            )
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure_reason"
-            ) from e
+            logger.error(f"Database operational error when updating pipeline run {run_id}: {e}")
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
         except SQLAlchemyError as e:
             session.rollback()
             logger.error(f"Database error when updating pipeline run {run_id}: {e}")
-            raise PipelineStorageError(
-                "Failed to update pipeline run failure_reason"
-            ) from e
+            raise PipelineStorageError("Failed to update pipeline run failure_reason") from e
         finally:
             if self._should_close_session():
                 session.close()
@@ -777,11 +694,7 @@ class PipelineRepository:
         session = self._get_session()
         try:
             # Query change_events by the run's ID
-            events = (
-                session.query(ChangeEvent)
-                .filter(ChangeEvent.batch_run_id == run_id)
-                .all()
-            )
+            events = session.query(ChangeEvent).filter(ChangeEvent.batch_run_id == run_id).all()
 
             return [
                 {
@@ -796,15 +709,12 @@ class PipelineRepository:
             ]
         except OperationalError as e:
             msg = (
-                "Database operational error when retrieving change events "
-                f"for run {run_id}: {e}"
+                "Database operational error when retrieving change events " f"for run {run_id}: {e}"
             )
             logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         except SQLAlchemyError as e:
-            msg = (
-                "Database error when retrieving change events " f"for run {run_id}: {e}"
-            )
+            msg = "Database error when retrieving change events " f"for run {run_id}: {e}"
             logger.error(msg)
             raise PipelineStorageError("Failed to retrieve change events") from e
         finally:

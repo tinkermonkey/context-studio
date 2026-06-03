@@ -64,9 +64,7 @@ class _SchemaExtractionMockLLM:
                 '{"relationships": [{"subject": "Microservice", "predicate": "subclass_of",'
                 ' "object": "Service", "confidence": 0.9}], "properties": []}'
             )
-        elif (
-            "extract" in system_prompt.lower() and "candidate" in system_prompt.lower()
-        ):
+        elif "extract" in system_prompt.lower() and "candidate" in system_prompt.lower():
             content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
         else:
             content = '["Microservice", "API Gateway", "Service", "Message Queue"]'
@@ -265,10 +263,7 @@ class TestSchemaExtractionHTTP:
 
 
 _CANON_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "datafiles"
-    / "canon"
-    / "software_architecture"
+    Path(__file__).parent.parent.parent.parent / "datafiles" / "canon" / "software_architecture"
 )
 
 
@@ -286,9 +281,7 @@ class _CanonSchemaLLM:
 
     def __init__(self, paper: dict) -> None:
         self._paper = paper
-        self._candidate_labels = [
-            e["label"] for e in paper.get("expected_entities", [])
-        ]
+        self._candidate_labels = [e["label"] for e in paper.get("expected_entities", [])]
         self._definitions = {
             e["label"]: e.get("context", f"Canon concept: {e['label']}")
             for e in paper.get("expected_entities", [])
@@ -407,9 +400,7 @@ class TestSchemaExtractionAgainstCanon:
 
         candidates = result_state.result.get("candidates", [])
         produced_labels = {c.get("label", "").lower() for c in candidates}
-        expected_labels = {
-            e["label"].lower() for e in paper.get("expected_entities", [])
-        }
+        expected_labels = {e["label"].lower() for e in paper.get("expected_entities", [])}
         overlap = produced_labels & expected_labels
         assert overlap, (
             f"No produced candidate aligned with canon expected_entities. "

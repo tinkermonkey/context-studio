@@ -177,9 +177,7 @@ class IndividualExtractionRun(PipelineRun):
         All pipeline-shared fields (pipeline_type, implementation_id, configuration_ref, etc.)
     """
 
-    pipeline_type: PipelineType = field(
-        default=PipelineType.INDIVIDUAL_EXTRACTION, init=False
-    )
+    pipeline_type: PipelineType = field(default=PipelineType.INDIVIDUAL_EXTRACTION, init=False)
     source_text_hash: str = ""
     source_document_uri: str | None = None
 
@@ -241,9 +239,7 @@ class SchemaExtractionRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(
-        default=PipelineType.SCHEMA_EXTRACTION, init=False
-    )
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_EXTRACTION, init=False)
 
     @classmethod
     def create(
@@ -283,9 +279,7 @@ class SchemaGroundingRun(PipelineRun):
         All pipeline-shared fields
     """
 
-    pipeline_type: PipelineType = field(
-        default=PipelineType.SCHEMA_NODE_GROUNDING, init=False
-    )
+    pipeline_type: PipelineType = field(default=PipelineType.SCHEMA_NODE_GROUNDING, init=False)
 
     @classmethod
     def create(

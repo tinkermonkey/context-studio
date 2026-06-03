@@ -125,10 +125,7 @@ class OntologyService:
             raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
 
         # Check identifier uniqueness only if provided
-        if (
-            identifier is not None
-            and self._repository.get_by_identifier(identifier) is not None
-        ):
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
             raise IdentifierConflictError(identifier)
 
         taxonomy_id = str(uuid4())
@@ -261,9 +258,7 @@ class OntologyService:
                 raise ValueError("Title cannot be empty")
             existing = self._repository.list_taxonomies(limit=None)
             if any(t.id != taxonomy_id and t.title == title for t in existing):
-                raise DuplicateEntityError(
-                    f"Taxonomy with title '{title}' already exists"
-                )
+                raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
             taxonomy.title = title
 
         if description is not None:
@@ -356,9 +351,7 @@ class OntologyService:
         # Check for duplicate title (excluding the current taxonomy)
         existing = self._repository.list_taxonomies(limit=None)
         if any(t.title == new_title and t.id != taxonomy_id for t in existing):
-            raise DuplicateEntityError(
-                f"Taxonomy with title '{new_title}' already exists"
-            )
+            raise DuplicateEntityError(f"Taxonomy with title '{new_title}' already exists")
 
         # Guard against no-op updates
         if new_title == taxonomy.title:
@@ -407,13 +400,10 @@ class OntologyService:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
         # Check for concept schemes
-        schemes = self._repository.list_concept_schemes(
-            taxonomy_id=taxonomy_id, limit=None
-        )
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
         if schemes:
             raise OntologyError(
-                f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept"
-                " scheme(s)"
+                f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept" " scheme(s)"
             )
 
         self._repository.delete_taxonomy(taxonomy_id)
@@ -433,9 +423,7 @@ class OntologyService:
                 handler_names,
             )
 
-    def publish_taxonomy(
-        self, taxonomy_id: str, commit_message: str | None = None
-    ) -> Taxonomy:
+    def publish_taxonomy(self, taxonomy_id: str, commit_message: str | None = None) -> Taxonomy:
         """
         Publish a taxonomy, transitioning status from draft to published.
 
@@ -566,10 +554,7 @@ class OntologyService:
             )
 
         # Check identifier uniqueness only if provided
-        if (
-            identifier is not None
-            and self._repository.get_by_identifier(identifier) is not None
-        ):
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
             raise IdentifierConflictError(identifier)
 
         scheme_id = str(uuid4())
@@ -667,9 +652,7 @@ class OntologyService:
         Returns:
             Total count of concept schemes
         """
-        return self._repository.count_concept_schemes(
-            taxonomy_id=taxonomy_id, query=query
-        )
+        return self._repository.count_concept_schemes(taxonomy_id=taxonomy_id, query=query)
 
     def rename_scheme(self, concept_scheme_id: str, new_title: str) -> ConceptScheme:
         """
@@ -700,12 +683,9 @@ class OntologyService:
         existing_schemes = self._repository.list_concept_schemes(
             taxonomy_id=scheme.taxonomy_id, limit=None
         )
-        if any(
-            s.title == new_title and s.id != concept_scheme_id for s in existing_schemes
-        ):
+        if any(s.title == new_title and s.id != concept_scheme_id for s in existing_schemes):
             raise DuplicateEntityError(
-                f"ConceptScheme with title '{new_title}' already exists in this"
-                " taxonomy"
+                f"ConceptScheme with title '{new_title}' already exists in this" " taxonomy"
             )
 
         # Guard against no-op updates
@@ -756,9 +736,7 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for classes
-        classes = self._repository.list_classes(
-            concept_scheme_id=concept_scheme_id, limit=None
-        )
+        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
         if classes:
             raise OntologyError(
                 f"Cannot delete concept scheme {concept_scheme_id}: it has"
@@ -835,15 +813,10 @@ class OntologyService:
             concept_scheme_id=concept_scheme_id, limit=None
         )
         if any(c.title == title for c in existing_classes):
-            raise DuplicateEntityError(
-                f"Class with title '{title}' already exists in this scheme"
-            )
+            raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         # Check identifier uniqueness only if provided
-        if (
-            identifier is not None
-            and self._repository.get_by_identifier(identifier) is not None
-        ):
+        if identifier is not None and self._repository.get_by_identifier(identifier) is not None:
             raise IdentifierConflictError(identifier)
 
         # Validate parent class if provided
@@ -853,9 +826,7 @@ class OntologyService:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
             if parent_class.concept_scheme_id != concept_scheme_id:
-                raise ValueError(
-                    f"Parent class {parent_class_id} is not in the same scheme"
-                )
+                raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
 
@@ -1089,8 +1060,7 @@ class OntologyService:
         individuals = self._repository.list_individuals(class_id=class_id, limit=None)
         if individuals:
             raise OntologyError(
-                f"Cannot delete class {class_id}: it has {len(individuals)}"
-                " individual(s)"
+                f"Cannot delete class {class_id}: it has {len(individuals)}" " individual(s)"
             )
 
         # Find and delete all relationships where this class is source or target
@@ -1201,9 +1171,7 @@ class OntologyService:
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
             if new_parent.concept_scheme_id != cls.concept_scheme_id:
-                raise ValueError(
-                    f"Parent class {new_parent_id} is not in the same scheme"
-                )
+                raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
             current_id: str | None = new_parent_id
@@ -1215,9 +1183,7 @@ class OntologyService:
                         current_id,
                     )
                 if ancestor.id == class_id:
-                    raise CircularReferenceError(
-                        "Move would create a circular reference"
-                    )
+                    raise CircularReferenceError("Move would create a circular reference")
                 current_id = ancestor.parent_class_id
 
         # Safe to proceed
@@ -1371,9 +1337,7 @@ class OntologyService:
             source_individual = self._repository.get_individual(source_id)
             if source_individual:
                 # Get taxonomy from first parent class
-                individual_class = self._repository.get_class(
-                    source_individual.class_ids[0]
-                )
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
             else:
@@ -1566,9 +1530,7 @@ class OntologyService:
             # Try source as an Individual - resolve its parent class to find taxonomy
             source_individual = self._repository.get_individual(relationship.source_id)
             if source_individual and source_individual.class_ids:
-                individual_class = self._repository.get_class(
-                    source_individual.class_ids[0]
-                )
+                individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
 
@@ -1579,13 +1541,9 @@ class OntologyService:
                 taxonomy_id = target_class.taxonomy_id
             else:
                 # Try target as an Individual - resolve its parent class to find taxonomy
-                target_individual = self._repository.get_individual(
-                    relationship.target_id
-                )
+                target_individual = self._repository.get_individual(relationship.target_id)
                 if target_individual and target_individual.class_ids:
-                    individual_class = self._repository.get_class(
-                        target_individual.class_ids[0]
-                    )
+                    individual_class = self._repository.get_class(target_individual.class_ids[0])
                     if individual_class:
                         taxonomy_id = individual_class.taxonomy_id
 
@@ -1654,9 +1612,7 @@ class OntologyService:
                 f"PropertyDefinition with identifier '{identifier}' already exists"
             )
         if any(p.title == title for p in existing_props):
-            raise DuplicateEntityError(
-                f"PropertyDefinition with title '{title}' already exists"
-            )
+            raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
 
         property_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -1747,9 +1703,7 @@ class OntologyService:
 
         # Create new property definition with provided title
         if not title or not title.strip():
-            raise ValueError(
-                "Title cannot be empty when creating a new property definition"
-            )
+            raise ValueError("Title cannot be empty when creating a new property definition")
 
         return self.create_property_definition(
             identifier=identifier,
@@ -1802,9 +1756,7 @@ class OntologyService:
         Returns:
             Total count of property definitions
         """
-        return self._repository.count_property_definitions(
-            is_relevant=is_relevant, query=query
-        )
+        return self._repository.count_property_definitions(is_relevant=is_relevant, query=query)
 
     def update_property_definition(
         self,
@@ -1885,9 +1837,7 @@ class OntologyService:
             raise EntityNotFoundError("PropertyDefinition", property_id)
 
         # Check if property is in use
-        relationships = self._repository.list_relationships(
-            property_id=property_id, limit=None
-        )
+        relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
             raise OntologyError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
@@ -1949,12 +1899,9 @@ class OntologyService:
             existing_schemes = self._repository.list_concept_schemes(
                 taxonomy_id=scheme.taxonomy_id, limit=None
             )
-            if any(
-                s.id != concept_scheme_id and s.title == title for s in existing_schemes
-            ):
+            if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{title}' already exists in this"
-                    " taxonomy"
+                    f"ConceptScheme with title '{title}' already exists in this" " taxonomy"
                 )
             scheme.title = title
 
@@ -2053,8 +2000,7 @@ class OntologyService:
             existing = self._repository.list_individuals(class_id=class_id, limit=None)
             if any(ind.title == title for ind in existing):
                 raise DuplicateEntityError(
-                    f"Individual with title '{title}' already exists in class"
-                    f" '{class_id}'"
+                    f"Individual with title '{title}' already exists in class" f" '{class_id}'"
                 )
 
         individual_id = str(uuid4())
@@ -2179,13 +2125,8 @@ class OntologyService:
             if title_changed:
                 # Check uniqueness within each parent class
                 for class_id in individual.class_ids:
-                    existing = self._repository.list_individuals(
-                        class_id=class_id, limit=None
-                    )
-                    if any(
-                        ind.title == title and ind.id != individual_id
-                        for ind in existing
-                    ):
+                    existing = self._repository.list_individuals(class_id=class_id, limit=None)
+                    if any(ind.title == title and ind.id != individual_id for ind in existing):
                         raise DuplicateEntityError(
                             f"Individual with title '{title}' already exists in class"
                             f" '{class_id}'"
@@ -2419,9 +2360,7 @@ class OntologyService:
 
         return individual
 
-    def remove_class_from_individual(
-        self, individual_id: str, class_id: str
-    ) -> Individual:
+    def remove_class_from_individual(self, individual_id: str, class_id: str) -> Individual:
         """
         Remove a parent class from an individual.
 

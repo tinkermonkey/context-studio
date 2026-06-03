@@ -108,9 +108,7 @@ class BenchmarkResult:
         self.f1 = 0.0
         self.conformance = 0.0
         self.hallucination_rate = 0.0
-        self.extraction_run_ids: list[str] = (
-            []
-        )  # TODO: Populate from API response when implemented
+        self.extraction_run_ids: list[str] = []  # TODO: Populate from API response when implemented
         self.timestamp = datetime.now(timezone.utc).isoformat()
         self.model = ""
         self.cost_usd = 0.0
@@ -141,9 +139,7 @@ class BenchmarkResult:
         }
 
 
-def load_dataset_from_jsonl(
-    dataset_name: str, split: str = "test"
-) -> list[dict] | None:
+def load_dataset_from_jsonl(dataset_name: str, split: str = "test") -> list[dict] | None:
     """
     Attempt to load dataset from local JSONL file.
 
@@ -259,10 +255,7 @@ def estimate_cost(
     total_input_tokens = num_samples * avg_input_tokens
     total_output_tokens = num_samples * avg_output_tokens
 
-    cost = (
-        total_input_tokens / 1000 * rates["input"]
-        + total_output_tokens / 1000 * rates["output"]
-    )
+    cost = total_input_tokens / 1000 * rates["input"] + total_output_tokens / 1000 * rates["output"]
 
     return cost
 
@@ -317,10 +310,7 @@ def stratified_sample_dataset(
             item_ontologies = item["ontologies"]
 
         # Add if we haven't reached quota for any of its ontologies
-        if any(
-            ontology_counts.get(ont, 0) < samples_per_ontology
-            for ont in item_ontologies
-        ):
+        if any(ontology_counts.get(ont, 0) < samples_per_ontology for ont in item_ontologies):
             sampled.append(dict(item))
             for ont in item_ontologies:
                 ontology_counts[ont] = ontology_counts.get(ont, 0) + 1
@@ -368,20 +358,12 @@ def compute_metrics(
     def triple_key(t):
         # Handle ontology-scoped format with nodes
         if isinstance(t.get("subject"), dict):
-            s = (
-                str(t["subject"].get("label", t["subject"].get("id", "")))
-                .lower()
-                .strip()
-            )
+            s = str(t["subject"].get("label", t["subject"].get("id", ""))).lower().strip()
         else:
             s = str(t.get("subject", "")).lower().strip()
 
         if isinstance(t.get("predicate"), dict):
-            p = (
-                str(t["predicate"].get("label", t["predicate"].get("id", "")))
-                .lower()
-                .strip()
-            )
+            p = str(t["predicate"].get("label", t["predicate"].get("id", ""))).lower().strip()
         else:
             p = str(t.get("predicate", "")).lower().strip()
 
@@ -416,11 +398,7 @@ def compute_metrics(
         if (true_positives + false_negatives) > 0
         else 0.0
     )
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
 
     # Conformance: check for required fields and valid confidence scores
     valid_count = 0
@@ -429,9 +407,7 @@ def compute_metrics(
         has_predicate = "predicate" in t and t["predicate"]
         has_object = "object" in t and t["object"]
         confidence = t.get("confidence", 1.0)
-        valid_confidence = (
-            isinstance(confidence, (int, float)) and 0.0 <= confidence <= 1.0
-        )
+        valid_confidence = isinstance(confidence, (int, float)) and 0.0 <= confidence <= 1.0
 
         if has_subject and has_predicate and has_object and valid_confidence:
             valid_count += 1
@@ -515,10 +491,7 @@ def run_benchmark(
             for s in samples
             if (
                 s.get("ontology") == ontology
-                or (
-                    isinstance(s.get("ontologies"), list)
-                    and ontology in s["ontologies"]
-                )
+                or (isinstance(s.get("ontologies"), list) and ontology in s["ontologies"])
             )
         ]
 
@@ -624,9 +597,7 @@ def run_benchmark(
         "total_duration_ms": total_duration_ms,
         "total_cost_usd": total_cost,
         "ontologies_count": len(results_by_ontology),
-        "samples_processed": sum(
-            r.samples_processed for r in results_by_ontology.values()
-        ),
+        "samples_processed": sum(r.samples_processed for r in results_by_ontology.values()),
         "results": [r.to_dict() for r in results_by_ontology.values()],
     }
 
@@ -690,16 +661,10 @@ def save_markdown_report(results: dict[str, Any], output_path: str) -> Path:
             "- **Precision:** Proportion of predicted triples that match ground truth",
             "- **Recall:** Proportion of ground truth triples that were predicted",
             "- **F1:** Harmonic mean of precision and recall",
-            (
-                "- **Conformance:** Proportion of triples with valid format and"
-                " confidence (0-1)"
-            ),
+            ("- **Conformance:** Proportion of triples with valid format and" " confidence (0-1)"),
             "",
             "---",
-            (
-                "*Generated by Text2KGBench harness on"
-                f" {datetime.now(timezone.utc).isoformat()}*"
-            ),
+            ("*Generated by Text2KGBench harness on" f" {datetime.now(timezone.utc).isoformat()}*"),
         ]
     )
 
@@ -766,19 +731,13 @@ def main():
         "--pipeline",
         type=str,
         default="configs/extraction-default.json",
-        help=(
-            "Path to extraction pipeline config (default:"
-            " configs/extraction-default.json)"
-        ),
+        help=("Path to extraction pipeline config (default:" " configs/extraction-default.json)"),
     )
     parser.add_argument(
         "--out",
         type=str,
         default=None,
-        help=(
-            "Output path for JSON report (default:"
-            " reports/{dataset_abbrev}-YYYY-MM-DD.json)"
-        ),
+        help=("Output path for JSON report (default:" " reports/{dataset_abbrev}-YYYY-MM-DD.json)"),
     )
     parser.add_argument(
         "--max-cost",
@@ -828,9 +787,7 @@ def main():
         if args.comparison:
             try:
                 comparison_out = str(Path(args.out).parent / "comparison")
-                generate_comparison_from_current(
-                    results, args.comparison, comparison_out
-                )
+                generate_comparison_from_current(results, args.comparison, comparison_out)
             except FileNotFoundError as e:
                 _logger.error(f"Comparison file not found: {e}")
                 return 1

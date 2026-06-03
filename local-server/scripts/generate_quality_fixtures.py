@@ -4,9 +4,7 @@
 import json
 from pathlib import Path
 
-FIXTURES_DIR = (
-    Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
-)
+FIXTURES_DIR = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines"
 
 # Fixture definitions for individual_extraction
 INDIVIDUAL_EXTRACTION_FIXTURES = {

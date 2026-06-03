@@ -88,11 +88,7 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
 
         # Setup mocks
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -146,11 +142,7 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         )
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -204,11 +196,7 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         )
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -304,11 +292,7 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         """Deltas below confidence threshold are skipped."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -454,11 +438,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         """Property definition resolved via slugification of predicate label."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -480,9 +460,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
                     {
                         "operation": "add",
                         "subject": "Microservice",
-                        "predicate": (
-                            "Depends On"
-                        ),  # Should be slugified to "depends_on"
+                        "predicate": "Depends On",  # Should be slugified to "depends_on"
                         "object": "Service",
                         "confidence": 0.95,
                     },
@@ -495,9 +473,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
 
         assert result.relationships_created == 1
         # Verify slugification was used
-        mock_ontology_repo.get_property_definition_by_identifier.assert_called_with(
-            "depends_on"
-        )
+        mock_ontology_repo.get_property_definition_by_identifier.assert_called_with("depends_on")
 
     def test_unresolvable_class_skips_delta(
         self, mock_ontology_repo, sample_property_definition, sample_scope_id
@@ -539,11 +515,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         """Delta skipped if property definition cannot be resolved."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = None
@@ -596,11 +568,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         )
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = [existing_rel]
@@ -646,11 +614,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         """Removing a non-existent relationship is skipped (idempotent)."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.list_relationships.return_value = []
@@ -696,11 +660,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         """Missing confidence field defaults to 0.0."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
@@ -744,11 +704,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         """Unknown operation type is skipped."""
 
         def get_class_side_effect(ref):
-            return (
-                sample_classes.get(ref.lower())
-                if ref.lower() in sample_classes
-                else None
-            )
+            return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (

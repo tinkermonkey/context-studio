@@ -86,9 +86,7 @@ def embedding_service():
 
 
 @pytest.fixture
-def ontology_service(
-    change_recorder, ontology_repo, embedding_service, event_publisher
-):
+def ontology_service(change_recorder, ontology_repo, embedding_service, event_publisher):
     """Create the ontology service with all dependencies."""
     return OntologyService(ontology_repo, embedding_service, event_publisher)
 
@@ -132,9 +130,7 @@ class TestNoOpLLMCalling:
         assert result_state.current_status == "completed"
 
     @pytest.mark.asyncio
-    async def test_noop_llm_call_includes_call_llm_in_steps(
-        self, noop_orchestrator, llm_provider
-    ):
+    async def test_noop_llm_call_includes_call_llm_in_steps(self, noop_orchestrator, llm_provider):
         """NoOp execution should include 'call_llm' in steps_completed."""
         state = NoOpPipelineState(
             run_id=str(uuid4()),
@@ -150,9 +146,7 @@ class TestNoOpLLMCalling:
         assert "finalize" in result_state.steps_completed
 
     @pytest.mark.asyncio
-    async def test_noop_result_includes_llm_metadata(
-        self, noop_orchestrator, llm_provider
-    ):
+    async def test_noop_result_includes_llm_metadata(self, noop_orchestrator, llm_provider):
         """NoOp result should include LLM metadata from the call."""
         state = NoOpPipelineState(
             run_id=str(uuid4()),
@@ -212,9 +206,7 @@ class TestNoOpChangeEvents:
             apply_result = apply_service.apply(run)
 
             # Verify at least one taxonomy was created
-            assert (
-                len(apply_result.created_taxonomy_ids) >= 1
-            ), "Should have sentinel taxonomy ID"
+            assert len(apply_result.created_taxonomy_ids) >= 1, "Should have sentinel taxonomy ID"
 
             # Verify change events were recorded for the applied entity
             session = session_factory()
@@ -291,13 +283,9 @@ class TestNoOpRevert:
             # Query change events for this run
             session = session_factory()
             try:
-                initial_events = (
-                    session.query(ChangeEvent).filter_by(batch_run_id=run_id).all()
-                )
+                initial_events = session.query(ChangeEvent).filter_by(batch_run_id=run_id).all()
                 initial_count = len(initial_events)
-                assert (
-                    initial_count >= 1
-                ), "Should have at least one change event from NoOp apply"
+                assert initial_count >= 1, "Should have at least one change event from NoOp apply"
             finally:
                 session.close()
 
@@ -401,9 +389,7 @@ class TestNoOpStructuralComplete:
             result_state = await noop_orchestrator.execute(state)
 
             # Assertion 1: _call_llm was invoked
-            assert (
-                llm_provider.call_count > initial_call_count
-            ), "LLM should have been called"
+            assert llm_provider.call_count > initial_call_count, "LLM should have been called"
             assert result_state.current_status == PipelineRunStatus.COMPLETED
 
             # Create PipelineRun and apply
@@ -421,9 +407,7 @@ class TestNoOpStructuralComplete:
             apply_result = apply_service.apply(run)
 
             # Assertion 2: Apply produces at least one change_event
-            assert (
-                len(apply_result.created_taxonomy_ids) >= 1
-            ), "Should create sentinel taxonomy"
+            assert len(apply_result.created_taxonomy_ids) >= 1, "Should create sentinel taxonomy"
             sentinel_id = apply_result.created_taxonomy_ids[0]
 
             session = session_factory()

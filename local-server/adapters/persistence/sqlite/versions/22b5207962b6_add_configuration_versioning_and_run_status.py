@@ -28,17 +28,13 @@ def upgrade() -> None:
     )
     op.add_column(
         "pipeline_runs",
-        sa.Column(
-            "configuration_version", sa.Integer(), nullable=False, server_default="1"
-        ),
+        sa.Column("configuration_version", sa.Integer(), nullable=False, server_default="1"),
     )
     op.add_column(
         "pipeline_runs",
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.add_column(
-        "pipeline_runs", sa.Column("failure_reason", sa.Text(), nullable=True)
-    )
+    op.add_column("pipeline_runs", sa.Column("failure_reason", sa.Text(), nullable=True))
 
 
 def downgrade() -> None:

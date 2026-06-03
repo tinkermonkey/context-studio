@@ -86,9 +86,7 @@ class SpacyNLPProcessor:
                         "NLP processor not ready. Returning empty results for text:"
                         f" {text[:100]}"
                     )
-                    return NLPResult(
-                        tokens=[], entities=[], noun_chunks=[], language="unknown"
-                    )
+                    return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
                 assert self._nlp is not None
                 doc = self._nlp(text)

@@ -135,9 +135,7 @@ class TestMeanReciprocalRank:
 
     def test_multiple_correct_first_match_wins(self):
         """Multiple correct answers; first one is ranked."""
-        mrr = mean_reciprocal_rank(
-            ["correct1", "correct2"], ["wrong", "correct1", "correct2"]
-        )
+        mrr = mean_reciprocal_rank(["correct1", "correct2"], ["wrong", "correct1", "correct2"])
         assert mrr == 0.5
 
 

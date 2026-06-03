@@ -90,9 +90,7 @@ class FloorGate:
         """
         self._floors = floors
 
-    def assert_metrics(
-        self, metrics: dict[str, float], pipeline_type: str = "unknown"
-    ) -> None:
+    def assert_metrics(self, metrics: dict[str, float], pipeline_type: str = "unknown") -> None:
         """
         Assert that all metrics meet their floor values.
 
@@ -122,8 +120,7 @@ class FloorGate:
             else:
                 if actual_value < floor_value:
                     failures.append(
-                        f"{metric_name}={actual_value:.4f} below "
-                        f"floor {floor_value:.4f}"
+                        f"{metric_name}={actual_value:.4f} below " f"floor {floor_value:.4f}"
                     )
 
         if failures:
@@ -156,9 +153,7 @@ class ABReport:
             Formatted comparison string
         """
         lines = [f"\nA/B Comparison: {config_a} vs {config_b}\n"]
-        lines.append(
-            "Metric".ljust(20) + config_a.ljust(15) + config_b.ljust(15) + "Delta"
-        )
+        lines.append("Metric".ljust(20) + config_a.ljust(15) + config_b.ljust(15) + "Delta")
         lines.append("-" * 65)
 
         all_metrics = sorted(set(metrics_a.keys()) | set(metrics_b.keys()))
@@ -175,10 +170,7 @@ class ABReport:
             value_b_str = f"{value_b:.4f}" if not math.isnan(value_b) else "N/A"
 
             lines.append(
-                f"{metric_name.ljust(20)}"
-                f"{value_a_str:<15}"
-                f"{value_b_str:<15}"
-                f"{delta_str}"
+                f"{metric_name.ljust(20)}" f"{value_a_str:<15}" f"{value_b_str:<15}" f"{delta_str}"
             )
 
         return "\n".join(lines)

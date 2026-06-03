@@ -49,9 +49,7 @@ class ReferenceResultSchema(BaseModel):
     uri: str = Field(..., description="Unique URI for this resource")
     label: str = Field(..., description="Human-readable label")
     description: Optional[str] = Field(None, description="Optional description")
-    confidence: float = Field(
-        1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)"
-    )
+    confidence: float = Field(1.0, ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     source: str = Field(..., description="Reference source name")
 
 
@@ -166,16 +164,12 @@ class GroundingWorkflowCreate(BaseModel):
 class GroundingWorkflowUpdate(BaseModel):
     """Request to update an existing grounding workflow."""
 
-    title: Optional[str] = Field(
-        None, description="Human-readable workflow name", min_length=1
-    )
+    title: Optional[str] = Field(None, description="Human-readable workflow name", min_length=1)
     source: Optional[str] = Field(None, description="External knowledge source name")
     class_scope: Optional[list[str]] = Field(
         None, description="List of class IDs or names to scope enrichment"
     )
-    status: Optional[str] = Field(
-        None, description="Workflow status: active, inactive, error"
-    )
+    status: Optional[str] = Field(None, description="Workflow status: active, inactive, error")
     description: Optional[str] = Field(None, description="Optional description")
 
 
@@ -193,9 +187,7 @@ class GroundingWorkflowResponse(BaseModel):
         description="List of class IDs or names to scope enrichment",
     )
     status: str = Field(..., description="Workflow status: active, inactive, error")
-    last_run: Optional[str] = Field(
-        None, description="ISO 8601 timestamp of most recent run"
-    )
+    last_run: Optional[str] = Field(None, description="ISO 8601 timestamp of most recent run")
     last_run_record_count: Optional[int] = Field(
         None, description="Record count from most recent run"
     )
@@ -211,6 +203,4 @@ class WorkflowRunResponse(BaseModel):
     status: str = Field(..., description="Run status: running, success, failed")
     record_count: int = Field(0, description="Number of records processed")
     timestamp: str = Field(..., description="ISO 8601 timestamp when run was initiated")
-    error_message: Optional[str] = Field(
-        None, description="Error message if status is failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if status is failed")

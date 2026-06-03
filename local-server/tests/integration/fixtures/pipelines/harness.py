@@ -134,9 +134,7 @@ async def run_pipeline_against_fixture(
     elif pipeline_type == "schema_node_connection_refinement":
         from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 
-        engine = create_engine(
-            "sqlite:///:memory:", connect_args={"check_same_thread": False}
-        )
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
         Base.metadata.create_all(engine)
         session_factory = sessionmaker(bind=engine)
         repo = SQLiteOntologyRepository(session_factory)
@@ -182,9 +180,7 @@ async def run_pipeline_against_fixture(
     elif pipeline_type == "schema_node_definition_refinement":
         from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 
-        engine = create_engine(
-            "sqlite:///:memory:", connect_args={"check_same_thread": False}
-        )
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
         Base.metadata.create_all(engine)
         session_factory = sessionmaker(bind=engine)
         repo = SQLiteOntologyRepository(session_factory)

@@ -59,9 +59,7 @@ class FakeOntologyRepo:
     def list_classes(self, concept_scheme_id=None, **kwargs):
         if concept_scheme_id is None:
             return list(self.classes.values())
-        return [
-            c for c in self.classes.values() if c.concept_scheme_id == concept_scheme_id
-        ]
+        return [c for c in self.classes.values() if c.concept_scheme_id == concept_scheme_id]
 
     def get_individual(self, individual_id):
         return self.individuals.get(individual_id)

@@ -114,9 +114,7 @@ def test_nlp_entities_emit_layer_2_extracted_entities():
 def test_duplicate_against_prior_entity_is_filtered():
     """Layer 2 must dedupe (case-insensitively) against existing_entities."""
     prior = (
-        ExtractedEntity(
-            label="CRDT", entity_type="DataStructure", source_layer=1, confidence=0.9
-        ),
+        ExtractedEntity(label="CRDT", entity_type="DataStructure", source_layer=1, confidence=0.9),
     )
     processor = _PaperNLPProcessor(
         entities=[
@@ -138,9 +136,7 @@ def test_duplicate_against_prior_entity_is_filtered():
             ),
         ]
     )
-    out = nlp_gap.execute(
-        _input(text="text with crdt and anti-entropy", prior=prior), processor
-    )
+    out = nlp_gap.execute(_input(text="text with crdt and anti-entropy", prior=prior), processor)
     labels = {e.label for e in out.entities}
     assert "anti-entropy" in labels
     # 'crdt' must be filtered because prior had 'CRDT' (case-insensitive match)
@@ -149,9 +145,7 @@ def test_duplicate_against_prior_entity_is_filtered():
 
 def test_metadata_reports_skipped_duplicates():
     prior = (
-        ExtractedEntity(
-            label="CRDT", entity_type="DataStructure", source_layer=1, confidence=0.9
-        ),
+        ExtractedEntity(label="CRDT", entity_type="DataStructure", source_layer=1, confidence=0.9),
     )
     processor = _PaperNLPProcessor(
         entities=[

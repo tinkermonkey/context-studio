@@ -93,9 +93,7 @@ def _produced_triple_key(triple: dict[str, Any]) -> tuple[str, str, str]:
     obj = triple.get("object", {}) or {}
 
     subject_id = subject.get("id") or subject.get("label") or ""
-    predicate_id = (
-        predicate.get("property_definition_id") or predicate.get("label") or ""
-    )
+    predicate_id = predicate.get("property_definition_id") or predicate.get("label") or ""
     object_id = obj.get("id") or obj.get("label") or obj.get("value") or ""
 
     return (
@@ -139,11 +137,7 @@ def score_triples(
 
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = (
-        (2 * precision * recall / (precision + recall))
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
     return TripleMetrics(
         precision=precision,
@@ -185,8 +179,7 @@ def assert_triples_match(
         failures.append(f"f1={metrics.f1:.2f} < min {min_f1:.2f}")
     if failures:
         msg_lines = [
-            f"Triple-match assertion failed for paper {paper_name!r}: "
-            + ", ".join(failures),
+            f"Triple-match assertion failed for paper {paper_name!r}: " + ", ".join(failures),
             (
                 f"  tp={metrics.true_positives} fp={metrics.false_positives} "
                 f"fn={metrics.false_negatives}"
@@ -197,9 +190,7 @@ def assert_triples_match(
             for triple in metrics.missing_expected[:10]:
                 msg_lines.append(f"    - {triple}")
             if len(metrics.missing_expected) > 10:
-                msg_lines.append(
-                    f"    ... and {len(metrics.missing_expected) - 10} more"
-                )
+                msg_lines.append(f"    ... and {len(metrics.missing_expected) - 10} more")
         raise AssertionError("\n".join(msg_lines))
     return metrics
 
@@ -276,9 +267,7 @@ def assert_color_present(repo: Any, *, for_node_types: Iterable[str]) -> None:
                 offenders.append(f"class {cls.id} color={color!r}")
 
     if offenders:
-        msg = "\n".join(
-            ["Color missing or malformed:"] + [f"  - {o}" for o in offenders]
-        )
+        msg = "\n".join(["Color missing or malformed:"] + [f"  - {o}" for o in offenders])
         raise AssertionError(msg)
 
 
@@ -289,9 +278,7 @@ def assert_class_hierarchy_matches(repo: Any, canon: CanonBundle) -> None:
     `parent_class_id`. Classes are looked up by `identifier`.
     """
     if not hasattr(repo, "list_classes"):
-        raise AssertionError(
-            "Repo does not expose list_classes; cannot verify hierarchy"
-        )
+        raise AssertionError("Repo does not expose list_classes; cannot verify hierarchy")
 
     by_identifier: dict[str, Any] = {}
     for cls in repo.list_classes():
@@ -311,9 +298,7 @@ def assert_class_hierarchy_matches(repo: Any, canon: CanonBundle) -> None:
             continue
 
         actual_parent_id = getattr(actual, "parent_class_id", None)
-        expected_parent_obj = (
-            by_identifier.get(expected_parent) if expected_parent else None
-        )
+        expected_parent_obj = by_identifier.get(expected_parent) if expected_parent else None
         expected_parent_id = (
             getattr(expected_parent_obj, "id", None) if expected_parent_obj else None
         )
@@ -329,11 +314,7 @@ def assert_class_hierarchy_matches(repo: Any, canon: CanonBundle) -> None:
         failures.append(
             "missing classes: "
             + ", ".join(missing_classes[:10])
-            + (
-                f" (and {len(missing_classes)-10} more)"
-                if len(missing_classes) > 10
-                else ""
-            )
+            + (f" (and {len(missing_classes)-10} more)" if len(missing_classes) > 10 else "")
         )
     if wrong_parents:
         failures.append("wrong parents:\n  - " + "\n  - ".join(wrong_parents[:10]))
@@ -416,11 +397,7 @@ def assert_source_run_id_lineage(
     if not hasattr(repo, "list_classes"):
         raise AssertionError("Repo does not expose list_classes")
 
-    tagged = [
-        cls
-        for cls in repo.list_classes()
-        if getattr(cls, "source_run_id", None) == run_id
-    ]
+    tagged = [cls for cls in repo.list_classes() if getattr(cls, "source_run_id", None) == run_id]
     if len(tagged) < min_count:
         raise AssertionError(
             f"Expected ≥{min_count} classes tagged with source_run_id={run_id!r}, "

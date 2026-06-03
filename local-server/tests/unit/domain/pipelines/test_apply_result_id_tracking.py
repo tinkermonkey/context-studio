@@ -12,9 +12,7 @@ import sys
 from unittest.mock import MagicMock
 
 sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    )
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 import pytest
@@ -51,9 +49,7 @@ CLASS_ID = "cls-person"
 @pytest.fixture()
 def repo():
     r = FakeOntologyRepository()
-    r.save_taxonomy(
-        Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy")
-    )
+    r.save_taxonomy(Taxonomy(id=TAXONOMY_ID, identifier="test_tax", title="Test Taxonomy"))
     r.save_concept_scheme(
         ConceptScheme(
             id=SCHEME_ID,
@@ -460,8 +456,7 @@ class TestApplyResultValidation:
 
         with pytest.raises(
             ValueError,
-            match="relationships_created.*created_relationship_ids.*must be "
-            "consistent",
+            match="relationships_created.*created_relationship_ids.*must be " "consistent",
         ):
             ApplyResult(
                 relationships_created=2,
@@ -474,8 +469,7 @@ class TestApplyResultValidation:
 
         with pytest.raises(
             ValueError,
-            match="properties_created.*created_property_definition_ids.*must "
-            "be consistent",
+            match="properties_created.*created_property_definition_ids.*must " "be consistent",
         ):
             ApplyResult(
                 properties_created=1,

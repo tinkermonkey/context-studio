@@ -124,9 +124,7 @@ class OpenAIProvider:
                 duration_ms = elapsed_time * 1000
 
                 span.set_attribute("llm.tokens.input", response.usage.prompt_tokens)
-                span.set_attribute(
-                    "llm.tokens.output", response.usage.completion_tokens
-                )
+                span.set_attribute("llm.tokens.output", response.usage.completion_tokens)
 
                 return LLMResponse(
                     content=response.choices[0].message.content or "",

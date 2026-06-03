@@ -68,9 +68,7 @@ class TestDomainEventBase:
     def test_domain_event_rejects_empty_aggregate_id(self):
         """DomainEvent raises ValueError if aggregate_id is empty."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(
-            ValueError, match="Event field 'aggregate_id' cannot be empty"
-        ):
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             DomainEvent(
                 event_id="evt-456",
                 aggregate_id="",
@@ -139,9 +137,7 @@ class TestTaxonomyCreated:
         """TaxonomyCreated raises ValueError if taxonomy_id is empty."""
         # When taxonomy_id is empty, aggregate_id becomes empty too,
         # causing aggregate_id validation to fail
-        with pytest.raises(
-            ValueError, match="Event field 'aggregate_id' cannot be empty"
-        ):
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             TaxonomyCreated(
                 taxonomy_id="",
                 title="Biology Taxonomy",
@@ -561,9 +557,7 @@ class TestClassMoved:
         """ClassMoved raises ValueError if class_id is empty."""
         # When class_id is empty, aggregate_id becomes empty too,
         # causing aggregate_id validation to fail
-        with pytest.raises(
-            ValueError, match="Event field 'aggregate_id' cannot be empty"
-        ):
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             ClassMoved(
                 class_id="",
                 old_parent_id="parent-old",

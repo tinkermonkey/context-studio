@@ -201,9 +201,7 @@ class TestPipelineRunValidation:
 
     def test_pipeline_run_rejects_zero_configuration_version(self):
         """PipelineRun rejects configuration_version <= 0."""
-        with pytest.raises(
-            ValueError, match="configuration_version must be greater than 0"
-        ):
+        with pytest.raises(ValueError, match="configuration_version must be greater than 0"):
             PipelineRun(
                 id="run-123",
                 batch_run_id="batch-456",

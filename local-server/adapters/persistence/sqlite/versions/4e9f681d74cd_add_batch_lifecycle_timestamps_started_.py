@@ -17,12 +17,8 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "batches", sa.Column("started_at", sa.DateTime(timezone=True), nullable=True)
-    )
-    op.add_column(
-        "batches", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True)
-    )
+    op.add_column("batches", sa.Column("started_at", sa.DateTime(timezone=True), nullable=True))
+    op.add_column("batches", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column(
         "batches",
         sa.Column(
@@ -34,12 +30,8 @@ def upgrade() -> None:
     )
     op.create_index("idx_batch_id_status", "batches", ["id", "status"], unique=False)
     op.create_index("ix_batches_started_at", "batches", ["started_at"], unique=False)
-    op.create_index(
-        "ix_batches_completed_at", "batches", ["completed_at"], unique=False
-    )
-    op.create_index(
-        "ix_batches_last_updated", "batches", ["last_updated"], unique=False
-    )
+    op.create_index("ix_batches_completed_at", "batches", ["completed_at"], unique=False)
+    op.create_index("ix_batches_last_updated", "batches", ["last_updated"], unique=False)
 
 
 def downgrade() -> None:

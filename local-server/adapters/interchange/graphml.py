@@ -96,9 +96,7 @@ class GraphMLSerializer(OntologySerializer):
                     self._serialize_whole_graph()
                 case SerializationScopeType.TAXONOMY:
                     if scope.taxonomy_id is None:
-                        raise ValueError(
-                            "TAXONOMY scope requires taxonomy_id to be set"
-                        )
+                        raise ValueError("TAXONOMY scope requires taxonomy_id to be set")
                     self._serialize_taxonomy(scope.taxonomy_id)
                 case SerializationScopeType.SCHEME:
                     if scope.scheme_id is None:
@@ -166,18 +164,14 @@ class GraphMLSerializer(OntologySerializer):
         for scheme in schemes:
             self._add_concept_scheme(scheme)
             # Add classes in this scheme (without limit to ensure complete export)
-            classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            )
+            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
             for cls in classes:
                 self._add_class(cls)
 
         # Add relationships within this taxonomy
         self._add_structural_edges_for_taxonomy(taxonomy, schemes)
 
-    def _serialize_scheme(
-        self, scheme_id: str, include_descendants: bool = True
-    ) -> None:
+    def _serialize_scheme(self, scheme_id: str, include_descendants: bool = True) -> None:
         """Serialize a single concept scheme and optionally its classes.
 
         Args:
@@ -200,9 +194,7 @@ class GraphMLSerializer(OntologySerializer):
         classes = []
         if include_descendants:
             # Query all classes without limit to ensure complete export
-            classes = self.ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            )
+            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
             for cls in classes:
                 self._add_class(cls)
 
@@ -268,9 +260,7 @@ class GraphMLSerializer(OntologySerializer):
                 "kind": "taxonomy",
                 "cs:title": taxonomy.title,
                 "cs:description": taxonomy.description or "",
-                "cs:created_at": (
-                    taxonomy.created_at.isoformat() if taxonomy.created_at else ""
-                ),
+                "cs:created_at": taxonomy.created_at.isoformat() if taxonomy.created_at else "",
                 "cs:last_modified": (
                     taxonomy.last_modified.isoformat() if taxonomy.last_modified else ""
                 ),
@@ -289,9 +279,7 @@ class GraphMLSerializer(OntologySerializer):
                 "kind": "concept_scheme",
                 "cs:title": scheme.title,
                 "cs:description": scheme.description or "",
-                "cs:created_at": (
-                    scheme.created_at.isoformat() if scheme.created_at else ""
-                ),
+                "cs:created_at": scheme.created_at.isoformat() if scheme.created_at else "",
                 "cs:last_modified": (
                     scheme.last_modified.isoformat() if scheme.last_modified else ""
                 ),
@@ -323,9 +311,7 @@ class GraphMLSerializer(OntologySerializer):
                 "cs:title": cls.title,
                 "cs:description": cls.description or "",
                 "cs:created_at": cls.created_at.isoformat() if cls.created_at else "",
-                "cs:last_modified": (
-                    cls.last_modified.isoformat() if cls.last_modified else ""
-                ),
+                "cs:last_modified": cls.last_modified.isoformat() if cls.last_modified else "",
                 "cs:external_references": ext_refs_json,
             },
         )
@@ -354,13 +340,9 @@ class GraphMLSerializer(OntologySerializer):
                 "kind": "individual",
                 "cs:title": individual.title,
                 "cs:description": individual.description or "",
-                "cs:created_at": (
-                    individual.created_at.isoformat() if individual.created_at else ""
-                ),
+                "cs:created_at": individual.created_at.isoformat() if individual.created_at else "",
                 "cs:last_modified": (
-                    individual.last_modified.isoformat()
-                    if individual.last_modified
-                    else ""
+                    individual.last_modified.isoformat() if individual.last_modified else ""
                 ),
                 "cs:external_references": ext_refs_json,
             },
@@ -380,13 +362,9 @@ class GraphMLSerializer(OntologySerializer):
                 "cs:title": prop.title,
                 "cs:identifier": prop.identifier,
                 "cs:description": prop.description or "",
-                "cs:is_relevant": (
-                    str(prop.is_relevant) if prop.is_relevant is not None else ""
-                ),
+                "cs:is_relevant": str(prop.is_relevant) if prop.is_relevant is not None else "",
                 "cs:created_at": prop.created_at.isoformat() if prop.created_at else "",
-                "cs:last_modified": (
-                    prop.last_modified.isoformat() if prop.last_modified else ""
-                ),
+                "cs:last_modified": prop.last_modified.isoformat() if prop.last_modified else "",
             },
         )
 
@@ -403,18 +381,14 @@ class GraphMLSerializer(OntologySerializer):
 
         # Taxonomy → ConceptScheme edges
         for scheme in schemes:
-            if self.graph.has_node(scheme.id) and self.graph.has_node(
-                scheme.taxonomy_id
-            ):
+            if self.graph.has_node(scheme.id) and self.graph.has_node(scheme.taxonomy_id):
                 self.graph.add_edge(
                     scheme.taxonomy_id, scheme.id, key="has_scheme", kind="has_scheme"
                 )
 
         # Class → ConceptScheme edges
         for cls in classes:
-            if self.graph.has_node(cls.id) and self.graph.has_node(
-                cls.concept_scheme_id
-            ):
+            if self.graph.has_node(cls.id) and self.graph.has_node(cls.concept_scheme_id):
                 self.graph.add_edge(
                     cls.concept_scheme_id, cls.id, key="has_class", kind="has_class"
                 )
@@ -452,9 +426,7 @@ class GraphMLSerializer(OntologySerializer):
             raise RuntimeError("Graph not initialized")
 
         for scheme in schemes:
-            if self.graph.has_node(scheme.id) and self.graph.has_node(
-                scheme.taxonomy_id
-            ):
+            if self.graph.has_node(scheme.id) and self.graph.has_node(scheme.taxonomy_id):
                 self.graph.add_edge(
                     scheme.taxonomy_id, scheme.id, key="has_scheme", kind="has_scheme"
                 )
@@ -469,9 +441,7 @@ class GraphMLSerializer(OntologySerializer):
             raise RuntimeError("Graph not initialized")
 
         for cls in classes:
-            if self.graph.has_node(cls.id) and self.graph.has_node(
-                cls.concept_scheme_id
-            ):
+            if self.graph.has_node(cls.id) and self.graph.has_node(cls.concept_scheme_id):
                 self.graph.add_edge(
                     cls.concept_scheme_id, cls.id, key="has_class", kind="has_class"
                 )
@@ -714,9 +684,7 @@ class GraphMLDeserializer(OntologyDeserializer):
             elif kind == "property_definition":
                 self._extract_property_definition(node_id, node_attrs)
             else:
-                logger.warning(
-                    f"Node {node_id} has unknown kind attribute: {kind}; skipping"
-                )
+                logger.warning(f"Node {node_id} has unknown kind attribute: {kind}; skipping")
 
     def _check_unknown_attributes(
         self, node_id: str, attrs: Dict[str, Any], known_keys: set[str]
@@ -821,9 +789,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         # Find parent class via outgoing edges
         parent_class_id = None
-        for _, succ, _, edge_attrs in self.graph.out_edges(
-            node_id, data=True, keys=True
-        ):
+        for _, succ, _, edge_attrs in self.graph.out_edges(node_id, data=True, keys=True):
             if edge_attrs.get("kind") == "parent_class":
                 parent_class_id = succ
                 break
@@ -885,9 +851,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         # Find parent classes via outgoing edges, maintaining order
         class_ids = []
         class_orders = []
-        for _, succ, _, edge_attrs in self.graph.out_edges(
-            node_id, data=True, keys=True
-        ):
+        for _, succ, _, edge_attrs in self.graph.out_edges(node_id, data=True, keys=True):
             if edge_attrs.get("kind") == "class_membership":
                 class_order = edge_attrs.get("cs:class_order")
                 if class_order is not None:
@@ -895,14 +859,12 @@ class GraphMLDeserializer(OntologyDeserializer):
                         class_orders.append((int(class_order), succ))
                     except ValueError:
                         self.warnings.append(
-                            f"Individual {node_id} has invalid cs:class_order:"
-                            f" {class_order}"
+                            f"Individual {node_id} has invalid cs:class_order:" f" {class_order}"
                         )
                         class_ids.append(succ)
                 else:
                     self.warnings.append(
-                        f"Individual {node_id} missing cs:class_order on class"
-                        " membership edge"
+                        f"Individual {node_id} missing cs:class_order on class" " membership edge"
                     )
                     class_ids.append(succ)
 
@@ -931,13 +893,11 @@ class GraphMLDeserializer(OntologyDeserializer):
                     )
             except json.JSONDecodeError as e:
                 raise ValueError(
-                    f"Individual {node_id} has malformed cs:external_references"
-                    f" JSON: {e}"
+                    f"Individual {node_id} has malformed cs:external_references" f" JSON: {e}"
                 ) from e
             except KeyError as e:
                 raise ValueError(
-                    f"Individual {node_id} external reference missing required"
-                    f" field: {e}"
+                    f"Individual {node_id} external reference missing required" f" field: {e}"
                 ) from e
 
         known_keys = {
@@ -965,9 +925,7 @@ class GraphMLDeserializer(OntologyDeserializer):
         title = attrs.get("cs:title")
         identifier = attrs.get("cs:identifier")
         if not title or not identifier:
-            self.warnings.append(
-                f"PropertyDefinition {node_id} missing cs:title or cs:identifier"
-            )
+            self.warnings.append(f"PropertyDefinition {node_id} missing cs:title or cs:identifier")
             return
 
         is_relevant_str = attrs.get("cs:is_relevant", "")
@@ -1038,17 +996,13 @@ class GraphMLDeserializer(OntologyDeserializer):
                             existing_entity = existing_by_uuid.id
                             match_kind = MatchKind.UUID
                         else:
-                            existing_by_uuid = self.ontology_repo.get_individual(
-                                entity_id
-                            )
+                            existing_by_uuid = self.ontology_repo.get_individual(entity_id)
                             if existing_by_uuid:
                                 existing_entity = existing_by_uuid.id
                                 match_kind = MatchKind.UUID
                             else:
-                                existing_by_uuid = (
-                                    self.ontology_repo.get_property_definition(
-                                        entity_id
-                                    )
+                                existing_by_uuid = self.ontology_repo.get_property_definition(
+                                    entity_id
                                 )
                                 if existing_by_uuid:
                                     existing_entity = existing_by_uuid.id
@@ -1066,9 +1020,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
             # If conflict found, record it
             if existing_entity and match_kind:
-                default_resolution = ImportConflict.derive_default_resolution(
-                    match_kind
-                )
+                default_resolution = ImportConflict.derive_default_resolution(match_kind)
                 conflict = ImportConflict(
                     match_kind=match_kind,
                     incoming=entity_dict,
@@ -1086,9 +1038,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         return conflicts
 
-    def _find_by_external_reference(
-        self, source: str, identifier: str
-    ) -> Optional[str]:
+    def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
         """Find an existing entity by external reference."""
         if self._classes_cache is None:
             # Query all classes without limit to ensure complete search
@@ -1109,9 +1059,7 @@ class GraphMLDeserializer(OntologyDeserializer):
 
         return None
 
-    def _find_class_by_title(
-        self, title: str, concept_scheme_id: Optional[str]
-    ) -> Optional[Class]:
+    def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
         # Query all classes without limit to ensure complete search
         all_classes = self.ontology_repo.list_classes(

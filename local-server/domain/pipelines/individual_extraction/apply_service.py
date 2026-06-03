@@ -115,11 +115,7 @@ class IndividualExtractionApplyService:
             obj_kind = obj.get("kind", "")
             obj_id = obj.get("id", "")
 
-            if (
-                property_definition_id
-                and obj_kind in ("individual", "class")
-                and obj_id
-            ):
+            if property_definition_id and obj_kind in ("individual", "class") and obj_id:
                 self._apply_relationship(
                     source_id=resolved_id,
                     target_id=obj_id,

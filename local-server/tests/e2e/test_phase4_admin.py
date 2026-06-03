@@ -90,9 +90,7 @@ class TestSystemMetrics:
 
         db_body = response.json()
         assert "connected" in db_body
-        assert (
-            db_body["connected"] is True
-        ), "Database should be connected and responsive"
+        assert db_body["connected"] is True, "Database should be connected and responsive"
 
         # Check service metrics endpoint
         response = e2e_client.get("/api/v1/admin/health/services")
@@ -149,9 +147,7 @@ class TestConfigurationManagement:
         # Verify expected sections present
         expected_sections = ["server", "database", "llm"]
         for section in expected_sections:
-            assert (
-                section in config["sections"]
-            ), f"Configuration should have '{section}' section"
+            assert section in config["sections"], f"Configuration should have '{section}' section"
 
         # Update a non-sensitive setting (e.g., update CORS origins in server section)
         test_section = "server"

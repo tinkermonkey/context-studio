@@ -104,9 +104,7 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_unhealthy_when_database_disconnected(self):
         """Status is UNHEALTHY when database is disconnected."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(
-                connected=False, issues=("Connection timeout",)
-            ),
+            database_health=DatabaseHealth(connected=False, issues=("Connection timeout",)),
             service_metrics=ServiceMetrics(
                 uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
@@ -128,9 +126,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(
                 uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
-            embedding_status=ComponentStatus(
-                available=False, details="Model not loaded"
-            ),
+            embedding_status=ComponentStatus(available=False, details="Model not loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
             task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
@@ -164,9 +160,7 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_degraded_when_database_has_issues(self):
         """Status is DEGRADED when database reports issues."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(
-                connected=True, issues=["Slow queries detected"]
-            ),
+            database_health=DatabaseHealth(connected=True, issues=["Slow queries detected"]),
             service_metrics=ServiceMetrics(
                 uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
@@ -213,9 +207,7 @@ class TestAdminServiceHealthErrorHandling:
     def test_check_health_resilient_to_database_health_failure(self):
         """Health check continues despite database health check failure."""
         metrics = FakeMetricsCollector(
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
             task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
@@ -249,9 +241,7 @@ class TestAdminServiceHealthErrorHandling:
         """Health check continues despite embedding model check failure."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(connected=True, issues=()),
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             nlp_status=ComponentStatus(available=True, details="OK"),
             task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             embedding_status_error=RuntimeError("Embedding check failed"),
@@ -267,9 +257,7 @@ class TestAdminServiceHealthErrorHandling:
         """Health check continues despite NLP pipeline check failure."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(connected=True, issues=()),
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             embedding_status=ComponentStatus(available=True, details="OK"),
             task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             nlp_status_error=RuntimeError("NLP check failed"),
@@ -286,9 +274,7 @@ class TestAdminServiceHealthErrorHandling:
         error."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(connected=True, issues=()),
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
             task_summary_error=RuntimeError("Task summary check failed"),
@@ -298,9 +284,7 @@ class TestAdminServiceHealthErrorHandling:
 
         # Health check continues despite the failure and reports it
         assert health.status == SystemHealthStatus.DEGRADED
-        assert any(
-            "Error checking background tasks" in issue for issue in health.issues
-        )
+        assert any("Error checking background tasks" in issue for issue in health.issues)
 
 
 class TestBackgroundTaskSummaryValueObject:
@@ -429,9 +413,7 @@ class TestBackgroundTaskStateTransitions:
         )
 
         with pytest.raises(InvalidStateTransitionError) as exc_info:
-            task.transition_to(
-                BackgroundTaskStatus.COMPLETED, datetime.now(timezone.utc)
-            )
+            task.transition_to(BackgroundTaskStatus.COMPLETED, datetime.now(timezone.utc))
 
         assert "Cannot transition task" in str(exc_info.value)
 
@@ -446,9 +428,7 @@ class TestAdminServiceBackgroundTaskSummary:
     def test_check_health_reports_failed_tasks(self):
         """Health check reports issues when tasks have failed."""
         metrics = FakeMetricsCollector(
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             task_summary=BackgroundTaskSummary(
                 by_status=MappingProxyType(
                     {
@@ -468,12 +448,8 @@ class TestAdminServiceBackgroundTaskSummary:
     def test_check_health_healthy_with_no_failed_tasks(self):
         """Health check is healthy when all tasks completed successfully."""
         metrics = FakeMetricsCollector(
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
-            task_summary=BackgroundTaskSummary(
-                by_status={BackgroundTaskStatus.COMPLETED: 3}
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
+            task_summary=BackgroundTaskSummary(by_status={BackgroundTaskStatus.COMPLETED: 3}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -485,9 +461,7 @@ class TestAdminServiceBackgroundTaskSummary:
     def test_check_health_reports_multiple_failed_tasks(self):
         """Health check reports correct count of multiple failed tasks."""
         metrics = FakeMetricsCollector(
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            ),
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",)),
             task_summary=BackgroundTaskSummary(
                 by_status={
                     BackgroundTaskStatus.COMPLETED: 3,
@@ -515,9 +489,7 @@ class TestAdminServiceHealthMonitoring:
     def test_check_health_returns_healthy_status(self):
         """Check health returns healthy status from metrics collector."""
         metrics = FakeMetricsCollector(
-            service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=("openai",)
-            )
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=("openai",))
         )
         service = AdminService(metrics, self.config_store)
         health = service.check_health()

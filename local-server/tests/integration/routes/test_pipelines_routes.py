@@ -166,9 +166,7 @@ class TestPipelineImplementationEndpoints:
 
     def test_list_implementations_no_implementations_returns_empty_list(self, client):
         """GET implementations endpoint returns empty list when none registered."""
-        response = client.get(
-            "/api/pipelines/types/individual_extraction/implementations"
-        )
+        response = client.get("/api/pipelines/types/individual_extraction/implementations")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert isinstance(body, list)
@@ -544,9 +542,7 @@ class TestPipelineRunEndpoints:
 class TestPipelineErrorHandling:
     """Test error handling in pipeline routes."""
 
-    def test_create_returns_500_when_repo_raises_storage_error(
-        self, client, registries
-    ):
+    def test_create_returns_500_when_repo_raises_storage_error(self, client, registries):
         """Test that PipelineStorageError during create returns 500 with generic message."""
         # Register a test implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -582,9 +578,7 @@ class TestPipelineErrorHandling:
         assert "table" not in body["detail"].lower()
         assert "constraint" not in body["detail"].lower()
 
-    def test_orchestrator_raises_pipeline_input_error_returns_400(
-        self, client, registries
-    ):
+    def test_orchestrator_raises_pipeline_input_error_returns_400(self, client, registries):
         """Test that PipelineInputError from orchestrator returns 400."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -599,9 +593,7 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise PipelineInputError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineInputError(
-            "Invalid documents format"
-        )
+        mock_orchestrator.execute.side_effect = PipelineInputError("Invalid documents format")
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -619,9 +611,7 @@ class TestPipelineErrorHandling:
         assert "detail" in body
         assert "Invalid documents format" in body["detail"]
 
-    def test_orchestrator_raises_external_service_error_returns_503(
-        self, client, registries
-    ):
+    def test_orchestrator_raises_external_service_error_returns_503(self, client, registries):
         """Test that PipelineExternalServiceError from orchestrator returns 503."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -671,9 +661,7 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineExecutionError(
-            "Internal logic failed"
-        )
+        mock_orchestrator.execute.side_effect = PipelineExecutionError("Internal logic failed")
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -691,9 +679,7 @@ class TestPipelineErrorHandling:
         assert "detail" in body
         assert body["detail"] == "Pipeline execution failed"
 
-    def test_orchestrator_raises_generic_pipeline_error_returns_500(
-        self, client, registries
-    ):
+    def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
         """Test that generic PipelineExecutionError from orchestrator returns 500."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -708,9 +694,7 @@ class TestPipelineErrorHandling:
 
         # Mock orchestrator to raise generic PipelineExecutionError
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.execute.side_effect = PipelineExecutionError(
-            "Generic pipeline error"
-        )
+        mock_orchestrator.execute.side_effect = PipelineExecutionError("Generic pipeline error")
 
         # Patch create_orchestrator to return our mock
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=mock_orchestrator):
@@ -1037,9 +1021,7 @@ class TestRunStatusLifecycle:
             or "Unexpected orchestrator failure" in run.failure_reason
         )
 
-    def test_run_transition_writes_started_at_before_orchestrator(
-        self, client, registries
-    ):
+    def test_run_transition_writes_started_at_before_orchestrator(self, client, registries):
         """RUNNING status and started_at timestamp are written before orchestrator executes."""
         registries["implementation_registry"].register_impl(
             PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
@@ -1143,9 +1125,7 @@ class TestRunStatusLifecycle:
         thread.start()
 
         # Wait for the orchestrator to start (status is RUNNING at this point)
-        assert orchestrator_started_event.wait(
-            timeout=5.0
-        ), "Orchestrator did not start"
+        assert orchestrator_started_event.wait(timeout=5.0), "Orchestrator did not start"
 
         # Now query the runs to find the one we just created
         # (run_id is not available yet, so we query by list)
@@ -1162,9 +1142,7 @@ class TestRunStatusLifecycle:
 
         # Wait for the request to complete
         thread.join(timeout=5.0)
-        assert (
-            exception_in_thread is None
-        ), f"Exception in thread: {exception_in_thread}"
+        assert exception_in_thread is None, f"Exception in thread: {exception_in_thread}"
 
         # After completion, verify the run status is COMPLETED
         final_run = repo.get(mid_execution_run.id)
@@ -1215,8 +1193,7 @@ class TestRunStatusLifecycle:
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason is not None
         assert (
-            "timeout" in run.failure_reason.lower()
-            or "unavailable" in run.failure_reason.lower()
+            "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()
         )
 
 
@@ -1395,9 +1372,7 @@ class TestRevertEndpoint:
         assert "Traceback" not in detail
         assert ".py" not in detail
 
-    def test_revert_multi_run_batch_returns_422(
-        self, revert_client, pipeline_run_repo, batch_repo
-    ):
+    def test_revert_multi_run_batch_returns_422(self, revert_client, pipeline_run_repo, batch_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in multi-run batch returns 422."""
         from domain.pipelines.entities import PipelineType
 

@@ -142,9 +142,7 @@ def build_arxiv_corpus(output_dir: str, max_papers: int = 20) -> None:
     index = {
         "source": "ArXiv API",
         "categories": ["cs.DC", "cs.SE"],
-        "description_cs_dc": (
-            "Computer Systems - Distributed, Parallel, and Cluster Computing"
-        ),
+        "description_cs_dc": "Computer Systems - Distributed, Parallel, and Cluster Computing",
         "description_cs_se": "Computer Science - Software Engineering",
         "date_from": "2018-01-01",
         "build_timestamp": datetime.now(timezone.utc).isoformat(),
