@@ -61,7 +61,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_provider: LLMProvider | None,
         grounding_adapter: GroundingAdapterPort,
         scorer: GroundingScorer,
         config: dict[str, Any] | None = None,
@@ -72,7 +72,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         Initialize the grounding orchestrator.
 
         Args:
-            llm_provider: LLM provider for semantic scoring (if needed)
+            llm_provider: LLM provider (not currently used by grounding pipeline)
             grounding_adapter: Adapter for external source queries
             scorer: GroundingScorer instance for combining scores
             config: Configuration dict (top_n, weights, type preferences, etc.)

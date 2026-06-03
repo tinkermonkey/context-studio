@@ -54,7 +54,7 @@ class PipelineOrchestrator(ABC):
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_provider: LLMProvider | None,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
     ) -> None:
@@ -62,7 +62,7 @@ class PipelineOrchestrator(ABC):
         Initialize orchestrator with LLM provider and optional status writer.
 
         Args:
-            llm_provider: Port implementation for LLM completions
+            llm_provider: Port implementation for LLM completions (optional for pipelines that don't use LLM)
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
         """
