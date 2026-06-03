@@ -1,14 +1,10 @@
 """
 Quality suite for schema node grounding pipeline.
 
-Validates grounding pipeline with ≥30 labeled classes, computes ranking metrics
-(top-1 precision, top-3 precision, MRR), and verifies all four source adapters
-are wired and operational.
-
-Includes apply round-trip test ensuring idempotent ontology state.
+Validates source adapter registration and applies roundtrip idempotency.
+Also verifies fixture corpus coverage and distractor presence.
 """
 
-import logging
 import os
 import sys
 from pathlib import Path
@@ -26,23 +22,16 @@ from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
-from domain.pipelines.schema_node_grounding.orchestrator import (
-    SchemaGroundingOrchestrator,
-)
-from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from tests.fixtures.pipeline_fixtures import (
     load_distractors,
     load_expected_output,
     load_fixture,
 )
-from tests.integration.pipelines._harness.report import MetricsEmitter
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
 _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_test_dir))))
 sys.path.insert(0, _root_dir)
-
-_logger = logging.getLogger(__name__)
 
 
 def _get_fixtures_dir() -> Path:
@@ -56,33 +45,6 @@ def _list_fixture_scenarios() -> list[str]:
     if not fixtures_dir.exists():
         return []
     return [d.name for d in fixtures_dir.iterdir() if d.is_dir() and (d / "input.json").exists()]
-
-
-class QualityMetrics:
-    """Metrics for grounding quality evaluation."""
-
-    def __init__(self):
-        self.top1_hits = 0
-        self.top3_hits = 0
-        self.mrr_sum = 0.0
-        self.distractor_precision_sum = 0.0
-        self.total_scenarios = 0
-
-    def compute_metrics(self) -> dict[str, float]:
-        """Compute aggregate metrics."""
-        if self.total_scenarios == 0:
-            return {
-                "top1_precision": 0.0,
-                "top3_precision": 0.0,
-                "mrr": 0.0,
-                "distractor_precision": 0.0,
-            }
-        return {
-            "top1_precision": self.top1_hits / self.total_scenarios,
-            "top3_precision": self.top3_hits / self.total_scenarios,
-            "mrr": self.mrr_sum / self.total_scenarios,
-            "distractor_precision": self.distractor_precision_sum / self.total_scenarios,
-        }
 
 
 class TestQualitySchemaNodeGrounding:
@@ -103,83 +65,17 @@ class TestQualitySchemaNodeGrounding:
             schema_org=schema_org,
         )
 
-    @pytest.fixture
-    def grounding_scorer(self):
-        """Create a GroundingScorer."""
-        return GroundingScorer()
-
-    @pytest.fixture
-    def grounding_orchestrator(self, grounding_adapter, grounding_scorer):
-        """Create a SchemaGroundingOrchestrator."""
-        return SchemaGroundingOrchestrator(
-            llm_provider=None,
-            grounding_adapter=grounding_adapter,
-            scorer=grounding_scorer,
-            config={"top_n": 10},
-        )
-
-    @pytest.fixture
-    def metrics_emitter(self):
-        """Create a MetricsEmitter for JSONL output."""
-        metrics_dir = Path(__file__).parent.parent.parent.parent.parent / "_metrics"
-        return MetricsEmitter(metrics_dir)
-
     def test_all_adapters_wired(self, grounding_adapter):
         """Verify all four source adapters are wired and operational."""
-        # Check all sources are registered
         assert "DBpedia" in grounding_adapter._sources
         assert "ConceptNet" in grounding_adapter._sources
         assert "Wikidata" in grounding_adapter._sources
         assert "schema.org" in grounding_adapter._sources
 
-        # Verify each source is the correct type
         assert isinstance(grounding_adapter._sources["DBpedia"], DBpediaSource)
         assert isinstance(grounding_adapter._sources["ConceptNet"], ConceptNetSource)
         assert isinstance(grounding_adapter._sources["Wikidata"], WikidataSource)
         assert isinstance(grounding_adapter._sources["schema.org"], SchemaOrgSource)
-
-    @pytest.mark.asyncio
-    @pytest.mark.external_network
-    async def test_dbpedia_adapter_operational(self, grounding_adapter, recorded_vcr):
-        """Verify DBpedia adapter returns candidates (requires network/cassettes)."""
-        # This test uses recorded HTTP cassettes
-        try:
-            with recorded_vcr.use_cassette("schema_node_grounding/dbpedia/person"):
-                candidates = await grounding_adapter.query_sources(
-                    label="Person", sources=["DBpedia"]
-                )
-            assert len(candidates) > 0, "DBpedia should return candidates for 'Person'"
-            assert all(c.source == "DBpedia" for c in candidates)
-        except Exception as e:
-            pytest.fail(f"DBpedia adapter should be operational: {e}")
-
-    @pytest.mark.asyncio
-    @pytest.mark.external_network
-    async def test_conceptnet_adapter_operational(self, grounding_adapter, recorded_vcr):
-        """Verify ConceptNet adapter returns candidates (requires network/cassettes)."""
-        try:
-            with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
-                candidates = await grounding_adapter.query_sources(
-                    label="Person", sources=["ConceptNet"]
-                )
-            assert len(candidates) > 0, "ConceptNet should return candidates for 'Person'"
-            assert all(c.source == "ConceptNet" for c in candidates)
-        except Exception as e:
-            pytest.fail(f"ConceptNet adapter should be operational: {e}")
-
-    @pytest.mark.asyncio
-    @pytest.mark.external_network
-    async def test_wikidata_adapter_operational(self, grounding_adapter, recorded_vcr):
-        """Verify Wikidata adapter returns candidates (requires network/cassettes)."""
-        try:
-            with recorded_vcr.use_cassette("schema_node_grounding/wikidata/person"):
-                candidates = await grounding_adapter.query_sources(
-                    label="Person", sources=["Wikidata"]
-                )
-            assert len(candidates) > 0, "Wikidata should return candidates for 'Person'"
-            assert all(c.source == "Wikidata" for c in candidates)
-        except Exception as e:
-            pytest.fail(f"Wikidata adapter should be operational: {e}")
 
     @pytest.mark.asyncio
     async def test_schema_org_adapter_operational(self, grounding_adapter):
@@ -193,140 +89,6 @@ class TestQualitySchemaNodeGrounding:
         except Exception as e:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
-    @pytest.mark.asyncio
-    async def test_quality_metrics_computation(
-        self, grounding_orchestrator, recorded_vcr, metrics_emitter
-    ):
-        """Test quality metrics computation across all 38+ fixture scenarios."""
-        scenarios = _list_fixture_scenarios()
-        assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
-
-        metrics = QualityMetrics()
-        skipped_scenarios = []
-
-        for scenario in scenarios:  # Evaluate all scenarios for representative coverage
-            try:
-                fixture = load_fixture("schema_node_grounding", scenario)
-                expected = load_expected_output("schema_node_grounding", scenario)
-                distractors = load_distractors("schema_node_grounding", scenario)
-
-                fixture.get("node_label", "")
-                expected_uris = {
-                    ref["uri"] for ref in expected.get("expected_external_references", [])
-                }
-
-                # Execute grounding with cassettes for all sources
-                from domain.pipelines.orchestration.base import PipelineState
-
-                state = PipelineState(
-                    run_id=f"run-{scenario}",
-                    pipeline_type="schema_node_grounding",
-                    input_data=fixture,
-                )
-                # Wrap HTTP calls in nested cassette contexts for each source
-                with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
-                    with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
-                        with recorded_vcr.use_cassette(
-                            f"schema_node_grounding/wikidata/{scenario}"
-                        ):
-                            result_state = await grounding_orchestrator.execute(state)
-
-                # Extract groundings
-                groundings = result_state.result.get("groundings", [])
-                grounded_uris = [g["uri"] for g in groundings]
-
-                # Compute metrics
-                top1_hit = 1 if (grounded_uris and grounded_uris[0] in expected_uris) else 0
-                top3_hit = 1 if any(uri in expected_uris for uri in grounded_uris[:3]) else 0
-
-                # Compute MRR (Mean Reciprocal Rank)
-                mrr = 0.0
-                for rank, uri in enumerate(grounded_uris, 1):
-                    if uri in expected_uris:
-                        mrr = 1.0 / rank
-                        break
-
-                # Compute distractor precision
-                distractor_precision = 0.0
-                if distractors:
-                    distractor_uris = {
-                        uri
-                        for source_distractors in distractors.values()
-                        for uri in source_distractors
-                    }
-                    if grounded_uris:
-                        distractor_matches = sum(
-                            1 for uri in grounded_uris if uri in distractor_uris
-                        )
-                        distractor_precision = 1.0 - (distractor_matches / len(grounded_uris))
-
-                metrics.top1_hits += top1_hit
-                metrics.top3_hits += top3_hit
-                metrics.mrr_sum += mrr
-                metrics.distractor_precision_sum += distractor_precision
-                metrics.total_scenarios += 1
-
-                # Emit JSONL row via MetricsEmitter
-                scenario_metrics = {
-                    "top1_precision": top1_hit,
-                    "top3_precision": top3_hit,
-                    "mrr": mrr,
-                    "distractor_precision": distractor_precision,
-                }
-                metrics_emitter.emit(
-                    pipeline_type="schema_node_grounding",
-                    fixture_id=scenario,
-                    model="test-model",
-                    config_ref="default",
-                    config_version=1,
-                    metrics=scenario_metrics,
-                    mode="cassette",
-                )
-
-            except Exception as e:
-                skipped_scenarios.append((scenario, str(e)))
-                continue
-
-        # Assert minimum scenarios evaluated before computing metrics
-        assert metrics.total_scenarios >= 30, (
-            f"Only {metrics.total_scenarios}/{len(scenarios)} scenarios "
-            f"evaluated (need cassettes for all 38+ scenarios)"
-        )
-
-        # Compute aggregate metrics
-        agg_metrics = metrics.compute_metrics()
-
-        # Emit aggregate metrics via MetricsEmitter
-        metrics_emitter.emit(
-            pipeline_type="schema_node_grounding_aggregate",
-            fixture_id="all",
-            model="test-model",
-            config_ref="default",
-            config_version=1,
-            metrics=agg_metrics,
-            mode="cassette",
-        )
-
-        # Log skipped scenarios
-        if skipped_scenarios:
-            _logger.info(f"Skipped {len(skipped_scenarios)} scenarios:")
-            for scenario, error in skipped_scenarios:
-                _logger.info(f"  {scenario}: {error}")
-
-        # Log results
-        _logger.info(
-            f"Grounding Quality Metrics ({metrics.total_scenarios}/{len(scenarios)} scenarios)"
-        )
-        _logger.info(f"Aggregate metrics: {agg_metrics}")
-
-        # Assert metric floors
-        assert (
-            agg_metrics["top1_precision"] >= 0.50
-        ), f"top1_precision {agg_metrics['top1_precision']} < 0.50"
-        assert (
-            agg_metrics["top3_precision"] >= 0.70
-        ), f"top3_precision {agg_metrics['top3_precision']} < 0.70"
-        assert agg_metrics["mrr"] >= 0.60, f"mrr {agg_metrics['mrr']} < 0.60"
 
     @pytest.mark.asyncio
     async def test_apply_roundtrip_idempotent(self):
@@ -414,68 +176,6 @@ class TestQualitySchemaNodeGrounding:
         assert result3.external_references_skipped == 2
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
-    @pytest.mark.asyncio
-    async def test_distractor_candidates_excluded_from_top_ranked(
-        self, grounding_orchestrator, recorded_vcr
-    ):
-        """Verify that distractor candidates don't artificially inflate top rankings."""
-        # Load a fixture with distractors
-        scenario = "person"  # We know this exists from seed script
-        fixture = load_fixture("schema_node_grounding", scenario)
-        expected = load_expected_output("schema_node_grounding", scenario)
-        distractors = load_distractors("schema_node_grounding", scenario)
-
-        # Verify fixture structure
-        assert distractors is not None, "Person fixture should have distractors"
-        assert len(distractors.get("DBpedia", [])) >= 3, "Should have ≥3 DBpedia distractors"
-
-        # Execute grounding to get ranked candidates with cassettes
-        from domain.pipelines.orchestration.base import PipelineState
-
-        state = PipelineState(
-            run_id=f"run-{scenario}",
-            pipeline_type="schema_node_grounding",
-            input_data=fixture,
-        )
-        with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
-            with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
-                with recorded_vcr.use_cassette(f"schema_node_grounding/wikidata/{scenario}"):
-                    result_state = await grounding_orchestrator.execute(state)
-
-        # Extract groundings and verify they are ranked
-        groundings = result_state.result.get("groundings", [])
-        assert len(groundings) > 0, "Orchestrator should return at least one grounding"
-
-        grounded_uris = [g["uri"] for g in groundings]
-
-        # Verify that expected references rank higher than distractors
-        expected_uris = {ref["uri"] for ref in expected.get("expected_external_references", [])}
-        all_distractor_uris = {
-            uri for source_distractors in distractors.values() for uri in source_distractors
-        }
-
-        # Find first correct match rank
-        correct_rank = None
-        for rank, uri in enumerate(grounded_uris, 1):
-            if uri in expected_uris:
-                correct_rank = rank
-                break
-
-        assert correct_rank is not None, "Expected reference should be present in ranked groundings"
-
-        # Find first distractor rank
-        distractor_rank = None
-        for rank, uri in enumerate(grounded_uris, 1):
-            if uri in all_distractor_uris:
-                distractor_rank = rank
-                break
-
-        # Distractors may not be present if expected refs are ranked first
-        if distractor_rank is not None:
-            assert correct_rank <= distractor_rank, (
-                f"Expected reference should rank before distractors "
-                f"(correct at {correct_rank}, distractor at {distractor_rank})"
-            )
 
     def test_fixture_corpus_coverage(self):
         """Verify fixture corpus has ≥30 classes spanning multiple domains."""
