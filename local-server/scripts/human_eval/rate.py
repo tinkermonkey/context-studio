@@ -120,7 +120,9 @@ def format_candidate(candidate: dict[str, Any], index: int = 0) -> str:
     return "\n".join(lines)
 
 
-def prompt_for_rating(candidate_id: str) -> tuple[str, Optional[str]]:
+def prompt_for_rating(
+    candidate_id: str,
+) -> tuple[str, Optional[str]] | tuple[None, None]:
     """
     Prompt user for rating.
 
@@ -132,6 +134,7 @@ def prompt_for_rating(candidate_id: str) -> tuple[str, Optional[str]]:
         - "accept": The candidate is good
         - "revise": The candidate needs changes
         - "reject": The candidate should not be applied
+        Returns (None, None) if user skips
 
     Raises:
         KeyboardInterrupt: If user cancels

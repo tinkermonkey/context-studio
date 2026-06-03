@@ -90,11 +90,15 @@ def fetch_run_metadata(
     try:
         import requests
 
-        run_ids = {r.get("run_id") for r in ratings if r.get("run_id")}
+        run_ids: set[str] = {
+            str(r.get("run_id"))
+            for r in ratings
+            if r.get("run_id")
+        }
         if not run_ids:
             return {}
 
-        metadata = {}
+        metadata: dict[str, dict[str, Any]] = {}
         for run_id in run_ids:
             try:
                 url = f"{api_url}/api/pipelines/runs/{run_id}"
@@ -134,23 +138,25 @@ def aggregate_ratings(
         }
     """
     # Group ratings by (config_ref, config_version)
-    groups = defaultdict(lambda: {"accept": 0, "revise": 0, "reject": 0, "total": 0})
+    groups: dict[tuple[str, int], dict[str, int]] = defaultdict(
+        lambda: {"accept": 0, "revise": 0, "reject": 0, "total": 0}
+    )
 
     for rating in ratings:
         run_id = rating.get("run_id")
         rating_value = rating.get("rating")
 
         # Get config info from metadata
-        metadata = run_metadata.get(run_id, {})
-        config_ref = metadata.get("config_ref", "unknown")
-        config_version = metadata.get("config_version", 0)
+        metadata = run_metadata.get(str(run_id) if run_id else "", {})
+        config_ref: str = metadata.get("config_ref", "unknown")
+        config_version: int = metadata.get("config_version", 0)
 
         # If metadata is unavailable, try to infer from ratings themselves
         # (though this is less reliable)
         if config_ref == "unknown":
             # Try to extract from rating if it has config info
-            config_ref = rating.get("config_ref", "unknown")
-            config_version = rating.get("config_version", 0)
+            config_ref = str(rating.get("config_ref", "unknown"))
+            config_version = int(rating.get("config_version", 0))
 
         key = (config_ref, config_version)
 

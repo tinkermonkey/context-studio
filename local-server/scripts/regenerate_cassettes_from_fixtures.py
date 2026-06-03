@@ -57,8 +57,21 @@ async def regenerate_definition_cassettes():
     """Regenerate definition refinement cassettes."""
     print("Regenerating definition refinement cassettes...")
 
-    cassettes_dir = Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
-    fixtures_dir = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_node_definition_refinement"
+    cassettes_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "pipelines"
+        / "_cassettes"
+    )
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_node_definition_refinement"
+    )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
 
@@ -170,8 +183,21 @@ async def regenerate_connection_cassettes():
     """Regenerate connection refinement cassettes."""
     print("\nRegenerating connection refinement cassettes...")
 
-    cassettes_dir = Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
-    fixtures_dir = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_node_connection_refinement"
+    cassettes_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "pipelines"
+        / "_cassettes"
+    )
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_node_connection_refinement"
+    )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
 

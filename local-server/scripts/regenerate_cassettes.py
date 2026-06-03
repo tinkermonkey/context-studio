@@ -19,8 +19,21 @@ from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 
 def regenerate_definition_cassettes():
     """Regenerate cassettes for definition refinement."""
-    cassettes_dir = Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
-    fixtures_dir = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_node_definition_refinement"
+    cassettes_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "pipelines"
+        / "_cassettes"
+    )
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_node_definition_refinement"
+    )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
 
@@ -60,10 +73,11 @@ def regenerate_definition_cassettes():
         # The system and user prompts are hardcoded in the orchestrator
         # We need to match exactly what the orchestrator generates
         system_prompt = (
-            "You are an ontology refinement expert. Generate 2-3 alternative, improved "
-            "definitions for a schema class. Each definition should be grounded in specific "
-            "inputs (parent class definitions, sibling patterns, external sources, or usage "
-            "examples). For each variant, cite which inputs informed it."
+            "You are an ontology refinement expert. Generate 2-3 alternative, "
+            "improved definitions for a schema class. Each definition should be "
+            "grounded in specific inputs (parent class definitions, sibling "
+            "patterns, external sources, or usage examples). For each variant, "
+            "cite which inputs informed it."
         )
 
         # User prompt needs to be constructed from fixture input
@@ -75,9 +89,10 @@ def regenerate_definition_cassettes():
             f"Refine this class definition:\n\n"
             f"Current definition: {current_definition}\n"
             f"Class label: {scenario}\n\n"
-            f"Return exactly 2-3 alternative definitions as a JSON array with keys: "
-            f"'definition', 'rationale' (which inputs drove this variant), "
-            f"'sources_used' (list of input types), 'confidence' (0.0-1.0)."
+            f"Return exactly 2-3 alternative definitions as a JSON array "
+            f"with keys: 'definition', 'rationale' (which inputs drove this "
+            f"variant), 'sources_used' (list of input types), "
+            f"'confidence' (0.0-1.0)."
         )
 
         prompt_hash = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, None)
@@ -99,8 +114,21 @@ def regenerate_definition_cassettes():
 
 def regenerate_connection_cassettes():
     """Regenerate cassettes for connection refinement."""
-    cassettes_dir = Path(__file__).parent.parent / "tests" / "integration" / "pipelines" / "_cassettes"
-    fixtures_dir = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_node_connection_refinement"
+    cassettes_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "pipelines"
+        / "_cassettes"
+    )
+    fixtures_dir = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_node_connection_refinement"
+    )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
 
@@ -139,19 +167,20 @@ def regenerate_connection_cassettes():
 
         # System and user prompts from orchestrator
         system_prompt = (
-            "You are an ontology connection expert. Propose high-value connection deltas "
-            "(add/remove/modify) to improve schema structure. Each delta should cite specific "
-            "inputs (parent patterns, grounding sources, extraction usages) justifying the change. "
-            "Focus on maximizing value while minimizing noise."
+            "You are an ontology connection expert. Propose high-value "
+            "connection deltas (add/remove/modify) to improve schema structure. "
+            "Each delta should cite specific inputs (parent patterns, grounding "
+            "sources, extraction usages) justifying the change. Focus on "
+            "maximizing value while minimizing noise."
         )
 
         user_prompt = (
             f"Propose connection improvements for this schema node:\n\n"
             f"Schema node: {scenario}\n\n"
-            f"Return deltas as a JSON array with keys: 'operation' (add|remove|modify), "
-            f"'subject', 'predicate' (relationship type), 'object', 'rationale', "
-            f"'sources_cited' (list of input types), 'confidence' (0.0-1.0). "
-            f"Limit to top 3-5 most valuable deltas."
+            f"Return deltas as a JSON array with keys: 'operation' "
+            f"(add|remove|modify), 'subject', 'predicate' (relationship type), "
+            f"'object', 'rationale', 'sources_cited' (list of input types), "
+            f"'confidence' (0.0-1.0). Limit to top 3-5 most valuable deltas."
         )
 
         prompt_hash = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, None)
