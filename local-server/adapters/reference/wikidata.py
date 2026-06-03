@@ -19,14 +19,16 @@ class WikidataSource:
 
     BASE_URL = "https://www.wikidata.org/w/api.php"
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
         """
         Initialize the Wikidata source adapter.
 
         Args:
             timeout: HTTP request timeout in seconds
+            async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
         """
         self._timeout = timeout
+        self._async_client = async_client
 
     @property
     def source_name(self) -> str:
@@ -236,7 +238,7 @@ class WikidataSource:
         """
         Search for entities matching a term in Wikidata (async version).
 
-        Delegates to sync method via executor to avoid code duplication.
+        Uses provided async client if available, otherwise delegates to sync method.
 
         Args:
             term: Search query
@@ -245,7 +247,61 @@ class WikidataSource:
         Returns:
             List of ReferenceResult objects. Returns empty list on network failures.
         """
-        return await run_sync_in_executor(self.search, term, limit)
+        if self._async_client is None:
+            return await run_sync_in_executor(self.search, term, limit)
+
+        try:
+            response = await self._async_client.get(
+                self.BASE_URL,
+                params={
+                    "action": "wbsearchentities",
+                    "search": term,
+                    "language": "en",
+                    "limit": limit,
+                    "format": "json",
+                },
+                timeout=self._timeout,
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            results = []
+
+            if "search" in data:
+                for item in data["search"][:limit]:
+                    entity_id = item.get("id", "")
+                    label = item.get("label", "")
+                    description = item.get("description", None)
+
+                    if entity_id:
+                        uri = f"http://www.wikidata.org/entity/{entity_id}"
+                        results.append(
+                            ReferenceResult(
+                                uri=uri,
+                                label=label,
+                                description=description,
+                                source=self.source_name,
+                            )
+                        )
+
+            return results
+        except httpx.TimeoutException as e:
+            logger.warning(f"Wikidata search timed out for '{term}': {e}")
+            return []
+        except httpx.NetworkError as e:
+            logger.warning(f"Wikidata network error during search for '{term}': {e}")
+            return []
+        except httpx.HTTPStatusError as e:
+            logger.warning(
+                f"Wikidata HTTP {e.response.status_code} error during search for '{term}': {e}"
+            )
+            return []
+        except httpx.HTTPError as e:
+            logger.warning(f"Wikidata HTTP error during search for '{term}': {e}")
+            return []
+        except ValueError as e:
+            logger.warning(f"Wikidata JSON parse error during search for '{term}': {e}")
+            return []
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """

@@ -19,16 +19,23 @@ class ConceptNetSource:
 
     DEFAULT_BASE_URL = "https://api.conceptnet.io"
 
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout: int = 10):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: int = 10,
+        async_client: httpx.AsyncClient | None = None,
+    ):
         """
         Initialize the ConceptNet source adapter.
 
         Args:
             base_url: ConceptNet API base URL
             timeout: HTTP request timeout in seconds
+            async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
         """
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._async_client = async_client
 
     @property
     def source_name(self) -> str:
@@ -208,7 +215,7 @@ class ConceptNetSource:
         """
         Search for concepts matching a term in ConceptNet (async version).
 
-        Delegates to sync method via executor to avoid code duplication.
+        Uses provided async client if available, otherwise delegates to sync method.
 
         Args:
             term: Search query
@@ -217,7 +224,59 @@ class ConceptNetSource:
         Returns:
             List of ReferenceResult objects. Returns empty list on network failures.
         """
-        return await run_sync_in_executor(self.search, term, limit)
+        if self._async_client is None:
+            return await run_sync_in_executor(self.search, term, limit)
+
+        try:
+            response = await self._async_client.get(
+                f"{self._base_url}/query",
+                params={"text": term, "limit": limit},
+                timeout=self._timeout,
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            results = []
+
+            if "edges" in data:
+                seen_uris = set()
+                for edge in data["edges"]:
+                    start = edge.get("start", {})
+                    uri = start.get("@id", "")
+                    label = start.get("label", "")
+
+                    if uri and uri not in seen_uris:
+                        seen_uris.add(uri)
+                        results.append(
+                            ReferenceResult(
+                                uri=uri,
+                                label=label,
+                                description=None,
+                                source=self.source_name,
+                            )
+                        )
+
+                    if len(results) >= limit:
+                        break
+
+            return results
+        except httpx.TimeoutException as e:
+            logger.warning(f"ConceptNet search timed out for '{term}': {e}")
+            return []
+        except httpx.NetworkError as e:
+            logger.warning(f"ConceptNet network error during search for '{term}': {e}")
+            return []
+        except httpx.HTTPStatusError as e:
+            logger.warning(
+                f"ConceptNet HTTP {e.response.status_code} error during search for '{term}': {e}"
+            )
+            return []
+        except httpx.HTTPError as e:
+            logger.warning(f"ConceptNet HTTP error during search for '{term}': {e}")
+            return []
+        except ValueError as e:
+            logger.warning(f"ConceptNet JSON parse error during search for '{term}': {e}")
+            return []
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """

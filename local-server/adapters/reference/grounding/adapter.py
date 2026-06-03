@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any, cast
 
+import httpx
+
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.schema_org import SchemaOrgSource
@@ -36,6 +38,7 @@ class GroundingAdapter:
         conceptnet: ConceptNetSource | None = None,
         wikidata: WikidataSource | None = None,
         schema_org: SchemaOrgSource | None = None,
+        http_client: httpx.AsyncClient | None = None,
     ) -> None:
         """
         Initialize the grounding adapter.
@@ -45,11 +48,12 @@ class GroundingAdapter:
             conceptnet: ConceptNet source adapter (creates default if None)
             wikidata: Wikidata source adapter (creates default if None)
             schema_org: schema.org source adapter (creates default if None)
+            http_client: Optional httpx.AsyncClient to pass to sources (e.g., for cassette recording)
         """
-        self._dbpedia = dbpedia or DBpediaSource()
-        self._conceptnet = conceptnet or ConceptNetSource()
-        self._wikidata = wikidata or WikidataSource()
-        self._schema_org = schema_org or SchemaOrgSource()
+        self._dbpedia = dbpedia or DBpediaSource(async_client=http_client)
+        self._conceptnet = conceptnet or ConceptNetSource(async_client=http_client)
+        self._wikidata = wikidata or WikidataSource(async_client=http_client)
+        self._schema_org = schema_org or SchemaOrgSource(async_client=http_client)
         self._sources = {
             "DBpedia": self._dbpedia,
             "ConceptNet": self._conceptnet,

@@ -19,14 +19,16 @@ class DBpediaSource:
 
     LOOKUP_URL = "https://lookup.dbpedia.org/api/search"
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
         """
         Initialize the DBpedia source adapter.
 
         Args:
             timeout: HTTP request timeout in seconds
+            async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
         """
         self._timeout = timeout
+        self._async_client = async_client
 
     @property
     def source_name(self) -> str:
@@ -163,7 +165,7 @@ class DBpediaSource:
         """
         Search for entities matching a term in DBpedia (async version).
 
-        Delegates to sync method via executor to avoid code duplication.
+        Uses provided async client if available, otherwise delegates to sync method.
 
         Args:
             term: Search query
@@ -172,7 +174,58 @@ class DBpediaSource:
         Returns:
             List of ReferenceResult objects. Returns empty list on network failures.
         """
-        return await run_sync_in_executor(self.search, term, limit)
+        if self._async_client is None:
+            return await run_sync_in_executor(self.search, term, limit)
+
+        try:
+            response = await self._async_client.get(
+                self.LOOKUP_URL,
+                params={
+                    "query": term,
+                    "format": "json",
+                    "maxResults": limit,
+                },
+                timeout=self._timeout,
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            results = []
+
+            if "results" in data:
+                for result in data["results"][:limit]:
+                    uri = result.get("uri", "")
+                    label = result.get("label", "")
+                    description = result.get("description", None)
+
+                    if uri:
+                        results.append(
+                            ReferenceResult(
+                                uri=uri,
+                                label=label,
+                                description=description,
+                                source=self.source_name,
+                            )
+                        )
+
+            return results
+        except httpx.TimeoutException as e:
+            logger.warning(f"DBpedia search timed out for '{term}': {e}")
+            return []
+        except httpx.NetworkError as e:
+            logger.warning(f"DBpedia network error during search for '{term}': {e}")
+            return []
+        except httpx.HTTPStatusError as e:
+            logger.warning(
+                f"DBpedia HTTP {e.response.status_code} error during search for '{term}': {e}"
+            )
+            return []
+        except httpx.HTTPError as e:
+            logger.warning(f"DBpedia HTTP error during search for '{term}': {e}")
+            return []
+        except ValueError as e:
+            logger.warning(f"DBpedia JSON parse error during search for '{term}': {e}")
+            return []
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """

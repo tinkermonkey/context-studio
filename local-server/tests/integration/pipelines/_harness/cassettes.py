@@ -1,14 +1,20 @@
-"""LLM-level recording and replay for deterministic pipeline quality tests.
+"""HTTP and LLM-level recording and replay for deterministic pipeline quality tests.
 
-Records LLM interactions at the LLMProvider protocol boundary as
-(prompt_hash → LLMResponse) pairs, enabling compact cassettes that survive
-SDK version changes and transport-layer modifications.
+Records HTTP interactions at the httpx.AsyncClient transport layer and
+LLM interactions at the LLMProvider protocol boundary, enabling cassettes
+that survive SDK version changes and preserve request-response patterns.
+
+HTTP cassettes record request/response pairs at the AsyncBaseTransport level,
+enabling deterministic replay without network access. LLM cassettes store
+prompt→response pairs indexed by prompt hash.
 """
 
 import hashlib
 import json
 from pathlib import Path
 from typing import Any, Literal
+
+import httpx
 
 from domain.pipelines.ports import LLMResponse
 
@@ -29,6 +35,114 @@ def _compute_prompt_hash(
     seed_part = str(seed) if seed is not None else "none"
     payload = f"{system_prompt}|{user_prompt}|{model}|{temperature}|{seed_part}"
     return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class RecordingHTTPTransport(httpx.AsyncBaseTransport):
+    """Intercepts httpx.AsyncClient calls and records them to disk via respx.
+
+    Records HTTP interactions (request/response pairs) to a JSON cassette file,
+    enabling deterministic replay in tests without network access.
+    """
+
+    def __init__(self, delegate: httpx.AsyncBaseTransport, cassette_path: Path) -> None:
+        """
+        Initialize the recording transport.
+
+        Args:
+            delegate: Real AsyncBaseTransport to delegate calls to
+            cassette_path: Path where cassette will be written (relative or absolute)
+        """
+        self._delegate = delegate
+        self._cassette_path = Path(cassette_path)
+        self._recordings: list[dict[str, Any]] = []
+
+    async def handle_async_request(
+        self,
+        request: httpx.Request,
+    ) -> httpx.Response:
+        """Handle an async request and record the interaction."""
+        response = await self._delegate.handle_async_request(request)
+
+        interaction = {
+            "request": {
+                "method": request.method,
+                "url": str(request.url),
+                "headers": dict(request.headers),
+                "body": request.content.decode() if request.content else None,
+            },
+            "response": {
+                "status_code": response.status_code,
+                "headers": dict(response.headers),
+                "body": response.text,
+            },
+        }
+        self._recordings.append(interaction)
+
+        return response
+
+    async def aclose(self) -> None:
+        """Close the transport and write the cassette."""
+        await self._delegate.aclose()
+        self.flush()
+
+    def flush(self) -> None:
+        """Write recorded cassette to disk."""
+        try:
+            self._cassette_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._cassette_path, "w") as f:
+                json.dump({"interactions": self._recordings}, f, indent=2)
+        except OSError as e:
+            raise IOError(f"Failed to write cassette to {self._cassette_path}: {e}") from e
+
+
+class ReplayHTTPTransport(httpx.AsyncBaseTransport):
+    """Replays HTTP responses from a recorded cassette file.
+
+    All responses are deterministic, requiring zero network access.
+    Raises an error if a request is not found in the cassette.
+    """
+
+    def __init__(self, cassette_path: Path) -> None:
+        """
+        Initialize the replay transport.
+
+        Args:
+            cassette_path: Path to the cassette JSON file
+
+        Raises:
+            FileNotFoundError: If cassette does not exist
+            json.JSONDecodeError: If cassette is malformed
+        """
+        self._cassette_path = Path(cassette_path)
+        with open(self._cassette_path, "r") as f:
+            cassette = json.load(f)
+            self._interactions: list[dict[str, Any]] = cassette.get("interactions", [])
+        self._interaction_index = 0
+
+    async def handle_async_request(
+        self,
+        request: httpx.Request,
+    ) -> httpx.Response:
+        """Replay a response from the cassette."""
+        if self._interaction_index >= len(self._interactions):
+            raise RuntimeError(
+                f"Cassette exhausted: tried to replay interaction {self._interaction_index} "
+                f"but cassette only has {len(self._interactions)} interactions"
+            )
+
+        interaction = self._interactions[self._interaction_index]
+        self._interaction_index += 1
+
+        response_data = interaction["response"]
+        return httpx.Response(
+            status_code=response_data["status_code"],
+            headers=response_data.get("headers", {}),
+            content=response_data.get("body", "").encode(),
+        )
+
+    async def aclose(self) -> None:
+        """Close the transport (no-op for replay)."""
+        pass
 
 
 class CassetteStaleError(Exception):
