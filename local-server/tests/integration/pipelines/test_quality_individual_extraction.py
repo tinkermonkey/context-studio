@@ -320,7 +320,8 @@ def registered_extraction(session_factory):
 @pytest.fixture
 def metrics_emitter():
     """Create a MetricsEmitter for JSONL output."""
-    metrics_dir = Path(__file__).parent.parent.parent.parent / "_metrics"
+    metrics_dir = Path(__file__).parent.parent / "fixtures" / "pipelines" / "_metrics"
+    metrics_dir.mkdir(parents=True, exist_ok=True)
     return MetricsEmitter(metrics_dir)
 
 

@@ -1,1 +1,3 @@
-*.jsonl
+# Baseline JSONL metrics can be committed for regression testing.
+# Ephemeral CI metrics should be written to a temporary directory instead.
+# Baseline metrics are now committed to tests/integration/fixtures/pipelines/_metrics/
