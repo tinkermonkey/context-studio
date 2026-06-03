@@ -347,7 +347,9 @@ class TestQualitySchemaExtraction:
         cassette_dir.mkdir(parents=True, exist_ok=True)
 
         # Use quality_llm_provider_factory to get appropriate provider
-        quality_provider = quality_llm_provider_factory(scenario, cassette_dir, "schema_extraction_")
+        quality_provider = quality_llm_provider_factory(
+            scenario, cassette_dir, "schema_extraction_"
+        )
 
         # If it's a recording provider, we need to flush it after execution
         is_recording = isinstance(quality_provider, RecordingLLMProvider)

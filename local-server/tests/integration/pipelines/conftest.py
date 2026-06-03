@@ -240,7 +240,8 @@ def quality_llm_provider_factory(request):
             ):
                 pytest.skip(
                     f"Cassette not found at {cassette_path} and no real LLM provider configured. "
-                    f"To record cassettes, set OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY."
+                    "To record cassettes, set OPENAI_API_KEY, ANTHROPIC_API_KEY, or "
+                    "OPENROUTER_API_KEY."
                 )
 
             try:
@@ -256,7 +257,10 @@ def quality_llm_provider_factory(request):
 
         # Cassette mode: require cassette to exist
         if not cassette_path.exists():
-            pytest.skip(f"Cassette not found at {cassette_path}. Run with --refresh-cassettes to record.")
+            pytest.skip(
+                f"Cassette not found at {cassette_path}. "
+                "Run with --refresh-cassettes to record."
+            )
 
         return CassetteLLMProvider(cassette_path)
 
