@@ -19,10 +19,26 @@ FIXTURES = {
         "node_label": "Person",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Person", "source": "DBpedia", "rationale": "Core concept for human beings"},
-            {"uri": "http://www.wikidata.org/entity/Q5", "source": "Wikidata", "rationale": "Wikidata: human"},
-            {"uri": "https://schema.org/Person", "source": "schema.org", "rationale": "schema.org definition"},
-            {"uri": "http://conceptnet.io/c/en/person", "source": "ConceptNet", "rationale": "ConceptNet person concept"},
+            {
+                "uri": "http://dbpedia.org/resource/Person",
+                "source": "DBpedia",
+                "rationale": "Core concept for human beings",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q5",
+                "source": "Wikidata",
+                "rationale": "Wikidata: human",
+            },
+            {
+                "uri": "https://schema.org/Person",
+                "source": "schema.org",
+                "rationale": "schema.org definition",
+            },
+            {
+                "uri": "http://conceptnet.io/c/en/person",
+                "source": "ConceptNet",
+                "rationale": "ConceptNet person concept",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -42,15 +58,27 @@ FIXTURES = {
                 "https://schema.org/Agent",
                 "https://schema.org/Thing",
             ],
-        }
+        },
     },
     "organization": {
         "node_label": "Organization",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Organization", "source": "DBpedia", "rationale": "DBpedia organization"},
-            {"uri": "http://www.wikidata.org/entity/Q43229", "source": "Wikidata", "rationale": "Wikidata organization"},
-            {"uri": "https://schema.org/Organization", "source": "schema.org", "rationale": "schema.org organization"},
+            {
+                "uri": "http://dbpedia.org/resource/Organization",
+                "source": "DBpedia",
+                "rationale": "DBpedia organization",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q43229",
+                "source": "Wikidata",
+                "rationale": "Wikidata organization",
+            },
+            {
+                "uri": "https://schema.org/Organization",
+                "source": "schema.org",
+                "rationale": "schema.org organization",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -66,15 +94,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/company",
                 "http://conceptnet.io/c/en/group",
             ],
-        }
+        },
     },
     "location": {
         "node_label": "Location",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Location", "source": "DBpedia", "rationale": "Geographic location"},
-            {"uri": "http://www.wikidata.org/entity/Q2221906", "source": "Wikidata", "rationale": "Wikidata location"},
-            {"uri": "https://schema.org/Place", "source": "schema.org", "rationale": "schema.org place"},
+            {
+                "uri": "http://dbpedia.org/resource/Location",
+                "source": "DBpedia",
+                "rationale": "Geographic location",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q2221906",
+                "source": "Wikidata",
+                "rationale": "Wikidata location",
+            },
+            {
+                "uri": "https://schema.org/Place",
+                "source": "schema.org",
+                "rationale": "schema.org place",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -90,15 +130,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/place",
                 "http://conceptnet.io/c/en/area",
             ],
-        }
+        },
     },
     "event": {
         "node_label": "Event",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Event", "source": "DBpedia", "rationale": "Occurrence or incident"},
-            {"uri": "http://www.wikidata.org/entity/Q1656682", "source": "Wikidata", "rationale": "Wikidata event"},
-            {"uri": "https://schema.org/Event", "source": "schema.org", "rationale": "schema.org event"},
+            {
+                "uri": "http://dbpedia.org/resource/Event",
+                "source": "DBpedia",
+                "rationale": "Occurrence or incident",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q1656682",
+                "source": "Wikidata",
+                "rationale": "Wikidata event",
+            },
+            {
+                "uri": "https://schema.org/Event",
+                "source": "schema.org",
+                "rationale": "schema.org event",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -114,15 +166,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/event",
                 "http://conceptnet.io/c/en/happening",
             ],
-        }
+        },
     },
     "animal": {
         "node_label": "Animal",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Animal", "source": "DBpedia", "rationale": "Living organism"},
-            {"uri": "http://www.wikidata.org/entity/Q729", "source": "Wikidata", "rationale": "Wikidata animal"},
-            {"uri": "https://schema.org/Animal", "source": "schema.org", "rationale": "schema.org animal"},
+            {
+                "uri": "http://dbpedia.org/resource/Animal",
+                "source": "DBpedia",
+                "rationale": "Living organism",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q729",
+                "source": "Wikidata",
+                "rationale": "Wikidata animal",
+            },
+            {
+                "uri": "https://schema.org/Animal",
+                "source": "schema.org",
+                "rationale": "schema.org animal",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -139,15 +203,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/beast",
                 "http://conceptnet.io/c/en/organism",
             ],
-        }
+        },
     },
     "plant": {
         "node_label": "Plant",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Plant", "source": "DBpedia", "rationale": "Botanical organism"},
-            {"uri": "http://www.wikidata.org/entity/Q756", "source": "Wikidata", "rationale": "Wikidata plant"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Bio entity"},
+            {
+                "uri": "http://dbpedia.org/resource/Plant",
+                "source": "DBpedia",
+                "rationale": "Botanical organism",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q756",
+                "source": "Wikidata",
+                "rationale": "Wikidata plant",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Bio entity",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -163,15 +239,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/vegetation",
                 "http://conceptnet.io/c/en/flora",
             ],
-        }
+        },
     },
     "vehicle": {
         "node_label": "Vehicle",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Vehicle", "source": "DBpedia", "rationale": "Means of transport"},
-            {"uri": "http://www.wikidata.org/entity/Q42889", "source": "Wikidata", "rationale": "Wikidata vehicle"},
-            {"uri": "https://schema.org/Vehicle", "source": "schema.org", "rationale": "schema.org vehicle"},
+            {
+                "uri": "http://dbpedia.org/resource/Vehicle",
+                "source": "DBpedia",
+                "rationale": "Means of transport",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q42889",
+                "source": "Wikidata",
+                "rationale": "Wikidata vehicle",
+            },
+            {
+                "uri": "https://schema.org/Vehicle",
+                "source": "schema.org",
+                "rationale": "schema.org vehicle",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -187,15 +275,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/transport",
                 "http://conceptnet.io/c/en/machine",
             ],
-        }
+        },
     },
     "food": {
         "node_label": "Food",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Food", "source": "DBpedia", "rationale": "Edible substance"},
-            {"uri": "http://www.wikidata.org/entity/Q2095", "source": "Wikidata", "rationale": "Wikidata food"},
-            {"uri": "https://schema.org/Food", "source": "schema.org", "rationale": "schema.org food"},
+            {
+                "uri": "http://dbpedia.org/resource/Food",
+                "source": "DBpedia",
+                "rationale": "Edible substance",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q2095",
+                "source": "Wikidata",
+                "rationale": "Wikidata food",
+            },
+            {
+                "uri": "https://schema.org/Food",
+                "source": "schema.org",
+                "rationale": "schema.org food",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -211,15 +311,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/meal",
                 "http://conceptnet.io/c/en/cuisine",
             ],
-        }
+        },
     },
     "artist": {
         "node_label": "Artist",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Artist", "source": "DBpedia", "rationale": "Creative professional"},
-            {"uri": "http://www.wikidata.org/entity/Q483501", "source": "Wikidata", "rationale": "Wikidata artist"},
-            {"uri": "https://schema.org/Artist", "source": "schema.org", "rationale": "schema.org artist"},
+            {
+                "uri": "http://dbpedia.org/resource/Artist",
+                "source": "DBpedia",
+                "rationale": "Creative professional",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q483501",
+                "source": "Wikidata",
+                "rationale": "Wikidata artist",
+            },
+            {
+                "uri": "https://schema.org/Artist",
+                "source": "schema.org",
+                "rationale": "schema.org artist",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -235,15 +347,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/musician",
                 "http://conceptnet.io/c/en/creator",
             ],
-        }
+        },
     },
     "color": {
         "node_label": "Color",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Color", "source": "DBpedia", "rationale": "Visual property"},
-            {"uri": "http://www.wikidata.org/entity/Q1075", "source": "Wikidata", "rationale": "Wikidata color"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic schema.org thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Color",
+                "source": "DBpedia",
+                "rationale": "Visual property",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q1075",
+                "source": "Wikidata",
+                "rationale": "Wikidata color",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic schema.org thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -259,15 +383,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/hue",
                 "http://conceptnet.io/c/en/shade",
             ],
-        }
+        },
     },
     "book": {
         "node_label": "Book",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Book", "source": "DBpedia", "rationale": "Written work"},
-            {"uri": "http://www.wikidata.org/entity/Q571", "source": "Wikidata", "rationale": "Wikidata book"},
-            {"uri": "https://schema.org/Book", "source": "schema.org", "rationale": "schema.org book"},
+            {
+                "uri": "http://dbpedia.org/resource/Book",
+                "source": "DBpedia",
+                "rationale": "Written work",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q571",
+                "source": "Wikidata",
+                "rationale": "Wikidata book",
+            },
+            {
+                "uri": "https://schema.org/Book",
+                "source": "schema.org",
+                "rationale": "schema.org book",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -283,15 +419,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/publication",
                 "http://conceptnet.io/c/en/document",
             ],
-        }
+        },
     },
     "sport": {
         "node_label": "Sport",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Sport", "source": "DBpedia", "rationale": "Athletic activity"},
-            {"uri": "http://www.wikidata.org/entity/Q349", "source": "Wikidata", "rationale": "Wikidata sport"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "schema.org thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Sport",
+                "source": "DBpedia",
+                "rationale": "Athletic activity",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q349",
+                "source": "Wikidata",
+                "rationale": "Wikidata sport",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "schema.org thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -307,15 +455,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/game",
                 "http://conceptnet.io/c/en/competition",
             ],
-        }
+        },
     },
     "chemical_element": {
         "node_label": "ChemicalElement",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Chemical_element", "source": "DBpedia", "rationale": "Element in periodic table"},
-            {"uri": "http://www.wikidata.org/entity/Q11344", "source": "Wikidata", "rationale": "Wikidata chemical element"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Chemical_element",
+                "source": "DBpedia",
+                "rationale": "Element in periodic table",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q11344",
+                "source": "Wikidata",
+                "rationale": "Wikidata chemical element",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -331,15 +491,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/atom",
                 "http://conceptnet.io/c/en/substance",
             ],
-        }
+        },
     },
     "disease": {
         "node_label": "Disease",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Disease", "source": "DBpedia", "rationale": "Medical condition"},
-            {"uri": "http://www.wikidata.org/entity/Q12136", "source": "Wikidata", "rationale": "Wikidata disease"},
-            {"uri": "https://schema.org/MedicalCondition", "source": "schema.org", "rationale": "schema.org medical condition"},
+            {
+                "uri": "http://dbpedia.org/resource/Disease",
+                "source": "DBpedia",
+                "rationale": "Medical condition",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q12136",
+                "source": "Wikidata",
+                "rationale": "Wikidata disease",
+            },
+            {
+                "uri": "https://schema.org/MedicalCondition",
+                "source": "schema.org",
+                "rationale": "schema.org medical condition",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -355,15 +527,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/illness",
                 "http://conceptnet.io/c/en/sickness",
             ],
-        }
+        },
     },
     "music": {
         "node_label": "Music",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Music", "source": "DBpedia", "rationale": "Art of sound"},
-            {"uri": "http://www.wikidata.org/entity/Q638", "source": "Wikidata", "rationale": "Wikidata music"},
-            {"uri": "https://schema.org/MusicGroup", "source": "schema.org", "rationale": "schema.org music"},
+            {
+                "uri": "http://dbpedia.org/resource/Music",
+                "source": "DBpedia",
+                "rationale": "Art of sound",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q638",
+                "source": "Wikidata",
+                "rationale": "Wikidata music",
+            },
+            {
+                "uri": "https://schema.org/MusicGroup",
+                "source": "schema.org",
+                "rationale": "schema.org music",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -379,15 +563,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/song",
                 "http://conceptnet.io/c/en/sound",
             ],
-        }
+        },
     },
     "language": {
         "node_label": "Language",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Language", "source": "DBpedia", "rationale": "Communication system"},
-            {"uri": "http://www.wikidata.org/entity/Q315", "source": "Wikidata", "rationale": "Wikidata language"},
-            {"uri": "https://schema.org/Language", "source": "schema.org", "rationale": "schema.org language"},
+            {
+                "uri": "http://dbpedia.org/resource/Language",
+                "source": "DBpedia",
+                "rationale": "Communication system",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q315",
+                "source": "Wikidata",
+                "rationale": "Wikidata language",
+            },
+            {
+                "uri": "https://schema.org/Language",
+                "source": "schema.org",
+                "rationale": "schema.org language",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -403,15 +599,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/dialect",
                 "http://conceptnet.io/c/en/speech",
             ],
-        }
+        },
     },
     "software": {
         "node_label": "Software",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Software", "source": "DBpedia", "rationale": "Computer program"},
-            {"uri": "http://www.wikidata.org/entity/Q7397", "source": "Wikidata", "rationale": "Wikidata software"},
-            {"uri": "https://schema.org/SoftwareApplication", "source": "schema.org", "rationale": "schema.org application"},
+            {
+                "uri": "http://dbpedia.org/resource/Software",
+                "source": "DBpedia",
+                "rationale": "Computer program",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q7397",
+                "source": "Wikidata",
+                "rationale": "Wikidata software",
+            },
+            {
+                "uri": "https://schema.org/SoftwareApplication",
+                "source": "schema.org",
+                "rationale": "schema.org application",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -427,15 +635,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/application",
                 "http://conceptnet.io/c/en/program",
             ],
-        }
+        },
     },
     "building": {
         "node_label": "Building",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Building", "source": "DBpedia", "rationale": "Structure"},
-            {"uri": "http://www.wikidata.org/entity/Q41176", "source": "Wikidata", "rationale": "Wikidata building"},
-            {"uri": "https://schema.org/Place", "source": "schema.org", "rationale": "schema.org place"},
+            {
+                "uri": "http://dbpedia.org/resource/Building",
+                "source": "DBpedia",
+                "rationale": "Structure",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q41176",
+                "source": "Wikidata",
+                "rationale": "Wikidata building",
+            },
+            {
+                "uri": "https://schema.org/Place",
+                "source": "schema.org",
+                "rationale": "schema.org place",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -451,15 +671,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/structure",
                 "http://conceptnet.io/c/en/construction",
             ],
-        }
+        },
     },
     "university": {
         "node_label": "University",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/University", "source": "DBpedia", "rationale": "Educational institution"},
-            {"uri": "http://www.wikidata.org/entity/Q3918", "source": "Wikidata", "rationale": "Wikidata university"},
-            {"uri": "https://schema.org/EducationalOrganization", "source": "schema.org", "rationale": "schema.org organization"},
+            {
+                "uri": "http://dbpedia.org/resource/University",
+                "source": "DBpedia",
+                "rationale": "Educational institution",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q3918",
+                "source": "Wikidata",
+                "rationale": "Wikidata university",
+            },
+            {
+                "uri": "https://schema.org/EducationalOrganization",
+                "source": "schema.org",
+                "rationale": "schema.org organization",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -475,15 +707,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/school",
                 "http://conceptnet.io/c/en/college",
             ],
-        }
+        },
     },
     "government": {
         "node_label": "Government",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Government", "source": "DBpedia", "rationale": "Political system"},
-            {"uri": "http://www.wikidata.org/entity/Q7188", "source": "Wikidata", "rationale": "Wikidata government"},
-            {"uri": "https://schema.org/Organization", "source": "schema.org", "rationale": "schema.org organization"},
+            {
+                "uri": "http://dbpedia.org/resource/Government",
+                "source": "DBpedia",
+                "rationale": "Political system",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q7188",
+                "source": "Wikidata",
+                "rationale": "Wikidata government",
+            },
+            {
+                "uri": "https://schema.org/Organization",
+                "source": "schema.org",
+                "rationale": "schema.org organization",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -499,15 +743,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/politics",
                 "http://conceptnet.io/c/en/state",
             ],
-        }
+        },
     },
     "river": {
         "node_label": "River",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/River", "source": "DBpedia", "rationale": "Water body"},
-            {"uri": "http://www.wikidata.org/entity/Q4022", "source": "Wikidata", "rationale": "Wikidata river"},
-            {"uri": "https://schema.org/LandmarksOrHistoricalBuildings", "source": "schema.org", "rationale": "Geographic feature"},
+            {
+                "uri": "http://dbpedia.org/resource/River",
+                "source": "DBpedia",
+                "rationale": "Water body",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q4022",
+                "source": "Wikidata",
+                "rationale": "Wikidata river",
+            },
+            {
+                "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+                "source": "schema.org",
+                "rationale": "Geographic feature",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -523,15 +779,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/stream",
                 "http://conceptnet.io/c/en/water",
             ],
-        }
+        },
     },
     "mountain": {
         "node_label": "Mountain",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Mountain", "source": "DBpedia", "rationale": "Landform"},
-            {"uri": "http://www.wikidata.org/entity/Q8502", "source": "Wikidata", "rationale": "Wikidata mountain"},
-            {"uri": "https://schema.org/LandmarksOrHistoricalBuildings", "source": "schema.org", "rationale": "Geographic landmark"},
+            {
+                "uri": "http://dbpedia.org/resource/Mountain",
+                "source": "DBpedia",
+                "rationale": "Landform",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q8502",
+                "source": "Wikidata",
+                "rationale": "Wikidata mountain",
+            },
+            {
+                "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+                "source": "schema.org",
+                "rationale": "Geographic landmark",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -547,15 +815,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/hill",
                 "http://conceptnet.io/c/en/peak",
             ],
-        }
+        },
     },
     "ocean": {
         "node_label": "Ocean",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Ocean", "source": "DBpedia", "rationale": "Large water body"},
-            {"uri": "http://www.wikidata.org/entity/Q9430", "source": "Wikidata", "rationale": "Wikidata ocean"},
-            {"uri": "https://schema.org/LandmarksOrHistoricalBuildings", "source": "schema.org", "rationale": "Water body"},
+            {
+                "uri": "http://dbpedia.org/resource/Ocean",
+                "source": "DBpedia",
+                "rationale": "Large water body",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q9430",
+                "source": "Wikidata",
+                "rationale": "Wikidata ocean",
+            },
+            {
+                "uri": "https://schema.org/LandmarksOrHistoricalBuildings",
+                "source": "schema.org",
+                "rationale": "Water body",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -571,15 +851,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/sea",
                 "http://conceptnet.io/c/en/water",
             ],
-        }
+        },
     },
     "star": {
         "node_label": "Star",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Star", "source": "DBpedia", "rationale": "Celestial object"},
-            {"uri": "http://www.wikidata.org/entity/Q523", "source": "Wikidata", "rationale": "Wikidata star"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Star",
+                "source": "DBpedia",
+                "rationale": "Celestial object",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q523",
+                "source": "Wikidata",
+                "rationale": "Wikidata star",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -595,15 +887,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/planet",
                 "http://conceptnet.io/c/en/sun",
             ],
-        }
+        },
     },
     "atom": {
         "node_label": "Atom",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Atom", "source": "DBpedia", "rationale": "Matter particle"},
-            {"uri": "http://www.wikidata.org/entity/Q125885", "source": "Wikidata", "rationale": "Wikidata atom"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Atom",
+                "source": "DBpedia",
+                "rationale": "Matter particle",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q125885",
+                "source": "Wikidata",
+                "rationale": "Wikidata atom",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -619,15 +923,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/molecule",
                 "http://conceptnet.io/c/en/particle",
             ],
-        }
+        },
     },
     "cell": {
         "node_label": "Cell",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Cell", "source": "DBpedia", "rationale": "Biological unit"},
-            {"uri": "http://www.wikidata.org/entity/Q7868", "source": "Wikidata", "rationale": "Wikidata cell"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Biochemical entity"},
+            {
+                "uri": "http://dbpedia.org/resource/Cell",
+                "source": "DBpedia",
+                "rationale": "Biological unit",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q7868",
+                "source": "Wikidata",
+                "rationale": "Wikidata cell",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Biochemical entity",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -643,15 +959,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/tissue",
                 "http://conceptnet.io/c/en/organism",
             ],
-        }
+        },
     },
     "protein": {
         "node_label": "Protein",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Protein", "source": "DBpedia", "rationale": "Biomolecule"},
-            {"uri": "http://www.wikidata.org/entity/Q8054", "source": "Wikidata", "rationale": "Wikidata protein"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Biochemical entity"},
+            {
+                "uri": "http://dbpedia.org/resource/Protein",
+                "source": "DBpedia",
+                "rationale": "Biomolecule",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q8054",
+                "source": "Wikidata",
+                "rationale": "Wikidata protein",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Biochemical entity",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -667,15 +995,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/amino_acid",
                 "http://conceptnet.io/c/en/enzyme",
             ],
-        }
+        },
     },
     "dna": {
         "node_label": "DNA",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/DNA", "source": "DBpedia", "rationale": "Genetic material"},
-            {"uri": "http://www.wikidata.org/entity/Q7055", "source": "Wikidata", "rationale": "Wikidata DNA"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Biochemical entity"},
+            {
+                "uri": "http://dbpedia.org/resource/DNA",
+                "source": "DBpedia",
+                "rationale": "Genetic material",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q7055",
+                "source": "Wikidata",
+                "rationale": "Wikidata DNA",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Biochemical entity",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -691,15 +1031,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/rna",
                 "http://conceptnet.io/c/en/gene",
             ],
-        }
+        },
     },
     "bacteria": {
         "node_label": "Bacteria",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Bacterium", "source": "DBpedia", "rationale": "Microorganism"},
-            {"uri": "http://www.wikidata.org/entity/Q6516", "source": "Wikidata", "rationale": "Wikidata bacteria"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Living organism"},
+            {
+                "uri": "http://dbpedia.org/resource/Bacterium",
+                "source": "DBpedia",
+                "rationale": "Microorganism",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q6516",
+                "source": "Wikidata",
+                "rationale": "Wikidata bacteria",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Living organism",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -715,15 +1067,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/virus",
                 "http://conceptnet.io/c/en/microorganism",
             ],
-        }
+        },
     },
     "virus": {
         "node_label": "Virus",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Virus", "source": "DBpedia", "rationale": "Infectious agent"},
-            {"uri": "http://www.wikidata.org/entity/Q10876", "source": "Wikidata", "rationale": "Wikidata virus"},
-            {"uri": "https://schema.org/BioChemEntity", "source": "schema.org", "rationale": "Living entity"},
+            {
+                "uri": "http://dbpedia.org/resource/Virus",
+                "source": "DBpedia",
+                "rationale": "Infectious agent",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q10876",
+                "source": "Wikidata",
+                "rationale": "Wikidata virus",
+            },
+            {
+                "uri": "https://schema.org/BioChemEntity",
+                "source": "schema.org",
+                "rationale": "Living entity",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -739,15 +1103,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/bacteria",
                 "http://conceptnet.io/c/en/pathogen",
             ],
-        }
+        },
     },
     "chemical_compound": {
         "node_label": "ChemicalCompound",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Chemical_compound", "source": "DBpedia", "rationale": "Substance"},
-            {"uri": "http://www.wikidata.org/entity/Q11173", "source": "Wikidata", "rationale": "Wikidata chemical"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Chemical_compound",
+                "source": "DBpedia",
+                "rationale": "Substance",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q11173",
+                "source": "Wikidata",
+                "rationale": "Wikidata chemical",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -763,15 +1139,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/molecule",
                 "http://conceptnet.io/c/en/substance",
             ],
-        }
+        },
     },
     "energy": {
         "node_label": "Energy",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Energy", "source": "DBpedia", "rationale": "Physical quantity"},
-            {"uri": "http://www.wikidata.org/entity/Q11379", "source": "Wikidata", "rationale": "Wikidata energy"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Energy",
+                "source": "DBpedia",
+                "rationale": "Physical quantity",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q11379",
+                "source": "Wikidata",
+                "rationale": "Wikidata energy",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -787,15 +1175,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/power",
                 "http://conceptnet.io/c/en/force",
             ],
-        }
+        },
     },
     "motion": {
         "node_label": "Motion",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Motion", "source": "DBpedia", "rationale": "Change of position"},
-            {"uri": "http://www.wikidata.org/entity/Q11465", "source": "Wikidata", "rationale": "Wikidata motion"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Motion",
+                "source": "DBpedia",
+                "rationale": "Change of position",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q11465",
+                "source": "Wikidata",
+                "rationale": "Wikidata motion",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -811,15 +1211,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/movement",
                 "http://conceptnet.io/c/en/velocity",
             ],
-        }
+        },
     },
     "time": {
         "node_label": "Time",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Time", "source": "DBpedia", "rationale": "Temporal dimension"},
-            {"uri": "http://www.wikidata.org/entity/Q11471", "source": "Wikidata", "rationale": "Wikidata time"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Time",
+                "source": "DBpedia",
+                "rationale": "Temporal dimension",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q11471",
+                "source": "Wikidata",
+                "rationale": "Wikidata time",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -835,15 +1247,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/duration",
                 "http://conceptnet.io/c/en/period",
             ],
-        }
+        },
     },
     "space": {
         "node_label": "Space",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Space", "source": "DBpedia", "rationale": "Spatial dimension"},
-            {"uri": "http://www.wikidata.org/entity/Q1922563", "source": "Wikidata", "rationale": "Wikidata space"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Space",
+                "source": "DBpedia",
+                "rationale": "Spatial dimension",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q1922563",
+                "source": "Wikidata",
+                "rationale": "Wikidata space",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -859,15 +1283,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/area",
                 "http://conceptnet.io/c/en/volume",
             ],
-        }
+        },
     },
     "network": {
         "node_label": "Network",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Network", "source": "DBpedia", "rationale": "Connected system"},
-            {"uri": "http://www.wikidata.org/entity/Q5649462", "source": "Wikidata", "rationale": "Wikidata network"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Network",
+                "source": "DBpedia",
+                "rationale": "Connected system",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q5649462",
+                "source": "Wikidata",
+                "rationale": "Wikidata network",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -883,15 +1319,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/connection",
                 "http://conceptnet.io/c/en/link",
             ],
-        }
+        },
     },
     "algorithm": {
         "node_label": "Algorithm",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Algorithm", "source": "DBpedia", "rationale": "Computational procedure"},
-            {"uri": "http://www.wikidata.org/entity/Q8366", "source": "Wikidata", "rationale": "Wikidata algorithm"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Algorithm",
+                "source": "DBpedia",
+                "rationale": "Computational procedure",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q8366",
+                "source": "Wikidata",
+                "rationale": "Wikidata algorithm",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -907,15 +1355,27 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/procedure",
                 "http://conceptnet.io/c/en/method",
             ],
-        }
+        },
     },
     "database": {
         "node_label": "Database",
         "node_type": "Class",
         "expected_uris": [
-            {"uri": "http://dbpedia.org/resource/Database", "source": "DBpedia", "rationale": "Data storage"},
-            {"uri": "http://www.wikidata.org/entity/Q27302918", "source": "Wikidata", "rationale": "Wikidata database"},
-            {"uri": "https://schema.org/Thing", "source": "schema.org", "rationale": "Generic thing"},
+            {
+                "uri": "http://dbpedia.org/resource/Database",
+                "source": "DBpedia",
+                "rationale": "Data storage",
+            },
+            {
+                "uri": "http://www.wikidata.org/entity/Q27302918",
+                "source": "Wikidata",
+                "rationale": "Wikidata database",
+            },
+            {
+                "uri": "https://schema.org/Thing",
+                "source": "schema.org",
+                "rationale": "Generic thing",
+            },
         ],
         "distractors": {
             "DBpedia": [
@@ -931,14 +1391,21 @@ FIXTURES = {
                 "http://conceptnet.io/c/en/storage",
                 "http://conceptnet.io/c/en/memory",
             ],
-        }
+        },
     },
 }
 
 
 def create_fixtures():
     """Create fixture directories and JSON files for quality suite."""
-    fixtures_base = Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_node_grounding"
+    fixtures_base = (
+        Path(__file__).parent.parent
+        / "tests"
+        / "integration"
+        / "fixtures"
+        / "pipelines"
+        / "schema_node_grounding"
+    )
     fixtures_base.mkdir(parents=True, exist_ok=True)
 
     for scenario_name, config in FIXTURES.items():
@@ -949,15 +1416,13 @@ def create_fixtures():
         input_data = {
             "node_label": config["node_label"],
             "node_type": config["node_type"],
-            "sources": ["DBpedia", "ConceptNet", "Wikidata", "schema.org"]
+            "sources": ["DBpedia", "ConceptNet", "Wikidata", "schema.org"],
         }
         with open(scenario_dir / "input.json", "w") as f:
             json.dump(input_data, f, indent=2)
 
         # Create expected.json
-        expected_data = {
-            "expected_external_references": config["expected_uris"]
-        }
+        expected_data = {"expected_external_references": config["expected_uris"]}
         with open(scenario_dir / "expected.json", "w") as f:
             json.dump(expected_data, f, indent=2)
 

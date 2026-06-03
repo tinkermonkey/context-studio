@@ -128,7 +128,9 @@ class TestQualitySchemaNodeGrounding:
         # This test uses recorded HTTP cassettes
         try:
             with recorded_vcr.use_cassette("schema_node_grounding/dbpedia/person"):
-                candidates = await grounding_adapter.query_sources(label="Person", sources=["DBpedia"])
+                candidates = await grounding_adapter.query_sources(
+                    label="Person", sources=["DBpedia"]
+                )
             assert len(candidates) > 0, "DBpedia should return candidates for 'Person'"
             assert all(c.source == "DBpedia" for c in candidates)
         except Exception as e:
@@ -140,7 +142,9 @@ class TestQualitySchemaNodeGrounding:
         """Verify ConceptNet adapter returns candidates (requires network/cassettes)."""
         try:
             with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
-                candidates = await grounding_adapter.query_sources(label="Person", sources=["ConceptNet"])
+                candidates = await grounding_adapter.query_sources(
+                    label="Person", sources=["ConceptNet"]
+                )
             assert len(candidates) > 0, "ConceptNet should return candidates for 'Person'"
             assert all(c.source == "ConceptNet" for c in candidates)
         except Exception as e:
@@ -152,7 +156,9 @@ class TestQualitySchemaNodeGrounding:
         """Verify Wikidata adapter returns candidates (requires network/cassettes)."""
         try:
             with recorded_vcr.use_cassette("schema_node_grounding/wikidata/person"):
-                candidates = await grounding_adapter.query_sources(label="Person", sources=["Wikidata"])
+                candidates = await grounding_adapter.query_sources(
+                    label="Person", sources=["Wikidata"]
+                )
             assert len(candidates) > 0, "Wikidata should return candidates for 'Person'"
             assert all(c.source == "Wikidata" for c in candidates)
         except Exception as e:
@@ -162,7 +168,9 @@ class TestQualitySchemaNodeGrounding:
     async def test_schema_org_adapter_operational(self, grounding_adapter):
         """Verify schema.org adapter returns candidates (offline, no HTTP)."""
         try:
-            candidates = await grounding_adapter.query_sources(label="Person", sources=["schema.org"])
+            candidates = await grounding_adapter.query_sources(
+                label="Person", sources=["schema.org"]
+            )
             assert len(candidates) > 0, "schema.org should return candidates for 'Person'"
             assert all(c.source == "schema.org" for c in candidates)
         except Exception as e:
@@ -191,6 +199,7 @@ class TestQualitySchemaNodeGrounding:
 
                 # Execute grounding with cassettes for all sources
                 from domain.pipelines.orchestration.base import PipelineState
+
                 state = PipelineState(
                     run_id=f"run-{scenario}",
                     pipeline_type="schema_node_grounding",
@@ -199,7 +208,9 @@ class TestQualitySchemaNodeGrounding:
                 # Wrap HTTP calls in nested cassette contexts for each source
                 with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
                     with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
-                        with recorded_vcr.use_cassette(f"schema_node_grounding/wikidata/{scenario}"):
+                        with recorded_vcr.use_cassette(
+                            f"schema_node_grounding/wikidata/{scenario}"
+                        ):
                             result_state = await grounding_orchestrator.execute(state)
 
                 # Extract groundings
@@ -221,7 +232,8 @@ class TestQualitySchemaNodeGrounding:
                 distractor_precision = 0.0
                 if distractors:
                     distractor_uris = {
-                        uri for source_distractors in distractors.values()
+                        uri
+                        for source_distractors in distractors.values()
                         for uri in source_distractors
                     }
                     if grounded_uris:
@@ -255,7 +267,10 @@ class TestQualitySchemaNodeGrounding:
         # Assert minimum scenarios evaluated before computing metrics
         assert (
             metrics.total_scenarios >= 30
-        ), f"Only {metrics.total_scenarios}/{len(scenarios)} scenarios evaluated (need cassettes for all 38+ scenarios)"
+        ), (
+            f"Only {metrics.total_scenarios}/{len(scenarios)} scenarios "
+            f"evaluated (need cassettes for all 38+ scenarios)"
+        )
 
         # Compute aggregate metrics
         agg_metrics = metrics.compute_metrics()
@@ -267,9 +282,11 @@ class TestQualitySchemaNodeGrounding:
                 print(f"  {scenario}: {error}")
 
         # Emit JSONL results
-        print("\n=== Grounding Quality Metrics ({}/{} scenarios) ===".format(
-            len(jsonl_rows), len(scenarios)
-        ))
+        print(
+            "\n=== Grounding Quality Metrics ({}/{} scenarios) ===".format(
+                len(jsonl_rows), len(scenarios)
+            )
+        )
         for row in jsonl_rows:
             print(json.dumps(row))
         print("\n=== Aggregate Metrics ===")
@@ -358,7 +375,9 @@ class TestQualitySchemaNodeGrounding:
         ]
 
         # Step 4: Verify idempotent behavior
-        assert state_after_apply == state_after_reapply, "Ontology state should be identical after re-apply"
+        assert (
+            state_after_apply == state_after_reapply
+        ), "Ontology state should be identical after re-apply"
         assert len(cls.external_references) == 2
 
         # Step 5: Apply again with same run (should deduplicate)
@@ -369,7 +388,9 @@ class TestQualitySchemaNodeGrounding:
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
     @pytest.mark.asyncio
-    async def test_distractor_candidates_excluded_from_top_ranked(self, grounding_orchestrator, recorded_vcr):
+    async def test_distractor_candidates_excluded_from_top_ranked(
+        self, grounding_orchestrator, recorded_vcr
+    ):
         """Verify that distractor candidates don't artificially inflate top rankings."""
         # Load a fixture with distractors
         scenario = "person"  # We know this exists from seed script
@@ -383,6 +404,7 @@ class TestQualitySchemaNodeGrounding:
 
         # Execute grounding to get ranked candidates with cassettes
         from domain.pipelines.orchestration.base import PipelineState
+
         state = PipelineState(
             run_id=f"run-{scenario}",
             pipeline_type="schema_node_grounding",
@@ -402,8 +424,7 @@ class TestQualitySchemaNodeGrounding:
         # Verify that expected references rank higher than distractors
         expected_uris = {ref["uri"] for ref in expected.get("expected_external_references", [])}
         all_distractor_uris = {
-            uri for source_distractors in distractors.values()
-            for uri in source_distractors
+            uri for source_distractors in distractors.values() for uri in source_distractors
         }
 
         # Find first correct match rank
@@ -435,15 +456,9 @@ class TestQualitySchemaNodeGrounding:
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
 
         # Verify different domains represented
-        biology_classes = {
-            "animal", "plant", "cell", "protein", "dna", "bacteria", "virus"
-        }
-        technology_classes = {
-            "software", "network", "algorithm", "database"
-        }
-        social_classes = {
-            "person", "organization", "artist", "university", "government"
-        }
+        biology_classes = {"animal", "plant", "cell", "protein", "dna", "bacteria", "virus"}
+        technology_classes = {"software", "network", "algorithm", "database"}
+        social_classes = {"person", "organization", "artist", "university", "government"}
 
         scenario_set = set(scenarios)
         assert len(scenario_set & biology_classes) >= 3, "Should have ≥3 biology classes"
@@ -454,7 +469,7 @@ class TestQualitySchemaNodeGrounding:
         """Verify all quality suite fixtures (≥30 classes) include distractors."""
         scenarios = _list_fixture_scenarios()
         # Filter to quality suite fixtures (exclude legacy fixtures like 'basic')
-        quality_scenarios = [s for s in scenarios if s != 'basic']
+        quality_scenarios = [s for s in scenarios if s != "basic"]
 
         for scenario in quality_scenarios:  # Check all fixtures
             distractors = load_distractors("schema_node_grounding", scenario)
@@ -466,12 +481,13 @@ class TestQualitySchemaNodeGrounding:
                 if source in distractors:
                     count = len(distractors[source])
                     assert 0 <= count <= 5, (
-                        f"Fixture {scenario} {source} has {count} distractors, "
-                        f"expected 0-5"
+                        f"Fixture {scenario} {source} has {count} distractors, " f"expected 0-5"
                     )
                     if count >= 3:
                         has_sufficient_distractors = True
-            assert has_sufficient_distractors, f"Fixture {scenario} should have ≥3 distractors from at least one source"
+            assert (
+                has_sufficient_distractors
+            ), f"Fixture {scenario} should have ≥3 distractors from at least one source"
 
     def test_fixture_has_required_fields(self):
         """Verify fixtures have all required fields."""
@@ -505,7 +521,7 @@ class TestQualityMetricsIntegration:
         """Test that all quality fixtures (≥30) can produce metrics without errors."""
         scenarios = _list_fixture_scenarios()
         # Filter to quality suite fixtures (exclude legacy fixtures like 'basic')
-        quality_scenarios = [s for s in scenarios if s != 'basic']
+        quality_scenarios = [s for s in scenarios if s != "basic"]
 
         # Count successful metric computations
         successful = 0
@@ -526,5 +542,7 @@ class TestQualityMetricsIntegration:
                 print(f"Scenario {scenario} failed: {e}")
 
         print(f"\nQuality fixtures: {successful} valid out of {len(quality_scenarios)}")
-        assert len(quality_scenarios) >= 30, f"Expected ≥30 quality fixtures, got {len(quality_scenarios)}"
+        assert (
+            len(quality_scenarios) >= 30
+        ), f"Expected ≥30 quality fixtures, got {len(quality_scenarios)}"
         assert failed == 0, f"Expected all quality scenarios to be valid, {failed} failed"
