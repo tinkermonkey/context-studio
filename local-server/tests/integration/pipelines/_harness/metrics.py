@@ -220,7 +220,7 @@ def mean_reciprocal_rank(expected_list: list[str], ranked_list: list[str]) -> fl
 
 def ranking_precision_at_k(expected: list[str], ranked_list: list[str], k: int) -> float:
     """
-    Compute precision@k: fraction of expected items in top k.
+    Compute precision@k: fraction of top k results that are correct.
 
     Args:
         expected: List of correct item identifiers
@@ -237,7 +237,7 @@ def ranking_precision_at_k(expected: list[str], ranked_list: list[str], k: int) 
     top_k = set(ranked_list[:k])
 
     matches = len(expected_set & top_k)
-    return round(matches / len(expected), 4)
+    return round(matches / k, 4)
 
 
 def ranking_metrics(expected: list[str], ranked_list: list[str]) -> RankingMetrics:

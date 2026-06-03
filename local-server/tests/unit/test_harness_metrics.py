@@ -11,7 +11,10 @@ from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
     delta_set_overlap,
     jaccard_similarity,
+    mean_reciprocal_rank,
     precision_recall_f1,
+    ranking_metrics,
+    ranking_precision_at_k,
     reciprocal_rank,
 )
 
@@ -280,3 +283,128 @@ class TestDeltaSetOverlap:
         # Expected delta: {a, b}, Actual delta: empty
         # Precision: vacuous 1.0, Recall: 0.0, F1 = 0.0
         assert f1 == 0.0
+
+
+class TestRankingPrecisionAtK:
+    """Tests for precision@k (ranking quality)."""
+
+    def test_perfect_top1(self):
+        """All expected items are first."""
+        precision = ranking_precision_at_k(["correct"], ["correct", "wrong1", "wrong2"], k=1)
+        assert precision == 1.0
+
+    def test_missed_top1(self):
+        """Expected item not in top 1."""
+        precision = ranking_precision_at_k(["correct"], ["wrong1", "correct", "wrong2"], k=1)
+        assert precision == 0.0
+
+    def test_perfect_top3(self):
+        """All expected items in top 3."""
+        precision = ranking_precision_at_k(
+            ["a", "b", "c"], ["a", "b", "c", "d", "e"], k=3
+        )
+        assert precision == 1.0
+
+    def test_partial_top3(self):
+        """Two of three expected items in top 3."""
+        precision = ranking_precision_at_k(["a", "b", "c"], ["a", "b", "x", "c"], k=3)
+        # Top 3: {a, b, x}, matches: 2, precision = 2/3
+        assert precision == pytest.approx(0.6667, abs=0.001)
+
+    def test_no_matches_top3(self):
+        """None of expected items in top 3."""
+        precision = ranking_precision_at_k(["a", "b"], ["x", "y", "z", "a"], k=3)
+        assert precision == 0.0
+
+    def test_empty_expected(self):
+        """Empty expected list returns 1.0."""
+        precision = ranking_precision_at_k([], ["a", "b", "c"], k=1)
+        assert precision == 1.0
+
+    def test_single_expected_multiple_matches_top3(self):
+        """Single expected item appears multiple times (treated as set)."""
+        precision = ranking_precision_at_k(["a"], ["a", "a", "b"], k=3)
+        # Top 3: {a, b}, matches: 1, precision = 1/3
+        assert precision == pytest.approx(0.3333, abs=0.001)
+
+
+class TestMeanReciprocalRank:
+    """Tests for Mean Reciprocal Rank (MRR)."""
+
+    def test_single_expected_at_rank1(self):
+        """Single expected item at first position."""
+        mrr = mean_reciprocal_rank(["correct"], ["correct", "wrong1", "wrong2"])
+        assert mrr == 1.0
+
+    def test_single_expected_at_rank2(self):
+        """Single expected item at second position."""
+        mrr = mean_reciprocal_rank(["correct"], ["wrong1", "correct", "wrong2"])
+        assert mrr == 0.5
+
+    def test_multiple_expected_all_found(self):
+        """Multiple expected items, all in list."""
+        mrr = mean_reciprocal_rank(["a", "b"], ["a", "wrong", "b"])
+        # RR for a: 1/1 = 1.0, RR for b: 1/3 = 0.333
+        # MRR = (1.0 + 0.333) / 2 = 0.667
+        assert mrr == pytest.approx(0.6667, abs=0.001)
+
+    def test_multiple_expected_one_missing(self):
+        """One expected item not in list."""
+        mrr = mean_reciprocal_rank(["a", "b"], ["wrong", "a", "wrong2"])
+        # RR for a: 1/2 = 0.5, RR for b: 0 (not found)
+        # MRR = (0.5 + 0) / 2 = 0.25
+        assert mrr == 0.25
+
+    def test_empty_expected(self):
+        """Empty expected list returns 1.0."""
+        mrr = mean_reciprocal_rank([], ["a", "b", "c"])
+        assert mrr == 1.0
+
+    def test_none_found(self):
+        """None of expected items found in list."""
+        mrr = mean_reciprocal_rank(["a", "b"], ["x", "y", "z"])
+        assert mrr == 0.0
+
+
+class TestRankingMetrics:
+    """Tests for combined ranking metrics."""
+
+    def test_perfect_ranking(self):
+        """All expected items in top positions."""
+        metrics = ranking_metrics(["a", "b", "c"], ["a", "b", "c", "d", "e"])
+        # top1_precision: 1 match in top-1 / 1 = 1.0
+        # top3_precision: 3 matches in top-3 / 3 = 1.0
+        # MRR: a=1.0, b=0.5, c=0.333, avg ≈ 0.611
+        assert metrics.top1_precision == 1.0
+        assert metrics.top3_precision == 1.0
+        assert metrics.mrr == pytest.approx(0.6111, abs=0.001)
+
+    def test_one_expected_top1_only(self):
+        """Single expected item only at rank 1."""
+        metrics = ranking_metrics(["a"], ["a", "b", "c", "d"])
+        # top1_precision: 1 match in top-1 / 1 = 1.0
+        # top3_precision: 1 match in top-3 / 3 = 0.333
+        # MRR: a at rank 1 = 1.0
+        assert metrics.top1_precision == 1.0
+        assert metrics.top3_precision == pytest.approx(0.3333, abs=0.001)
+        assert metrics.mrr == 1.0
+
+    def test_one_expected_rank2(self):
+        """Single expected item at rank 2."""
+        metrics = ranking_metrics(["a"], ["b", "a", "c", "d"])
+        # top1_precision: 0 matches in top-1 / 1 = 0.0
+        # top3_precision: 1 match in top-3 / 3 = 0.333
+        # MRR: a at rank 2 = 0.5
+        assert metrics.top1_precision == 0.0
+        assert metrics.top3_precision == pytest.approx(0.3333, abs=0.001)
+        assert metrics.mrr == 0.5
+
+    def test_multiple_expected_mixed_positions(self):
+        """Multiple expected, some in top-1, some in top-3."""
+        metrics = ranking_metrics(["a", "b"], ["a", "x", "b", "c"])
+        # top1_precision: 1 match in top-1 / 1 = 1.0
+        # top3_precision: 2 matches in top-3 / 3 = 0.667
+        # MRR: a at rank 1 (1.0), b at rank 3 (0.333), avg = 0.667
+        assert metrics.top1_precision == 1.0
+        assert metrics.top3_precision == pytest.approx(0.6667, abs=0.001)
+        assert metrics.mrr == pytest.approx(0.6667, abs=0.001)
