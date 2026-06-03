@@ -198,7 +198,6 @@ class TestQualitySchemaNodeGrounding:
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
 
         metrics = QualityMetrics()
-        jsonl_rows = []
         skipped_scenarios = []
 
         for scenario in scenarios:  # Evaluate all scenarios for representative coverage
@@ -280,18 +279,6 @@ class TestQualitySchemaNodeGrounding:
                     mode="cassette",
                 )
 
-                # Also collect for old output format
-                jsonl_row = {
-                    "pipeline_type": "schema_node_grounding",
-                    "scenario": scenario,
-                    "node_label": node_label,
-                    "top1_precision": top1_hit,
-                    "top3_precision": top3_hit,
-                    "mrr": mrr,
-                    "distractor_precision": distractor_precision,
-                }
-                jsonl_rows.append(jsonl_row)
-
             except Exception as e:
                 skipped_scenarios.append((scenario, str(e)))
                 continue
@@ -324,7 +311,7 @@ class TestQualitySchemaNodeGrounding:
 
         # Log results
         _logger.info(
-            f"Grounding Quality Metrics ({len(jsonl_rows)}/{len(scenarios)} scenarios)"
+            f"Grounding Quality Metrics ({metrics.total_scenarios}/{len(scenarios)} scenarios)"
         )
         _logger.info(f"Aggregate metrics: {agg_metrics}")
 
