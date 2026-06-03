@@ -98,6 +98,41 @@ QUALITY_SCENARIOS = [
     "technical_concepts",
 ]
 
+
+def _get_llm_provider_for_cassette(cassette_path: Path, refresh_cassettes: bool):
+    """
+    Get the appropriate LLM provider for a cassette path.
+
+    Returns CassetteLLMProvider if cassette exists, RecordingLLMProvider if recording,
+    otherwise raises FileNotFoundError.
+    """
+    if cassette_path.exists():
+        return CassetteLLMProvider(cassette_path)
+
+    if refresh_cassettes:
+        settings = get_settings()
+        llm_config = settings.llm
+        if (
+            not llm_config.openai_api_key
+            and not llm_config.anthropic_api_key
+            and not llm_config.openrouter_api_key
+        ):
+            raise ValueError(
+                f"No real LLM provider configured. To record cassettes, set "
+                "OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY."
+            )
+
+        real_llm_provider = LLMProviderRouter(
+            openai_api_key=llm_config.openai_api_key,
+            anthropic_api_key=llm_config.anthropic_api_key,
+            openrouter_api_key=llm_config.openrouter_api_key,
+        )
+        return RecordingLLMProvider(real_llm_provider, cassette_path)
+
+    raise FileNotFoundError(
+        f"Cassette not found at {cassette_path} and --refresh-cassettes not set."
+    )
+
 # Metric floors for E2E chain quality
 METRIC_FLOORS = {
     "class_set_match": 1.0,
@@ -261,8 +296,13 @@ class TestQualityE2EChain:
 
         documents = fixture_input.get("documents", [])
 
+        # Track recording providers for flushing later
+        recording_providers = []
+
         # ===== STAGE 1: Schema Extraction =====
-        llm_provider = CassetteLLMProvider(cassette_paths[0])
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[0], refresh_cassettes)
+        if isinstance(llm_provider, RecordingLLMProvider):
+            recording_providers.append(llm_provider)
         schema_ext_orchestrator = SchemaExtractionOrchestrator(
             llm_provider=llm_provider,
             ontology_repo=ontology_repo,
@@ -291,7 +331,9 @@ class TestQualityE2EChain:
         schema_ext_apply.apply(schema_ext_run, concept_scheme_id, taxonomy_id)
 
         # ===== STAGE 3: Individual Extraction =====
-        llm_provider = CassetteLLMProvider(cassette_paths[1])
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[1], refresh_cassettes)
+        if isinstance(llm_provider, RecordingLLMProvider):
+            recording_providers.append(llm_provider)
         # Get extraction service from configuration registry
         extraction_impl = impl_registry.get_implementation(PipelineType.INDIVIDUAL_EXTRACTION)
         if not extraction_impl:
@@ -359,7 +401,9 @@ class TestQualityE2EChain:
 
         # ===== STAGE 7: Definition Refinement =====
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
-        llm_provider = CassetteLLMProvider(cassette_paths[3])
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[3], refresh_cassettes)
+        if isinstance(llm_provider, RecordingLLMProvider):
+            recording_providers.append(llm_provider)
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         def_refine_orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm_provider,
@@ -393,7 +437,9 @@ class TestQualityE2EChain:
         def_refine_apply.apply(def_refine_run)
 
         # ===== STAGE 9: Connection Refinement =====
-        llm_provider = CassetteLLMProvider(cassette_paths[4])
+        llm_provider = _get_llm_provider_for_cassette(cassette_paths[4], refresh_cassettes)
+        if isinstance(llm_provider, RecordingLLMProvider):
+            recording_providers.append(llm_provider)
         conn_traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         conn_refine_orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm_provider,
@@ -425,6 +471,10 @@ class TestQualityE2EChain:
         # ===== STAGE 10: Apply Connection Refinement =====
         conn_refine_apply = SchemaConnectionRefinementApplyService(ontology_repo)
         conn_refine_apply.apply(conn_refine_run)
+
+        # Flush all recording providers
+        for provider in recording_providers:
+            provider.flush()
 
         # ===== Compute Quality Metrics =====
         final_classes = ontology_repo.list_classes()

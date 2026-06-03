@@ -325,46 +325,6 @@ def cassette_dir():
     return Path(__file__).parent.parent / "fixtures" / "cassettes" / "individual_extraction"
 
 
-@pytest.fixture
-def quality_llm_provider_factory(cassette_dir):
-    """Factory to create quality LLM providers for individual extraction tests."""
-    def _make_provider(scenario: str, request, llm_provider):
-        cassette_path = cassette_dir / f"individual_extraction_{scenario}.json"
-        refresh_cassettes = request.config.getoption("--refresh-cassettes")
-
-        if cassette_path.exists():
-            return CassetteLLMProvider(cassette_path)
-
-        if refresh_cassettes:
-            # Check if a real LLM provider is available
-            settings = get_settings()
-            llm_config = settings.llm
-            if (
-                not llm_config.openai_api_key
-                and not llm_config.anthropic_api_key
-                and not llm_config.openrouter_api_key
-            ):
-                pytest.skip(
-                    f"Cassette not found at {cassette_path} and no real LLM provider configured. "
-                    f"To record cassettes, set OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY."
-                )
-
-            try:
-                real_llm_provider = LLMProviderRouter(
-                    openai_api_key=llm_config.openai_api_key,
-                    anthropic_api_key=llm_config.anthropic_api_key,
-                    openrouter_api_key=llm_config.openrouter_api_key,
-                )
-            except ValueError as e:
-                pytest.skip(f"Failed to initialize LLM provider: {e}")
-
-            return RecordingLLMProvider(real_llm_provider, cassette_path)
-
-        pytest.skip(f"Cassette not found at {cassette_path}. Run with --refresh-cassettes to record.")
-
-    return _make_provider
-
-
 class TestQualityIndividualExtraction:
     """Quality test suite for individual_extraction pipeline."""
 
@@ -378,8 +338,6 @@ class TestQualityIndividualExtraction:
         metrics_emitter,
         cassette_dir,
         quality_llm_provider_factory,
-        request,
-        llm_provider,
     ):
         """
         Test individual extraction quality on a specific scenario.
@@ -396,7 +354,7 @@ class TestQualityIndividualExtraction:
         cassette_dir.mkdir(parents=True, exist_ok=True)
 
         # Use quality_llm_provider_factory to get appropriate provider
-        quality_provider = quality_llm_provider_factory(scenario, request, llm_provider)
+        quality_provider = quality_llm_provider_factory(scenario, cassette_dir, "individual_extraction_")
 
         # If it's a recording provider, we need to flush it after execution
         is_recording = isinstance(quality_provider, RecordingLLMProvider)
