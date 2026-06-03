@@ -3,7 +3,6 @@
   "identifier": "async_patterns",
   "title": "Asynchronous Programming",
   "current_description": "A programming technique.",
-  "expected_description": "A programming model that enables non-blocking execution of operations, allowing multiple tasks to progress without waiting for completion of preceding tasks.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

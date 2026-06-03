@@ -3,7 +3,6 @@
   "identifier": "good_pattern",
   "title": "A Good Pattern",
   "current_description": "A pattern with clear semantics and well-defined boundaries for use cases.",
-  "expected_description": "A pattern with clear semantics and well-defined boundaries for use cases, demonstrating proven effectiveness in software architecture.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": true

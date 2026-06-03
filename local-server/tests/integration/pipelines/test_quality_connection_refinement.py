@@ -15,7 +15,6 @@ Metric floors:
 - modify_recall ≥ 0.30 (recall for modify operations)
 """
 
-import asyncio
 import json
 import logging
 import tempfile
@@ -29,7 +28,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Relationship, Taxonomy
-from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -59,7 +58,7 @@ QUALITY_SCENARIOS = [
     "remove_no_longer_applicable",
     "modify_relationship_semantics",
     "mixed_add_and_remove",
-    "empty_delta_no_changes",
+    "empty_delta_fixture_1",
     "empty_delta_already_optimal",
     "add_event_driven_pattern",
     "add_async_pattern",
@@ -74,6 +73,8 @@ QUALITY_SCENARIOS = [
     "mixed_semantic_refinement",
     "empty_delta_complete_schema",
     "add_multiple_implementations",
+    "empty_delta_fixture_2",
+    "empty_delta_fixture_3",
 ]
 
 # Metric floors for connection refinement quality
@@ -153,7 +154,7 @@ def ontology_repo(session_factory):
         prop = PropertyDefinition(
             id=str(uuid4()),
             identifier=prop_label,
-            label=prop_label.replace("_", " ").title(),
+            title=prop_label.replace("_", " ").title(),
             description=f"Property: {prop_label}",
         )
         repo.save_property_definition(prop)
@@ -180,9 +181,9 @@ def metrics_emitter(tmp_path):
 
 
 @pytest.fixture
-def cassette_dir(tmp_path):
-    """Create a cassette directory for LLM recordings."""
-    return tmp_path / "_cassettes"
+def cassette_dir():
+    """Resolve cassette directory to committed recordings."""
+    return Path(__file__).parent / "_cassettes"
 
 
 class TestQualityConnectionRefinement:
@@ -311,7 +312,7 @@ class TestQualityConnectionRefinement:
                 prop_def = PropertyDefinition(
                     id=str(uuid4()),
                     identifier=predicate.lower().replace(" ", "_"),
-                    label=predicate,
+                    title=predicate,
                     description=f"Property: {predicate}",
                 )
                 ontology_repo.save_property_definition(prop_def)
@@ -498,7 +499,7 @@ class TestQualityConnectionRefinement:
         inherits_prop = PropertyDefinition(
             id=str(uuid4()),
             identifier="inherits_from",
-            label="Inherits From",
+            title="Inherits From",
             description="Inheritance relationship",
         )
         ontology_repo.save_property_definition(inherits_prop)
@@ -641,6 +642,68 @@ class TestQualityConnectionRefinementAggregation:
 
         FR-P5.2, FR-P5.3: Floors: delta_f1 >= 0.40, per-operation recall >= 0.30
         """
-        # This is a placeholder test that would aggregate metrics from JSONL output
-        # In a real scenario, this would read the emitted metrics and compute aggregates
-        pass
+        # Read emitted metrics from JSONL file
+        metrics_file = metrics_emitter._metrics_dir / "connection_refinement.jsonl"
+
+        if not metrics_file.exists():
+            pytest.skip("No metrics emitted yet (scenarios may have skipped due to missing cassettes)")
+
+        delta_f1_values = []
+        add_recall_values = []
+        remove_recall_values = []
+        modify_recall_values = []
+
+        with open(metrics_file, "r") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                metrics = row.get("metrics", {})
+
+                if "delta_f1" in metrics:
+                    delta_f1_values.append(metrics["delta_f1"])
+                if "add_recall" in metrics:
+                    add_recall_values.append(metrics["add_recall"])
+                if "remove_recall" in metrics:
+                    remove_recall_values.append(metrics["remove_recall"])
+                if "modify_recall" in metrics:
+                    modify_recall_values.append(metrics["modify_recall"])
+
+        # Compute aggregates
+        if not delta_f1_values:
+            pytest.skip("No valid delta_f1 metrics found")
+
+        aggregate_delta_f1 = sum(delta_f1_values) / len(delta_f1_values)
+        aggregate_add_recall = (
+            sum(add_recall_values) / len(add_recall_values) if add_recall_values else 0.0
+        )
+        aggregate_remove_recall = (
+            sum(remove_recall_values) / len(remove_recall_values)
+            if remove_recall_values
+            else 0.0
+        )
+        aggregate_modify_recall = (
+            sum(modify_recall_values) / len(modify_recall_values)
+            if modify_recall_values
+            else 0.0
+        )
+
+        _logger.info(
+            f"Connection refinement aggregate metrics: "
+            f"delta_f1={aggregate_delta_f1:.4f}, "
+            f"add_recall={aggregate_add_recall:.4f}, "
+            f"remove_recall={aggregate_remove_recall:.4f}, "
+            f"modify_recall={aggregate_modify_recall:.4f}"
+        )
+
+        # Assert floors using FloorGate
+        gate = FloorGate(METRIC_FLOORS)
+        gate.assert_metrics(
+            {
+                "delta_f1": aggregate_delta_f1,
+                "add_recall": aggregate_add_recall,
+                "remove_recall": aggregate_remove_recall,
+                "modify_recall": aggregate_modify_recall,
+            },
+            pipeline_type="connection_refinement",
+        )

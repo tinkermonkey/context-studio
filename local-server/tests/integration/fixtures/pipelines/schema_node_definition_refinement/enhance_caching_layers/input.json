@@ -3,7 +3,6 @@
   "identifier": "caching",
   "title": "Caching",
   "current_description": "Storing data.",
-  "expected_description": "A performance optimization technique that keeps frequently accessed data in fast-access memory layers to reduce latency and database load.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

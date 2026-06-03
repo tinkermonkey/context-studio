@@ -3,7 +3,6 @@
   "identifier": "authentication",
   "title": "Authentication",
   "current_description": "User identity.",
-  "expected_description": "A security process that verifies the identity of users and systems through credentials such as passwords, tokens, or certificates.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

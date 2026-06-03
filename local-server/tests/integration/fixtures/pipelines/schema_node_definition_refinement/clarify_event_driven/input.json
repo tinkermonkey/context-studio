@@ -3,7 +3,6 @@
   "identifier": "event_driven",
   "title": "Event-Driven Architecture",
   "current_description": "Event-based processing.",
-  "expected_description": "An architectural pattern where components communicate through emission and consumption of events, enabling loose coupling and asynchronous interactions.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

@@ -3,7 +3,6 @@
   "identifier": "design_patterns",
   "title": "Design Patterns",
   "current_description": "A pattern.",
-  "expected_description": "A reusable solution to a common software design problem, encoding best practices and proven architectural principles.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

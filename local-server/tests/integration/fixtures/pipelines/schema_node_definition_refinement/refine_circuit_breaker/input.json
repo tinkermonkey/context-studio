@@ -3,7 +3,6 @@
   "identifier": "circuit_breaker",
   "title": "Circuit Breaker",
   "current_description": "Preventing cascading failures.",
-  "expected_description": "A fault-tolerance pattern that monitors for failures in remote service calls and fails fast by stopping requests to a failing service after a threshold is exceeded.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

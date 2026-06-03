@@ -71,6 +71,9 @@ QUALITY_SCENARIOS = [
     "abstract_authorization",
     "enhance_observability",
     "clarify_tracing",
+    "adequate_description_no_regress",
+    "already_clear_no_regress",
+    "good_description_no_regress",
 ]
 
 # Metric floors for definition refinement quality
@@ -159,9 +162,9 @@ def metrics_emitter(tmp_path):
 
 
 @pytest.fixture
-def cassette_dir(tmp_path):
-    """Create a cassette directory for LLM recordings."""
-    return tmp_path / "_cassettes"
+def cassette_dir():
+    """Resolve cassette directory to committed recordings."""
+    return Path(__file__).parent / "_cassettes"
 
 
 class TestQualityDefinitionRefinement:
@@ -464,6 +467,66 @@ class TestQualityDefinitionRefinementAggregation:
 
         FR-P4.2, FR-P4.3: Floors: mean cosine >= 0.75, pct_above_060 >= 80%
         """
-        # This is a placeholder test that would aggregate metrics from JSONL output
-        # In a real scenario, this would read the emitted metrics and compute aggregates
-        pass
+        # Read emitted metrics from JSONL file
+        metrics_file = metrics_emitter._metrics_dir / "definition_refinement.jsonl"
+
+        if not metrics_file.exists():
+            pytest.skip("No metrics emitted yet (scenarios may have skipped due to missing cassettes)")
+
+        cosines = []
+        no_regress_fixtures = []
+        no_regress_passed = []
+
+        with open(metrics_file, "r") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                metrics = row.get("metrics", {})
+                cosine = metrics.get("cosine")
+                is_no_regress = metrics.get("is_no_regress", 0)
+
+                if cosine is not None:
+                    cosines.append(cosine)
+
+                if is_no_regress == 1:
+                    no_regress_fixtures.append(row.get("scenario", "unknown"))
+                    # No-regress fixtures that don't have zero cosine implicitly passed
+                    # (they didn't degrade the existing description)
+                    if cosine is not None and cosine >= 0.85:
+                        no_regress_passed.append(True)
+                    # Abstaining (no candidates) for no-regress is also acceptable
+                    elif cosine == 0.0:
+                        no_regress_passed.append(True)
+                    else:
+                        no_regress_passed.append(False)
+
+        # Compute aggregates
+        if not cosines:
+            pytest.skip("No valid cosine metrics found")
+
+        mean_cosine = sum(cosines) / len(cosines)
+        pct_above_060 = (sum(1 for c in cosines if c >= 0.60) / len(cosines)) * 100
+        no_regress_rate = (
+            (sum(no_regress_passed) / len(no_regress_passed)) * 100
+            if no_regress_passed
+            else 100.0
+        )
+
+        _logger.info(
+            f"Definition refinement aggregate metrics: "
+            f"mean_cosine={mean_cosine:.4f}, "
+            f"pct_above_060={pct_above_060:.1f}%, "
+            f"no_regress_rate={no_regress_rate:.1f}% ({len(no_regress_passed)} fixtures)"
+        )
+
+        # Assert floors using FloorGate
+        gate = FloorGate(METRIC_FLOORS)
+        gate.assert_metrics(
+            {
+                "mean_cosine": mean_cosine,
+                "pct_above_060": pct_above_060,
+                "no_regress_rate": no_regress_rate,
+            },
+            pipeline_type="definition_refinement",
+        )

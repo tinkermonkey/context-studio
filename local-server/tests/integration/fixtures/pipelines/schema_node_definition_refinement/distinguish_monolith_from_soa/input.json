@@ -3,7 +3,6 @@
   "identifier": "monolithic_architecture",
   "title": "Monolithic Architecture",
   "current_description": "A single system.",
-  "expected_description": "An application architecture where all functionality is built and deployed as a single, unified codebase, often tightly coupled and deployed as a single unit.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false

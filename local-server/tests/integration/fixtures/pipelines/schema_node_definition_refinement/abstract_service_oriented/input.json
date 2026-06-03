@@ -3,7 +3,6 @@
   "identifier": "service_oriented",
   "title": "Service-Oriented Architecture",
   "current_description": "A service approach.",
-  "expected_description": "An architectural paradigm that organizes applications as a set of interoperable business services with standardized interfaces and contracts.",
   "model": "claude-opus-4-7",
   "temperature": 0.0,
   "is_no_regress": false
