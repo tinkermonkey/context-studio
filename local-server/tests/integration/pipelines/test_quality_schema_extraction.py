@@ -34,8 +34,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.entities import PipelineType, PipelineRun
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -45,11 +44,12 @@ from domain.pipelines.schema_extraction import (
     SchemaExtractionState,
     register_schema_extraction,
 )
-from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
     RecordingLLMProvider,
@@ -487,7 +487,7 @@ class TestQualitySchemaExtraction:
                 ontology_repo.delete_relationship(rel_id)
 
         # Second execution: re-apply with same run output
-        apply_result2 = apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
+        apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
 
         # Snapshot ontology state after second apply
         classes_after_apply2 = [

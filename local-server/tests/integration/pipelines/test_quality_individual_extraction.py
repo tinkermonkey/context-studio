@@ -29,28 +29,27 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.pipelines.entities import PipelineType, PipelineRun
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
     register_individual_extraction,
 )
+from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
-from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
     RecordingLLMProvider,
 )
 from tests.integration.pipelines._harness.metrics import (
-    PrecisionRecallF1,
     brier_score,
     precision_recall_f1,
 )
