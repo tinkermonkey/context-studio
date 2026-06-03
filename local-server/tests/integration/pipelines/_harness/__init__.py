@@ -22,8 +22,6 @@ from .metrics import (
     precision_recall_f1,
     reciprocal_rank,
 )
-
-mean_reciprocal_rank = reciprocal_rank
 from .report import ABReport, FloorGate, MetricsEmitter
 from .runner import QualityRunner
 
@@ -38,7 +36,7 @@ __all__ = [
     "precision_recall_f1",
     "PrecisionRecallF1",
     "jaccard_similarity",
-    "mean_reciprocal_rank",
+    "reciprocal_rank",
     "brier_score",
     "cosine_similarity",
     "delta_set_overlap",

@@ -83,7 +83,7 @@ from tests.integration.pipelines._harness.cassettes import (
 )
 from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
-    mean_reciprocal_rank,
+    reciprocal_rank,
 )
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
 
@@ -482,8 +482,8 @@ class TestQualityE2EChain:
             final_class = next((c for c in final_classes if c.title == class_label), None)
             if final_class and expected_refs:
                 final_refs = [ref.get("uri", "") for ref in final_class.external_references or []]
-                mrr = mean_reciprocal_rank(expected_refs[:3], final_refs)
-                ref_top3_matches.append(mrr)
+                rr = reciprocal_rank(expected_refs[:3], final_refs)
+                ref_top3_matches.append(rr)
 
         pct_references_top3 = (
             sum(ref_top3_matches) / len(ref_top3_matches) if ref_top3_matches else 0.0

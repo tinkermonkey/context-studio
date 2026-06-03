@@ -15,8 +15,6 @@ from tests.integration.pipelines._harness.metrics import (
     reciprocal_rank,
 )
 
-mean_reciprocal_rank = reciprocal_rank
-
 
 class TestPrecisionRecallF1:
     """Tests for triple metric computation."""
@@ -112,33 +110,33 @@ class TestJaccardSimilarity:
         assert sim == 0.0
 
 
-class TestMeanReciprocalRank:
-    """Tests for MRR (ranking quality)."""
+class TestReciprocalRank:
+    """Tests for RR (ranking quality)."""
 
     def test_first_position(self):
         """Correct answer is first."""
-        mrr = mean_reciprocal_rank(["correct"], ["correct", "wrong1", "wrong2"])
-        assert mrr == 1.0
+        rr = reciprocal_rank(["correct"], ["correct", "wrong1", "wrong2"])
+        assert rr == 1.0
 
     def test_second_position(self):
         """Correct answer is second."""
-        mrr = mean_reciprocal_rank(["correct"], ["wrong1", "correct", "wrong2"])
-        assert mrr == 0.5
+        rr = reciprocal_rank(["correct"], ["wrong1", "correct", "wrong2"])
+        assert rr == 0.5
 
     def test_third_position(self):
         """Correct answer is third."""
-        mrr = mean_reciprocal_rank(["correct"], ["wrong1", "wrong2", "correct"])
-        assert mrr == pytest.approx(0.3333, abs=0.001)
+        rr = reciprocal_rank(["correct"], ["wrong1", "wrong2", "correct"])
+        assert rr == pytest.approx(0.3333, abs=0.001)
 
     def test_not_found(self):
         """Correct answer not in list."""
-        mrr = mean_reciprocal_rank(["correct"], ["wrong1", "wrong2"])
-        assert mrr == 0.0
+        rr = reciprocal_rank(["correct"], ["wrong1", "wrong2"])
+        assert rr == 0.0
 
     def test_multiple_correct_first_match_wins(self):
         """Multiple correct answers; first one is ranked."""
-        mrr = mean_reciprocal_rank(["correct1", "correct2"], ["wrong", "correct1", "correct2"])
-        assert mrr == 0.5
+        rr = reciprocal_rank(["correct1", "correct2"], ["wrong", "correct1", "correct2"])
+        assert rr == 0.5
 
 
 class TestBrierScore:

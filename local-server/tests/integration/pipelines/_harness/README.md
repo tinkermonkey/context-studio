@@ -20,7 +20,7 @@ Pure metric computation with zero infrastructure imports. Exposes:
 
 - `precision_recall_f1(expected, actual) → PrecisionRecallF1`
 - `jaccard_similarity(expected, actual) → float`
-- `mean_reciprocal_rank(expected, ranked_list) → float`
+- `reciprocal_rank(expected, ranked_list) → float`
 - `brier_score(probabilities, labels) → float`
 - `cosine_similarity(vec_a, vec_b) → float`
 - `delta_set_overlap(exp_added, act_added, exp_removed, act_removed) → float`
@@ -106,7 +106,7 @@ Each row is a versioned envelope:
   "timestamp": "2026-06-03T14:30:00Z",
   "run_id": "a1b2c3d4-...",
   "pipeline_type": "individual_extraction",
-  "scenario": "fielding_rest",
+  "fixture_id": "fielding_rest",
   "model": "claude-sonnet-4-6",
   "config_ref": "individual-extraction-default",
   "config_version": 1,
@@ -325,7 +325,7 @@ def test_quality_individual_extraction_across_corpus(
         # Emit JSONL row
         metrics_emitter.emit(
             pipeline_type="individual_extraction",
-            scenario=scenario,
+            fixture_id=scenario,
             model="claude-sonnet-4-6",
             config_ref="individual-extraction-default",
             config_version=1,
@@ -361,7 +361,7 @@ The E2E chain test (`test_quality_e2e_chain.py`) exercises all 5 pipelines in se
 **Metrics:**
 - Class/property/relationship set match (binary: 1.0 if exact match, 0.0 otherwise)
 - Mean description cosine similarity (≥ 0.75)
-- External reference top-3 mean reciprocal rank (≥ 0.80)
+- External reference top-3 reciprocal rank (≥ 0.80)
 
 **JSONL rows carry `pipeline_type = "_e2e_chain"` to distinguish from per-pipeline rows.**
 
