@@ -98,7 +98,7 @@ def extract_delta_tuples(deltas: list[dict]) -> dict[str, list[tuple]]:
 
     Returns dict with keys "add", "remove", "modify", each containing list of tuples.
     """
-    result = {"add": [], "remove": [], "modify": []}
+    result: dict[str, list[tuple]] = {"add": [], "remove": [], "modify": []}
     for delta in deltas:
         operation = delta.get("operation", "").lower()
         subject = delta.get("subject", "")
@@ -363,9 +363,7 @@ class TestQualityConnectionRefinement:
         expected_delta_tuples = extract_delta_tuples(expected_deltas)
 
         # Compute per-operation metrics
-        add_metrics = precision_recall_f1(
-            expected_delta_tuples["add"], actual_delta_tuples["add"]
-        )
+        add_metrics = precision_recall_f1(expected_delta_tuples["add"], actual_delta_tuples["add"])
         remove_metrics = precision_recall_f1(
             expected_delta_tuples["remove"], actual_delta_tuples["remove"]
         )
@@ -433,9 +431,9 @@ class TestQualityConnectionRefinement:
             ), f"Modify recall {modify_metrics.recall:.4f} below floor 0.30 for scenario {scenario}"
 
             # Assert overall delta F1 floor
-            assert overall_metrics.f1 >= 0.40, (
-                f"Delta F1 {overall_metrics.f1:.4f} below floor 0.40 for scenario {scenario}"
-            )
+            assert (
+                overall_metrics.f1 >= 0.40
+            ), f"Delta F1 {overall_metrics.f1:.4f} below floor 0.40 for scenario {scenario}"
 
     @pytest.mark.asyncio
     async def test_connection_refinement_apply_roundtrip_with_modify(
@@ -546,9 +544,7 @@ class TestQualityConnectionRefinement:
             ]
         }
 
-        llm_provider = FakeLLMProvider(
-            response_content=json.dumps(llm_response.get("deltas", []))
-        )
+        llm_provider = FakeLLMProvider(response_content=json.dumps(llm_response.get("deltas", [])))
 
         traversal = SchemaNeighborhoodTraversal(ontology_repo=ontology_repo)
         orchestrator = ConnectionRefinementOrchestrator(
@@ -589,8 +585,7 @@ class TestQualityConnectionRefinement:
         # Snapshot ontology state after first apply
         relationships_after_apply1 = list(ontology_repo.list_relationships(source_id=scope_id))
         rel_tuples_1 = [
-            (r.source_id, r.property_definition_id, r.target_id)
-            for r in relationships_after_apply1
+            (r.source_id, r.property_definition_id, r.target_id) for r in relationships_after_apply1
         ]
 
         # Verify add operation: relationship to class_b should exist
@@ -608,17 +603,16 @@ class TestQualityConnectionRefinement:
         assert remove_verified, "Remove operation did not delete relationship to Class A"
 
         # Verify modify operation is tracked
-        assert apply_result1.relationships_modified > 0, (
-            "Modify operation was not tracked (silent-drop bug regression)"
-        )
+        assert (
+            apply_result1.relationships_modified > 0
+        ), "Modify operation was not tracked (silent-drop bug regression)"
 
         # Second apply: verify idempotence
         apply_service.apply(mock_run)
 
         relationships_after_apply2 = list(ontology_repo.list_relationships(source_id=scope_id))
         rel_tuples_2 = [
-            (r.source_id, r.property_definition_id, r.target_id)
-            for r in relationships_after_apply2
+            (r.source_id, r.property_definition_id, r.target_id) for r in relationships_after_apply2
         ]
 
         # Assert idempotence: same relationship tuples after second apply
@@ -652,7 +646,9 @@ class TestQualityConnectionRefinementAggregation:
         metrics_file = metrics_emitter._metrics_dir / "connection_refinement.jsonl"
 
         if not metrics_file.exists():
-            pytest.skip("No metrics emitted yet (scenarios may have skipped due to missing cassettes)")
+            pytest.skip(
+                "No metrics emitted yet (scenarios may have skipped due to missing cassettes)"
+            )
 
         delta_f1_values = []
         add_recall_values = []
@@ -684,14 +680,10 @@ class TestQualityConnectionRefinementAggregation:
             sum(add_recall_values) / len(add_recall_values) if add_recall_values else 0.0
         )
         aggregate_remove_recall = (
-            sum(remove_recall_values) / len(remove_recall_values)
-            if remove_recall_values
-            else 0.0
+            sum(remove_recall_values) / len(remove_recall_values) if remove_recall_values else 0.0
         )
         aggregate_modify_recall = (
-            sum(modify_recall_values) / len(modify_recall_values)
-            if modify_recall_values
-            else 0.0
+            sum(modify_recall_values) / len(modify_recall_values) if modify_recall_values else 0.0
         )
 
         _logger.info(

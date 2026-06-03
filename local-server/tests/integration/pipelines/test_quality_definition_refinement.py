@@ -277,9 +277,7 @@ class TestQualityDefinitionRefinement:
 
         # Extract best candidate and expected description
         candidates = result_state.result.get("definitions", []) if result_state.result else []
-        expected_description = expected_output.get("result", {}).get(
-            "expected_description", ""
-        )
+        expected_description = expected_output.get("result", {}).get("expected_description", "")
 
         # Compute similarity metrics
         if not candidates or not expected_description:
@@ -335,8 +333,7 @@ class TestQualityDefinitionRefinement:
         # Assert no-regress constraint
         if is_no_regress:
             assert no_regress_pass, (
-                f"No-regress fixture {scenario} failed: "
-                f"pipeline degraded existing description"
+                f"No-regress fixture {scenario} failed: " f"pipeline degraded existing description"
             )
 
         # Assert cosine similarity floor for regular fixtures
@@ -420,7 +417,9 @@ class TestQualityDefinitionRefinement:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             output_summary={
                 "node_id": node_id,
-                "definitions": result_state1.result.get("definitions", []) if result_state1.result else [],
+                "definitions": (
+                    result_state1.result.get("definitions", []) if result_state1.result else []
+                ),
             },
         )
 
@@ -471,7 +470,9 @@ class TestQualityDefinitionRefinementAggregation:
         metrics_file = metrics_emitter._metrics_dir / "definition_refinement.jsonl"
 
         if not metrics_file.exists():
-            pytest.skip("No metrics emitted yet (scenarios may have skipped due to missing cassettes)")
+            pytest.skip(
+                "No metrics emitted yet (scenarios may have skipped due to missing cassettes)"
+            )
 
         cosines = []
         no_regress_fixtures = []
@@ -508,9 +509,7 @@ class TestQualityDefinitionRefinementAggregation:
         mean_cosine = sum(cosines) / len(cosines)
         pct_above_060 = (sum(1 for c in cosines if c >= 0.60) / len(cosines)) * 100
         no_regress_rate = (
-            (sum(no_regress_passed) / len(no_regress_passed)) * 100
-            if no_regress_passed
-            else 100.0
+            (sum(no_regress_passed) / len(no_regress_passed)) * 100 if no_regress_passed else 100.0
         )
 
         _logger.info(
