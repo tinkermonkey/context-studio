@@ -7,7 +7,6 @@ No I/O, no database, no infrastructure imports.
 import pytest
 
 from tests.integration.pipelines._harness.metrics import (
-    PrecisionRecallF1,
     brier_score,
     cosine_similarity,
     delta_set_overlap,
