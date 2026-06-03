@@ -27,5 +27,5 @@ htmlcov/
 logs/
 *.log
 
-# Metrics artifacts
-_metrics/
+# Metrics artifacts (only ignores root-level _metrics/, not test fixtures)
+/_metrics/
