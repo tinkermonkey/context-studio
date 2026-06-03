@@ -79,14 +79,11 @@ class TestQualitySchemaNodeGrounding:
     """Quality test suite for schema node grounding."""
 
     @pytest.fixture
-    def grounding_adapter(self, recorded_vcr):
-        """Create a GroundingAdapter with all sources using recorded cassettes."""
-        with recorded_vcr.use_cassette("schema_node_grounding/dbpedia/person"):
-            dbpedia = DBpediaSource()
-        with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
-            conceptnet = ConceptNetSource()
-        with recorded_vcr.use_cassette("schema_node_grounding/wikidata/person"):
-            wikidata = WikidataSource()
+    def grounding_adapter(self):
+        """Create a GroundingAdapter with all sources."""
+        dbpedia = DBpediaSource()
+        conceptnet = ConceptNetSource()
+        wikidata = WikidataSource()
         schema_org = SchemaOrgSource()
 
         return GroundingAdapter(
@@ -127,11 +124,12 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     @pytest.mark.external_network
-    async def test_dbpedia_adapter_operational(self, grounding_adapter):
+    async def test_dbpedia_adapter_operational(self, grounding_adapter, recorded_vcr):
         """Verify DBpedia adapter returns candidates (requires network/cassettes)."""
-        # This test uses live network or recorded HTTP cassettes
+        # This test uses recorded HTTP cassettes
         try:
-            candidates = await grounding_adapter.query_sources(label="Person", sources=["DBpedia"])
+            with recorded_vcr.use_cassette("schema_node_grounding/dbpedia/person"):
+                candidates = await grounding_adapter.query_sources(label="Person", sources=["DBpedia"])
             assert len(candidates) > 0, "DBpedia should return candidates for 'Person'"
             assert all(c.source == "DBpedia" for c in candidates)
         except Exception as e:
@@ -139,10 +137,11 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     @pytest.mark.external_network
-    async def test_conceptnet_adapter_operational(self, grounding_adapter):
+    async def test_conceptnet_adapter_operational(self, grounding_adapter, recorded_vcr):
         """Verify ConceptNet adapter returns candidates (requires network/cassettes)."""
         try:
-            candidates = await grounding_adapter.query_sources(label="Person", sources=["ConceptNet"])
+            with recorded_vcr.use_cassette("schema_node_grounding/conceptnet/person"):
+                candidates = await grounding_adapter.query_sources(label="Person", sources=["ConceptNet"])
             assert len(candidates) > 0, "ConceptNet should return candidates for 'Person'"
             assert all(c.source == "ConceptNet" for c in candidates)
         except Exception as e:
@@ -150,10 +149,11 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     @pytest.mark.external_network
-    async def test_wikidata_adapter_operational(self, grounding_adapter):
+    async def test_wikidata_adapter_operational(self, grounding_adapter, recorded_vcr):
         """Verify Wikidata adapter returns candidates (requires network/cassettes)."""
         try:
-            candidates = await grounding_adapter.query_sources(label="Person", sources=["Wikidata"])
+            with recorded_vcr.use_cassette("schema_node_grounding/wikidata/person"):
+                candidates = await grounding_adapter.query_sources(label="Person", sources=["Wikidata"])
             assert len(candidates) > 0, "Wikidata should return candidates for 'Person'"
             assert all(c.source == "Wikidata" for c in candidates)
         except Exception as e:
@@ -170,7 +170,7 @@ class TestQualitySchemaNodeGrounding:
             pytest.fail(f"schema.org adapter should be operational: {e}")
 
     @pytest.mark.asyncio
-    async def test_quality_metrics_computation(self, grounding_orchestrator):
+    async def test_quality_metrics_computation(self, grounding_orchestrator, recorded_vcr):
         """Test quality metrics computation across all 38+ fixture scenarios."""
         scenarios = _list_fixture_scenarios()
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
@@ -190,14 +190,18 @@ class TestQualitySchemaNodeGrounding:
                     ref["uri"] for ref in expected.get("expected_external_references", [])
                 }
 
-                # Execute grounding
+                # Execute grounding with cassettes for all sources
                 from domain.pipelines.orchestration.base import PipelineState
                 state = PipelineState(
                     run_id=f"run-{scenario}",
                     pipeline_type="schema_node_grounding",
                     input_data=fixture,
                 )
-                result_state = await grounding_orchestrator.execute(state)
+                # Wrap HTTP calls in nested cassette contexts for each source
+                with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
+                    with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
+                        with recorded_vcr.use_cassette(f"schema_node_grounding/wikidata/{scenario}"):
+                            result_state = await grounding_orchestrator.execute(state)
 
                 # Extract groundings
                 groundings = result_state.result.get("groundings", [])
@@ -361,7 +365,7 @@ class TestQualitySchemaNodeGrounding:
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
     @pytest.mark.asyncio
-    async def test_distractor_candidates_excluded_from_top_ranked(self, grounding_orchestrator):
+    async def test_distractor_candidates_excluded_from_top_ranked(self, grounding_orchestrator, recorded_vcr):
         """Verify that distractor candidates don't artificially inflate top rankings."""
         # Load a fixture with distractors
         scenario = "person"  # We know this exists from seed script
@@ -373,14 +377,17 @@ class TestQualitySchemaNodeGrounding:
         assert distractors is not None, "Person fixture should have distractors"
         assert len(distractors.get("DBpedia", [])) >= 3, "Should have ≥3 DBpedia distractors"
 
-        # Execute grounding to get ranked candidates
+        # Execute grounding to get ranked candidates with cassettes
         from domain.pipelines.orchestration.base import PipelineState
         state = PipelineState(
             run_id=f"run-{scenario}",
             pipeline_type="schema_node_grounding",
             input_data=fixture,
         )
-        result_state = await grounding_orchestrator.execute(state)
+        with recorded_vcr.use_cassette(f"schema_node_grounding/dbpedia/{scenario}"):
+            with recorded_vcr.use_cassette(f"schema_node_grounding/conceptnet/{scenario}"):
+                with recorded_vcr.use_cassette(f"schema_node_grounding/wikidata/{scenario}"):
+                    result_state = await grounding_orchestrator.execute(state)
 
         # Extract groundings and verify they are ranked
         groundings = result_state.result.get("groundings", [])
