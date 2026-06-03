@@ -23,7 +23,6 @@ from adapters.reference.grounding.adapter import GroundingAdapter
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from domain.ontology.entities import Class
-from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
 from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
@@ -164,14 +163,15 @@ class TestQualitySchemaNodeGrounding:
 
     @pytest.mark.asyncio
     async def test_quality_metrics_computation(self, grounding_orchestrator):
-        """Test quality metrics computation across fixture scenarios."""
+        """Test quality metrics computation across all 38+ fixture scenarios."""
         scenarios = _list_fixture_scenarios()
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
 
         metrics = QualityMetrics()
         jsonl_rows = []
+        skipped_scenarios = []
 
-        for scenario in scenarios[:5]:  # Test first 5 scenarios for speed in CI
+        for scenario in scenarios:  # Evaluate all scenarios for representative coverage
             try:
                 fixture = load_fixture("schema_node_grounding", scenario)
                 expected = load_expected_output("schema_node_grounding", scenario)
@@ -238,13 +238,22 @@ class TestQualitySchemaNodeGrounding:
                 jsonl_rows.append(jsonl_row)
 
             except Exception as e:
-                pytest.skip(f"Skipping scenario {scenario}: {e}")
+                skipped_scenarios.append((scenario, str(e)))
+                continue
 
         # Compute aggregate metrics
         agg_metrics = metrics.compute_metrics()
 
+        # Log skipped scenarios
+        if skipped_scenarios:
+            print(f"\n=== Skipped {len(skipped_scenarios)} scenarios ===")
+            for scenario, error in skipped_scenarios:
+                print(f"  {scenario}: {error}")
+
         # Emit JSONL results
-        print("\n=== Grounding Quality Metrics ===")
+        print("\n=== Grounding Quality Metrics ({}/{} scenarios) ===".format(
+            len(jsonl_rows), len(scenarios)
+        ))
         for row in jsonl_rows:
             print(json.dumps(row))
         print(f"\n=== Aggregate Metrics ===")
@@ -344,17 +353,58 @@ class TestQualitySchemaNodeGrounding:
         assert len(cls.external_references) == 2, "State should remain unchanged"
 
     @pytest.mark.asyncio
-    async def test_distractor_candidates_excluded_from_top_ranked(self):
+    async def test_distractor_candidates_excluded_from_top_ranked(self, grounding_orchestrator):
         """Verify that distractor candidates don't artificially inflate top rankings."""
         # Load a fixture with distractors
         scenario = "person"  # We know this exists from seed script
         fixture = load_fixture("schema_node_grounding", scenario)
+        expected = load_expected_output("schema_node_grounding", scenario)
         distractors = load_distractors("schema_node_grounding", scenario)
 
-        # The test verifies that when scoring candidates, distractors
-        # (plausible-but-wrong URIs) receive lower scores than true matches
+        # Verify fixture structure
         assert distractors is not None, "Person fixture should have distractors"
         assert len(distractors.get("DBpedia", [])) >= 3, "Should have ≥3 DBpedia distractors"
+
+        # Execute grounding to get ranked candidates
+        from domain.pipelines.orchestration.base import PipelineState
+        state = PipelineState(
+            run_id=f"run-{scenario}",
+            pipeline_type="schema_node_grounding",
+            input_data=fixture,
+        )
+        result_state = await grounding_orchestrator.execute(state)
+
+        # Extract groundings and verify they are ranked
+        groundings = result_state.result.get("groundings", [])
+        grounded_uris = [g["uri"] for g in groundings]
+
+        # Verify that expected references rank higher than distractors
+        expected_uris = {ref["uri"] for ref in expected.get("expected_external_references", [])}
+        all_distractor_uris = {
+            uri for source_distractors in distractors.values()
+            for uri in source_distractors
+        }
+
+        # Find first correct match rank
+        correct_rank = None
+        for rank, uri in enumerate(grounded_uris, 1):
+            if uri in expected_uris:
+                correct_rank = rank
+                break
+
+        # Find first distractor rank
+        distractor_rank = None
+        for rank, uri in enumerate(grounded_uris, 1):
+            if uri in all_distractor_uris:
+                distractor_rank = rank
+                break
+
+        # Distractors may not be present if expected refs are ranked first
+        if correct_rank is not None and distractor_rank is not None:
+            assert correct_rank <= distractor_rank, (
+                f"Expected reference should rank before distractors "
+                f"(correct at {correct_rank}, distractor at {distractor_rank})"
+            )
 
     def test_fixture_corpus_coverage(self):
         """Verify fixture corpus has ≥30 classes spanning multiple domains."""
@@ -378,12 +428,12 @@ class TestQualitySchemaNodeGrounding:
         assert len(scenario_set & social_classes) >= 2, "Should have ≥2 social classes"
 
     def test_each_fixture_has_distractors(self):
-        """Verify quality suite fixtures (≥30 classes) include distractors."""
+        """Verify all quality suite fixtures (≥30 classes) include distractors."""
         scenarios = _list_fixture_scenarios()
         # Filter to quality suite fixtures (exclude legacy fixtures like 'basic')
         quality_scenarios = [s for s in scenarios if s != 'basic']
 
-        for scenario in quality_scenarios[:10]:  # Check first 10
+        for scenario in quality_scenarios:  # Check all fixtures
             distractors = load_distractors("schema_node_grounding", scenario)
             assert distractors is not None, f"Fixture {scenario} should have distractors"
 

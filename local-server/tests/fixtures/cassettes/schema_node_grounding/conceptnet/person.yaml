@@ -1,0 +1,37 @@
+interactions:
+  - request:
+      method: GET
+      uri: "http://api.conceptnet.io/c/en/person"
+      headers:
+        User-Agent: ["httpx"]
+    response:
+      status: 200
+      headers:
+        content-type: ["application/json"]
+      body: |
+        {
+          "edges": [
+            {
+              "start": {"label": "person"},
+              "end": {"label": "person"},
+              "uri": "http://conceptnet.io/c/en/person",
+              "weight": 5.0,
+              "sources": []
+            },
+            {
+              "start": {"label": "person"},
+              "end": {"label": "human"},
+              "uri": "http://conceptnet.io/c/en/human",
+              "weight": 3.0,
+              "sources": []
+            },
+            {
+              "start": {"label": "person"},
+              "end": {"label": "individual"},
+              "uri": "http://conceptnet.io/c/en/individual",
+              "weight": 2.0,
+              "sources": []
+            }
+          ]
+        }
+version: 1
