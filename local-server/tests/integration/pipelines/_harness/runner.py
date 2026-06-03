@@ -4,7 +4,6 @@ Orchestrates fixture loading, pipeline execution, and metric collection
 across single or multiple (A/B) configurations.
 """
 
-import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -97,8 +96,6 @@ class QualityRunner:
         pipeline_type: str,
         executor_fn: Callable,
         metrics_fn: Callable,
-        cassette_dir: Path | str | None = None,
-        validate_cassettes: bool = True,
     ) -> dict[str, dict[str, dict[str, float]]]:
         """
         Run A/B comparison across ≥2 configurations and fixture corpus.
@@ -116,11 +113,6 @@ class QualityRunner:
                         Should handle any pipeline-specific orchestration.
             metrics_fn: Callable(expected, actual) -> metrics_dict.
                        Computes metrics from expected output and actual result.
-            cassette_dir: Base cassette directory (optional). If provided with
-                         validate_cassettes=True, checks that cassettes exist
-                         before running.
-            validate_cassettes: If True and cassette_dir is set, checks all
-                               required cassettes exist upfront, failing fast.
 
         Returns:
             Dict mapping config_ref → scenario → metrics:
@@ -136,15 +128,8 @@ class QualityRunner:
             }
 
         Raises:
-            FileNotFoundError: If validate_cassettes=True and required cassettes
-                              do not exist.
             AssertionError: If metric computation fails.
         """
-        if validate_cassettes and cassette_dir:
-            self._validate_cassettes_exist(
-                config_specs, scenario_list, pipeline_type, Path(cassette_dir)
-            )
-
         results: dict[str, dict[str, dict[str, float]]] = {}
 
         for config_ref, llm_provider in config_specs:
@@ -160,41 +145,3 @@ class QualityRunner:
                 results[config_ref][scenario] = metrics
 
         return results
-
-    def _validate_cassettes_exist(
-        self,
-        config_specs: list[tuple[str, Any]],
-        scenario_list: list[str],
-        pipeline_type: str,
-        cassette_dir: Path,
-    ) -> None:
-        """
-        Check that all required cassettes exist before running A/B tests.
-
-        Fails fast with a clear error message listing missing cassettes.
-
-        Args:
-            config_specs: List of (config_ref, llm_provider) tuples.
-            scenario_list: List of scenario names.
-            pipeline_type: Pipeline type identifier.
-            cassette_dir: Base cassette directory.
-
-        Raises:
-            FileNotFoundError: If any required cassette is missing.
-        """
-        missing = []
-
-        for config_ref, _ in config_specs:
-            for scenario in scenario_list:
-                cassette_path = (
-                    cassette_dir / f"{pipeline_type}_{scenario}_{config_ref}.json"
-                )
-                if not cassette_path.exists():
-                    missing.append(str(cassette_path))
-
-        if missing:
-            raise FileNotFoundError(
-                "Missing cassettes for A/B run:\n"
-                + "\n".join(f"  - {p}" for p in missing)
-                + "\nRun with --refresh-cassettes to record all missing cassettes."
-            )

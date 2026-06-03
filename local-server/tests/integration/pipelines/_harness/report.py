@@ -276,7 +276,7 @@ class ABReport:
                         elif math.isnan(base_value) or math.isnan(other_value):
                             row_parts.append("N/A".ljust(14))
                         else:
-                            delta = other_value - base_value
+                            delta = base_value - other_value
                             row_parts.append(f"{delta:+.4f}".ljust(14))
 
                 lines.append(" ".join(row_parts))

@@ -53,7 +53,7 @@ jobs:
 
     - name: Upload metrics artifact
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: quality-metrics
         path: local-server/tests/integration/fixtures/pipelines/_metrics/

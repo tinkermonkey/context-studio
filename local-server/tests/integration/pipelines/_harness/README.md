@@ -1,6 +1,6 @@
 # Shared Quality Testing Harness
 
-This directory contains the foundational infrastructure for all pipeline quality testing in Phase B.
+This directory contains the foundational infrastructure for all pipeline quality testing.
 
 ## Overview
 
@@ -365,7 +365,7 @@ The E2E chain test (`test_quality_e2e_chain.py`) exercises all 5 pipelines in se
 
 **JSONL rows carry `pipeline_type = "_e2e_chain"` to distinguish from per-pipeline rows.**
 
-## A/B Testing (Phase B.6)
+## A/B Testing
 
 The harness supports multi-model A/B comparison to evaluate LLM or configuration changes without separate test passes.
 
@@ -442,8 +442,6 @@ async def test_quality_individual_extraction_ab(quality_runner):
         pipeline_type="individual_extraction",
         executor_fn=extract_individual_candidates,
         metrics_fn=compute_extraction_metrics,
-        cassette_dir=cassette_dir,
-        validate_cassettes=True,
     )
     
     # Format and display comparison
