@@ -388,7 +388,7 @@ class TestQualitySchemaExtraction:
         # Emit JSONL row
         metrics_emitter.emit(
             pipeline_type="schema_extraction",
-            scenario=scenario,
+            fixture_id=scenario,
             model="test-model",
             config_ref="default",
             config_version=1,

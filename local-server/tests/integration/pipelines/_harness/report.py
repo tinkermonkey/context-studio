@@ -28,7 +28,7 @@ class MetricsEmitter:
     def emit(
         self,
         pipeline_type: str,
-        scenario: str,
+        fixture_id: str,
         model: str,
         config_ref: str,
         config_version: int,
@@ -44,7 +44,7 @@ class MetricsEmitter:
 
         Args:
             pipeline_type: Pipeline type identifier
-            scenario: Scenario name
+            fixture_id: Fixture identifier
             model: Model identifier
             config_ref: Configuration reference
             config_version: Configuration version number
@@ -60,7 +60,7 @@ class MetricsEmitter:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "run_id": self._run_id,
             "pipeline_type": pipeline_type,
-            "scenario": scenario,
+            "fixture_id": fixture_id,
             "model": model,
             "config_ref": config_ref,
             "config_version": config_version,
@@ -74,8 +74,11 @@ class MetricsEmitter:
 
         # Append to JSONL file (one row per line, no outer array)
         metrics_file = self._metrics_dir / f"{pipeline_type}.jsonl"
-        with open(metrics_file, "a") as f:
-            f.write(json.dumps(row) + "\n")
+        try:
+            with open(metrics_file, "a") as f:
+                f.write(json.dumps(row) + "\n")
+        except OSError as e:
+            raise IOError(f"Failed to write metrics to {metrics_file}: {e}") from e
 
 
 class FloorGate:

@@ -11,9 +11,11 @@ from tests.integration.pipelines._harness.metrics import (
     cosine_similarity,
     delta_set_overlap,
     jaccard_similarity,
-    mean_reciprocal_rank,
     precision_recall_f1,
+    reciprocal_rank,
 )
+
+mean_reciprocal_rank = reciprocal_rank
 
 
 class TestPrecisionRecallF1:

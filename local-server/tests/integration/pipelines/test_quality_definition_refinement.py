@@ -320,7 +320,7 @@ class TestQualityDefinitionRefinement:
         # Emit JSONL row
         metrics_emitter.emit(
             pipeline_type="definition_refinement",
-            scenario=scenario,
+            fixture_id=scenario,
             model=fixture_input.get("model", "claude-opus-4-7"),
             config_ref="default",
             config_version=1,

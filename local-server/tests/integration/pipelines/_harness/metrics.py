@@ -75,16 +75,19 @@ def jaccard_similarity(expected: list[Any], actual: list[Any]) -> float:
     return round(intersection / union, 4)
 
 
-def mean_reciprocal_rank(expected: list[str], ranked_list: list[str]) -> float:
+def reciprocal_rank(expected: list[str], ranked_list: list[str]) -> float:
     """
-    Compute mean reciprocal rank (MRR).
+    Compute reciprocal rank (RR) for a single query.
+
+    Finds the rank position of the first match from expected in ranked_list.
+    For ranking quality of individual queries; not averaged across queries.
 
     Args:
         expected: List of correct item identifiers
         ranked_list: List of candidates in rank order
 
     Returns:
-        MRR in [0, 1], or 0.0 if no match found
+        RR in [0, 1], or 0.0 if no match found
     """
     expected_set = set(expected)
 

@@ -134,9 +134,12 @@ class RecordingLLMProvider:
 
     def flush(self) -> None:
         """Write recorded cassette to disk."""
-        self._cassette_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self._cassette_path, "w") as f:
-            json.dump(self._recordings, f, indent=2)
+        try:
+            self._cassette_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._cassette_path, "w") as f:
+                json.dump(self._recordings, f, indent=2)
+        except OSError as e:
+            raise IOError(f"Failed to write cassette to {self._cassette_path}: {e}") from e
 
 
 class CassetteLLMProvider:

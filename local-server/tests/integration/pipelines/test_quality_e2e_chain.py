@@ -502,7 +502,7 @@ class TestQualityE2EChain:
         # Emit JSONL row
         metrics_emitter.emit(
             pipeline_type="_e2e_chain",
-            scenario=scenario,
+            fixture_id=scenario,
             model="test-model",
             config_ref="default",
             config_version=1,

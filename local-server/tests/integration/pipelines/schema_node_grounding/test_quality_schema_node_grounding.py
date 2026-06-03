@@ -275,7 +275,7 @@ class TestQualitySchemaNodeGrounding:
                 }
                 metrics_emitter.emit(
                     pipeline_type="schema_node_grounding",
-                    scenario=scenario,
+                    fixture_id=scenario,
                     model="test-model",
                     config_ref="default",
                     config_version=1,
@@ -299,7 +299,7 @@ class TestQualitySchemaNodeGrounding:
         # Emit aggregate metrics via MetricsEmitter
         metrics_emitter.emit(
             pipeline_type="schema_node_grounding_aggregate",
-            scenario="all",
+            fixture_id="all",
             model="test-model",
             config_ref="default",
             config_version=1,

@@ -396,7 +396,7 @@ class TestQualityConnectionRefinement:
         # Emit JSONL row with per-operation metrics
         metrics_emitter.emit(
             pipeline_type="connection_refinement",
-            scenario=scenario,
+            fixture_id=scenario,
             model=fixture_input.get("model", "claude-opus-4-7"),
             config_ref="default",
             config_version=1,
