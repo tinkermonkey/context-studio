@@ -213,7 +213,7 @@ def ontology_repo(session_factory):
 
     # Create ontology with classes for testing
     tax = Taxonomy(
-        id=str(uuid4()),
+        id="test-ontology-123",
         identifier="test_ontology",
         title="Test Ontology",
         description="Test ontology for extraction",
@@ -328,15 +328,12 @@ class TestQualityIndividualExtraction:
         cassette_dir.mkdir(parents=True, exist_ok=True)
         cassette_path = cassette_dir / f"individual_extraction_{scenario}.json"
 
-        # Determine whether to use cassette (recording mode) or real LLM
-        use_cassette = cassette_path.exists()
-        llm_provider: CassetteLLMProvider | RecordingLLMProvider
-        if use_cassette:
-            llm_provider = CassetteLLMProvider(cassette_path)
-        else:
-            # Create recording provider for new cassettes
-            fake_provider = FakeLLMProvider()
-            llm_provider = RecordingLLMProvider(fake_provider, cassette_path)
+        # Skip test if cassette doesn't exist (cassettes contain real LLM responses)
+        if not cassette_path.exists():
+            pytest.skip(f"Cassette not found at {cassette_path}. Run with real LLM to record.")
+
+        # Use cassette provider for deterministic quality testing
+        llm_provider = CassetteLLMProvider(cassette_path)
 
         orchestrator = IndividualExtractionOrchestrator(
             llm_provider=llm_provider,
@@ -388,16 +385,12 @@ class TestQualityIndividualExtraction:
             config_ref="default",
             config_version=1,
             metrics=aggregate_metrics,
-            mode="cassette" if use_cassette else "recording",
+            mode="cassette",
         )
 
         # Assert metrics against floors
         gate = FloorGate(METRIC_FLOORS)
         gate.assert_metrics(aggregate_metrics, pipeline_type=f"individual_extraction/{scenario}")
-
-        # If recording, flush cassette
-        if not use_cassette and isinstance(llm_provider, RecordingLLMProvider):
-            llm_provider.flush()
 
     @pytest.mark.asyncio
     async def test_individual_extraction_apply_roundtrip(
