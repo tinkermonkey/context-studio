@@ -226,7 +226,10 @@ def main() -> int:
         "--output",
         type=Path,
         default=None,
-        help="Output JSONL file for ratings (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)",
+        help=(
+            "Output JSONL file for ratings (default: "
+            "tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)"
+        ),
     )
     parser.add_argument(
         "--rater",

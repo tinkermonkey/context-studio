@@ -234,13 +234,19 @@ def main() -> int:
         "--ratings",
         type=Path,
         default=None,
-        help="Input JSONL file with ratings (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)",
+        help=(
+            "Input JSONL file with ratings "
+            "(default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>.jsonl)"
+        ),
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="Output JSONL file for metrics (default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>_metrics.jsonl)",
+        help=(
+            "Output JSONL file for metrics "
+            "(default: tests/integration/fixtures/pipelines/_human_eval/<pipeline>_metrics.jsonl)"
+        ),
     )
     parser.add_argument(
         "--pipeline",
