@@ -1,0 +1,10 @@
+{
+  "node_id": "rest-api-001",
+  "identifier": "rest_api",
+  "title": "REST API",
+  "current_description": "A web style.",
+  "expected_description": "An architectural style that uses HTTP methods and resources to build scalable, stateless web services with standard content negotiation.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

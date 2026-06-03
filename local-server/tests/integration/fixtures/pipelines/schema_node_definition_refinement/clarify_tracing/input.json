@@ -1,0 +1,10 @@
+{
+  "node_id": "distributed_tracing-8024",
+  "identifier": "distributed_tracing",
+  "title": "Distributed Tracing",
+  "current_description": "Tracking requests.",
+  "expected_description": "A monitoring technique that follows individual requests across distributed system components to understand execution paths and identify performance bottlenecks.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

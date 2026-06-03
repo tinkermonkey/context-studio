@@ -1,0 +1,10 @@
+{
+  "node_id": "dependency_injection-4583",
+  "identifier": "dependency_injection",
+  "title": "Dependency Injection",
+  "current_description": "Injecting dependencies.",
+  "expected_description": "A design pattern that provides required dependencies to objects at construction time or through method calls, decoupling components from their concrete dependencies.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

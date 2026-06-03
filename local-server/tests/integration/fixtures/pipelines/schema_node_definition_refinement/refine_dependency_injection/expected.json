@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A design pattern that provides required dependencies to objects at construction time or through method calls, decoupling components from their concrete dependencies."
+  }
+}

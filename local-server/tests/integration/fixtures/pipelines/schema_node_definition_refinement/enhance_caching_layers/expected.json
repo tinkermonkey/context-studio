@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A performance optimization technique that keeps frequently accessed data in fast-access memory layers to reduce latency and database load."
+  }
+}

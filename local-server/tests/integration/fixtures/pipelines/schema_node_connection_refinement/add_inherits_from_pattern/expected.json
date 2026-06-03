@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "add",
+        "subject": "Microservices Architecture",
+        "predicate": "inherits_from",
+        "object": "Distributed System",
+        "confidence": 0.9
+      }
+    ]
+  }
+}

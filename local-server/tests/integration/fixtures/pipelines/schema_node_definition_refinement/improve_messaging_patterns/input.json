@@ -1,0 +1,10 @@
+{
+  "node_id": "messaging-30527",
+  "identifier": "messaging",
+  "title": "Messaging Patterns",
+  "current_description": "Message passing.",
+  "expected_description": "A set of architectural patterns for designing systems where components communicate through asynchronous message queues, enabling decoupling and reliable communication.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

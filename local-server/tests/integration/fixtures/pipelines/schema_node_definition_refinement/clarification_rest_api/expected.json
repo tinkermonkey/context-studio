@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "An architectural style that uses HTTP methods and resources to build scalable, stateless web services with standard content negotiation."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "3a8c5d9e2b1f4a7c9e3d1b5f8a2c4e6d9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b": {
+    "content": "[{\"definition\": \"A refined and clarified description of the architectural pattern.\", \"confidence\": 0.88}]",
+    "tokens_in": 150,
+    "tokens_out": 50,
+    "model": "claude-opus-4-7",
+    "finish_reason": "end_turn"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "node_id": "api_design-14769",
+  "identifier": "api_design",
+  "title": "API Design",
+  "current_description": "API methods.",
+  "expected_description": "A set of architectural and design patterns for defining scalable, maintainable, and intuitive interfaces that enable integration between software components.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

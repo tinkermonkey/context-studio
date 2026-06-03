@@ -1,0 +1,28 @@
+{
+  "scope_id": "scope-mixed_add_and_remove",
+  "scope_identifier": "target_scope",
+  "scope_title": "Target Architecture",
+  "scope_description": "Architecture being refined",
+  "candidate_classes": [
+    {"id": "cls-001", "identifier": "design_pattern", "title": "Design Pattern"},
+    {"id": "cls-002", "identifier": "legacy_system", "title": "Legacy System"},
+    {"id": "cls-003", "identifier": "new_pattern", "title": "New Pattern"},
+    {"id": "cls-004", "identifier": "old_dependency", "title": "Old Dependency"}
+  ],
+  "before_relationships": [
+    {
+      "subject_id": "scope-mixed_add_and_remove",
+      "object_id": "cls-002",
+      "predicate": "depends_on"
+    },
+    {
+      "subject_id": "scope-mixed_add_and_remove",
+      "object_id": "cls-004",
+      "predicate": "depends_on"
+    }
+  ],
+  "candidates": [],
+  "is_empty_delta": false,
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

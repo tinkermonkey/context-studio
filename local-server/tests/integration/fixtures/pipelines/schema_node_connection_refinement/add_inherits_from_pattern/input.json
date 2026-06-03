@@ -1,0 +1,15 @@
+{
+  "scope_id": "microservices-001",
+  "scope_identifier": "microservices_architecture",
+  "scope_title": "Microservices Architecture",
+  "scope_description": "An architectural style",
+  "candidate_classes": [
+    {"id": "pattern-001", "identifier": "design_pattern", "title": "Design Pattern"},
+    {"id": "pattern-002", "identifier": "distributed_system", "title": "Distributed System"}
+  ],
+  "before_relationships": [],
+  "candidates": [],
+  "is_empty_delta": false,
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

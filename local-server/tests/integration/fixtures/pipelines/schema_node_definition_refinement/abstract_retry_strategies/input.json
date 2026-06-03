@@ -1,0 +1,10 @@
+{
+  "node_id": "retry_pattern-17386",
+  "identifier": "retry_pattern",
+  "title": "Retry Strategies",
+  "current_description": "Retry logic.",
+  "expected_description": "A resilience pattern that automatically retries failed operations with configurable delays and backoff strategies to handle transient failures gracefully.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

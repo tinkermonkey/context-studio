@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A programming model that enables non-blocking execution of operations, allowing multiple tasks to progress without waiting for completion of preceding tasks."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "scope_id": "pattern-001",
+  "scope_identifier": "service_pattern",
+  "scope_title": "Service Pattern",
+  "scope_description": "Service relationship patterns",
+  "candidate_classes": [
+    {"id": "pattern-002", "identifier": "interface", "title": "Interface"}
+  ],
+  "before_relationships": [
+    {
+      "subject_id": "pattern-001",
+      "object_id": "pattern-002",
+      "predicate": "uses"
+    }
+  ],
+  "candidates": [],
+  "is_empty_delta": false,
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

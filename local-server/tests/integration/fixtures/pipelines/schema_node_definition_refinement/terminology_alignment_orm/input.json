@@ -1,0 +1,10 @@
+{
+  "node_id": "orm-003",
+  "identifier": "object_relational_mapping",
+  "title": "Object-Relational Mapping",
+  "current_description": "Maps objects to database records.",
+  "expected_description": "A programming pattern that abstracts database tables and rows as object instances, providing automatic persistence and query generation for domain entities.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

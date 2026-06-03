@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A monitoring technique that follows individual requests across distributed system components to understand execution paths and identify performance bottlenecks."
+  }
+}

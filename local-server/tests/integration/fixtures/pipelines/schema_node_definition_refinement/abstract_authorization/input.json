@@ -1,0 +1,10 @@
+{
+  "node_id": "authorization-1318",
+  "identifier": "authorization",
+  "title": "Authorization",
+  "current_description": "Access control.",
+  "expected_description": "A security mechanism that determines what authenticated users and systems are permitted to access or modify based on defined policies and roles.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

@@ -1,0 +1,10 @@
+{
+  "node_id": "adequate_arch-17363",
+  "identifier": "adequate_arch",
+  "title": "Adequate Architecture",
+  "current_description": "An architectural approach designed for distributed systems.",
+  "expected_description": "An architectural approach designed for distributed systems with emphasis on independent deployability and organizational alignment.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": true
+}

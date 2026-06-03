@@ -1,0 +1,10 @@
+{
+  "node_id": "resilience-27318",
+  "identifier": "resilience",
+  "title": "Resilience",
+  "current_description": "System robustness.",
+  "expected_description": "The ability of a system to withstand and recover from failures, maintaining functionality through fault tolerance, redundancy, and graceful degradation.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

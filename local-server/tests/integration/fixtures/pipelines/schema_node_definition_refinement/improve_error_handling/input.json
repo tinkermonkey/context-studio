@@ -1,0 +1,10 @@
+{
+  "node_id": "error_handling-12566",
+  "identifier": "error_handling",
+  "title": "Error Handling",
+  "current_description": "Handling errors.",
+  "expected_description": "A set of practices and patterns for detecting, reporting, and recovering from errors or exceptional conditions during program execution.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

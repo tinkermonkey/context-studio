@@ -1,0 +1,21 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "add",
+        "subject": "Target Architecture",
+        "predicate": "implements",
+        "object": "New Pattern",
+        "confidence": 0.85
+      },
+      {
+        "operation": "remove",
+        "subject": "Target Architecture",
+        "predicate": "depends_on",
+        "object": "Old Dependency",
+        "confidence": 0.75
+      }
+    ]
+  }
+}

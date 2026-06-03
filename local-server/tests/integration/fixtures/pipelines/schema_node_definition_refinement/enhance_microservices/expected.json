@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "An architectural approach that structures an application as a collection of loosely-coupled, independently deployable services that communicate via well-defined interfaces."
+  }
+}

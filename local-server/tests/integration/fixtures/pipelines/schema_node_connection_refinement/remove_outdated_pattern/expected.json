@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "remove",
+        "subject": "Modern Architecture",
+        "predicate": "uses",
+        "object": "Legacy Pattern",
+        "confidence": 0.8
+      }
+    ]
+  }
+}

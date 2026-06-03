@@ -1,0 +1,10 @@
+{
+  "node_id": "observability-933",
+  "identifier": "observability",
+  "title": "Observability",
+  "current_description": "System monitoring.",
+  "expected_description": "The capability to understand system behavior through collection and analysis of logs, metrics, traces, and events enabling diagnosis of failures and performance issues.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

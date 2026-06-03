@@ -1,0 +1,12 @@
+{
+  "scope_id": "complete-3",
+  "scope_identifier": "complete_schema_3",
+  "scope_title": "Complete Schema 3",
+  "scope_description": "A schema that requires no refinement",
+  "candidate_classes": [],
+  "before_relationships": [],
+  "candidates": [],
+  "is_empty_delta": true,
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}
