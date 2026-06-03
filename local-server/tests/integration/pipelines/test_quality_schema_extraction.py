@@ -55,7 +55,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from tests.fixtures.pipeline_fixtures import load_distractors, load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
@@ -131,12 +131,19 @@ def extract_confidence(item: dict, default: float = 0.5) -> float:
 def compute_quality_metrics(
     expected_output: dict,
     actual_output: dict,
+    distractors: dict | None = None,
 ) -> dict:
     """
     Compute quality metrics for schema extraction.
 
+    Args:
+        expected_output: Expected output from fixture
+        actual_output: Actual output from pipeline
+        distractors: Optional distractor dict with off-topic classes/properties
+
     Returns dict with keys: class_jaccard, property_jaccard, connection_overlap, brier.
     """
+    distractors = distractors or {}
     expected_result = expected_output.get("result", {})
     actual_result = actual_output.get("result", {})
 
@@ -181,7 +188,7 @@ def compute_quality_metrics(
 
     # Brier score on confidence calibration
     # For expected classes: predicted confidence should be ~1.0
-    # For unexpected classes: predicted confidence should be ~0.0
+    # For non-expected classes (including distractors): predicted confidence should be ~0.0
     expected_class_set = set(expected_class_labels)
     brier_probs = []
     brier_labels = []
@@ -189,7 +196,10 @@ def compute_quality_metrics(
     for class_dict in actual_classes:
         label = class_dict.get("label", "")
         confidence = extract_confidence(class_dict)
-        is_expected = 1 if label in expected_class_set else 0
+        if label in expected_class_set:
+            is_expected = 1
+        else:
+            is_expected = 0
         brier_probs.append(confidence)
         brier_labels.append(is_expected)
 
@@ -362,6 +372,7 @@ class TestQualitySchemaExtraction:
         # Load fixture
         fixture_input = load_fixture("schema_extraction", scenario)
         expected_output = load_expected_output("schema_extraction", scenario)
+        distractors = load_distractors("schema_extraction", scenario) or {}
 
         # Convert input format: wrap text in documents array if needed
         pipeline_input = fixture_input.copy()
@@ -387,7 +398,7 @@ class TestQualitySchemaExtraction:
         }
 
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_output, actual_output)
+        metrics = compute_quality_metrics(expected_output, actual_output, distractors)
 
         # Log metrics for debugging
         _logger.info(f"Schema extraction metrics for {scenario}: {metrics}")
@@ -584,6 +595,7 @@ class TestQualitySchemaExtraction:
         # Load fixture
         fixture_input = load_fixture("schema_extraction", scenario)
         expected_output = load_expected_output("schema_extraction", scenario)
+        distractors = load_distractors("schema_extraction", scenario) or {}
 
         # Convert input format: wrap text in documents array if needed
         pipeline_input = fixture_input.copy()
@@ -615,7 +627,7 @@ class TestQualitySchemaExtraction:
             cassette_path.write_text(json.dumps(cassette_data, indent=2))
 
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_output, actual_output)
+        metrics = compute_quality_metrics(expected_output, actual_output, distractors)
 
         # Log metrics for debugging
         _logger.info(f"Schema extraction metrics for {scenario}: {metrics}")

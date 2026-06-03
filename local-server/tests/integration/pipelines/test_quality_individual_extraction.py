@@ -50,7 +50,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from tests.fixtures.pipeline_fixtures import load_distractors, load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
@@ -175,7 +175,7 @@ def compute_quality_metrics(
     # For triples in excluded set: predicted confidence should be ~0.0
     # For triples not in either: penalize if high confidence
     expected_set = set(expected_keys)
-    set(excluded_keys)
+    excluded_set = set(excluded_keys)
     brier_probs = []
     brier_labels = []
 
@@ -368,6 +368,7 @@ class TestQualityIndividualExtraction:
         # Load fixture
         fixture_input = load_fixture("individual_extraction", scenario)
         expected_output = load_expected_output("individual_extraction", scenario)
+        distractors = load_distractors("individual_extraction", scenario) or {}
 
         # Run pipeline
         state = IndividualExtractionState(
@@ -387,8 +388,12 @@ class TestQualityIndividualExtraction:
         expected_triples = expected_output_result.get("triples", [])
         excluded_triples = expected_output_result.get("excluded", [])
 
+        # Add distractor triples to excluded triples
+        distractor_triples = distractors.get("triples", [])
+        all_excluded_triples = excluded_triples + distractor_triples
+
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_triples, actual_triples, excluded_triples)
+        metrics = compute_quality_metrics(expected_triples, actual_triples, all_excluded_triples)
 
         # Extract aggregate metrics for floor assertion
         aggregate_metrics = {
@@ -583,6 +588,7 @@ class TestQualityIndividualExtraction:
         # Load fixture
         fixture_input = load_fixture("individual_extraction", scenario)
         expected_output = load_expected_output("individual_extraction", scenario)
+        distractors = load_distractors("individual_extraction", scenario) or {}
 
         # Run pipeline with real LLM
         state = IndividualExtractionState(
@@ -601,8 +607,12 @@ class TestQualityIndividualExtraction:
         expected_triples = expected_output_result.get("triples", [])
         excluded_triples = expected_output_result.get("excluded", [])
 
+        # Add distractor triples to excluded triples
+        distractor_triples = distractors.get("triples", [])
+        all_excluded_triples = excluded_triples + distractor_triples
+
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_triples, actual_triples, excluded_triples)
+        metrics = compute_quality_metrics(expected_triples, actual_triples, all_excluded_triples)
 
         # Extract aggregate metrics for floor assertion
         aggregate_metrics = {
