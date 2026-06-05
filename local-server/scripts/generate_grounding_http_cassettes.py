@@ -221,7 +221,8 @@ def main():
             json.dump(cassette, f, indent=2)
 
         print(
-            f"\n✓ Generated HTTP cassette with {len(all_interactions)} interactions at {cassette_path}"
+            f"\n✓ Generated HTTP cassette with {len(all_interactions)} interactions "
+            f"at {cassette_path}"
         )
 
     except (FileNotFoundError, RuntimeError) as e:
