@@ -237,6 +237,18 @@ def metrics_emitter():
     return MetricsEmitter(metrics_dir)
 
 
+@pytest.fixture(scope="session")
+def embedding_service():
+    """Session-scoped embedding service using pinned model: all-MiniLM-L12-v2.
+
+    The model is loaded once per test session to avoid repeated initialization overhead.
+    This fixture implements the requirement for session-scoped embedding_service.
+    """
+    service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
+    yield service
+    service.cleanup()
+
+
 @pytest.fixture
 def cassette_dir():
     """Cassette directory for LLM recordings (repo-relative)."""
@@ -289,6 +301,7 @@ class TestQualityE2EChain:
         cassette_dir,
         http_client_factory,
         request,
+        embedding_service,
     ):
         """
         Test complete pipeline chain execution.
@@ -458,7 +471,6 @@ class TestQualityE2EChain:
                 f"'{candidate_label}': {error}"
             )
 
-        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         grounding_scorer = GroundingScorer(
             embedding_service=embedding_service,
             error_callback=log_embedding_error,
@@ -523,7 +535,6 @@ class TestQualityE2EChain:
             grounding_apply.apply(grounding_run, class_id)
 
         # ===== STAGE 7: Definition Refinement =====
-        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         llm_provider = _get_llm_provider_for_cassette(cassette_paths[2], refresh_cassettes)
         if isinstance(llm_provider, RecordingLLMProvider):
             recording_providers.append(llm_provider)
@@ -717,6 +728,7 @@ class TestQualityE2EChain:
         registered_pipelines,
         metrics_emitter,
         cassette_dir,
+        embedding_service,
     ):
         """
         Live end-to-end test with real LLM provider.
@@ -752,9 +764,6 @@ class TestQualityE2EChain:
 
         if not fixture_input or not expected_output:
             pytest.skip(f"Fixture not found for scenario {scenario}")
-
-        # Initialize embedding service for description similarity metrics
-        embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
 
         # Initialize registries
         config_registry, impl_registry = registered_pipelines
