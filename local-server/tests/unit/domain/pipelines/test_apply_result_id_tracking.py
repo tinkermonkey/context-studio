@@ -323,7 +323,7 @@ def test_schema_connection_refinement_separates_operations(repo):
     run.pipeline_type = PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
     run.status = PipelineRunStatus.COMPLETED
     run.output_summary = {
-        "scope_id": SCHEME_ID,
+        "scope_id": "cls-dog",  # Use a class ID from the same scheme as scope
         "deltas": [
             {
                 "operation": "add",
