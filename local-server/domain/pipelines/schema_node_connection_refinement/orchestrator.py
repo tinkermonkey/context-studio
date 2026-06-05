@@ -171,9 +171,11 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
-        except ValueError:
+        except ValueError as exc:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
-            raise
+            raise PipelineExecutionError(
+                "Connection refinement encountered an unexpected error"
+            ) from exc
         except Exception as exc:
             _logger.error(f"Unexpected error during connection refinement: {exc}", exc_info=True)
             state = replace(
