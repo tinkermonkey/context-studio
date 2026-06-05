@@ -15,6 +15,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.models import Base
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
@@ -46,9 +47,7 @@ from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
     RecordingHTTPTransport,
     RecordingLLMProvider,
-    ReplayHTTPTransport,
 )
-from adapters.llm.provider_router import LLMProviderRouter
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
