@@ -1,3 +1,49 @@
 {
-  "interactions": []
+  "interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=technical&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Technology\", \"label\": \"technical\", \"description\": \"DBpedia entry for technical\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.conceptnet.io/c/en/technical?limit=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"edges\": [{\"start\": {\"@id\": \"http://conceptnet.io/c/en/technical\", \"label\": \"technical\"}, \"rel\": {\"label\": \"related_to\"}, \"end\": {\"@id\": \"/c/en/technology\", \"label\": \"technology\"}}], \"@context\": {}, \"@id\": \"http://conceptnet.io/c/en/technical\"}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=technical&language=en&format=json&limit=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q1234\", \"label\": \"technical\", \"description\": \"Wikidata item for technical\", \"url\": \"https://www.wikidata.org/wiki/Q1234\"}]}"
+      }
+    }
+  ]
 }

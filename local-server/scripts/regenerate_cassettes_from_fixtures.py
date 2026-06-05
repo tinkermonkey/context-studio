@@ -73,6 +73,8 @@ async def regenerate_definition_cassettes():
 
     scenarios = sorted([d.name for d in fixtures_dir.iterdir() if d.is_dir()])
 
+    failed_scenarios = []
+
     for scenario in scenarios:
         fixture_dir = fixtures_dir / scenario
         input_file = fixture_dir / "input.json"
@@ -175,6 +177,9 @@ async def regenerate_definition_cassettes():
             print(f"  ✓ {cassette_path.name}")
         except Exception as e:
             print(f"  ✗ {scenario}: {e}")
+            failed_scenarios.append(scenario)
+
+    return failed_scenarios
 
 
 async def regenerate_connection_cassettes():
@@ -196,6 +201,8 @@ async def regenerate_connection_cassettes():
     cassettes_dir.mkdir(parents=True, exist_ok=True)
 
     scenarios = sorted([d.name for d in fixtures_dir.iterdir() if d.is_dir()])
+
+    failed_scenarios = []
 
     for scenario in scenarios:
         fixture_dir = fixtures_dir / scenario
@@ -289,13 +296,24 @@ async def regenerate_connection_cassettes():
             print(f"  ✓ {cassette_path.name}")
         except Exception as e:
             print(f"  ✗ {scenario}: {e}")
+            failed_scenarios.append(scenario)
+
+    return failed_scenarios
 
 
 async def main():
     """Main entry point."""
-    await regenerate_definition_cassettes()
-    await regenerate_connection_cassettes()
-    print("\nDone!")
+    definition_failures = await regenerate_definition_cassettes()
+    connection_failures = await regenerate_connection_cassettes()
+
+    all_failures = definition_failures + connection_failures
+
+    if all_failures:
+        print(f"\n❌ Regeneration FAILED for {len(all_failures)} scenario(s): {all_failures}")
+        sys.exit(1)
+
+    print("\n✓ Regeneration completed successfully!")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
