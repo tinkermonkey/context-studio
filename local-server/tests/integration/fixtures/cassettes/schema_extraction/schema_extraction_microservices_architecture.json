@@ -1,1 +1,30 @@
-{}
+{
+  "0e3daa9939120d106b756d365de9f2c6348e12b009a2a703697e0c63f7582c53": {
+    "content": "[{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b22f19a230e44d4c126f57c5c3693ed29469e4afcdcca539aea23fea5e19e83a": {
+    "content": "[{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1cb056a7160ee7e7e57b723563394e7335400e90f8d2257ca1375f46ca3ff202": {
+    "content": "[{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ff674b815b2868d0f571900600eab021bd6342b6ee97e51cd9b3228a7a18a27e": {
+    "content": "[{\"label\": \"Microservice\", \"confidence\": 0.85}, {\"label\": \"APIGateway\", \"confidence\": 0.85}, {\"label\": \"EventBus\", \"confidence\": 0.85}, {\"label\": \"ServiceMesh\", \"confidence\": 0.85}, {\"label\": \"CircuitBreaker\", \"confidence\": 0.85}, {\"label\": \"RESTInterface\", \"confidence\": 0.85}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

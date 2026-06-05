@@ -234,7 +234,6 @@ def main():
             json.dump(cassette, f, indent=2)
 
         print(f"\n✓ Generated cassette with {len(interactions)} interactions at {cassette_path}")
-        sys.exit(0)
 
     except (FileNotFoundError, RuntimeError) as e:
         print(f"\n❌ Cassette generation FAILED: {e}")

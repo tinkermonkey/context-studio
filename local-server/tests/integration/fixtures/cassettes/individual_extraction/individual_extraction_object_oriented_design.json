@@ -1,1 +1,9 @@
-{}
+{
+  "370886f5a9ad67ba6ec91fd0e5f7c5f5e33011cd9298ffb1793a8f4a2188d74f": {
+    "content": "[{\"subject\": {\"label\": \"inheritance\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"models\", \"kind\": \"property\"}, \"object\": {\"label\": \"hierarchies\", \"kind\": \"individual\"}, \"confidence\": 0.89}, {\"subject\": {\"label\": \"composition\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"enables\", \"kind\": \"property\"}, \"object\": {\"label\": \"flexibility\", \"kind\": \"individual\"}, \"confidence\": 0.88}, {\"subject\": {\"label\": \"encapsulation\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"hides\", \"kind\": \"property\"}, \"object\": {\"label\": \"details\", \"kind\": \"individual\"}, \"confidence\": 0.91}, {\"subject\": {\"label\": \"polymorphism\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"allows\", \"kind\": \"property\"}, \"object\": {\"label\": \"uniform_treatment\", \"kind\": \"individual\"}, \"confidence\": 0.87}, {\"subject\": {\"label\": \"interface\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"defines\", \"kind\": \"property\"}, \"object\": {\"label\": \"contract\", \"kind\": \"individual\"}, \"confidence\": 0.9}, {\"subject\": {\"label\": \"liskov_substitution\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"ensures\", \"kind\": \"property\"}, \"object\": {\"label\": \"substitutability\", \"kind\": \"individual\"}, \"confidence\": 0.86}, {\"subject\": {\"label\": \"inheritance\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"models\", \"kind\": \"property\"}, \"object\": {\"label\": \"is_a_relationship\", \"kind\": \"individual\"}, \"confidence\": 0.85}, {\"subject\": {\"label\": \"composition\", \"kind\": \"individual\"}, \"predicate\": {\"label\": \"models\", \"kind\": \"property\"}, \"object\": {\"label\": \"has_a_relationship\", \"kind\": \"individual\"}, \"confidence\": 0.84}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

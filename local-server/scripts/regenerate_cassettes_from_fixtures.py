@@ -313,7 +313,6 @@ async def main():
         sys.exit(1)
 
     print("\n✓ Regeneration completed successfully!")
-    sys.exit(0)
 
 
 if __name__ == "__main__":
