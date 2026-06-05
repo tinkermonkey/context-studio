@@ -60,28 +60,6 @@ def generate_dbpedia_response(label: str, uri: str | None = None) -> str:
     return json.dumps(response)
 
 
-def generate_conceptnet_response(label: str, uri: str | None = None) -> str:
-    """Generate a ConceptNet response matching the adapter's expected format."""
-    if uri is None:
-        uri = f"http://conceptnet.io/c/en/{label.lower().replace(' ', '_')}"
-
-    response = {
-        "edges": [
-            {
-                "start": {
-                    "@id": uri,
-                    "label": label,
-                },
-                "rel": {"label": "related_to"},
-                "end": {"@id": "/c/en/related", "label": "related"},
-            }
-        ],
-        "@context": {},
-        "@id": uri,
-    }
-    return json.dumps(response)
-
-
 def generate_conceptnet_query_response(label: str, uri: str | None = None) -> str:
     """Generate a ConceptNet /query endpoint response."""
     if uri is None:

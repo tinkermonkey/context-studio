@@ -107,54 +107,6 @@ class TestQualitySchemaNodeGrounding:
         """Create a grounding scorer."""
         return GroundingScorer()
 
-    @pytest.fixture
-    async def http_client(self, request):
-        """Create an httpx.AsyncClient with HTTP cassette replay support.
-
-        Replays recorded HTTP interactions for deterministic testing using
-        URL-based matching to support multiple scenarios in a single cassette.
-        Raises FileNotFoundError if cassette is missing.
-        """
-        http_cassette_path = _get_http_cassette_path()
-
-        refresh_cassettes = request.config.getoption("--refresh-cassettes", default=False)
-
-        if refresh_cassettes:
-            transport = RecordingHTTPTransport(
-                delegate=httpx.AsyncHTTPTransport(),
-                cassette_path=http_cassette_path,
-            )
-            return httpx.AsyncClient(transport=transport)
-        elif http_cassette_path.exists():
-            transport = ReplayHTTPTransport(cassette_path=http_cassette_path, match_by_url=True)
-            return httpx.AsyncClient(transport=transport)
-        else:
-            raise FileNotFoundError(
-                f"HTTP cassette not found at {http_cassette_path}. "
-                f"Run with --refresh-cassettes to record HTTP interactions."
-            )
-
-    @pytest.fixture
-    def grounding_adapter(self, http_client):
-        """Create a real GroundingAdapter with HTTP cassette support.
-
-        Wires all four reference source adapters (DBpedia, ConceptNet,
-        Wikidata, schema.org) with the provided HTTP client for cassette
-        replay. Ensures adapters are properly wired and functional.
-        """
-        dbpedia = DBpediaSource(async_client=http_client)
-        conceptnet = ConceptNetSource(async_client=http_client)
-        wikidata = WikidataSource(async_client=http_client)
-        schema_org = SchemaOrgSource(async_client=http_client)
-
-        return GroundingAdapter(
-            dbpedia=dbpedia,
-            conceptnet=conceptnet,
-            wikidata=wikidata,
-            schema_org=schema_org,
-            http_client=http_client,
-        )
-
     @pytest.mark.asyncio
     async def test_fixture_corpus_coverage(self):
         """Verify fixture corpus has ≥30 classes spanning multiple domains."""
@@ -309,10 +261,11 @@ class TestQualitySchemaNodeGrounding:
                 failed_scenarios.append((scenario, str(e)))
                 # Continue with other scenarios instead of failing immediately
 
-        # Report failures
-        if failed_scenarios:
-            failures_str = "\n".join(f"  - {s}: {e}" for s, e in failed_scenarios)
-            print(f"\nFailed scenarios:\n{failures_str}")
+        # Assert all scenarios succeeded (no silent failures)
+        assert len(failed_scenarios) == 0, (
+            f"All {len(quality_scenarios)} fixtures must succeed. "
+            f"Failed: {failed_scenarios}"
+        )
 
         # Compute aggregate metrics (mean across fixtures)
         avg_top1 = sum(all_top1_scores) / len(all_top1_scores) if all_top1_scores else 0.0
@@ -321,16 +274,14 @@ class TestQualitySchemaNodeGrounding:
 
         # Define floor gates for grounding pipeline.
         # Issue spec targets: top-1 ≥ 0.50, top-3 ≥ 0.70, MRR ≥ 0.60
-        # Note: HTTP cassette only includes DBpedia and Wikidata interactions
-        # (ConceptNet and schema.org lack expected_external_references in most fixtures).
-        # Adapters handle missing sources gracefully by continuing with others.
-        # Floors set to validated achievable levels with available cassette data
-        # to ensure CI passes while maintaining meaningful regression detection.
-        # Current achievable: top-1 ≈ 0.11, top-3 ≈ 0.36, MRR ≈ 0.34
+        # Achieved metrics (validated with cassette): top-1 ≈ 1.0, top-3 ≈ 0.693, MRR ≈ 0.506
+        # Floors set to 80% of achieved values to catch meaningful regressions while
+        # maintaining CI stability. This ensures the quality floor represents all
+        # fixtures, not just the subset that happened to work.
         floors = {
-            "top1_precision": 0.08,
-            "top3_precision": 0.30,
-            "mrr": 0.25,
+            "top1_precision": 0.80,
+            "top3_precision": 0.55,
+            "mrr": 0.40,
         }
 
         # Emit aggregate metrics with explicit exception handling (symmetric with per-fixture)

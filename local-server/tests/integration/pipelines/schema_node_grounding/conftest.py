@@ -2,7 +2,8 @@
 
 Provides HTTP cassette recording/replay for deterministic testing of reference
 source adapters (DBpedia, ConceptNet, Wikidata, schema.org) without requiring
-live network access.
+live network access. Quality tests use URL-based matching for shared cassettes
+across multiple scenarios.
 """
 
 from collections.abc import AsyncGenerator
@@ -24,10 +25,26 @@ from tests.integration.pipelines._harness.cassettes import (
 
 @pytest.fixture
 def http_cassette_path(request) -> Path:
-    """Compute HTTP cassette path based on test module and function."""
+    """Compute HTTP cassette path based on test module and function.
+
+    For test_quality_schema_node_grounding, uses a fixed cassette path shared
+    across all quality test scenarios. For other tests, uses dynamic per-test paths.
+    """
     test_file = Path(request.node.fspath)
     test_name = request.node.name
 
+    # Quality tests use a shared HTTP cassette for all scenarios
+    if test_file.stem == "test_quality_schema_node_grounding":
+        cassette_dir = (
+            test_file.parent.parent.parent
+            / "fixtures"
+            / "cassettes"
+            / "schema_node_grounding"
+        )
+        cassette_dir.mkdir(parents=True, exist_ok=True)
+        return cassette_dir / "schema_node_grounding_http.json"
+
+    # Other tests use dynamic per-test cassette paths
     cassette_dir = test_file.parent / "_cassettes" / test_file.stem
     cassette_dir.mkdir(parents=True, exist_ok=True)
 
@@ -46,7 +63,7 @@ def http_cassette_mode(request) -> str:
 
 @pytest.fixture
 async def http_client(
-    http_cassette_mode, http_cassette_path
+    request, http_cassette_mode, http_cassette_path
 ) -> AsyncGenerator[httpx.AsyncClient, None]:
     """Create an httpx.AsyncClient with optional cassette recording/replay.
 
@@ -55,9 +72,15 @@ async def http_client(
     - Client with ReplayHTTPTransport if replay mode and cassette exists
     - Client with default transport if live mode
 
+    For quality tests, uses URL-based matching to support multiple scenarios
+    in a single shared cassette. Other tests use sequential matching.
+
     Properly closes the client on teardown, ensuring cassettes are flushed to disk.
     """
     transport: httpx.AsyncBaseTransport
+    test_file = Path(request.node.fspath)
+    is_quality_test = test_file.stem == "test_quality_schema_node_grounding"
+
     if http_cassette_mode == "record":
         transport = RecordingHTTPTransport(
             delegate=httpx.AsyncHTTPTransport(),
@@ -70,7 +93,11 @@ async def http_client(
                 f"HTTP cassette not found at {http_cassette_path}. "
                 f"Run with --refresh-cassettes to record, or mark test with @pytest.mark.real_http"
             )
-        transport = ReplayHTTPTransport(cassette_path=http_cassette_path)
+        # Quality tests use URL-based matching for multi-scenario cassettes
+        transport = ReplayHTTPTransport(
+            cassette_path=http_cassette_path,
+            match_by_url=is_quality_test
+        )
         client = httpx.AsyncClient(transport=transport)
     else:
         client = httpx.AsyncClient()
