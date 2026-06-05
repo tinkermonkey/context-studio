@@ -342,6 +342,20 @@ class TestQualityE2EChain:
 
         documents = fixture_input.get("documents", [])
 
+        # Convert document dicts to strings (extract content field if necessary)
+        document_strings = []
+        for doc in documents:
+            if isinstance(doc, dict):
+                # Combine title and content for richer context
+                title = doc.get("title", "")
+                content = doc.get("content", "")
+                doc_text = f"{title}\n{content}".strip() if title and content else (content or title or "")
+                if doc_text:
+                    document_strings.append(doc_text)
+            elif isinstance(doc, str):
+                if doc.strip():
+                    document_strings.append(doc)
+
         # Track recording providers for flushing later
         recording_providers = []
 
@@ -357,7 +371,7 @@ class TestQualityE2EChain:
         schema_ext_state = SchemaExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            input_data={"documents": documents},
+            input_data={"documents": document_strings},
         )
         schema_ext_result = await schema_ext_orchestrator.execute(schema_ext_state)
 
@@ -393,7 +407,7 @@ class TestQualityE2EChain:
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             input_data={
-                "documents": documents,
+                "documents": document_strings,
                 "target_classes": [
                     c.get("label", "")
                     for c in (schema_ext_result.result or {}).get("candidates", [])

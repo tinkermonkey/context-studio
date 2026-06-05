@@ -344,6 +344,8 @@ class TestQualityIndividualExtraction:
         metrics_emitter,
         cassette_dir,
         quality_llm_provider_factory,
+        session_factory,
+        ontology_repo,
     ):
         """
         Test individual extraction quality on a specific scenario.
@@ -367,9 +369,33 @@ class TestQualityIndividualExtraction:
         # If it's a recording provider, we need to flush it after execution
         is_recording = isinstance(quality_provider, RecordingLLMProvider)
 
+        # Create extraction service with the quality provider instead of the fake provider
+        from adapters.events.in_process import InProcessEventPublisher
+        from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+        from tests.fakes.fake_embedding_service import FakeEmbeddingService
+        from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+        from tests.fakes.fake_reference_source import FakeReferenceSource
+
+        extraction_repo = SQLiteExtractionRepository(session_factory)
+        extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+        embedding_service = FakeEmbeddingService()
+        event_publisher = InProcessEventPublisher()
+
+        quality_extraction_service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=quality_provider,
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+        )
+
         orchestrator = IndividualExtractionOrchestrator(
             llm_provider=quality_provider,
-            extraction_service=extraction_service,
+            extraction_service=quality_extraction_service,
         )
 
         # Load fixture

@@ -57,6 +57,7 @@ from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_distractors, load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
+    CassetteLLMProvider,
     RecordingLLMProvider,
 )
 from tests.integration.pipelines._harness.metrics import (
