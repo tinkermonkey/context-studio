@@ -8,9 +8,12 @@ Idempotent: re-applying the same run overwrites the description with the same va
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -40,7 +43,7 @@ class SchemaDefinitionRefinementApplyService:
             confidence_threshold: Minimum candidate confidence to consider
 
         Returns:
-            ApplyResult (classes_created=1 if applied, classes_skipped=1 if no candidate qualifies)
+            ApplyResult (classes_updated=1 if applied, classes_skipped=1 if no candidate qualifies)
 
         Raises:
             ValueError: If node_id is missing from output_summary or the class does not exist
@@ -70,7 +73,11 @@ class SchemaDefinitionRefinementApplyService:
             return result
 
         cls.description = new_definition
-        self._repo.save_class(cls)
+        try:
+            self._repo.save_class(cls)
+        except Exception as e:
+            _logger.error(f"Failed to save class with updated definition: {e}")
+            raise
         result.classes_updated += 1
         result.validate()
         return result

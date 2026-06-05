@@ -12,6 +12,7 @@ source+target+property triple for relationships).
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 from uuid import uuid4
@@ -19,6 +20,8 @@ from uuid import uuid4
 from domain.ontology.entities import Class, PropertyDefinition, Relationship
 from domain.ontology.value_objects import Status
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -88,20 +91,24 @@ class SchemaExtractionApplyService:
             if label.lower() in existing_titles:
                 result.classes_skipped += 1
                 continue
-            new_class = Class(
-                id=str(uuid4()),
-                concept_scheme_id=concept_scheme_id,
-                taxonomy_id=taxonomy_id,
-                title=label,
-                description=candidate.get("proposed_definition"),
-                status=Status.DRAFT,
-                source_run_id=run.id,
-            )
-            self._repo.save_class(new_class)
-            existing_titles[label.lower()] = new_class.id
-            all_class_title_to_id[label.lower()] = new_class.id
-            result.classes_created += 1
-            result.created_class_ids.append(new_class.id)
+            try:
+                new_class = Class(
+                    id=str(uuid4()),
+                    concept_scheme_id=concept_scheme_id,
+                    taxonomy_id=taxonomy_id,
+                    title=label,
+                    description=candidate.get("proposed_definition"),
+                    status=Status.DRAFT,
+                    source_run_id=run.id,
+                )
+                self._repo.save_class(new_class)
+                existing_titles[label.lower()] = new_class.id
+                all_class_title_to_id[label.lower()] = new_class.id
+                result.classes_created += 1
+                result.created_class_ids.append(new_class.id)
+            except Exception as e:
+                _logger.error(f"Failed to save class: {e}")
+                raise
 
         # --- Property Definitions ---
         prop_candidates = [c for c in candidates if c.get("kind") == "property_definition"]
@@ -119,17 +126,21 @@ class SchemaExtractionApplyService:
             if existing_prop is not None:
                 result.properties_skipped += 1
                 continue
-            new_prop = PropertyDefinition(
-                id=str(uuid4()),
-                identifier=identifier,
-                title=label,
-                description=candidate.get("proposed_definition"),
-                status=Status.DRAFT,
-                source_run_id=run.id,
-            )
-            self._repo.save_property_definition(new_prop)
-            result.properties_created += 1
-            result.created_property_definition_ids.append(new_prop.id)
+            try:
+                new_prop = PropertyDefinition(
+                    id=str(uuid4()),
+                    identifier=identifier,
+                    title=label,
+                    description=candidate.get("proposed_definition"),
+                    status=Status.DRAFT,
+                    source_run_id=run.id,
+                )
+                self._repo.save_property_definition(new_prop)
+                result.properties_created += 1
+                result.created_property_definition_ids.append(new_prop.id)
+            except Exception as e:
+                _logger.error(f"Failed to save property definition: {e}")
+                raise
 
         # --- Relationships ---
         for connection in connections:
@@ -169,16 +180,20 @@ class SchemaExtractionApplyService:
                 result.relationships_skipped += 1
                 continue
 
-            new_rel = Relationship(
-                id=str(uuid4()),
-                source_id=src_id,
-                target_id=tgt_id,
-                property_definition_id=prop_def.id,
-                source_run_id=run.id,
-            )
-            self._repo.save_relationship(new_rel)
-            result.relationships_created += 1
-            result.created_relationship_ids.append(new_rel.id)
+            try:
+                new_rel = Relationship(
+                    id=str(uuid4()),
+                    source_id=src_id,
+                    target_id=tgt_id,
+                    property_definition_id=prop_def.id,
+                    source_run_id=run.id,
+                )
+                self._repo.save_relationship(new_rel)
+                result.relationships_created += 1
+                result.created_relationship_ids.append(new_rel.id)
+            except Exception as e:
+                _logger.error(f"Failed to save relationship: {e}")
+                raise
 
         result.validate()
         return result

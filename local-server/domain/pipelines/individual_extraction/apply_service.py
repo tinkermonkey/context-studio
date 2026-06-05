@@ -11,12 +11,15 @@ for relationships).
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from domain.ontology.entities import Individual, Relationship
 from domain.ontology.value_objects import Status
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -93,17 +96,21 @@ class IndividualExtractionApplyService:
                     result.individuals_skipped += 1
                     continue
 
-                new_individual = Individual(
-                    id=str(uuid4()),
-                    class_ids=valid_class_ids,
-                    title=subject_label,
-                    status=Status.DRAFT,
-                    source_run_id=run.id,
-                )
-                self._repo.save_individual(new_individual)
-                resolved_id = new_individual.id
-                result.individuals_created += 1
-                result.created_individual_ids.append(resolved_id)
+                try:
+                    new_individual = Individual(
+                        id=str(uuid4()),
+                        class_ids=valid_class_ids,
+                        title=subject_label,
+                        status=Status.DRAFT,
+                        source_run_id=run.id,
+                    )
+                    self._repo.save_individual(new_individual)
+                    resolved_id = new_individual.id
+                    result.individuals_created += 1
+                    result.created_individual_ids.append(resolved_id)
+                except Exception as e:
+                    _logger.error(f"Failed to save individual: {e}")
+                    raise
 
                 # Cache for dedup within this apply pass
                 for cid in valid_class_ids:
@@ -179,13 +186,17 @@ class IndividualExtractionApplyService:
             result.relationships_skipped += 1
             return
 
-        new_rel = Relationship(
-            id=str(uuid4()),
-            source_id=source_id,
-            target_id=target_id,
-            property_definition_id=property_definition_id,
-            source_run_id=source_run_id,
-        )
-        self._repo.save_relationship(new_rel)
-        result.relationships_created += 1
-        result.created_relationship_ids.append(new_rel.id)
+        try:
+            new_rel = Relationship(
+                id=str(uuid4()),
+                source_id=source_id,
+                target_id=target_id,
+                property_definition_id=property_definition_id,
+                source_run_id=source_run_id,
+            )
+            self._repo.save_relationship(new_rel)
+            result.relationships_created += 1
+            result.created_relationship_ids.append(new_rel.id)
+        except Exception as e:
+            _logger.error(f"Failed to save relationship: {e}")
+            raise

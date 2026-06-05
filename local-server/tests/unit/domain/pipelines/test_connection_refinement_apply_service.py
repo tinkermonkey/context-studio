@@ -33,6 +33,13 @@ def mock_ontology_repo():
 def sample_classes():
     """Create sample Class entities for testing."""
     return {
+        "class-0": Class(
+            id="class-0",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            title="Scope",
+            description="",
+        ),
         "microservice": Class(
             id="class-1",
             concept_scheme_id="scheme-1",
@@ -70,8 +77,8 @@ def sample_property_definition():
 
 @pytest.fixture
 def sample_scope_id():
-    """Create a scope ID."""
-    return str(uuid4())
+    """Create a scope ID (valid class ID that will be set up in each test)."""
+    return "class-0"
 
 
 class TestSchemaConnectionRefinementApplyServiceBasic:
@@ -88,6 +95,8 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
 
         # Setup mocks
         def get_class_side_effect(ref):
+            if ref in sample_classes:
+                return sample_classes[ref]
             return sample_classes.get(ref.lower()) if ref.lower() in sample_classes else None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
@@ -245,11 +254,14 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
         """Self-loops are prevented (source == target)."""
 
         def get_class_side_effect(ref):
-            if ref.lower() == "microservice":
+            if ref == sample_scope_id:
+                return sample_classes["class-0"]
+            elif ref.lower() == "microservice":
                 return sample_classes["microservice"]
             return None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
+        mock_ontology_repo.list_classes.return_value = [sample_classes["class-0"], sample_classes["microservice"]]
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
             sample_property_definition
         )
@@ -342,7 +354,9 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         """Class references resolved by ID take precedence."""
 
         def get_class_side_effect(ref):
-            if ref == "class-1":
+            if ref == sample_scope_id:
+                return sample_classes["class-0"]
+            elif ref == "class-1":
                 return sample_classes["microservice"]
             elif ref.lower() == "service":
                 return sample_classes["service"]
@@ -353,6 +367,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
             sample_property_definition
         )
+        mock_ontology_repo.list_classes.return_value = list(sample_classes.values())
 
         run = PipelineRun(
             id="run-by-id",
@@ -391,7 +406,10 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         """Class references resolved by label when ID lookup fails."""
 
         def get_class_side_effect(ref):
-            # First attempt (direct ID) fails
+            # ID-based lookup: only scope class
+            if ref == sample_scope_id:
+                return sample_classes["class-0"]
+            # Other ID-based lookups fail, will fall back to label lookup
             return None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
@@ -476,11 +494,17 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         mock_ontology_repo.get_property_definition_by_identifier.assert_called_with("depends_on")
 
     def test_unresolvable_class_skips_delta(
-        self, mock_ontology_repo, sample_property_definition, sample_scope_id
+        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
     ):
         """Delta skipped if class cannot be resolved."""
-        mock_ontology_repo.get_class.return_value = None
-        mock_ontology_repo.list_classes.return_value = []
+        def get_class_side_effect(ref):
+            # Only scope class exists
+            if ref == sample_scope_id:
+                return sample_classes["class-0"]
+            return None
+
+        mock_ontology_repo.get_class.side_effect = get_class_side_effect
+        mock_ontology_repo.list_classes.return_value = [sample_classes["class-0"]]
 
         run = PipelineRun(
             id="run-unresolvable",

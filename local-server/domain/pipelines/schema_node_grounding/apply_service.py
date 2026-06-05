@@ -8,10 +8,13 @@ Class by appending ExternalReference entries. Idempotent: groundings already pre
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.apply_result import ApplyResult
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
@@ -79,7 +82,11 @@ class SchemaGroundingApplyService:
             result.created_external_reference_ids.append(uri)
 
         if result.external_references_created > 0:
-            self._repo.save_class(cls)
+            try:
+                self._repo.save_class(cls)
+            except Exception as e:
+                _logger.error(f"Failed to save class with external references: {e}")
+                raise
 
         result.validate()
         return result
