@@ -39,6 +39,13 @@ class SchemaExtractionApplyService:
 
     Creates Class, PropertyDefinition, and Relationship entities with Status.DRAFT
     and source_run_id set to the originating pipeline run ID.
+
+    NOTE: This service performs multiple sequential writes (classes, then property
+    definitions, then relationships). If a write fails mid-apply, earlier writes are
+    already persisted with no rollback. For full transactional atomicity (all-or-nothing),
+    the calling adapter layer must wrap the entire apply() call in a database transaction.
+    Without transaction wrapping, a partial-apply state is possible but indicated by
+    exception propagation; there is no silent partial success.
     """
 
     def __init__(self, ontology_repo: "OntologyRepository") -> None:

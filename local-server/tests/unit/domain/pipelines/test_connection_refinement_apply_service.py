@@ -914,3 +914,61 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
+
+    def test_unresolvable_scope_id_skips_all_deltas(
+        self,
+        mock_ontology_repo,
+        sample_property_definition,
+    ):
+        """Unresolvable scope_id causes all deltas to be skipped (early-return path)."""
+        # Setup: scope_id is provided but cannot be resolved
+        mock_ontology_repo.get_class.return_value = None  # scope_id lookup fails
+        mock_ontology_repo.list_relationships.return_value = []
+        mock_ontology_repo.get_property_definition_by_identifier.return_value = (
+            sample_property_definition
+        )
+
+        run = PipelineRun(
+            id="run-bad-scope",
+            batch_run_id="batch-bad-scope",
+            implementation_id="default",
+            configuration_slug="connection-default",
+            configuration_version=1,
+            status=PipelineRunStatus.COMPLETED,
+            output_summary={
+                "scope_id": "nonexistent-scope-id",  # Non-empty but unresolvable
+                "deltas": [
+                    {
+                        "operation": "add",
+                        "subject": "Microservice",
+                        "predicate": "depends on",
+                        "object": "Service",
+                        "confidence": 0.95,
+                    },
+                    {
+                        "operation": "add",
+                        "subject": "Service",
+                        "predicate": "depends on",
+                        "object": "API",
+                        "confidence": 0.95,
+                    },
+                ],
+            },
+        )
+
+        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        result = service.apply(run)
+
+        # Verify all deltas are skipped (early-return on unresolvable scope)
+        assert result.relationships_created == 0
+        assert result.relationships_removed == 0
+        assert result.relationships_modified == 0
+        assert result.relationships_skipped == 0  # No individual deltas are processed
+        # Verify repository write methods are never called
+        mock_ontology_repo.save_relationship.assert_not_called()
+        mock_ontology_repo.delete_relationship.assert_not_called()
+        # Verify all result counters are zero (empty ApplyResult)
+        assert result.classes_created == 0
+        assert result.classes_updated == 0
+        assert result.classes_skipped == 0
+        assert result.external_references_created == 0

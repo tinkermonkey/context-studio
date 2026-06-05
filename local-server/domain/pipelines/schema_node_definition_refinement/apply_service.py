@@ -73,11 +73,7 @@ class SchemaDefinitionRefinementApplyService:
             return result
 
         cls.description = new_definition
-        try:
-            self._repo.save_class(cls)
-        except Exception as e:
-            _logger.error(f"Failed to save class with updated definition: {e}")
-            raise
+        self._repo.save_class(cls)
         result.classes_updated += 1
         result.validate()
         return result

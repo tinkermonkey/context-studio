@@ -82,11 +82,7 @@ class SchemaGroundingApplyService:
             result.created_external_reference_ids.append(uri)
 
         if result.external_references_created > 0:
-            try:
-                self._repo.save_class(cls)
-            except Exception as e:
-                _logger.error(f"Failed to save class with external references: {e}")
-                raise
+            self._repo.save_class(cls)
 
         result.validate()
         return result
