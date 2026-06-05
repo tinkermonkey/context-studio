@@ -7,7 +7,6 @@ and property definition resolution via slugification.
 """
 
 from unittest.mock import Mock
-from uuid import uuid4
 
 import pytest
 
@@ -261,7 +260,10 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             return None
 
         mock_ontology_repo.get_class.side_effect = get_class_side_effect
-        mock_ontology_repo.list_classes.return_value = [sample_classes["class-0"], sample_classes["microservice"]]
+        mock_ontology_repo.list_classes.return_value = [
+            sample_classes["class-0"],
+            sample_classes["microservice"],
+        ]
         mock_ontology_repo.get_property_definition_by_identifier.return_value = (
             sample_property_definition
         )
@@ -497,6 +499,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
     ):
         """Delta skipped if class cannot be resolved."""
+
         def get_class_side_effect(ref):
             # Only scope class exists
             if ref == sample_scope_id:

@@ -81,7 +81,8 @@ class SchemaConnectionRefinementApplyService:
             else:
                 _logger.warning(
                     f"Connection refinement scope_id {scope_id} could not be resolved; "
-                    "skipping all deltas to prevent title collisions across unrelated concept schemes"
+                    "skipping all deltas to prevent title collisions across "
+                    "unrelated concept schemes"
                 )
                 result.validate()
                 return result
