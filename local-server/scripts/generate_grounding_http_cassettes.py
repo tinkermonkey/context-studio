@@ -171,9 +171,7 @@ def main():
                         {
                             "request": {
                                 "method": "GET",
-                                "url": (
-                                    f"https://api.conceptnet.io/query?text={label}&limit=10"
-                                ),
+                                "url": f"https://api.conceptnet.io/query?text={label}&limit=10",
                                 "headers": {},
                                 "body": None,
                             },
@@ -214,8 +212,7 @@ def main():
         if failed_fixtures:
             num_failed = len(failed_fixtures)
             raise RuntimeError(
-                f"Failed to generate cassettes for {num_failed} fixture(s): "
-                f"{failed_fixtures}"
+                f"Failed to generate cassettes for {num_failed} fixture(s): " f"{failed_fixtures}"
             )
 
         cassette_path = cassettes_dir / "schema_node_grounding_http.json"
@@ -223,7 +220,9 @@ def main():
         with open(cassette_path, "w") as f:
             json.dump(cassette, f, indent=2)
 
-        print(f"\n✓ Generated HTTP cassette with {len(all_interactions)} interactions at {cassette_path}")
+        print(
+            f"\n✓ Generated HTTP cassette with {len(all_interactions)} interactions at {cassette_path}"
+        )
 
     except (FileNotFoundError, RuntimeError) as e:
         print(f"\n❌ Cassette generation FAILED: {e}")

@@ -349,7 +349,9 @@ class TestQualityE2EChain:
                 # Combine title and content for richer context
                 title = doc.get("title", "")
                 content = doc.get("content", "")
-                doc_text = f"{title}\n{content}".strip() if title and content else (content or title or "")
+                doc_text = (
+                    f"{title}\n{content}".strip() if title and content else (content or title or "")
+                )
                 if doc_text:
                     document_strings.append(doc_text)
             elif isinstance(doc, str):
