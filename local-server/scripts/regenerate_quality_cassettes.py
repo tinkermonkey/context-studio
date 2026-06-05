@@ -27,25 +27,21 @@ from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionReposito
 from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from tests.fakes.fake_embedding_service import FakeEmbeddingService
-from tests.fakes.fake_nlp_processor import FakeNLPProcessor
-from tests.fakes.fake_reference_source import FakeReferenceSource
 from domain.extraction.services import ExtractionService
-from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
-from domain.pipelines.registry import (
-    PipelineConfigurationRegistry,
-    PipelineImplementationRegistry,
-)
 from domain.pipelines.schema_extraction import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
@@ -68,11 +64,14 @@ async def regenerate_individual_extraction_cassettes():
     """Regenerate individual_extraction quality cassettes."""
     print("Regenerating individual_extraction quality cassettes...")
 
+    base_path = Path(__file__).parent.parent
     cassettes_dir = (
-        Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "cassettes" / "individual_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "cassettes"
+        / "individual_extraction"
     )
     fixtures_dir = (
-        Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "individual_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "pipelines"
+        / "individual_extraction"
     )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
@@ -191,11 +190,14 @@ async def regenerate_schema_extraction_cassettes():
     """Regenerate schema_extraction quality cassettes."""
     print("\nRegenerating schema_extraction quality cassettes...")
 
+    base_path = Path(__file__).parent.parent
     cassettes_dir = (
-        Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "cassettes" / "schema_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "cassettes"
+        / "schema_extraction"
     )
     fixtures_dir = (
-        Path(__file__).parent.parent / "tests" / "integration" / "fixtures" / "pipelines" / "schema_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "pipelines"
+        / "schema_extraction"
     )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
@@ -234,8 +236,8 @@ async def regenerate_schema_extraction_cassettes():
             # Setup ontology and databases
             session_factory, db_url = create_test_database()
             ontology_repo = SQLiteOntologyRepository(session_factory)
-            extraction_repo = SQLiteExtractionRepository(session_factory)
-            extraction_run_repo = SQLiteExtractionRunRepository(session_factory)
+            SQLiteExtractionRepository(session_factory)
+            SQLiteExtractionRunRepository(session_factory)
 
             # Create ontology with test data
             tax = Taxonomy(
@@ -269,8 +271,8 @@ async def regenerate_schema_extraction_cassettes():
                 ontology_repo=ontology_repo,
             )
 
-            model = fixture_input.get("model", "claude-opus-4-7")
-            temperature = fixture_input.get("temperature", 0.0)
+            fixture_input.get("model", "claude-opus-4-7")
+            fixture_input.get("temperature", 0.0)
 
             # Convert text to documents list if needed
             pipeline_input = fixture_input.copy()
