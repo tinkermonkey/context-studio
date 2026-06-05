@@ -123,15 +123,17 @@ class ReplayHTTPTransport(httpx.AsyncBaseTransport):
     """Replays HTTP responses from a recorded cassette file.
 
     All responses are deterministic, requiring zero network access.
+    Supports both sequential replay (legacy) and URL-based lookup (new).
     Raises an error if a request is not found in the cassette.
     """
 
-    def __init__(self, cassette_path: Path) -> None:
+    def __init__(self, cassette_path: Path, match_by_url: bool = False) -> None:
         """
         Initialize the replay transport.
 
         Args:
             cassette_path: Path to the cassette JSON file
+            match_by_url: If True, match requests by URL. If False, use sequential replay (default).
 
         Raises:
             FileNotFoundError: If cassette does not exist
@@ -142,22 +144,38 @@ class ReplayHTTPTransport(httpx.AsyncBaseTransport):
             cassette = json.load(f)
             self._interactions: list[dict[str, Any]] = cassette.get("interactions", [])
         self._interaction_index = 0
+        self._match_by_url = match_by_url
+
+        if match_by_url:
+            self._url_map: dict[str, dict[str, Any]] = {}
+            for interaction in self._interactions:
+                url = interaction["request"]["url"]
+                self._url_map[url] = interaction["response"]
 
     async def handle_async_request(
         self,
         request: httpx.Request,
     ) -> httpx.Response:
         """Replay a response from the cassette."""
-        if self._interaction_index >= len(self._interactions):
-            raise RuntimeError(
-                f"Cassette exhausted: tried to replay interaction {self._interaction_index} "
-                f"but cassette only has {len(self._interactions)} interactions"
-            )
+        if self._match_by_url:
+            url = str(request.url)
+            if url not in self._url_map:
+                raise RuntimeError(
+                    f"No cassette response for URL: {url}. "
+                    f"Cassette contains {len(self._url_map)} URLs."
+                )
+            response_data = self._url_map[url]
+        else:
+            if self._interaction_index >= len(self._interactions):
+                raise RuntimeError(
+                    f"Cassette exhausted: tried to replay interaction {self._interaction_index} "
+                    f"but cassette only has {len(self._interactions)} interactions"
+                )
 
-        interaction = self._interactions[self._interaction_index]
-        self._interaction_index += 1
+            interaction = self._interactions[self._interaction_index]
+            self._interaction_index += 1
+            response_data = interaction["response"]
 
-        response_data = interaction["response"]
         return httpx.Response(
             status_code=response_data["status_code"],
             headers=response_data.get("headers", {}),

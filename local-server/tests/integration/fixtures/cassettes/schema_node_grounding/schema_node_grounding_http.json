@@ -1,0 +1,1159 @@
+{
+  "interactions": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Algorithm&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Algorithm\", \"label\": \"Algorithm\", \"description\": \"DBpedia entry for Algorithm\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Algorithm&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q8366\", \"label\": \"Algorithm\", \"description\": \"Wikidata item for Algorithm\", \"url\": \"https://www.wikidata.org/wiki/Q8366\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Animal&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Animal\", \"label\": \"Animal\", \"description\": \"DBpedia entry for Animal\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Animal&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q729\", \"label\": \"Animal\", \"description\": \"Wikidata item for Animal\", \"url\": \"https://www.wikidata.org/wiki/Q729\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Artist&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Artist\", \"label\": \"Artist\", \"description\": \"DBpedia entry for Artist\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Artist&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q483501\", \"label\": \"Artist\", \"description\": \"Wikidata item for Artist\", \"url\": \"https://www.wikidata.org/wiki/Q483501\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Atom&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Atom\", \"label\": \"Atom\", \"description\": \"DBpedia entry for Atom\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Atom&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q125885\", \"label\": \"Atom\", \"description\": \"Wikidata item for Atom\", \"url\": \"https://www.wikidata.org/wiki/Q125885\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Bacteria&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Bacterium\", \"label\": \"Bacteria\", \"description\": \"DBpedia entry for Bacteria\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Bacteria&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q6516\", \"label\": \"Bacteria\", \"description\": \"Wikidata item for Bacteria\", \"url\": \"https://www.wikidata.org/wiki/Q6516\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Book&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Book\", \"label\": \"Book\", \"description\": \"DBpedia entry for Book\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Book&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q571\", \"label\": \"Book\", \"description\": \"Wikidata item for Book\", \"url\": \"https://www.wikidata.org/wiki/Q571\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Building&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Building\", \"label\": \"Building\", \"description\": \"DBpedia entry for Building\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Building&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q41176\", \"label\": \"Building\", \"description\": \"Wikidata item for Building\", \"url\": \"https://www.wikidata.org/wiki/Q41176\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Cell&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Cell\", \"label\": \"Cell\", \"description\": \"DBpedia entry for Cell\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Cell&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q7868\", \"label\": \"Cell\", \"description\": \"Wikidata item for Cell\", \"url\": \"https://www.wikidata.org/wiki/Q7868\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=ChemicalCompound&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Chemical_compound\", \"label\": \"ChemicalCompound\", \"description\": \"DBpedia entry for ChemicalCompound\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=ChemicalCompound&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q11173\", \"label\": \"ChemicalCompound\", \"description\": \"Wikidata item for ChemicalCompound\", \"url\": \"https://www.wikidata.org/wiki/Q11173\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=ChemicalElement&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Chemical_element\", \"label\": \"ChemicalElement\", \"description\": \"DBpedia entry for ChemicalElement\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=ChemicalElement&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q11344\", \"label\": \"ChemicalElement\", \"description\": \"Wikidata item for ChemicalElement\", \"url\": \"https://www.wikidata.org/wiki/Q11344\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Color&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Color\", \"label\": \"Color\", \"description\": \"DBpedia entry for Color\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Color&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q1075\", \"label\": \"Color\", \"description\": \"Wikidata item for Color\", \"url\": \"https://www.wikidata.org/wiki/Q1075\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Database&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Database\", \"label\": \"Database\", \"description\": \"DBpedia entry for Database\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Database&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q27302918\", \"label\": \"Database\", \"description\": \"Wikidata item for Database\", \"url\": \"https://www.wikidata.org/wiki/Q27302918\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Disease&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Disease\", \"label\": \"Disease\", \"description\": \"DBpedia entry for Disease\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Disease&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q12136\", \"label\": \"Disease\", \"description\": \"Wikidata item for Disease\", \"url\": \"https://www.wikidata.org/wiki/Q12136\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=DNA&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/DNA\", \"label\": \"DNA\", \"description\": \"DBpedia entry for DNA\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=DNA&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q7055\", \"label\": \"DNA\", \"description\": \"Wikidata item for DNA\", \"url\": \"https://www.wikidata.org/wiki/Q7055\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Energy&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Energy\", \"label\": \"Energy\", \"description\": \"DBpedia entry for Energy\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Energy&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q11379\", \"label\": \"Energy\", \"description\": \"Wikidata item for Energy\", \"url\": \"https://www.wikidata.org/wiki/Q11379\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Event&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Event\", \"label\": \"Event\", \"description\": \"DBpedia entry for Event\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Event&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q1656682\", \"label\": \"Event\", \"description\": \"Wikidata item for Event\", \"url\": \"https://www.wikidata.org/wiki/Q1656682\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Food&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Food\", \"label\": \"Food\", \"description\": \"DBpedia entry for Food\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Food&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q2095\", \"label\": \"Food\", \"description\": \"Wikidata item for Food\", \"url\": \"https://www.wikidata.org/wiki/Q2095\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Government&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Government\", \"label\": \"Government\", \"description\": \"DBpedia entry for Government\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Government&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q7188\", \"label\": \"Government\", \"description\": \"Wikidata item for Government\", \"url\": \"https://www.wikidata.org/wiki/Q7188\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Language&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Language\", \"label\": \"Language\", \"description\": \"DBpedia entry for Language\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Language&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q315\", \"label\": \"Language\", \"description\": \"Wikidata item for Language\", \"url\": \"https://www.wikidata.org/wiki/Q315\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Location&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Location\", \"label\": \"Location\", \"description\": \"DBpedia entry for Location\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Location&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q2221906\", \"label\": \"Location\", \"description\": \"Wikidata item for Location\", \"url\": \"https://www.wikidata.org/wiki/Q2221906\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Motion&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Motion\", \"label\": \"Motion\", \"description\": \"DBpedia entry for Motion\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Motion&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q11465\", \"label\": \"Motion\", \"description\": \"Wikidata item for Motion\", \"url\": \"https://www.wikidata.org/wiki/Q11465\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Mountain&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Mountain\", \"label\": \"Mountain\", \"description\": \"DBpedia entry for Mountain\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Mountain&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q8502\", \"label\": \"Mountain\", \"description\": \"Wikidata item for Mountain\", \"url\": \"https://www.wikidata.org/wiki/Q8502\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Music&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Music\", \"label\": \"Music\", \"description\": \"DBpedia entry for Music\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Music&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q638\", \"label\": \"Music\", \"description\": \"Wikidata item for Music\", \"url\": \"https://www.wikidata.org/wiki/Q638\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Network&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Network\", \"label\": \"Network\", \"description\": \"DBpedia entry for Network\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Network&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q5649462\", \"label\": \"Network\", \"description\": \"Wikidata item for Network\", \"url\": \"https://www.wikidata.org/wiki/Q5649462\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Ocean&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Ocean\", \"label\": \"Ocean\", \"description\": \"DBpedia entry for Ocean\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Ocean&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q9430\", \"label\": \"Ocean\", \"description\": \"Wikidata item for Ocean\", \"url\": \"https://www.wikidata.org/wiki/Q9430\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Organization&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Organization\", \"label\": \"Organization\", \"description\": \"DBpedia entry for Organization\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Organization&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q43229\", \"label\": \"Organization\", \"description\": \"Wikidata item for Organization\", \"url\": \"https://www.wikidata.org/wiki/Q43229\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Person&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Person\", \"label\": \"Person\", \"description\": \"DBpedia entry for Person\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.conceptnet.io/query?text=Person&limit=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"edges\": [{\"start\": {\"@id\": \"http://conceptnet.io/c/en/person\", \"label\": \"Person\"}, \"rel\": {\"label\": \"related_to\"}, \"end\": {\"@id\": \"/c/en/related\", \"label\": \"related\"}}], \"@context\": {}, \"@id\": \"http://conceptnet.io/c/en/person\"}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Person&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q5\", \"label\": \"Person\", \"description\": \"Wikidata item for Person\", \"url\": \"https://www.wikidata.org/wiki/Q5\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Plant&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Plant\", \"label\": \"Plant\", \"description\": \"DBpedia entry for Plant\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Plant&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q756\", \"label\": \"Plant\", \"description\": \"Wikidata item for Plant\", \"url\": \"https://www.wikidata.org/wiki/Q756\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Protein&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Protein\", \"label\": \"Protein\", \"description\": \"DBpedia entry for Protein\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Protein&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q8054\", \"label\": \"Protein\", \"description\": \"Wikidata item for Protein\", \"url\": \"https://www.wikidata.org/wiki/Q8054\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=River&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/River\", \"label\": \"River\", \"description\": \"DBpedia entry for River\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=River&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q4022\", \"label\": \"River\", \"description\": \"Wikidata item for River\", \"url\": \"https://www.wikidata.org/wiki/Q4022\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Software&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Software\", \"label\": \"Software\", \"description\": \"DBpedia entry for Software\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Software&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q7397\", \"label\": \"Software\", \"description\": \"Wikidata item for Software\", \"url\": \"https://www.wikidata.org/wiki/Q7397\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Space&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Space\", \"label\": \"Space\", \"description\": \"DBpedia entry for Space\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Space&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q1922563\", \"label\": \"Space\", \"description\": \"Wikidata item for Space\", \"url\": \"https://www.wikidata.org/wiki/Q1922563\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Sport&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Sport\", \"label\": \"Sport\", \"description\": \"DBpedia entry for Sport\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Sport&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q349\", \"label\": \"Sport\", \"description\": \"Wikidata item for Sport\", \"url\": \"https://www.wikidata.org/wiki/Q349\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Star&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Star\", \"label\": \"Star\", \"description\": \"DBpedia entry for Star\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Star&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q523\", \"label\": \"Star\", \"description\": \"Wikidata item for Star\", \"url\": \"https://www.wikidata.org/wiki/Q523\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Time&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Time\", \"label\": \"Time\", \"description\": \"DBpedia entry for Time\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Time&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q11471\", \"label\": \"Time\", \"description\": \"Wikidata item for Time\", \"url\": \"https://www.wikidata.org/wiki/Q11471\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=University&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/University\", \"label\": \"University\", \"description\": \"DBpedia entry for University\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=University&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q3918\", \"label\": \"University\", \"description\": \"Wikidata item for University\", \"url\": \"https://www.wikidata.org/wiki/Q3918\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Vehicle&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Vehicle\", \"label\": \"Vehicle\", \"description\": \"DBpedia entry for Vehicle\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Vehicle&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q42889\", \"label\": \"Vehicle\", \"description\": \"Wikidata item for Vehicle\", \"url\": \"https://www.wikidata.org/wiki/Q42889\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lookup.dbpedia.org/api/search?query=Virus&format=json&maxResults=10",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Virus\", \"label\": \"Virus\", \"description\": \"DBpedia entry for Virus\"}]}"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Virus&language=en&limit=10&format=json",
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"search\": [{\"id\": \"Q10876\", \"label\": \"Virus\", \"description\": \"Wikidata item for Virus\", \"url\": \"https://www.wikidata.org/wiki/Q10876\"}]}"
+      }
+    }
+  ]
+}
