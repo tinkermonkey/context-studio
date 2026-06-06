@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Chip } from "@tinkermonkey/heimdall-ui";
 import type { SchemaNodeGroundingOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import "./ReviewComponents.css";
 
 interface GroundingReviewProps {
   outputSummary: SchemaNodeGroundingOutputSummary | null;
@@ -17,11 +18,7 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
     return (
       <div
         data-testid="grounding-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No grounding candidates available
       </div>
@@ -34,11 +31,7 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
     return (
       <div
         data-testid="grounding-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No nodes to ground
       </div>
@@ -64,40 +57,24 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
   return (
     <div
       data-testid="grounding-review"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
+      className="grounding-review"
     >
       {groundedNodes.map((node) => (
         <div
           key={node.node_id}
           data-testid={`grounding-node-${node.node_id}`}
-          style={{
-            padding: "12px",
-            border: "1px solid rgb(var(--canvas-border))",
-            borderRadius: "4px",
-            backgroundColor: "rgb(var(--canvas-bg-hover))",
-          }}
+          className="grounding-node-section"
         >
-          <div style={{ marginBottom: "12px" }}>
-            <span style={{ fontWeight: 600, fontSize: "13px" }}>
+          <div className="grounding-node-header">
+            <span className="grounding-node-label">
               {node.node_label}
             </span>
-            <span
-              style={{
-                color: "rgb(var(--canvas-fg-3))",
-                fontSize: "11px",
-                marginLeft: "8px",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
+            <span className="grounding-node-id">
               {node.node_id}
             </span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div className="grounding-candidates-list">
             {node.candidates.map((candidate, idx) => {
               const candidateKey = `${node.node_id}-${idx}`;
               const status = candidateStatus[candidateKey] || "pending";
@@ -106,77 +83,28 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
                 <div
                   key={candidateKey}
                   data-testid={`grounding-candidate-${candidateKey}`}
-                  style={{
-                    padding: "8px",
-                    backgroundColor: "rgb(var(--canvas-bg))",
-                    border: "1px solid rgb(var(--canvas-border))",
-                    borderRadius: "3px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                    opacity:
-                      status === "rejected"
-                        ? 0.5
-                        : status === "accepted"
-                          ? 1
-                          : 0.75,
-                  }}
+                  className="grounding-candidate-card"
+                  data-status={status}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "8px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        flex: 1,
-                        minWidth: 0,
-                      }}
-                    >
-                      <span style={{ fontWeight: 500, fontSize: "13px" }}>
+                  <div className="grounding-candidate-header">
+                    <div className="grounding-candidate-info">
+                      <span className="grounding-candidate-label">
                         {candidate.label}
                       </span>
                       <Chip
                         variant="neutral"
-                        style={{
-                          padding: "2px 6px",
-                          fontSize: "10px",
-                        }}
                       >
                         {candidate.source}
                       </Chip>
                     </div>
-                    <div style={{ display: "flex", gap: "4px" }}>
+                    <div className="grounding-candidate-buttons">
                       <button
                         type="button"
                         data-testid={`grounding-accept-${candidateKey}`}
                         onClick={() => acceptCandidate(candidateKey)}
                         aria-label={`Accept candidate: ${status}`}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "11px",
-                          fontWeight: 500,
-                          border:
-                            status === "accepted"
-                              ? "1px solid rgb(var(--status-emerald))"
-                              : "1px solid rgb(var(--canvas-border))",
-                          backgroundColor:
-                            status === "accepted"
-                              ? "rgb(var(--status-emerald) / 0.1)"
-                              : "transparent",
-                          color:
-                            status === "accepted"
-                              ? "rgb(var(--status-emerald))"
-                              : "rgb(var(--canvas-fg-2))",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                        }}
+                        className="candidate-action-button"
+                        data-accepted={status === "accepted"}
                       >
                         ✓ Accept
                       </button>
@@ -185,25 +113,8 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
                         data-testid={`grounding-reject-${candidateKey}`}
                         onClick={() => rejectCandidate(candidateKey)}
                         aria-label={`Reject candidate: ${status}`}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "11px",
-                          fontWeight: 500,
-                          border:
-                            status === "rejected"
-                              ? "1px solid rgb(var(--status-rose))"
-                              : "1px solid rgb(var(--canvas-border))",
-                          backgroundColor:
-                            status === "rejected"
-                              ? "rgb(var(--status-rose) / 0.1)"
-                              : "transparent",
-                          color:
-                            status === "rejected"
-                              ? "rgb(var(--status-rose))"
-                              : "rgb(var(--canvas-fg-2))",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                        }}
+                        className="candidate-action-button"
+                        data-rejected={status === "rejected"}
                       >
                         ✕ Reject
                       </button>
@@ -211,36 +122,19 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
                   </div>
 
                   {candidate.description && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "rgb(var(--canvas-fg-3))",
-                      }}
-                    >
+                    <span className="grounding-candidate-description">
                       {candidate.description}
                     </span>
                   )}
 
                   {candidate.match_rationale && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "rgb(var(--canvas-fg-2))",
-                        fontStyle: "italic",
-                      }}
-                    >
+                    <span className="grounding-candidate-rationale">
                       Rationale: {candidate.match_rationale}
                     </span>
                   )}
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
-                  >
-                    <span style={{ fontSize: "10px" }}>
+                  <div className="grounding-candidate-score">
+                    <span>
                       Score: {(candidate.confidence * 100).toFixed(0)}%
                     </span>
                   </div>

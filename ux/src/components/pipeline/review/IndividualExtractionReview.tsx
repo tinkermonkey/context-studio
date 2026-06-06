@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Table } from "@tinkermonkey/heimdall-ui";
 import type { IndividualExtractionOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import "./ReviewComponents.css";
 
 interface IndividualExtractionReviewProps {
   outputSummary: IndividualExtractionOutputSummary | null;
@@ -15,11 +16,7 @@ export function IndividualExtractionReview({
     return (
       <div
         data-testid="individual-extraction-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No extraction candidates available
       </div>
@@ -32,11 +29,7 @@ export function IndividualExtractionReview({
     return (
       <div
         data-testid="individual-extraction-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No triples extracted
       </div>
@@ -57,7 +50,7 @@ export function IndividualExtractionReview({
   return (
     <div
       data-testid="individual-extraction-review"
-      style={{ display: "flex", flexDirection: "column" }}
+      className="individual-extraction-review"
     >
       <Table
         columns={[
@@ -65,19 +58,14 @@ export function IndividualExtractionReview({
             key: "subject" as const,
             label: "Subject",
             render: (v) => (
-              <span style={{ fontWeight: 500 }}>{String(v)}</span>
+              <span className="individual-table-cell-label">{String(v)}</span>
             ),
           },
           {
             key: "predicate" as const,
             label: "Predicate",
             render: (v) => (
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "12px",
-                }}
-              >
+              <span className="individual-table-cell-mono">
                 {String(v)}
               </span>
             ),
@@ -86,7 +74,7 @@ export function IndividualExtractionReview({
             key: "object" as const,
             label: "Object",
             render: (v) => (
-              <span style={{ fontWeight: 500 }}>{String(v)}</span>
+              <span className="individual-table-cell-label">{String(v)}</span>
             ),
           },
           {
@@ -94,7 +82,7 @@ export function IndividualExtractionReview({
             label: "Confidence",
             width: "100px",
             render: (v) => (
-              <span style={{ textAlign: "center" }}>
+              <span className="individual-table-cell-confidence">
                 {(Number(v) * 100).toFixed(0)}%
               </span>
             ),
@@ -104,13 +92,7 @@ export function IndividualExtractionReview({
             label: "Source",
             width: "120px",
             render: (v) => (
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  color: "rgb(var(--canvas-fg-3))",
-                }}
-              >
+              <span className="individual-table-cell-mono">
                 {String(v)}
               </span>
             ),
@@ -124,22 +106,14 @@ export function IndividualExtractionReview({
         emptyState={<span>No triples extracted</span>}
       />
 
-      <div
-        style={{
-          padding: "8px",
-          borderTop: "1px solid rgb(var(--canvas-border))",
-          display: "flex",
-          alignItems: "center",
-          fontSize: "12px",
-        }}
-      >
+      <div className="individual-select-all-footer">
         <input
           type="checkbox"
           data-testid="individual-extraction-select-all"
           checked={allSelected}
           onChange={handleSelectAll}
           aria-label="Select all triples"
-          style={{ marginRight: "8px", cursor: "pointer" }}
+          className="individual-select-all-checkbox"
         />
         <span>
           {selectedTriples.length === 0

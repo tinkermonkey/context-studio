@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Table, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import type { SchemaExtractionOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import "./ReviewComponents.css";
 
 interface SchemaExtractionReviewProps {
   outputSummary: SchemaExtractionOutputSummary | null;
@@ -22,11 +23,7 @@ export function SchemaExtractionReview({
     return (
       <div
         data-testid="schema-extraction-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No extraction candidates available
       </div>
@@ -72,7 +69,7 @@ export function SchemaExtractionReview({
   return (
     <div
       data-testid="schema-extraction-review"
-      style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+      className="schema-extraction-review"
     >
       <SegmentedControl
         value={activeTab}
@@ -88,15 +85,12 @@ export function SchemaExtractionReview({
       />
 
       {activeTab === "classes" && (
-        <div data-testid="classes-table-container">
+        <div
+          data-testid="classes-table-container"
+          className="schema-table-container"
+        >
           {classes.length === 0 ? (
-            <div
-              style={{
-                padding: "16px",
-                color: "rgb(var(--canvas-fg-3))",
-                fontSize: "12px",
-              }}
-            >
+            <div className="review-empty">
               No classes extracted
             </div>
           ) : (
@@ -106,14 +100,14 @@ export function SchemaExtractionReview({
                   key: "label" as const,
                   label: "Label",
                   render: (v) => (
-                    <span style={{ fontWeight: 500 }}>{String(v)}</span>
+                    <span className="table-cell-label">{String(v)}</span>
                   ),
                 },
                 {
                   key: "description" as const,
                   label: "Description",
                   render: (v) => (
-                    <span style={{ color: "rgb(var(--canvas-fg-3))" }}>
+                    <span className="table-cell-description">
                       {String(v || "—")}
                     </span>
                   ),
@@ -123,7 +117,7 @@ export function SchemaExtractionReview({
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span style={{ textAlign: "center" }}>
+                    <span className="table-cell-confidence">
                       {(Number(v) * 100).toFixed(0)}%
                     </span>
                   ),
@@ -138,22 +132,14 @@ export function SchemaExtractionReview({
             />
           )}
           {classes.length > 0 && (
-            <div
-              style={{
-                padding: "8px",
-                borderTop: "1px solid rgb(var(--canvas-border))",
-                display: "flex",
-                alignItems: "center",
-                fontSize: "12px",
-              }}
-            >
+            <div className="schema-select-all-footer">
               <input
                 type="checkbox"
                 data-testid="schema-extraction-select-all-classes"
                 checked={allClassesSelected}
                 onChange={handleSelectAllClasses}
                 aria-label="Select all classes"
-                style={{ marginRight: "8px", cursor: "pointer" }}
+                className="schema-select-all-checkbox"
               />
               <span>
                 {selectedClasses.length === 0
@@ -166,15 +152,12 @@ export function SchemaExtractionReview({
       )}
 
       {activeTab === "properties" && (
-        <div data-testid="properties-table-container">
+        <div
+          data-testid="properties-table-container"
+          className="schema-table-container"
+        >
           {properties.length === 0 ? (
-            <div
-              style={{
-                padding: "16px",
-                color: "rgb(var(--canvas-fg-3))",
-                fontSize: "12px",
-              }}
-            >
+            <div className="review-empty">
               No properties extracted
             </div>
           ) : (
@@ -184,14 +167,14 @@ export function SchemaExtractionReview({
                   key: "label" as const,
                   label: "Label",
                   render: (v) => (
-                    <span style={{ fontWeight: 500 }}>{String(v)}</span>
+                    <span className="table-cell-label">{String(v)}</span>
                   ),
                 },
                 {
                   key: "description" as const,
                   label: "Description",
                   render: (v) => (
-                    <span style={{ color: "rgb(var(--canvas-fg-3))" }}>
+                    <span className="table-cell-description">
                       {String(v || "—")}
                     </span>
                   ),
@@ -201,7 +184,7 @@ export function SchemaExtractionReview({
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span style={{ textAlign: "center" }}>
+                    <span className="table-cell-confidence">
                       {(Number(v) * 100).toFixed(0)}%
                     </span>
                   ),
@@ -216,22 +199,14 @@ export function SchemaExtractionReview({
             />
           )}
           {properties.length > 0 && (
-            <div
-              style={{
-                padding: "8px",
-                borderTop: "1px solid rgb(var(--canvas-border))",
-                display: "flex",
-                alignItems: "center",
-                fontSize: "12px",
-              }}
-            >
+            <div className="schema-select-all-footer">
               <input
                 type="checkbox"
                 data-testid="schema-extraction-select-all-properties"
                 checked={allPropertiesSelected}
                 onChange={handleSelectAllProperties}
                 aria-label="Select all properties"
-                style={{ marginRight: "8px", cursor: "pointer" }}
+                className="schema-select-all-checkbox"
               />
               <span>
                 {selectedProperties.length === 0
@@ -244,15 +219,12 @@ export function SchemaExtractionReview({
       )}
 
       {activeTab === "relationships" && (
-        <div data-testid="relationships-table-container">
+        <div
+          data-testid="relationships-table-container"
+          className="schema-table-container"
+        >
           {relationships.length === 0 ? (
-            <div
-              style={{
-                padding: "16px",
-                color: "rgb(var(--canvas-fg-3))",
-                fontSize: "12px",
-              }}
-            >
+            <div className="review-empty">
               No relationships extracted
             </div>
           ) : (
@@ -262,19 +234,14 @@ export function SchemaExtractionReview({
                   key: "source_label" as const,
                   label: "Source",
                   render: (v) => (
-                    <span style={{ fontWeight: 500 }}>{String(v)}</span>
+                    <span className="table-cell-label">{String(v)}</span>
                   ),
                 },
                 {
                   key: "relationship_type" as const,
                   label: "Type",
                   render: (v) => (
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "12px",
-                      }}
-                    >
+                    <span className="table-cell-mono">
                       {String(v)}
                     </span>
                   ),
@@ -283,7 +250,7 @@ export function SchemaExtractionReview({
                   key: "target_label" as const,
                   label: "Target",
                   render: (v) => (
-                    <span style={{ fontWeight: 500 }}>{String(v)}</span>
+                    <span className="table-cell-label">{String(v)}</span>
                   ),
                 },
                 {
@@ -291,7 +258,7 @@ export function SchemaExtractionReview({
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span style={{ textAlign: "center" }}>
+                    <span className="table-cell-confidence">
                       {(Number(v) * 100).toFixed(0)}%
                     </span>
                   ),
@@ -306,22 +273,14 @@ export function SchemaExtractionReview({
             />
           )}
           {relationships.length > 0 && (
-            <div
-              style={{
-                padding: "8px",
-                borderTop: "1px solid rgb(var(--canvas-border))",
-                display: "flex",
-                alignItems: "center",
-                fontSize: "12px",
-              }}
-            >
+            <div className="schema-select-all-footer">
               <input
                 type="checkbox"
                 data-testid="schema-extraction-select-all-relationships"
                 checked={allRelationshipsSelected}
                 onChange={handleSelectAllRelationships}
                 aria-label="Select all relationships"
-                style={{ marginRight: "8px", cursor: "pointer" }}
+                className="schema-select-all-checkbox"
               />
               <span>
                 {selectedRelationships.length === 0

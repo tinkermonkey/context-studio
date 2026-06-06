@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SchemaNodeDefinitionRefinementOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import "./ReviewComponents.css";
 
 interface DefinitionRefinementReviewProps {
   outputSummary: SchemaNodeDefinitionRefinementOutputSummary | null;
@@ -16,11 +17,7 @@ export function DefinitionRefinementReview({
     return (
       <div
         data-testid="definition-refinement-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No refinement candidates available
       </div>
@@ -34,11 +31,7 @@ export function DefinitionRefinementReview({
     return (
       <div
         data-testid="definition-refinement-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No definitions available
       </div>
@@ -51,26 +44,13 @@ export function DefinitionRefinementReview({
     <div
       data-testid="definition-refinement-review"
       role="radiogroup"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-      }}
+      className="definition-refinement-review"
     >
       {currentDefinition && (
         <div
           data-testid="definition-refinement-current"
-          style={{
-            padding: "12px",
-            border:
-              selectedOption === "current"
-                ? "2px solid rgb(var(--accent-cyan))"
-                : "1px solid rgb(var(--canvas-border))",
-            borderRadius: "4px",
-            backgroundColor: "rgb(var(--canvas-bg-hover))",
-            cursor: "pointer",
-            transition: "border-color 0.2s",
-          }}
+          className="definition-option-card"
+          data-selected={selectedOption === "current"}
           onClick={() => setSelectedOption("current")}
           role="radio"
           aria-checked={selectedOption === "current"}
@@ -82,14 +62,7 @@ export function DefinitionRefinementReview({
             }
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "8px",
-              marginBottom: "8px",
-            }}
-          >
+          <div className="definition-option-header">
             <input
               type="radio"
               data-testid="definition-refinement-radio-current"
@@ -98,20 +71,13 @@ export function DefinitionRefinementReview({
               checked={selectedOption === "current"}
               onChange={() => setSelectedOption("current")}
               aria-label="Keep current definition"
-              style={{ marginTop: "2px", cursor: "pointer" }}
+              className="definition-radio-input"
             />
-            <span style={{ fontWeight: 600, fontSize: "13px" }}>
+            <span className="definition-option-label">
               Current Definition
             </span>
           </div>
-          <p
-            style={{
-              margin: 0,
-              fontSize: "12px",
-              color: "rgb(var(--canvas-fg-1))",
-              lineHeight: 1.5,
-            }}
-          >
+          <p className="definition-text">
             {currentDefinition}
           </p>
         </div>
@@ -121,17 +87,8 @@ export function DefinitionRefinementReview({
         <div
           key={idx}
           data-testid={`definition-refinement-candidate-${idx}`}
-          style={{
-            padding: "12px",
-            border:
-              selectedOption === idx
-                ? "2px solid rgb(var(--accent-cyan))"
-                : "1px solid rgb(var(--canvas-border))",
-            borderRadius: "4px",
-            backgroundColor: "rgb(var(--canvas-bg-hover))",
-            cursor: "pointer",
-            transition: "border-color 0.2s",
-          }}
+          className="definition-option-card"
+          data-selected={selectedOption === idx}
           onClick={() => setSelectedOption(idx)}
           role="radio"
           aria-checked={selectedOption === idx}
@@ -144,22 +101,10 @@ export function DefinitionRefinementReview({
           }}
         >
           <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "8px",
-              marginBottom: "8px",
-              justifyContent: "space-between",
-            }}
+            className="definition-option-title"
+            style={{ justifyContent: "space-between" }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "8px",
-                flex: 1,
-              }}
-            >
+            <div className="definition-option-title">
               <input
                 type="radio"
                 data-testid={`definition-refinement-radio-candidate-${idx}`}
@@ -168,45 +113,17 @@ export function DefinitionRefinementReview({
                 checked={selectedOption === idx}
                 onChange={() => setSelectedOption(idx)}
                 aria-label={`Choose candidate ${idx + 1}`}
-                style={{ marginTop: "2px", cursor: "pointer" }}
+                className="definition-radio-input"
               />
               <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    marginBottom: "4px",
-                  }}
-                >
+                <div className="definition-candidate-number">
                   Candidate {idx + 1}
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "4px",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      padding: "2px 6px",
-                      backgroundColor: "rgb(var(--canvas-bg))",
-                      border: "1px solid rgb(var(--canvas-border))",
-                      borderRadius: "2px",
-                    }}
-                  >
+                <div className="definition-candidate-badges">
+                  <span className="definition-candidate-badge">
                     Score: {(candidate.confidence * 100).toFixed(0)}%
                   </span>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      padding: "2px 6px",
-                      backgroundColor: "rgb(var(--canvas-bg))",
-                      border: "1px solid rgb(var(--canvas-border))",
-                      borderRadius: "2px",
-                    }}
-                  >
+                  <span className="definition-candidate-badge">
                     {candidate.source}
                   </span>
                 </div>
@@ -215,28 +132,14 @@ export function DefinitionRefinementReview({
           </div>
 
           <p
-            style={{
-              margin: 0,
-              fontSize: "12px",
-              color: "rgb(var(--canvas-fg-1))",
-              lineHeight: 1.5,
-              marginBottom: candidate.rationale ? "8px" : 0,
-            }}
+            className="definition-text"
+            style={{ marginBottom: candidate.rationale ? "8px" : 0 }}
           >
             {candidate.definition}
           </p>
 
           {candidate.rationale && (
-            <div
-              style={{
-                fontSize: "11px",
-                color: "rgb(var(--canvas-fg-3))",
-                fontStyle: "italic",
-                paddingTop: "8px",
-                borderTop: "1px solid rgb(var(--canvas-border))",
-                marginTop: "8px",
-              }}
-            >
+            <div className="definition-rationale">
               <strong>Rationale:</strong> {candidate.rationale}
             </div>
           )}

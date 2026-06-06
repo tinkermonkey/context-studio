@@ -4,6 +4,7 @@ import type {
   SchemaNodeConnectionRefinementOutputSummary,
   Delta,
 } from "@/api/hooks/pipeline/outputSummaryTypes";
+import "./ReviewComponents.css";
 
 interface ConnectionRefinementReviewProps {
   outputSummary: SchemaNodeConnectionRefinementOutputSummary | null;
@@ -22,11 +23,7 @@ export function ConnectionRefinementReview({
     return (
       <div
         data-testid="connection-refinement-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No refinement candidates available
       </div>
@@ -39,11 +36,7 @@ export function ConnectionRefinementReview({
     return (
       <div
         data-testid="connection-refinement-empty"
-        style={{
-          padding: "16px",
-          color: "rgb(var(--canvas-fg-3))",
-          fontSize: "12px",
-        }}
+        className="review-empty"
       >
         No connection deltas
       </div>
@@ -103,80 +96,34 @@ export function ConnectionRefinementReview({
       <div
         key={deltaKey}
         data-testid={`connection-delta-${deltaKey}`}
+        className="connection-delta-card"
         style={{
-          padding: "12px",
           backgroundColor: bgColor,
-          border: `1px solid ${borderColor}`,
-          borderRadius: "4px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          opacity: status === "rejected" ? 0.5 : 1,
+          borderColor: borderColor,
         }}
+        data-rejected={status === "rejected"}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "8px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
+        <div className="connection-delta-header">
+          <div className="connection-delta-details">
             <span
-              style={{
-                fontWeight: 600,
-                fontSize: "11px",
-                textTransform: "uppercase",
-                color: `rgb(var(--status-${operationColor}))`,
-              }}
+              className="connection-delta-operation-label"
+              style={{ color: `rgb(var(--status-${operationColor}))` }}
             >
               {delta.operation}
             </span>
 
             {delta.operation === "modify" ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  minWidth: 0,
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
+              <div className="connection-delta-triple">
+                <span className="connection-delta-triple-text">
                   {delta.source_label || delta.source_id}
                 </span>
-                <span style={{ color: "rgb(var(--canvas-fg-3))" }}>→</span>
-                <span
-                  style={{
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
+                <span className="connection-delta-separator">→</span>
+                <span className="connection-delta-triple-text">
                   {delta.target_label || delta.target_id}
                 </span>
               </div>
             ) : (
-              <span style={{ fontWeight: 500, fontSize: "12px" }}>
+              <span className="connection-delta-triple-text">
                 {delta.operation === "add"
                   ? `${delta.source_label || delta.source_id} → ${delta.target_label || delta.target_id}`
                   : `${delta.source_label || delta.source_id} ← ${delta.target_label || delta.target_id}`}
@@ -184,31 +131,14 @@ export function ConnectionRefinementReview({
             )}
           </div>
 
-          <div style={{ display: "flex", gap: "4px" }}>
+          <div className="connection-delta-buttons">
             <button
               type="button"
               data-testid={`connection-accept-${deltaKey}`}
               onClick={() => acceptDelta(deltaKey)}
               aria-label={`Accept delta: ${status}`}
-              style={{
-                padding: "4px 8px",
-                fontSize: "11px",
-                fontWeight: 500,
-                border:
-                  status === "accepted"
-                    ? "1px solid rgb(var(--status-emerald))"
-                    : "1px solid rgb(var(--canvas-border))",
-                backgroundColor:
-                  status === "accepted"
-                    ? "rgb(var(--status-emerald) / 0.1)"
-                    : "transparent",
-                color:
-                  status === "accepted"
-                    ? "rgb(var(--status-emerald))"
-                    : "rgb(var(--canvas-fg-2))",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
+              className="candidate-action-button"
+              data-accepted={status === "accepted"}
             >
               ✓ Accept
             </button>
@@ -217,47 +147,18 @@ export function ConnectionRefinementReview({
               data-testid={`connection-reject-${deltaKey}`}
               onClick={() => rejectDelta(deltaKey)}
               aria-label={`Reject delta: ${status}`}
-              style={{
-                padding: "4px 8px",
-                fontSize: "11px",
-                fontWeight: 500,
-                border:
-                  status === "rejected"
-                    ? "1px solid rgb(var(--status-rose))"
-                    : "1px solid rgb(var(--canvas-border))",
-                backgroundColor:
-                  status === "rejected"
-                    ? "rgb(var(--status-rose) / 0.1)"
-                    : "transparent",
-                color:
-                  status === "rejected"
-                    ? "rgb(var(--status-rose))"
-                    : "rgb(var(--canvas-fg-2))",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
+              className="candidate-action-button"
+              data-rejected={status === "rejected"}
             >
               ✕ Reject
             </button>
           </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            fontSize: "11px",
-            color: "rgb(var(--canvas-fg-3))",
-          }}
-        >
+        <div className="connection-delta-metadata">
           <span>
             Predicate:{" "}
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                color: "rgb(var(--canvas-fg-2))",
-              }}
-            >
+            <span className="mono-text">
               {delta.relationship_type}
             </span>
           </span>
@@ -266,7 +167,7 @@ export function ConnectionRefinementReview({
           </span>
           <span>
             Source:{" "}
-            <span style={{ fontFamily: "var(--font-mono)" }}>
+            <span className="mono-text">
               {delta.source}
             </span>
           </span>
@@ -274,60 +175,33 @@ export function ConnectionRefinementReview({
 
         {delta.operation === "modify" && (delta.before || delta.after) && (
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "8px",
-              paddingTop: "8px",
-              borderTop: `1px solid ${borderColor}`,
-            }}
+            className="connection-delta-comparison"
+            style={{ borderTopColor: borderColor }}
           >
             <div>
               <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  marginBottom: "4px",
-                  color: "rgb(var(--status-rose))",
-                }}
+                className="comparison-section-label"
+                data-type="before"
               >
                 Before
               </div>
               <div
-                style={{
-                  fontSize: "11px",
-                  padding: "6px",
-                  backgroundColor: "rgb(var(--status-rose) / 0.1)",
-                  border: "1px solid rgb(var(--status-rose) / 0.3)",
-                  borderRadius: "2px",
-                  fontFamily: "var(--font-mono)",
-                  color: "rgb(var(--canvas-fg-1))",
-                }}
+                className="comparison-section-value"
+                data-type="before"
               >
                 {delta.before || "—"}
               </div>
             </div>
             <div>
               <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  marginBottom: "4px",
-                  color: "rgb(var(--status-emerald))",
-                }}
+                className="comparison-section-label"
+                data-type="after"
               >
                 After
               </div>
               <div
-                style={{
-                  fontSize: "11px",
-                  padding: "6px",
-                  backgroundColor: "rgb(var(--status-emerald) / 0.1)",
-                  border: "1px solid rgb(var(--status-emerald) / 0.3)",
-                  borderRadius: "2px",
-                  fontFamily: "var(--font-mono)",
-                  color: "rgb(var(--canvas-fg-1))",
-                }}
+                className="comparison-section-value"
+                data-type="after"
               >
                 {delta.after || "—"}
               </div>
@@ -341,7 +215,7 @@ export function ConnectionRefinementReview({
   return (
     <div
       data-testid="connection-refinement-review"
-      style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+      className="connection-refinement-review"
     >
       <SegmentedControl
         value={activeOperation}
@@ -355,18 +229,12 @@ export function ConnectionRefinementReview({
 
       <div
         data-testid={`connection-deltas-${activeOperation}`}
-        style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+        className="connection-deltas-container"
       >
         {activeOperation === "add" && (
           <>
             {addDeltas.length === 0 ? (
-              <div
-                style={{
-                  padding: "16px",
-                  color: "rgb(var(--canvas-fg-3))",
-                  fontSize: "12px",
-                }}
-              >
+              <div className="review-empty">
                 No connections to add
               </div>
             ) : (
@@ -380,13 +248,7 @@ export function ConnectionRefinementReview({
         {activeOperation === "remove" && (
           <>
             {removeDeltas.length === 0 ? (
-              <div
-                style={{
-                  padding: "16px",
-                  color: "rgb(var(--canvas-fg-3))",
-                  fontSize: "12px",
-                }}
-              >
+              <div className="review-empty">
                 No connections to remove
               </div>
             ) : (
@@ -400,13 +262,7 @@ export function ConnectionRefinementReview({
         {activeOperation === "modify" && (
           <>
             {modifyDeltas.length === 0 ? (
-              <div
-                style={{
-                  padding: "16px",
-                  color: "rgb(var(--canvas-fg-3))",
-                  fontSize: "12px",
-                }}
-              >
+              <div className="review-empty">
                 No connections to modify
               </div>
             ) : (
