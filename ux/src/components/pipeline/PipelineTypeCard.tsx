@@ -15,13 +15,15 @@ interface PipelineTypeCardProps {
 type StatusVariant = "emerald" | "rose" | "cyan" | "neutral";
 
 const getRunStatusDisplay = (status: string): { label: string; variant: StatusVariant } => {
-  switch (status.toLowerCase()) {
-    case "success":
-      return { label: "Success", variant: "emerald" };
-    case "failed":
+  switch (status.toUpperCase()) {
+    case "COMPLETED":
+      return { label: "Completed", variant: "emerald" };
+    case "FAILED":
       return { label: "Failed", variant: "rose" };
-    case "running":
+    case "RUNNING":
       return { label: "Running", variant: "cyan" };
+    case "PENDING":
+      return { label: "Pending", variant: "neutral" };
     default:
       return { label: status, variant: "neutral" };
   }
