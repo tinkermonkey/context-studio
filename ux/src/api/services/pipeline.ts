@@ -1,4 +1,3 @@
-import axiosInstance from "@/api/client/axios";
 import { BaseService } from "./base";
 import type { components } from "@/api/types";
 
@@ -7,6 +6,7 @@ type ImplementationResponse = components["schemas"]["ImplementationResponse"];
 type ConfigurationResponse = components["schemas"]["ConfigurationResponse"];
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
+type ListPipelineRuns = components["schemas"]["ListResponse_PipelineRunResponse_"];
 type CandidateResponse = components["schemas"]["CandidateResponse"];
 type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
 type RevertRunResponse = components["schemas"]["RevertRunResponse"];
@@ -18,7 +18,10 @@ export interface RunListParams {
   limit?: number;
   offset?: number;
   pipeline_type?: string;
+  implementation_id?: string;
   status?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface ApplyParams {
@@ -26,7 +29,6 @@ export interface ApplyParams {
   concept_scheme_id?: string;
   taxonomy_id?: string;
   node_id?: string;
-  [key: string]: unknown;
 }
 
 class PipelineService extends BaseService {
@@ -63,8 +65,8 @@ class PipelineService extends BaseService {
     return this.get<PipelineRunResponse>(`/api/pipelines/runs/${runId}`);
   }
 
-  async listRuns(params?: RunListParams): Promise<PipelineRunResponse[]> {
-    return this.get<PipelineRunResponse[]>("/api/pipelines/runs", params as Record<string, unknown>);
+  async listRuns(params?: RunListParams): Promise<ListPipelineRuns> {
+    return this.get<ListPipelineRuns>("/api/pipelines/runs", params as unknown as Record<string, unknown>);
   }
 
   async getCandidates(runId: string): Promise<CandidateResponse[]> {
@@ -78,12 +80,11 @@ class PipelineService extends BaseService {
     runId: string,
     params: ApplyParams,
   ): Promise<ApplyRunResponse> {
-    const response = await axiosInstance.post<ApplyRunResponse>(
+    return this.post<ApplyRunResponse>(
       `/api/pipelines/runs/${runId}/apply`,
-      null,
-      { params },
+      undefined,
+      params as unknown as Record<string, unknown>,
     );
-    return response.data;
   }
 
   async revertRun(runId: string): Promise<RevertRunResponse> {

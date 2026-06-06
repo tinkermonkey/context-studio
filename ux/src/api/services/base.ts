@@ -7,8 +7,12 @@ export abstract class BaseService {
     return response.data;
   }
 
-  protected async post<T>(url: string, data?: unknown): Promise<T> {
-    const response = await axiosInstance.post<T>(url, data);
+  protected async post<T>(
+    url: string,
+    data?: unknown,
+    params?: Record<string, unknown>,
+  ): Promise<T> {
+    const response = await axiosInstance.post<T>(url, data, { params });
     return response.data;
   }
 
