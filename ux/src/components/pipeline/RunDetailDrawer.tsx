@@ -1,14 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader, AlertCircle, X } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   InspectorPanel,
   KVGrid,
   Chip,
   Button,
 } from "@tinkermonkey/heimdall-ui";
-import { QUERY_KEYS } from "@/api/config";
-import { pipelineService } from "@/api/services/pipeline";
+import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { formatDate } from "@/utils/dateFormatting";
 import {
   SchemaExtractionReview,
@@ -41,24 +40,7 @@ interface RunDetailDrawerProps {
 export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
   const queryClient = useQueryClient();
 
-  const { data: run, isLoading, error, refetch } = useQuery({
-    queryKey: QUERY_KEYS.pipelineRun(runId),
-    queryFn: () => pipelineService.getRun(runId),
-    enabled: !!runId,
-  });
-
-  // Poll for status changes when run is in PENDING or RUNNING state
-  useEffect(() => {
-    if (!run || (run.status !== "PENDING" && run.status !== "RUNNING")) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      refetch();
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [run?.status, refetch]);
+  const { data: run, isLoading, error } = usePipelineRun(runId);
 
   // Selection state for SchemaExtractionReview
   const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);

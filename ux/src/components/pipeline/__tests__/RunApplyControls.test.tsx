@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -114,7 +114,7 @@ describe("RunApplyControls", () => {
         ),
       );
 
-      const { container } = render(
+      render(
         <RunApplyControls
           run={run}
           pipelineType="schema_extraction"
@@ -157,7 +157,7 @@ describe("RunApplyControls", () => {
         ),
       );
 
-      const { container } = render(
+      render(
         <RunApplyControls
           run={run}
           pipelineType="schema_extraction"
@@ -438,8 +438,9 @@ describe("RunApplyControls", () => {
       const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
       await userEvent.click(confirmButton);
 
-      // Check that the callback was called with the response
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await waitFor(() => {
+        expect(onApplySuccess).toHaveBeenCalled();
+      });
     });
 
     it("includes taxonomy_id for individual extraction", async () => {
@@ -481,7 +482,9 @@ describe("RunApplyControls", () => {
       const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
       await userEvent.click(confirmButton);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await waitFor(() => {
+        expect(onApplySuccess).toHaveBeenCalled();
+      });
     });
 
     it("includes node_id for grounding pipeline", async () => {
@@ -523,7 +526,9 @@ describe("RunApplyControls", () => {
       const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
       await userEvent.click(confirmButton);
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await waitFor(() => {
+        expect(onApplySuccess).toHaveBeenCalled();
+      });
     });
   });
 

@@ -1828,7 +1828,6 @@ selectors:
     component: components/pipeline/RunDetailDrawer.tsx
     description: Status message shown when run is RUNNING
 
-  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
   - selector: connection-refinement-empty
     component: src/components/pipeline/review/ConnectionRefinementReview.tsx
     description: Empty state message when no connection deltas are available
@@ -1903,7 +1902,6 @@ selectors:
     component: src/components/pipeline/review/ConnectionRefinementReview.tsx
     description: Reject button for connection delta with dynamic key suffix
 
-  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
   - selector: run-apply-button-disabled
     component: src/components/pipeline/RunApplyControls.tsx
     description: Disabled Already applied button shown after a successful apply
@@ -1935,12 +1933,10 @@ selectors:
     component: src/components/pipeline/RunRevertControls.tsx
     description: Confirmation dialog before reverting an applied run
 
-  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
   - selector: batch-detail-page
     component: src/routes/app/pipelines/batches/$batchId.tsx
     description: Batch detail page placeholder showing deferred batch execution feature unavailability message
 
-  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
   - selector: connection-refinement-batch-toggle
     component: src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
     description: Container for run as batch toggle in connection refinement wizard
@@ -1981,7 +1977,6 @@ selectors:
     component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Checkbox to enable batch execution in schema grounding wizard
 
-  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
   - selector: run-detail-close-button
     component: src/components/pipeline/RunDetailDrawer.tsx
     description: Close button in run details drawer header
