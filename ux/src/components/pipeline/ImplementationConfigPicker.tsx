@@ -69,7 +69,7 @@ export function ImplementationConfigPicker({
             onSelectImplementation(e.target.value);
             onSelectConfig("");
           }}
-          disabled={disabled || implLoading}
+          disabled={disabled || implLoading || implError}
           aria-invalid={!!implErrorMessage}
           aria-describedby={
             implErrorMessage ? "implementation-error" : undefined
@@ -96,7 +96,7 @@ export function ImplementationConfigPicker({
           <select
             value={selectedConfigRef}
             onChange={(e) => onSelectConfig(e.target.value)}
-            disabled={disabled || configLoading || !configurations?.length}
+            disabled={disabled || configLoading || configQueryError || !configurations?.length}
             aria-invalid={!!configErrorMessage}
             aria-describedby={configErrorMessage ? "configuration-error" : undefined}
             data-testid="configuration-select"

@@ -72,7 +72,11 @@ export function EntitySearchPicker({
   return (
     <div data-testid={testId} className="entity-search-picker">
       {errorMessage && (
-        <div className="entity-picker-error" role="alert">
+        <div
+          className="error-banner-compact"
+          role="alert"
+          data-testid="entity-picker-error"
+        >
           {errorMessage}
         </div>
       )}

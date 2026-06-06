@@ -1051,6 +1051,11 @@ selectors:
     component: components/pipeline/FlavorDrawer.tsx
     description: Button to delete the flavor
 
+  # Pipeline Pickers
+  - selector: entity-picker-error
+    component: components/pipeline/EntitySearchPicker.tsx
+    description: Error message displayed when entity type query fails
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx
