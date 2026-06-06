@@ -353,7 +353,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
                 {revertResult && (
                   <div className="run-detail-revert-result" data-testid="run-revert-result">
                     <div className="revert-result-header">
-                      <span className="revert-result-status">✓ Reverted</span>
+                      <span className="revert-result-status" data-testid="run-status-reverted">✓ Reverted</span>
                     </div>
                     <p className="revert-result-message">
                       {revertResult.events_reverted} change event{revertResult.events_reverted === 1 ? "" : "s"} were
