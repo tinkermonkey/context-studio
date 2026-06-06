@@ -388,7 +388,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                       <div className="apply-result-sample-ids">
                         <span className="sample-ids-label">Sample IDs:</span>
                         <div className="sample-ids-list">
-                          {applyResult.created_class_ids.slice(0, 3).map((id, idx) => (
+                          {applyResult.created_class_ids.slice(0, 3).map((id: string, idx: number) => (
                             <code key={idx} className="sample-id" title={id}>
                               {id}
                             </code>

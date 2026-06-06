@@ -254,22 +254,22 @@ def build_run_specific_data(
 
         return specific
     elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
-        input_summary: dict[str, Any] = {}
+        schema_input_summary: dict[str, Any] = {}
 
         # Store taxonomy_id and concept_scheme_id for apply operations
         scope = input_data.get("scope")
         if scope:
-            input_summary["taxonomy_id"] = str(scope)
+            schema_input_summary["taxonomy_id"] = str(scope)
 
         scope_name = input_data.get("scope_name")
         if scope_name:
-            input_summary["taxonomy_name"] = str(scope_name)
+            schema_input_summary["taxonomy_name"] = str(scope_name)
 
         concept_scheme_id = input_data.get("concept_scheme_id")
         if concept_scheme_id:
-            input_summary["concept_scheme_id"] = str(concept_scheme_id)
+            schema_input_summary["concept_scheme_id"] = str(concept_scheme_id)
 
-        if input_summary:
-            return {"input_summary": input_summary}
+        if schema_input_summary:
+            return {"input_summary": schema_input_summary}
 
     return {}
