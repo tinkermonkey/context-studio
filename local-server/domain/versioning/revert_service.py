@@ -9,6 +9,7 @@ the originating batch_run_id for auditability.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from domain.versioning.value_objects import ChangeOperation
@@ -406,47 +407,19 @@ class RevertService:
             elif entity_type == "property_definition":
                 summary["properties_deleted"] += 1
         elif operation == ChangeOperation.DELETE:
-            if entity_type == "class":
-                summary["classes_deleted"] += 1
-            elif entity_type == "individual":
-                summary["individuals_deleted"] += 1
-            elif entity_type == "relationship":
-                summary["relationships_deleted"] += 1
-            elif entity_type == "property_definition":
-                summary["properties_deleted"] += 1
+            summary["entities_restored"] += 1
         elif operation == ChangeOperation.UPDATE:
             summary["entities_restored"] += 1
 
 
+@dataclass
 class RevertResult:
     """Result of a revert operation with detailed summary."""
 
-    def __init__(
-        self,
-        run_id: str,
-        events_reverted: int,
-        classes_deleted: int = 0,
-        individuals_deleted: int = 0,
-        relationships_deleted: int = 0,
-        properties_deleted: int = 0,
-        entities_restored: int = 0,
-    ) -> None:
-        """
-        Initialize RevertResult.
-
-        Args:
-            run_id: ID of the reverted run
-            events_reverted: Total number of events reverted
-            classes_deleted: Number of classes deleted during revert
-            individuals_deleted: Number of individuals deleted during revert
-            relationships_deleted: Number of relationships deleted during revert
-            properties_deleted: Number of properties deleted during revert
-            entities_restored: Number of entities restored during revert
-        """
-        self.run_id = run_id
-        self.events_reverted = events_reverted
-        self.classes_deleted = classes_deleted
-        self.individuals_deleted = individuals_deleted
-        self.relationships_deleted = relationships_deleted
-        self.properties_deleted = properties_deleted
-        self.entities_restored = entities_restored
+    run_id: str
+    events_reverted: int
+    classes_deleted: int = 0
+    individuals_deleted: int = 0
+    relationships_deleted: int = 0
+    properties_deleted: int = 0
+    entities_restored: int = 0
