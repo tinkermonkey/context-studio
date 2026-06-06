@@ -30,22 +30,16 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(page.getByTestId("pipeline-types-grid")).toBeVisible();
 
     // Locate Definition Refinement pipeline type card
-    const defRefCard = page.getByTestId(
-      "pipeline-type-card-definition_refinement",
-    );
+    const defRefCard = page.getByTestId("pipeline-type-card-definition_refinement");
     await expect(defRefCard).toBeVisible();
 
     // Verify Run button is visible and enabled
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await expect(runButton).toBeVisible();
     await expect(runButton).toBeEnabled();
   });
 
-  test("Test Case 2: Open Definition Refinement Wizard and Select Class", async ({
-    page,
-  }) => {
+  test("Test Case 2: Open Definition Refinement Wizard and Select Class", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -60,9 +54,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Click Run button on Definition Refinement card
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     // Wait for wizard to open
@@ -70,9 +62,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(wizard).toBeVisible();
 
     // Select a class from the picker
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await expect(classPickerInput).toBeVisible();
     await classPickerInput.click();
 
@@ -81,9 +71,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Select from dropdown
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await expect(classOption).toBeVisible();
     await classOption.first().click();
 
@@ -91,9 +79,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(classPickerInput).toHaveValue(testClass.title);
   });
 
-  test("Test Case 3: Review Current Definition and Neighborhood Context", async ({
-    page,
-  }) => {
+  test("Test Case 3: Review Current Definition and Neighborhood Context", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -108,43 +94,31 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Verify neighborhood panel is visible
-    const neighborhoodPanel = page.getByTestId(
-      "definition-refinement-neighborhood",
-    );
+    const neighborhoodPanel = page.getByTestId("definition-refinement-neighborhood");
     await expect(neighborhoodPanel).toBeVisible();
 
     // Verify definition textarea is visible
-    const definitionTextarea = page.getByTestId(
-      "definition-refinement-definition",
-    );
+    const definitionTextarea = page.getByTestId("definition-refinement-definition");
     await expect(definitionTextarea).toBeVisible();
   });
 
-  test("Test Case 4: Submit Wizard and Wait for Pipeline Execution", async ({
-    page,
-  }) => {
+  test("Test Case 4: Submit Wizard and Wait for Pipeline Execution", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -158,25 +132,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Verify Submit button is enabled
@@ -210,25 +178,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -245,15 +207,11 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Verify current definition radio option exists
-    const currentDefRadio = page.getByTestId(
-      "definition-refinement-radio-current",
-    );
+    const currentDefRadio = page.getByTestId("definition-refinement-radio-current");
     await expect(currentDefRadio).toBeVisible();
 
     // Verify at least one candidate definition exists
-    const candidateRadios = page.locator(
-      '[data-testid^="definition-refinement-radio-candidate-"]',
-    );
+    const candidateRadios = page.locator('[data-testid^="definition-refinement-radio-candidate-"]');
     const count = await candidateRadios.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -273,25 +231,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -308,9 +260,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Get candidate radio buttons
-    const candidateRadios = page.locator(
-      '[data-testid^="definition-refinement-radio-candidate-"]',
-    );
+    const candidateRadios = page.locator('[data-testid^="definition-refinement-radio-candidate-"]');
     const count = await candidateRadios.count();
     expect(count).toBeGreaterThan(0);
 
@@ -328,9 +278,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(applyButton).toBeEnabled();
   });
 
-  test("Test Case 7: Click Apply Button and Confirm Application", async ({
-    page,
-  }) => {
+  test("Test Case 7: Click Apply Button and Confirm Application", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -345,25 +293,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -380,9 +322,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Select first candidate
-    const candidateRadios = page.locator(
-      '[data-testid^="definition-refinement-radio-candidate-"]',
-    );
+    const candidateRadios = page.locator('[data-testid^="definition-refinement-radio-candidate-"]');
     const count = await candidateRadios.count();
     expect(count).toBeGreaterThan(0);
 
@@ -403,9 +343,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
     // Click Confirm button
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
   });
@@ -425,25 +363,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -460,9 +392,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Select first candidate
-    const candidateRadios = page.locator(
-      '[data-testid^="definition-refinement-radio-candidate-"]',
-    );
+    const candidateRadios = page.locator('[data-testid^="definition-refinement-radio-candidate-"]');
     const count = await candidateRadios.count();
     expect(count).toBeGreaterThan(0);
 
@@ -477,9 +407,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 
     // Wait for apply result panel to appear
@@ -491,9 +419,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(errorBanner).not.toBeVisible();
   });
 
-  test("Test Case 9: Navigate to Classes Page and Verify Updated Definition", async ({
-    page,
-  }) => {
+  test("Test Case 9: Navigate to Classes Page and Verify Updated Definition", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -508,25 +434,19 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-definition_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-definition_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("definition-refinement-wizard");
     await expect(wizard).toBeVisible();
 
     // Select class
-    const classPickerInput = page.getByTestId(
-      "definition-refinement-class",
-    );
+    const classPickerInput = page.getByTestId("definition-refinement-class");
     await classPickerInput.click();
     await classPickerInput.fill(testClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: testClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: testClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -543,9 +463,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Select and apply first candidate
-    const candidateRadios = page.locator(
-      '[data-testid^="definition-refinement-radio-candidate-"]',
-    );
+    const candidateRadios = page.locator('[data-testid^="definition-refinement-radio-candidate-"]');
     const count = await candidateRadios.count();
     expect(count).toBeGreaterThan(0);
 
@@ -560,9 +478,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 
     // Wait for apply result
@@ -582,9 +498,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Click on the class row
-    const classRow = page
-      .getByRole("row")
-      .filter({ hasText: testClass.title });
+    const classRow = page.getByRole("row").filter({ hasText: testClass.title });
     await expect(classRow).toBeVisible();
     await classRow.click();
 
@@ -593,9 +507,7 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
     await expect(classInspector).toBeVisible();
 
     // Verify description field is updated
-    const descriptionField = classInspector.getByTestId(
-      "class-drawer-description-input",
-    );
+    const descriptionField = classInspector.getByTestId("class-drawer-description-input");
     await expect(descriptionField).toBeVisible();
   });
 });

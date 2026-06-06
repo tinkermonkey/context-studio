@@ -85,7 +85,10 @@ export function RunApplyControls({
           });
         }
 
-        if (selectedCandidates.relationships.length > 0 && Array.isArray(summaryObj.relationships)) {
+        if (
+          selectedCandidates.relationships.length > 0 &&
+          Array.isArray(summaryObj.relationships)
+        ) {
           summaryObj.relationships.forEach((item: unknown, idx: number) => {
             if (selectedCandidates.relationships.includes(`rel-${idx}`)) {
               const itemObj = item as Record<string, unknown>;
@@ -178,11 +181,7 @@ export function RunApplyControls({
         onApplySuccess(result);
       }
     } catch (error) {
-      toast(
-        "error",
-        "Apply failed",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      toast("error", "Apply failed", error instanceof Error ? error.message : "Unknown error");
     }
   };
 
@@ -229,14 +228,16 @@ export function RunApplyControls({
               <p>
                 {pipelineType === "schema_extraction" ? (
                   <>
-                    Confidence threshold will be set to <strong>{confidenceThreshold.toFixed(2)}</strong> to include all selected
-                    candidates. Any candidates above this threshold that were not explicitly selected
-                    will also be applied.
+                    Confidence threshold will be set to{" "}
+                    <strong>{confidenceThreshold.toFixed(2)}</strong> to include all selected
+                    candidates. Any candidates above this threshold that were not explicitly
+                    selected will also be applied.
                   </>
                 ) : (
                   <>
-                    A conservative confidence threshold of <strong>{confidenceThreshold.toFixed(2)}</strong> will be used. Only
-                    candidates above this threshold will be applied.
+                    A conservative confidence threshold of{" "}
+                    <strong>{confidenceThreshold.toFixed(2)}</strong> will be used. Only candidates
+                    above this threshold will be applied.
                   </>
                 )}
               </p>

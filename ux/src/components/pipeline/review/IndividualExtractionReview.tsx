@@ -22,10 +22,7 @@ export function IndividualExtractionReview({
 
   if (!outputSummary) {
     return (
-      <div
-        data-testid="individual-extraction-empty"
-        className="review-empty"
-      >
+      <div data-testid="individual-extraction-empty" className="review-empty">
         No extraction candidates available
       </div>
     );
@@ -35,17 +32,13 @@ export function IndividualExtractionReview({
 
   if (triples.length === 0) {
     return (
-      <div
-        data-testid="individual-extraction-empty"
-        className="review-empty"
-      >
+      <div data-testid="individual-extraction-empty" className="review-empty">
         No triples extracted
       </div>
     );
   }
 
-  const allSelected =
-    triples.length > 0 && selectedTriples.length === triples.length;
+  const allSelected = triples.length > 0 && selectedTriples.length === triples.length;
 
   const handleSelectAll = () => {
     if (allSelected) {
@@ -56,34 +49,23 @@ export function IndividualExtractionReview({
   };
 
   return (
-    <div
-      data-testid="individual-extraction-review"
-      className="individual-extraction-review"
-    >
+    <div data-testid="individual-extraction-review" className="individual-extraction-review">
       <Table
         columns={[
           {
             key: "subject" as const,
             label: "Subject",
-            render: (v) => (
-              <span className="individual-table-cell-label">{String(v)}</span>
-            ),
+            render: (v) => <span className="individual-table-cell-label">{String(v)}</span>,
           },
           {
             key: "predicate" as const,
             label: "Predicate",
-            render: (v) => (
-              <span className="individual-table-cell-mono">
-                {String(v)}
-              </span>
-            ),
+            render: (v) => <span className="individual-table-cell-mono">{String(v)}</span>,
           },
           {
             key: "object" as const,
             label: "Object",
-            render: (v) => (
-              <span className="individual-table-cell-label">{String(v)}</span>
-            ),
+            render: (v) => <span className="individual-table-cell-label">{String(v)}</span>,
           },
           {
             key: "confidence" as const,
@@ -99,11 +81,7 @@ export function IndividualExtractionReview({
             key: "source" as const,
             label: "Source",
             width: "120px",
-            render: (v) => (
-              <span className="individual-table-cell-mono">
-                {String(v)}
-              </span>
-            ),
+            render: (v) => <span className="individual-table-cell-mono">{String(v)}</span>,
           },
         ]}
         data={triples}

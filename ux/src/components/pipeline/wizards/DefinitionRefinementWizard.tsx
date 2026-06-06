@@ -29,8 +29,7 @@ export function DefinitionRefinementWizard() {
     return {
       label: selectedNodeDetails.title || selectedNodeDetails.id,
       definition: selectedNodeDetails.description,
-      outgoingRelationships: (selectedNodeDetails as any)
-        .outgoing_relationships || [],
+      outgoingRelationships: (selectedNodeDetails as any).outgoing_relationships || [],
     };
   }, [selectedNodeDetails]);
 
@@ -80,24 +79,14 @@ export function DefinitionRefinementWizard() {
 
       await handleSubmit(request);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
+      const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      data-testid="definition-refinement-wizard"
-      className="wizard-form"
-    >
-      <Field
-        label="Class to Refine"
-        required
-        error={errors.nodeId}
-        errorId="node-id-error"
-      >
+    <form onSubmit={onSubmit} data-testid="definition-refinement-wizard" className="wizard-form">
+      <Field label="Class to Refine" required error={errors.nodeId} errorId="node-id-error">
         <EntitySearchPicker
           entityType="Class"
           selectedId={selectedNode?.id}
@@ -113,16 +102,9 @@ export function DefinitionRefinementWizard() {
       </Field>
 
       {neighborhoodPreview && (
-        <div
-          className="neighborhood-preview"
-          data-testid="definition-refinement-neighborhood"
-        >
-          <h4>
-            Neighborhood Preview
-          </h4>
-          <p style={{ marginBottom: "4px", fontWeight: 600 }}>
-            {neighborhoodPreview.label}
-          </p>
+        <div className="neighborhood-preview" data-testid="definition-refinement-neighborhood">
+          <h4>Neighborhood Preview</h4>
+          <p style={{ marginBottom: "4px", fontWeight: 600 }}>{neighborhoodPreview.label}</p>
           {neighborhoodPreview.definition && (
             <p
               style={{
@@ -136,21 +118,15 @@ export function DefinitionRefinementWizard() {
           )}
           {neighborhoodPreview.outgoingRelationships.length > 0 && (
             <div>
-              <h5>
-                Relationships
-              </h5>
+              <h5>Relationships</h5>
               <ul>
-                {neighborhoodPreview.outgoingRelationships
-                  .slice(0, 5)
-                  .map((rel: any) => (
-                    <li key={rel.id || rel.target_id}>
-                      {rel.relationship_type} → {rel.target_label || rel.target_id}
-                    </li>
-                  ))}
-                {neighborhoodPreview.outgoingRelationships.length > 5 && (
-                  <li>
-                    +{neighborhoodPreview.outgoingRelationships.length - 5} more
+                {neighborhoodPreview.outgoingRelationships.slice(0, 5).map((rel: any) => (
+                  <li key={rel.id || rel.target_id}>
+                    {rel.relationship_type} → {rel.target_label || rel.target_id}
                   </li>
+                ))}
+                {neighborhoodPreview.outgoingRelationships.length > 5 && (
+                  <li>+{neighborhoodPreview.outgoingRelationships.length - 5} more</li>
                 )}
               </ul>
             </div>
@@ -174,9 +150,7 @@ export function DefinitionRefinementWizard() {
           placeholder="Current definition to be refined…"
           rows={4}
           aria-invalid={!!errors.currentDefinition}
-          aria-describedby={
-            errors.currentDefinition ? "definition-error" : undefined
-          }
+          aria-describedby={errors.currentDefinition ? "definition-error" : undefined}
           data-testid="definition-refinement-definition"
           className="wizard-textarea"
         />
@@ -201,10 +175,7 @@ export function DefinitionRefinementWizard() {
       />
 
       {isSubmitting && (
-        <FormCallout
-          variant="info"
-          data-testid="definition-refinement-loading"
-        >
+        <FormCallout variant="info" data-testid="definition-refinement-loading">
           Running pipeline — this may take up to a minute
         </FormCallout>
       )}
@@ -212,9 +183,7 @@ export function DefinitionRefinementWizard() {
       <Button
         type="submit"
         variant="primary"
-        disabled={
-          isSubmitting || !selectedNode || !currentDefinition.trim()
-        }
+        disabled={isSubmitting || !selectedNode || !currentDefinition.trim()}
         aria-busy={isSubmitting}
         data-testid="definition-refinement-submit"
       >

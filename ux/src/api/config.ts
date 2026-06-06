@@ -42,8 +42,7 @@ export const QUERY_KEYS = {
   groundingWorkflowRuns: (id: string) => ["grounding-workflows", id, "runs"] as const,
   // Pipeline
   pipelineTypes: ["pipeline-types"] as const,
-  pipelineImplementations: (type: string) =>
-    ["pipeline-types", type, "implementations"] as const,
+  pipelineImplementations: (type: string) => ["pipeline-types", type, "implementations"] as const,
   pipelineConfigurations: (type: string, implId: string) =>
     ["pipeline-types", type, "implementations", implId, "configurations"] as const,
   pipelineRuns: (params?: object) => ["pipeline-runs", params] as const,

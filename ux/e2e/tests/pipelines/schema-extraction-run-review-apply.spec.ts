@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  createTaxonomy,
-  createConceptScheme,
-  clearTestData,
-} from "../../fixtures/test-helpers";
+import { createTaxonomy, createConceptScheme, clearTestData } from "../../fixtures/test-helpers";
 
 test.describe("Schema Extraction Run, Review, and Apply", () => {
   test.afterEach(async ({ page }) => {
@@ -73,7 +69,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
     // Fill document input
     const documentInput = page.getByTestId("schema-extraction-document");
     await documentInput.fill(
-      "A Person is an entity with a name property. An Organization has employees."
+      "A Person is an entity with a name property. An Organization has employees.",
     );
 
     // Locate and click the taxonomy picker
@@ -91,7 +87,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
 
     // Verify the selection is retained
     await expect(documentInput).toHaveValue(
-      "A Person is an entity with a name property. An Organization has employees."
+      "A Person is an entity with a name property. An Organization has employees.",
     );
   });
 
@@ -187,7 +183,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
 
     const documentInput = page.getByTestId("schema-extraction-document");
     await documentInput.fill(
-      "Person has name, age. Organization has name, size. Person has_member Organization."
+      "Person has name, age. Organization has name, size. Person has_member Organization.",
     );
 
     const taxonomyPicker = page.getByTestId("schema-extraction-taxonomy-picker");
@@ -239,7 +235,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
 
     const documentInput = page.getByTestId("schema-extraction-document");
     await documentInput.fill(
-      "Person is a class. Organization is a class. name is a property. Person has_name name."
+      "Person is a class. Organization is a class. name is a property. Person has_name name.",
     );
 
     const taxonomyPicker = page.getByTestId("schema-extraction-taxonomy-picker");
@@ -290,7 +286,9 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
     await expect(page.getByTestId("schema-extraction-wizard")).toBeVisible();
 
     const documentInput = page.getByTestId("schema-extraction-document");
-    await documentInput.fill("Animal is a class. Dog is a subclass of Animal. has_owner is a property.");
+    await documentInput.fill(
+      "Animal is a class. Dog is a subclass of Animal. has_owner is a property.",
+    );
 
     const taxonomyPicker = page.getByTestId("schema-extraction-taxonomy-picker");
     await taxonomyPicker.click();
@@ -326,9 +324,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
     await expect(resultPanel).not.toContainText(/error|failed/i);
   });
 
-  test("Test Case 9: Navigate to Ontology and Verify Applied Entities Exist", async ({
-    page,
-  }) => {
+  test("Test Case 9: Navigate to Ontology and Verify Applied Entities Exist", async ({ page }) => {
     // Create test data
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
@@ -400,7 +396,7 @@ test.describe("Schema Extraction Run, Review, and Apply", () => {
 
     const documentInput = page.getByTestId("schema-extraction-document");
     await documentInput.fill(
-      "Person has name, email properties. Company has size property. Person works_for Company."
+      "Person has name, email properties. Company has size property. Person works_for Company.",
     );
 
     const taxonomyPicker = page.getByTestId("schema-extraction-taxonomy-picker");

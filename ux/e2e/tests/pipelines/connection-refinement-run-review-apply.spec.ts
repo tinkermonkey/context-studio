@@ -30,15 +30,11 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(page.getByTestId("pipeline-types-grid")).toBeVisible();
 
     // Locate Connection Refinement pipeline type card
-    const connRefCard = page.getByTestId(
-      "pipeline-type-card-connection_refinement",
-    );
+    const connRefCard = page.getByTestId("pipeline-type-card-connection_refinement");
     await expect(connRefCard).toBeVisible();
 
     // Verify Run button is visible and enabled
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await expect(runButton).toBeVisible();
     await expect(runButton).toBeEnabled();
   });
@@ -60,9 +56,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Click Run button on Connection Refinement card
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     // Wait for wizard to open
@@ -79,9 +73,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Select from dropdown
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await expect(classOption).toBeVisible();
     await classOption.first().click();
 
@@ -104,9 +96,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -118,21 +108,15 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Verify neighborhood panel is visible
-    const neighborhoodPanel = page.getByTestId(
-      "connection-refinement-neighborhood",
-    );
+    const neighborhoodPanel = page.getByTestId("connection-refinement-neighborhood");
     await expect(neighborhoodPanel).toBeVisible();
   });
 
-  test("Test Case 4: Submit Wizard and Wait for Pipeline Execution", async ({
-    page,
-  }) => {
+  test("Test Case 4: Submit Wizard and Wait for Pipeline Execution", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -146,9 +130,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -160,9 +142,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Verify Submit button is enabled
@@ -181,9 +161,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(loadingState).not.toBeVisible({ timeout: 60000 });
   });
 
-  test("Test Case 5: Review Connection Deltas in Candidate Table", async ({
-    page,
-  }) => {
+  test("Test Case 5: Review Connection Deltas in Candidate Table", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -197,9 +175,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -211,9 +187,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -230,9 +204,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Verify accept/reject buttons exist for deltas
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const _acceptCount = await acceptButtons.count();
 
     // Panel should be visible even if no deltas (empty state)
@@ -253,9 +225,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -267,9 +237,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -286,9 +254,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Get accept buttons for deltas
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const acceptCount = await acceptButtons.count();
     expect(acceptCount).toBeGreaterThan(0);
 
@@ -300,9 +266,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(firstAcceptButton).toBeVisible();
   });
 
-  test("Test Case 7: Click Apply Button and Confirm Application", async ({
-    page,
-  }) => {
+  test("Test Case 7: Click Apply Button and Confirm Application", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -316,9 +280,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -330,9 +292,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -349,9 +309,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Accept first delta if available
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const acceptCount = await acceptButtons.count();
     expect(acceptCount).toBeGreaterThan(0);
 
@@ -372,9 +330,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
     // Click Confirm button
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
   });
@@ -393,9 +349,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -407,9 +361,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -426,9 +378,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Accept and apply first delta if available
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const acceptCount = await acceptButtons.count();
     expect(acceptCount).toBeGreaterThan(0);
 
@@ -443,9 +393,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 
     // Wait for apply result panel to appear
@@ -473,9 +421,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -487,9 +433,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -506,9 +450,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Accept and apply first delta if available
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const acceptCount = await acceptButtons.count();
     expect(acceptCount).toBeGreaterThan(0);
 
@@ -523,9 +465,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 
     // Wait for apply result
@@ -551,9 +491,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(relationshipsTable).toBeVisible();
   });
 
-  test("Test Case 10: Verify Updated Relationships on Class Page", async ({
-    page,
-  }) => {
+  test("Test Case 10: Verify Updated Relationships on Class Page", async ({ page }) => {
     // Create test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id, {
@@ -567,9 +505,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.goto("/app/pipelines");
     await page.waitForLoadState("networkidle");
 
-    const runButton = page.getByTestId(
-      "pipeline-run-button-connection_refinement",
-    );
+    const runButton = page.getByTestId("pipeline-run-button-connection_refinement");
     await runButton.click();
 
     const wizard = page.getByTestId("connection-refinement-wizard");
@@ -581,9 +517,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await scopePickerInput.fill(scopeClass.title);
     await page.waitForLoadState("networkidle");
 
-    const classOption = page
-      .getByRole("option")
-      .filter({ hasText: scopeClass.title });
+    const classOption = page.getByRole("option").filter({ hasText: scopeClass.title });
     await classOption.first().click();
 
     // Submit wizard
@@ -600,9 +534,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await expect(reviewPanel).toBeVisible();
 
     // Accept and apply first delta if available
-    const acceptButtons = page.locator(
-      '[data-testid^="connection-accept-"]',
-    );
+    const acceptButtons = page.locator('[data-testid^="connection-accept-"]');
     const acceptCount = await acceptButtons.count();
     expect(acceptCount).toBeGreaterThan(0);
 
@@ -617,9 +549,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
     await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-    const confirmButton = confirmDialog.getByTestId(
-      "confirm-dialog-confirm",
-    );
+    const confirmButton = confirmDialog.getByTestId("confirm-dialog-confirm");
     await confirmButton.click();
 
     // Wait for apply result
@@ -639,9 +569,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     await page.waitForLoadState("networkidle");
 
     // Click on the class row
-    const classRow = page
-      .getByRole("row")
-      .filter({ hasText: scopeClass.title });
+    const classRow = page.getByRole("row").filter({ hasText: scopeClass.title });
     await expect(classRow).toBeVisible();
     await classRow.click();
 

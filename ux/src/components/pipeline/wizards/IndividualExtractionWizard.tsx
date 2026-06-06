@@ -66,24 +66,14 @@ export function IndividualExtractionWizard() {
 
       await handleSubmit(request);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
+      const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      data-testid="individual-extraction-wizard"
-      className="wizard-form"
-    >
-      <Field
-        label="Source Text"
-        required
-        error={errors.sourceText}
-        errorId="source-text-error"
-      >
+    <form onSubmit={onSubmit} data-testid="individual-extraction-wizard" className="wizard-form">
+      <Field label="Source Text" required error={errors.sourceText} errorId="source-text-error">
         <textarea
           id="source-text-input"
           value={sourceText}
@@ -94,20 +84,13 @@ export function IndividualExtractionWizard() {
           placeholder="Paste or type text to extract individuals from…"
           rows={6}
           aria-invalid={!!errors.sourceText}
-          aria-describedby={
-            errors.sourceText ? "source-text-error" : undefined
-          }
+          aria-describedby={errors.sourceText ? "source-text-error" : undefined}
           data-testid="individual-extraction-source"
           className="wizard-textarea"
         />
       </Field>
 
-      <Field
-        label="Target Ontology"
-        required
-        error={errors.ontologyId}
-        errorId="ontology-error"
-      >
+      <Field label="Target Ontology" required error={errors.ontologyId} errorId="ontology-error">
         <EntitySearchPicker
           entityType="Taxonomy"
           selectedId={selectedOntology?.id}

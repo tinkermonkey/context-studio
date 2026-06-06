@@ -73,7 +73,13 @@ export function PipelineTypeCard({ type, latestRun, isRunsLoading }: PipelineTyp
       data-testid={`pipeline-type-card-${type.pipeline_type}`}
       role="article"
     >
-      <div className="pipeline-card-body" onClick={handleCardClick} onKeyDown={handleCardKeyDown} role="button" tabIndex={0}>
+      <div
+        className="pipeline-card-body"
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        role="button"
+        tabIndex={0}
+      >
         <div className="pipeline-card-header">
           <div className="pipeline-type-info">
             <div className="pipeline-type-name">{type.pipeline_type}</div>
@@ -89,11 +95,7 @@ export function PipelineTypeCard({ type, latestRun, isRunsLoading }: PipelineTyp
               className="pipeline-run-status"
               data-testid={`pipeline-run-status-${type.pipeline_type}`}
             >
-              {statusDisplay && (
-                <Chip variant={statusDisplay.variant}>
-                  {statusDisplay.label}
-                </Chip>
-              )}
+              {statusDisplay && <Chip variant={statusDisplay.variant}>{statusDisplay.label}</Chip>}
               {runTimestamp && <span className="pipeline-run-timestamp">{runTimestamp}</span>}
             </div>
           ) : (

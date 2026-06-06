@@ -14,7 +14,9 @@ import "./PipelineTypeDetail.css";
 export function PipelineTypeDetail() {
   const { type } = useParams({ from: "/app/pipelines/types/:type" as any });
   const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/pipelines/types/:type" as any }) as PipelineTypeSearchParams;
+  const searchParams = useSearch({
+    from: "/app/pipelines/types/:type" as any,
+  }) as PipelineTypeSearchParams;
 
   const {
     data: implementations,
@@ -66,7 +68,11 @@ export function PipelineTypeDetail() {
     return (
       <div data-testid="pipeline-type-detail-page">
         <PageHeader eyebrow="Pipelines" title={`Type: ${type}`} />
-        <ErrorBanner error={implError} onRetry={() => refetchImpl()} message="Failed to load implementations" />
+        <ErrorBanner
+          error={implError}
+          onRetry={() => refetchImpl()}
+          message="Failed to load implementations"
+        />
       </div>
     );
   }
@@ -86,7 +92,11 @@ export function PipelineTypeDetail() {
 
   return (
     <div data-testid="pipeline-type-detail-page" className="pipeline-type-detail">
-      <PageHeader eyebrow="Pipelines" title={`Type: ${type}`} subtitle="Browse implementations and configurations" />
+      <PageHeader
+        eyebrow="Pipelines"
+        title={`Type: ${type}`}
+        subtitle="Browse implementations and configurations"
+      />
 
       <div className="pipeline-detail-content">
         <FormCallout variant="info" icon="info">

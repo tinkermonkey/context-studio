@@ -442,4 +442,3 @@ If sufficient runs do not exist, use existing pipeline execution factories (`exe
 - [x] Edge cases documented (no results, all results, multiple pages)
 - [x] Anti-patterns acknowledged (no timeouts, no hardcoded IDs, no invented selectors)
 - [x] Factory usage appropriate for filtering tests (no data creation needed)
-

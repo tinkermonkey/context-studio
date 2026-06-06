@@ -25,9 +25,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
     await expect(page.getByTestId("pipeline-types-grid")).toBeVisible();
 
     // Locate the definition refinement pipeline type card
-    const definitionRefinementCard = page.getByTestId(
-      "pipeline-type-card-definition_refinement"
-    );
+    const definitionRefinementCard = page.getByTestId("pipeline-type-card-definition_refinement");
     await expect(definitionRefinementCard).toBeVisible();
 
     // Verify the "Run" button is visible and enabled
@@ -91,7 +89,11 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
 
     // Wait for the run to complete (observe result panel or empty state)
     // Use a single selector that matches either element
-    await expect(page.locator('[data-testid="definition-refinement-review"], [data-testid="definition-refinement-empty"]')).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.locator(
+        '[data-testid="definition-refinement-review"], [data-testid="definition-refinement-empty"]',
+      ),
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test("Verify Empty Candidates State for No-Op Result", async ({ page }) => {

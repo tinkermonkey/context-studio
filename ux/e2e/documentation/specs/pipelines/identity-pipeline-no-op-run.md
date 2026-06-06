@@ -268,6 +268,7 @@ Factories needed for preconditions:
 ## Implementation Notes
 
 **Before running this test:**
+
 1. Identify and confirm which pipeline type should be tested as the no-op case.
 2. Verify the pipeline type's identifier (e.g., `identity_pipeline`, `test_no_op`, etc.).
 3. Update all selector patterns in this spec with the confirmed pipeline type identifier.
@@ -275,6 +276,7 @@ Factories needed for preconditions:
 5. Confirm that the pipeline is configured to produce no candidates in the test environment.
 
 **Selector substitutions needed:**
+
 - `pipeline-type-card-{type}` → Replace `{type}` with the actual pipeline type identifier
 - `pipeline-run-button-{type}` → Replace `{type}` with the actual pipeline type identifier
 - Empty state selector → Replace with the correct selector for the chosen pipeline type

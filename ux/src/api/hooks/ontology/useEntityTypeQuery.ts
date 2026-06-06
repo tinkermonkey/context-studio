@@ -11,9 +11,7 @@ interface ListResponse {
   offset: number;
 }
 
-export function useEntityTypeQuery(
-  entityType: EntityType
-): UseQueryResult<ListResponse, Error> {
+export function useEntityTypeQuery(entityType: EntityType): UseQueryResult<ListResponse, Error> {
   const queryKey =
     entityType === "Class"
       ? QUERY_KEYS.classes()

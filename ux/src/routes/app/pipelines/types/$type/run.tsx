@@ -41,11 +41,7 @@ function RunWizardPage() {
 
   return (
     <div data-testid={`${type}-run-wizard-page`}>
-      <PageHeader
-        eyebrow="Pipelines"
-        title={typeLabel}
-        subtitle="Configure and run pipeline"
-      />
+      <PageHeader eyebrow="Pipelines" title={typeLabel} subtitle="Configure and run pipeline" />
       <div className="wizard-container" style={{ padding: "24px" }}>
         <WizardComponent />
       </div>

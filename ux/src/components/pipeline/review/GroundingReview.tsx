@@ -24,7 +24,9 @@ export function GroundingReview({
   const candidateStatus = externalCandidateStatus ?? internalCandidateStatus;
 
   const setCandidateStatus = (
-    update: Record<string, CandidateStatus> | ((prev: Record<string, CandidateStatus>) => Record<string, CandidateStatus>)
+    update:
+      | Record<string, CandidateStatus>
+      | ((prev: Record<string, CandidateStatus>) => Record<string, CandidateStatus>),
   ) => {
     if (externalOnCandidateStatusChange) {
       const newValue = typeof update === "function" ? update(candidateStatus) : update;
@@ -36,10 +38,7 @@ export function GroundingReview({
 
   if (!outputSummary) {
     return (
-      <div
-        data-testid="grounding-empty"
-        className="review-empty"
-      >
+      <div data-testid="grounding-empty" className="review-empty">
         No grounding candidates available
       </div>
     );
@@ -49,10 +48,7 @@ export function GroundingReview({
 
   if (groundedNodes.length === 0) {
     return (
-      <div
-        data-testid="grounding-empty"
-        className="review-empty"
-      >
+      <div data-testid="grounding-empty" className="review-empty">
         No nodes to ground
       </div>
     );
@@ -75,10 +71,7 @@ export function GroundingReview({
   };
 
   return (
-    <div
-      data-testid="grounding-review"
-      className="grounding-review"
-    >
+    <div data-testid="grounding-review" className="grounding-review">
       {groundedNodes.map((node) => (
         <div
           key={node.node_id}
@@ -86,12 +79,8 @@ export function GroundingReview({
           className="grounding-node-section"
         >
           <div className="grounding-node-header">
-            <span className="grounding-node-label">
-              {node.node_label}
-            </span>
-            <span className="grounding-node-id">
-              {node.node_id}
-            </span>
+            <span className="grounding-node-label">{node.node_label}</span>
+            <span className="grounding-node-id">{node.node_id}</span>
           </div>
 
           <div className="grounding-candidates-list">
@@ -108,14 +97,8 @@ export function GroundingReview({
                 >
                   <div className="grounding-candidate-header">
                     <div className="grounding-candidate-info">
-                      <span className="grounding-candidate-label">
-                        {candidate.label}
-                      </span>
-                      <Chip
-                        variant="neutral"
-                      >
-                        {candidate.source}
-                      </Chip>
+                      <span className="grounding-candidate-label">{candidate.label}</span>
+                      <Chip variant="neutral">{candidate.source}</Chip>
                     </div>
                     <div className="grounding-candidate-buttons">
                       <button
@@ -142,9 +125,7 @@ export function GroundingReview({
                   </div>
 
                   {candidate.description && (
-                    <span className="grounding-candidate-description">
-                      {candidate.description}
-                    </span>
+                    <span className="grounding-candidate-description">{candidate.description}</span>
                   )}
 
                   {candidate.match_rationale && (
@@ -154,9 +135,7 @@ export function GroundingReview({
                   )}
 
                   <div className="grounding-candidate-score">
-                    <span>
-                      Score: {(candidate.confidence * 100).toFixed(0)}%
-                    </span>
+                    <span>Score: {(candidate.confidence * 100).toFixed(0)}%</span>
                   </div>
                 </div>
               );

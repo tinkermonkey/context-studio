@@ -56,11 +56,19 @@ export function ImplementationConfigPicker({
   implementationError,
   configError,
 }: ImplementationConfigPickerProps) {
-  const { data: implementations, isLoading: implLoading, isError: implError, error: implErrorObj } =
-    usePipelineImplementations(pipelineType);
+  const {
+    data: implementations,
+    isLoading: implLoading,
+    isError: implError,
+    error: implErrorObj,
+  } = usePipelineImplementations(pipelineType);
 
-  const { data: configurations, isLoading: configLoading, isError: configQueryError, error: configErrorObj } =
-    usePipelineConfigurations(pipelineType, selectedImplementationId || "");
+  const {
+    data: configurations,
+    isLoading: configLoading,
+    isError: configQueryError,
+    error: configErrorObj,
+  } = usePipelineConfigurations(pipelineType, selectedImplementationId || "");
 
   const implErrorMessage = implError
     ? implErrorObj instanceof Error
@@ -73,7 +81,6 @@ export function ImplementationConfigPicker({
       ? configErrorObj.message
       : "Failed to load configurations"
     : configError;
-
 
   return (
     <div data-testid="implementation-config-picker">
@@ -91,9 +98,7 @@ export function ImplementationConfigPicker({
           }}
           disabled={disabled || implLoading || implError}
           aria-invalid={!!implErrorMessage}
-          aria-describedby={
-            implErrorMessage ? "implementation-error" : undefined
-          }
+          aria-describedby={implErrorMessage ? "implementation-error" : undefined}
           data-testid="implementation-select"
           className="wizard-select"
         >
@@ -126,10 +131,7 @@ export function ImplementationConfigPicker({
             {configurations?.map((config) => {
               const compositeValue = encodeConfigSelection(config.config_ref, config.version);
               return (
-                <option
-                  key={compositeValue}
-                  value={compositeValue}
-                >
+                <option key={compositeValue} value={compositeValue}>
                   {config.config_ref} v{config.version}
                 </option>
               );

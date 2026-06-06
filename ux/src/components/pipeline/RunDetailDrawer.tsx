@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Loader, AlertCircle, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  InspectorPanel,
-  KVGrid,
-  Chip,
-  Button,
-} from "@tinkermonkey/heimdall-ui";
+import { InspectorPanel, KVGrid, Chip, Button } from "@tinkermonkey/heimdall-ui";
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { formatDate } from "@/utils/dateFormatting";
 import {
@@ -51,22 +46,32 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
   const [selectedTriples, setSelectedTriples] = useState<(string | number)[]>([]);
 
   // Selection state for GroundingReview
-  const [candidateStatus, setCandidateStatus] = useState<Record<string, "pending" | "accepted" | "rejected">>({});
+  const [candidateStatus, setCandidateStatus] = useState<
+    Record<string, "pending" | "accepted" | "rejected">
+  >({});
 
   // Selection state for DefinitionRefinementReview
   const [selectedOption, setSelectedOption] = useState<"current" | number>("current");
 
   // Selection state for ConnectionRefinementReview
   const [activeOperation, setActiveOperation] = useState<"add" | "remove" | "modify">("add");
-  const [deltaStatus, setDeltaStatus] = useState<Record<string, "pending" | "accepted" | "rejected">>({});
+  const [deltaStatus, setDeltaStatus] = useState<
+    Record<string, "pending" | "accepted" | "rejected">
+  >({});
 
   // Apply/revert state from React Query cache
   const getCachedApplyStatus = () => {
-    return queryClient.getQueryData<{
-      applyResult: ApplyRunResponse | null;
-      revertResult: RevertRunResponse | null;
-      isReverted: boolean;
-    }>(['pipeline-runs', runId, 'apply-status']) || { applyResult: null, revertResult: null, isReverted: false };
+    return (
+      queryClient.getQueryData<{
+        applyResult: ApplyRunResponse | null;
+        revertResult: RevertRunResponse | null;
+        isReverted: boolean;
+      }>(["pipeline-runs", runId, "apply-status"]) || {
+        applyResult: null,
+        revertResult: null,
+        isReverted: false,
+      }
+    );
   };
 
   const setCachedApplyStatus = (status: {
@@ -74,7 +79,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     revertResult: RevertRunResponse | null;
     isReverted: boolean;
   }) => {
-    queryClient.setQueryData(['pipeline-runs', runId, 'apply-status'], status);
+    queryClient.setQueryData(["pipeline-runs", runId, "apply-status"], status);
   };
 
   const cachedStatus = getCachedApplyStatus();
@@ -132,7 +137,10 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-  const statusColorMap: Record<string, "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral"> = {
+  const statusColorMap: Record<
+    string,
+    "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral"
+  > = {
     PENDING: "amber",
     RUNNING: "cyan",
     COMPLETED: "emerald",
@@ -144,7 +152,10 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     { key: "Type", value: pipelineTypeDisplay },
     { key: "Implementation", value: run.configuration_slug || "—" },
     { key: "Configuration", value: `${run.configuration_ref} (v${run.configuration_version})` },
-    { key: "Status", value: <Chip variant={statusColorMap[run.status] || "neutral"}>{run.status}</Chip> },
+    {
+      key: "Status",
+      value: <Chip variant={statusColorMap[run.status] || "neutral"}>{run.status}</Chip>,
+    },
     { key: "Started", value: formatDate(run.started_at) },
     { key: "Updated", value: formatDate(run.updated_at) },
   ];
@@ -222,10 +233,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
 
       {run.status === "FAILED" && run.failure_reason && (
         <InspectorPanel.Section title="Error">
-          <div
-            className="run-detail-failure-reason"
-            data-testid="run-failure-reason"
-          >
+          <div className="run-detail-failure-reason" data-testid="run-failure-reason">
             {run.failure_reason}
           </div>
         </InspectorPanel.Section>
@@ -236,9 +244,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
           <div className="run-detail-results-section" data-testid="run-completed-section">
             <div className="run-detail-results-item">
               <strong>Review</strong>
-              <div className="run-detail-results-item-content">
-                {renderReviewComponent(run)}
-              </div>
+              <div className="run-detail-results-item-content">{renderReviewComponent(run)}</div>
             </div>
 
             <div className="run-detail-results-item">
@@ -257,11 +263,14 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                       groundingCandidates: Object.entries(candidateStatus)
                         .filter(([, status]) => status === "accepted")
                         .map(([key]) => key),
-                      refinementCandidates: run.pipeline_type === "schema_node_definition_refinement"
-                        ? (selectedOption === "current" ? [] : [`definition-${selectedOption}`])
-                        : Object.entries(deltaStatus)
-                            .filter(([, status]) => status === "accepted")
-                            .map(([key]) => key),
+                      refinementCandidates:
+                        run.pipeline_type === "schema_node_definition_refinement"
+                          ? selectedOption === "current"
+                            ? []
+                            : [`definition-${selectedOption}`]
+                          : Object.entries(deltaStatus)
+                              .filter(([, status]) => status === "accepted")
+                              .map(([key]) => key),
                     }}
                     isApplied={!!applyResult}
                     onApplySuccess={(result) => {
@@ -285,7 +294,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                         <div className="apply-result-item">
                           <span className="item-count">{applyResult.classes_created}</span>
                           <span className="item-label">
-                            {applyResult.classes_created === 1 ? "Class created" : "Classes created"}
+                            {applyResult.classes_created === 1
+                              ? "Class created"
+                              : "Classes created"}
                           </span>
                         </div>
                       )}
@@ -294,7 +305,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                         <div className="apply-result-item">
                           <span className="item-count">{applyResult.classes_updated}</span>
                           <span className="item-label">
-                            {applyResult.classes_updated === 1 ? "Class updated" : "Classes updated"}
+                            {applyResult.classes_updated === 1
+                              ? "Class updated"
+                              : "Classes updated"}
                           </span>
                         </div>
                       )}
@@ -303,7 +316,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                         <div className="apply-result-item">
                           <span className="item-count">{applyResult.properties_created}</span>
                           <span className="item-label">
-                            {applyResult.properties_created === 1 ? "Property created" : "Properties created"}
+                            {applyResult.properties_created === 1
+                              ? "Property created"
+                              : "Properties created"}
                           </span>
                         </div>
                       )}
@@ -324,14 +339,18 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                         <div className="apply-result-item">
                           <span className="item-count">{applyResult.individuals_created}</span>
                           <span className="item-label">
-                            {applyResult.individuals_created === 1 ? "Individual created" : "Individuals created"}
+                            {applyResult.individuals_created === 1
+                              ? "Individual created"
+                              : "Individuals created"}
                           </span>
                         </div>
                       )}
 
                       {applyResult.external_references_created > 0 && (
                         <div className="apply-result-item">
-                          <span className="item-count">{applyResult.external_references_created}</span>
+                          <span className="item-count">
+                            {applyResult.external_references_created}
+                          </span>
                           <span className="item-label">External references added</span>
                         </div>
                       )}
@@ -370,11 +389,13 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                 {revertResult && (
                   <div className="run-detail-revert-result" data-testid="run-revert-result">
                     <div className="revert-result-header">
-                      <span className="revert-result-status" data-testid="run-status-reverted">✓ Reverted</span>
+                      <span className="revert-result-status" data-testid="run-status-reverted">
+                        ✓ Reverted
+                      </span>
                     </div>
                     <p className="revert-result-message">
-                      {revertResult.events_reverted} change event{revertResult.events_reverted === 1 ? "" : "s"} were
-                      reverted.
+                      {revertResult.events_reverted} change event
+                      {revertResult.events_reverted === 1 ? "" : "s"} were reverted.
                     </p>
                   </div>
                 )}
@@ -386,10 +407,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
 
       {run.status === "PENDING" && (
         <InspectorPanel.Section title="Status">
-          <div
-            className="run-detail-pending-placeholder"
-            data-testid="run-pending-placeholder"
-          >
+          <div className="run-detail-pending-placeholder" data-testid="run-pending-placeholder">
             This run is pending execution
           </div>
         </InspectorPanel.Section>
@@ -397,10 +415,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
 
       {run.status === "RUNNING" && (
         <InspectorPanel.Section title="Status">
-          <div
-            className="run-detail-running-placeholder"
-            data-testid="run-running-placeholder"
-          >
+          <div className="run-detail-running-placeholder" data-testid="run-running-placeholder">
             <Loader size={14} className="spin" />
             This run is currently executing
           </div>

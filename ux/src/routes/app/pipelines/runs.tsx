@@ -232,11 +232,11 @@ function RunsPageContent({
                     {run.status}
                   </StatusBadge>
                 </div>
-                <div className="runs-table-cell runs-table-cell--date">{formatDate(run.started_at)}</div>
+                <div className="runs-table-cell runs-table-cell--date">
+                  {formatDate(run.started_at)}
+                </div>
                 <div className="runs-table-cell">
-                  <Chip variant="neutral">
-                    {(run.output_summary as any)?.candidate_count ?? 0}
-                  </Chip>
+                  <Chip variant="neutral">{(run.output_summary as any)?.candidate_count ?? 0}</Chip>
                 </div>
               </div>
             ))}
@@ -329,16 +329,11 @@ function FilterBarContent({
         <FilterDropdown
           mode="radio"
           value={filters.status ? [filters.status] : []}
-          onChange={(values) =>
-            onFilterChange({ status: values[0] || undefined })
-          }
+          onChange={(values) => onFilterChange({ status: values[0] || undefined })}
         >
           <FilterDropdown.Trigger
             label="Status"
-            summary={
-              filters.status ||
-              "All"
-            }
+            summary={filters.status || "All"}
             data-testid="filter-status"
           />
           <FilterDropdown.Panel>
@@ -354,18 +349,10 @@ function FilterBarContent({
           </FilterDropdown.Panel>
         </FilterDropdown>
 
-        <FilterDropdown
-          mode="checkbox"
-          value={[]}
-          onChange={() => {}}
-        >
+        <FilterDropdown mode="checkbox" value={[]} onChange={() => {}}>
           <FilterDropdown.Trigger
             label="Date Range"
-            summary={
-              filters.startDate || filters.endDate
-                ? "Set"
-                : "Any"
-            }
+            summary={filters.startDate || filters.endDate ? "Set" : "Any"}
             data-testid="filter-date-range"
           />
           <FilterDropdown.Panel>
@@ -375,9 +362,7 @@ function FilterBarContent({
                 <input
                   type="date"
                   value={filters.startDate ? filters.startDate.split("T")[0] : ""}
-                  onChange={(e) =>
-                    onFilterChange({ startDate: e.target.value || undefined })
-                  }
+                  onChange={(e) => onFilterChange({ startDate: e.target.value || undefined })}
                   data-testid="filter-start-date"
                 />
               </div>
@@ -386,9 +371,7 @@ function FilterBarContent({
                 <input
                   type="date"
                   value={filters.endDate ? filters.endDate.split("T")[0] : ""}
-                  onChange={(e) =>
-                    onFilterChange({ endDate: e.target.value || undefined })
-                  }
+                  onChange={(e) => onFilterChange({ endDate: e.target.value || undefined })}
                   data-testid="filter-end-date"
                 />
               </div>
@@ -396,9 +379,7 @@ function FilterBarContent({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    onFilterChange({ startDate: undefined, endDate: undefined })
-                  }
+                  onClick={() => onFilterChange({ startDate: undefined, endDate: undefined })}
                   data-testid="filter-clear-dates"
                   className="date-filter-clear"
                 >
@@ -413,9 +394,7 @@ function FilterBarContent({
           <FilterDropdown
             mode="radio"
             value={filters.implementation ? [filters.implementation] : []}
-            onChange={(values) =>
-              onFilterChange({ implementation: values[0] || undefined })
-            }
+            onChange={(values) => onFilterChange({ implementation: values[0] || undefined })}
           >
             <FilterDropdown.Trigger
               label="Implementation"
@@ -439,11 +418,7 @@ function FilterBarContent({
           </FilterDropdown>
         )}
 
-        <FilterDropdown
-          mode="radio"
-          value={[]}
-          onChange={() => {}}
-        >
+        <FilterDropdown mode="radio" value={[]} onChange={() => {}}>
           <FilterDropdown.Trigger
             label="Applied"
             summary="All"
@@ -490,10 +465,7 @@ function RunsPageWrapper() {
         subtitle="View execution history and results from your pipeline runs."
       />
 
-      <RunsPageContent
-        selectedId={selectedId}
-        onSelectedIdChange={handleSelectedIdChange}
-      />
+      <RunsPageContent selectedId={selectedId} onSelectedIdChange={handleSelectedIdChange} />
     </div>
   );
 }

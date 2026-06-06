@@ -23,10 +23,7 @@ export function DefinitionRefinementReview({
 
   if (!outputSummary) {
     return (
-      <div
-        data-testid="definition-refinement-empty"
-        className="review-empty"
-      >
+      <div data-testid="definition-refinement-empty" className="review-empty">
         No refinement candidates available
       </div>
     );
@@ -37,10 +34,7 @@ export function DefinitionRefinementReview({
 
   if (!currentDefinition && candidates.length === 0) {
     return (
-      <div
-        data-testid="definition-refinement-empty"
-        className="review-empty"
-      >
+      <div data-testid="definition-refinement-empty" className="review-empty">
         No definitions available
       </div>
     );
@@ -81,13 +75,9 @@ export function DefinitionRefinementReview({
               aria-label="Keep current definition"
               className="definition-radio-input"
             />
-            <span className="definition-option-label">
-              Current Definition
-            </span>
+            <span className="definition-option-label">Current Definition</span>
           </div>
-          <p className="definition-text">
-            {currentDefinition}
-          </p>
+          <p className="definition-text">{currentDefinition}</p>
         </div>
       )}
 
@@ -121,24 +111,18 @@ export function DefinitionRefinementReview({
                 className="definition-radio-input"
               />
               <div className="definition-option-content">
-                <div className="definition-candidate-number">
-                  Candidate {idx + 1}
-                </div>
+                <div className="definition-candidate-number">Candidate {idx + 1}</div>
                 <div className="definition-candidate-badges">
                   <span className="definition-candidate-badge">
                     Score: {(candidate.confidence * 100).toFixed(0)}%
                   </span>
-                  <span className="definition-candidate-badge">
-                    {candidate.source}
-                  </span>
+                  <span className="definition-candidate-badge">{candidate.source}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="definition-text">
-            {candidate.definition}
-          </p>
+          <p className="definition-text">{candidate.definition}</p>
 
           {candidate.rationale && (
             <div className="definition-rationale">

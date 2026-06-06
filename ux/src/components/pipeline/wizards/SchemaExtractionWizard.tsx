@@ -62,24 +62,14 @@ export function SchemaExtractionWizard() {
 
       await handleSubmit(request);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
+      const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      data-testid="schema-extraction-wizard"
-      className="wizard-form"
-    >
-      <Field
-        label="Document"
-        required
-        error={errors.document}
-        errorId="document-error"
-      >
+    <form onSubmit={onSubmit} data-testid="schema-extraction-wizard" className="wizard-form">
+      <Field label="Document" required error={errors.document} errorId="document-error">
         <textarea
           id="document-input"
           value={document}
@@ -96,10 +86,7 @@ export function SchemaExtractionWizard() {
         />
       </Field>
 
-      <Field
-        label="Scope (Optional)"
-        hint="Taxonomy or Concept Scheme to constrain extraction"
-      >
+      <Field label="Scope (Optional)" hint="Taxonomy or Concept Scheme to constrain extraction">
         <EntitySearchPicker
           entityType="Taxonomy"
           selectedId={selectedScope?.id}

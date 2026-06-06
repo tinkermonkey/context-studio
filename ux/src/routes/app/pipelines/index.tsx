@@ -15,7 +15,12 @@ export const Route = createFileRoute("/app/pipelines/")({
 });
 
 export function PipelinesPage() {
-  const { data: typesData, isLoading: typesLoading, error: typesError, refetch: refetchTypes } = usePipelineTypes();
+  const {
+    data: typesData,
+    isLoading: typesLoading,
+    error: typesError,
+    refetch: refetchTypes,
+  } = usePipelineTypes();
   const { data: runsData, isLoading: runsLoading } = usePipelineRuns({ limit: 100 });
 
   const runsByType = useMemo(() => {
@@ -42,10 +47,7 @@ export function PipelinesPage() {
     return (
       <div data-testid="pipelines-page">
         <PageHeader eyebrow="Pipelines" title="Pipeline Registry" />
-        <ErrorBanner
-          error={typesError}
-          onRetry={() => refetchTypes()}
-        />
+        <ErrorBanner error={typesError} onRetry={() => refetchTypes()} />
       </div>
     );
   }

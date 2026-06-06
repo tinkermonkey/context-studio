@@ -39,7 +39,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Configure the wizard with sample source text
     const sourceInput = page.getByTestId("individual-extraction-source");
     await sourceInput.fill(
-      "John Smith is a person. Jane Doe is a person. Both work in technology."
+      "John Smith is a person. Jane Doe is a person. Both work in technology.",
     );
 
     // Verify the submit button is enabled
@@ -336,9 +336,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     const applyButtonDisabled = page.getByTestId("run-apply-button-disabled");
     const applyButtonActive = page.getByTestId("run-apply-button");
 
-    const applyDisabledVisible = await applyButtonDisabled
-      .isVisible()
-      .catch(() => false);
+    const applyDisabledVisible = await applyButtonDisabled.isVisible().catch(() => false);
     if (!applyDisabledVisible) {
       // If disabled button not visible, apply button should be disabled
       await expect(applyButtonActive).toBeVisible();

@@ -3,7 +3,11 @@ import type { AxiosRequestConfig } from "axios";
 
 // Errors are normalized to ApiError by the axios interceptor — error.message contains the FastAPI detail
 export abstract class BaseService {
-  protected async get<T>(url: string, params?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<T> {
+  protected async get<T>(
+    url: string,
+    params?: Record<string, unknown>,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     const response = await axiosInstance.get<T>(url, { params, ...config });
     return response.data;
   }

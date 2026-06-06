@@ -27,8 +27,7 @@ export function ConnectionRefinementWizard() {
 
     return {
       label: scopeClassDetails.title || scopeClassDetails.id,
-      outgoingRelationships: (scopeClassDetails as any)
-        .outgoing_relationships || [],
+      outgoingRelationships: (scopeClassDetails as any).outgoing_relationships || [],
     };
   }, [scopeClassDetails]);
 
@@ -73,24 +72,14 @@ export function ConnectionRefinementWizard() {
 
       await handleSubmit(request);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
+      const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      data-testid="connection-refinement-wizard"
-      className="wizard-form"
-    >
-      <Field
-        label="Scope Class"
-        required
-        error={errors.scopeId}
-        errorId="scope-id-error"
-      >
+    <form onSubmit={onSubmit} data-testid="connection-refinement-wizard" className="wizard-form">
+      <Field label="Scope Class" required error={errors.scopeId} errorId="scope-id-error">
         <EntitySearchPicker
           entityType="Class"
           selectedId={selectedScope?.id}
@@ -106,54 +95,32 @@ export function ConnectionRefinementWizard() {
       </Field>
 
       {neighborhoodPreview && (
-        <div
-          className="neighborhood-preview"
-          data-testid="connection-refinement-neighborhood"
-        >
-          <h4>
-            {neighborhoodPreview.label} — Current Connections
-          </h4>
+        <div className="neighborhood-preview" data-testid="connection-refinement-neighborhood">
+          <h4>{neighborhoodPreview.label} — Current Connections</h4>
 
           {neighborhoodPreview.outgoingRelationships.length > 0 ? (
             <div style={{ overflowX: "auto" }}>
               <table>
                 <thead>
                   <tr>
-                    <th>
-                      Subject
-                    </th>
-                    <th>
-                      Predicate
-                    </th>
-                    <th>
-                      Object
-                    </th>
+                    <th>Subject</th>
+                    <th>Predicate</th>
+                    <th>Object</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {neighborhoodPreview.outgoingRelationships
-                    .slice(0, 10)
-                    .map((rel: any) => (
-                      <tr
-                        key={rel.id || rel.target_id}
-                      >
-                        <td>
-                          {neighborhoodPreview.label}
-                        </td>
-                        <td>
-                          {rel.relationship_type}
-                        </td>
-                        <td>
-                          {rel.target_label || rel.target_id}
-                        </td>
-                      </tr>
-                    ))}
+                  {neighborhoodPreview.outgoingRelationships.slice(0, 10).map((rel: any) => (
+                    <tr key={rel.id || rel.target_id}>
+                      <td>{neighborhoodPreview.label}</td>
+                      <td>{rel.relationship_type}</td>
+                      <td>{rel.target_label || rel.target_id}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
               {neighborhoodPreview.outgoingRelationships.length > 10 && (
                 <p style={{ marginTop: "8px", fontSize: "var(--text-sm)" }}>
-                  +{neighborhoodPreview.outgoingRelationships.length - 10} more
-                  connections
+                  +{neighborhoodPreview.outgoingRelationships.length - 10} more connections
                 </p>
               )}
             </div>
@@ -189,10 +156,7 @@ export function ConnectionRefinementWizard() {
       />
 
       {isSubmitting && (
-        <FormCallout
-          variant="info"
-          data-testid="connection-refinement-loading"
-        >
+        <FormCallout variant="info" data-testid="connection-refinement-loading">
           Running pipeline — this may take up to a minute
         </FormCallout>
       )}

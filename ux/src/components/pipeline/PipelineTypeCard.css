@@ -86,7 +86,12 @@
   .pipeline-skeleton-run-status {
     height: 24px;
     width: 120px;
-    background: linear-gradient(90deg, rgb(var(--canvas-fg-3)), rgb(var(--canvas-fg-2)), rgb(var(--canvas-fg-3)));
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-fg-3)),
+      rgb(var(--canvas-fg-2)),
+      rgb(var(--canvas-fg-3))
+    );
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
     border-radius: 4px;

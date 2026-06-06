@@ -60,10 +60,7 @@ test.describe("Pipeline Run History Filtering", () => {
     // Wait for dropdown to appear and select first option
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -100,10 +97,7 @@ test.describe("Pipeline Run History Filtering", () => {
     // Wait for dropdown to appear and select first option
     const dropdown = statusFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = statusFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = statusFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -133,12 +127,11 @@ test.describe("Pipeline Run History Filtering", () => {
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");
     await pipelineTypeFilter.click();
 
-    const typeDropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    await expect(typeDropdown).toBeVisible();
-    const firstTypeOption = pipelineTypeFilter
+    const typeDropdown = pipelineTypeFilter
       .locator("..")
-      .locator('[role="option"]')
-      .first();
+      .locator('[role="listbox"], [role="dialog"]');
+    await expect(typeDropdown).toBeVisible();
+    const firstTypeOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstTypeOption).toBeVisible();
     await firstTypeOption.click();
     await page.waitForLoadState("networkidle");
@@ -153,10 +146,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const statusDropdown = statusFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(statusDropdown).toBeVisible();
-    const firstStatusOption = statusFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstStatusOption = statusFilter.locator("..").locator('[role="option"]').first();
     await expect(firstStatusOption).toBeVisible();
     await firstStatusOption.click();
     await page.waitForLoadState("networkidle");
@@ -235,10 +225,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -265,10 +252,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -300,10 +284,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -351,10 +332,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");
@@ -370,10 +348,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const statusDropdown = statusFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(statusDropdown).toBeVisible();
-    const firstStatusOption = statusFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstStatusOption = statusFilter.locator("..").locator('[role="option"]').first();
     await expect(firstStatusOption).toBeVisible();
     await firstStatusOption.click();
     await page.waitForLoadState("networkidle");
@@ -402,10 +377,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
     await expect(dropdown).toBeVisible();
-    const firstOption = pipelineTypeFilter
-      .locator("..")
-      .locator('[role="option"]')
-      .first();
+    const firstOption = pipelineTypeFilter.locator("..").locator('[role="option"]').first();
     await expect(firstOption).toBeVisible();
     await firstOption.click();
     await page.waitForLoadState("networkidle");

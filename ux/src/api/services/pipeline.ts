@@ -38,25 +38,17 @@ class PipelineService extends BaseService {
   }
 
   async listImplementations(type: string): Promise<ImplementationResponse[]> {
-    return this.get<ImplementationResponse[]>(
-      `/api/pipelines/types/${type}/implementations`,
-    );
+    return this.get<ImplementationResponse[]>(`/api/pipelines/types/${type}/implementations`);
   }
 
-  async listConfigurations(
-    type: string,
-    implId: string,
-  ): Promise<ConfigurationResponse[]> {
+  async listConfigurations(type: string, implId: string): Promise<ConfigurationResponse[]> {
     return this.get<ConfigurationResponse[]>(
       `/api/pipelines/types/${type}/implementations/${implId}/configurations`,
     );
   }
 
   // Execution
-  async runPipeline(
-    type: string,
-    request: PipelineRunRequest,
-  ): Promise<PipelineRunResponse> {
+  async runPipeline(type: string, request: PipelineRunRequest): Promise<PipelineRunResponse> {
     return this.post<PipelineRunResponse>(`/api/pipelines/${type}/run`, request, undefined, {
       timeout: 120_000,
     });
@@ -68,20 +60,18 @@ class PipelineService extends BaseService {
   }
 
   async listRuns(params?: RunListParams): Promise<ListPipelineRuns> {
-    return this.get<ListPipelineRuns>("/api/pipelines/runs", params as unknown as Record<string, unknown>);
-  }
-
-  async getCandidates(runId: string): Promise<CandidateResponse[]> {
-    return this.get<CandidateResponse[]>(
-      `/api/pipelines/runs/${runId}/candidates`,
+    return this.get<ListPipelineRuns>(
+      "/api/pipelines/runs",
+      params as unknown as Record<string, unknown>,
     );
   }
 
+  async getCandidates(runId: string): Promise<CandidateResponse[]> {
+    return this.get<CandidateResponse[]>(`/api/pipelines/runs/${runId}/candidates`);
+  }
+
   // Materialization
-  async applyRun(
-    runId: string,
-    params: ApplyParams,
-  ): Promise<ApplyRunResponse> {
+  async applyRun(runId: string, params: ApplyParams): Promise<ApplyRunResponse> {
     return this.post<ApplyRunResponse>(
       `/api/pipelines/runs/${runId}/apply`,
       undefined,
@@ -90,10 +80,7 @@ class PipelineService extends BaseService {
   }
 
   async revertRun(runId: string): Promise<RevertRunResponse> {
-    return this.post<RevertRunResponse>(
-      `/api/pipelines/runs/${runId}/revert`,
-      undefined,
-    );
+    return this.post<RevertRunResponse>(`/api/pipelines/runs/${runId}/revert`, undefined);
   }
 
   // Batch (scaffolded, deferred)
@@ -105,28 +92,16 @@ class PipelineService extends BaseService {
     return this.get<BatchResponse>(`/api/pipelines/batches/${batchId}`);
   }
 
-  async enqueueBatchRuns(
-    batchId: string,
-    data: unknown,
-  ): Promise<BatchResponse> {
-    return this.post<BatchResponse>(
-      `/api/pipelines/batches/${batchId}/runs`,
-      data,
-    );
+  async enqueueBatchRuns(batchId: string, data: unknown): Promise<BatchResponse> {
+    return this.post<BatchResponse>(`/api/pipelines/batches/${batchId}/runs`, data);
   }
 
   async cancelBatch(batchId: string): Promise<CancelBatchResponse> {
-    return this.post<CancelBatchResponse>(
-      `/api/pipelines/batches/${batchId}/cancel`,
-      undefined,
-    );
+    return this.post<CancelBatchResponse>(`/api/pipelines/batches/${batchId}/cancel`, undefined);
   }
 
   async resumeBatch(batchId: string): Promise<ResumeBatchResponse> {
-    return this.post<ResumeBatchResponse>(
-      `/api/pipelines/batches/${batchId}/resume`,
-      undefined,
-    );
+    return this.post<ResumeBatchResponse>(`/api/pipelines/batches/${batchId}/resume`, undefined);
   }
 }
 

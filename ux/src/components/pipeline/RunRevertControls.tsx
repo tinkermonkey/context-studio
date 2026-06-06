@@ -37,11 +37,7 @@ export function RunRevertControls({
         onRevertSuccess(result);
       }
     } catch (error) {
-      toast(
-        "error",
-        "Revert failed",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      toast("error", "Revert failed", error instanceof Error ? error.message : "Unknown error");
     }
   };
 
@@ -126,8 +122,7 @@ export function RunRevertControls({
               </div>
             )}
 
-            {(applyResult.relationships_created || 0) +
-              (applyResult.relationships_modified || 0) >
+            {(applyResult.relationships_created || 0) + (applyResult.relationships_modified || 0) >
               0 && (
               <div className="revert-item-count">
                 <span className="count">

@@ -7,10 +7,12 @@ export function usePipelineRun(runId: string, options?: { refetchInterval?: numb
     queryKey: QUERY_KEYS.pipelineRun(runId),
     queryFn: () => pipelineService.getRun(runId),
     enabled: !!runId,
-    refetchInterval: options?.refetchInterval ?? ((query) => {
-      const status = query.state.data?.status;
-      return status === "PENDING" || status === "RUNNING" ? 2000 : false;
-    }),
+    refetchInterval:
+      options?.refetchInterval ??
+      ((query) => {
+        const status = query.state.data?.status;
+        return status === "PENDING" || status === "RUNNING" ? 2000 : false;
+      }),
   });
 }
 

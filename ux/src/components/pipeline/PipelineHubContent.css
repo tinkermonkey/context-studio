@@ -8,7 +8,12 @@
 
   .pipeline-skeleton-card {
     height: 160px;
-    background: linear-gradient(90deg, rgb(var(--canvas-bg)), rgb(var(--canvas-fg-4)), rgb(var(--canvas-bg)));
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-bg)),
+      rgb(var(--canvas-fg-4)),
+      rgb(var(--canvas-bg))
+    );
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
     border: 1px solid rgb(var(--canvas-border));

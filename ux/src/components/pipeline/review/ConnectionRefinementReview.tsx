@@ -29,9 +29,7 @@ export function ConnectionRefinementReview({
 
   // Use external state if provided, otherwise use internal state
   const activeOperation = externalActiveOperation ?? internalActiveOperation;
-  const setActiveOperation = (
-    update: OperationType | ((prev: OperationType) => OperationType)
-  ) => {
+  const setActiveOperation = (update: OperationType | ((prev: OperationType) => OperationType)) => {
     if (externalOnOperationChange) {
       const newValue = typeof update === "function" ? update(activeOperation) : update;
       externalOnOperationChange(newValue);
@@ -42,7 +40,9 @@ export function ConnectionRefinementReview({
 
   const deltaStatus = externalDeltaStatus ?? internalDeltaStatus;
   const setDeltaStatus = (
-    update: Record<string, DeltaStatus> | ((prev: Record<string, DeltaStatus>) => Record<string, DeltaStatus>)
+    update:
+      | Record<string, DeltaStatus>
+      | ((prev: Record<string, DeltaStatus>) => Record<string, DeltaStatus>),
   ) => {
     if (externalOnDeltaStatusChange) {
       const newValue = typeof update === "function" ? update(deltaStatus) : update;
@@ -54,10 +54,7 @@ export function ConnectionRefinementReview({
 
   if (!outputSummary) {
     return (
-      <div
-        data-testid="connection-refinement-empty"
-        className="review-empty"
-      >
+      <div data-testid="connection-refinement-empty" className="review-empty">
         No refinement candidates available
       </div>
     );
@@ -67,10 +64,7 @@ export function ConnectionRefinementReview({
 
   if (deltas.length === 0) {
     return (
-      <div
-        data-testid="connection-refinement-empty"
-        className="review-empty"
-      >
+      <div data-testid="connection-refinement-empty" className="review-empty">
         No connection deltas
       </div>
     );
@@ -96,9 +90,7 @@ export function ConnectionRefinementReview({
     }));
   };
 
-  const getOperationColor = (
-    op: OperationType
-  ): "emerald" | "rose" | "amber" => {
+  const getOperationColor = (op: OperationType): "emerald" | "rose" | "amber" => {
     switch (op) {
       case "add":
         return "emerald";
@@ -190,52 +182,29 @@ export function ConnectionRefinementReview({
 
         <div className="connection-delta-metadata">
           <span>
-            Predicate:{" "}
-            <span className="mono-text">
-              {delta.relationship_type}
-            </span>
+            Predicate: <span className="mono-text">{delta.relationship_type}</span>
           </span>
+          <span>Score: {(delta.confidence * 100).toFixed(0)}%</span>
           <span>
-            Score: {(delta.confidence * 100).toFixed(0)}%
-          </span>
-          <span>
-            Source:{" "}
-            <span className="mono-text">
-              {delta.source}
-            </span>
+            Source: <span className="mono-text">{delta.source}</span>
           </span>
         </div>
 
         {delta.operation === "modify" && (delta.before || delta.after) && (
-          <div
-            className="connection-delta-comparison"
-            style={{ borderTopColor: borderColor }}
-          >
+          <div className="connection-delta-comparison" style={{ borderTopColor: borderColor }}>
             <div>
-              <div
-                className="comparison-section-label"
-                data-type="before"
-              >
+              <div className="comparison-section-label" data-type="before">
                 Before
               </div>
-              <div
-                className="comparison-section-value"
-                data-type="before"
-              >
+              <div className="comparison-section-value" data-type="before">
                 {delta.before || "—"}
               </div>
             </div>
             <div>
-              <div
-                className="comparison-section-label"
-                data-type="after"
-              >
+              <div className="comparison-section-label" data-type="after">
                 After
               </div>
-              <div
-                className="comparison-section-value"
-                data-type="after"
-              >
+              <div className="comparison-section-value" data-type="after">
                 {delta.after || "—"}
               </div>
             </div>
@@ -246,10 +215,7 @@ export function ConnectionRefinementReview({
   };
 
   return (
-    <div
-      data-testid="connection-refinement-review"
-      className="connection-refinement-review"
-    >
+    <div data-testid="connection-refinement-review" className="connection-refinement-review">
       <SegmentedControl
         value={activeOperation}
         onChange={(value) => setActiveOperation(value as OperationType)}
@@ -267,13 +233,9 @@ export function ConnectionRefinementReview({
         {activeOperation === "add" && (
           <>
             {addDeltas.length === 0 ? (
-              <div className="review-empty">
-                No connections to add
-              </div>
+              <div className="review-empty">No connections to add</div>
             ) : (
-              addDeltas.map((delta, idx) =>
-                renderDelta(delta, `add-${idx}`)
-              )
+              addDeltas.map((delta, idx) => renderDelta(delta, `add-${idx}`))
             )}
           </>
         )}
@@ -281,13 +243,9 @@ export function ConnectionRefinementReview({
         {activeOperation === "remove" && (
           <>
             {removeDeltas.length === 0 ? (
-              <div className="review-empty">
-                No connections to remove
-              </div>
+              <div className="review-empty">No connections to remove</div>
             ) : (
-              removeDeltas.map((delta, idx) =>
-                renderDelta(delta, `remove-${idx}`)
-              )
+              removeDeltas.map((delta, idx) => renderDelta(delta, `remove-${idx}`))
             )}
           </>
         )}
@@ -295,13 +253,9 @@ export function ConnectionRefinementReview({
         {activeOperation === "modify" && (
           <>
             {modifyDeltas.length === 0 ? (
-              <div className="review-empty">
-                No connections to modify
-              </div>
+              <div className="review-empty">No connections to modify</div>
             ) : (
-              modifyDeltas.map((delta, idx) =>
-                renderDelta(delta, `modify-${idx}`)
-              )
+              modifyDeltas.map((delta, idx) => renderDelta(delta, `modify-${idx}`))
             )}
           </>
         )}

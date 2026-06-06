@@ -26,10 +26,12 @@ export function SchemaExtractionReview({
 }: SchemaExtractionReviewProps) {
   const [activeTab, setActiveTab] = useState<TabType>("classes");
   const [internalSelectedClasses, setInternalSelectedClasses] = useState<(string | number)[]>([]);
-  const [internalSelectedProperties, setInternalSelectedProperties] = useState<(string | number)[]>([]);
-  const [internalSelectedRelationships, setInternalSelectedRelationships] = useState<(string | number)[]>(
-    []
+  const [internalSelectedProperties, setInternalSelectedProperties] = useState<(string | number)[]>(
+    [],
   );
+  const [internalSelectedRelationships, setInternalSelectedRelationships] = useState<
+    (string | number)[]
+  >([]);
 
   // Use external state if provided, otherwise use internal state
   const selectedClasses = externalSelectedClasses ?? internalSelectedClasses;
@@ -39,14 +41,12 @@ export function SchemaExtractionReview({
   const setSelectedProperties = externalOnSelectProperties ?? setInternalSelectedProperties;
 
   const selectedRelationships = externalSelectedRelationships ?? internalSelectedRelationships;
-  const setSelectedRelationships = externalOnSelectRelationships ?? setInternalSelectedRelationships;
+  const setSelectedRelationships =
+    externalOnSelectRelationships ?? setInternalSelectedRelationships;
 
   if (!outputSummary) {
     return (
-      <div
-        data-testid="schema-extraction-empty"
-        className="review-empty"
-      >
+      <div data-testid="schema-extraction-empty" className="review-empty">
         No extraction candidates available
       </div>
     );
@@ -56,13 +56,11 @@ export function SchemaExtractionReview({
   const properties = outputSummary.properties || [];
   const relationships = outputSummary.relationships || [];
 
-  const allClassesSelected =
-    classes.length > 0 && selectedClasses.length === classes.length;
+  const allClassesSelected = classes.length > 0 && selectedClasses.length === classes.length;
   const allPropertiesSelected =
     properties.length > 0 && selectedProperties.length === properties.length;
   const allRelationshipsSelected =
-    relationships.length > 0 &&
-    selectedRelationships.length === relationships.length;
+    relationships.length > 0 && selectedRelationships.length === relationships.length;
 
   const handleSelectAllClasses = () => {
     if (allClassesSelected) {
@@ -89,10 +87,7 @@ export function SchemaExtractionReview({
   };
 
   return (
-    <div
-      data-testid="schema-extraction-review"
-      className="schema-extraction-review"
-    >
+    <div data-testid="schema-extraction-review" className="schema-extraction-review">
       <SegmentedControl
         value={activeTab}
         onChange={(value) => setActiveTab(value as TabType)}
@@ -107,41 +102,28 @@ export function SchemaExtractionReview({
       />
 
       {activeTab === "classes" && (
-        <div
-          data-testid="classes-table-container"
-          className="schema-table-container"
-        >
+        <div data-testid="classes-table-container" className="schema-table-container">
           {classes.length === 0 ? (
-            <div className="review-empty">
-              No classes extracted
-            </div>
+            <div className="review-empty">No classes extracted</div>
           ) : (
             <Table
               columns={[
                 {
                   key: "label" as const,
                   label: "Label",
-                  render: (v) => (
-                    <span className="table-cell-label">{String(v)}</span>
-                  ),
+                  render: (v) => <span className="table-cell-label">{String(v)}</span>,
                 },
                 {
                   key: "description" as const,
                   label: "Description",
-                  render: (v) => (
-                    <span className="table-cell-description">
-                      {String(v || "—")}
-                    </span>
-                  ),
+                  render: (v) => <span className="table-cell-description">{String(v || "—")}</span>,
                 },
                 {
                   key: "confidence" as const,
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span className="table-cell-confidence">
-                      {(Number(v) * 100).toFixed(0)}%
-                    </span>
+                    <span className="table-cell-confidence">{(Number(v) * 100).toFixed(0)}%</span>
                   ),
                 },
               ]}
@@ -174,41 +156,28 @@ export function SchemaExtractionReview({
       )}
 
       {activeTab === "properties" && (
-        <div
-          data-testid="properties-table-container"
-          className="schema-table-container"
-        >
+        <div data-testid="properties-table-container" className="schema-table-container">
           {properties.length === 0 ? (
-            <div className="review-empty">
-              No properties extracted
-            </div>
+            <div className="review-empty">No properties extracted</div>
           ) : (
             <Table
               columns={[
                 {
                   key: "label" as const,
                   label: "Label",
-                  render: (v) => (
-                    <span className="table-cell-label">{String(v)}</span>
-                  ),
+                  render: (v) => <span className="table-cell-label">{String(v)}</span>,
                 },
                 {
                   key: "description" as const,
                   label: "Description",
-                  render: (v) => (
-                    <span className="table-cell-description">
-                      {String(v || "—")}
-                    </span>
-                  ),
+                  render: (v) => <span className="table-cell-description">{String(v || "—")}</span>,
                 },
                 {
                   key: "confidence" as const,
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span className="table-cell-confidence">
-                      {(Number(v) * 100).toFixed(0)}%
-                    </span>
+                    <span className="table-cell-confidence">{(Number(v) * 100).toFixed(0)}%</span>
                   ),
                 },
               ]}
@@ -241,48 +210,33 @@ export function SchemaExtractionReview({
       )}
 
       {activeTab === "relationships" && (
-        <div
-          data-testid="relationships-table-container"
-          className="schema-table-container"
-        >
+        <div data-testid="relationships-table-container" className="schema-table-container">
           {relationships.length === 0 ? (
-            <div className="review-empty">
-              No relationships extracted
-            </div>
+            <div className="review-empty">No relationships extracted</div>
           ) : (
             <Table
               columns={[
                 {
                   key: "source_label" as const,
                   label: "Source",
-                  render: (v) => (
-                    <span className="table-cell-label">{String(v)}</span>
-                  ),
+                  render: (v) => <span className="table-cell-label">{String(v)}</span>,
                 },
                 {
                   key: "relationship_type" as const,
                   label: "Type",
-                  render: (v) => (
-                    <span className="table-cell-mono">
-                      {String(v)}
-                    </span>
-                  ),
+                  render: (v) => <span className="table-cell-mono">{String(v)}</span>,
                 },
                 {
                   key: "target_label" as const,
                   label: "Target",
-                  render: (v) => (
-                    <span className="table-cell-label">{String(v)}</span>
-                  ),
+                  render: (v) => <span className="table-cell-label">{String(v)}</span>,
                 },
                 {
                   key: "confidence" as const,
                   label: "Confidence",
                   width: "100px",
                   render: (v) => (
-                    <span className="table-cell-confidence">
-                      {(Number(v) * 100).toFixed(0)}%
-                    </span>
+                    <span className="table-cell-confidence">{(Number(v) * 100).toFixed(0)}%</span>
                   ),
                 },
               ]}

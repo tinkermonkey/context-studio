@@ -130,9 +130,7 @@ test.describe("Individual Extraction Run, Review, and Apply", () => {
     await expect(page.getByTestId("individual-extraction-review")).toBeVisible({ timeout: 30000 });
   });
 
-  test("Test Case 5: Review Extracted Individuals/Triples in Candidate Table", async ({
-    page,
-  }) => {
+  test("Test Case 5: Review Extracted Individuals/Triples in Candidate Table", async ({ page }) => {
     // Create test data
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);

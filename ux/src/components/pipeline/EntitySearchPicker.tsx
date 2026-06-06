@@ -45,7 +45,7 @@ export function EntitySearchPicker({
     const filtered = entities.filter(
       (e: any) =>
         e.title?.toLowerCase().includes(query.toLowerCase()) ||
-        e.id?.toLowerCase().includes(query.toLowerCase())
+        e.id?.toLowerCase().includes(query.toLowerCase()),
     );
 
     return filtered.slice(0, 50).map((e: any) => ({
@@ -56,7 +56,7 @@ export function EntitySearchPicker({
 
   const selectedEntity = useMemo(
     () => entities.find((e: any) => e.id === selectedId),
-    [entities, selectedId]
+    [entities, selectedId],
   );
 
   const handleSelect = (result: Entity) => {
@@ -72,11 +72,7 @@ export function EntitySearchPicker({
   return (
     <div data-testid={testId} className="entity-search-picker">
       {errorMessage && (
-        <div
-          className="error-banner-compact"
-          role="alert"
-          data-testid="entity-picker-error"
-        >
+        <div className="error-banner-compact" role="alert" data-testid="entity-picker-error">
           {errorMessage}
         </div>
       )}

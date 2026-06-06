@@ -28,7 +28,10 @@ export function ConfigurationList({
     const groups = new Map<string, ConfigurationResponse[]>();
     configurations.forEach((config) => {
       const existing = groups.get(config.config_ref) || [];
-      groups.set(config.config_ref, [...existing, config].sort((a, b) => b.version - a.version));
+      groups.set(
+        config.config_ref,
+        [...existing, config].sort((a, b) => b.version - a.version),
+      );
     });
     return Array.from(groups.entries());
   }, [configurations]);
@@ -86,7 +89,9 @@ export function ConfigurationList({
     const parts = selectedId.split("_v");
     const selectedRef = parts[0];
     const selectedVersion = parts[1] ? parseInt(parts[1]) : undefined;
-    return config.config_ref === selectedRef && (!selectedVersion || config.version === selectedVersion);
+    return (
+      config.config_ref === selectedRef && (!selectedVersion || config.version === selectedVersion)
+    );
   };
 
   return (

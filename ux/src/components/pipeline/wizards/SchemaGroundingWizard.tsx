@@ -74,8 +74,7 @@ export function SchemaGroundingWizard() {
 
       await handleSubmit(request);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
+      const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
   };
@@ -91,19 +90,13 @@ export function SchemaGroundingWizard() {
 
   const toggleSource = (sourceId: string) => {
     setSelectedSources((prev) =>
-      prev.includes(sourceId)
-        ? prev.filter((s) => s !== sourceId)
-        : [...prev, sourceId]
+      prev.includes(sourceId) ? prev.filter((s) => s !== sourceId) : [...prev, sourceId],
     );
     setErrors((prev) => ({ ...prev, sources: undefined }));
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      data-testid="schema-grounding-wizard"
-      className="wizard-form"
-    >
+    <form onSubmit={onSubmit} data-testid="schema-grounding-wizard" className="wizard-form">
       <Field label="Node Type" data-testid="schema-grounding-node-type">
         <SegmentedControl
           value={nodeType}
@@ -120,12 +113,7 @@ export function SchemaGroundingWizard() {
         />
       </Field>
 
-      <Field
-        label="Target Nodes"
-        required
-        error={errors.nodes}
-        errorId="nodes-error"
-      >
+      <Field label="Target Nodes" required error={errors.nodes} errorId="nodes-error">
         <EntitySearchPicker
           entityType={nodeType}
           selectedId={selectedNodes[0]?.id}
@@ -137,12 +125,7 @@ export function SchemaGroundingWizard() {
         />
       </Field>
 
-      <Field
-        label="Knowledge Sources"
-        required
-        error={errors.sources}
-        errorId="sources-error"
-      >
+      <Field label="Knowledge Sources" required error={errors.sources} errorId="sources-error">
         <div
           className="sources-checkboxes"
           role="group"
@@ -152,10 +135,7 @@ export function SchemaGroundingWizard() {
           data-testid="schema-grounding-sources"
         >
           {KNOWLEDGE_SOURCES.map((source) => (
-            <label
-              key={source.id}
-              className="sources-label"
-            >
+            <label key={source.id} className="sources-label">
               <input
                 type="checkbox"
                 checked={selectedSources.includes(source.id)}
@@ -196,11 +176,7 @@ export function SchemaGroundingWizard() {
       <Button
         type="submit"
         variant="primary"
-        disabled={
-          isSubmitting ||
-          selectedNodes.length === 0 ||
-          selectedSources.length === 0
-        }
+        disabled={isSubmitting || selectedNodes.length === 0 || selectedSources.length === 0}
         aria-busy={isSubmitting}
         data-testid="schema-grounding-submit"
       >

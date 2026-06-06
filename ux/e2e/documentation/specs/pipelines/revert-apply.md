@@ -416,4 +416,3 @@ Note: Pipeline types are assumed to exist as built-in system types.
 - [x] Invariant validation named (apply confirmation, revert confirmation, state consistency)
 - [x] Anti-patterns acknowledged (no timeouts, no hardcoded IDs, no invented selectors)
 - [x] Factory usage documented (ontology setup, cleanup)
-
