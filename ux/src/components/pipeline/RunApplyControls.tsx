@@ -2,7 +2,11 @@ import { useState } from "react";
 import { ConfirmDialog, Button } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
+import type { ApplyParams } from "@/api/services/pipeline";
 import type { components } from "@/api/types";
+import type {
+  SchemaExtractionOutputSummary,
+} from "@/api/hooks/pipeline/outputSummaryTypes";
 import "./RunApplyControls.css";
 
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
@@ -55,39 +59,46 @@ export function RunApplyControls({
 
     // For schema extraction, check classes, properties, and relationships
     if (pipelineType === "schema_extraction" && outputSummary) {
-      const summary = outputSummary as any;
+      const summary = outputSummary as SchemaExtractionOutputSummary | unknown;
 
-      if (selectedCandidates.classes.length > 0 && summary.classes) {
-        summary.classes.forEach((item: any, idx: number) => {
-          if (selectedCandidates.classes.includes(`class-${idx}`)) {
-            if (typeof item.confidence === "number") {
-              minConfidence = Math.min(minConfidence, item.confidence);
-              foundConfidence = true;
-            }
-          }
-        });
-      }
+      if (typeof summary === "object" && summary !== null) {
+        const summaryObj = summary as Record<string, unknown>;
 
-      if (selectedCandidates.properties.length > 0 && summary.properties) {
-        summary.properties.forEach((item: any, idx: number) => {
-          if (selectedCandidates.properties.includes(`prop-${idx}`)) {
-            if (typeof item.confidence === "number") {
-              minConfidence = Math.min(minConfidence, item.confidence);
-              foundConfidence = true;
+        if (selectedCandidates.classes.length > 0 && Array.isArray(summaryObj.classes)) {
+          summaryObj.classes.forEach((item: unknown, idx: number) => {
+            if (selectedCandidates.classes.includes(`class-${idx}`)) {
+              const itemObj = item as Record<string, unknown>;
+              if (typeof itemObj.confidence === "number") {
+                minConfidence = Math.min(minConfidence, itemObj.confidence);
+                foundConfidence = true;
+              }
             }
-          }
-        });
-      }
+          });
+        }
 
-      if (selectedCandidates.relationships.length > 0 && summary.relationships) {
-        summary.relationships.forEach((item: any, idx: number) => {
-          if (selectedCandidates.relationships.includes(`rel-${idx}`)) {
-            if (typeof item.confidence === "number") {
-              minConfidence = Math.min(minConfidence, item.confidence);
-              foundConfidence = true;
+        if (selectedCandidates.properties.length > 0 && Array.isArray(summaryObj.properties)) {
+          summaryObj.properties.forEach((item: unknown, idx: number) => {
+            if (selectedCandidates.properties.includes(`prop-${idx}`)) {
+              const itemObj = item as Record<string, unknown>;
+              if (typeof itemObj.confidence === "number") {
+                minConfidence = Math.min(minConfidence, itemObj.confidence);
+                foundConfidence = true;
+              }
             }
-          }
-        });
+          });
+        }
+
+        if (selectedCandidates.relationships.length > 0 && Array.isArray(summaryObj.relationships)) {
+          summaryObj.relationships.forEach((item: unknown, idx: number) => {
+            if (selectedCandidates.relationships.includes(`rel-${idx}`)) {
+              const itemObj = item as Record<string, unknown>;
+              if (typeof itemObj.confidence === "number") {
+                minConfidence = Math.min(minConfidence, itemObj.confidence);
+                foundConfidence = true;
+              }
+            }
+          });
+        }
       }
     }
 
@@ -100,38 +111,46 @@ export function RunApplyControls({
     try {
       const confidenceThreshold = getMinConfidenceThreshold();
 
-      const params: Record<string, unknown> = {
+      const params: ApplyParams = {
         confidence_threshold: confidenceThreshold,
       };
 
       // Add scope parameters based on pipeline type
       if (run.pipeline_type === "schema_extraction") {
-        // Schema extraction doesn't require additional scope
+        // Schema extraction may require concept_scheme_id
+        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+        if (inputSummary && typeof inputSummary === "object" && "concept_scheme_id" in inputSummary) {
+          params.concept_scheme_id = String(inputSummary.concept_scheme_id);
+        }
       } else if (run.pipeline_type === "individual_extraction") {
         // Individual extraction may require taxonomy_id
-        if (run.input_summary?.taxonomy_id) {
-          params.taxonomy_id = run.input_summary.taxonomy_id;
+        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+        if (inputSummary && typeof inputSummary === "object" && "taxonomy_id" in inputSummary) {
+          params.taxonomy_id = String(inputSummary.taxonomy_id);
         }
       } else if (run.pipeline_type === "schema_node_grounding") {
         // Grounding requires node_id
-        if (run.input_summary?.node_id) {
-          params.node_id = run.input_summary.node_id;
+        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
+          params.node_id = String(inputSummary.node_id);
         }
       } else if (run.pipeline_type === "schema_node_definition_refinement") {
         // Definition refinement requires node_id
-        if (run.input_summary?.node_id) {
-          params.node_id = run.input_summary.node_id;
+        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
+          params.node_id = String(inputSummary.node_id);
         }
       } else if (run.pipeline_type === "schema_node_connection_refinement") {
         // Connection refinement requires node_id
-        if (run.input_summary?.node_id) {
-          params.node_id = run.input_summary.node_id;
+        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
+          params.node_id = String(inputSummary.node_id);
         }
       }
 
       const result = await applyMutation.mutateAsync({
         runId: run.id,
-        params: params as any,
+        params,
       });
 
       toast("success", "Results applied successfully");
@@ -162,6 +181,8 @@ export function RunApplyControls({
     );
   }
 
+  const confidenceThreshold = getMinConfidenceThreshold();
+
   return (
     <>
       <Button
@@ -178,6 +199,7 @@ export function RunApplyControls({
         onClose={() => setShowDialog(false)}
         onConfirm={handleApply}
         title="Apply run results"
+        data-testid="run-apply-confirm-dialog"
         message={
           <div className="run-apply-dialog-content">
             <p>
@@ -187,14 +209,11 @@ export function RunApplyControls({
             <div className="run-apply-threshold-warning">
               <span className="warning-icon">⚠</span>
               <p>
-                Confidence threshold will be set to <strong>0</strong> to include all selected
+                Confidence threshold will be set to <strong>{confidenceThreshold.toFixed(2)}</strong> to include all selected
                 candidates. Any candidates above this threshold that were not explicitly selected
                 will also be applied.
               </p>
             </div>
-            {totalSelected === 0 && (
-              <p className="run-apply-error">Please select at least one candidate to apply.</p>
-            )}
           </div>
         }
         confirmLabel="Apply"

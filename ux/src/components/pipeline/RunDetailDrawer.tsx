@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader, AlertCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   InspectorPanel,
   KVGrid,
@@ -37,6 +38,7 @@ interface RunDetailDrawerProps {
 
 export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
   const { data: run, isLoading, error } = usePipelineRun(runId);
+  const queryClient = useQueryClient();
 
   // Selection state for SchemaExtractionReview
   const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
@@ -56,10 +58,27 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
   const [activeOperation, setActiveOperation] = useState<"add" | "remove" | "modify">("add");
   const [deltaStatus, setDeltaStatus] = useState<Record<string, "pending" | "accepted" | "rejected">>({});
 
-  // Apply/revert state
-  const [applyResult, setApplyResult] = useState<ApplyRunResponse | null>(null);
-  const [revertResult, setRevertResult] = useState<RevertRunResponse | null>(null);
-  const [isReverted, setIsReverted] = useState(false);
+  // Apply/revert state from React Query cache
+  const getCachedApplyStatus = () => {
+    return queryClient.getQueryData<{
+      applyResult: ApplyRunResponse | null;
+      revertResult: RevertRunResponse | null;
+      isReverted: boolean;
+    }>(['pipeline-runs', runId, 'apply-status']) || { applyResult: null, revertResult: null, isReverted: false };
+  };
+
+  const setCachedApplyStatus = (status: {
+    applyResult: ApplyRunResponse | null;
+    revertResult: RevertRunResponse | null;
+    isReverted: boolean;
+  }) => {
+    queryClient.setQueryData(['pipeline-runs', runId, 'apply-status'], status);
+  };
+
+  const cachedStatus = getCachedApplyStatus();
+  const applyResult = cachedStatus.applyResult;
+  const revertResult = cachedStatus.revertResult;
+  const isReverted = cachedStatus.isReverted;
 
   if (isLoading) {
     return (
@@ -166,13 +185,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
         );
       default:
         return (
-          <div
-            style={{
-              padding: "16px",
-              color: "rgb(var(--canvas-fg-3))",
-              fontSize: "12px",
-            }}
-          >
+          <div className="run-detail-placeholder">
             Unknown pipeline type: {runData.pipeline_type}
           </div>
         );
@@ -206,7 +219,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
           <div className="run-detail-results-section" data-testid="run-completed-section">
             <div className="run-detail-results-item">
               <strong>Review</strong>
-              <div style={{ marginTop: "8px" }}>
+              <div className="run-detail-results-item-content">
                 {renderReviewComponent(run)}
               </div>
             </div>
@@ -227,14 +240,15 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
                       groundingCandidates: Object.entries(candidateStatus)
                         .filter(([, status]) => status === "accepted")
                         .map(([key]) => key),
-                      refinementCandidates: Object.entries(deltaStatus)
-                        .filter(([, status]) => status === "accepted")
-                        .map(([key]) => key),
+                      refinementCandidates: selectedOption === "current" ? [] : [`definition-${selectedOption}`],
                     }}
                     isApplied={!!applyResult}
                     onApplySuccess={(result) => {
-                      setApplyResult(result);
-                      setRevertResult(null);
+                      setCachedApplyStatus({
+                        applyResult: result,
+                        revertResult: null,
+                        isReverted: false,
+                      });
                     }}
                   />
                 </div>
@@ -321,8 +335,11 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
                         applyResult={applyResult}
                         isReverted={isReverted}
                         onRevertSuccess={(result) => {
-                          setRevertResult(result);
-                          setIsReverted(true);
+                          setCachedApplyStatus({
+                            applyResult,
+                            revertResult: result,
+                            isReverted: true,
+                          });
                         }}
                       />
                     </div>

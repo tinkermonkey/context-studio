@@ -43,6 +43,10 @@
   display: block;
 }
 
+.run-detail-results-item-content {
+  margin-top: 8px;
+}
+
 .run-detail-candidates-wrapper {
   margin-top: 4px;
 }

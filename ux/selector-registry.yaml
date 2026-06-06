@@ -1870,3 +1870,9 @@ selectors:
   - selector: run-revert-button
     component: src/components/pipeline/RunRevertControls.tsx
     description: Revert this apply button to undo a successful apply
+  - selector: run-apply-confirm-dialog
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Confirmation dialog before applying selected candidates
+  - selector: run-revert-confirm-dialog
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Confirmation dialog before reverting an applied run

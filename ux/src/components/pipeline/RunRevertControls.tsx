@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ConfirmDialog, Button } from "@tinkermonkey/heimdall-ui";
+import { Loader } from "lucide-react";
 import { useToasts } from "@/components/ui/Toast";
 import { useRevertRun } from "@/api/hooks/pipeline/usePipelineMutations";
 import type { components } from "@/api/types";
@@ -88,7 +89,14 @@ export function RunRevertControls({
         data-testid="run-revert-button"
         aria-label="Revert this apply"
       >
-        Revert this apply
+        {revertMutation.isPending ? (
+          <>
+            <Loader size={16} className="spin" />
+            Reverting...
+          </>
+        ) : (
+          "Revert this apply"
+        )}
       </Button>
 
       <ConfirmDialog
@@ -96,6 +104,7 @@ export function RunRevertControls({
         onClose={() => setShowDialog(false)}
         onConfirm={handleRevert}
         title="Revert run results"
+        data-testid="run-revert-confirm-dialog"
         message={
           <div className="run-revert-dialog-content">
             <p>
