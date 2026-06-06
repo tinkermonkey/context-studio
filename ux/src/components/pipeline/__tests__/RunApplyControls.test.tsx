@@ -42,16 +42,14 @@ function createMockRun(overrides?: Partial<PipelineRunResponse>): PipelineRunRes
       candidate_count: 5,
       classes: [
         { id: "class-0", name: "Class A", confidence: 0.95 },
-        { id: "class-1", name: "Class B", confidence: 0.80 },
-        { id: "class-2", name: "Class C", confidence: 0.60 },
+        { id: "class-1", name: "Class B", confidence: 0.8 },
+        { id: "class-2", name: "Class C", confidence: 0.6 },
       ],
       properties: [
-        { id: "prop-0", name: "Property 1", confidence: 0.90 },
-        { id: "prop-1", name: "Property 2", confidence: 0.70 },
+        { id: "prop-0", name: "Property 1", confidence: 0.9 },
+        { id: "prop-1", name: "Property 2", confidence: 0.7 },
       ],
-      relationships: [
-        { id: "rel-0", name: "Related to", confidence: 0.85 },
-      ],
+      relationships: [{ id: "rel-0", name: "Related to", confidence: 0.85 }],
     },
     ...overrides,
   } as PipelineRunResponse;
@@ -145,7 +143,7 @@ describe("RunApplyControls", () => {
 
       const threshold = parseFloat(match![1]);
       expect(threshold).toBeGreaterThanOrEqual(0.59);
-      expect(threshold).toBeLessThanOrEqual(0.60);
+      expect(threshold).toBeLessThanOrEqual(0.6);
     });
 
     it("calculates minimum confidence from selected properties", async () => {
@@ -184,7 +182,7 @@ describe("RunApplyControls", () => {
       const threshold = parseFloat(match![1]);
 
       expect(threshold).toBeGreaterThanOrEqual(0.69);
-      expect(threshold).toBeLessThanOrEqual(0.70);
+      expect(threshold).toBeLessThanOrEqual(0.7);
     });
 
     it("calculates minimum confidence from selected relationships", async () => {
@@ -262,7 +260,7 @@ describe("RunApplyControls", () => {
       const threshold = parseFloat(match![1]);
 
       expect(threshold).toBeGreaterThanOrEqual(0.69);
-      expect(threshold).toBeLessThanOrEqual(0.70);
+      expect(threshold).toBeLessThanOrEqual(0.7);
     });
 
     it("uses conservative threshold (0.95) for non-schema-extraction pipeline types", async () => {
@@ -679,7 +677,7 @@ describe("RunApplyControls", () => {
     it("prevents apply when input_summary has unexpected shape", async () => {
       const run = createMockRun({
         pipeline_type: "schema_extraction",
-        input_summary: null, // Invalid shape
+        input_summary: undefined, // Invalid shape
       });
 
       let applyWasCalled = false;
