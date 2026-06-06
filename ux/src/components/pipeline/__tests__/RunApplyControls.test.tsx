@@ -333,6 +333,72 @@ describe("RunApplyControls", () => {
       expect(button).toHaveTextContent("Already applied");
     });
 
+    it("displays targetName in confirmation dialog when provided", async () => {
+      const run = createMockRun({
+        input_summary: { concept_scheme_id: "scheme-001", taxonomy_name: "My Taxonomy" },
+      });
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          targetName="My Taxonomy"
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const targetDisplay = within(dialog).getByText(/You are about to apply/);
+      const codeElement = within(dialog).getByText("My Taxonomy");
+
+      expect(codeElement).toBeInTheDocument();
+      expect(targetDisplay).toHaveTextContent("My Taxonomy");
+    });
+
+    it("displays implementation_id when targetName is not provided", async () => {
+      const run = createMockRun({
+        implementation_id: "impl-test-id",
+        input_summary: { concept_scheme_id: "scheme-001", taxonomy_id: "tax-001" },
+      });
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const codeElement = within(dialog).getByText("impl-test-id");
+
+      expect(codeElement).toBeInTheDocument();
+    });
+
     it("counts all candidate types in total", () => {
       const run = createMockRun();
 

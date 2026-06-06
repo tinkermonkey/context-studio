@@ -296,8 +296,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                     isApplied={!!applyResult}
                     targetName={
                       run.input_summary && typeof run.input_summary === "object"
-                        ? (run.input_summary as Record<string, unknown>).taxonomy_name ||
-                          (run.input_summary as Record<string, unknown>).scope_name
+                        ? ((run.input_summary as Record<string, unknown>).taxonomy_name as
+                            | string
+                            | undefined)
                         : undefined
                     }
                     onApplySuccess={(result) => {
@@ -407,6 +408,11 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                             revertResult: result,
                             isReverted: true,
                           });
+                          try {
+                            localStorage.removeItem(`pipeline-run-apply-status-${runId}`);
+                          } catch {
+                            // Ignore localStorage errors
+                          }
                         }}
                       />
                     </div>
