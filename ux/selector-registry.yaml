@@ -1456,6 +1456,9 @@ selectors:
   - selector: pipeline-run-target-picker
     component: components/pipeline/wizards/*.tsx
     description: Target entity/node picker in the run wizard
+  - selector: implementation-config-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Root container for implementation and configuration selection in run wizards
 
   # Pipelines — runs page and filtering
   - selector: runs-filter-bar

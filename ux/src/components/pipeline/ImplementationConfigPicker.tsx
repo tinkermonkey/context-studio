@@ -2,6 +2,19 @@ import { Field } from "@tinkermonkey/heimdall-ui";
 import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfigurations";
 
+export interface ConfigSelection {
+  configRef: string;
+  version: number;
+}
+
+export const encodeConfigSelection = (configRef: string, version: number): string => {
+  return btoa(JSON.stringify({ configRef, version }));
+};
+
+export const decodeConfigSelection = (encoded: string): ConfigSelection => {
+  return JSON.parse(atob(encoded));
+};
+
 export interface ImplementationConfigPickerProps {
   pipelineType: string;
   onSelectImplementation: (id: string) => void;
@@ -23,18 +36,31 @@ export function ImplementationConfigPicker({
   implementationError,
   configError,
 }: ImplementationConfigPickerProps) {
-  const { data: implementations, isLoading: implLoading } =
+  const { data: implementations, isLoading: implLoading, isError: implError, error: implErrorObj } =
     usePipelineImplementations(pipelineType);
 
-  const { data: configurations, isLoading: configLoading } =
+  const { data: configurations, isLoading: configLoading, isError: configQueryError, error: configErrorObj } =
     usePipelineConfigurations(pipelineType, selectedImplementationId || "");
 
+  const implErrorMessage = implError
+    ? implErrorObj instanceof Error
+      ? implErrorObj.message
+      : "Failed to load implementations"
+    : implementationError;
+
+  const configErrorMessage = configQueryError
+    ? configErrorObj instanceof Error
+      ? configErrorObj.message
+      : "Failed to load configurations"
+    : configError;
+
+
   return (
-    <>
+    <div data-testid="implementation-config-picker">
       <Field
         label="Implementation"
         required
-        error={implementationError}
+        error={implErrorMessage}
         errorId="implementation-error"
       >
         <select
@@ -44,9 +70,9 @@ export function ImplementationConfigPicker({
             onSelectConfig("");
           }}
           disabled={disabled || implLoading}
-          aria-invalid={!!implementationError}
+          aria-invalid={!!implErrorMessage}
           aria-describedby={
-            implementationError ? "implementation-error" : undefined
+            implErrorMessage ? "implementation-error" : undefined
           }
           data-testid="implementation-select"
           className="wizard-select"
@@ -64,21 +90,21 @@ export function ImplementationConfigPicker({
         <Field
           label="Configuration"
           required
-          error={configError}
+          error={configErrorMessage}
           errorId="configuration-error"
         >
           <select
             value={selectedConfigRef}
             onChange={(e) => onSelectConfig(e.target.value)}
             disabled={disabled || configLoading || !configurations?.length}
-            aria-invalid={!!configError}
-            aria-describedby={configError ? "configuration-error" : undefined}
+            aria-invalid={!!configErrorMessage}
+            aria-describedby={configErrorMessage ? "configuration-error" : undefined}
             data-testid="configuration-select"
             className="wizard-select"
           >
             <option value="">Choose configuration…</option>
             {configurations?.map((config) => {
-              const compositeValue = `${config.config_ref}_v${config.version}`;
+              const compositeValue = encodeConfigSelection(config.config_ref, config.version);
               return (
                 <option
                   key={compositeValue}
@@ -91,6 +117,6 @@ export function ImplementationConfigPicker({
           </select>
         </Field>
       )}
-    </>
+    </div>
   );
 }

@@ -31,6 +31,12 @@ export function EntitySearchPicker({
   const [query, setQuery] = useState("");
   const currentQuery = useEntityTypeQuery(entityType);
 
+  const errorMessage = currentQuery.isError
+    ? currentQuery.error instanceof Error
+      ? currentQuery.error.message
+      : `Failed to load ${entityType.toLowerCase()}s`
+    : undefined;
+
   const entities = useMemo(() => currentQuery.data?.items || [], [currentQuery.data?.items]);
 
   const results = useMemo(() => {
@@ -65,6 +71,11 @@ export function EntitySearchPicker({
 
   return (
     <div data-testid={testId} className="entity-search-picker">
+      {errorMessage && (
+        <div className="entity-picker-error" role="alert">
+          {errorMessage}
+        </div>
+      )}
       {selectedEntity ? (
         <div className="selected-entity">
           <span>{selectedEntity.title || selectedEntity.id}</span>
@@ -72,7 +83,7 @@ export function EntitySearchPicker({
             variant="secondary"
             size="sm"
             onClick={handleClear}
-            disabled={disabled}
+            disabled={disabled || currentQuery.isLoading}
             aria-label={`Clear ${entityType} selection`}
             data-testid={testId ? `${testId}-clear` : undefined}
           >
@@ -87,9 +98,9 @@ export function EntitySearchPicker({
           onSelect={handleSelect}
           onClear={handleClear}
           placeholder={placeholder}
-          disabled={disabled || currentQuery.isLoading}
+          disabled={disabled || currentQuery.isLoading || currentQuery.isError}
           data-testid={testId ? `${testId}-input` : undefined}
-          aria-invalid={ariaInvalid}
+          aria-invalid={ariaInvalid || currentQuery.isError}
           aria-describedby={ariaDescribedBy}
         />
       )}

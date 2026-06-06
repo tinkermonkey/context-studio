@@ -3,7 +3,7 @@ import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
-import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
 import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
@@ -72,7 +72,7 @@ export function DefinitionRefinementWizard() {
     }
 
     try {
-      const configRefPart = configRef.split("_v")[0];
+      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
         implementation_id: implementationId,
         configuration_ref: configRefPart,
