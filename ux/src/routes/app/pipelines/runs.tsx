@@ -115,8 +115,7 @@ function RunsPageContent({
     filters.status ||
     filters.startDate ||
     filters.endDate ||
-    filters.implementation ||
-    filters.applied
+    filters.implementation
   );
   const isGenuinelyEmpty = total === 0 && !hasFilters;
   const isFilteredEmpty = total === 0 && hasFilters;
@@ -159,7 +158,6 @@ function RunsPageContent({
                 startDate: undefined,
                 endDate: undefined,
                 implementation: undefined,
-                applied: undefined,
               });
             },
           }}
@@ -430,7 +428,10 @@ function FilterBarContent({
                   <FilterDropdown.Radio
                     key={impl.id}
                     value={impl.id}
-                    label={impl.id}
+                    label={impl.id
+                      .split("_")
+                      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                      .join(" ")}
                   />
                 ))}
               </FilterDropdown.Section>
@@ -440,26 +441,22 @@ function FilterBarContent({
 
         <FilterDropdown
           mode="radio"
-          value={filters.applied ? [filters.applied] : []}
-          onChange={(values) =>
-            onFilterChange({ applied: (values[0] as "applied" | "not-applied") || undefined })
-          }
+          value={[]}
+          onChange={() => {}}
         >
           <FilterDropdown.Trigger
             label="Applied"
-            summary={filters.applied ? (filters.applied === "applied" ? "Applied" : "Not Applied") : "All"}
+            summary="All"
             data-testid="filter-applied"
+            title="Pending backend support for applied status filtering"
+            aria-disabled="true"
+            style={{ opacity: 0.5, cursor: "not-allowed" }}
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
-              <FilterDropdown.Radio
-                value="applied"
-                label="Applied"
-              />
-              <FilterDropdown.Radio
-                value="not-applied"
-                label="Not Applied"
-              />
+              <div style={{ padding: "8px 12px", fontSize: "12px", color: "#888" }}>
+                Pending backend support
+              </div>
             </FilterDropdown.Section>
           </FilterDropdown.Panel>
         </FilterDropdown>
