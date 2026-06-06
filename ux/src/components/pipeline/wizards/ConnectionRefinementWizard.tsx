@@ -1,0 +1,253 @@
+import { useState, useMemo } from "react";
+import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
+import { useToasts } from "@/components/ui/Toast";
+import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
+import { useClass } from "@/api/hooks/ontology/useClasses";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
+import type { components } from "@/api/types";
+
+type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
+
+export function ConnectionRefinementWizard() {
+  const { toast } = useToasts();
+  const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
+    type: "schema_node_connection_refinement",
+  });
+
+  const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
+  const [implementationId, setImplementationId] = useState("");
+  const [configRef, setConfigRef] = useState("");
+
+  const { data: scopeClassDetails } = useClass(selectedScope?.id || "");
+
+  const neighborhoodPreview = useMemo(() => {
+    if (!scopeClassDetails) return null;
+
+    return {
+      label: scopeClassDetails.title || scopeClassDetails.id,
+      outgoingRelationships: (scopeClassDetails as any)
+        .outgoing_relationships || [],
+    };
+  }, [scopeClassDetails]);
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!selectedScope?.id) {
+      newErrors.scopeId = "Scope class is required";
+    }
+
+    if (!implementationId.trim()) {
+      newErrors.implementationId = "Implementation is required";
+    }
+
+    if (!configRef.trim()) {
+      newErrors.configRef = "Configuration is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
+
+    return true;
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const request: PipelineRunRequest = {
+        implementation_id: implementationId,
+        configuration_ref: configRef,
+        scope_id: selectedScope!.id,
+      };
+
+      await handleSubmit(request);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to run pipeline";
+      toast("error", errorMessage);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      data-testid="connection-refinement-wizard"
+      className="wizard-form"
+    >
+      <Field
+        label="Scope Class"
+        required
+        error={errors.scopeId}
+        errorId="scope-id-error"
+      >
+        <EntitySearchPicker
+          entityType="Class"
+          selectedId={selectedScope?.id}
+          onSelect={(entity) => {
+            setSelectedScope(entity);
+            setErrors((prev) => ({ ...prev, scopeId: undefined }));
+          }}
+          placeholder="Search classes…"
+          aria-invalid={!!errors.scopeId}
+          aria-describedby={errors.scopeId ? "scope-id-error" : undefined}
+          data-testid="connection-refinement-scope"
+        />
+      </Field>
+
+      {neighborhoodPreview && (
+        <div
+          className="neighborhood-preview"
+          data-testid="connection-refinement-neighborhood"
+          style={{
+            padding: "12px",
+            borderRadius: "4px",
+            backgroundColor: "rgb(var(--canvas-bg-2))",
+            border: "1px solid rgb(var(--canvas-border))",
+            marginBottom: "12px",
+          }}
+        >
+          <h4 style={{ marginBottom: "8px", fontSize: "var(--text-base)" }}>
+            {neighborhoodPreview.label} — Current Connections
+          </h4>
+
+          {neighborhoodPreview.outgoingRelationships.length > 0 ? (
+            <div style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "var(--text-sm)",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      borderBottom: "1px solid rgb(var(--canvas-border))",
+                    }}
+                  >
+                    <th
+                      style={{
+                        padding: "6px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Subject
+                    </th>
+                    <th
+                      style={{
+                        padding: "6px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Predicate
+                    </th>
+                    <th
+                      style={{
+                        padding: "6px",
+                        textAlign: "left",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Object
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {neighborhoodPreview.outgoingRelationships
+                    .slice(0, 10)
+                    .map((rel: any) => (
+                      <tr
+                        key={rel.id || rel.target_id}
+                        style={{
+                          borderBottom: "1px solid rgb(var(--canvas-border))",
+                        }}
+                      >
+                        <td style={{ padding: "6px" }}>
+                          {neighborhoodPreview.label}
+                        </td>
+                        <td style={{ padding: "6px" }}>
+                          {rel.relationship_type}
+                        </td>
+                        <td style={{ padding: "6px" }}>
+                          {rel.target_label || rel.target_id}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {neighborhoodPreview.outgoingRelationships.length > 10 && (
+                <p style={{ marginTop: "8px", fontSize: "var(--text-sm)" }}>
+                  +{neighborhoodPreview.outgoingRelationships.length - 10} more
+                  connections
+                </p>
+              )}
+            </div>
+          ) : (
+            <p
+              style={{
+                fontSize: "var(--text-sm)",
+                color: "rgb(var(--canvas-fg-2))",
+              }}
+            >
+              No current connections
+            </p>
+          )}
+        </div>
+      )}
+
+      <ImplementationConfigPicker
+        pipelineType="schema_node_connection_refinement"
+        selectedImplementationId={implementationId}
+        selectedConfigRef={configRef}
+        onSelectImplementation={(id) => {
+          setImplementationId(id);
+          setErrors((prev) => ({ ...prev, implementationId: undefined }));
+          setConfigRef("");
+        }}
+        onSelectConfig={(ref) => {
+          setConfigRef(ref);
+          setErrors((prev) => ({ ...prev, configRef: undefined }));
+        }}
+        disabled={isSubmitting}
+        implementationError={errors.implementationId}
+        configError={errors.configRef}
+      />
+
+      {errors.submit && (
+        <FormCallout variant="error" data-testid="connection-refinement-error">
+          {errors.submit}
+        </FormCallout>
+      )}
+
+      {isSubmitting && (
+        <FormCallout
+          variant="info"
+          data-testid="connection-refinement-loading"
+        >
+          Running pipeline — this may take up to a minute
+        </FormCallout>
+      )}
+
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting || !selectedScope}
+        aria-busy={isSubmitting}
+        data-testid="connection-refinement-submit"
+      >
+        {isSubmitting ? "Running…" : "Run Pipeline"}
+      </Button>
+    </form>
+  );
+}

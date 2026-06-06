@@ -57,7 +57,9 @@ class PipelineService extends BaseService {
     type: string,
     request: PipelineRunRequest,
   ): Promise<PipelineRunResponse> {
-    return this.post<PipelineRunResponse>(`/api/pipelines/${type}/run`, request);
+    return this.post<PipelineRunResponse>(`/api/pipelines/${type}/run`, request, undefined, {
+      timeout: 120_000,
+    });
   }
 
   // Runs

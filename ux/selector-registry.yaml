@@ -1596,3 +1596,121 @@ selectors:
   - selector: configuration-drawer-*
     component: src/components/pipeline/ConfigurationDrawer.tsx
     description: Right pane inspector showing read-only configuration details with dynamic ID suffix (pattern matches configuration-drawer-{ref}-{version})
+
+  # Pipeline Run Wizards
+  - selector: schema-extraction-wizard
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Schema extraction pipeline wizard form
+  - selector: schema-extraction-document
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Document text area input in schema extraction wizard
+  - selector: schema-extraction-taxonomy-picker
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Taxonomy/concept scheme entity picker in schema extraction wizard
+  - selector: schema-extraction-submit
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Submit button in schema extraction wizard
+  - selector: schema-extraction-error
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Error message callout in schema extraction wizard
+  - selector: schema-extraction-loading
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Loading state message in schema extraction wizard
+
+  - selector: individual-extraction-wizard
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Individual extraction pipeline wizard form
+  - selector: individual-extraction-source
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Source text area in individual extraction wizard
+  - selector: individual-extraction-ontology
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Target ontology entity picker in individual extraction wizard
+  - selector: individual-extraction-submit
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Submit button in individual extraction wizard
+  - selector: individual-extraction-error
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Error message callout in individual extraction wizard
+  - selector: individual-extraction-loading
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Loading state message in individual extraction wizard
+
+  - selector: schema-grounding-wizard
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Schema grounding pipeline wizard form
+  - selector: schema-grounding-nodes
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Target nodes entity picker in schema grounding wizard
+  - selector: schema-grounding-sources
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Knowledge sources multi-select checkboxes in schema grounding wizard
+  - selector: schema-grounding-source-dbpedia
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: DBpedia source checkbox
+  - selector: schema-grounding-source-conceptnet
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: ConceptNet source checkbox
+  - selector: schema-grounding-source-wikidata
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Wikidata source checkbox
+  - selector: schema-grounding-source-schema_org
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Schema.org source checkbox
+  - selector: schema-grounding-submit
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Submit button in schema grounding wizard
+  - selector: schema-grounding-error
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Error message callout in schema grounding wizard
+  - selector: schema-grounding-loading
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Loading state message in schema grounding wizard
+
+  - selector: definition-refinement-wizard
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Definition refinement pipeline wizard form
+  - selector: definition-refinement-class
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Class to refine entity picker in definition refinement wizard
+  - selector: definition-refinement-neighborhood
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Neighborhood preview panel showing class context in definition refinement wizard
+  - selector: definition-refinement-definition
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Current definition text area in definition refinement wizard
+  - selector: definition-refinement-submit
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Submit button in definition refinement wizard
+  - selector: definition-refinement-error
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Error message callout in definition refinement wizard
+  - selector: definition-refinement-loading
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Loading state message in definition refinement wizard
+
+  - selector: connection-refinement-wizard
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Connection refinement pipeline wizard form
+  - selector: connection-refinement-scope
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Scope class entity picker in connection refinement wizard
+  - selector: connection-refinement-neighborhood
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Neighborhood preview table showing current connections in connection refinement wizard
+  - selector: connection-refinement-submit
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Submit button in connection refinement wizard
+  - selector: connection-refinement-error
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Error message callout in connection refinement wizard
+  - selector: connection-refinement-loading
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Loading state message in connection refinement wizard
+
+  - selector: implementation-select
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation dropdown selector shared across all wizards
+  - selector: configuration-select
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration dropdown selector shared across all wizards
