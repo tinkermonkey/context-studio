@@ -29,6 +29,7 @@ import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
+import { Route as AppPipelinesTypesTypeRouteImport } from './routes/app/pipelines/types/$type'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -130,6 +131,11 @@ const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSchemaSchemesRoute,
 } as any)
+const AppPipelinesTypesTypeRoute = AppPipelinesTypesTypeRouteImport.update({
+  id: '/pipelines/types/$type',
+  path: '/pipelines/types/$type',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/app/extraction': typeof AppExtractionIndexRoute
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
+  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRoutesById {
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
 }
 export interface FileRouteTypes {
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/app/extraction'
     | '/app/graph'
     | '/app/pipelines'
+    | '/app/pipelines/types/$type'
     | '/app/schema/schemes'
   id:
     | '__root__'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
   fileRoutesById: FileRoutesById
 }
@@ -411,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSchemaSchemesIndexRouteImport
       parentRoute: typeof AppSchemaSchemesRoute
     }
+    '/app/pipelines/types/$type': {
+      id: '/app/pipelines/types/$type'
+      path: '/pipelines/types/$type'
+      fullPath: '/app/pipelines/types/$type'
+      preLoaderRoute: typeof AppPipelinesTypesTypeRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -442,6 +461,7 @@ interface AppRouteChildren {
   AppExtractionIndexRoute: typeof AppExtractionIndexRoute
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
+  AppPipelinesTypesTypeRoute: typeof AppPipelinesTypesTypeRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -461,6 +481,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExtractionIndexRoute: AppExtractionIndexRoute,
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
+  AppPipelinesTypesTypeRoute: AppPipelinesTypesTypeRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

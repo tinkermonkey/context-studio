@@ -1686,12 +1686,15 @@ export interface paths {
      * Revert Pipeline Run
      * @description Revert all changes made by a specific pipeline run.
      *
-     *     Walks the change_events for the given run_id in reverse order and applies
+     *     Walks the change_events for the given run in reverse order and applies
      *     the inverse of each operation. This restores the ontology to its state
      *     before the run was applied.
      *
      *     The operation is idempotent — calling revert twice produces the same state
      *     without error.
+     *
+     *     This endpoint only supports reverting runs from single-run batches. For multi-run
+     *     batches, use the batch revert endpoint instead.
      *
      *     Args:
      *         run_id: ID of the pipeline run to revert
@@ -1700,7 +1703,7 @@ export interface paths {
      *         RevertRunResponse with count of events reverted
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 500 for revert errors
+     *         HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
      */
     post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
     delete?: never;

@@ -3369,7 +3369,7 @@
           "pipelines"
         ],
         "summary": "Revert Pipeline Run",
-        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run_id in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 500 for revert errors",
+        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nThis endpoint only supports reverting runs from single-run batches. For multi-run\nbatches, use the batch revert endpoint instead.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors",
         "operationId": "revert_pipeline_run_api_pipelines_runs__run_id__revert_post",
         "parameters": [
           {

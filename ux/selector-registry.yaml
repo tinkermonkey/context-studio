@@ -1582,3 +1582,14 @@ selectors:
   - selector: pipeline-run-button-{type}
     component: src/components/pipeline/PipelineTypeCard.tsx
     description: Run button to navigate to execution wizard (type = pipeline_type identifier)
+
+  # Pipeline Type Detail
+  - selector: pipeline-type-detail-page
+    component: src/components/pipeline/PipelineTypeDetail.tsx
+    description: Root container for the pipeline type detail page showing implementations and configurations
+  - selector: implementation-list
+    component: src/components/pipeline/ImplementationList.tsx
+    description: Left pane list of implementations for the selected pipeline type
+  - selector: configuration-list
+    component: src/components/pipeline/ConfigurationList.tsx
+    description: Center pane list of versioned configurations for the selected implementation
