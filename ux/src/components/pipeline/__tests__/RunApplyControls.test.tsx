@@ -300,7 +300,7 @@ describe("RunApplyControls", () => {
       await userEvent.click(button);
 
       const dialog = screen.getByRole("dialog");
-      const dialogText = within(dialog).getByText(/Confidence threshold will be set to/);
+      const dialogText = within(dialog).getByText(/A conservative confidence threshold of/);
 
       const match = dialogText.textContent?.match(/(\d+\.\d+)/);
       expect(match).toBeDefined();
@@ -680,6 +680,47 @@ describe("RunApplyControls", () => {
       const run = createMockRun({
         pipeline_type: "schema_extraction",
         input_summary: null, // Invalid shape
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
+    });
+
+    it("prevents apply when concept_scheme_id is null for schema extraction", async () => {
+      const run = createMockRun({
+        pipeline_type: "schema_extraction",
+        input_summary: { concept_scheme_id: null }, // Invalid value
       });
 
       let applyWasCalled = false;

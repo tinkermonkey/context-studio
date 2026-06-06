@@ -117,20 +117,20 @@ export function RunApplyControls({
 
     switch (run.pipeline_type) {
       case "schema_extraction":
-        if (!("concept_scheme_id" in inputSummary)) {
-          return "Missing required parameter: concept_scheme_id";
+        if (!inputSummary.concept_scheme_id) {
+          return "Missing or invalid required parameter: concept_scheme_id";
         }
         break;
       case "individual_extraction":
-        if (!("taxonomy_id" in inputSummary)) {
-          return "Missing required parameter: taxonomy_id";
+        if (!inputSummary.taxonomy_id) {
+          return "Missing or invalid required parameter: taxonomy_id";
         }
         break;
       case "schema_node_grounding":
       case "schema_node_definition_refinement":
       case "schema_node_connection_refinement":
-        if (!("node_id" in inputSummary)) {
-          return "Missing required parameter: node_id";
+        if (!inputSummary.node_id) {
+          return "Missing or invalid required parameter: node_id";
         }
         break;
     }
@@ -227,9 +227,18 @@ export function RunApplyControls({
             <div className="run-apply-threshold-warning">
               <span className="warning-icon">⚠</span>
               <p>
-                Confidence threshold will be set to <strong>{confidenceThreshold.toFixed(2)}</strong> to include all selected
-                candidates. Any candidates above this threshold that were not explicitly selected
-                will also be applied.
+                {pipelineType === "schema_extraction" ? (
+                  <>
+                    Confidence threshold will be set to <strong>{confidenceThreshold.toFixed(2)}</strong> to include all selected
+                    candidates. Any candidates above this threshold that were not explicitly selected
+                    will also be applied.
+                  </>
+                ) : (
+                  <>
+                    A conservative confidence threshold of <strong>{confidenceThreshold.toFixed(2)}</strong> will be used. Only
+                    candidates above this threshold will be applied.
+                  </>
+                )}
               </p>
             </div>
           </div>
