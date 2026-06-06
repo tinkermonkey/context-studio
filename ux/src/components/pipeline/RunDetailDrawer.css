@@ -14,7 +14,6 @@
 }
 
 .run-detail-error-icon {
-  margin-right: 8px;
   display: inline;
 }
 
@@ -38,10 +37,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.run-detail-results-item {
-  margin-bottom: 12px;
 }
 
 .run-detail-results-item strong {
