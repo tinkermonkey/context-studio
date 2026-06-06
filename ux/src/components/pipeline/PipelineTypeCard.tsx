@@ -12,7 +12,7 @@ interface PipelineTypeCardProps {
   isRunsLoading?: boolean;
 }
 
-type StatusVariant = "emerald" | "rose" | "cyan" | "neutral";
+type StatusVariant = "emerald" | "rose" | "cyan" | "amber" | "neutral";
 
 const getRunStatusDisplay = (status: string): { label: string; variant: StatusVariant } => {
   switch (status.toUpperCase()) {
@@ -23,7 +23,7 @@ const getRunStatusDisplay = (status: string): { label: string; variant: StatusVa
     case "RUNNING":
       return { label: "Running", variant: "cyan" };
     case "PENDING":
-      return { label: "Pending", variant: "neutral" };
+      return { label: "Pending", variant: "amber" };
     default:
       return { label: status, variant: "neutral" };
   }
