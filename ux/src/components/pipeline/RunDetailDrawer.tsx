@@ -144,7 +144,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     { key: "Type", value: pipelineTypeDisplay },
     { key: "Implementation", value: run.configuration_slug || "—" },
     { key: "Configuration", value: `${run.configuration_ref} (v${run.configuration_version})` },
-    { key: "Status", value: <Chip color={statusColorMap[run.status] || "neutral"}>{run.status}</Chip> },
+    { key: "Status", value: <Chip variant={statusColorMap[run.status] || "neutral"}>{run.status}</Chip> },
     { key: "Started", value: formatDate(run.started_at) },
     { key: "Updated", value: formatDate(run.updated_at) },
   ];
