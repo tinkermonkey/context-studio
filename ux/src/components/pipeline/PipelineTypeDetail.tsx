@@ -98,7 +98,7 @@ export function PipelineTypeDetail() {
           Configuration editing is not yet available — persistence backend is not yet delivered
         </FormCallout>
 
-        <div className="pipeline-detail-layout">
+        <div className={`pipeline-detail-layout ${selectedConfig ? "has-drawer" : ""}`}>
           <ImplementationList
             implementations={implementations || []}
             selectedId={searchParams.impl}
