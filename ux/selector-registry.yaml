@@ -1945,30 +1945,6 @@ selectors:
     component: src/routes/app/pipelines/batches/$batchId.tsx
     description: Batch detail page placeholder showing deferred batch execution feature unavailability message
 
-  - selector: connection-refinement-batch-toggle
-    component: src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
-    description: Container for run as batch toggle in connection refinement wizard
-  - selector: connection-refinement-batch-checkbox
-    component: src/components/pipeline/wizards/ConnectionRefinementWizard.tsx
-    description: Checkbox to enable batch execution in connection refinement wizard
-  - selector: definition-refinement-batch-toggle
-    component: src/components/pipeline/wizards/DefinitionRefinementWizard.tsx
-    description: Container for run as batch toggle in definition refinement wizard
-  - selector: definition-refinement-batch-checkbox
-    component: src/components/pipeline/wizards/DefinitionRefinementWizard.tsx
-    description: Checkbox to enable batch execution in definition refinement wizard
-  - selector: individual-extraction-batch-toggle
-    component: src/components/pipeline/wizards/IndividualExtractionWizard.tsx
-    description: Container for run as batch toggle in individual extraction wizard
-  - selector: individual-extraction-batch-checkbox
-    component: src/components/pipeline/wizards/IndividualExtractionWizard.tsx
-    description: Checkbox to enable batch execution in individual extraction wizard
-  - selector: schema-extraction-batch-toggle
-    component: src/components/pipeline/wizards/SchemaExtractionWizard.tsx
-    description: Container for run as batch toggle in schema extraction wizard
-  - selector: schema-extraction-batch-checkbox
-    component: src/components/pipeline/wizards/SchemaExtractionWizard.tsx
-    description: Checkbox to enable batch execution in schema extraction wizard
   - selector: schema-grounding-node-type
     component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Container for node type selector (Class or PropertyDefinition) in grounding wizard
@@ -1978,12 +1954,6 @@ selectors:
   - selector: schema-grounding-node-type-property
     component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Button to select PropertyDefinition as target node type in grounding wizard
-  - selector: schema-grounding-batch-toggle
-    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Container for run as batch toggle in schema grounding wizard
-  - selector: schema-grounding-batch-checkbox
-    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Checkbox to enable batch execution in schema grounding wizard
 
   - selector: run-detail-close-button
     component: src/components/pipeline/RunDetailDrawer.tsx
@@ -1995,3 +1965,11 @@ selectors:
   - selector: filter-applied
     component: src/routes/app/pipelines/runs.tsx
     description: Applied status dropdown filter button in run history filter bar
+
+  # Batch Detail Page
+  - selector: batch-unavailable-notice
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Warning notice indicating batch execution requires background task runner not yet available
+  - selector: batch-child-runs-placeholder
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Placeholder showing child runs list will be available when batch execution is implemented

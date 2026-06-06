@@ -4,7 +4,6 @@ import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -28,7 +27,6 @@ export function SchemaGroundingWizard() {
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
   const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -72,7 +70,6 @@ export function SchemaGroundingWizard() {
         configuration_ref: configRefPart,
         nodes: selectedNodes.map((n) => ({ id: n.id })),
         sources: selectedSources,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -188,13 +185,6 @@ export function SchemaGroundingWizard() {
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="schema-grounding"
       />
 
       {isSubmitting && (

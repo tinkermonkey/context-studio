@@ -4,7 +4,6 @@ import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -20,7 +19,6 @@ export function SchemaExtractionWizard() {
   const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -60,7 +58,6 @@ export function SchemaExtractionWizard() {
         configuration_ref: configRefPart,
         documents: [document],
         ...(selectedScope && { scope: selectedScope.id }),
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -128,13 +125,6 @@ export function SchemaExtractionWizard() {
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="schema-extraction"
       />
 
       {isSubmitting && (

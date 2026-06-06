@@ -5,7 +5,6 @@ import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -21,7 +20,6 @@ export function DefinitionRefinementWizard() {
   const [currentDefinition, setCurrentDefinition] = useState("");
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const { data: selectedNodeDetails } = useClass(selectedNode?.id || "");
 
@@ -78,7 +76,6 @@ export function DefinitionRefinementWizard() {
         configuration_ref: configRefPart,
         node_id: selectedNode!.id,
         current_definition: currentDefinition,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -201,13 +198,6 @@ export function DefinitionRefinementWizard() {
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="definition-refinement"
       />
 
       {isSubmitting && (

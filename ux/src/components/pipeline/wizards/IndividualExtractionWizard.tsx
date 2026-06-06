@@ -4,7 +4,6 @@ import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -20,7 +19,6 @@ export function IndividualExtractionWizard() {
   const [selectedOntology, setSelectedOntology] = useState<Entity | null>(null);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -64,7 +62,6 @@ export function IndividualExtractionWizard() {
         configuration_ref: configRefPart,
         text: sourceText,
         ontology_id: selectedOntology!.id,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -141,13 +138,6 @@ export function IndividualExtractionWizard() {
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="individual-extraction"
       />
 
       {isSubmitting && (
