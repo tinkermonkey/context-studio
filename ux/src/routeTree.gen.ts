@@ -31,6 +31,7 @@ import { Route as AppDataIndividualsRouteImport } from './routes/app/data/indivi
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
 import { Route as AppPipelinesTypesTypeRouteImport } from './routes/app/pipelines/types/$type'
+import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -143,6 +144,12 @@ const AppPipelinesTypesTypeRoute = AppPipelinesTypesTypeRouteImport.update({
   path: '/pipelines/types/$type',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPipelinesBatchesBatchIdRoute =
+  AppPipelinesBatchesBatchIdRouteImport.update({
+    id: '/pipelines/batches/$batchId',
+    path: '/pipelines/batches/$batchId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPipelinesTypesTypeRunRoute =
   AppPipelinesTypesTypeRunRouteImport.update({
     id: '/run',
@@ -171,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
   '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/app/extraction': typeof AppExtractionIndexRoute
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
+  '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
   '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
   '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/pipelines/batches/$batchId'
     | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/app/extraction'
     | '/app/graph'
     | '/app/pipelines'
+    | '/app/pipelines/batches/$batchId'
     | '/app/pipelines/types/$type'
     | '/app/schema/schemes'
     | '/app/pipelines/types/$type/run'
@@ -295,6 +307,7 @@ export interface FileRouteTypes {
     | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/pipelines/batches/$batchId'
     | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
@@ -462,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesTypesTypeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/batches/$batchId': {
+      id: '/app/pipelines/batches/$batchId'
+      path: '/pipelines/batches/$batchId'
+      fullPath: '/app/pipelines/batches/$batchId'
+      preLoaderRoute: typeof AppPipelinesBatchesBatchIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/types/$type/run': {
       id: '/app/pipelines/types/$type/run'
       path: '/run'
@@ -514,6 +534,7 @@ interface AppRouteChildren {
   AppExtractionIndexRoute: typeof AppExtractionIndexRoute
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
+  AppPipelinesBatchesBatchIdRoute: typeof AppPipelinesBatchesBatchIdRoute
   AppPipelinesTypesTypeRoute: typeof AppPipelinesTypesTypeRouteWithChildren
 }
 
@@ -535,6 +556,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExtractionIndexRoute: AppExtractionIndexRoute,
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
+  AppPipelinesBatchesBatchIdRoute: AppPipelinesBatchesBatchIdRoute,
   AppPipelinesTypesTypeRoute: AppPipelinesTypesTypeRouteWithChildren,
 }
 

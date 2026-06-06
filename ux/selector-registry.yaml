@@ -1876,3 +1876,8 @@ selectors:
   - selector: run-revert-confirm-dialog
     component: src/components/pipeline/RunRevertControls.tsx
     description: Confirmation dialog before reverting an applied run
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: batch-detail-page
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Batch detail page placeholder showing deferred batch execution feature unavailability message
