@@ -1419,7 +1419,10 @@ selectors:
     component: routes/app/settings.tsx
     description: Telemetry summary config tile
 
-  # Pipelines — list page
+  # Pipelines — hub page
+  - selector: pipeline-hub-page
+    component: routes/app/pipelines/index.tsx
+    description: Root container for the pipeline hub/registry page
   - selector: pipeline-add-button
     component: routes/app/pipelines/index.tsx
     description: New-pipeline button on the pipelines page
@@ -1430,16 +1433,86 @@ selectors:
     component: routes/app/pipelines/index.tsx
     description: Create/edit pipeline modal on the pipelines page
 
-  # Pipelines — runs and flavors pages
+  # Pipelines — type cards and detail page
+  - selector: pipeline-type-run-button-*
+    component: components/pipeline/PipelineTypeCard.tsx
+    description: Run button on pipeline type card with dynamic pipeline type suffix
+  - selector: pipeline-type-detail-page
+    component: components/pipeline/PipelineTypeDetail.tsx
+    description: Root container for the pipeline type detail page
+
+  # Pipelines — implementation and configuration lists
+  - selector: pipeline-implementation-list
+    component: components/pipeline/ImplementationList.tsx
+    description: List of pipeline implementations and their configurations
+  - selector: pipeline-configuration-list
+    component: components/pipeline/ConfigurationList.tsx
+    description: List of saved pipeline configurations
+  - selector: pipeline-configuration-drawer
+    component: components/pipeline/ConfigurationDrawer.tsx
+    description: Drawer showing configuration details and edit options
+
+  # Pipelines — run wizard
+  - selector: pipeline-run-wizard
+    component: components/pipeline/wizards/*.tsx
+    description: Root container for run wizard (varies by pipeline type)
+  - selector: pipeline-run-wizard-submit
+    component: components/pipeline/wizards/*.tsx
+    description: Submit/execute button in the run wizard
+  - selector: pipeline-run-wizard-source-input
+    component: components/pipeline/wizards/*.tsx
+    description: Source data input field in the run wizard
+  - selector: pipeline-run-target-picker
+    component: components/pipeline/wizards/*.tsx
+    description: Target entity/node picker in the run wizard
+
+  # Pipelines — runs page and filtering
   - selector: runs-filter-bar
     component: routes/app/pipelines/runs.tsx
     description: Filter bar on the pipeline runs page
+  - selector: pipeline-runs-filter-type
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline type filter dropdown on the runs page
+  - selector: pipeline-runs-filter-status
+    component: routes/app/pipelines/runs.tsx
+    description: Status filter dropdown on the runs page
+  - selector: pipeline-runs-filter-date
+    component: routes/app/pipelines/runs.tsx
+    description: Date range filter on the runs page
   - selector: runs-status-filter
     component: routes/app/pipelines/runs.tsx
     description: Status filter on the pipeline runs page
   - selector: flavors-filter-bar
     component: routes/app/pipelines/flavors.tsx
     description: Filter bar on the pipeline flavors page
+
+  # Pipelines — run detail and controls
+  - selector: pipeline-run-detail-drawer
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Drawer showing detailed information about a pipeline run
+  - selector: pipeline-run-status-badge
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status badge showing current run status (PENDING, RUNNING, COMPLETED, FAILED)
+  - selector: pipeline-run-apply-button
+    component: components/pipeline/RunApplyControls.tsx
+    description: Button to apply a completed run's changes to the ontology
+  - selector: pipeline-run-revert-button
+    component: components/pipeline/RunRevertControls.tsx
+    description: Button to revert a previously applied run
+  - selector: pipeline-run-apply-confirm
+    component: components/pipeline/RunApplyControls.tsx
+    description: Confirmation dialog for applying run changes
+  - selector: pipeline-run-revert-confirm
+    component: components/pipeline/RunRevertControls.tsx
+    description: Confirmation dialog for reverting run changes
+
+  # Pipelines — review and candidate tables
+  - selector: pipeline-run-candidate-table
+    component: components/pipeline/review/*.tsx
+    description: Table displaying candidates/results from pipeline execution
+  - selector: pipeline-run-candidate-select-all
+    component: components/pipeline/review/*.tsx
+    description: Select-all checkbox for pipeline run candidates
 
   # Pipeline create form
   - selector: pipeline-create-form
@@ -1573,15 +1646,15 @@ selectors:
   - selector: pipeline-types-grid
     component: src/components/pipeline/PipelineHubContent.tsx
     description: Grid container displaying all pipeline type cards
-  - selector: pipeline-type-card-{type}
+  - selector: pipeline-type-card-*
     component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Individual pipeline type card with name, description, and run controls (type = pipeline_type identifier)
-  - selector: pipeline-run-status-{type}
+    description: Individual pipeline type card with name, description, and run controls (wildcard matches pipeline-type-card-{type_identifier})
+  - selector: pipeline-run-status-*
     component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Run status chip and timestamp display on card (type = pipeline_type identifier)
-  - selector: pipeline-run-button-{type}
+    description: Run status chip and timestamp display on card (wildcard matches pipeline-run-status-{type_identifier})
+  - selector: pipeline-run-button-*
     component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Run button to navigate to execution wizard (type = pipeline_type identifier)
+    description: Run button to navigate to execution wizard (wildcard matches pipeline-run-button-{type_identifier})
 
   # Pipeline Type Detail
   - selector: pipeline-type-detail-page
