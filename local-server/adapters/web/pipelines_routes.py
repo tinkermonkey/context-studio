@@ -915,11 +915,6 @@ async def revert_pipeline_run(
     revert_svc = request.app.state.revert_service
     try:
         revert_result = revert_svc.revert_with_summary(run.batch_run_id)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
     except (PipelineStorageError, IntegrityError, OperationalError) as exc:
         _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
         status_code, message = _handle_domain_error(
