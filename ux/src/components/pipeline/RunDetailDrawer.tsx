@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
@@ -13,6 +14,8 @@ import {
   DefinitionRefinementReview,
   ConnectionRefinementReview,
 } from "./review";
+import { RunApplyControls } from "./RunApplyControls";
+import { RunRevertControls } from "./RunRevertControls";
 import type {
   SchemaExtractionOutputSummary,
   IndividualExtractionOutputSummary,
@@ -24,6 +27,8 @@ import type { components } from "@/api/types";
 import "./RunDetailDrawer.css";
 
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
+type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 
 interface RunDetailDrawerProps {
   runId: string;
@@ -32,6 +37,29 @@ interface RunDetailDrawerProps {
 
 export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
   const { data: run, isLoading, error } = usePipelineRun(runId);
+
+  // Selection state for SchemaExtractionReview
+  const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
+  const [selectedProperties, setSelectedProperties] = useState<(string | number)[]>([]);
+  const [selectedRelationships, setSelectedRelationships] = useState<(string | number)[]>([]);
+
+  // Selection state for IndividualExtractionReview
+  const [selectedTriples, setSelectedTriples] = useState<(string | number)[]>([]);
+
+  // Selection state for GroundingReview
+  const [candidateStatus, setCandidateStatus] = useState<Record<string, "pending" | "accepted" | "rejected">>({});
+
+  // Selection state for DefinitionRefinementReview
+  const [selectedOption, setSelectedOption] = useState<"current" | number>("current");
+
+  // Selection state for ConnectionRefinementReview
+  const [activeOperation, setActiveOperation] = useState<"add" | "remove" | "modify">("add");
+  const [deltaStatus, setDeltaStatus] = useState<Record<string, "pending" | "accepted" | "rejected">>({});
+
+  // Apply/revert state
+  const [applyResult, setApplyResult] = useState<ApplyRunResponse | null>(null);
+  const [revertResult, setRevertResult] = useState<RevertRunResponse | null>(null);
+  const [isReverted, setIsReverted] = useState(false);
 
   if (isLoading) {
     return (
@@ -94,30 +122,46 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
         return (
           <SchemaExtractionReview
             outputSummary={outputSummary as SchemaExtractionOutputSummary}
+            selectedClasses={selectedClasses}
+            onSelectClasses={setSelectedClasses}
+            selectedProperties={selectedProperties}
+            onSelectProperties={setSelectedProperties}
+            selectedRelationships={selectedRelationships}
+            onSelectRelationships={setSelectedRelationships}
           />
         );
       case "individual_extraction":
         return (
           <IndividualExtractionReview
             outputSummary={outputSummary as IndividualExtractionOutputSummary}
+            selectedTriples={selectedTriples}
+            onSelectTriples={setSelectedTriples}
           />
         );
       case "schema_node_grounding":
         return (
           <GroundingReview
             outputSummary={outputSummary as SchemaNodeGroundingOutputSummary}
+            candidateStatus={candidateStatus}
+            onCandidateStatusChange={setCandidateStatus}
           />
         );
       case "schema_node_definition_refinement":
         return (
           <DefinitionRefinementReview
             outputSummary={outputSummary as SchemaNodeDefinitionRefinementOutputSummary}
+            selectedOption={selectedOption}
+            onSelectOption={setSelectedOption}
           />
         );
       case "schema_node_connection_refinement":
         return (
           <ConnectionRefinementReview
             outputSummary={outputSummary as SchemaNodeConnectionRefinementOutputSummary}
+            activeOperation={activeOperation}
+            onOperationChange={setActiveOperation}
+            deltaStatus={deltaStatus}
+            onDeltaStatusChange={setDeltaStatus}
           />
         );
       default:
@@ -169,11 +213,133 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
 
             <div className="run-detail-results-item">
               <strong>Apply</strong>
-              <div
-                className="run-detail-placeholder"
-                data-testid="run-apply-placeholder"
-              >
-                Apply controls will be displayed here (Phase 7)
+              <div className="run-detail-apply-section" data-testid="run-apply-section">
+                <div className="run-detail-apply-controls">
+                  <RunApplyControls
+                    run={run}
+                    pipelineType={run.pipeline_type}
+                    outputSummary={run.output_summary}
+                    selectedCandidates={{
+                      classes: selectedClasses,
+                      properties: selectedProperties,
+                      relationships: selectedRelationships,
+                      individuals: selectedTriples,
+                      groundingCandidates: Object.entries(candidateStatus)
+                        .filter(([, status]) => status === "accepted")
+                        .map(([key]) => key),
+                      refinementCandidates: Object.entries(deltaStatus)
+                        .filter(([, status]) => status === "accepted")
+                        .map(([key]) => key),
+                    }}
+                    isApplied={!!applyResult}
+                    onApplySuccess={(result) => {
+                      setApplyResult(result);
+                      setRevertResult(null);
+                    }}
+                  />
+                </div>
+
+                {applyResult && (
+                  <div className="run-detail-apply-result" data-testid="run-apply-result">
+                    <div className="apply-result-header">
+                      <span className="apply-result-status">✓ Applied</span>
+                    </div>
+
+                    <div className="apply-result-grid">
+                      {applyResult.classes_created > 0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">{applyResult.classes_created}</span>
+                          <span className="item-label">
+                            {applyResult.classes_created === 1 ? "Class created" : "Classes created"}
+                          </span>
+                        </div>
+                      )}
+
+                      {applyResult.classes_updated > 0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">{applyResult.classes_updated}</span>
+                          <span className="item-label">
+                            {applyResult.classes_updated === 1 ? "Class updated" : "Classes updated"}
+                          </span>
+                        </div>
+                      )}
+
+                      {applyResult.properties_created > 0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">{applyResult.properties_created}</span>
+                          <span className="item-label">
+                            {applyResult.properties_created === 1 ? "Property created" : "Properties created"}
+                          </span>
+                        </div>
+                      )}
+
+                      {(applyResult.relationships_created || 0) +
+                        (applyResult.relationships_modified || 0) >
+                        0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">
+                            {(applyResult.relationships_created || 0) +
+                              (applyResult.relationships_modified || 0)}
+                          </span>
+                          <span className="item-label">Relationships affected</span>
+                        </div>
+                      )}
+
+                      {applyResult.individuals_created > 0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">{applyResult.individuals_created}</span>
+                          <span className="item-label">
+                            {applyResult.individuals_created === 1 ? "Individual created" : "Individuals created"}
+                          </span>
+                        </div>
+                      )}
+
+                      {applyResult.external_references_created > 0 && (
+                        <div className="apply-result-item">
+                          <span className="item-count">{applyResult.external_references_created}</span>
+                          <span className="item-label">External references added</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {applyResult.created_class_ids && applyResult.created_class_ids.length > 0 && (
+                      <div className="apply-result-sample-ids">
+                        <span className="sample-ids-label">Sample IDs:</span>
+                        <div className="sample-ids-list">
+                          {applyResult.created_class_ids.slice(0, 3).map((id, idx) => (
+                            <code key={idx} className="sample-id" title={id}>
+                              {id}
+                            </code>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="run-detail-revert-controls">
+                      <RunRevertControls
+                        run={run}
+                        applyResult={applyResult}
+                        isReverted={isReverted}
+                        onRevertSuccess={(result) => {
+                          setRevertResult(result);
+                          setIsReverted(true);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {revertResult && (
+                  <div className="run-detail-revert-result" data-testid="run-revert-result">
+                    <div className="revert-result-header">
+                      <span className="revert-result-status">✓ Reverted</span>
+                    </div>
+                    <p className="revert-result-message">
+                      {revertResult.events_reverted} change event{revertResult.events_reverted === 1 ? "" : "s"} were
+                      reverted.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

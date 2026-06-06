@@ -8,6 +8,10 @@ import "./ReviewComponents.css";
 
 interface ConnectionRefinementReviewProps {
   outputSummary: SchemaNodeConnectionRefinementOutputSummary | null;
+  activeOperation?: OperationType;
+  onOperationChange?: (operation: OperationType) => void;
+  deltaStatus?: Record<string, DeltaStatus>;
+  onDeltaStatusChange?: (deltaStatus: Record<string, DeltaStatus>) => void;
 }
 
 type OperationType = "add" | "remove" | "modify";
@@ -15,9 +19,38 @@ type DeltaStatus = "pending" | "accepted" | "rejected";
 
 export function ConnectionRefinementReview({
   outputSummary,
+  activeOperation: externalActiveOperation,
+  onOperationChange: externalOnOperationChange,
+  deltaStatus: externalDeltaStatus,
+  onDeltaStatusChange: externalOnDeltaStatusChange,
 }: ConnectionRefinementReviewProps) {
-  const [activeOperation, setActiveOperation] = useState<OperationType>("add");
-  const [deltaStatus, setDeltaStatus] = useState<Record<string, DeltaStatus>>({});
+  const [internalActiveOperation, setInternalActiveOperation] = useState<OperationType>("add");
+  const [internalDeltaStatus, setInternalDeltaStatus] = useState<Record<string, DeltaStatus>>({});
+
+  // Use external state if provided, otherwise use internal state
+  const activeOperation = externalActiveOperation ?? internalActiveOperation;
+  const setActiveOperation = (
+    update: OperationType | ((prev: OperationType) => OperationType)
+  ) => {
+    if (externalOnOperationChange) {
+      const newValue = typeof update === "function" ? update(activeOperation) : update;
+      externalOnOperationChange(newValue);
+    } else {
+      setInternalActiveOperation(update);
+    }
+  };
+
+  const deltaStatus = externalDeltaStatus ?? internalDeltaStatus;
+  const setDeltaStatus = (
+    update: Record<string, DeltaStatus> | ((prev: Record<string, DeltaStatus>) => Record<string, DeltaStatus>)
+  ) => {
+    if (externalOnDeltaStatusChange) {
+      const newValue = typeof update === "function" ? update(deltaStatus) : update;
+      externalOnDeltaStatusChange(newValue);
+    } else {
+      setInternalDeltaStatus(update);
+    }
+  };
 
   if (!outputSummary) {
     return (

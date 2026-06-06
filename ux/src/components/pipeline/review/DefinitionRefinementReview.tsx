@@ -4,14 +4,22 @@ import "./ReviewComponents.css";
 
 interface DefinitionRefinementReviewProps {
   outputSummary: SchemaNodeDefinitionRefinementOutputSummary | null;
+  selectedOption?: SelectedOption;
+  onSelectOption?: (option: SelectedOption) => void;
 }
 
 type SelectedOption = "current" | number;
 
 export function DefinitionRefinementReview({
   outputSummary,
+  selectedOption: externalSelectedOption,
+  onSelectOption: externalOnSelectOption,
 }: DefinitionRefinementReviewProps) {
-  const [selectedOption, setSelectedOption] = useState<SelectedOption>("current");
+  const [internalSelectedOption, setInternalSelectedOption] = useState<SelectedOption>("current");
+
+  // Use external state if provided, otherwise use internal state
+  const selectedOption = externalSelectedOption ?? internalSelectedOption;
+  const setSelectedOption = externalOnSelectOption ?? setInternalSelectedOption;
 
   if (!outputSummary) {
     return (

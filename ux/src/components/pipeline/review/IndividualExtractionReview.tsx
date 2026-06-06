@@ -5,12 +5,20 @@ import "./ReviewComponents.css";
 
 interface IndividualExtractionReviewProps {
   outputSummary: IndividualExtractionOutputSummary | null;
+  selectedTriples?: (string | number)[];
+  onSelectTriples?: (selected: (string | number)[]) => void;
 }
 
 export function IndividualExtractionReview({
   outputSummary,
+  selectedTriples: externalSelectedTriples,
+  onSelectTriples: externalOnSelectTriples,
 }: IndividualExtractionReviewProps) {
-  const [selectedTriples, setSelectedTriples] = useState<(string | number)[]>([]);
+  const [internalSelectedTriples, setInternalSelectedTriples] = useState<(string | number)[]>([]);
+
+  // Use external state if provided, otherwise use internal state
+  const selectedTriples = externalSelectedTriples ?? internalSelectedTriples;
+  const setSelectedTriples = externalOnSelectTriples ?? setInternalSelectedTriples;
 
   if (!outputSummary) {
     return (

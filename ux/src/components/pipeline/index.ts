@@ -4,3 +4,5 @@ export { PipelineTypeDetail } from "./PipelineTypeDetail";
 export { ImplementationList } from "./ImplementationList";
 export { ConfigurationList } from "./ConfigurationList";
 export { ConfigurationDrawer } from "./ConfigurationDrawer";
+export { RunApplyControls } from "./RunApplyControls";
+export { RunRevertControls } from "./RunRevertControls";

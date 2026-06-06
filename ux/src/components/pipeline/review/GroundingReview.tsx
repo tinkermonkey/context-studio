@@ -5,14 +5,34 @@ import "./ReviewComponents.css";
 
 interface GroundingReviewProps {
   outputSummary: SchemaNodeGroundingOutputSummary | null;
+  candidateStatus?: Record<string, CandidateStatus>;
+  onCandidateStatusChange?: (candidateStatus: Record<string, CandidateStatus>) => void;
 }
 
 type CandidateStatus = "pending" | "accepted" | "rejected";
 
-export function GroundingReview({ outputSummary }: GroundingReviewProps) {
-  const [candidateStatus, setCandidateStatus] = useState<
+export function GroundingReview({
+  outputSummary,
+  candidateStatus: externalCandidateStatus,
+  onCandidateStatusChange: externalOnCandidateStatusChange,
+}: GroundingReviewProps) {
+  const [internalCandidateStatus, setInternalCandidateStatus] = useState<
     Record<string, CandidateStatus>
   >({});
+
+  // Use external state if provided, otherwise use internal state
+  const candidateStatus = externalCandidateStatus ?? internalCandidateStatus;
+
+  const setCandidateStatus = (
+    update: Record<string, CandidateStatus> | ((prev: Record<string, CandidateStatus>) => Record<string, CandidateStatus>)
+  ) => {
+    if (externalOnCandidateStatusChange) {
+      const newValue = typeof update === "function" ? update(candidateStatus) : update;
+      externalOnCandidateStatusChange(newValue);
+    } else {
+      setInternalCandidateStatus(update);
+    }
+  };
 
   if (!outputSummary) {
     return (

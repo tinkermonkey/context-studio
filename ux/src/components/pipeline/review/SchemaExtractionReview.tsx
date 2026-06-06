@@ -5,19 +5,41 @@ import "./ReviewComponents.css";
 
 interface SchemaExtractionReviewProps {
   outputSummary: SchemaExtractionOutputSummary | null;
+  selectedClasses?: (string | number)[];
+  onSelectClasses?: (selected: (string | number)[]) => void;
+  selectedProperties?: (string | number)[];
+  onSelectProperties?: (selected: (string | number)[]) => void;
+  selectedRelationships?: (string | number)[];
+  onSelectRelationships?: (selected: (string | number)[]) => void;
 }
 
 type TabType = "classes" | "properties" | "relationships";
 
 export function SchemaExtractionReview({
   outputSummary,
+  selectedClasses: externalSelectedClasses,
+  onSelectClasses: externalOnSelectClasses,
+  selectedProperties: externalSelectedProperties,
+  onSelectProperties: externalOnSelectProperties,
+  selectedRelationships: externalSelectedRelationships,
+  onSelectRelationships: externalOnSelectRelationships,
 }: SchemaExtractionReviewProps) {
   const [activeTab, setActiveTab] = useState<TabType>("classes");
-  const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
-  const [selectedProperties, setSelectedProperties] = useState<(string | number)[]>([]);
-  const [selectedRelationships, setSelectedRelationships] = useState<(string | number)[]>(
+  const [internalSelectedClasses, setInternalSelectedClasses] = useState<(string | number)[]>([]);
+  const [internalSelectedProperties, setInternalSelectedProperties] = useState<(string | number)[]>([]);
+  const [internalSelectedRelationships, setInternalSelectedRelationships] = useState<(string | number)[]>(
     []
   );
+
+  // Use external state if provided, otherwise use internal state
+  const selectedClasses = externalSelectedClasses ?? internalSelectedClasses;
+  const setSelectedClasses = externalOnSelectClasses ?? setInternalSelectedClasses;
+
+  const selectedProperties = externalSelectedProperties ?? internalSelectedProperties;
+  const setSelectedProperties = externalOnSelectProperties ?? setInternalSelectedProperties;
+
+  const selectedRelationships = externalSelectedRelationships ?? internalSelectedRelationships;
+  const setSelectedRelationships = externalOnSelectRelationships ?? setInternalSelectedRelationships;
 
   if (!outputSummary) {
     return (

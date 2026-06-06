@@ -1847,3 +1847,26 @@ selectors:
   - selector: connection-reject-*
     component: src/components/pipeline/review/ConnectionRefinementReview.tsx
     description: Reject button for connection delta with dynamic key suffix
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: run-apply-button-disabled
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Disabled Already applied button shown after a successful apply
+  - selector: run-apply-button
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Apply selected button to apply candidates to ontology
+  - selector: run-apply-section
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Container for apply and revert controls and results
+  - selector: run-apply-result
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Summary display of entities created/updated after successful apply
+  - selector: run-revert-result
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Summary display after successful revert showing events reverted count
+  - selector: run-revert-button-disabled
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Disabled Already reverted button shown after a successful revert
+  - selector: run-revert-button
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Revert this apply button to undo a successful apply

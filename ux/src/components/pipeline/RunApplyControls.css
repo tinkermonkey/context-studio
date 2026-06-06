@@ -1,0 +1,45 @@
+.run-apply-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.run-apply-dialog-content p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgb(var(--canvas-fg-1));
+}
+
+.run-apply-target {
+  background-color: rgb(var(--canvas-bg-1));
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.run-apply-threshold-warning {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background-color: rgb(var(--status-amber) / 0.1);
+  border-radius: 4px;
+  border-left: 3px solid rgb(var(--status-amber));
+}
+
+.warning-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.run-apply-threshold-warning p {
+  margin: 0;
+  font-size: 13px;
+  color: rgb(var(--canvas-fg-2));
+}
+
+.run-apply-error {
+  color: rgb(var(--status-rose));
+  font-weight: 500;
+}
