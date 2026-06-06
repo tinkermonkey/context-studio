@@ -59,19 +59,34 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     Record<string, "pending" | "accepted" | "rejected">
   >({});
 
-  // Apply/revert state from React Query cache
+  // Apply/revert state from React Query cache with localStorage fallback
   const getCachedApplyStatus = () => {
-    return (
-      queryClient.getQueryData<{
-        applyResult: ApplyRunResponse | null;
-        revertResult: RevertRunResponse | null;
-        isReverted: boolean;
-      }>(["pipeline-runs", runId, "apply-status"]) || {
-        applyResult: null,
-        revertResult: null,
-        isReverted: false,
+    // First try React Query cache
+    const cached = queryClient.getQueryData<{
+      applyResult: ApplyRunResponse | null;
+      revertResult: RevertRunResponse | null;
+      isReverted: boolean;
+    }>(["pipeline-runs", runId, "apply-status"]);
+
+    if (cached) {
+      return cached;
+    }
+
+    // Fallback to localStorage to survive cache garbage collection
+    try {
+      const stored = localStorage.getItem(`pipeline-run-apply-status-${runId}`);
+      if (stored) {
+        return JSON.parse(stored);
       }
-    );
+    } catch {
+      // Ignore parsing errors
+    }
+
+    return {
+      applyResult: null,
+      revertResult: null,
+      isReverted: false,
+    };
   };
 
   const setCachedApplyStatus = (status: {
@@ -79,7 +94,13 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     revertResult: RevertRunResponse | null;
     isReverted: boolean;
   }) => {
+    // Store in both React Query cache and localStorage
     queryClient.setQueryData(["pipeline-runs", runId, "apply-status"], status);
+    try {
+      localStorage.setItem(`pipeline-run-apply-status-${runId}`, JSON.stringify(status));
+    } catch {
+      // Ignore localStorage errors (e.g., private browsing mode)
+    }
   };
 
   const cachedStatus = getCachedApplyStatus();
@@ -273,6 +294,12 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                               .map(([key]) => key),
                     }}
                     isApplied={!!applyResult}
+                    targetName={
+                      run.input_summary && typeof run.input_summary === "object"
+                        ? (run.input_summary as Record<string, unknown>).taxonomy_name ||
+                          (run.input_summary as Record<string, unknown>).scope_name
+                        : undefined
+                    }
                     onApplySuccess={(result) => {
                       setCachedApplyStatus({
                         applyResult: result,

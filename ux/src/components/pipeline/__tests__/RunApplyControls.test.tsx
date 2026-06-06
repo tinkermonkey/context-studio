@@ -37,7 +37,7 @@ function createMockRun(overrides?: Partial<PipelineRunResponse>): PipelineRunRes
     started_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     failure_reason: null,
-    input_summary: { concept_scheme_id: "scheme-001" },
+    input_summary: { concept_scheme_id: "scheme-001", taxonomy_id: "tax-001" },
     output_summary: {
       candidate_count: 5,
       classes: [
@@ -418,9 +418,9 @@ describe("RunApplyControls", () => {
       expect(confirmText).toBeInTheDocument();
     });
 
-    it("includes concept_scheme_id for schema extraction", async () => {
+    it("includes concept_scheme_id and taxonomy_id for schema extraction", async () => {
       const run = createMockRun({
-        input_summary: { concept_scheme_id: "scheme-123" },
+        input_summary: { concept_scheme_id: "scheme-123", taxonomy_id: "tax-123" },
       });
       const onApplySuccess = vi.fn();
 
@@ -428,6 +428,7 @@ describe("RunApplyControls", () => {
         http.post("*/api/pipelines/runs/run-001/apply", async ({ request }) => {
           const body = await request.json();
           expect(body).toHaveProperty("concept_scheme_id", "scheme-123");
+          expect(body).toHaveProperty("taxonomy_id", "tax-123");
           return HttpResponse.json(createMockApplyResponse());
         }),
       );
@@ -554,7 +555,48 @@ describe("RunApplyControls", () => {
     it("prevents apply when concept_scheme_id is missing for schema extraction", async () => {
       const run = createMockRun({
         pipeline_type: "schema_extraction",
-        input_summary: {}, // Missing concept_scheme_id
+        input_summary: { taxonomy_id: "tax-001" }, // Missing concept_scheme_id
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
+    });
+
+    it("prevents apply when taxonomy_id is missing for schema extraction", async () => {
+      const run = createMockRun({
+        pipeline_type: "schema_extraction",
+        input_summary: { concept_scheme_id: "scheme-001" }, // Missing taxonomy_id
       });
 
       let applyWasCalled = false;

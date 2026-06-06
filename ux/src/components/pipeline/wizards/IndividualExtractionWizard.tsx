@@ -62,6 +62,7 @@ export function IndividualExtractionWizard() {
         configuration_ref: configRefPart,
         text: sourceText,
         ontology_id: selectedOntology!.id,
+        ontology_name: selectedOntology!.label,
       };
 
       await handleSubmit(request);

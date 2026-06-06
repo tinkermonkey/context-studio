@@ -57,7 +57,10 @@ export function SchemaExtractionWizard() {
         implementation_id: implementationId,
         configuration_ref: configRefPart,
         documents: [document],
-        ...(selectedScope && { scope: selectedScope.id }),
+        ...(selectedScope && {
+          scope: selectedScope.id,
+          scope_name: selectedScope.label,
+        }),
       };
 
       await handleSubmit(request);

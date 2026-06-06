@@ -237,5 +237,39 @@ def build_run_specific_data(
         source_document_uri = input_data.get("source_document_uri")
         if source_document_uri:
             specific["source_document_uri"] = source_document_uri
+
+        # Store input_summary with taxonomy_id for apply operations
+        # ontology_id is the field name in the request, we store it as taxonomy_id
+        input_summary: dict[str, Any] = {}
+        ontology_id = input_data.get("ontology_id")
+        if ontology_id:
+            input_summary["taxonomy_id"] = str(ontology_id)
+
+        ontology_name = input_data.get("ontology_name")
+        if ontology_name:
+            input_summary["taxonomy_name"] = str(ontology_name)
+
+        if input_summary:
+            specific["input_summary"] = input_summary
+
         return specific
+    elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        input_summary: dict[str, Any] = {}
+
+        # Store taxonomy_id and concept_scheme_id for apply operations
+        scope = input_data.get("scope")
+        if scope:
+            input_summary["taxonomy_id"] = str(scope)
+
+        scope_name = input_data.get("scope_name")
+        if scope_name:
+            input_summary["taxonomy_name"] = str(scope_name)
+
+        concept_scheme_id = input_data.get("concept_scheme_id")
+        if concept_scheme_id:
+            input_summary["concept_scheme_id"] = str(concept_scheme_id)
+
+        if input_summary:
+            return {"input_summary": input_summary}
+
     return {}

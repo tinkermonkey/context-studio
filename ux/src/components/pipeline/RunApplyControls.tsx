@@ -23,6 +23,7 @@ interface RunApplyControlsProps {
   };
   onApplySuccess?: (result: ApplyRunResponse) => void;
   isApplied?: boolean;
+  targetName?: string;
 }
 
 export function RunApplyControls({
@@ -32,6 +33,7 @@ export function RunApplyControls({
   selectedCandidates,
   onApplySuccess,
   isApplied = false,
+  targetName,
 }: RunApplyControlsProps) {
   const { toast } = useToasts();
   const [showDialog, setShowDialog] = useState(false);
@@ -123,6 +125,9 @@ export function RunApplyControls({
         if (!inputSummary.concept_scheme_id) {
           return "Missing or invalid required parameter: concept_scheme_id";
         }
+        if (!inputSummary.taxonomy_id) {
+          return "Missing or invalid required parameter: taxonomy_id";
+        }
         break;
       case "individual_extraction":
         if (!inputSummary.taxonomy_id) {
@@ -159,6 +164,7 @@ export function RunApplyControls({
       const inputSummary = run.input_summary as Record<string, unknown>;
       if (run.pipeline_type === "schema_extraction") {
         params.concept_scheme_id = String(inputSummary.concept_scheme_id);
+        params.taxonomy_id = String(inputSummary.taxonomy_id);
       } else if (run.pipeline_type === "individual_extraction") {
         params.taxonomy_id = String(inputSummary.taxonomy_id);
       } else if (
@@ -221,7 +227,7 @@ export function RunApplyControls({
           <div className="run-apply-dialog-content">
             <p>
               You are about to apply <strong>{totalSelected} candidates</strong> to{" "}
-              <code className="run-apply-target">{run.implementation_id}</code>
+              <code className="run-apply-target">{targetName || run.implementation_id}</code>
             </p>
             <div className="run-apply-threshold-warning">
               <span className="warning-icon">⚠</span>
