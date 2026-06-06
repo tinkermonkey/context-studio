@@ -110,27 +110,6 @@
     margin-top: 8px;
   }
 
-  .skeleton {
-    background: linear-gradient(
-      90deg,
-      rgb(var(--canvas-bg-hover)),
-      rgb(var(--canvas-bg)),
-      rgb(var(--canvas-bg-hover))
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-  }
-
-  @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
-
   .filter-disabled {
     opacity: 0.5;
     cursor: not-allowed;
