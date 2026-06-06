@@ -14,6 +14,7 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RunDetailDrawer } from "@/components/pipeline/RunDetailDrawer";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
 import { usePipelineRuns } from "@/api/hooks/pipeline/usePipelineRuns";
+import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 import { formatDate } from "@/utils/dateFormatting";
 import type { RunListParams } from "@/api/services/pipeline";
 import "./runs.css";
@@ -27,6 +28,8 @@ interface FilterState {
   status?: string;
   startDate?: string;
   endDate?: string;
+  implementation?: string;
+  applied?: "applied" | "not-applied";
 }
 
 const PAGE_SIZE = 20;
@@ -51,6 +54,9 @@ function RunsPageContent({
   const { data: typesData } = usePipelineTypes();
   const types = typesData || [];
 
+  const { data: implementationsData } = usePipelineImplementations(filters.pipelineType || "");
+  const implementations = implementationsData || [];
+
   const listParams: RunListParams = useMemo(() => {
     const params: RunListParams = {
       limit: PAGE_SIZE,
@@ -67,6 +73,9 @@ function RunsPageContent({
     }
     if (filters.endDate) {
       params.end_date = filters.endDate;
+    }
+    if (filters.implementation) {
+      params.implementation_id = filters.implementation;
     }
     return params;
   }, [filters, pageIndex]);
@@ -101,7 +110,14 @@ function RunsPageContent({
     );
   }
 
-  const hasFilters = !!(filters.pipelineType || filters.status || filters.startDate || filters.endDate);
+  const hasFilters = !!(
+    filters.pipelineType ||
+    filters.status ||
+    filters.startDate ||
+    filters.endDate ||
+    filters.implementation ||
+    filters.applied
+  );
   const isGenuinelyEmpty = total === 0 && !hasFilters;
   const isFilteredEmpty = total === 0 && hasFilters;
 
@@ -129,6 +145,7 @@ function RunsPageContent({
           onFilterChange={handleFilterChange}
           total={total}
           count={runs.length}
+          implementations={implementations}
         />
         <EmptyState
           title="No runs match your filters"
@@ -141,6 +158,8 @@ function RunsPageContent({
                 status: undefined,
                 startDate: undefined,
                 endDate: undefined,
+                implementation: undefined,
+                applied: undefined,
               });
             },
           }}
@@ -157,6 +176,7 @@ function RunsPageContent({
         onFilterChange={handleFilterChange}
         total={total}
         count={runs.length}
+        implementations={implementations}
       />
 
       <SchemaPageLayout
@@ -263,6 +283,7 @@ interface FilterBarContentProps {
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   total: number;
   count: number;
+  implementations?: Array<{ id: string }>;
 }
 
 function FilterBarContent({
@@ -271,6 +292,7 @@ function FilterBarContent({
   onFilterChange,
   total,
   count,
+  implementations,
 }: FilterBarContentProps) {
   return (
     <div data-testid="runs-filter-bar" className="runs-filter-bar">
@@ -279,12 +301,16 @@ function FilterBarContent({
           mode="radio"
           value={filters.pipelineType ? [filters.pipelineType] : []}
           onChange={(values) =>
-            onFilterChange({ pipelineType: values[0] || undefined })
+            onFilterChange({
+              pipelineType: values[0] || undefined,
+              implementation: undefined,
+            })
           }
         >
           <FilterDropdown.Trigger
             label="Pipeline Type"
             summary={filters.pipelineType || "All"}
+            data-testid="filter-pipeline-type"
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
@@ -315,6 +341,7 @@ function FilterBarContent({
               filters.status ||
               "All"
             }
+            data-testid="filter-status"
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
@@ -341,6 +368,7 @@ function FilterBarContent({
                 ? "Set"
                 : "Any"
             }
+            data-testid="filter-date-range"
           />
           <FilterDropdown.Panel>
             <div className="date-filter-content">
@@ -380,6 +408,59 @@ function FilterBarContent({
                 </Button>
               )}
             </div>
+          </FilterDropdown.Panel>
+        </FilterDropdown>
+
+        {filters.pipelineType && implementations && implementations.length > 0 && (
+          <FilterDropdown
+            mode="radio"
+            value={filters.implementation ? [filters.implementation] : []}
+            onChange={(values) =>
+              onFilterChange({ implementation: values[0] || undefined })
+            }
+          >
+            <FilterDropdown.Trigger
+              label="Implementation"
+              summary={filters.implementation || "All"}
+              data-testid="filter-implementation"
+            />
+            <FilterDropdown.Panel>
+              <FilterDropdown.Section>
+                {implementations.map((impl) => (
+                  <FilterDropdown.Radio
+                    key={impl.id}
+                    value={impl.id}
+                    label={impl.id}
+                  />
+                ))}
+              </FilterDropdown.Section>
+            </FilterDropdown.Panel>
+          </FilterDropdown>
+        )}
+
+        <FilterDropdown
+          mode="radio"
+          value={filters.applied ? [filters.applied] : []}
+          onChange={(values) =>
+            onFilterChange({ applied: (values[0] as "applied" | "not-applied") || undefined })
+          }
+        >
+          <FilterDropdown.Trigger
+            label="Applied"
+            summary={filters.applied ? (filters.applied === "applied" ? "Applied" : "Not Applied") : "All"}
+            data-testid="filter-applied"
+          />
+          <FilterDropdown.Panel>
+            <FilterDropdown.Section>
+              <FilterDropdown.Radio
+                value="applied"
+                label="Applied"
+              />
+              <FilterDropdown.Radio
+                value="not-applied"
+                label="Not Applied"
+              />
+            </FilterDropdown.Section>
           </FilterDropdown.Panel>
         </FilterDropdown>
       </div>

@@ -1980,3 +1980,10 @@ selectors:
   - selector: run-detail-close-button
     component: src/components/pipeline/RunDetailDrawer.tsx
     description: Close button in run details drawer header
+
+  - selector: filter-implementation
+    component: src/routes/app/pipelines/runs.tsx
+    description: Implementation dropdown filter button in run history filter bar
+  - selector: filter-applied
+    component: src/routes/app/pipelines/runs.tsx
+    description: Applied status dropdown filter button in run history filter bar
