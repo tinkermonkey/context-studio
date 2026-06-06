@@ -1714,3 +1714,64 @@ selectors:
   - selector: configuration-select
     component: components/pipeline/ImplementationConfigPicker.tsx
     description: Configuration dropdown selector shared across all wizards
+
+  # Pipeline Runs Page
+  - selector: runs-page
+    component: routes/app/pipelines/runs.tsx
+    description: Main pipeline runs list page container
+  - selector: runs-filter-bar
+    component: routes/app/pipelines/runs.tsx
+    description: Filter bar container with pipeline type, status, and date range filters
+  - selector: runs-table
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline runs table wrapper container
+  - selector: run-row-*
+    component: routes/app/pipelines/runs.tsx
+    description: Table row for a pipeline run with dynamic ID suffix
+  - selector: runs-pagination-prev
+    component: routes/app/pipelines/runs.tsx
+    description: Previous page button in run pagination
+  - selector: runs-pagination-next
+    component: routes/app/pipelines/runs.tsx
+    description: Next page button in run pagination
+  - selector: filter-pipeline-type
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline type dropdown filter button
+  - selector: filter-status
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline status multi-select filter button
+  - selector: filter-date-range
+    component: routes/app/pipelines/runs.tsx
+    description: Date range filter button for filtering runs by start date
+  - selector: filter-start-date
+    component: routes/app/pipelines/runs.tsx
+    description: Start date input field in date range filter
+  - selector: filter-end-date
+    component: routes/app/pipelines/runs.tsx
+    description: End date input field in date range filter
+  - selector: filter-clear-dates
+    component: routes/app/pipelines/runs.tsx
+    description: Clear button to reset date range filter
+
+  # Pipeline Run Detail Drawer
+  - selector: run-detail-drawer
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Run detail inspector panel showing metadata and execution results
+  - selector: run-failure-reason
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Error message display for FAILED run status
+  - selector: run-completed-section
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Results section shown for COMPLETED runs with candidate summary
+  - selector: run-review-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Placeholder for candidate review content (Phase 6 feature)
+  - selector: run-apply-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Placeholder for apply controls (Phase 7 feature)
+  - selector: run-pending-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status message shown when run is PENDING execution
+  - selector: run-running-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status message shown when run is RUNNING
