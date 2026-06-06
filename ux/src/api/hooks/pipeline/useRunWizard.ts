@@ -37,8 +37,9 @@ export function useRunWizard(options: UseRunWizardOptions) {
         search: { selected: (run as PipelineRunResponse).id } as any,
       });
     } catch (error) {
-      setIsSubmitting(false);
       throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
