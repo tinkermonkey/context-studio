@@ -56,6 +56,25 @@ class RevertService:
         Raises:
             ValueError: If batch_run_id is empty
         """
+        result = self.revert_with_summary(batch_run_id)
+        return result.events_reverted
+
+    def revert_with_summary(self, batch_run_id: str) -> RevertResult:
+        """
+        Revert all changes made by a specific batch run and return detailed summary.
+
+        Walks the change_events for the given batch_run_id in reverse chronological order
+        and applies the inverse of each operation. Already-reverted events are skipped.
+
+        Args:
+            batch_run_id: ID of the batch run to revert
+
+        Returns:
+            RevertResult with event count and detailed breakdown by entity type
+
+        Raises:
+            ValueError: If batch_run_id is empty
+        """
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
 
@@ -65,18 +84,35 @@ class RevertService:
 
         if not events:
             _logger.info(f"No events found for batch run {batch_run_id}")
-            return 0
+            return RevertResult(run_id=batch_run_id, events_reverted=0)
 
         reverted_count = 0
+        summary = {
+            "classes_deleted": 0,
+            "individuals_deleted": 0,
+            "relationships_deleted": 0,
+            "properties_deleted": 0,
+            "entities_restored": 0,
+        }
+
         for event in reversed(events):
             if self._should_skip_revert(event, events):
                 continue
 
             if self._apply_inverse(event, batch_run_id):
                 reverted_count += 1
+                self._update_summary(event, summary)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
-        return reverted_count
+        return RevertResult(
+            run_id=batch_run_id,
+            events_reverted=reverted_count,
+            classes_deleted=summary["classes_deleted"],
+            individuals_deleted=summary["individuals_deleted"],
+            relationships_deleted=summary["relationships_deleted"],
+            properties_deleted=summary["properties_deleted"],
+            entities_restored=summary["entities_restored"],
+        )
 
     def _should_skip_revert(self, event, all_events) -> bool:
         """Check if an event should be skipped during revert (already reverted)."""
@@ -353,3 +389,64 @@ class RevertService:
             return ChangeOperation.CREATE
         else:
             return ChangeOperation.UPDATE
+
+    @staticmethod
+    def _update_summary(event, summary: dict) -> None:
+        """Update summary counts based on the event being reverted."""
+        entity_type = RevertService._normalize_entity_type(event.entity_type)
+        operation = event.operation
+
+        if operation == ChangeOperation.CREATE:
+            if entity_type == "class":
+                summary["classes_deleted"] += 1
+            elif entity_type == "individual":
+                summary["individuals_deleted"] += 1
+            elif entity_type == "relationship":
+                summary["relationships_deleted"] += 1
+            elif entity_type == "property_definition":
+                summary["properties_deleted"] += 1
+        elif operation == ChangeOperation.DELETE:
+            if entity_type == "class":
+                summary["classes_deleted"] += 1
+            elif entity_type == "individual":
+                summary["individuals_deleted"] += 1
+            elif entity_type == "relationship":
+                summary["relationships_deleted"] += 1
+            elif entity_type == "property_definition":
+                summary["properties_deleted"] += 1
+        elif operation == ChangeOperation.UPDATE:
+            summary["entities_restored"] += 1
+
+
+class RevertResult:
+    """Result of a revert operation with detailed summary."""
+
+    def __init__(
+        self,
+        run_id: str,
+        events_reverted: int,
+        classes_deleted: int = 0,
+        individuals_deleted: int = 0,
+        relationships_deleted: int = 0,
+        properties_deleted: int = 0,
+        entities_restored: int = 0,
+    ) -> None:
+        """
+        Initialize RevertResult.
+
+        Args:
+            run_id: ID of the reverted run
+            events_reverted: Total number of events reverted
+            classes_deleted: Number of classes deleted during revert
+            individuals_deleted: Number of individuals deleted during revert
+            relationships_deleted: Number of relationships deleted during revert
+            properties_deleted: Number of properties deleted during revert
+            entities_restored: Number of entities restored during revert
+        """
+        self.run_id = run_id
+        self.events_reverted = events_reverted
+        self.classes_deleted = classes_deleted
+        self.individuals_deleted = individuals_deleted
+        self.relationships_deleted = relationships_deleted
+        self.properties_deleted = properties_deleted
+        self.entities_restored = entities_restored

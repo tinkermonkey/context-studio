@@ -393,10 +393,63 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
                         ✓ Reverted
                       </span>
                     </div>
-                    <p className="revert-result-message">
-                      {revertResult.events_reverted} change event
-                      {revertResult.events_reverted === 1 ? "" : "s"} were reverted.
-                    </p>
+
+                    <div className="revert-result-grid">
+                      {revertResult.classes_deleted > 0 && (
+                        <div className="revert-result-item">
+                          <span className="item-count">{revertResult.classes_deleted}</span>
+                          <span className="item-label">
+                            {revertResult.classes_deleted === 1
+                              ? "Class removed"
+                              : "Classes removed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {revertResult.individuals_deleted > 0 && (
+                        <div className="revert-result-item">
+                          <span className="item-count">{revertResult.individuals_deleted}</span>
+                          <span className="item-label">
+                            {revertResult.individuals_deleted === 1
+                              ? "Individual removed"
+                              : "Individuals removed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {revertResult.relationships_deleted > 0 && (
+                        <div className="revert-result-item">
+                          <span className="item-count">{revertResult.relationships_deleted}</span>
+                          <span className="item-label">
+                            {revertResult.relationships_deleted === 1
+                              ? "Relationship removed"
+                              : "Relationships removed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {revertResult.properties_deleted > 0 && (
+                        <div className="revert-result-item">
+                          <span className="item-count">{revertResult.properties_deleted}</span>
+                          <span className="item-label">
+                            {revertResult.properties_deleted === 1
+                              ? "Property removed"
+                              : "Properties removed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {revertResult.entities_restored > 0 && (
+                        <div className="revert-result-item">
+                          <span className="item-count">{revertResult.entities_restored}</span>
+                          <span className="item-label">
+                            {revertResult.entities_restored === 1
+                              ? "Entity restored"
+                              : "Entities restored"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

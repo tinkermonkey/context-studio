@@ -10231,6 +10231,36 @@
             "type": "integer",
             "title": "Events Reverted",
             "description": "Number of change events reverted"
+          },
+          "classes_deleted": {
+            "type": "integer",
+            "title": "Classes Deleted",
+            "description": "Number of classes deleted during revert",
+            "default": 0
+          },
+          "individuals_deleted": {
+            "type": "integer",
+            "title": "Individuals Deleted",
+            "description": "Number of individuals deleted during revert",
+            "default": 0
+          },
+          "relationships_deleted": {
+            "type": "integer",
+            "title": "Relationships Deleted",
+            "description": "Number of relationships deleted during revert",
+            "default": 0
+          },
+          "properties_deleted": {
+            "type": "integer",
+            "title": "Properties Deleted",
+            "description": "Number of properties deleted during revert",
+            "default": 0
+          },
+          "entities_restored": {
+            "type": "integer",
+            "title": "Entities Restored",
+            "description": "Number of entities restored during revert",
+            "default": 0
           }
         },
         "type": "object",

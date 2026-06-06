@@ -211,6 +211,19 @@ class RevertRunResponse(BaseModel):
 
     run_id: str = Field(..., description="ID of the reverted pipeline run")
     events_reverted: int = Field(..., description="Number of change events reverted")
+    classes_deleted: int = Field(default=0, description="Number of classes deleted during revert")
+    individuals_deleted: int = Field(
+        default=0, description="Number of individuals deleted during revert"
+    )
+    relationships_deleted: int = Field(
+        default=0, description="Number of relationships deleted during revert"
+    )
+    properties_deleted: int = Field(
+        default=0, description="Number of properties deleted during revert"
+    )
+    entities_restored: int = Field(
+        default=0, description="Number of entities restored during revert"
+    )
 
 
 class CandidateResponse(BaseModel):

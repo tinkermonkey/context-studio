@@ -6289,6 +6289,36 @@ export interface components {
        * @description Number of change events reverted
        */
       events_reverted: number;
+      /**
+       * Classes Deleted
+       * @description Number of classes deleted during revert
+       * @default 0
+       */
+      classes_deleted: number;
+      /**
+       * Individuals Deleted
+       * @description Number of individuals deleted during revert
+       * @default 0
+       */
+      individuals_deleted: number;
+      /**
+       * Relationships Deleted
+       * @description Number of relationships deleted during revert
+       * @default 0
+       */
+      relationships_deleted: number;
+      /**
+       * Properties Deleted
+       * @description Number of properties deleted during revert
+       * @default 0
+       */
+      properties_deleted: number;
+      /**
+       * Entities Restored
+       * @description Number of entities restored during revert
+       * @default 0
+       */
+      entities_restored: number;
     };
     /**
      * RunCountsResponse

@@ -914,8 +914,16 @@ async def revert_pipeline_run(
 
     revert_svc = request.app.state.revert_service
     try:
-        events_reverted = revert_svc.revert(run.batch_run_id)
-        return RevertRunResponse(run_id=run_id, events_reverted=events_reverted)
+        revert_result = revert_svc.revert_with_summary(run.batch_run_id)
+        return RevertRunResponse(
+            run_id=run_id,
+            events_reverted=revert_result.events_reverted,
+            classes_deleted=revert_result.classes_deleted,
+            individuals_deleted=revert_result.individuals_deleted,
+            relationships_deleted=revert_result.relationships_deleted,
+            properties_deleted=revert_result.properties_deleted,
+            entities_restored=revert_result.entities_restored,
+        )
     except Exception as exc:
         _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
         raise HTTPException(
