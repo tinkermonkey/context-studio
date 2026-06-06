@@ -44,12 +44,12 @@ export function GroundingReview({
     );
   }
 
-  const groundedNodes = outputSummary.grounded_nodes || [];
+  const groundings = outputSummary.groundings || [];
 
-  if (groundedNodes.length === 0) {
+  if (groundings.length === 0) {
     return (
       <div data-testid="grounding-empty" className="review-empty">
-        No nodes to ground
+        No grounding candidates found
       </div>
     );
   }
@@ -72,77 +72,70 @@ export function GroundingReview({
 
   return (
     <div data-testid="grounding-review" className="grounding-review">
-      {groundedNodes.map((node) => (
-        <div
-          key={node.node_id}
-          data-testid={`grounding-node-${node.node_id}`}
-          className="grounding-node-section"
-        >
-          <div className="grounding-node-header">
-            <span className="grounding-node-label">{node.node_label}</span>
-            <span className="grounding-node-id">{node.node_id}</span>
-          </div>
-
-          <div className="grounding-candidates-list">
-            {node.candidates.map((candidate, idx) => {
-              const candidateKey = `${node.node_id}-${idx}`;
-              const status = candidateStatus[candidateKey] || "pending";
-
-              return (
-                <div
-                  key={candidateKey}
-                  data-testid={`grounding-candidate-${candidateKey}`}
-                  className="grounding-candidate-card"
-                  data-status={status}
-                >
-                  <div className="grounding-candidate-header">
-                    <div className="grounding-candidate-info">
-                      <span className="grounding-candidate-label">{candidate.label}</span>
-                      <Chip variant="neutral">{candidate.source}</Chip>
-                    </div>
-                    <div className="grounding-candidate-buttons">
-                      <button
-                        type="button"
-                        data-testid={`grounding-accept-${candidateKey}`}
-                        onClick={() => acceptCandidate(candidateKey)}
-                        aria-label={`Accept candidate: ${status}`}
-                        className="candidate-action-button"
-                        data-accepted={status === "accepted"}
-                      >
-                        ✓ Accept
-                      </button>
-                      <button
-                        type="button"
-                        data-testid={`grounding-reject-${candidateKey}`}
-                        onClick={() => rejectCandidate(candidateKey)}
-                        aria-label={`Reject candidate: ${status}`}
-                        className="candidate-action-button"
-                        data-rejected={status === "rejected"}
-                      >
-                        ✕ Reject
-                      </button>
-                    </div>
-                  </div>
-
-                  {candidate.description && (
-                    <span className="grounding-candidate-description">{candidate.description}</span>
-                  )}
-
-                  {candidate.match_rationale && (
-                    <span className="grounding-candidate-rationale">
-                      Rationale: {candidate.match_rationale}
-                    </span>
-                  )}
-
-                  <div className="grounding-candidate-score">
-                    <span>Score: {(candidate.confidence * 100).toFixed(0)}%</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {outputSummary.node_label && (
+        <div className="grounding-node-header">
+          <span className="grounding-node-label">{outputSummary.node_label}</span>
         </div>
-      ))}
+      )}
+
+      <div className="grounding-candidates-list">
+        {groundings.map((candidate, idx) => {
+          const candidateKey = `candidate-${idx}`;
+          const status = candidateStatus[candidateKey] || "pending";
+
+          return (
+            <div
+              key={candidateKey}
+              data-testid={`grounding-candidate-${candidateKey}`}
+              className="grounding-candidate-card"
+              data-status={status}
+            >
+              <div className="grounding-candidate-header">
+                <div className="grounding-candidate-info">
+                  <span className="grounding-candidate-label">{candidate.label}</span>
+                  <Chip variant="neutral">{candidate.source}</Chip>
+                </div>
+                <div className="grounding-candidate-buttons">
+                  <button
+                    type="button"
+                    data-testid={`grounding-accept-${candidateKey}`}
+                    onClick={() => acceptCandidate(candidateKey)}
+                    aria-label={`Accept candidate: ${status}`}
+                    className="candidate-action-button"
+                    data-accepted={status === "accepted"}
+                  >
+                    ✓ Accept
+                  </button>
+                  <button
+                    type="button"
+                    data-testid={`grounding-reject-${candidateKey}`}
+                    onClick={() => rejectCandidate(candidateKey)}
+                    aria-label={`Reject candidate: ${status}`}
+                    className="candidate-action-button"
+                    data-rejected={status === "rejected"}
+                  >
+                    ✕ Reject
+                  </button>
+                </div>
+              </div>
+
+              {candidate.description && (
+                <span className="grounding-candidate-description">{candidate.description}</span>
+              )}
+
+              {candidate.match_rationale && (
+                <span className="grounding-candidate-rationale">
+                  Rationale: {candidate.match_rationale}
+                </span>
+              )}
+
+              <div className="grounding-candidate-score">
+                <span>Score: {(candidate.confidence * 100).toFixed(0)}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

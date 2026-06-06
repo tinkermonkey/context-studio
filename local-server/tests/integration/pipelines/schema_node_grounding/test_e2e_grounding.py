@@ -229,6 +229,8 @@ class TestE2ESchemaNodeGrounding:
 
         result = await orchestrator.execute(state)
 
+        assert "node_label" in result.result
+        assert result.result["node_label"] == fixture["node_label"]
         groundings = result.result["groundings"]
         assert len(groundings) > 0
 
@@ -237,7 +239,7 @@ class TestE2ESchemaNodeGrounding:
         assert "label" in grounding
         assert "description" in grounding
         assert "source" in grounding
-        assert "match_confidence" in grounding
+        assert "confidence" in grounding
         assert "match_rationale" in grounding
 
     @pytest.mark.asyncio

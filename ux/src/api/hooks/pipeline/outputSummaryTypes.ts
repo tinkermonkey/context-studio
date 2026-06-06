@@ -56,19 +56,16 @@ export interface IndividualExtractionOutputSummary {
 }
 
 export interface SchemaNodeGroundingOutputSummary {
-  grounded_nodes?: Array<{
-    node_id: string;
-    node_label: string;
-    candidates: Array<{
-      uri: string;
-      label: string;
-      description?: string;
-      confidence: number;
-      source: string;
-      match_rationale?: string;
-      source_uri?: string;
-    }>;
+  node_label?: string;
+  groundings?: Array<{
+    uri: string;
+    label: string;
+    description?: string;
+    confidence: number;
+    source: string;
+    match_rationale?: string;
   }>;
+  total_candidates_evaluated?: number;
 }
 
 export interface SchemaNodeDefinitionRefinementOutputSummary {

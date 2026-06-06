@@ -182,8 +182,8 @@ class TestGroundingCanon:
         groundings = (result_state.result or {}).get("groundings", [])
         assert groundings, "Expected at least one grounding for the REST canon class"
         for g in groundings:
-            assert "match_confidence" in g
-            assert 0.0 <= g["match_confidence"] <= 1.0
+            assert "confidence" in g
+            assert 0.0 <= g["confidence"] <= 1.0
             assert g.get("match_rationale"), f"Grounding missing rationale: {g}"
 
     def test_empty_candidate_set_completes_with_empty_groundings(self, passthrough_scorer):
