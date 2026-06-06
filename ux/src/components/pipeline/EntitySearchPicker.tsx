@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { EntityPicker, Button } from "@tinkermonkey/heimdall-ui";
 import { useEntityTypeQuery } from "@/api/hooks/ontology/useEntityTypeQuery";
+import "./EntitySearchPicker.css";
 
 export interface Entity {
   id: string;

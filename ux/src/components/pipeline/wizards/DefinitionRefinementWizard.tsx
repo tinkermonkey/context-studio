@@ -5,6 +5,7 @@ import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
+import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -76,6 +77,7 @@ export function DefinitionRefinementWizard() {
         configuration_ref: configRefPart,
         node_id: selectedNode!.id,
         current_definition: currentDefinition,
+        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -175,23 +177,12 @@ export function DefinitionRefinementWizard() {
         configError={errors.configRef}
       />
 
-      <div
-        className="batch-toggle"
-        role="group"
-        aria-label="Batch execution"
-        data-testid="definition-refinement-batch-toggle"
-      >
-        <label className="batch-toggle-label">
-          <input
-            type="checkbox"
-            checked={runAsBatch}
-            onChange={(e) => setRunAsBatch(e.target.checked)}
-            disabled={isSubmitting}
-            data-testid="definition-refinement-batch-checkbox"
-          />
-          <span>Run as batch</span>
-        </label>
-      </div>
+      <BatchToggle
+        checked={runAsBatch}
+        onChange={setRunAsBatch}
+        disabled={isSubmitting}
+        testIdPrefix="definition-refinement"
+      />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="definition-refinement-loading">

@@ -5,6 +5,7 @@ import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
+import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -69,6 +70,7 @@ export function ConnectionRefinementWizard() {
         implementation_id: implementationId,
         configuration_ref: configRefPart,
         scope_id: selectedScope!.id,
+        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -156,23 +158,12 @@ export function ConnectionRefinementWizard() {
         configError={errors.configRef}
       />
 
-      <div
-        className="batch-toggle"
-        role="group"
-        aria-label="Batch execution"
-        data-testid="connection-refinement-batch-toggle"
-      >
-        <label className="batch-toggle-label">
-          <input
-            type="checkbox"
-            checked={runAsBatch}
-            onChange={(e) => setRunAsBatch(e.target.checked)}
-            disabled={isSubmitting}
-            data-testid="connection-refinement-batch-checkbox"
-          />
-          <span>Run as batch</span>
-        </label>
-      </div>
+      <BatchToggle
+        checked={runAsBatch}
+        onChange={setRunAsBatch}
+        disabled={isSubmitting}
+        testIdPrefix="connection-refinement"
+      />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="connection-refinement-loading">

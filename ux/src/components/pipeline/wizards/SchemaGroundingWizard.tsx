@@ -4,6 +4,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
+import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -71,6 +72,7 @@ export function SchemaGroundingWizard() {
         configuration_ref: configRefPart,
         nodes: selectedNodes.map((n) => ({ id: n.id })),
         sources: selectedSources,
+        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -165,23 +167,12 @@ export function SchemaGroundingWizard() {
         configError={errors.configRef}
       />
 
-      <div
-        className="batch-toggle"
-        role="group"
-        aria-label="Batch execution"
-        data-testid="schema-grounding-batch-toggle"
-      >
-        <label className="batch-toggle-label">
-          <input
-            type="checkbox"
-            checked={runAsBatch}
-            onChange={(e) => setRunAsBatch(e.target.checked)}
-            disabled={isSubmitting}
-            data-testid="schema-grounding-batch-checkbox"
-          />
-          <span>Run as batch</span>
-        </label>
-      </div>
+      <BatchToggle
+        checked={runAsBatch}
+        onChange={setRunAsBatch}
+        disabled={isSubmitting}
+        testIdPrefix="schema-grounding"
+      />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">
