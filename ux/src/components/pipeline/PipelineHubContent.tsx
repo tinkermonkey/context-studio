@@ -27,7 +27,7 @@ export function PipelineHubContent({
         aria-label="Pipeline types loading"
       >
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={`skeleton-${i}`} className="skeleton-card" />
+          <div key={`skeleton-${i}`} className="pipeline-skeleton-card" />
         ))}
       </div>
     );

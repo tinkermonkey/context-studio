@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@tinkermonkey/heimdall-ui";
+import { PageHeader, Icon } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
@@ -57,7 +57,7 @@ export function PipelinesPage() {
         <EmptyState
           title="No pipeline types registered"
           description="The pipeline registry is empty. This should not occur during normal operation."
-          icon="pipeline"
+          icon={<Icon name="pipeline" size={48} />}
         />
       </div>
     );

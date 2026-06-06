@@ -55,6 +55,13 @@ export function PipelineTypeCard({ type, latestRun, isRunsLoading }: PipelineTyp
     navigate({ to: `/app/pipelines/types/${type.pipeline_type}/run` });
   };
 
+  const handleCardKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
   const statusDisplay = latestRun ? getRunStatusDisplay(latestRun.status) : null;
   const runTimestamp = latestRun ? formatTimestamp(latestRun.created_at) : null;
 
@@ -64,20 +71,20 @@ export function PipelineTypeCard({ type, latestRun, isRunsLoading }: PipelineTyp
       data-testid={`pipeline-type-card-${type.pipeline_type}`}
       role="article"
     >
-      <div className="card-body" onClick={handleCardClick} role="button" tabIndex={0}>
-        <div className="card-header">
-          <div className="type-info">
+      <div className="pipeline-card-body" onClick={handleCardClick} onKeyDown={handleCardKeyDown} role="button" tabIndex={0}>
+        <div className="pipeline-card-header">
+          <div className="pipeline-type-info">
             <div className="pipeline-type-name">{type.pipeline_type}</div>
             <div className="pipeline-description">{type.description}</div>
           </div>
         </div>
 
-        <div className="card-footer">
+        <div className="pipeline-card-footer">
           {isRunsLoading ? (
-            <div className="skeleton-run-status" />
+            <div className="pipeline-skeleton-run-status" />
           ) : latestRun ? (
             <div
-              className="run-status"
+              className="pipeline-run-status"
               data-testid={`pipeline-run-status-${type.pipeline_type}`}
             >
               {statusDisplay && (
@@ -85,15 +92,15 @@ export function PipelineTypeCard({ type, latestRun, isRunsLoading }: PipelineTyp
                   {statusDisplay.label}
                 </Chip>
               )}
-              {runTimestamp && <span className="run-timestamp">{runTimestamp}</span>}
+              {runTimestamp && <span className="pipeline-run-timestamp">{runTimestamp}</span>}
             </div>
           ) : (
-            <span className="no-runs-text">No runs yet</span>
+            <span className="pipeline-no-runs-text">No runs yet</span>
           )}
         </div>
       </div>
 
-      <div className="card-actions">
+      <div className="pipeline-card-actions">
         <Button
           variant="primary"
           size="sm"
