@@ -265,8 +265,17 @@ describe("RunApplyControls", () => {
       expect(threshold).toBeLessThanOrEqual(0.70);
     });
 
-    it("defaults to 0 for non-schema-extraction pipeline types", () => {
-      const run = createMockRun({ pipeline_type: "individual_extraction" });
+    it("uses conservative threshold (0.95) for non-schema-extraction pipeline types", async () => {
+      const run = createMockRun({
+        pipeline_type: "individual_extraction",
+        input_summary: { taxonomy_id: "tax-456" },
+      });
+
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () =>
+          HttpResponse.json(createMockApplyResponse()),
+        ),
+      );
 
       render(
         <RunApplyControls
@@ -287,6 +296,17 @@ describe("RunApplyControls", () => {
 
       const button = screen.getByTestId("run-apply-button");
       expect(button).not.toBeDisabled();
+
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const dialogText = within(dialog).getByText(/Confidence threshold will be set to/);
+
+      const match = dialogText.textContent?.match(/(\d+\.\d+)/);
+      expect(match).toBeDefined();
+
+      const threshold = parseFloat(match![1]);
+      expect(threshold).toBe(0.95);
     });
 
     it("shows already applied state correctly", () => {
@@ -529,6 +549,172 @@ describe("RunApplyControls", () => {
       await waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe("scope parameter validation", () => {
+    it("prevents apply when concept_scheme_id is missing for schema extraction", async () => {
+      const run = createMockRun({
+        pipeline_type: "schema_extraction",
+        input_summary: {}, // Missing concept_scheme_id
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
+    });
+
+    it("prevents apply when taxonomy_id is missing for individual extraction", async () => {
+      const run = createMockRun({
+        pipeline_type: "individual_extraction",
+        input_summary: {}, // Missing taxonomy_id
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="individual_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: [],
+            properties: [],
+            relationships: [],
+            individuals: ["ind-0"],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
+    });
+
+    it("prevents apply when node_id is missing for grounding pipeline", async () => {
+      const run = createMockRun({
+        pipeline_type: "schema_node_grounding",
+        input_summary: {}, // Missing node_id
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_node_grounding"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: [],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: ["ground-0"],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
+    });
+
+    it("prevents apply when input_summary has unexpected shape", async () => {
+      const run = createMockRun({
+        pipeline_type: "schema_extraction",
+        input_summary: null, // Invalid shape
+      });
+
+      let applyWasCalled = false;
+      server.use(
+        http.post("*/api/pipelines/runs/run-001/apply", () => {
+          applyWasCalled = true;
+          return HttpResponse.json(createMockApplyResponse());
+        }),
+      );
+
+      render(
+        <RunApplyControls
+          run={run}
+          pipelineType="schema_extraction"
+          outputSummary={run.output_summary}
+          selectedCandidates={{
+            classes: ["class-0"],
+            properties: [],
+            relationships: [],
+            individuals: [],
+            groundingCandidates: [],
+            refinementCandidates: [],
+          }}
+          onApplySuccess={vi.fn()}
+        />,
+      );
+
+      const button = screen.getByTestId("run-apply-button");
+      await userEvent.click(button);
+
+      const dialog = screen.getByRole("dialog");
+      const confirmButton = within(dialog).getByRole("button", { name: /Apply/i });
+      await userEvent.click(confirmButton);
+
+      expect(applyWasCalled).toBe(false);
     });
   });
 

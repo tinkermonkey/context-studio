@@ -97,15 +97,55 @@ export function RunApplyControls({
           });
         }
       }
+
+      // If we found actual confidence values, use them
+      // Otherwise, use 0.5 to include all selected candidates
+      return foundConfidence ? Math.max(minConfidence - 0.01, 0) : 0.5;
     }
 
-    // If we found actual confidence values, use them
-    // Otherwise, use 0 to include all selected candidates
-    return foundConfidence ? Math.max(minConfidence - 0.01, 0) : 0;
+    // For non-schema-extraction pipelines, use a conservative threshold to avoid
+    // applying unselected candidates. Use 0.95 as a high bar.
+    return 0.95;
+  };
+
+  const validateScopeParameters = (): string | null => {
+    const inputSummary = run.input_summary as Record<string, unknown> | undefined;
+
+    if (!inputSummary || typeof inputSummary !== "object") {
+      return "Invalid input summary: expected an object";
+    }
+
+    switch (run.pipeline_type) {
+      case "schema_extraction":
+        if (!("concept_scheme_id" in inputSummary)) {
+          return "Missing required parameter: concept_scheme_id";
+        }
+        break;
+      case "individual_extraction":
+        if (!("taxonomy_id" in inputSummary)) {
+          return "Missing required parameter: taxonomy_id";
+        }
+        break;
+      case "schema_node_grounding":
+      case "schema_node_definition_refinement":
+      case "schema_node_connection_refinement":
+        if (!("node_id" in inputSummary)) {
+          return "Missing required parameter: node_id";
+        }
+        break;
+    }
+
+    return null;
   };
 
   const handleApply = async () => {
     try {
+      const validationError = validateScopeParameters();
+      if (validationError) {
+        toast("error", "Cannot apply", validationError);
+        return;
+      }
+
       const confidenceThreshold = getMinConfidenceThreshold();
 
       const params: ApplyParams = {
@@ -113,36 +153,17 @@ export function RunApplyControls({
       };
 
       // Add scope parameters based on pipeline type
+      const inputSummary = run.input_summary as Record<string, unknown>;
       if (run.pipeline_type === "schema_extraction") {
-        // Schema extraction may require concept_scheme_id
-        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
-        if (inputSummary && typeof inputSummary === "object" && "concept_scheme_id" in inputSummary) {
-          params.concept_scheme_id = String(inputSummary.concept_scheme_id);
-        }
+        params.concept_scheme_id = String(inputSummary.concept_scheme_id);
       } else if (run.pipeline_type === "individual_extraction") {
-        // Individual extraction may require taxonomy_id
-        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
-        if (inputSummary && typeof inputSummary === "object" && "taxonomy_id" in inputSummary) {
-          params.taxonomy_id = String(inputSummary.taxonomy_id);
-        }
-      } else if (run.pipeline_type === "schema_node_grounding") {
-        // Grounding requires node_id
-        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
-        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
-          params.node_id = String(inputSummary.node_id);
-        }
-      } else if (run.pipeline_type === "schema_node_definition_refinement") {
-        // Definition refinement requires node_id
-        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
-        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
-          params.node_id = String(inputSummary.node_id);
-        }
-      } else if (run.pipeline_type === "schema_node_connection_refinement") {
-        // Connection refinement requires node_id
-        const inputSummary = run.input_summary as Record<string, unknown> | undefined;
-        if (inputSummary && typeof inputSummary === "object" && "node_id" in inputSummary) {
-          params.node_id = String(inputSummary.node_id);
-        }
+        params.taxonomy_id = String(inputSummary.taxonomy_id);
+      } else if (
+        run.pipeline_type === "schema_node_grounding" ||
+        run.pipeline_type === "schema_node_definition_refinement" ||
+        run.pipeline_type === "schema_node_connection_refinement"
+      ) {
+        params.node_id = String(inputSummary.node_id);
       }
 
       const result = await applyMutation.mutateAsync({
