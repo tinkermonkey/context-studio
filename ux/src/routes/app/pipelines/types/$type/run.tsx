@@ -5,6 +5,7 @@ import { IndividualExtractionWizard } from "@/components/pipeline/wizards/Indivi
 import { SchemaGroundingWizard } from "@/components/pipeline/wizards/SchemaGroundingWizard";
 import { DefinitionRefinementWizard } from "@/components/pipeline/wizards/DefinitionRefinementWizard";
 import { ConnectionRefinementWizard } from "@/components/pipeline/wizards/ConnectionRefinementWizard";
+import "./run.css";
 
 const WIZARD_MAP: Record<string, React.ComponentType> = {
   schema_extraction: SchemaExtractionWizard,
@@ -27,7 +28,7 @@ function RunWizardPage() {
     return (
       <div data-testid={`${type}-run-wizard-page-invalid`}>
         <PageHeader eyebrow="Pipelines" title="Invalid Pipeline Type" />
-        <div style={{ padding: "24px" }}>
+        <div className="wizard-padding">
           <p>Invalid pipeline type: {type}</p>
         </div>
       </div>
@@ -42,7 +43,7 @@ function RunWizardPage() {
   return (
     <div data-testid={`${type}-run-wizard-page`}>
       <PageHeader eyebrow="Pipelines" title={typeLabel} subtitle="Configure and run pipeline" />
-      <div className="wizard-container" style={{ padding: "24px" }}>
+      <div className="wizard-container wizard-padding">
         <WizardComponent />
       </div>
     </div>

@@ -93,10 +93,10 @@ function RunsPageContent({
   if (isLoading && runs.length === 0) {
     return (
       <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
+        <div className="skeleton runs-loading-header" />
+        <div className="skeleton runs-loading-row" />
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
+          <div key={i} className="skeleton runs-loading-row" />
         ))}
       </div>
     );
@@ -425,11 +425,11 @@ function FilterBarContent({
             data-testid="filter-applied"
             title="Pending backend support for applied status filtering"
             aria-disabled="true"
-            style={{ opacity: 0.5, cursor: "not-allowed" }}
+            className="filter-disabled"
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
-              <div style={{ padding: "8px 12px", fontSize: "12px", color: "#888" }}>
+              <div className="filter-pending-message">
                 Pending backend support
               </div>
             </FilterDropdown.Section>

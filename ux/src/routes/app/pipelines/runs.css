@@ -109,4 +109,45 @@
     width: 100%;
     margin-top: 8px;
   }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-bg-hover)),
+      rgb(var(--canvas-bg)),
+      rgb(var(--canvas-bg-hover))
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .filter-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .runs-loading-header {
+    height: 32px;
+    width: 200px;
+  }
+
+  .runs-loading-row {
+    height: 40px;
+  }
+
+  .filter-pending-message {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
 }
