@@ -43,7 +43,7 @@ class SchemaGroundingApplyService:
         Args:
             run: Completed grounding PipelineRun with output_summary["groundings"]
             node_id: ID of the Class to apply groundings to
-            confidence_threshold: Minimum match_confidence to include a grounding
+            confidence_threshold: Minimum confidence to include a grounding
 
         Returns:
             ApplyResult with external_references_created and external_references_skipped
@@ -64,7 +64,7 @@ class SchemaGroundingApplyService:
 
         for grounding in groundings:
             uri = (grounding.get("uri") or "").strip()
-            confidence = grounding.get("match_confidence", 0.0)
+            confidence = grounding.get("confidence", 0.0)
             if not uri or confidence < confidence_threshold:
                 result.external_references_skipped += 1
                 continue

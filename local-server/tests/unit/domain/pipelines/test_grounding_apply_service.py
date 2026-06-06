@@ -57,17 +57,17 @@ def sample_pipeline_run():
                 {
                     "uri": "https://www.wikidata.org/wiki/Q123",
                     "source": "wikidata",
-                    "match_confidence": 0.95,
+                    "confidence": 0.95,
                 },
                 {
                     "uri": "https://dbpedia.org/resource/Service",
                     "source": "dbpedia",
-                    "match_confidence": 0.85,
+                    "confidence": 0.85,
                 },
                 {
                     "uri": "https://schema.org/Service",
                     "source": "schema.org",
-                    "match_confidence": 0.75,
+                    "confidence": 0.75,
                 },
             ]
         },
@@ -127,22 +127,22 @@ class TestSchemaGroundingApplyServiceBasic:
                     {
                         "uri": "https://www.wikidata.org/wiki/Q123",
                         "source": "wikidata",
-                        "match_confidence": 0.95,
+                        "confidence": 0.95,
                     },
                     {
                         "uri": "https://dbpedia.org/resource/Service",
                         "source": "dbpedia",
-                        "match_confidence": 0.85,
+                        "confidence": 0.85,
                     },
                     {
                         "uri": "https://schema.org/Service",
                         "source": "schema.org",
-                        "match_confidence": 0.75,
+                        "confidence": 0.75,
                     },
                     {
                         "uri": "https://www.wikidata.org/wiki/Q12345",
                         "source": "wikidata",
-                        "match_confidence": 0.95,
+                        "confidence": 0.95,
                     },
                 ]
             },
@@ -321,7 +321,7 @@ class TestSchemaGroundingApplyServiceEdgeCases:
                     {
                         "uri": "https://example.org/test",
                         "source": "test",
-                        "match_confidence": 0.0,
+                        "confidence": 0.0,
                     },
                 ]
             },
@@ -349,7 +349,7 @@ class TestSchemaGroundingApplyServiceEdgeCases:
                     {
                         "uri": "https://example.org/test",
                         # no source
-                        "match_confidence": 0.95,
+                        "confidence": 0.95,
                     },
                 ]
             },

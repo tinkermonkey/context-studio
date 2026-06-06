@@ -7,7 +7,7 @@
         "label": "Microservice",
         "description": "A small, independent service",
         "source": "wikidata",
-        "match_confidence": 0.92,
+        "confidence": 0.92,
         "match_rationale": "strong match"
       }
     ],
