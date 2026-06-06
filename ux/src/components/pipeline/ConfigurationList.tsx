@@ -33,7 +33,10 @@ export function ConfigurationList({
     return Array.from(groups.entries());
   }, [configurations]);
 
-  // Find default configuration (usually the one with highest version for 'default' ref)
+  // Find default configuration by detecting config_ref === "default".
+  // This heuristic relies on backend convention: the config reference "default" identifies the default configuration.
+  // If backend changes naming conventions or uses an explicit is_default flag, this detection will fail silently.
+  // TODO: Verify with backend team that config_ref === "default" is a stable contract.
   const defaultConfig = useMemo(() => {
     const defaultGroup = groupedConfigs.find(([ref]) => ref === "default");
     if (defaultGroup && defaultGroup[1].length > 0) {
@@ -47,7 +50,7 @@ export function ConfigurationList({
       <div
         className="configuration-list"
         data-testid="configuration-list"
-        role="region"
+        role="listbox"
         aria-label="Configurations loading"
       >
         {Array.from({ length: 3 }).map((_, i) => (
@@ -90,7 +93,7 @@ export function ConfigurationList({
     <div
       className="configuration-list"
       data-testid="configuration-list"
-      role="region"
+      role="listbox"
       aria-label="Configurations"
     >
       {groupedConfigs.map(([ref, configs]) => (

@@ -1,73 +1,75 @@
-.implementation-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: 6px;
-  padding: 8px;
-  background: rgb(var(--canvas-bg));
-  min-height: 120px;
-}
-
-.implementation-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  text-align: left;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  color: rgb(var(--canvas-fg-1));
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.implementation-item:hover {
-  background: rgb(var(--canvas-bg-hover));
-  border-color: rgb(var(--canvas-border));
-}
-
-.implementation-item.selected {
-  background: rgba(var(--accent-primary), 0.1);
-  border-color: rgb(var(--accent-primary));
-}
-
-.implementation-id {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
-.implementation-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: rgb(var(--accent-primary));
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
-.implementation-skeleton {
-  height: 40px;
-  border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    rgb(var(--canvas-bg)) 0%,
-    rgb(var(--canvas-border)) 50%,
-    rgb(var(--canvas-bg)) 100%
-  );
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
+@layer app {
+  .implementation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    padding: 8px;
+    background: rgb(var(--canvas-bg));
+    min-height: 120px;
   }
-  100% {
-    background-position: -200% 0;
+
+  .implementation-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    text-align: left;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: rgb(var(--canvas-fg-1));
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .implementation-item:hover {
+    background: rgb(var(--canvas-bg-hover));
+    border-color: rgb(var(--canvas-border));
+  }
+
+  .implementation-item.selected {
+    background: rgba(var(--accent-primary), 0.1);
+    border-color: rgb(var(--accent-primary));
+  }
+
+  .implementation-id {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .implementation-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: rgb(var(--accent-primary));
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .implementation-skeleton {
+    height: 40px;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-bg)) 0%,
+      rgb(var(--canvas-border)) 50%,
+      rgb(var(--canvas-bg)) 100%
+    );
+    background-size: 200% 100%;
+    animation: implementation-loading 1.5s infinite;
+  }
+
+  @keyframes implementation-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 }

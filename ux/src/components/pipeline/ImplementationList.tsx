@@ -1,4 +1,3 @@
-import { Button } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { components } from "@/api/types";
@@ -28,7 +27,7 @@ export function ImplementationList({
       <div
         className="implementation-list"
         data-testid="implementation-list"
-        role="region"
+        role="listbox"
         aria-label="Implementations loading"
       >
         {Array.from({ length: 3 }).map((_, i) => (
@@ -62,7 +61,7 @@ export function ImplementationList({
     <div
       className="implementation-list"
       data-testid="implementation-list"
-      role="region"
+      role="listbox"
       aria-label="Implementations"
     >
       {implementations.map((impl) => (

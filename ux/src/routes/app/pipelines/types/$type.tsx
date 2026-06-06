@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PipelineTypeDetail } from "@/components/pipeline/PipelineTypeDetail";
 
-interface PipelineTypeSearchParams {
+export interface PipelineTypeSearchParams {
   impl?: string;
   config?: string;
 }

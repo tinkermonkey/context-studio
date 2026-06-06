@@ -8,16 +8,8 @@ import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfi
 import { ImplementationList } from "./ImplementationList";
 import { ConfigurationList } from "./ConfigurationList";
 import { ConfigurationDrawer } from "./ConfigurationDrawer";
-import type { components } from "@/api/types";
+import type { PipelineTypeSearchParams } from "@/routes/app/pipelines/types/$type";
 import "./PipelineTypeDetail.css";
-
-type ImplementationResponse = components["schemas"]["ImplementationResponse"];
-type ConfigurationResponse = components["schemas"]["ConfigurationResponse"];
-
-interface PipelineTypeSearchParams {
-  impl?: string;
-  config?: string;
-}
 
 export function PipelineTypeDetail() {
   const { type } = useParams({ from: "/app/pipelines/types/:type" as any });

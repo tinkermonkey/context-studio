@@ -1593,3 +1593,6 @@ selectors:
   - selector: configuration-list
     component: src/components/pipeline/ConfigurationList.tsx
     description: Center pane list of versioned configurations for the selected implementation
+  - selector: configuration-drawer-*
+    component: src/components/pipeline/ConfigurationDrawer.tsx
+    description: Right pane inspector showing read-only configuration details with dynamic ID suffix (pattern matches configuration-drawer-{ref}-{version})
