@@ -109,7 +109,7 @@ describe("RunApplyControls", () => {
       const onApplySuccess = vi.fn();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", () =>
+        http.post("*/api/pipelines/runs/run-001/apply", () =>
           HttpResponse.json(createMockApplyResponse()),
         ),
       );
@@ -152,7 +152,7 @@ describe("RunApplyControls", () => {
       const run = createMockRun();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", () =>
+        http.post("*/api/pipelines/runs/run-001/apply", () =>
           HttpResponse.json(createMockApplyResponse()),
         ),
       );
@@ -191,7 +191,7 @@ describe("RunApplyControls", () => {
       const run = createMockRun();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", () =>
+        http.post("*/api/pipelines/runs/run-001/apply", () =>
           HttpResponse.json(createMockApplyResponse()),
         ),
       );
@@ -230,7 +230,7 @@ describe("RunApplyControls", () => {
       const run = createMockRun();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", () =>
+        http.post("*/api/pipelines/runs/run-001/apply", () =>
           HttpResponse.json(createMockApplyResponse()),
         ),
       );
@@ -407,7 +407,7 @@ describe("RunApplyControls", () => {
       const onApplySuccess = vi.fn();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", async ({ request }) => {
+        http.post("*/api/pipelines/runs/run-001/apply", async ({ request }) => {
           const body = await request.json();
           expect(body).toHaveProperty("concept_scheme_id", "scheme-123");
           return HttpResponse.json(createMockApplyResponse());
@@ -451,7 +451,7 @@ describe("RunApplyControls", () => {
       const onApplySuccess = vi.fn();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", async ({ request }) => {
+        http.post("*/api/pipelines/runs/run-001/apply", async ({ request }) => {
           const body = await request.json();
           expect(body).toHaveProperty("taxonomy_id", "tax-456");
           return HttpResponse.json(createMockApplyResponse());
@@ -495,7 +495,7 @@ describe("RunApplyControls", () => {
       const onApplySuccess = vi.fn();
 
       server.use(
-        http.post("*/api/runs/run-001/apply", async ({ request }) => {
+        http.post("*/api/pipelines/runs/run-001/apply", async ({ request }) => {
           const body = await request.json();
           expect(body).toHaveProperty("node_id", "node-789");
           return HttpResponse.json(createMockApplyResponse());
@@ -542,7 +542,7 @@ describe("RunApplyControls", () => {
       });
 
       server.use(
-        http.post("*/api/runs/run-001/apply", async () => {
+        http.post("*/api/pipelines/runs/run-001/apply", async () => {
           await requestPromise;
           return HttpResponse.json(createMockApplyResponse());
         }),
