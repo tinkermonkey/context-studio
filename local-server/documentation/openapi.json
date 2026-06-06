@@ -10256,6 +10256,18 @@
             "description": "Number of properties deleted during revert",
             "default": 0
           },
+          "taxonomies_deleted": {
+            "type": "integer",
+            "title": "Taxonomies Deleted",
+            "description": "Number of taxonomies deleted during revert",
+            "default": 0
+          },
+          "concept_schemes_deleted": {
+            "type": "integer",
+            "title": "Concept Schemes Deleted",
+            "description": "Number of concept schemes deleted during revert",
+            "default": 0
+          },
           "entities_restored": {
             "type": "integer",
             "title": "Entities Restored",

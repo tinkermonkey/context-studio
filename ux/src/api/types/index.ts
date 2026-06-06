@@ -6314,6 +6314,18 @@ export interface components {
        */
       properties_deleted: number;
       /**
+       * Taxonomies Deleted
+       * @description Number of taxonomies deleted during revert
+       * @default 0
+       */
+      taxonomies_deleted: number;
+      /**
+       * Concept Schemes Deleted
+       * @description Number of concept schemes deleted during revert
+       * @default 0
+       */
+      concept_schemes_deleted: number;
+      /**
        * Entities Restored
        * @description Number of entities restored during revert
        * @default 0

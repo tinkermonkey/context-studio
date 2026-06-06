@@ -88,21 +88,36 @@ class RevertService:
             return RevertResult(run_id=batch_run_id, events_reverted=0)
 
         reverted_count = 0
+        applied_events = []
         summary = {
             "classes_deleted": 0,
             "individuals_deleted": 0,
             "relationships_deleted": 0,
             "properties_deleted": 0,
+            "taxonomies_deleted": 0,
+            "concept_schemes_deleted": 0,
             "entities_restored": 0,
         }
 
-        for event in reversed(events):
-            if self._should_skip_revert(event, events):
-                continue
+        try:
+            for event in reversed(events):
+                if self._should_skip_revert(event, events):
+                    continue
 
-            if self._apply_inverse(event, batch_run_id):
-                reverted_count += 1
-                self._update_summary(event, summary)
+                try:
+                    if self._apply_inverse(event, batch_run_id):
+                        reverted_count += 1
+                        applied_events.append(event)
+                        self._update_summary(event, summary)
+                except Exception as exc:
+                    _logger.error(
+                        f"Failed to revert event {event.id} for entity {event.entity_id}. "
+                        f"Partially reverted {reverted_count} events before failure.",
+                        exc_info=exc,
+                    )
+                    raise
+        except Exception:
+            raise
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
@@ -112,6 +127,8 @@ class RevertService:
             individuals_deleted=summary["individuals_deleted"],
             relationships_deleted=summary["relationships_deleted"],
             properties_deleted=summary["properties_deleted"],
+            taxonomies_deleted=summary["taxonomies_deleted"],
+            concept_schemes_deleted=summary["concept_schemes_deleted"],
             entities_restored=summary["entities_restored"],
         )
 
@@ -398,7 +415,11 @@ class RevertService:
         operation = event.operation
 
         if operation == ChangeOperation.CREATE:
-            if entity_type == "class":
+            if entity_type == "taxonomy":
+                summary["taxonomies_deleted"] += 1
+            elif entity_type == "concept_scheme":
+                summary["concept_schemes_deleted"] += 1
+            elif entity_type == "class":
                 summary["classes_deleted"] += 1
             elif entity_type == "individual":
                 summary["individuals_deleted"] += 1
@@ -422,4 +443,6 @@ class RevertResult:
     individuals_deleted: int = 0
     relationships_deleted: int = 0
     properties_deleted: int = 0
+    taxonomies_deleted: int = 0
+    concept_schemes_deleted: int = 0
     entities_restored: int = 0

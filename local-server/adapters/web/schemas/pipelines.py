@@ -221,6 +221,12 @@ class RevertRunResponse(BaseModel):
     properties_deleted: int = Field(
         default=0, description="Number of properties deleted during revert"
     )
+    taxonomies_deleted: int = Field(
+        default=0, description="Number of taxonomies deleted during revert"
+    )
+    concept_schemes_deleted: int = Field(
+        default=0, description="Number of concept schemes deleted during revert"
+    )
     entities_restored: int = Field(
         default=0, description="Number of entities restored during revert"
     )

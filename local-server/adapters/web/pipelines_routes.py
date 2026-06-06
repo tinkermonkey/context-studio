@@ -922,8 +922,16 @@ async def revert_pipeline_run(
             individuals_deleted=revert_result.individuals_deleted,
             relationships_deleted=revert_result.relationships_deleted,
             properties_deleted=revert_result.properties_deleted,
+            taxonomies_deleted=revert_result.taxonomies_deleted,
+            concept_schemes_deleted=revert_result.concept_schemes_deleted,
             entities_restored=revert_result.entities_restored,
         )
+    except (PipelineStorageError, IntegrityError, OperationalError) as exc:
+        _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
+        status_code, message = _handle_domain_error(
+            exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
+        )
+        raise HTTPException(status_code=status_code, detail=message) from exc
     except Exception as exc:
         _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
         raise HTTPException(
