@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
+import { Button, Field, FormCallout, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
+import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -71,6 +72,7 @@ export function SchemaGroundingWizard() {
         configuration_ref: configRefPart,
         nodes: selectedNodes.map((n) => ({ id: n.id })),
         sources: selectedSources,
+        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -105,37 +107,21 @@ export function SchemaGroundingWizard() {
       data-testid="schema-grounding-wizard"
       className="wizard-form"
     >
-      <div className="node-type-selector" data-testid="schema-grounding-node-type">
-        <div className="node-type-label">Node Type</div>
-        <div className="node-type-buttons">
-          <button
-            type="button"
-            className={`node-type-button ${nodeType === "Class" ? "active" : ""}`}
-            onClick={() => {
-              setNodeType("Class");
-              setSelectedNodes([]);
-              setErrors((prev) => ({ ...prev, nodes: undefined }));
-            }}
-            disabled={isSubmitting}
-            data-testid="schema-grounding-node-type-class"
-          >
-            Class
-          </button>
-          <button
-            type="button"
-            className={`node-type-button ${nodeType === "PropertyDefinition" ? "active" : ""}`}
-            onClick={() => {
-              setNodeType("PropertyDefinition");
-              setSelectedNodes([]);
-              setErrors((prev) => ({ ...prev, nodes: undefined }));
-            }}
-            disabled={isSubmitting}
-            data-testid="schema-grounding-node-type-property"
-          >
-            Property Definition
-          </button>
-        </div>
-      </div>
+      <Field label="Node Type" data-testid="schema-grounding-node-type">
+        <SegmentedControl
+          value={nodeType}
+          onChange={(value) => {
+            setNodeType(value as "Class" | "PropertyDefinition");
+            setSelectedNodes([]);
+            setErrors((prev) => ({ ...prev, nodes: undefined }));
+          }}
+          options={[
+            { value: "Class", label: "Class" },
+            { value: "PropertyDefinition", label: "Property Definition" },
+          ]}
+          disabled={isSubmitting}
+        />
+      </Field>
 
       <Field
         label="Target Nodes"
@@ -204,23 +190,12 @@ export function SchemaGroundingWizard() {
         configError={errors.configRef}
       />
 
-      <div
-        className="batch-toggle"
-        role="group"
-        aria-label="Batch execution"
-        data-testid="schema-grounding-batch-toggle"
-      >
-        <label className="batch-toggle-label">
-          <input
-            type="checkbox"
-            checked={runAsBatch}
-            onChange={(e) => setRunAsBatch(e.target.checked)}
-            disabled={isSubmitting}
-            data-testid="schema-grounding-batch-checkbox"
-          />
-          <span>Run as batch</span>
-        </label>
-      </div>
+      <BatchToggle
+        checked={runAsBatch}
+        onChange={setRunAsBatch}
+        disabled={isSubmitting}
+        testIdPrefix="schema-grounding"
+      />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">

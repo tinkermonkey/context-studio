@@ -130,52 +130,6 @@
     border-bottom: none;
   }
 
-  .node-type-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .node-type-label {
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  .node-type-buttons {
-    display: flex;
-    gap: 8px;
-  }
-
-  .node-type-button {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid rgb(var(--canvas-border));
-    border-radius: 4px;
-    background-color: rgb(var(--canvas-bg));
-    font-size: var(--text-sm);
-    color: rgb(var(--canvas-fg-1));
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .node-type-button:hover:not(:disabled) {
-    background-color: rgb(var(--canvas-bg-2));
-    border-color: rgb(var(--canvas-border-strong));
-  }
-
-  .node-type-button.active {
-    background-color: rgb(var(--accent-cyan));
-    border-color: rgb(var(--accent-cyan));
-    color: rgb(var(--shell-fg));
-    font-weight: 500;
-  }
-
-  .node-type-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
   .batch-toggle {
     padding: 12px;
     border-radius: 4px;
