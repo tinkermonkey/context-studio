@@ -240,7 +240,11 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
                       groundingCandidates: Object.entries(candidateStatus)
                         .filter(([, status]) => status === "accepted")
                         .map(([key]) => key),
-                      refinementCandidates: selectedOption === "current" ? [] : [`definition-${selectedOption}`],
+                      refinementCandidates: run.pipeline_type === "schema_node_definition_refinement"
+                        ? (selectedOption === "current" ? [] : [`definition-${selectedOption}`])
+                        : Object.entries(deltaStatus)
+                            .filter(([, status]) => status === "accepted")
+                            .map(([key]) => key),
                     }}
                     isApplied={!!applyResult}
                     onApplySuccess={(result) => {

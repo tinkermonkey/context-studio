@@ -4,9 +4,6 @@ import { useToasts } from "@/components/ui/Toast";
 import { useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
 import type { ApplyParams } from "@/api/services/pipeline";
 import type { components } from "@/api/types";
-import type {
-  SchemaExtractionOutputSummary,
-} from "@/api/hooks/pipeline/outputSummaryTypes";
 import "./RunApplyControls.css";
 
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
@@ -59,7 +56,7 @@ export function RunApplyControls({
 
     // For schema extraction, check classes, properties, and relationships
     if (pipelineType === "schema_extraction" && outputSummary) {
-      const summary = outputSummary as SchemaExtractionOutputSummary | unknown;
+      const summary = outputSummary as unknown;
 
       if (typeof summary === "object" && summary !== null) {
         const summaryObj = summary as Record<string, unknown>;
