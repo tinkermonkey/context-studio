@@ -19,6 +19,7 @@ export function ConnectionRefinementWizard() {
   const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const { data: scopeClassDetails } = useClass(selectedScope?.id || "");
 
@@ -187,6 +188,24 @@ export function ConnectionRefinementWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="connection-refinement-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="connection-refinement-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout

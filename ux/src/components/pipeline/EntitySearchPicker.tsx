@@ -8,7 +8,7 @@ export interface Entity {
 }
 
 export interface EntitySearchPickerProps {
-  entityType: "Class" | "Taxonomy" | "ConceptScheme" | "Individual";
+  entityType: "Class" | "Taxonomy" | "ConceptScheme" | "Individual" | "PropertyDefinition";
   selectedId?: string;
   onSelect: (entity: Entity | null) => void;
   placeholder?: string;

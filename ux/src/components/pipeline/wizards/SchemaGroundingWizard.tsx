@@ -26,6 +26,8 @@ export function SchemaGroundingWizard() {
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
+  const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -103,6 +105,38 @@ export function SchemaGroundingWizard() {
       data-testid="schema-grounding-wizard"
       className="wizard-form"
     >
+      <div className="node-type-selector" data-testid="schema-grounding-node-type">
+        <div className="node-type-label">Node Type</div>
+        <div className="node-type-buttons">
+          <button
+            type="button"
+            className={`node-type-button ${nodeType === "Class" ? "active" : ""}`}
+            onClick={() => {
+              setNodeType("Class");
+              setSelectedNodes([]);
+              setErrors((prev) => ({ ...prev, nodes: undefined }));
+            }}
+            disabled={isSubmitting}
+            data-testid="schema-grounding-node-type-class"
+          >
+            Class
+          </button>
+          <button
+            type="button"
+            className={`node-type-button ${nodeType === "PropertyDefinition" ? "active" : ""}`}
+            onClick={() => {
+              setNodeType("PropertyDefinition");
+              setSelectedNodes([]);
+              setErrors((prev) => ({ ...prev, nodes: undefined }));
+            }}
+            disabled={isSubmitting}
+            data-testid="schema-grounding-node-type-property"
+          >
+            Property Definition
+          </button>
+        </div>
+      </div>
+
       <Field
         label="Target Nodes"
         required
@@ -110,10 +144,10 @@ export function SchemaGroundingWizard() {
         errorId="nodes-error"
       >
         <EntitySearchPicker
-          entityType="Class"
+          entityType={nodeType}
           selectedId={selectedNodes[0]?.id}
           onSelect={handleNodeSelect}
-          placeholder="Search classes to ground…"
+          placeholder={`Search ${nodeType === "Class" ? "classes" : "property definitions"} to ground…`}
           aria-invalid={!!errors.nodes}
           aria-describedby={errors.nodes ? "nodes-error" : undefined}
           data-testid="schema-grounding-nodes"
@@ -169,6 +203,24 @@ export function SchemaGroundingWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="schema-grounding-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="schema-grounding-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">

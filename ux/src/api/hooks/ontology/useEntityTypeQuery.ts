@@ -2,7 +2,7 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService } from "@/api/services/ontology";
 
-type EntityType = "Class" | "Taxonomy" | "ConceptScheme" | "Individual";
+type EntityType = "Class" | "Taxonomy" | "ConceptScheme" | "Individual" | "PropertyDefinition";
 
 interface ListResponse {
   items: Array<{ id: string; title?: string }>;
@@ -21,7 +21,9 @@ export function useEntityTypeQuery(
         ? QUERY_KEYS.taxonomies
         : entityType === "ConceptScheme"
           ? QUERY_KEYS.schemes()
-          : QUERY_KEYS.individuals();
+          : entityType === "Individual"
+            ? QUERY_KEYS.individuals()
+            : QUERY_KEYS.properties;
 
   const queryFn = async () => {
     const response =
@@ -31,7 +33,9 @@ export function useEntityTypeQuery(
           ? await ontologyService.listTaxonomies()
           : entityType === "ConceptScheme"
             ? await ontologyService.listSchemes()
-            : await ontologyService.listIndividuals();
+            : entityType === "Individual"
+              ? await ontologyService.listIndividuals()
+              : await ontologyService.listProperties();
     return response as ListResponse;
   };
 
