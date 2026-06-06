@@ -23,11 +23,6 @@ export function PipelineTypeDetail() {
     refetch: refetchImpl,
   } = usePipelineImplementations(type);
 
-  const selectedImpl = useMemo(
-    () => implementations?.find((i) => i.id === searchParams.impl),
-    [implementations, searchParams.impl],
-  );
-
   const {
     data: configurations,
     isLoading: configLoading,
