@@ -10,7 +10,10 @@ export interface Entity {
 export interface EntitySearchPickerProps {
   entityType: "Class" | "Taxonomy" | "ConceptScheme" | "Individual" | "PropertyDefinition";
   selectedId?: string;
-  onSelect: (entity: Entity | null) => void;
+  selectedIds?: string[];
+  onSelect?: (entity: Entity | null) => void;
+  onSelectMultiple?: (entities: Entity[]) => void;
+  multiSelect?: boolean;
   placeholder?: string;
   disabled?: boolean;
   "data-testid"?: string;
@@ -21,7 +24,10 @@ export interface EntitySearchPickerProps {
 export function EntitySearchPicker({
   entityType,
   selectedId,
+  selectedIds = [],
   onSelect,
+  onSelectMultiple,
+  multiSelect = false,
   placeholder = "Search entities…",
   disabled = false,
   "data-testid": testId,
@@ -59,14 +65,40 @@ export function EntitySearchPicker({
     [entities, selectedId],
   );
 
+  const selectedEntities = useMemo(
+    () => entities.filter((e: any) => selectedIds.includes(e.id)).map((e: any) => ({
+      id: e.id,
+      label: e.title || e.id,
+    })),
+    [entities, selectedIds],
+  );
+
   const handleSelect = (result: Entity) => {
-    onSelect(result);
+    if (multiSelect && onSelectMultiple) {
+      if (selectedIds.includes(result.id)) {
+        onSelectMultiple(selectedEntities.filter((e) => e.id !== result.id));
+      } else {
+        onSelectMultiple([...selectedEntities, result]);
+      }
+    } else if (onSelect) {
+      onSelect(result);
+    }
     setQuery("");
   };
 
   const handleClear = () => {
-    onSelect(null);
+    if (multiSelect && onSelectMultiple) {
+      onSelectMultiple([]);
+    } else if (onSelect) {
+      onSelect(null);
+    }
     setQuery("");
+  };
+
+  const handleRemoveEntity = (id: string) => {
+    if (multiSelect && onSelectMultiple) {
+      onSelectMultiple(selectedEntities.filter((e) => e.id !== id));
+    }
   };
 
   return (
@@ -76,7 +108,41 @@ export function EntitySearchPicker({
           {errorMessage}
         </div>
       )}
-      {selectedEntity ? (
+      {multiSelect ? (
+        <>
+          {selectedEntities.length > 0 && (
+            <div className="selected-entities-list" role="list" data-testid={testId ? `${testId}-list` : undefined}>
+              {selectedEntities.map((entity) => (
+                <div key={entity.id} className="selected-entity-chip" role="listitem">
+                  <span>{entity.label}</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleRemoveEntity(entity.id)}
+                    disabled={disabled || currentQuery.isLoading}
+                    aria-label={`Remove ${entity.label}`}
+                    data-testid={testId ? `${testId}-remove-${entity.id}` : undefined}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <EntityPicker
+            query={query}
+            onQueryChange={setQuery}
+            results={results}
+            onSelect={handleSelect}
+            onClear={handleClear}
+            placeholder={placeholder}
+            disabled={disabled || currentQuery.isLoading || currentQuery.isError}
+            data-testid={testId ? `${testId}-input` : undefined}
+            aria-invalid={ariaInvalid || currentQuery.isError}
+            aria-describedby={ariaDescribedBy}
+          />
+        </>
+      ) : selectedEntity ? (
         <div className="selected-entity">
           <span>{selectedEntity.title || selectedEntity.id}</span>
           <Button

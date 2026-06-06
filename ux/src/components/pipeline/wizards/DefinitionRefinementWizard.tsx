@@ -20,6 +20,7 @@ export function DefinitionRefinementWizard() {
   const [currentDefinition, setCurrentDefinition] = useState("");
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const { data: selectedNodeDetails } = useClass(selectedNode?.id || "");
 
@@ -173,6 +174,24 @@ export function DefinitionRefinementWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="definition-refinement-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="definition-refinement-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="definition-refinement-loading">

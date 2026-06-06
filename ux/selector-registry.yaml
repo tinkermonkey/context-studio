@@ -1682,6 +1682,12 @@ selectors:
   - selector: schema-extraction-loading
     component: components/pipeline/wizards/SchemaExtractionWizard.tsx
     description: Loading state message in schema extraction wizard
+  - selector: schema-extraction-batch-toggle
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Container for run as batch toggle in schema extraction wizard
+  - selector: schema-extraction-batch-checkbox
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Checkbox to enable batch execution in schema extraction wizard
 
   - selector: individual-extraction-wizard
     component: components/pipeline/wizards/IndividualExtractionWizard.tsx
@@ -1701,6 +1707,12 @@ selectors:
   - selector: individual-extraction-loading
     component: components/pipeline/wizards/IndividualExtractionWizard.tsx
     description: Loading state message in individual extraction wizard
+  - selector: individual-extraction-batch-toggle
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Container for run as batch toggle in individual extraction wizard
+  - selector: individual-extraction-batch-checkbox
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Checkbox to enable batch execution in individual extraction wizard
 
   - selector: schema-grounding-wizard
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
@@ -1732,6 +1744,12 @@ selectors:
   - selector: schema-grounding-loading
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Loading state message in schema grounding wizard
+  - selector: schema-grounding-batch-toggle
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Container for run as batch toggle in schema grounding wizard
+  - selector: schema-grounding-batch-checkbox
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Checkbox to enable batch execution in schema grounding wizard
 
   - selector: definition-refinement-wizard
     component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
@@ -1754,6 +1772,12 @@ selectors:
   - selector: definition-refinement-loading
     component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
     description: Loading state message in definition refinement wizard
+  - selector: definition-refinement-batch-toggle
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Container for run as batch toggle in definition refinement wizard
+  - selector: definition-refinement-batch-checkbox
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Checkbox to enable batch execution in definition refinement wizard
 
   - selector: connection-refinement-wizard
     component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
@@ -1773,6 +1797,12 @@ selectors:
   - selector: connection-refinement-loading
     component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
     description: Loading state message in connection refinement wizard
+  - selector: connection-refinement-batch-toggle
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Container for run as batch toggle in connection refinement wizard
+  - selector: connection-refinement-batch-checkbox
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Checkbox to enable batch execution in connection refinement wizard
 
   - selector: implementation-select
     component: components/pipeline/ImplementationConfigPicker.tsx

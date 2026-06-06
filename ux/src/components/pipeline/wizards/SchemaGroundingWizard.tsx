@@ -27,6 +27,7 @@ export function SchemaGroundingWizard() {
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
   const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -79,12 +80,8 @@ export function SchemaGroundingWizard() {
     }
   };
 
-  const handleNodeSelect = (entity: Entity | null) => {
-    if (entity) {
-      setSelectedNodes([entity]);
-    } else {
-      setSelectedNodes([]);
-    }
+  const handleNodeSelect = (entities: Entity[]) => {
+    setSelectedNodes(entities);
     setErrors((prev) => ({ ...prev, nodes: undefined }));
   };
 
@@ -116,8 +113,9 @@ export function SchemaGroundingWizard() {
       <Field label="Target Nodes" required error={errors.nodes} errorId="nodes-error">
         <EntitySearchPicker
           entityType={nodeType}
-          selectedId={selectedNodes[0]?.id}
-          onSelect={handleNodeSelect}
+          selectedIds={selectedNodes.map((n) => n.id)}
+          onSelectMultiple={handleNodeSelect}
+          multiSelect
           placeholder={`Search ${nodeType === "Class" ? "classes" : "property definitions"} to ground…`}
           aria-invalid={!!errors.nodes}
           aria-describedby={errors.nodes ? "nodes-error" : undefined}
@@ -166,6 +164,24 @@ export function SchemaGroundingWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="schema-grounding-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="schema-grounding-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">

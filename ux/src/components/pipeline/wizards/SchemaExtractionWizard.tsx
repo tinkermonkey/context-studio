@@ -19,6 +19,7 @@ export function SchemaExtractionWizard() {
   const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -116,6 +117,24 @@ export function SchemaExtractionWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="schema-extraction-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="schema-extraction-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-extraction-loading">

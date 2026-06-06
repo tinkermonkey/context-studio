@@ -19,6 +19,7 @@ export function IndividualExtractionWizard() {
   const [selectedOntology, setSelectedOntology] = useState<Entity | null>(null);
   const [implementationId, setImplementationId] = useState("");
   const [configRef, setConfigRef] = useState("");
+  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -123,6 +124,24 @@ export function IndividualExtractionWizard() {
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
+
+      <div
+        className="batch-toggle"
+        role="group"
+        aria-label="Batch execution"
+        data-testid="individual-extraction-batch-toggle"
+      >
+        <label className="batch-toggle-label">
+          <input
+            type="checkbox"
+            checked={runAsBatch}
+            onChange={(e) => setRunAsBatch(e.target.checked)}
+            disabled={isSubmitting}
+            data-testid="individual-extraction-batch-checkbox"
+          />
+          <span>Run as batch</span>
+        </label>
+      </div>
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="individual-extraction-loading">
