@@ -330,6 +330,18 @@
   flex: 1;
 }
 
+.definition-option-title-spaced {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  justify-content: space-between;
+}
+
+.definition-option-content {
+  flex: 1;
+}
+
 .definition-radio-input {
   margin-top: 2px;
   cursor: pointer;

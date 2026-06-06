@@ -62,7 +62,7 @@ export function DefinitionRefinementReview({
             }
           }}
         >
-          <div className="definition-option-header">
+          <div className="definition-option-title">
             <input
               type="radio"
               data-testid="definition-refinement-radio-current"
@@ -100,10 +100,7 @@ export function DefinitionRefinementReview({
             }
           }}
         >
-          <div
-            className="definition-option-title"
-            style={{ justifyContent: "space-between" }}
-          >
+          <div className="definition-option-title-spaced">
             <div className="definition-option-title">
               <input
                 type="radio"
@@ -115,7 +112,7 @@ export function DefinitionRefinementReview({
                 aria-label={`Choose candidate ${idx + 1}`}
                 className="definition-radio-input"
               />
-              <div style={{ flex: 1 }}>
+              <div className="definition-option-content">
                 <div className="definition-candidate-number">
                   Candidate {idx + 1}
                 </div>
@@ -131,10 +128,7 @@ export function DefinitionRefinementReview({
             </div>
           </div>
 
-          <p
-            className="definition-text"
-            style={{ marginBottom: candidate.rationale ? "8px" : 0 }}
-          >
+          <p className="definition-text">
             {candidate.definition}
           </p>
 
