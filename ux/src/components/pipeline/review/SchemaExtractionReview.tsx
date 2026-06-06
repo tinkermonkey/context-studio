@@ -37,17 +37,13 @@ export function SchemaExtractionReview({
   const properties = outputSummary.properties || [];
   const relationships = outputSummary.relationships || [];
 
-  const classesSelected = selectedClasses;
-  const propertiesSelected = selectedProperties;
-  const relationshipsSelected = selectedRelationships;
-
   const allClassesSelected =
-    classes.length > 0 && classesSelected.length === classes.length;
+    classes.length > 0 && selectedClasses.length === classes.length;
   const allPropertiesSelected =
-    properties.length > 0 && propertiesSelected.length === properties.length;
+    properties.length > 0 && selectedProperties.length === properties.length;
   const allRelationshipsSelected =
     relationships.length > 0 &&
-    relationshipsSelected.length === relationships.length;
+    selectedRelationships.length === relationships.length;
 
   const handleSelectAllClasses = () => {
     if (allClassesSelected) {
@@ -153,6 +149,7 @@ export function SchemaExtractionReview({
             >
               <input
                 type="checkbox"
+                data-testid="schema-extraction-select-all-classes"
                 checked={allClassesSelected}
                 onChange={handleSelectAllClasses}
                 aria-label="Select all classes"
@@ -230,6 +227,7 @@ export function SchemaExtractionReview({
             >
               <input
                 type="checkbox"
+                data-testid="schema-extraction-select-all-properties"
                 checked={allPropertiesSelected}
                 onChange={handleSelectAllProperties}
                 aria-label="Select all properties"
@@ -319,6 +317,7 @@ export function SchemaExtractionReview({
             >
               <input
                 type="checkbox"
+                data-testid="schema-extraction-select-all-relationships"
                 checked={allRelationshipsSelected}
                 onChange={handleSelectAllRelationships}
                 aria-label="Select all relationships"

@@ -1763,9 +1763,6 @@ selectors:
   - selector: run-completed-section
     component: components/pipeline/RunDetailDrawer.tsx
     description: Results section shown for COMPLETED runs with candidate summary
-  - selector: run-review-placeholder
-    component: components/pipeline/RunDetailDrawer.tsx
-    description: Placeholder for candidate review content (Phase 6 feature)
   - selector: run-apply-placeholder
     component: components/pipeline/RunDetailDrawer.tsx
     description: Placeholder for apply controls (Phase 7 feature)
@@ -1819,3 +1816,34 @@ selectors:
   - selector: relationships-table-container
     component: src/components/pipeline/review/SchemaExtractionReview.tsx
     description: Table container for relationships tab in schema extraction review
+
+  - selector: definition-refinement-radio-current
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Radio input for selecting the current (non-candidate) definition in definition refinement review
+  - selector: definition-refinement-radio-candidate-*
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Radio input for selecting a candidate definition with dynamic index suffix
+  - selector: individual-extraction-select-all
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Select-all checkbox for triples table in individual extraction review
+  - selector: schema-extraction-select-all-classes
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for classes table in schema extraction review
+  - selector: schema-extraction-select-all-properties
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for properties table in schema extraction review
+  - selector: schema-extraction-select-all-relationships
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for relationships table in schema extraction review
+  - selector: grounding-accept-*
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Accept button for grounding candidate with dynamic key suffix
+  - selector: grounding-reject-*
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Reject button for grounding candidate with dynamic key suffix
+  - selector: connection-accept-*
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Accept button for connection delta with dynamic key suffix
+  - selector: connection-reject-*
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Reject button for connection delta with dynamic key suffix

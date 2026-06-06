@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Chip, Badge } from "@tinkermonkey/heimdall-ui";
+import { Chip } from "@tinkermonkey/heimdall-ui";
 import type { SchemaNodeGroundingOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
 
 interface GroundingReviewProps {
@@ -45,24 +45,20 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
     );
   }
 
-  const toggleCandidateStatus = (candidateKey: string) => {
+  const acceptCandidate = (candidateKey: string) => {
     const current = candidateStatus[candidateKey] || "pending";
-    if (current === "pending") {
-      setCandidateStatus((prev) => ({
-        ...prev,
-        [candidateKey]: "accepted",
-      }));
-    } else if (current === "accepted") {
-      setCandidateStatus((prev) => ({
-        ...prev,
-        [candidateKey]: "rejected",
-      }));
-    } else {
-      setCandidateStatus((prev) => ({
-        ...prev,
-        [candidateKey]: "pending",
-      }));
-    }
+    setCandidateStatus((prev) => ({
+      ...prev,
+      [candidateKey]: current === "accepted" ? "pending" : "accepted",
+    }));
+  };
+
+  const rejectCandidate = (candidateKey: string) => {
+    const current = candidateStatus[candidateKey] || "pending";
+    setCandidateStatus((prev) => ({
+      ...prev,
+      [candidateKey]: current === "rejected" ? "pending" : "rejected",
+    }));
   };
 
   return (
@@ -159,8 +155,9 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
                     <div style={{ display: "flex", gap: "4px" }}>
                       <button
                         type="button"
-                        onClick={() => toggleCandidateStatus(candidateKey)}
-                        aria-label={`Toggle candidate status: ${status}`}
+                        data-testid={`grounding-accept-${candidateKey}`}
+                        onClick={() => acceptCandidate(candidateKey)}
+                        aria-label={`Accept candidate: ${status}`}
                         style={{
                           padding: "4px 8px",
                           fontSize: "11px",
@@ -185,8 +182,9 @@ export function GroundingReview({ outputSummary }: GroundingReviewProps) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => toggleCandidateStatus(candidateKey)}
-                        aria-label={`Toggle candidate status: ${status}`}
+                        data-testid={`grounding-reject-${candidateKey}`}
+                        onClick={() => rejectCandidate(candidateKey)}
+                        aria-label={`Reject candidate: ${status}`}
                         style={{
                           padding: "4px 8px",
                           fontSize: "11px",

@@ -50,6 +50,7 @@ export function DefinitionRefinementReview({
   return (
     <div
       data-testid="definition-refinement-review"
+      role="radiogroup"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -91,6 +92,7 @@ export function DefinitionRefinementReview({
           >
             <input
               type="radio"
+              data-testid="definition-refinement-radio-current"
               name="definition-choice"
               value="current"
               checked={selectedOption === "current"}
@@ -160,6 +162,7 @@ export function DefinitionRefinementReview({
             >
               <input
                 type="radio"
+                data-testid={`definition-refinement-radio-candidate-${idx}`}
                 name="definition-choice"
                 value={idx}
                 checked={selectedOption === idx}

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { SegmentedControl } from "@tinkermonkey/heimdall-ui";
-import type { SchemaNodeConnectionRefinementOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import type {
+  SchemaNodeConnectionRefinementOutputSummary,
+  Delta,
+} from "@/api/hooks/pipeline/outputSummaryTypes";
 
 interface ConnectionRefinementReviewProps {
   outputSummary: SchemaNodeConnectionRefinementOutputSummary | null;
@@ -51,24 +54,20 @@ export function ConnectionRefinementReview({
   const removeDeltas = deltas.filter((d) => d.operation === "remove");
   const modifyDeltas = deltas.filter((d) => d.operation === "modify");
 
-  const toggleDeltaStatus = (deltaKey: string) => {
+  const acceptDelta = (deltaKey: string) => {
     const current = deltaStatus[deltaKey] || "pending";
-    if (current === "pending") {
-      setDeltaStatus((prev) => ({
-        ...prev,
-        [deltaKey]: "accepted",
-      }));
-    } else if (current === "accepted") {
-      setDeltaStatus((prev) => ({
-        ...prev,
-        [deltaKey]: "rejected",
-      }));
-    } else {
-      setDeltaStatus((prev) => ({
-        ...prev,
-        [deltaKey]: "pending",
-      }));
-    }
+    setDeltaStatus((prev) => ({
+      ...prev,
+      [deltaKey]: current === "accepted" ? "pending" : "accepted",
+    }));
+  };
+
+  const rejectDelta = (deltaKey: string) => {
+    const current = deltaStatus[deltaKey] || "pending";
+    setDeltaStatus((prev) => ({
+      ...prev,
+      [deltaKey]: current === "rejected" ? "pending" : "rejected",
+    }));
   };
 
   const getOperationColor = (
@@ -84,7 +83,7 @@ export function ConnectionRefinementReview({
     }
   };
 
-  const renderDelta = (delta: any, deltaKey: string) => {
+  const renderDelta = (delta: Delta, deltaKey: string) => {
     const status = deltaStatus[deltaKey] || "pending";
     const operationColor = getOperationColor(delta.operation);
     const bgColor =
@@ -188,8 +187,9 @@ export function ConnectionRefinementReview({
           <div style={{ display: "flex", gap: "4px" }}>
             <button
               type="button"
-              onClick={() => toggleDeltaStatus(deltaKey)}
-              aria-label={`Toggle delta status: ${status}`}
+              data-testid={`connection-accept-${deltaKey}`}
+              onClick={() => acceptDelta(deltaKey)}
+              aria-label={`Accept delta: ${status}`}
               style={{
                 padding: "4px 8px",
                 fontSize: "11px",
@@ -214,8 +214,9 @@ export function ConnectionRefinementReview({
             </button>
             <button
               type="button"
-              onClick={() => toggleDeltaStatus(deltaKey)}
-              aria-label={`Toggle delta status: ${status}`}
+              data-testid={`connection-reject-${deltaKey}`}
+              onClick={() => rejectDelta(deltaKey)}
+              aria-label={`Reject delta: ${status}`}
               style={{
                 padding: "4px 8px",
                 fontSize: "11px",

@@ -3,6 +3,19 @@
  * Each pipeline type produces a distinct output structure.
  */
 
+export type Delta = {
+  operation: "add" | "remove" | "modify";
+  source_id: string;
+  source_label?: string;
+  target_id: string;
+  target_label?: string;
+  relationship_type: string;
+  confidence: number;
+  source: string;
+  before?: string;
+  after?: string;
+};
+
 export interface SchemaExtractionOutputSummary {
   classes?: Array<{
     uri: string;
@@ -71,16 +84,5 @@ export interface SchemaNodeDefinitionRefinementOutputSummary {
 }
 
 export interface SchemaNodeConnectionRefinementOutputSummary {
-  deltas?: Array<{
-    operation: "add" | "remove" | "modify";
-    source_id: string;
-    source_label?: string;
-    target_id: string;
-    target_label?: string;
-    relationship_type: string;
-    confidence: number;
-    source: string;
-    before?: string;
-    after?: string;
-  }>;
+  deltas?: Array<Delta>;
 }

@@ -135,6 +135,7 @@ export function IndividualExtractionReview({
       >
         <input
           type="checkbox"
+          data-testid="individual-extraction-select-all"
           checked={allSelected}
           onChange={handleSelectAll}
           aria-label="Select all triples"

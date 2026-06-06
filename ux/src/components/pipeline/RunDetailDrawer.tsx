@@ -20,7 +20,10 @@ import type {
   SchemaNodeDefinitionRefinementOutputSummary,
   SchemaNodeConnectionRefinementOutputSummary,
 } from "@/api/hooks/pipeline/outputSummaryTypes";
+import type { components } from "@/api/types";
 import "./RunDetailDrawer.css";
+
+type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 
 interface RunDetailDrawerProps {
   runId: string;
@@ -83,7 +86,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
     { key: "Updated", value: formatDate(run.updated_at) },
   ];
 
-  const renderReviewComponent = (runData: any) => {
+  const renderReviewComponent = (runData: PipelineRunResponse) => {
     const outputSummary = runData.output_summary;
 
     switch (runData.pipeline_type) {
