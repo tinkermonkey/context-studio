@@ -1,9 +1,6 @@
 import { useState, useMemo } from "react";
 import { EntityPicker, Button } from "@tinkermonkey/heimdall-ui";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
+import { useEntityTypeQuery } from "@/api/hooks/ontology/useEntityTypeQuery";
 
 export interface Entity {
   id: string;
@@ -32,24 +29,7 @@ export function EntitySearchPicker({
   "aria-describedby": ariaDescribedBy,
 }: EntitySearchPickerProps) {
   const [query, setQuery] = useState("");
-
-  const classesQuery = useClasses();
-  const taxonomiesQuery = useTaxonomies();
-  const schemesQuery = useSchemes();
-  const individualsQuery = useIndividuals();
-
-  const currentQuery = useMemo(() => {
-    switch (entityType) {
-      case "Class":
-        return classesQuery;
-      case "Taxonomy":
-        return taxonomiesQuery;
-      case "ConceptScheme":
-        return schemesQuery;
-      case "Individual":
-        return individualsQuery;
-    }
-  }, [entityType, classesQuery, taxonomiesQuery, schemesQuery, individualsQuery]);
+  const currentQuery = useEntityTypeQuery(entityType);
 
   const entities = useMemo(() => currentQuery.data?.items || [], [currentQuery.data?.items]);
 
