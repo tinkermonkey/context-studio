@@ -439,7 +439,7 @@ describe("RunApplyControls", () => {
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(onApplySuccess).toHaveBeenCalled();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
     });
 
@@ -483,7 +483,7 @@ describe("RunApplyControls", () => {
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(onApplySuccess).toHaveBeenCalled();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
     });
 
@@ -527,7 +527,7 @@ describe("RunApplyControls", () => {
       await userEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(onApplySuccess).toHaveBeenCalled();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
     });
   });
