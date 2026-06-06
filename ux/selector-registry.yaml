@@ -1980,3 +1980,8 @@ selectors:
   - selector: schema-grounding-batch-checkbox
     component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Checkbox to enable batch execution in schema grounding wizard
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: run-detail-close-button
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Close button in run details drawer header

@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { Loader, AlertCircle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { Loader, AlertCircle, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   InspectorPanel,
   KVGrid,
   Chip,
+  Button,
 } from "@tinkermonkey/heimdall-ui";
-import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
+import { QUERY_KEYS } from "@/api/config";
+import { pipelineService } from "@/api/services/pipeline";
 import { formatDate } from "@/utils/dateFormatting";
 import {
   SchemaExtractionReview,
@@ -36,9 +38,27 @@ interface RunDetailDrawerProps {
   onClose?: () => void;
 }
 
-export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
-  const { data: run, isLoading, error } = usePipelineRun(runId);
+export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
   const queryClient = useQueryClient();
+
+  const { data: run, isLoading, error, refetch } = useQuery({
+    queryKey: QUERY_KEYS.pipelineRun(runId),
+    queryFn: () => pipelineService.getRun(runId),
+    enabled: !!runId,
+  });
+
+  // Poll for status changes when run is in PENDING or RUNNING state
+  useEffect(() => {
+    if (!run || (run.status !== "PENDING" && run.status !== "RUNNING")) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      refetch();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [run?.status, refetch]);
 
   // Selection state for SchemaExtractionReview
   const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
@@ -80,6 +100,18 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
   const revertResult = cachedStatus.revertResult;
   const isReverted = cachedStatus.isReverted;
 
+  const closeButton = onClose && (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClose}
+      aria-label="Close run details"
+      data-testid="run-detail-close-button"
+    >
+      <X size={16} />
+    </Button>
+  );
+
   if (isLoading) {
     return (
       <InspectorPanel
@@ -87,6 +119,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
         title="Loading…"
         id="loading"
         data-testid="run-detail-drawer"
+        actions={closeButton}
       >
         <div className="run-detail-loading">
           <Loader size={20} className="spin" />
@@ -102,6 +135,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
         title="Error"
         id="error"
         data-testid="run-detail-drawer"
+        actions={closeButton}
       >
         <div className="run-detail-error">
           <AlertCircle size={16} className="run-detail-error-icon" />
@@ -198,6 +232,7 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
       title={pipelineTypeDisplay}
       id={run.id}
       data-testid="run-detail-drawer"
+      actions={closeButton}
     >
       <InspectorPanel.Section title="Metadata">
         <KVGrid rows={metadataRows} />
