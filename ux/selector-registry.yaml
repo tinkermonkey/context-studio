@@ -1775,3 +1775,47 @@ selectors:
   - selector: run-running-placeholder
     component: components/pipeline/RunDetailDrawer.tsx
     description: Status message shown when run is RUNNING
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: connection-refinement-empty
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Empty state message when no connection deltas are available
+  - selector: connection-refinement-review
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Root container for connection refinement review component showing deltas grouped by operation type
+  - selector: definition-refinement-empty
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Empty state message when no definitions are available
+  - selector: definition-refinement-review
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Root container for definition refinement review component with radio-button definition selection
+  - selector: definition-refinement-current
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Current definition option card in definition refinement review
+  - selector: grounding-empty
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Empty state message when no grounding candidates are available
+  - selector: grounding-review
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Root container for grounding review component with per-node candidate lists
+  - selector: individual-extraction-empty
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Empty state message when no extraction candidates are available
+  - selector: individual-extraction-review
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Root container for individual extraction review component showing triples table
+  - selector: schema-extraction-empty
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Empty state message when no extraction candidates are available
+  - selector: schema-extraction-review
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Root container for schema extraction review component with tabbed Classes/Properties/Relationships interface
+  - selector: classes-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for classes tab in schema extraction review
+  - selector: properties-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for properties tab in schema extraction review
+  - selector: relationships-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for relationships tab in schema extraction review

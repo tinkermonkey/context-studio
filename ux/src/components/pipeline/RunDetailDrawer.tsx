@@ -6,6 +6,20 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { formatDate } from "@/utils/dateFormatting";
+import {
+  SchemaExtractionReview,
+  IndividualExtractionReview,
+  GroundingReview,
+  DefinitionRefinementReview,
+  ConnectionRefinementReview,
+} from "./review";
+import type {
+  SchemaExtractionOutputSummary,
+  IndividualExtractionOutputSummary,
+  SchemaNodeGroundingOutputSummary,
+  SchemaNodeDefinitionRefinementOutputSummary,
+  SchemaNodeConnectionRefinementOutputSummary,
+} from "@/api/hooks/pipeline/outputSummaryTypes";
 import "./RunDetailDrawer.css";
 
 interface RunDetailDrawerProps {
@@ -69,6 +83,55 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
     { key: "Updated", value: formatDate(run.updated_at) },
   ];
 
+  const renderReviewComponent = (runData: any) => {
+    const outputSummary = runData.output_summary;
+
+    switch (runData.pipeline_type) {
+      case "schema_extraction":
+        return (
+          <SchemaExtractionReview
+            outputSummary={outputSummary as SchemaExtractionOutputSummary}
+          />
+        );
+      case "individual_extraction":
+        return (
+          <IndividualExtractionReview
+            outputSummary={outputSummary as IndividualExtractionOutputSummary}
+          />
+        );
+      case "schema_node_grounding":
+        return (
+          <GroundingReview
+            outputSummary={outputSummary as SchemaNodeGroundingOutputSummary}
+          />
+        );
+      case "schema_node_definition_refinement":
+        return (
+          <DefinitionRefinementReview
+            outputSummary={outputSummary as SchemaNodeDefinitionRefinementOutputSummary}
+          />
+        );
+      case "schema_node_connection_refinement":
+        return (
+          <ConnectionRefinementReview
+            outputSummary={outputSummary as SchemaNodeConnectionRefinementOutputSummary}
+          />
+        );
+      default:
+        return (
+          <div
+            style={{
+              padding: "16px",
+              color: "rgb(var(--canvas-fg-3))",
+              fontSize: "12px",
+            }}
+          >
+            Unknown pipeline type: {runData.pipeline_type}
+          </div>
+        );
+    }
+  };
+
   return (
     <InspectorPanel
       eyebrow="run"
@@ -95,21 +158,9 @@ export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
         <InspectorPanel.Section title="Results">
           <div className="run-detail-results-section" data-testid="run-completed-section">
             <div className="run-detail-results-item">
-              <strong>Candidates</strong>
-              <div className="run-detail-candidates-wrapper">
-                <Chip variant="neutral">
-                  {(run.output_summary as any)?.candidate_count ?? 0} candidates
-                </Chip>
-              </div>
-            </div>
-
-            <div className="run-detail-results-item">
-              <strong>Review Content</strong>
-              <div
-                className="run-detail-placeholder"
-                data-testid="run-review-placeholder"
-              >
-                Candidate review content will be displayed here (Phase 6)
+              <strong>Review</strong>
+              <div style={{ marginTop: "8px" }}>
+                {renderReviewComponent(run)}
               </div>
             </div>
 
