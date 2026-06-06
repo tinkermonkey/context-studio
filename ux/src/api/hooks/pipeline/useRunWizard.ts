@@ -36,8 +36,6 @@ export function useRunWizard(options: UseRunWizardOptions) {
         to: "/app/pipelines/runs" as any,
         search: { selected: (run as PipelineRunResponse).id } as any,
       });
-    } catch (error) {
-      throw error;
     } finally {
       setIsSubmitting(false);
     }
