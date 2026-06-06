@@ -312,21 +312,20 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
       '[data-testid^="definition-refinement-radio-candidate-"]',
     );
     const count = await candidateRadios.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      // Click first candidate radio button
-      const firstCandidate = candidateRadios.first();
-      await firstCandidate.click();
+    // Click first candidate radio button
+    const firstCandidate = candidateRadios.first();
+    await firstCandidate.click();
 
-      // Verify it's selected
-      const firstCandidateInput = firstCandidate.locator("input");
-      await expect(firstCandidateInput).toBeChecked();
+    // Verify it's selected
+    const firstCandidateInput = firstCandidate.locator("input");
+    await expect(firstCandidateInput).toBeChecked();
 
-      // Verify Apply button is enabled
-      const applyButton = page.getByTestId("run-apply-button");
-      await expect(applyButton).toBeVisible();
-      await expect(applyButton).toBeEnabled();
-    }
+    // Verify Apply button is enabled
+    const applyButton = page.getByTestId("run-apply-button");
+    await expect(applyButton).toBeVisible();
+    await expect(applyButton).toBeEnabled();
   });
 
   test("Test Case 7: Click Apply Button and Confirm Application", async ({
@@ -385,31 +384,30 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
       '[data-testid^="definition-refinement-radio-candidate-"]',
     );
     const count = await candidateRadios.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      const firstCandidate = candidateRadios.first();
-      await firstCandidate.click();
+    const firstCandidate = candidateRadios.first();
+    await firstCandidate.click();
 
-      // Verify Apply controls section is visible
-      const applySection = page.getByTestId("run-apply-section");
-      await expect(applySection).toBeVisible();
+    // Verify Apply controls section is visible
+    const applySection = page.getByTestId("run-apply-section");
+    await expect(applySection).toBeVisible();
 
-      // Click Apply button
-      const applyButton = page.getByTestId("run-apply-button");
-      await expect(applyButton).toBeVisible();
-      await applyButton.click();
+    // Click Apply button
+    const applyButton = page.getByTestId("run-apply-button");
+    await expect(applyButton).toBeVisible();
+    await applyButton.click();
 
-      // Wait for confirmation dialog
-      const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
-      await expect(confirmDialog).toBeVisible({ timeout: 10000 });
+    // Wait for confirmation dialog
+    const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
+    await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-      // Click Confirm button
-      const confirmButton = confirmDialog.getByTestId(
-        "confirm-dialog-confirm",
-      );
-      await expect(confirmButton).toBeVisible();
-      await confirmButton.click();
-    }
+    // Click Confirm button
+    const confirmButton = confirmDialog.getByTestId(
+      "confirm-dialog-confirm",
+    );
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
   });
 
   test("Test Case 8: Verify Apply Result Summary", async ({ page }) => {
@@ -466,32 +464,31 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
       '[data-testid^="definition-refinement-radio-candidate-"]',
     );
     const count = await candidateRadios.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      const firstCandidate = candidateRadios.first();
-      await firstCandidate.click();
+    const firstCandidate = candidateRadios.first();
+    await firstCandidate.click();
 
-      // Click Apply button
-      const applyButton = page.getByTestId("run-apply-button");
-      await applyButton.click();
+    // Click Apply button
+    const applyButton = page.getByTestId("run-apply-button");
+    await applyButton.click();
 
-      // Confirm
-      const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
-      await expect(confirmDialog).toBeVisible({ timeout: 10000 });
+    // Confirm
+    const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
+    await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-      const confirmButton = confirmDialog.getByTestId(
-        "confirm-dialog-confirm",
-      );
-      await confirmButton.click();
+    const confirmButton = confirmDialog.getByTestId(
+      "confirm-dialog-confirm",
+    );
+    await confirmButton.click();
 
-      // Wait for apply result panel to appear
-      const resultPanel = page.getByTestId("run-apply-result");
-      await expect(resultPanel).toBeVisible({ timeout: 30000 });
+    // Wait for apply result panel to appear
+    const resultPanel = page.getByTestId("run-apply-result");
+    await expect(resultPanel).toBeVisible({ timeout: 30000 });
 
-      // Verify success state (no error messages)
-      const errorBanner = page.getByTestId("error-banner");
-      await expect(errorBanner).not.toBeVisible();
-    }
+    // Verify success state (no error messages)
+    const errorBanner = page.getByTestId("error-banner");
+    await expect(errorBanner).not.toBeVisible();
   });
 
   test("Test Case 9: Navigate to Classes Page and Verify Updated Definition", async ({
@@ -550,56 +547,55 @@ test.describe("Definition Refinement Run, Review, and Apply", () => {
       '[data-testid^="definition-refinement-radio-candidate-"]',
     );
     const count = await candidateRadios.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      const firstCandidate = candidateRadios.first();
-      await firstCandidate.click();
+    const firstCandidate = candidateRadios.first();
+    await firstCandidate.click();
 
-      // Apply
-      const applyButton = page.getByTestId("run-apply-button");
-      await applyButton.click();
+    // Apply
+    const applyButton = page.getByTestId("run-apply-button");
+    await applyButton.click();
 
-      // Confirm
-      const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
-      await expect(confirmDialog).toBeVisible({ timeout: 10000 });
+    // Confirm
+    const confirmDialog = page.getByTestId("run-apply-confirm-dialog");
+    await expect(confirmDialog).toBeVisible({ timeout: 10000 });
 
-      const confirmButton = confirmDialog.getByTestId(
-        "confirm-dialog-confirm",
-      );
-      await confirmButton.click();
+    const confirmButton = confirmDialog.getByTestId(
+      "confirm-dialog-confirm",
+    );
+    await confirmButton.click();
 
-      // Wait for apply result
-      const resultPanel = page.getByTestId("run-apply-result");
-      await expect(resultPanel).toBeVisible({ timeout: 30000 });
+    // Wait for apply result
+    const resultPanel = page.getByTestId("run-apply-result");
+    await expect(resultPanel).toBeVisible({ timeout: 30000 });
 
-      // Navigate to classes page
-      await page.goto("/app/schema/classes");
-      await page.waitForLoadState("networkidle");
+    // Navigate to classes page
+    await page.goto("/app/schema/classes");
+    await page.waitForLoadState("networkidle");
 
-      // Verify classes page loads
-      await expect(page.getByTestId("classes-page")).toBeVisible();
+    // Verify classes page loads
+    await expect(page.getByTestId("classes-page")).toBeVisible();
 
-      // Search for the test class
-      const searchInput = page.getByPlaceholder(/search/i).first();
-      await searchInput.fill(testClass.title);
-      await page.waitForLoadState("networkidle");
+    // Search for the test class
+    const searchInput = page.getByPlaceholder(/search/i).first();
+    await searchInput.fill(testClass.title);
+    await page.waitForLoadState("networkidle");
 
-      // Click on the class row
-      const classRow = page
-        .getByRole("row")
-        .filter({ hasText: testClass.title });
-      await expect(classRow).toBeVisible();
-      await classRow.click();
+    // Click on the class row
+    const classRow = page
+      .getByRole("row")
+      .filter({ hasText: testClass.title });
+    await expect(classRow).toBeVisible();
+    await classRow.click();
 
-      // Verify class detail drawer shows updated content
-      const classInspector = page.getByTestId("class-inspector");
-      await expect(classInspector).toBeVisible();
+    // Verify class detail drawer shows updated content
+    const classInspector = page.getByTestId("class-inspector");
+    await expect(classInspector).toBeVisible();
 
-      // Verify description field is updated
-      const descriptionField = classInspector.getByTestId(
-        "class-drawer-description-input",
-      );
-      await expect(descriptionField).toBeVisible();
-    }
+    // Verify description field is updated
+    const descriptionField = classInspector.getByTestId(
+      "class-drawer-description-input",
+    );
+    await expect(descriptionField).toBeVisible();
   });
 });

@@ -217,15 +217,14 @@ test.describe("Schema Node Grounding Run, Review, and Apply", () => {
     // Look for accept buttons (pattern: grounding-accept-*)
     const acceptButtons = page.locator("[data-testid^='grounding-accept-']");
     const count = await acceptButtons.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      // Click the first accept button
-      await acceptButtons.first().click();
+    // Click the first accept button
+    await acceptButtons.first().click();
 
-      // Verify acceptance is recorded (button might change state or show checkmark)
-      // The acceptance state should persist as we scroll
-      await page.waitForLoadState("networkidle");
-    }
+    // Verify acceptance is recorded (button might change state or show checkmark)
+    // The acceptance state should persist as we scroll
+    await page.waitForLoadState("networkidle");
   });
 
   test("Test Case 7: Click Apply Button and Confirm Application", async ({ page }) => {
@@ -260,10 +259,9 @@ test.describe("Schema Node Grounding Run, Review, and Apply", () => {
     // Accept at least one candidate
     const acceptButtons = page.locator("[data-testid^='grounding-accept-']");
     const count = await acceptButtons.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      await acceptButtons.first().click();
-    }
+    await acceptButtons.first().click();
 
     // Verify Apply button is visible and enabled
     const applyButton = page.getByTestId("run-apply-button");
@@ -316,10 +314,9 @@ test.describe("Schema Node Grounding Run, Review, and Apply", () => {
     // Accept candidates
     const acceptButtons = page.locator("[data-testid^='grounding-accept-']");
     const count = await acceptButtons.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      await acceptButtons.first().click();
-    }
+    await acceptButtons.first().click();
 
     // Apply
     const applyButton = page.getByTestId("run-apply-button");
@@ -374,10 +371,9 @@ test.describe("Schema Node Grounding Run, Review, and Apply", () => {
     // Accept candidates
     const acceptButtons = page.locator("[data-testid^='grounding-accept-']");
     const count = await acceptButtons.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      await acceptButtons.first().click();
-    }
+    await acceptButtons.first().click();
 
     // Apply
     const applyButton = page.getByTestId("run-apply-button");
@@ -461,11 +457,9 @@ test.describe("Schema Node Grounding Run, Review, and Apply", () => {
     // Accept candidates
     const acceptButtons = page.locator("[data-testid^='grounding-accept-']");
     const count = await acceptButtons.count();
+    expect(count).toBeGreaterThan(0);
 
-    // Accept first candidate
-    if (count > 0) {
-      await acceptButtons.first().click();
-    }
+    await acceptButtons.first().click();
 
     // Apply
     const applyButton = page.getByTestId("run-apply-button");
