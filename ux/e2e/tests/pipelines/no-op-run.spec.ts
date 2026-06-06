@@ -6,7 +6,7 @@ import {
   clearTestData,
 } from "../../fixtures/test-helpers";
 
-test.describe("Identity/No-Op Pipeline Run", () => {
+test.describe("Definition Refinement Pipeline No-Op Run", () => {
   test.afterEach(async ({ page }) => {
     await clearTestData(page);
   });
@@ -90,14 +90,8 @@ test.describe("Identity/No-Op Pipeline Run", () => {
     await expect(loadingState).toBeVisible({ timeout: 5000 });
 
     // Wait for the run to complete (observe result panel or empty state)
-    const reviewPanel = page.getByTestId("definition-refinement-review");
-    const emptyState = page.getByTestId("definition-refinement-empty");
-
-    // Wait for either review panel or empty state to appear (indicating completion)
-    await Promise.race([
-      expect(reviewPanel).toBeVisible({ timeout: 10000 }).catch(() => null),
-      expect(emptyState).toBeVisible({ timeout: 10000 }).catch(() => null),
-    ]);
+    // Use a single selector that matches either element
+    await expect(page.locator('[data-testid="definition-refinement-review"], [data-testid="definition-refinement-empty"]')).toBeVisible({ timeout: 10000 });
   });
 
   test("Verify Empty Candidates State for No-Op Result", async ({ page }) => {

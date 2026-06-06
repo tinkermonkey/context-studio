@@ -498,9 +498,6 @@ selectors:
   - selector: scheme-name-link-*
     component: routes/app/schema/schemes.index.tsx
     description: Clickable scheme name link in table with dynamic ID suffix
-  - selector: scheme-row-actions-*
-    component: routes/app/schema/schemes.index.tsx
-    description: Actions menu button for scheme row
 
   # Classes Page
   - selector: classes-page
@@ -660,12 +657,6 @@ selectors:
   - selector: individual-class-move-down-*
     component: components/ontology/IndividualDrawer.tsx
     description: Move down button for class chip with dynamic class ID suffix
-  - selector: individual-class-remove-*
-    component: components/ontology/IndividualDrawer.tsx
-    description: Remove button for class chip with dynamic class ID suffix
-  - selector: individual-class-option-*
-    component: components/ontology/IndividualDrawer.tsx
-    description: Class option in typeahead dropdown with dynamic class ID suffix
   - selector: individual-properties-panel
     component: components/ontology/IndividualDrawer.tsx
     description: Inherited properties panel in individual detail drawer
@@ -1640,9 +1631,6 @@ selectors:
     description: Hex color text input paired with the color picker on the taxonomy form
 
   # Pipelines Hub
-  - selector: pipelines-page
-    component: src/routes/app/pipelines/index.tsx
-    description: Root container for the pipelines hub page
   - selector: pipeline-types-grid
     component: src/components/pipeline/PipelineHubContent.tsx
     description: Grid container displaying all pipeline type cards
@@ -1657,9 +1645,6 @@ selectors:
     description: Run button to navigate to execution wizard (wildcard matches pipeline-run-button-{type_identifier})
 
   # Pipeline Type Detail
-  - selector: pipeline-type-detail-page
-    component: src/components/pipeline/PipelineTypeDetail.tsx
-    description: Root container for the pipeline type detail page showing implementations and configurations
   - selector: implementation-list
     component: src/components/pipeline/ImplementationList.tsx
     description: Left pane list of implementations for the selected pipeline type
@@ -1792,9 +1777,6 @@ selectors:
   - selector: runs-page
     component: routes/app/pipelines/runs.tsx
     description: Main pipeline runs list page container
-  - selector: runs-filter-bar
-    component: routes/app/pipelines/runs.tsx
-    description: Filter bar container with pipeline type, status, and date range filters
   - selector: runs-table
     component: routes/app/pipelines/runs.tsx
     description: Pipeline runs table wrapper container
@@ -1937,6 +1919,9 @@ selectors:
   - selector: run-revert-result
     component: src/components/pipeline/RunDetailDrawer.tsx
     description: Summary display after successful revert showing events reverted count
+  - selector: run-status-reverted
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Status badge or indicator showing that a run has been reverted
   - selector: run-revert-button-disabled
     component: src/components/pipeline/RunRevertControls.tsx
     description: Disabled Already reverted button shown after a successful revert
