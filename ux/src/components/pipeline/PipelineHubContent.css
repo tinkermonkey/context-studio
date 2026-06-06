@@ -1,0 +1,24 @@
+.pipeline-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.skeleton-card {
+  height: 160px;
+  background: linear-gradient(90deg, rgb(var(--canvas-bg)), rgb(var(--canvas-fg-4)), rgb(var(--canvas-bg)));
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

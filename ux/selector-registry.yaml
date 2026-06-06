@@ -1565,3 +1565,20 @@ selectors:
   - selector: taxonomy-color-input
     component: src/components/schema/TaxonomyForm.tsx
     description: Hex color text input paired with the color picker on the taxonomy form
+
+  # Pipelines Hub
+  - selector: pipelines-page
+    component: src/routes/app/pipelines/index.tsx
+    description: Root container for the pipelines hub page
+  - selector: pipeline-types-grid
+    component: src/components/pipeline/PipelineHubContent.tsx
+    description: Grid container displaying all pipeline type cards
+  - selector: pipeline-type-card-{type}
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Individual pipeline type card with name, description, and run controls (type = pipeline_type identifier)
+  - selector: pipeline-run-status-{type}
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Run status chip and timestamp display on card (type = pipeline_type identifier)
+  - selector: pipeline-run-button-{type}
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Run button to navigate to execution wizard (type = pipeline_type identifier)
