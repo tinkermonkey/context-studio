@@ -915,17 +915,11 @@ async def revert_pipeline_run(
     revert_svc = request.app.state.revert_service
     try:
         revert_result = revert_svc.revert_with_summary(run.batch_run_id)
-        return RevertRunResponse(
-            run_id=run_id,
-            events_reverted=revert_result.events_reverted,
-            classes_deleted=revert_result.classes_deleted,
-            individuals_deleted=revert_result.individuals_deleted,
-            relationships_deleted=revert_result.relationships_deleted,
-            properties_deleted=revert_result.properties_deleted,
-            taxonomies_deleted=revert_result.taxonomies_deleted,
-            concept_schemes_deleted=revert_result.concept_schemes_deleted,
-            entities_restored=revert_result.entities_restored,
-        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except (PipelineStorageError, IntegrityError, OperationalError) as exc:
         _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
         status_code, message = _handle_domain_error(
@@ -938,6 +932,17 @@ async def revert_pipeline_run(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to revert pipeline run due to an internal error",
         ) from exc
+    return RevertRunResponse(
+        run_id=run_id,
+        events_reverted=revert_result.events_reverted,
+        classes_deleted=revert_result.classes_deleted,
+        individuals_deleted=revert_result.individuals_deleted,
+        relationships_deleted=revert_result.relationships_deleted,
+        properties_deleted=revert_result.properties_deleted,
+        taxonomies_deleted=revert_result.taxonomies_deleted,
+        concept_schemes_deleted=revert_result.concept_schemes_deleted,
+        entities_restored=revert_result.entities_restored,
+    )
 
 
 # ==================== Batch Management ====================

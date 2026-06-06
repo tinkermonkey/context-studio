@@ -896,3 +896,166 @@ def test_independent_entity_deletion_no_op(ontology_repo, change_repo, revert_sv
     history = change_repo.get_changes(limit=None)
     revert_events = [e for e in history.events if "_reverted_" in (e.change_reason or "")]
     assert len(revert_events) == 0, "Should not record a revert event for skipped operation"
+
+
+# ============================================================================
+# Summary Fields Tests
+# ============================================================================
+
+
+def test_revert_with_summary_tracks_taxonomies_deleted(ontology_repo, change_repo, revert_svc):
+    """Test that revert_with_summary correctly increments taxonomies_deleted."""
+    # Create a taxonomy
+    tax = Taxonomy(id="tax-new", identifier="new_tax", title="New Taxonomy for Summary")
+    ontology_repo.save_taxonomy(tax)
+
+    # Record the creation event
+    change_repo.record_change(
+        entity_id="tax-new",
+        entity_type="taxonomy",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "tax-new",
+            "identifier": "new_tax",
+            "title": "New Taxonomy for Summary",
+        },
+        batch_run_id="run-tax-summary",
+    )
+
+    # Revert and get summary
+    result = revert_svc.revert_with_summary("run-tax-summary")
+
+    # Verify the taxonomy was deleted and counted
+    assert result.taxonomies_deleted == 1
+    assert result.events_reverted == 1
+    assert ontology_repo.get_taxonomy("tax-new") is None
+
+
+def test_revert_with_summary_tracks_concept_schemes_deleted(ontology_repo, change_repo, revert_svc):
+    """Test that revert_with_summary correctly increments concept_schemes_deleted."""
+    # Create a concept scheme
+    scheme = ConceptScheme(
+        id="scheme-new",
+        taxonomy_id="tx-1",
+        identifier="new_scheme",
+        title="New Scheme for Summary",
+    )
+    ontology_repo.save_concept_scheme(scheme)
+
+    # Record the creation event
+    change_repo.record_change(
+        entity_id="scheme-new",
+        entity_type="concept_scheme",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "scheme-new",
+            "taxonomy_id": "tx-1",
+            "identifier": "new_scheme",
+            "title": "New Scheme for Summary",
+        },
+        batch_run_id="run-scheme-summary",
+    )
+
+    # Revert and get summary
+    result = revert_svc.revert_with_summary("run-scheme-summary")
+
+    # Verify the concept scheme was deleted and counted
+    assert result.concept_schemes_deleted == 1
+    assert result.events_reverted == 1
+    assert ontology_repo.get_concept_scheme("scheme-new") is None
+
+
+def test_revert_with_summary_mixed_entity_types(ontology_repo, change_repo, revert_svc):
+    """Test that revert_with_summary correctly counts all entity type deletions."""
+    # Create various entity types
+    tax = Taxonomy(id="tax-mixed", identifier="tax_mixed", title="Tax Mixed")
+    scheme = ConceptScheme(
+        id="scheme-mixed",
+        taxonomy_id="tx-1",
+        identifier="scheme_mixed",
+        title="Scheme Mixed",
+    )
+    cls = Class(
+        id="cls-mixed",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Class Mixed",
+    )
+    ind = Individual(id="ind-mixed", class_ids=["cls-mixed"], title="Individual Mixed")
+
+    ontology_repo.save_taxonomy(tax)
+    ontology_repo.save_concept_scheme(scheme)
+    ontology_repo.save_class(cls)
+    ontology_repo.save_individual(ind)
+
+    # Record creation events for all entity types
+    change_repo.record_change(
+        entity_id="tax-mixed",
+        entity_type="taxonomy",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "tax-mixed", "identifier": "tax_mixed", "title": "Tax Mixed"},
+        batch_run_id="run-mixed",
+    )
+    change_repo.record_change(
+        entity_id="scheme-mixed",
+        entity_type="concept_scheme",
+        operation=ChangeOperation.CREATE,
+        new_state={
+            "id": "scheme-mixed",
+            "taxonomy_id": "tx-1",
+            "identifier": "scheme_mixed",
+            "title": "Scheme Mixed",
+        },
+        batch_run_id="run-mixed",
+    )
+    change_repo.record_change(
+        entity_id="cls-mixed",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-mixed", "concept_scheme_id": "scheme-1", "title": "Class Mixed"},
+        batch_run_id="run-mixed",
+    )
+    change_repo.record_change(
+        entity_id="ind-mixed",
+        entity_type="individual",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "ind-mixed", "class_ids": ["cls-mixed"], "title": "Individual Mixed"},
+        batch_run_id="run-mixed",
+    )
+
+    # Revert and get summary
+    result = revert_svc.revert_with_summary("run-mixed")
+
+    # Verify all counts
+    assert result.events_reverted == 4
+    assert result.taxonomies_deleted == 1
+    assert result.concept_schemes_deleted == 1
+    assert result.classes_deleted == 1
+    assert result.individuals_deleted == 1
+
+
+def test_revert_with_summary_delete_operations_count_as_restored(
+    ontology_repo, change_repo, revert_svc
+):
+    """Test that reverting DELETE operations counts as entities_restored."""
+    # Record a DELETE event
+    change_repo.record_change(
+        entity_id="cls-restored",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state={
+            "id": "cls-restored",
+            "taxonomy_id": "tx-1",
+            "concept_scheme_id": "scheme-1",
+            "title": "Restored Class",
+        },
+        batch_run_id="run-restore",
+    )
+
+    # Revert and get summary
+    result = revert_svc.revert_with_summary("run-restore")
+
+    # Verify the entity was restored and counted correctly
+    assert result.events_reverted == 1
+    assert result.entities_restored == 1
+    assert ontology_repo.get_class("cls-restored") is not None

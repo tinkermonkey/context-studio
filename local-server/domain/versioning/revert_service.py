@@ -88,7 +88,6 @@ class RevertService:
             return RevertResult(run_id=batch_run_id, events_reverted=0)
 
         reverted_count = 0
-        applied_events = []
         summary = {
             "classes_deleted": 0,
             "individuals_deleted": 0,
@@ -99,25 +98,21 @@ class RevertService:
             "entities_restored": 0,
         }
 
-        try:
-            for event in reversed(events):
-                if self._should_skip_revert(event, events):
-                    continue
+        for event in reversed(events):
+            if self._should_skip_revert(event, events):
+                continue
 
-                try:
-                    if self._apply_inverse(event, batch_run_id):
-                        reverted_count += 1
-                        applied_events.append(event)
-                        self._update_summary(event, summary)
-                except Exception as exc:
-                    _logger.error(
-                        f"Failed to revert event {event.id} for entity {event.entity_id}. "
-                        f"Partially reverted {reverted_count} events before failure.",
-                        exc_info=exc,
-                    )
-                    raise
-        except Exception:
-            raise
+            try:
+                if self._apply_inverse(event, batch_run_id):
+                    reverted_count += 1
+                    self._update_summary(event, summary)
+            except Exception as exc:
+                _logger.error(
+                    f"Failed to revert event {event.id} for entity {event.entity_id}. "
+                    f"Partially reverted {reverted_count} events before failure.",
+                    exc_info=exc,
+                )
+                raise
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
