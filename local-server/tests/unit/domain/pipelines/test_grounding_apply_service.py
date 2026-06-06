@@ -12,7 +12,9 @@ import pytest
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
+)
 
 
 @pytest.fixture

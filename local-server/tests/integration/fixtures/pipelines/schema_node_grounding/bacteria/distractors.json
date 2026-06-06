@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Virus",
+    "http://dbpedia.org/resource/Microorganism",
+    "http://dbpedia.org/resource/Prokaryote"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/virus",
+    "http://conceptnet.io/c/en/microorganism"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q10876",
+    "http://www.wikidata.org/entity/Q23430"
+  ],
+  "schema.org": []
+}

@@ -19,14 +19,18 @@ from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import IndividualCreated, RelationshipCreated
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import IndividualExtractionRun, PipelineRunStatus
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
 )
@@ -169,17 +173,22 @@ class TestIndividualExtractionStructural:
 
         result = ApplyResult()
 
-        # Verify count fields
+        # Verify count fields exist and are initialized to 0
         assert hasattr(result, "individuals_created")
         assert hasattr(result, "relationships_created")
         assert result.individuals_created == 0
         assert result.relationships_created == 0
 
-        # Test incrementing counts
-        result.individuals_created = 5
-        result.relationships_created = 3
-        assert result.individuals_created == 5
-        assert result.relationships_created == 3
+        # Verify that counts and ID lists must stay consistent
+        # Create a result with proper invariant maintenance
+        result2 = ApplyResult(
+            individuals_created=2,
+            created_individual_ids=["id1", "id2"],
+            relationships_created=1,
+            created_relationship_ids=["rel1"],
+        )
+        assert result2.individuals_created == 2
+        assert len(result2.created_individual_ids) == 2
 
     def test_apply_service_exists(self):
         """IndividualExtractionApplyService must exist and be instantiable."""

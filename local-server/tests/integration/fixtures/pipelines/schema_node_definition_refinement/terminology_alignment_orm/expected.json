@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A programming pattern that abstracts database tables and rows as object instances, providing automatic persistence and query generation for domain entities."
+  }
+}

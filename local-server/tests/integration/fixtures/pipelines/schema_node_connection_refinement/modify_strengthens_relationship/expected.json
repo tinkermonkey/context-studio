@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "modify",
+        "subject": "Target Architecture",
+        "predicate": "related_to",
+        "object": "Related Concept",
+        "confidence": 0.70
+      }
+    ]
+  }
+}

@@ -16,7 +16,6 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from adapters.web.dependencies import get_extraction_service

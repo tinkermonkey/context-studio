@@ -1,0 +1,9 @@
+{
+  "node_id": "monolithic_architecture-16984",
+  "identifier": "monolithic_architecture",
+  "title": "Monolithic Architecture",
+  "current_description": "A single system.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

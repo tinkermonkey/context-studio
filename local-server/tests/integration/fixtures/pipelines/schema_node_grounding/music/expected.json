@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Music",
+      "source": "DBpedia",
+      "rationale": "Art of sound"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q638",
+      "source": "Wikidata",
+      "rationale": "Wikidata music"
+    },
+    {
+      "uri": "http://schema.org/MusicGroup",
+      "source": "schema.org",
+      "rationale": "schema.org music"
+    }
+  ]
+}

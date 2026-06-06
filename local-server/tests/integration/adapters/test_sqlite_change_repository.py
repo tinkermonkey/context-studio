@@ -669,9 +669,7 @@ class TestSQLiteChangeRepository:
         )
 
         # Filter by batch_run_id and entity_id
-        result = change_repo.get_changes(
-            batch_run_id="batch-1", entity_id="entity-1", limit=None
-        )
+        result = change_repo.get_changes(batch_run_id="batch-1", entity_id="entity-1", limit=None)
         assert len(result.events) == 2
         assert all(e.entity_id == "entity-1" and e.batch_run_id == "batch-1" for e in result.events)
 

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Dialect",
+    "http://dbpedia.org/resource/Speech",
+    "http://dbpedia.org/resource/Communication"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/dialect",
+    "http://conceptnet.io/c/en/speech"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q33081",
+    "http://www.wikidata.org/entity/Q17051"
+  ],
+  "schema.org": []
+}

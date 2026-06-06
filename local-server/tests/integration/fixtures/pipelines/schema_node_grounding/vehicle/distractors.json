@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Transport",
+    "http://dbpedia.org/resource/Car",
+    "http://dbpedia.org/resource/Machine"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/transport",
+    "http://conceptnet.io/c/en/machine"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q1420",
+    "http://www.wikidata.org/entity/Q11019"
+  ],
+  "schema.org": []
+}

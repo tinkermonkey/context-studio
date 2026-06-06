@@ -1,0 +1,9 @@
+{
+  "node_id": "scalability-22185",
+  "identifier": "scalability",
+  "title": "Scalability",
+  "current_description": "The ability to scale.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

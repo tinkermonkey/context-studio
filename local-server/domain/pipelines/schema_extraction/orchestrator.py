@@ -169,7 +169,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 "documents is required and must contain at least one non-empty document"
             )
             schema_state = replace(
-                schema_state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                schema_state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -177,7 +179,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         source_text = " ".join(doc for doc in documents if isinstance(doc, str))
 
         schema_state = replace(
-            schema_state, source_text=source_text, current_status=PipelineRunStatus.RUNNING
+            schema_state,
+            source_text=source_text,
+            current_status=PipelineRunStatus.RUNNING,
         )
 
         try:

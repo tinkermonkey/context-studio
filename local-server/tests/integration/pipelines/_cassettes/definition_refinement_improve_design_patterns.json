@@ -1,0 +1,9 @@
+{
+  "9894601394f9ae167d189a9800632e6e8817a62e2803ba99e51df96b77ca882b": {
+    "content": "[{\"definition\": \"A reusable solution to a common software design problem, encoding best practices and proven architectural principles.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "node_id": "authentication-31332",
+  "identifier": "authentication",
+  "title": "Authentication",
+  "current_description": "User identity.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

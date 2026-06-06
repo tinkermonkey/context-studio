@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Area",
+    "http://dbpedia.org/resource/Volume",
+    "http://dbpedia.org/resource/Dimension"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/area",
+    "http://conceptnet.io/c/en/volume"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q17524",
+    "http://www.wikidata.org/entity/Q241"
+  ],
+  "schema.org": []
+}

@@ -1,5 +1,7 @@
 """schema.org reference source adapter for vocabulary definitions."""
 
+import httpx
+
 from adapters.reference.exceptions import (
     ReferenceSourceError,
     ReferenceSourceParseError,
@@ -69,14 +71,16 @@ class SchemaOrgSource:
     This is always available and never makes network requests.
     """
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
         """
         Initialize the schema.org source adapter.
 
         Args:
             timeout: Unused (included for protocol compatibility)
+            async_client: Unused (included for protocol compatibility)
         """
         self._timeout = timeout
+        self._async_client = async_client
 
     @property
     def source_name(self) -> str:

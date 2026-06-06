@@ -1,0 +1,9 @@
+{
+  "node_id": "messaging-30527",
+  "identifier": "messaging",
+  "title": "Messaging Patterns",
+  "current_description": "Message passing.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

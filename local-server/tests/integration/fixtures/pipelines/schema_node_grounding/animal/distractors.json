@@ -1,0 +1,17 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Creature",
+    "http://dbpedia.org/resource/Beast",
+    "http://dbpedia.org/resource/Organism"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/creature",
+    "http://conceptnet.io/c/en/beast",
+    "http://conceptnet.io/c/en/organism"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q7863",
+    "http://www.wikidata.org/entity/Q6005"
+  ],
+  "schema.org": []
+}

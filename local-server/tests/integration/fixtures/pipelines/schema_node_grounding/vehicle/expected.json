@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Vehicle",
+      "source": "DBpedia",
+      "rationale": "Means of transport"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q42889",
+      "source": "Wikidata",
+      "rationale": "Wikidata vehicle"
+    },
+    {
+      "uri": "http://schema.org/Vehicle",
+      "source": "schema.org",
+      "rationale": "schema.org vehicle"
+    }
+  ]
+}

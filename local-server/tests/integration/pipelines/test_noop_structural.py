@@ -22,7 +22,10 @@ from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import TaxonomyCreated
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import NoOpPipelineRun, PipelineRunStatus, PipelineType
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 from domain.pipelines.orchestration.noop_apply_service import NoOpApplyService
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -209,10 +212,14 @@ class TestNoOpChangeEvents:
             session = session_factory()
             try:
                 sentinel_id = apply_result.created_taxonomy_ids[0]
-                change_events = session.query(ChangeEvent).filter_by(
-                    entity_id=sentinel_id,
-                    batch_run_id=run_id,
-                ).all()
+                change_events = (
+                    session.query(ChangeEvent)
+                    .filter_by(
+                        entity_id=sentinel_id,
+                        batch_run_id=run_id,
+                    )
+                    .all()
+                )
                 msg = "Should have at least one change_event from NoOp apply"
                 assert len(change_events) >= 1, msg
             finally:
@@ -320,9 +327,7 @@ class TestNoOpHarnessSelfTest:
 
         # Assertion: the diff must be empty (perfect match)
         assert diff["matches"] is True, f"Outputs do not match: {diff}"
-        assert len(diff["missing_keys"]) == 0, (
-            f"Missing keys: {diff['missing_keys']}"
-        )
+        assert len(diff["missing_keys"]) == 0, f"Missing keys: {diff['missing_keys']}"
         assert len(diff["extra_keys"]) == 0, f"Extra keys: {diff['extra_keys']}"
         msg = f"Mismatched values: {diff['mismatched_values']}"
         assert len(diff["mismatched_values"]) == 0, msg
@@ -407,10 +412,14 @@ class TestNoOpStructuralComplete:
 
             session = session_factory()
             try:
-                change_events = session.query(ChangeEvent).filter_by(
-                    entity_id=sentinel_id,
-                    batch_run_id=run_id,
-                ).all()
+                change_events = (
+                    session.query(ChangeEvent)
+                    .filter_by(
+                        entity_id=sentinel_id,
+                        batch_run_id=run_id,
+                    )
+                    .all()
+                )
                 msg = "Should have at least one change_event from NoOp apply"
                 assert len(change_events) >= 1, msg
             finally:

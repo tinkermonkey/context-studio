@@ -1,0 +1,9 @@
+{
+  "node_id": "async-002",
+  "identifier": "async_patterns",
+  "title": "Asynchronous Programming",
+  "current_description": "A programming technique.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Duration",
+    "http://dbpedia.org/resource/Period",
+    "http://dbpedia.org/resource/Moment"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/duration",
+    "http://conceptnet.io/c/en/period"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q2147837",
+    "http://www.wikidata.org/entity/Q5161766"
+  ],
+  "schema.org": []
+}

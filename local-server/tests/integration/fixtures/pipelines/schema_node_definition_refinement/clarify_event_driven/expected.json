@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "An architectural pattern where components communicate through emission and consumption of events, enabling loose coupling and asynchronous interactions."
+  }
+}

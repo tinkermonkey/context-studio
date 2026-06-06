@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Procedure",
+    "http://dbpedia.org/resource/Method",
+    "http://dbpedia.org/resource/Process"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/procedure",
+    "http://conceptnet.io/c/en/method"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q11019",
+    "http://www.wikidata.org/entity/Q3671713"
+  ],
+  "schema.org": []
+}

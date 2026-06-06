@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Sport",
+      "source": "DBpedia",
+      "rationale": "Athletic activity"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q349",
+      "source": "Wikidata",
+      "rationale": "Wikidata sport"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "schema.org thing"
+    }
+  ]
+}

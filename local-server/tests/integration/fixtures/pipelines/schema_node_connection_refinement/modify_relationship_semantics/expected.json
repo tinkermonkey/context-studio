@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "modify",
+        "subject": "Service Pattern",
+        "predicate": "uses",
+        "object": "Interface",
+        "confidence": 0.7
+      }
+    ]
+  }
+}

@@ -66,14 +66,29 @@ class SchemaConnectionRefinementApplyService:
         """
         result = ApplyResult()
         deltas = run.output_summary.get("deltas", [])
-
-        # Build title→id lookup from the scope's classes for label-based resolution.
-        # Connection refinement deltas use class labels (not IDs) in subject/object fields.
         scope_id = run.output_summary.get("scope_id", "")
+
+        # Build title→id lookup from classes scoped to the refinement's concept scheme.
+        # Connection refinement deltas use class labels (not IDs) in subject/object fields.
+        # Scoping by concept_scheme_id prevents title collisions across schemes from
+        # resolving to incorrect classes.
         title_to_class_id: dict[str, str] = {}
+        scheme_id = None
         if scope_id:
-            for cls in self._repo.list_classes(concept_scheme_id=scope_id, limit=None):
-                title_to_class_id[cls.title.lower()] = cls.id
+            scope_class = self._repo.get_class(scope_id)
+            if scope_class:
+                scheme_id = scope_class.concept_scheme_id
+            else:
+                _logger.warning(
+                    f"Connection refinement scope_id {scope_id} could not be resolved; "
+                    "skipping all deltas to prevent title collisions across "
+                    "unrelated concept schemes"
+                )
+                result.validate()
+                return result
+
+        for cls in self._repo.list_classes(concept_scheme_id=scheme_id, limit=None):
+            title_to_class_id[cls.title.lower()] = cls.id
 
         for delta in deltas:
             confidence = delta.get("confidence", 0.0)
@@ -114,23 +129,31 @@ class SchemaConnectionRefinementApplyService:
                 if existing:
                     result.relationships_skipped += 1
                     continue
-                new_rel = Relationship(
-                    id=str(uuid4()),
-                    source_id=src_id,
-                    target_id=tgt_id,
-                    property_definition_id=prop_def.id,
-                    source_run_id=run.id,
-                )
-                self._repo.save_relationship(new_rel)
-                result.relationships_created += 1
-                result.created_relationship_ids.append(new_rel.id)
+                try:
+                    new_rel = Relationship(
+                        id=str(uuid4()),
+                        source_id=src_id,
+                        target_id=tgt_id,
+                        property_definition_id=prop_def.id,
+                        source_run_id=run.id,
+                    )
+                    self._repo.save_relationship(new_rel)
+                    result.relationships_created += 1
+                    result.created_relationship_ids.append(new_rel.id)
+                except Exception as e:
+                    _logger.error(f"Failed to save relationship: {e}")
+                    raise
 
             elif operation == "remove":
                 if not existing:
                     result.relationships_skipped += 1
                     continue
-                self._repo.delete_relationship(existing[0].id)
-                result.relationships_removed += 1
+                try:
+                    self._repo.delete_relationship(existing[0].id)
+                    result.relationships_removed += 1
+                except Exception as e:
+                    _logger.error(f"Failed to delete relationship: {e}")
+                    raise
 
             elif operation == "modify":
                 if not existing:
@@ -146,6 +169,7 @@ class SchemaConnectionRefinementApplyService:
             else:
                 result.relationships_skipped += 1
 
+        result.validate()
         return result
 
     def _resolve_class_id(self, ref: str, title_to_class_id: dict[str, str]) -> str | None:

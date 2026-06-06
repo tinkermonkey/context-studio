@@ -174,8 +174,7 @@ class PipelineRepository:
             session.commit()
             result = self._orm_to_domain(orm_obj)
             logger.info(
-                f"Created pipeline run {run_id} in batch {batch_run_id} "
-                f"({pipeline_type.value})"
+                f"Created pipeline run {run_id} in batch {batch_run_id} " f"({pipeline_type.value})"
             )
             return result
         except IntegrityError as e:

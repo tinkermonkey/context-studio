@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Organization",
+      "source": "DBpedia",
+      "rationale": "DBpedia organization"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q43229",
+      "source": "Wikidata",
+      "rationale": "Wikidata organization"
+    },
+    {
+      "uri": "http://schema.org/Organization",
+      "source": "schema.org",
+      "rationale": "schema.org organization"
+    }
+  ]
+}

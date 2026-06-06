@@ -18,7 +18,9 @@ import pytest
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ---------------------------------------------------------------------------
@@ -88,8 +90,15 @@ def _make_triple(
         "confidence": confidence,
     }
     if predicate_prop_id:
-        triple["predicate"] = {"property_definition_id": predicate_prop_id, "label": "test-pred"}
-        triple["object"] = {"kind": obj_kind, "id": obj_id or "tgt-id", "label": "Target"}
+        triple["predicate"] = {
+            "property_definition_id": predicate_prop_id,
+            "label": "test-pred",
+        }
+        triple["object"] = {
+            "kind": obj_kind,
+            "id": obj_id or "tgt-id",
+            "label": "Target",
+        }
     return triple
 
 
@@ -201,14 +210,20 @@ class TestRelationshipCreation:
         prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
         repo.save_property_definition(prop)
         target_cls = Class(
-            id="cls-org", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Org"
+            id="cls-org",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Org",
         )
         repo.save_class(target_cls)
 
         run = _make_run(
             triples=[
                 _make_triple(
-                    "Alice", predicate_prop_id="prop-knows", obj_id="cls-org", obj_kind="class"
+                    "Alice",
+                    predicate_prop_id="prop-knows",
+                    obj_id="cls-org",
+                    obj_kind="class",
                 ),
             ]
         )

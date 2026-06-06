@@ -1,0 +1,9 @@
+{
+  "fd67ab18def7035b4d6dd7c6e05f1861d9d82659c69050e589598534f45d2a17": {
+    "content": "[{\"definition\": \"A programming model that enables non-blocking execution of operations, allowing multiple tasks to progress without waiting for completion of preceding tasks.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

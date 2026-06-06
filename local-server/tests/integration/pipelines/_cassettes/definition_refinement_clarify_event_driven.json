@@ -1,0 +1,9 @@
+{
+  "104aee94c1dc32d7448e18105e3c0f22c9116ad5927627bbb6b9d9d483674948": {
+    "content": "[{\"definition\": \"An architectural pattern where components communicate through emission and consumption of events, enabling loose coupling and asynchronous interactions.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

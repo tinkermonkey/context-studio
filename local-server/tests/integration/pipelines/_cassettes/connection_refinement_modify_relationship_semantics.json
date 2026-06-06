@@ -1,0 +1,9 @@
+{
+  "50dcd6534f695154eb377159ccf29956d9cd4860a07ea42fefb843d6dec23dc8": {
+    "content": "[{\"operation\": \"modify\", \"subject\": \"Service Pattern\", \"predicate\": \"uses\", \"object\": \"Interface\", \"confidence\": 0.7}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

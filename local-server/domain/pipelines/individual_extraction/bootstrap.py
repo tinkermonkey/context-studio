@@ -10,7 +10,9 @@ from domain.pipelines.individual_extraction.configurations.default import (
     get_default_config,
     get_openrouter_config,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionOrchestrator,
+)
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,

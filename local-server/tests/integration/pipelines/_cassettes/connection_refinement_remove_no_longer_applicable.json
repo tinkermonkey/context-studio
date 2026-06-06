@@ -1,0 +1,9 @@
+{
+  "13e58700eb284aa6c66a3d3599e59a0d2eef5ecc870d7a5d3554f694713815ef": {
+    "content": "[{\"operation\": \"remove\", \"subject\": \"Target Architecture\", \"predicate\": \"depends_on\", \"object\": \"Legacy System\", \"confidence\": 0.75}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

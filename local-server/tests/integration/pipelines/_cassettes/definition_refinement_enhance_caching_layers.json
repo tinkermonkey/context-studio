@@ -1,0 +1,9 @@
+{
+  "d84a45d250723b7a63c00dd1fa3c3237a68c337ab48dc4977251cb8fedfc497f": {
+    "content": "[{\"definition\": \"A performance optimization technique that keeps frequently accessed data in fast-access memory layers to reduce latency and database load.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

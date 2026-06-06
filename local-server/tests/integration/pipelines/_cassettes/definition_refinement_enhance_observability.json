@@ -1,0 +1,9 @@
+{
+  "6b8006c0ebac7d2c5938732c610a6fa8ff4ba9369cdf7959f287c875016756e8": {
+    "content": "[{\"definition\": \"The capability to understand system behavior through collection and analysis of logs, metrics, traces, and events enabling diagnosis of failures and performance issues.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

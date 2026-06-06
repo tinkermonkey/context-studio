@@ -268,9 +268,7 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_multiple_qualifying_candidates_uses_highest(
-        self, mock_ontology_repo, sample_class
-    ):
+    def test_multiple_qualifying_candidates_uses_highest(self, mock_ontology_repo, sample_class):
         """When multiple candidates qualify, highest confidence wins."""
         run = PipelineRun(
             id="run-multi-qual",

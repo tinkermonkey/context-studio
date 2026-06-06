@@ -1,0 +1,9 @@
+{
+  "3c8ebbbb9d3dc3779fd36e008d6887f7e40b901cf8f60c0e56aafea10d4cbb99": {
+    "content": "[{\"operation\": \"add\", \"subject\": \"Microservices Architecture\", \"predicate\": \"inherits_from\", \"object\": \"Distributed System\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

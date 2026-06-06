@@ -61,7 +61,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
 
     def __init__(
         self,
-        llm_provider: LLMProvider,
+        llm_provider: LLMProvider | None,
         grounding_adapter: GroundingAdapterPort,
         scorer: GroundingScorer,
         config: dict[str, Any] | None = None,
@@ -72,7 +72,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         Initialize the grounding orchestrator.
 
         Args:
-            llm_provider: LLM provider for semantic scoring (if needed)
+            llm_provider: LLM provider (not currently used by grounding pipeline)
             grounding_adapter: Adapter for external source queries
             scorer: GroundingScorer instance for combining scores
             config: Configuration dict (top_n, weights, type preferences, etc.)
@@ -119,7 +119,9 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         if not node_label:
             exc = PipelineInputError("node_label is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -130,7 +132,9 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             error_msg = f"Invalid node_type '{node_type_str}'. " f"Must be one of: {valid_types}"
             input_error = PipelineInputError(error_msg)
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": error_msg}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": error_msg},
             )
             raise input_error from exc
 

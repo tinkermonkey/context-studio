@@ -9,13 +9,19 @@ from unittest.mock import Mock
 
 import pytest
 
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import (
+    create_orchestrator,
+    create_pipeline_state,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
@@ -105,9 +111,7 @@ class TestCreateOrchestratorNoOp:
         assert isinstance(orchestrator, NoOpPipelineOrchestrator)
         assert orchestrator._llm_provider is mock_llm_provider
 
-    def test_passes_run_id_and_status_writer_to_noop(
-        self, mock_llm_provider, mock_status_writer
-    ):
+    def test_passes_run_id_and_status_writer_to_noop(self, mock_llm_provider, mock_status_writer):
         """Test that run_id and status_writer are set on orchestrator."""
         services = {
             "run_id": "test-run-456",

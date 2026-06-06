@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Power",
+    "http://dbpedia.org/resource/Force",
+    "http://dbpedia.org/resource/Motion"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/power",
+    "http://conceptnet.io/c/en/force"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q21016",
+    "http://www.wikidata.org/entity/Q11402"
+  ],
+  "schema.org": []
+}

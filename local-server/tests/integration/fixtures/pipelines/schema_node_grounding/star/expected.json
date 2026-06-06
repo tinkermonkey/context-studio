@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Star",
+      "source": "DBpedia",
+      "rationale": "Celestial object"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q523",
+      "source": "Wikidata",
+      "rationale": "Wikidata star"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

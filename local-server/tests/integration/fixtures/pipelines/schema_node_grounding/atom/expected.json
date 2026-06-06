@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Atom",
+      "source": "DBpedia",
+      "rationale": "Matter particle"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q125885",
+      "source": "Wikidata",
+      "rationale": "Wikidata atom"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

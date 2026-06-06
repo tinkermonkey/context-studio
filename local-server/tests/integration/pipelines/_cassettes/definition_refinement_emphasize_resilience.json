@@ -1,0 +1,9 @@
+{
+  "c681c4218d64987c4fdc1a7266a97c7713f6b3a9a9a305b207fda77e685f4956": {
+    "content": "[{\"definition\": \"The ability of a system to withstand and recover from failures, maintaining functionality through fault tolerance, redundancy, and graceful degradation.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

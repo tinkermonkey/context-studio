@@ -122,16 +122,23 @@ class TestSchemaNodeConnectionRefinementStructural:
         assert hasattr(result, "relationships_modified")
         assert hasattr(result, "relationships_skipped")
 
-        # Verify they are distinct
-        result.relationships_created = 5
+        # Verify they are distinct and can track separate operation types
+        # Operations that don't create entities (removed, modified, skipped)
+        # can be set independently
         result.relationships_removed = 2
         result.relationships_modified = 3
         result.relationships_skipped = 1
 
-        assert result.relationships_created == 5
         assert result.relationships_removed == 2
         assert result.relationships_modified == 3
         assert result.relationships_skipped == 1
+
+        # Created relationships require corresponding ID list entries
+        result2 = ApplyResult(
+            relationships_created=5,
+            created_relationship_ids=["r1", "r2", "r3", "r4", "r5"],
+        )
+        assert result2.relationships_created == 5
 
     def test_apply_service_distinguishes_modify_operation(self):
         """Modify must be a real operation, not just add+remove."""

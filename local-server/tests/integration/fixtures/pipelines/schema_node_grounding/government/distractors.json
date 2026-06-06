@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Politics",
+    "http://dbpedia.org/resource/State",
+    "http://dbpedia.org/resource/Authority"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/politics",
+    "http://conceptnet.io/c/en/state"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q7163",
+    "http://www.wikidata.org/entity/Q7275"
+  ],
+  "schema.org": []
+}

@@ -1,0 +1,6 @@
+{
+  "text": "Asynchronous programming allows a program to perform tasks without blocking execution. The async/await syntax in Python provides a clean way to write coroutines. An event loop manages the execution of tasks and futures. When a coroutine awaits another coroutine, control returns to the event loop. Multiple tasks can be gathered together using asyncio.gather. Callbacks are registered with tasks to handle completion. A future represents a value that may not be available yet but will be eventually. To prepare for dessert after dinner, ensure the kitchen is clean and ready. Event loops do NOT run tasks in parallel threads. The event loop continuously polls tasks for readiness.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

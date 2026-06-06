@@ -1,0 +1,9 @@
+{
+  "19499d806e538bea2f6784ac07c28200d3812d159c1a063ee9982e82735a2bb0": {
+    "content": "[{\"definition\": \"A fault-tolerance pattern that monitors for failures in remote service calls and fails fast by stopping requests to a failing service after a threshold is exceeded.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

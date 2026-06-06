@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A design principle that advocates partitioning a system into distinct, independent subsystems each addressing a specific concern or responsibility."
+  }
+}

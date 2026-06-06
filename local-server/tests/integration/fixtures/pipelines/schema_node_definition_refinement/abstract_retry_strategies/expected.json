@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "A resilience pattern that automatically retries failed operations with configurable delays and backoff strategies to handle transient failures gracefully."
+  }
+}

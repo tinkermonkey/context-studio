@@ -1,0 +1,9 @@
+{
+  "746c81eb1a50313c5179e0bee1df16aa73eeeff3af0e231827115d1261bd4dd3": {
+    "content": "[{\"definition\": \"A set of architectural and design patterns for defining scalable, maintainable, and intuitive interfaces that enable integration between software components.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

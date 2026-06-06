@@ -1,0 +1,9 @@
+{
+  "59efd6d8cadb0d98cc6c40c2784aee1e019acea031312764b333b0b6f90f48f4": {
+    "content": "[{\"definition\": \"A system quality attribute that measures the capacity to handle increasing workloads and user requests through horizontal or vertical resource expansion.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

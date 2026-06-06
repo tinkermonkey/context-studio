@@ -1,0 +1,9 @@
+{
+  "dd1127c752057c7c630b40f6f61cc7af39fc4390fc58c49a29e6ad179267a1af": {
+    "content": "[{\"definition\": \"A set of practices and patterns for detecting, reporting, and recovering from errors or exceptional conditions during program execution.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

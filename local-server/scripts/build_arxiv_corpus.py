@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import arxiv
+import arxiv  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,7 +29,7 @@ def fetch_arxiv_papers(
     categories: list[str],
     date_from: str = "2018-01-01",
     max_papers: int = 20,
-    delay_between_requests: float = 0.4
+    delay_between_requests: float = 0.4,
 ) -> list[dict[str, Any]]:
     """
     Fetch papers from ArXiv matching specified categories.
@@ -65,7 +65,7 @@ def fetch_arxiv_papers(
             query=query,
             sort_by=arxiv.SortCriterion.SubmittedDate,
             sort_order=arxiv.SortOrder.Descending,
-            max_results=papers_per_category
+            max_results=papers_per_category,
         )
 
         category_papers = 0
@@ -106,9 +106,7 @@ def build_arxiv_corpus(output_dir: str, max_papers: int = 20) -> None:
     corpus_dir.mkdir(parents=True, exist_ok=True)
 
     papers = fetch_arxiv_papers(
-        categories=["cs.DC", "cs.SE"],
-        date_from="2018-01-01",
-        max_papers=max_papers
+        categories=["cs.DC", "cs.SE"], date_from="2018-01-01", max_papers=max_papers
     )
 
     # Write papers to individual directories
@@ -159,7 +157,7 @@ def build_arxiv_corpus(output_dir: str, max_papers: int = 20) -> None:
                 "categories": paper["categories"],
             }
             for paper in papers
-        ]
+        ],
     }
 
     index_file = corpus_dir / "index.json"

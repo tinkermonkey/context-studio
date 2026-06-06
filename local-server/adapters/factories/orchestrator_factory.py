@@ -14,7 +14,10 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionState,
 )
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_extraction.orchestrator import (
@@ -131,7 +134,8 @@ def _build_connection_refinement(
 
 
 _ORCHESTRATOR_BUILDERS: dict[
-    Type[PipelineOrchestrator], Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator]
+    Type[PipelineOrchestrator],
+    Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
 ] = {
     NoOpPipelineOrchestrator: _build_noop,
     IndividualExtractionOrchestrator: _build_individual_extraction,

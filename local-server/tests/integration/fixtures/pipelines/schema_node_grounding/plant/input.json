@@ -1,0 +1,10 @@
+{
+  "node_label": "Plant",
+  "node_type": "Class",
+  "sources": [
+    "DBpedia",
+    "ConceptNet",
+    "Wikidata",
+    "schema.org"
+  ]
+}

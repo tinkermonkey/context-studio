@@ -6,6 +6,7 @@ Provides common infrastructure for testing the pipeline framework:
 - Mock LLM provider with canned responses
 - Database and repository fixtures
 - Event publisher for change event tracking
+- Quality testing fixtures (cassettes, refresh mode)
 """
 
 import tempfile
@@ -18,11 +19,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
+from config import get_settings
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
 from domain.pipelines.registry import (
@@ -31,6 +34,10 @@ from domain.pipelines.registry import (
 )
 from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.integration.pipelines._harness.cassettes import (
+    CassetteLLMProvider,
+    RecordingLLMProvider,
+)
 
 
 @pytest.fixture
@@ -146,3 +153,115 @@ def client(pipeline_run_repo, batch_repo, impl_registry, config_registry, llm_pr
     app.state.llm_router = llm_provider
 
     return TestClient(app)
+
+
+def pytest_addoption(parser):
+    """Register custom pytest command-line options for quality testing."""
+    parser.addoption(
+        "--refresh-cassettes",
+        action="store_true",
+        default=False,
+        help="Re-record all cassettes against live providers",
+    )
+
+
+@pytest.fixture
+def cassette_path(request):
+    """Compute cassette path based on test module and function."""
+    test_file = Path(request.node.fspath)
+    test_module = request.node.name
+
+    cassette_dir = test_file.parent / "_cassettes" / test_file.stem
+    cassette_dir.mkdir(parents=True, exist_ok=True)
+
+    return cassette_dir / f"{test_module}.json"
+
+
+@pytest.fixture
+def llm_provider_mode(request):
+    """Determine execution mode: 'cassette' (default) or 'live'."""
+    if request.node.get_closest_marker("real_llm"):
+        return "live"
+    return "cassette"
+
+
+@pytest.fixture
+def quality_llm_provider(request, llm_provider_mode, cassette_path, llm_provider):
+    """Provide appropriate LLM provider based on execution mode.
+
+    Returns:
+    - CassetteLLMProvider if cassette mode and cassette exists
+    - RecordingLLMProvider if refresh-cassettes is requested
+    - Real llm_provider if live mode
+    """
+    if llm_provider_mode == "cassette":
+        if cassette_path.exists() and not request.config.getoption("--refresh-cassettes"):
+            yield CassetteLLMProvider(cassette_path)
+        elif request.config.getoption("--refresh-cassettes"):
+            provider = RecordingLLMProvider(llm_provider, cassette_path)
+            yield provider
+            provider.flush()
+        else:
+            raise FileNotFoundError(
+                f"Cassette not found at {cassette_path}. "
+                f"Run with --refresh-cassettes to record, or mark test with @pytest.mark.real_llm"
+            )
+    else:
+        # Live mode
+        yield llm_provider
+
+
+@pytest.fixture
+def quality_llm_provider_factory(request):
+    """Factory to create LLM providers for quality test scenarios.
+
+    Handles cassette mode with intelligent logic:
+    - If --refresh-cassettes is set: use RecordingLLMProvider (even if cassette exists)
+    - Else if cassette exists: use CassetteLLMProvider
+    - Else: skip test
+
+    Parameters:
+        scenario: scenario name (used in cassette filename)
+        cassette_dir: directory containing cassettes
+        cassette_prefix: prefix for cassette filename (e.g., "individual_extraction_")
+    """
+
+    def _make_provider(scenario: str, cassette_dir: Path, cassette_prefix: str):
+        cassette_path = cassette_dir / f"{cassette_prefix}{scenario}.json"
+        refresh_cassettes = request.config.getoption("--refresh-cassettes")
+
+        # Check --refresh-cassettes first so we can re-record existing cassettes
+        if refresh_cassettes:
+            settings = get_settings()
+            llm_config = settings.llm
+            if (
+                not llm_config.openai_api_key
+                and not llm_config.anthropic_api_key
+                and not llm_config.openrouter_api_key
+            ):
+                pytest.skip(
+                    f"Cassette not found at {cassette_path} and no real LLM provider configured. "
+                    "To record cassettes, set OPENAI_API_KEY, ANTHROPIC_API_KEY, or "
+                    "OPENROUTER_API_KEY."
+                )
+
+            try:
+                real_llm_provider = LLMProviderRouter(
+                    openai_api_key=llm_config.openai_api_key,
+                    anthropic_api_key=llm_config.anthropic_api_key,
+                    openrouter_api_key=llm_config.openrouter_api_key,
+                )
+            except ValueError as e:
+                pytest.skip(f"Failed to initialize LLM provider: {e}")
+
+            return RecordingLLMProvider(real_llm_provider, cassette_path)
+
+        # Cassette mode: require cassette to exist
+        if not cassette_path.exists():
+            pytest.skip(
+                f"Cassette not found at {cassette_path}. " "Run with --refresh-cassettes to record."
+            )
+
+        return CassetteLLMProvider(cassette_path)
+
+    return _make_provider

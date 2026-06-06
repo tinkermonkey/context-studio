@@ -1,0 +1,20 @@
+{
+  "scope_id": "modern-001",
+  "scope_identifier": "modern_architecture",
+  "scope_title": "Modern Architecture",
+  "scope_description": "Contemporary patterns",
+  "candidate_classes": [
+    {"id": "pattern-001", "identifier": "legacy_pattern", "title": "Legacy Pattern"}
+  ],
+  "before_relationships": [
+    {
+      "subject_id": "modern-001",
+      "object_id": "pattern-001",
+      "predicate": "uses"
+    }
+  ],
+  "candidates": [],
+  "is_empty_delta": false,
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

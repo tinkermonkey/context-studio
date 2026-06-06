@@ -1,0 +1,9 @@
+{
+  "33d414ad033eeb67b4c4bb570296d53c2489653f2ec519451debe654ea0f23a0": {
+    "content": "[{\"definition\": \"An architectural style that uses HTTP methods and resources to build scalable, stateless web services with standard content negotiation.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

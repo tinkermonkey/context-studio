@@ -1,0 +1,6 @@
+{
+  "text": "Reactive programming uses data streams and propagation of changes. Observables represent data sources that emit values over time. Streams are sequences of asynchronous events. Operators transform streams: map, filter, flatMap, etc. Subscriptions connect observers to observables. Backpressure allows consumers to control the rate of emission. Push-based systems do NOT pull data from sources; sources push to consumers. Functional composition chains operators together. Error handling uses error channels or catch operators. Completion signals the end of a stream. Reactive systems are responsive, resilient, and scalable.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

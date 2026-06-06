@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Happening",
+    "http://dbpedia.org/resource/Incident",
+    "http://dbpedia.org/resource/Occasion"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/event",
+    "http://conceptnet.io/c/en/happening"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q1191551",
+    "http://www.wikidata.org/entity/Q386611"
+  ],
+  "schema.org": []
+}

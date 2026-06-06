@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "remove",
+        "subject": "Target Architecture",
+        "predicate": "depends_on",
+        "object": "Legacy System",
+        "confidence": 0.75
+      }
+    ]
+  }
+}

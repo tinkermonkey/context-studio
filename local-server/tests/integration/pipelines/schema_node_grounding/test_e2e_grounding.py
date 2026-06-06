@@ -7,7 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+)
 from domain.pipelines.schema_node_grounding.scoring import (
     GroundingCandidate,
     GroundingScorer,

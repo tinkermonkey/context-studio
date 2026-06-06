@@ -9,7 +9,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -22,7 +21,9 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.events import ClassCreated, PropertyDefinitionCreated
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.fixtures.pipelines.harness import run_pipeline_against_fixture

@@ -1,0 +1,9 @@
+{
+  "node_id": "clear_concept-18933",
+  "identifier": "clear_concept",
+  "title": "Clear Concept",
+  "current_description": "A well-defined architectural concept that separates concerns and promotes modularity.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": true
+}

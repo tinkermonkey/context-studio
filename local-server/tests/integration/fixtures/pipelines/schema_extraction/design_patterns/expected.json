@@ -1,0 +1,76 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "DesignPattern",
+        "confidence": 0.85
+      },
+      {
+        "label": "CreationalPattern",
+        "confidence": 0.85
+      },
+      {
+        "label": "StructuralPattern",
+        "confidence": 0.85
+      },
+      {
+        "label": "BehavioralPattern",
+        "confidence": 0.85
+      },
+      {
+        "label": "Factory",
+        "confidence": 0.85
+      },
+      {
+        "label": "Observer",
+        "confidence": 0.85
+      },
+      {
+        "label": "Strategy",
+        "confidence": 0.85
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "categorizes",
+        "confidence": 0.8
+      },
+      {
+        "label": "solves",
+        "confidence": 0.8
+      },
+      {
+        "label": "abstracts",
+        "confidence": 0.8
+      },
+      {
+        "label": "enables",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "Factory",
+        "predicate": "is_a",
+        "object_class": "CreationalPattern",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Observer",
+        "predicate": "is_a",
+        "object_class": "BehavioralPattern",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Strategy",
+        "predicate": "is_a",
+        "object_class": "BehavioralPattern",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

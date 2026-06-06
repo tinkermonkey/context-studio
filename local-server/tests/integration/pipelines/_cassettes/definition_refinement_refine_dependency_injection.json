@@ -1,0 +1,9 @@
+{
+  "3d4dac0a3f04265b5dd1b3812e4f8286ce28cc876a5b09c73e50646a7cd5dbdf": {
+    "content": "[{\"definition\": \"A design pattern that provides required dependencies to objects at construction time or through method calls, decoupling components from their concrete dependencies.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

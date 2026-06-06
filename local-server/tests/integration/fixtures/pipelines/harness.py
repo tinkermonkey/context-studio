@@ -170,7 +170,7 @@ async def run_pipeline_against_fixture(
                 repo.save_class(cls)
 
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
-        if hasattr(orchestrator, '_traversal') and orchestrator._traversal is None:
+        if hasattr(orchestrator, "_traversal") and orchestrator._traversal is None:
             orchestrator._traversal = traversal
         state = ConnectionRefinementState(
             run_id=str(uuid4()),
@@ -216,7 +216,7 @@ async def run_pipeline_against_fixture(
                 repo.save_class(cls)
 
         traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
-        if hasattr(orchestrator, '_traversal') and orchestrator._traversal is None:
+        if hasattr(orchestrator, "_traversal") and orchestrator._traversal is None:
             orchestrator._traversal = traversal
         state = DefinitionRefinementState(
             run_id=str(uuid4()),

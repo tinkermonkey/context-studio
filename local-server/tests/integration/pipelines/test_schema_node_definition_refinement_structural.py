@@ -8,7 +8,6 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

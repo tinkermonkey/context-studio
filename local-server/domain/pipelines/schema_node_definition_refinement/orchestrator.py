@@ -106,7 +106,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         if not node_id:
             exc = PipelineInputError("node_id is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -126,11 +128,15 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
+            model = state.input_data.get("model")
+            temperature = state.input_data.get("temperature")
             candidates = await self._generate_candidates(
                 neighborhood,
                 current_definition,
                 groundings,
                 extraction_usages,
+                model=model,
+                temperature=temperature,
             )
             state = replace(state, candidates=candidates)
 
@@ -159,9 +165,11 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
-        except ValueError:
+        except ValueError as exc:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
-            raise
+            raise PipelineExecutionError(
+                "Definition refinement encountered an unexpected error"
+            ) from exc
         except Exception as exc:
             _logger.error(f"Unexpected error during definition refinement: {exc}", exc_info=True)
             state = replace(
@@ -181,6 +189,8 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         current_definition: str,
         groundings: list[dict[str, Any]],
         extraction_usages: list[dict[str, Any]],
+        model: str | None = None,
+        temperature: float | None = None,
     ) -> list[dict[str, Any]]:
         """
         Generate up to 3 candidate refined definitions.
@@ -190,12 +200,16 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             current_definition: Current definition to refine
             groundings: External groundings (optional)
             extraction_usages: Extraction usage examples (optional)
+            model: LLM model to use (overrides config)
+            temperature: Temperature for LLM (overrides config)
 
         Returns:
             List of candidate definitions with rationale and confidence (0-3 candidates)
         """
-        model = self._config.get("model", "google/gemini-3-flash-preview")
-        temperature = self._config.get("temperature", 0.0)
+        if model is None:
+            model = self._config.get("model", "google/gemini-3-flash-preview")
+        if temperature is None:
+            temperature = self._config.get("temperature", 0.0)
         max_tokens = self._config.get("max_tokens", 2000)
 
         # Build context prompt

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Storage",
+    "http://dbpedia.org/resource/Memory",
+    "http://dbpedia.org/resource/System"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/storage",
+    "http://conceptnet.io/c/en/memory"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q21049999",
+    "http://www.wikidata.org/entity/Q33971"
+  ],
+  "schema.org": []
+}

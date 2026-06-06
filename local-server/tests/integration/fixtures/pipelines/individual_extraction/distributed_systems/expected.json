@@ -1,0 +1,146 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "consensus_algorithm",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "ensures",
+          "kind": "property"
+        },
+        "object": {
+          "label": "state_agreement",
+          "kind": "individual"
+        },
+        "confidence": 0.92
+      },
+      {
+        "subject": {
+          "label": "replication",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "improves",
+          "kind": "property"
+        },
+        "object": {
+          "label": "availability",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "partitioning",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "distributes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "strong_consistency",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "guarantees",
+          "kind": "property"
+        },
+        "object": {
+          "label": "update_visibility",
+          "kind": "individual"
+        },
+        "confidence": 0.91
+      },
+      {
+        "subject": {
+          "label": "eventual_consistency",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "allows",
+          "kind": "property"
+        },
+        "object": {
+          "label": "temporary_divergence",
+          "kind": "individual"
+        },
+        "confidence": 0.89
+      },
+      {
+        "subject": {
+          "label": "cap_theorem",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrains",
+          "kind": "property"
+        },
+        "object": {
+          "label": "system_guarantees",
+          "kind": "individual"
+        },
+        "confidence": 0.93
+      },
+      {
+        "subject": {
+          "label": "fault_tolerance",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "requires",
+          "kind": "property"
+        },
+        "object": {
+          "label": "redundancy",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "monitoring",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "detects",
+          "kind": "property"
+        },
+        "object": {
+          "label": "failures",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "replication",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "ensures",
+          "kind": "property"
+        },
+        "object": {
+          "label": "immediate_consistency",
+          "kind": "individual"
+        },
+        "note": "replication does NOT ensure immediate consistency — it provides eventual consistency in distributed systems"
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

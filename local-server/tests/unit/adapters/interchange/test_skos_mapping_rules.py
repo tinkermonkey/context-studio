@@ -155,10 +155,7 @@ class TestSKOSConceptSchemeMapping:
     def test_export_concept_scheme_with_parent_taxonomy(self):
         """Test that ConceptScheme with parent Taxonomy uses dct:isPartOf."""
         repo = FakeOntologyRepo()
-        taxonomy = Taxonomy(
-            id="tax-1",
-            identifier="tax_test",
-            title="Biology")
+        taxonomy = Taxonomy(id="tax-1", identifier="tax_test", title="Biology")
         repo.taxonomies["tax-1"] = taxonomy
 
         scheme = ConceptScheme(

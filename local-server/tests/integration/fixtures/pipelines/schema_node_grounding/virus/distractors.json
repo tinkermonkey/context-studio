@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Bacteria",
+    "http://dbpedia.org/resource/Pathogen",
+    "http://dbpedia.org/resource/Disease"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/bacteria",
+    "http://conceptnet.io/c/en/pathogen"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q6516",
+    "http://www.wikidata.org/entity/Q12136"
+  ],
+  "schema.org": []
+}

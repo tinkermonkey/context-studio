@@ -469,7 +469,11 @@ class FakeOntologyRepository:
                 "American technology company specializing in search and advertising",
                 "google",
             ),
-            ("Apple", "American technology company known for consumer electronics", "apple"),
+            (
+                "Apple",
+                "American technology company known for consumer electronics",
+                "apple",
+            ),
             ("Database", "Organized collection of structured data", "database"),
             ("SQL", "Structured Query Language for database management", "sql"),
         ]

@@ -1,0 +1,6 @@
+{
+  "text": "Microservices architecture decomposes systems into independently deployable services. Each service owns its data and exposes APIs. An API gateway routes requests to appropriate services. Services communicate synchronously via REST or gRPC, or asynchronously via events. An event bus facilitates loose coupling. Service mesh manages inter-service communication. Circuit breakers prevent cascading failures. Microservices do NOT eliminate complexity; they distribute it. Independent deployment enables faster iteration. Services should be designed to be deployed independently. Shared libraries can lead to tight coupling. Database per service pattern avoids shared databases.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

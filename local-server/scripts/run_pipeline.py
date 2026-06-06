@@ -50,12 +50,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.factories.orchestrator_factory import create_orchestrator, create_pipeline_state
+from adapters.factories.orchestrator_factory import (
+    create_orchestrator,
+    create_pipeline_state,
+)
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -244,11 +249,14 @@ def main() -> int:
             "scorer": GroundingScorer(embedding_service=embedding_service),
             "grounding_config": {
                 "top_n": config_version.config.get("top_n", 10),
-                "weights": config_version.config.get("weights", {
-                    "source_score": 0.3,
-                    "label_match": 0.3,
-                    "semantic_similarity": 0.4,
-                }),
+                "weights": config_version.config.get(
+                    "weights",
+                    {
+                        "source_score": 0.3,
+                        "label_match": 0.3,
+                        "semantic_similarity": 0.4,
+                    },
+                ),
             },
             "refinement_config": config_version.config,
         }

@@ -1,0 +1,9 @@
+{
+  "node_id": "rest-api-001",
+  "identifier": "rest_api",
+  "title": "REST API",
+  "current_description": "A web style.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

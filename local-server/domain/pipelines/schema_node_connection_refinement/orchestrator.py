@@ -107,7 +107,9 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         if not scope_id:
             exc = PipelineInputError("scope_id is required and cannot be empty")
             state = replace(
-                state, current_status=PipelineRunStatus.FAILED, result={"error": str(exc)}
+                state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
             )
             raise exc
 
@@ -129,11 +131,15 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
+            model = state.input_data.get("model")
+            temperature = state.input_data.get("temperature")
             deltas = await self._propose_deltas(
                 neighborhood,
                 current_connections,
                 groundings,
                 extraction_usages,
+                model=model,
+                temperature=temperature,
             )
             state = replace(state, deltas=deltas)
 
@@ -165,9 +171,11 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
-        except ValueError:
+        except ValueError as exc:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
-            raise
+            raise PipelineExecutionError(
+                "Connection refinement encountered an unexpected error"
+            ) from exc
         except Exception as exc:
             _logger.error(f"Unexpected error during connection refinement: {exc}", exc_info=True)
             state = replace(
@@ -187,6 +195,8 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         current_connections: list[dict[str, Any]],
         groundings: list[dict[str, Any]],
         extraction_usages: list[dict[str, Any]],
+        model: str | None = None,
+        temperature: float | None = None,
     ) -> list[dict[str, Any]]:
         """
         Propose connection deltas.
@@ -196,12 +206,16 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             current_connections: Existing connections
             groundings: External groundings (optional)
             extraction_usages: Extraction usage examples (optional)
+            model: LLM model to use (overrides config)
+            temperature: Temperature for LLM (overrides config)
 
         Returns:
             List of connection deltas with operation, subjects, and rationale
         """
-        model = self._config.get("model", "google/gemini-3-flash-preview")
-        temperature = self._config.get("temperature", 0.0)
+        if model is None:
+            model = self._config.get("model", "google/gemini-3-flash-preview")
+        if temperature is None:
+            temperature = self._config.get("temperature", 0.0)
         max_tokens = self._config.get("max_tokens", 2000)
 
         # Build context prompt

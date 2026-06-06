@@ -1,0 +1,10 @@
+{
+  "node_label": "Government",
+  "node_type": "Class",
+  "sources": [
+    "DBpedia",
+    "ConceptNet",
+    "Wikidata",
+    "schema.org"
+  ]
+}

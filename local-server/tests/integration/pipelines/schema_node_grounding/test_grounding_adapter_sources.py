@@ -68,9 +68,9 @@ class TestGroundingAdapterSourceCoverage:
         sources = {c.source for c in candidates}
 
         expected_sources = {"DBpedia", "ConceptNet", "Wikidata", "schema.org"}
-        assert sources & expected_sources, (
-            "At least some of the default sources should return results for 'thing'"
-        )
+        assert (
+            sources & expected_sources
+        ), "At least some of the default sources should return results for 'thing'"
 
     @pytest.mark.asyncio
     async def test_unknown_source_raises_pipeline_input_error(self, adapter):

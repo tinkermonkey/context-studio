@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Government",
+      "source": "DBpedia",
+      "rationale": "Political system"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q7188",
+      "source": "Wikidata",
+      "rationale": "Wikidata government"
+    },
+    {
+      "uri": "http://schema.org/Organization",
+      "source": "schema.org",
+      "rationale": "schema.org organization"
+    }
+  ]
+}

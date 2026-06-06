@@ -66,7 +66,8 @@ class PipelineRunRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     implementation_id: str = Field(
-        default="default", description="Implementation identifier (defaults to 'default')"
+        default="default",
+        description="Implementation identifier (defaults to 'default')",
     )
     configuration_ref: str = Field(
         default="default", description="Configuration reference (defaults to 'default')"
@@ -177,7 +178,8 @@ class ApplyRunResponse(BaseModel):
     relationships_removed: int = Field(default=0, description="Relationship entities removed")
     relationships_modified: int = Field(default=0, description="Relationship entities modified")
     relationships_skipped: int = Field(
-        default=0, description="Relationship candidates skipped (already exist or unresolvable)"
+        default=0,
+        description="Relationship candidates skipped (already exist or unresolvable)",
     )
     individuals_created: int = Field(default=0, description="Individual entities created")
     individuals_skipped: int = Field(
@@ -189,9 +191,7 @@ class ApplyRunResponse(BaseModel):
     external_references_skipped: int = Field(
         default=0, description="External references skipped (already exist)"
     )
-    created_class_ids: list[str] = Field(
-        default_factory=list, description="IDs of created classes"
-    )
+    created_class_ids: list[str] = Field(default_factory=list, description="IDs of created classes")
     created_individual_ids: list[str] = Field(
         default_factory=list, description="IDs of created individuals"
     )
@@ -253,15 +253,9 @@ class BatchResponse(BaseModel):
         ...,
         description="Status: pending, running, completed, failed, or cancelled",
     )
-    created_at: datetime = Field(
-        ..., description="UTC timestamp of batch creation"
-    )
-    started_at: Optional[datetime] = Field(
-        None, description="UTC timestamp when batch started"
-    )
-    completed_at: Optional[datetime] = Field(
-        None, description="UTC timestamp when batch completed"
-    )
+    created_at: datetime = Field(..., description="UTC timestamp of batch creation")
+    started_at: Optional[datetime] = Field(None, description="UTC timestamp when batch started")
+    completed_at: Optional[datetime] = Field(None, description="UTC timestamp when batch completed")
     last_updated: datetime = Field(..., description="UTC timestamp of last update")
     run_count: int = Field(..., ge=0, description="Total number of runs in batch")
     run_counts: RunCountsResponse = Field(..., description="Breakdown of runs by status")
@@ -272,12 +266,8 @@ class EnqueueBatchRunsRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    runs: list[dict[str, Any]] = Field(
-        ..., min_length=1, description="Run specs to enqueue"
-    )
-    idempotency_key: Optional[str] = Field(
-        None, description="Optional idempotency key for replay"
-    )
+    runs: list[dict[str, Any]] = Field(..., min_length=1, description="Run specs to enqueue")
+    idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for replay")
 
 
 class EnqueueBatchRunsResponse(BaseModel):

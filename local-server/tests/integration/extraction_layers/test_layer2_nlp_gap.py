@@ -119,7 +119,12 @@ def test_duplicate_against_prior_entity_is_filtered():
     processor = _PaperNLPProcessor(
         entities=[
             NLPEntity(
-                text="crdt", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None
+                text="crdt",
+                label="DataStructure",
+                start=0,
+                end=4,
+                confidence=0.9,
+                linked_uri=None,
             ),
             NLPEntity(
                 text="anti-entropy",
@@ -145,7 +150,12 @@ def test_metadata_reports_skipped_duplicates():
     processor = _PaperNLPProcessor(
         entities=[
             NLPEntity(
-                text="CRDT", label="DataStructure", start=0, end=4, confidence=0.9, linked_uri=None
+                text="CRDT",
+                label="DataStructure",
+                start=0,
+                end=4,
+                confidence=0.9,
+                linked_uri=None,
             ),
         ]
     )

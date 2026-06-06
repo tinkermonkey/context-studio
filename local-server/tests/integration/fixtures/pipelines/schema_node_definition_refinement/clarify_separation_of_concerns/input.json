@@ -1,0 +1,9 @@
+{
+  "node_id": "separation_of_concerns-19200",
+  "identifier": "separation_of_concerns",
+  "title": "Separation of Concerns",
+  "current_description": "Dividing concerns.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

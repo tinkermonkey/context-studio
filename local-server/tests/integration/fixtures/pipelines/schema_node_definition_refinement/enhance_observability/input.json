@@ -1,0 +1,9 @@
+{
+  "node_id": "observability-933",
+  "identifier": "observability",
+  "title": "Observability",
+  "current_description": "System monitoring.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

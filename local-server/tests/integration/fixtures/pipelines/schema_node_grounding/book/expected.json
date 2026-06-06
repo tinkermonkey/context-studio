@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Book",
+      "source": "DBpedia",
+      "rationale": "Written work"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q571",
+      "source": "Wikidata",
+      "rationale": "Wikidata book"
+    },
+    {
+      "uri": "http://schema.org/Book",
+      "source": "schema.org",
+      "rationale": "schema.org book"
+    }
+  ]
+}

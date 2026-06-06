@@ -159,7 +159,7 @@ RUN node --version && \
     pip --version
 
 # Verify Python dependencies are importable
-RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import pytest_asyncio; import networkx; import rdflib; import boto3; import duckdb; import pyarrow; import datasets; print('Python deps OK')"
+RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import pytest_asyncio; import networkx; import rdflib; import boto3; import duckdb; import pyarrow; import datasets; import vcr; print('Python deps OK')"
 
 # Verify OpenTelemetry packages are importable
 RUN python3 -c "import opentelemetry; from opentelemetry import trace; from opentelemetry.sdk.trace import TracerProvider; from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter; from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor; from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor; from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor; print('OpenTelemetry deps OK')"

@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "result": {
+    "deltas": [
+      {
+        "operation": "add",
+        "subject": "Target Architecture",
+        "predicate": "implements",
+        "object": "Design Pattern",
+        "confidence": 0.85
+      }
+    ]
+  }
+}

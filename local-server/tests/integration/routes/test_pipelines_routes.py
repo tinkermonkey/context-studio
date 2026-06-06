@@ -32,7 +32,9 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
 )
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
-from domain.pipelines.schema_node_grounding.orchestrator import SchemaGroundingOrchestrator
+from domain.pipelines.schema_node_grounding.orchestrator import (
+    SchemaGroundingOrchestrator,
+)
 
 # Constant for mocking the orchestrator creation function
 ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
@@ -1081,6 +1083,7 @@ class TestRunStatusLifecycle:
             """Mock orchestrator that signals when execution begins."""
             # Simulate the orchestrator writing RUNNING status (like real orchestrators do)
             from datetime import datetime, timezone
+
             repo.update_running_status(state.run_id, datetime.now(timezone.utc))
 
             # Signal that execution has started
@@ -1190,8 +1193,7 @@ class TestRunStatusLifecycle:
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason is not None
         assert (
-            "timeout" in run.failure_reason.lower()
-            or "unavailable" in run.failure_reason.lower()
+            "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()
         )
 
 
@@ -1232,9 +1234,7 @@ class TestRevertEndpoint:
 
     def test_revert_nonexistent_run_returns_404(self, revert_client):
         """POST /api/pipelines/runs/{run_id}/revert for nonexistent run returns 404."""
-        response = revert_client.post(
-            "/api/pipelines/runs/nonexistent-run-id/revert"
-        )
+        response = revert_client.post("/api/pipelines/runs/nonexistent-run-id/revert")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_revert_empty_run_returns_200_with_zero_reverted(
@@ -1253,9 +1253,7 @@ class TestRevertEndpoint:
             configuration_version=1,
         )
 
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["run_id"] == run.id
@@ -1312,9 +1310,7 @@ class TestRevertEndpoint:
         assert ontology_repo.get_class("cls-1") is not None
 
         # Revert
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["run_id"] == run.id
@@ -1364,9 +1360,7 @@ class TestRevertEndpoint:
         )
 
         # Try to revert - should get 500 with generic error message
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         body = response.json()
 
@@ -1378,9 +1372,7 @@ class TestRevertEndpoint:
         assert "Traceback" not in detail
         assert ".py" not in detail
 
-    def test_revert_multi_run_batch_returns_422(
-        self, revert_client, pipeline_run_repo, batch_repo
-    ):
+    def test_revert_multi_run_batch_returns_422(self, revert_client, pipeline_run_repo, batch_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in multi-run batch returns 422."""
         from domain.pipelines.entities import PipelineType
 
@@ -1414,9 +1406,7 @@ class TestRevertEndpoint:
         assert len([r for r in batch_runs if r.batch_run_id == batch_id]) == 2
 
         # Try to revert the first run - should fail with 422 because batch has multiple runs
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run1.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run1.id}/revert")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         body = response.json()
 
@@ -1424,9 +1414,7 @@ class TestRevertEndpoint:
         assert "detail" in body
         assert "multi" in body["detail"].lower() or "multiple" in body["detail"].lower()
 
-    def test_revert_single_run_batch_succeeds(
-        self, revert_client, pipeline_run_repo
-    ):
+    def test_revert_single_run_batch_succeeds(self, revert_client, pipeline_run_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in single-run batch succeeds."""
         from domain.pipelines.entities import PipelineType
 
@@ -1443,9 +1431,7 @@ class TestRevertEndpoint:
         )
 
         # Revert should succeed with 200
-        response = revert_client.post(
-            f"/api/pipelines/runs/{run.id}/revert"
-        )
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
 

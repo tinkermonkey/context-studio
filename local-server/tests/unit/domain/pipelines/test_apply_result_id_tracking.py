@@ -12,9 +12,7 @@ import sys
 from unittest.mock import MagicMock
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
 import pytest
@@ -24,7 +22,9 @@ from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
@@ -225,8 +225,16 @@ def test_schema_grounding_tracks_external_reference_ids(repo):
     run.status = PipelineRunStatus.COMPLETED
     run.output_summary = {
         "groundings": [
-            {"uri": "http://example.com/person", "source": "test", "match_confidence": 0.95},
-            {"uri": "http://example.com/homo-sapiens", "source": "test", "match_confidence": 0.90},
+            {
+                "uri": "http://example.com/person",
+                "source": "test",
+                "match_confidence": 0.95,
+            },
+            {
+                "uri": "http://example.com/homo-sapiens",
+                "source": "test",
+                "match_confidence": 0.90,
+            },
         ]
     }
 
@@ -256,9 +264,7 @@ def test_schema_definition_refinement_increments_classes_updated_not_created(rep
     run.status = PipelineRunStatus.COMPLETED
     run.output_summary = {
         "node_id": CLASS_ID,
-        "candidates": [
-            {"definition": "A human being", "confidence": 0.95}
-        ]
+        "candidates": [{"definition": "A human being", "confidence": 0.95}],
     }
 
     result = svc.apply(run)
@@ -295,6 +301,7 @@ def test_schema_connection_refinement_separates_operations(repo):
     repo.save_property_definition(prop_likes)
 
     from domain.ontology.entities import Relationship
+
     rel_is = Relationship(
         id="rel-1",
         source_id="cls-dog",
@@ -316,7 +323,7 @@ def test_schema_connection_refinement_separates_operations(repo):
     run.pipeline_type = PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
     run.status = PipelineRunStatus.COMPLETED
     run.output_summary = {
-        "scope_id": SCHEME_ID,
+        "scope_id": "cls-dog",  # Use a class ID from the same scheme as scope
         "deltas": [
             {
                 "operation": "add",
@@ -339,7 +346,7 @@ def test_schema_connection_refinement_separates_operations(repo):
                 "object": "Animal",
                 "confidence": 0.9,
             },
-        ]
+        ],
     }
 
     result = svc.apply(run)
@@ -359,7 +366,11 @@ def test_schema_grounding_uses_external_references_created(repo):
     run.status = PipelineRunStatus.COMPLETED
     run.output_summary = {
         "groundings": [
-            {"uri": "http://example.com/test", "source": "test", "match_confidence": 0.95}
+            {
+                "uri": "http://example.com/test",
+                "source": "test",
+                "match_confidence": 0.95,
+            }
         ]
     }
 
@@ -432,8 +443,7 @@ class TestApplyResultValidation:
 
         with pytest.raises(
             ValueError,
-            match="individuals_created.*created_individual_ids.*must be "
-            "consistent",
+            match="individuals_created.*created_individual_ids.*must be " "consistent",
         ):
             ApplyResult(
                 individuals_created=3,
@@ -446,8 +456,7 @@ class TestApplyResultValidation:
 
         with pytest.raises(
             ValueError,
-            match="relationships_created.*created_relationship_ids.*must be "
-            "consistent",
+            match="relationships_created.*created_relationship_ids.*must be " "consistent",
         ):
             ApplyResult(
                 relationships_created=2,
@@ -460,8 +469,7 @@ class TestApplyResultValidation:
 
         with pytest.raises(
             ValueError,
-            match="properties_created.*created_property_definition_ids.*must "
-            "be consistent",
+            match="properties_created.*created_property_definition_ids.*must " "be consistent",
         ):
             ApplyResult(
                 properties_created=1,

@@ -1,0 +1,9 @@
+{
+  "node_id": "microservices-5352",
+  "identifier": "microservices",
+  "title": "Microservices",
+  "current_description": "Small services.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

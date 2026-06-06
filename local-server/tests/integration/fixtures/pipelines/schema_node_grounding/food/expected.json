@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Food",
+      "source": "DBpedia",
+      "rationale": "Edible substance"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q2095",
+      "source": "Wikidata",
+      "rationale": "Wikidata food"
+    },
+    {
+      "uri": "http://schema.org/Food",
+      "source": "schema.org",
+      "rationale": "schema.org food"
+    }
+  ]
+}

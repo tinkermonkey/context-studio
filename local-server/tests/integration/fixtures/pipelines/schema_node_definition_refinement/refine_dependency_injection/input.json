@@ -1,0 +1,9 @@
+{
+  "node_id": "dependency_injection-4583",
+  "identifier": "dependency_injection",
+  "title": "Dependency Injection",
+  "current_description": "Injecting dependencies.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

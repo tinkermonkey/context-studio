@@ -141,10 +141,7 @@ def _print_canon_block(
         else:
             delta = cur_val - base_val
             direction = "↑" if delta > 0 else ("↓" if delta < 0 else "→")
-            print(
-                f"    {label}: {base_val:.4f} → {cur_val:.4f} "
-                f"({direction} {delta:+.4f})"
-            )
+            print(f"    {label}: {base_val:.4f} → {cur_val:.4f} " f"({direction} {delta:+.4f})")
 
     # Per-node-type F1 line-by-line so regressions in a specific node type are
     # visible at a glance.
@@ -155,11 +152,7 @@ def _print_canon_block(
             cur_f1 = metrics.get("f1", 0.0)
             base_f1 = None
             if baseline:
-                base_f1 = (
-                    baseline.get("per_node_type_f1", {})
-                    .get(node_type, {})
-                    .get("f1")
-                )
+                base_f1 = baseline.get("per_node_type_f1", {}).get(node_type, {}).get("f1")
             if base_f1 is None:
                 print(f"      {node_type:22s} {cur_f1:.4f}")
             else:

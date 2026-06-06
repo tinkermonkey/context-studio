@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Energy",
+      "source": "DBpedia",
+      "rationale": "Physical quantity"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q11379",
+      "source": "Wikidata",
+      "rationale": "Wikidata energy"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

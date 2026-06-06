@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Sea",
+    "http://dbpedia.org/resource/Water",
+    "http://dbpedia.org/resource/Marine"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/sea",
+    "http://conceptnet.io/c/en/water"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q1359",
+    "http://www.wikidata.org/entity/Q4394"
+  ],
+  "schema.org": []
+}

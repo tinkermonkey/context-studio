@@ -96,7 +96,11 @@ def _produced_triple_key(triple: dict[str, Any]) -> tuple[str, str, str]:
     predicate_id = predicate.get("property_definition_id") or predicate.get("label") or ""
     object_id = obj.get("id") or obj.get("label") or obj.get("value") or ""
 
-    return (_normalize(str(subject_id)), _normalize(str(predicate_id)), _normalize(str(object_id)))
+    return (
+        _normalize(str(subject_id)),
+        _normalize(str(predicate_id)),
+        _normalize(str(object_id)),
+    )
 
 
 def _expected_triple_key(rel: dict[str, Any]) -> tuple[str, str, str]:

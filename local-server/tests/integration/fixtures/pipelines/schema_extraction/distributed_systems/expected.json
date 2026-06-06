@@ -1,0 +1,72 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "ConsensusAlgorithm",
+        "confidence": 0.85
+      },
+      {
+        "label": "Replication",
+        "confidence": 0.85
+      },
+      {
+        "label": "ConsistencyModel",
+        "confidence": 0.85
+      },
+      {
+        "label": "StrongConsistency",
+        "confidence": 0.85
+      },
+      {
+        "label": "EventualConsistency",
+        "confidence": 0.85
+      },
+      {
+        "label": "Partition",
+        "confidence": 0.85
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "ensures",
+        "confidence": 0.8
+      },
+      {
+        "label": "improves",
+        "confidence": 0.8
+      },
+      {
+        "label": "allows",
+        "confidence": 0.8
+      },
+      {
+        "label": "guarantees",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "StrongConsistency",
+        "predicate": "is_a",
+        "object_class": "ConsistencyModel",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "EventualConsistency",
+        "predicate": "is_a",
+        "object_class": "ConsistencyModel",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Consensus",
+        "predicate": "achieves",
+        "object_class": "Agreement",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

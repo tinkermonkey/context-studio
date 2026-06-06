@@ -1,0 +1,9 @@
+{
+  "node_id": "design_patterns-29541",
+  "identifier": "design_patterns",
+  "title": "Design Patterns",
+  "current_description": "A pattern.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Illness",
+    "http://dbpedia.org/resource/Syndrome",
+    "http://dbpedia.org/resource/Condition"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/illness",
+    "http://conceptnet.io/c/en/sickness"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q640099",
+    "http://www.wikidata.org/entity/Q10743570"
+  ],
+  "schema.org": []
+}

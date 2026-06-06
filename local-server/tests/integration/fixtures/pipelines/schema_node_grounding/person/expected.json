@@ -1,0 +1,24 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Person",
+      "source": "DBpedia",
+      "rationale": "Core concept for human beings"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q5",
+      "source": "Wikidata",
+      "rationale": "Wikidata: human"
+    },
+    {
+      "uri": "http://schema.org/Person",
+      "source": "schema.org",
+      "rationale": "schema.org definition"
+    },
+    {
+      "uri": "http://conceptnet.io/c/en/person",
+      "source": "ConceptNet",
+      "rationale": "ConceptNet person concept"
+    }
+  ]
+}

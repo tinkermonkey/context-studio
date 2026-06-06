@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Algorithm",
+      "source": "DBpedia",
+      "rationale": "Computational procedure"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q8366",
+      "source": "Wikidata",
+      "rationale": "Wikidata algorithm"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

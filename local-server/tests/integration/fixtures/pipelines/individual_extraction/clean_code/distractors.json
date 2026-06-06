@@ -1,0 +1,16 @@
+{
+  "triples": [
+    {
+      "subject": {"label": "clean_code", "kind": "individual"},
+      "predicate": {"label": "requires", "kind": "property"},
+      "object": {"label": "many_comments", "kind": "individual"},
+      "confidence": 0.20
+    },
+    {
+      "subject": {"label": "function", "kind": "individual"},
+      "predicate": {"label": "should_have", "kind": "property"},
+      "object": {"label": "many_parameters", "kind": "individual"},
+      "confidence": 0.15
+    }
+  ]
+}

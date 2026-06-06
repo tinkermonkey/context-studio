@@ -30,12 +30,17 @@ class TestDefinitionRefinementSchemaContract:
         }
 
         # Fields read from input_data by the orchestrator
-        input_fields = {"node_id", "current_definition", "groundings", "extraction_usages"}
+        input_fields = {
+            "node_id",
+            "current_definition",
+            "groundings",
+            "extraction_usages",
+        }
 
         # Assert that schema contains all input_data fields
-        assert input_fields.issubset(schema_fields), (
-            f"Schema is missing input fields: {input_fields - schema_fields}"
-        )
+        assert input_fields.issubset(
+            schema_fields
+        ), f"Schema is missing input fields: {input_fields - schema_fields}"
 
 
 class TestConnectionRefinementSchemaContract:
@@ -54,9 +59,14 @@ class TestConnectionRefinementSchemaContract:
         }
 
         # Fields read from input_data by the orchestrator
-        input_fields = {"scope_id", "current_connections", "groundings", "extraction_usages"}
+        input_fields = {
+            "scope_id",
+            "current_connections",
+            "groundings",
+            "extraction_usages",
+        }
 
         # Assert that schema contains all input_data fields
-        assert input_fields.issubset(schema_fields), (
-            f"Schema is missing input fields: {input_fields - schema_fields}"
-        )
+        assert input_fields.issubset(
+            schema_fields
+        ), f"Schema is missing input fields: {input_fields - schema_fields}"

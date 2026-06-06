@@ -1,0 +1,9 @@
+{
+  "node_id": "orm-003",
+  "identifier": "object_relational_mapping",
+  "title": "Object-Relational Mapping",
+  "current_description": "Maps objects to database records.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

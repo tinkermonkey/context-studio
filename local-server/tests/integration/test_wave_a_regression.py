@@ -84,7 +84,10 @@ class TestWaveARegression:
             operation="create",
             timestamp=datetime.now(timezone.utc),
             batch_run_id=run.id,
-            new_state={"label": "ExtractedClass1", "uri": "http://example.org/ExtractedClass1"},
+            new_state={
+                "label": "ExtractedClass1",
+                "uri": "http://example.org/ExtractedClass1",
+            },
         )
         event2 = ChangeEvent(
             id=str(uuid4()),

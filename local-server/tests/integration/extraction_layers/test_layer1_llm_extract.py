@@ -112,7 +112,10 @@ def test_prior_entities_propagate_into_user_prompt():
     fake = FakeLLMProvider(response_content="[]")
     prior = (
         ExtractedEntity(
-            label="REST", entity_type="ArchitecturalStyle", source_layer=0, confidence=0.9
+            label="REST",
+            entity_type="ArchitecturalStyle",
+            source_layer=0,
+            confidence=0.9,
         ),
         ExtractedEntity(label="HATEOAS", entity_type="Concept", source_layer=0, confidence=0.85),
     )

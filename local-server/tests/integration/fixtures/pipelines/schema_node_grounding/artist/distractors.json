@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Musician",
+    "http://dbpedia.org/resource/Painter",
+    "http://dbpedia.org/resource/Creator"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/musician",
+    "http://conceptnet.io/c/en/creator"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q639669",
+    "http://www.wikidata.org/entity/Q1028181"
+  ],
+  "schema.org": []
+}

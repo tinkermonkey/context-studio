@@ -1,0 +1,6 @@
+{
+  "text": "Clean code is readable and maintainable code. Functions should be small and focused on a single responsibility. Classes should follow the Single Responsibility Principle. Meaningful names are crucial for code comprehension. Comments should explain why, not what. Meaningful names do NOT consist of random characters or abbreviations. Functions should have few parameters, preferably three or fewer. Error handling should be explicit and clear. Code should be formatted consistently throughout the project. The DRY principle eliminates code duplication. Testing ensures code correctness and supports refactoring.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

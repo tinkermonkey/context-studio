@@ -1,0 +1,9 @@
+{
+  "node_id": "api_design-14769",
+  "identifier": "api_design",
+  "title": "API Design",
+  "current_description": "API methods.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

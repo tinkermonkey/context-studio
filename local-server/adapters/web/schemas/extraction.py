@@ -84,5 +84,3 @@ class EnrichFromReferencesRequest(BaseModel):
     extracted_entities: list[ExtractedEntitySchema] = Field(
         ..., description="Entities to enrich with reference knowledge"
     )
-
-

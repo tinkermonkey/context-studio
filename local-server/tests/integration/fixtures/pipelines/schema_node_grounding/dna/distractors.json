@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/RNA",
+    "http://dbpedia.org/resource/Gene",
+    "http://dbpedia.org/resource/Chromosome"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/rna",
+    "http://conceptnet.io/c/en/gene"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q11053",
+    "http://www.wikidata.org/entity/Q7314"
+  ],
+  "schema.org": []
+}

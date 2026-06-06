@@ -1,0 +1,10 @@
+{
+  "node_label": "Space",
+  "node_type": "Class",
+  "sources": [
+    "DBpedia",
+    "ConceptNet",
+    "Wikidata",
+    "schema.org"
+  ]
+}

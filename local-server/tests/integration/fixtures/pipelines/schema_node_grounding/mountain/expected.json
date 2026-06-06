@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Mountain",
+      "source": "DBpedia",
+      "rationale": "Landform"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q8502",
+      "source": "Wikidata",
+      "rationale": "Wikidata mountain"
+    },
+    {
+      "uri": "http://schema.org/LandmarksOrHistoricalBuildings",
+      "source": "schema.org",
+      "rationale": "Geographic landmark"
+    }
+  ]
+}

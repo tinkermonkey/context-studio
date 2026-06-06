@@ -270,9 +270,7 @@ def compute_color_presence_rate(
     out: dict[str, dict[str, Any]] = {}
     for node_type, values in produced_colors_by_type.items():
         values_list = list(values)
-        with_color = sum(
-            1 for v in values_list if v and _HEX_COLOR_PATTERN.match(str(v))
-        )
+        with_color = sum(1 for v in values_list if v and _HEX_COLOR_PATTERN.match(str(v)))
         total = len(values_list)
         out[node_type] = {
             "total": total,
@@ -301,9 +299,7 @@ def compute_embedding_presence_rate(
         {"classes_total", "classes_with_embedding", "rate"}
     """
     classes = list(produced_classes)
-    with_embedding = sum(
-        1 for c in classes if c.get("embedding") not in (None, [], b"", "")
-    )
+    with_embedding = sum(1 for c in classes if c.get("embedding") not in (None, [], b"", ""))
     total = len(classes)
     return {
         "classes_total": total,
@@ -334,27 +330,19 @@ def aggregate_canon_metrics(
         Nested dict with the canon-specific metric block.
     """
     per_type = compute_per_node_type_f1(produced_by_type, expected_by_type)
-    avg_f1 = (
-        sum(m.f1 for m in per_type.values()) / len(per_type)
-        if per_type
-        else 0.0
-    )
+    avg_f1 = sum(m.f1 for m in per_type.values()) / len(per_type) if per_type else 0.0
 
     classes_list = list(produced_classes)
 
     return {
         "per_node_type_f1": {k: v.to_dict() for k, v in per_type.items()},
         "avg_node_type_f1": avg_f1,
-        "hierarchy_correctness": compute_hierarchy_correctness(
-            produced_class_parents, canon
-        ),
+        "hierarchy_correctness": compute_hierarchy_correctness(produced_class_parents, canon),
         "multi_sense_disambiguation": compute_multi_sense_disambiguation_score(
             produced_lexical_senses_by_term, canon
         ),
         "reference_grounding_rate": compute_reference_grounding_rate(classes_list),
-        "identifier_slug_validity": compute_identifier_slug_validity(
-            produced_identifiers
-        ),
+        "identifier_slug_validity": compute_identifier_slug_validity(produced_identifiers),
         "color_presence_rate": compute_color_presence_rate(produced_colors_by_type),
         "embedding_presence_rate": compute_embedding_presence_rate(classes_list),
     }

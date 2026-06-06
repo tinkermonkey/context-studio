@@ -18,7 +18,9 @@ import pytest
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ---------------------------------------------------------------------------
@@ -157,7 +159,10 @@ class TestConfidenceThreshold:
             ]
         )
         result = svc.apply(
-            run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.5
+            run,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            confidence_threshold=0.5,
         )
 
         assert result.classes_created == 1
@@ -172,7 +177,10 @@ class TestConfidenceThreshold:
             ]
         )
         result = svc.apply(
-            run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.0
+            run,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            confidence_threshold=0.0,
         )
         assert result.classes_created == 2
 
@@ -206,7 +214,11 @@ class TestPropertyDefinitions:
     def test_skips_existing_property_definitions(self, svc, repo):
         run = _make_run(
             candidates=[
-                {"kind": "property_definition", "label": "Has Component", "confidence": 0.9},
+                {
+                    "kind": "property_definition",
+                    "label": "Has Component",
+                    "confidence": 0.9,
+                },
             ]
         )
         svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
@@ -225,10 +237,16 @@ class TestRelationships:
     def test_creates_relationship_when_subject_object_and_property_resolve(self, svc, repo):
         # Pre-create classes and property so relationship can be resolved
         cls_a = Class(
-            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+            id="cls-a",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Alpha",
         )
         cls_b = Class(
-            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+            id="cls-b",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Beta",
         )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
@@ -254,10 +272,16 @@ class TestRelationships:
 
     def test_skips_relationship_when_predicate_unresolvable(self, svc, repo):
         cls_a = Class(
-            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+            id="cls-a",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Alpha",
         )
         cls_b = Class(
-            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+            id="cls-b",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Beta",
         )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
@@ -279,10 +303,16 @@ class TestRelationships:
 
     def test_relationship_dedup_on_second_apply(self, svc, repo):
         cls_a = Class(
-            id="cls-a", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Alpha"
+            id="cls-a",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Alpha",
         )
         cls_b = Class(
-            id="cls-b", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Beta"
+            id="cls-b",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Beta",
         )
         repo.save_class(cls_a)
         repo.save_class(cls_b)
@@ -355,7 +385,10 @@ class TestValidation:
             ]
         )
         result = svc.apply(
-            run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, confidence_threshold=0.5
+            run,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            confidence_threshold=0.5,
         )
         assert result.classes_created == 1
         assert result.classes_skipped == 1

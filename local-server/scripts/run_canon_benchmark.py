@@ -76,9 +76,7 @@ def _expected_identifiers_by_type(canon: dict) -> dict[str, list[str]]:
         "taxonomy": [t["identifier"] for t in canon.get("taxonomies", [])],
         "concept_scheme": [s["identifier"] for s in canon.get("concept_schemes", [])],
         "class": [c["identifier"] for c in canon.get("class_hierarchy", [])],
-        "property_definition": [
-            p["identifier"] for p in canon.get("property_definitions", [])
-        ],
+        "property_definition": [p["identifier"] for p in canon.get("property_definitions", [])],
         "individual": [],  # canon doesn't enumerate individuals at the master level
     }
 
@@ -143,9 +141,7 @@ def _read_produced_state(db_path: Path) -> dict[str, Any]:
         "taxonomy": [t.identifier for t in taxonomies if t.identifier],
         "concept_scheme": [s.identifier for s in concept_schemes if s.identifier],
         "class": [c.identifier for c in classes if c.identifier],
-        "property_definition": [
-            p.identifier for p in property_defs if p.identifier
-        ],
+        "property_definition": [p.identifier for p in property_defs if p.identifier],
         "individual": [str(i.id) for i in individuals],
     }
 
@@ -231,8 +227,10 @@ def _shape_result_record(canon_block: dict[str, Any], dataset_name: str) -> dict
         "cost_usd": 0.0,
         "extraction_run_ids": [],
         "total_duration_ms": 0,
-        "samples_processed": canon_block["per_node_type_f1"]["class"]["true_positives"]
-        + canon_block["per_node_type_f1"]["class"]["false_negatives"],
+        "samples_processed": (
+            canon_block["per_node_type_f1"]["class"]["true_positives"]
+            + canon_block["per_node_type_f1"]["class"]["false_negatives"]
+        ),
         "total_error_count": 0,
         "errors": [],
         "canon": canon_block,
@@ -345,10 +343,7 @@ def main() -> int:
         f"({canon_block['reference_grounding_rate']['classes_grounded']}/"
         f"{canon_block['reference_grounding_rate']['classes_total']})"
     )
-    print(
-        f"  Identifier slug validity : "
-        f"{canon_block['identifier_slug_validity']['rate']:.4f}"
-    )
+    print(f"  Identifier slug validity : " f"{canon_block['identifier_slug_validity']['rate']:.4f}")
     print(
         f"  Color presence (class)   : "
         f"{canon_block['color_presence_rate'].get('class', {}).get('rate', 0.0):.4f}"

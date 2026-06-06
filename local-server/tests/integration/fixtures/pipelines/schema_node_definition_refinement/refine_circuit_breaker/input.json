@@ -1,0 +1,9 @@
+{
+  "node_id": "circuit_breaker-23152",
+  "identifier": "circuit_breaker",
+  "title": "Circuit Breaker",
+  "current_description": "Preventing cascading failures.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

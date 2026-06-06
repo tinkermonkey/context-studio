@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Software",
+      "source": "DBpedia",
+      "rationale": "Computer program"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q7397",
+      "source": "Wikidata",
+      "rationale": "Wikidata software"
+    },
+    {
+      "uri": "http://schema.org/SoftwareApplication",
+      "source": "schema.org",
+      "rationale": "schema.org application"
+    }
+  ]
+}

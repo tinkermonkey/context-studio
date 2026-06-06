@@ -87,13 +87,19 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     if isinstance(exc, PipelineStorageError):
         _logger.error(f"Pipeline storage error: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to persist pipeline state")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Failed to persist pipeline state",
+        )
     elif isinstance(exc, PipelineInputError):
         _logger.warning(f"Pipeline input error: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, PipelineExternalServiceError):
         _logger.error(f"External service error: {exc}", exc_info=exc)
-        return (http_status.HTTP_503_SERVICE_UNAVAILABLE, "External service unavailable")
+        return (
+            http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            "External service unavailable",
+        )
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
         return (
@@ -105,7 +111,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
     else:
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
-        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+        return (
+            http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "An unexpected error occurred",
+        )
 
 
 def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -379,7 +388,10 @@ async def run_pipeline(
         run_id = run.id  # Use the actual run ID returned by repo.create()
         # Mark this configuration version as referenced by this run
         config_registry.mark_version_referenced(
-            ptype, request_body.implementation_id, config_version.config_ref, config_version.version
+            ptype,
+            request_body.implementation_id,
+            config_version.config_ref,
+            config_version.version,
         )
         # Update batch started_at timestamp
         batch_repo.update_started_at(batch_id)
@@ -896,8 +908,8 @@ async def revert_pipeline_run(
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Cannot revert single run from multi-run batch. "
-                   f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
-                   f"Use batch revert endpoint instead.",
+            f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
+            f"Use batch revert endpoint instead.",
         )
 
     revert_svc = request.app.state.revert_service
@@ -944,7 +956,13 @@ async def create_batch(request: Request) -> dict[str, Any]:
             "completed_at": batch.completed_at,
             "last_updated": batch.last_updated,
             "run_count": 0,
-            "run_counts": {"pending": 0, "running": 0, "completed": 0, "failed": 0, "cancelled": 0},
+            "run_counts": {
+                "pending": 0,
+                "running": 0,
+                "completed": 0,
+                "failed": 0,
+                "cancelled": 0,
+            },
         }
     except Exception as e:
         status_code, message = _handle_domain_error(e)

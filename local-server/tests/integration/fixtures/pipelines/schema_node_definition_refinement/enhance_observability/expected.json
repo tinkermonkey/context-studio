@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "result": {
+    "expected_description": "The capability to understand system behavior through collection and analysis of logs, metrics, traces, and events enabling diagnosis of failures and performance issues."
+  }
+}

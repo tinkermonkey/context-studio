@@ -1,0 +1,9 @@
+{
+  "32118354ec6bdb17f77b97deb2672e41a60a88f836db43dfce957da118abcd7f": {
+    "content": "[{\"definition\": \"A set of architectural patterns for designing systems where components communicate through asynchronous message queues, enabling decoupling and reliable communication.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

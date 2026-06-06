@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Connection",
+    "http://dbpedia.org/resource/Link",
+    "http://dbpedia.org/resource/System"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/connection",
+    "http://conceptnet.io/c/en/link"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q14378098",
+    "http://www.wikidata.org/entity/Q1028494"
+  ],
+  "schema.org": []
+}

@@ -1,0 +1,9 @@
+{
+  "b6eaf34b46943b2033d4fed8488b0b06d3d5e0ad9ad27948b8df576e76c619f2": {
+    "content": "[{\"operation\": \"remove\", \"subject\": \"Modern Architecture\", \"predicate\": \"uses\", \"object\": \"Legacy Pattern\", \"confidence\": 0.8}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

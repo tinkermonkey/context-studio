@@ -27,15 +27,21 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
 from domain.ontology.entities import ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
-from domain.pipelines.schema_extraction.apply_service import SchemaExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
+from domain.pipelines.schema_extraction.apply_service import (
+    SchemaExtractionApplyService,
+)
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
 )
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,
 )
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
+)
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 TAXONOMY_ID = "tx-apply-test"

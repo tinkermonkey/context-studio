@@ -141,9 +141,7 @@ class PipelineRun:
         if self.configuration_version <= 0:
             raise ValueError("configuration_version must be greater than 0")
         if self.status == PipelineRunStatus.PENDING and self.failure_reason is not None:
-            raise ValueError(
-                "status=PENDING is incompatible with a set failure_reason"
-            )
+            raise ValueError("status=PENDING is incompatible with a set failure_reason")
 
 
 @dataclass(frozen=True)

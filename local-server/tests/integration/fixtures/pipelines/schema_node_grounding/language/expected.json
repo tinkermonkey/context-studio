@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Language",
+      "source": "DBpedia",
+      "rationale": "Communication system"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q315",
+      "source": "Wikidata",
+      "rationale": "Wikidata language"
+    },
+    {
+      "uri": "http://schema.org/Language",
+      "source": "schema.org",
+      "rationale": "schema.org language"
+    }
+  ]
+}

@@ -16,7 +16,10 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator, NoOpPipelineState
+from domain.pipelines.orchestration.noop import (
+    NoOpPipelineOrchestrator,
+    NoOpPipelineState,
+)
 
 
 class BlockingFakeLLMProvider:
@@ -209,10 +212,9 @@ class TestRunningStatusObservation:
         assert result_state.current_status == PipelineRunStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_blocking_provider_allows_status_observation(
-        self, blocking_llm_provider
-    ):
+    async def test_blocking_provider_allows_status_observation(self, blocking_llm_provider):
         """Blocking provider correctly blocks and unblocks."""
+
         async def call_provider():
             return await blocking_llm_provider.complete_async(
                 system_prompt="test",

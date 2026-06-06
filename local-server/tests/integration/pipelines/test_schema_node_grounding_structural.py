@@ -8,7 +8,6 @@ Tests verify:
 4. Uses shared test harness for fixture I/O
 """
 
-
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -21,7 +20,9 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
-from domain.pipelines.schema_node_grounding.apply_service import SchemaGroundingApplyService
+from domain.pipelines.schema_node_grounding.apply_service import (
+    SchemaGroundingApplyService,
+)
 from domain.pipelines.schema_node_grounding.scoring import GroundingCandidate
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider

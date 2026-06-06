@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Bacterium",
+      "source": "DBpedia",
+      "rationale": "Microorganism"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q6516",
+      "source": "Wikidata",
+      "rationale": "Wikidata bacteria"
+    },
+    {
+      "uri": "http://schema.org/BioChemEntity",
+      "source": "schema.org",
+      "rationale": "Living organism"
+    }
+  ]
+}

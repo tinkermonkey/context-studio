@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Publication",
+    "http://dbpedia.org/resource/Document",
+    "http://dbpedia.org/resource/Literature"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/publication",
+    "http://conceptnet.io/c/en/document"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q10870920",
+    "http://www.wikidata.org/entity/Q47461344"
+  ],
+  "schema.org": []
+}

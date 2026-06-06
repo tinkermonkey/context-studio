@@ -1,0 +1,82 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "Coroutine",
+        "confidence": 0.85
+      },
+      {
+        "label": "EventLoop",
+        "confidence": 0.85
+      },
+      {
+        "label": "Task",
+        "confidence": 0.85
+      },
+      {
+        "label": "Future",
+        "confidence": 0.85
+      },
+      {
+        "label": "Callback",
+        "confidence": 0.85
+      },
+      {
+        "label": "Gather",
+        "confidence": 0.85
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "manages",
+        "confidence": 0.8
+      },
+      {
+        "label": "awaits",
+        "confidence": 0.8
+      },
+      {
+        "label": "enables",
+        "confidence": 0.8
+      },
+      {
+        "label": "handles",
+        "confidence": 0.8
+      },
+      {
+        "label": "polls",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "EventLoop",
+        "predicate": "manages",
+        "object_class": "Task",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Task",
+        "predicate": "awaits",
+        "object_class": "Coroutine",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Future",
+        "predicate": "represents",
+        "object_class": "Value",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Callback",
+        "predicate": "handles",
+        "object_class": "Completion",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

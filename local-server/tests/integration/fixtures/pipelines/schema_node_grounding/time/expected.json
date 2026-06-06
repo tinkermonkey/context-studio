@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Time",
+      "source": "DBpedia",
+      "rationale": "Temporal dimension"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q11471",
+      "source": "Wikidata",
+      "rationale": "Wikidata time"
+    },
+    {
+      "uri": "http://schema.org/Thing",
+      "source": "schema.org",
+      "rationale": "Generic thing"
+    }
+  ]
+}

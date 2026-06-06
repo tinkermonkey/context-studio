@@ -1,0 +1,19 @@
+{
+  "expected_external_references": [
+    {
+      "uri": "http://dbpedia.org/resource/Animal",
+      "source": "DBpedia",
+      "rationale": "Living organism"
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q729",
+      "source": "Wikidata",
+      "rationale": "Wikidata animal"
+    },
+    {
+      "uri": "http://schema.org/Animal",
+      "source": "schema.org",
+      "rationale": "schema.org animal"
+    }
+  ]
+}

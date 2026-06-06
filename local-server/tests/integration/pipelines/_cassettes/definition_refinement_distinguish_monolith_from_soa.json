@@ -1,0 +1,9 @@
+{
+  "a07f0e33efea325a550118b441213f8ed334e0a368c4ca4d837efc9f327c26f9": {
+    "content": "[{\"definition\": \"An application architecture where all functionality is built and deployed as a single, unified codebase, often tightly coupled and deployed as a single unit.\", \"confidence\": 0.9}]",
+    "tokens_in": 10,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

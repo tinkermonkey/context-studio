@@ -1,0 +1,9 @@
+{
+  "node_id": "service_oriented-8674",
+  "identifier": "service_oriented",
+  "title": "Service-Oriented Architecture",
+  "current_description": "A service approach.",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0,
+  "is_no_regress": false
+}

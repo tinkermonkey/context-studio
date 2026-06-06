@@ -1,0 +1,16 @@
+{
+  "DBpedia": [
+    "http://dbpedia.org/resource/Amino_acid",
+    "http://dbpedia.org/resource/Enzyme",
+    "http://dbpedia.org/resource/Molecule"
+  ],
+  "ConceptNet": [
+    "http://conceptnet.io/c/en/amino_acid",
+    "http://conceptnet.io/c/en/enzyme"
+  ],
+  "Wikidata": [
+    "http://www.wikidata.org/entity/Q4177",
+    "http://www.wikidata.org/entity/Q8047"
+  ],
+  "schema.org": []
+}

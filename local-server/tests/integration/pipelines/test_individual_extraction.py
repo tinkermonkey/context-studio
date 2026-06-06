@@ -24,7 +24,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
@@ -771,8 +773,7 @@ class TestIndividualExtractionAgainstCanon:
         """At least the seminal 5 papers must be present; 15 is the full Phase 1 target."""
         papers_found = len(canon_bundle.papers)
         assert papers_found >= 5, (
-            f"Canon corpus underpopulated: found {papers_found} papers, "
-            f"expected ≥5"
+            f"Canon corpus underpopulated: found {papers_found} papers, " f"expected ≥5"
         )
         # Sanity check on master slice integrity.
         assert len(canon_bundle.canon["taxonomies"]) >= 1
@@ -838,9 +839,7 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert (
-            metrics.f1 == 1.0
-        ), (
+        assert metrics.f1 == 1.0, (
             f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
             f"(p={metrics.precision}, r={metrics.recall})"
         )
@@ -859,9 +858,7 @@ class TestIndividualExtractionAgainstCanon:
             produced=result_state.extracted_triples or [],
             expected=paper["expected_relationships"],
         )
-        assert (
-            metrics.f1 == 1.0
-        ), (
+        assert metrics.f1 == 1.0, (
             f"Canon-fake F1={metrics.f1:.4f} expected 1.0 "
             f"(p={metrics.precision}, r={metrics.recall})"
         )

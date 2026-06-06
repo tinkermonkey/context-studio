@@ -237,7 +237,10 @@ class TestDefinitionRefinementExecution:
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-            input_data={"node_id": rest_cls.id, "current_definition": rest_cls.description},
+            input_data={
+                "node_id": rest_cls.id,
+                "current_definition": rest_cls.description,
+            },
         )
         result_state = asyncio.run(orchestrator.execute(state))
         candidates = result_state.result.get("candidates", [])
@@ -263,7 +266,10 @@ class TestDefinitionRefinementExecution:
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-            input_data={"node_id": rest_cls.id, "current_definition": rest_cls.description},
+            input_data={
+                "node_id": rest_cls.id,
+                "current_definition": rest_cls.description,
+            },
         )
         result_state = asyncio.run(orchestrator.execute(state))
         assert result_state.current_status == PipelineRunStatus.COMPLETED
