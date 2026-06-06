@@ -1,110 +1,112 @@
-.runs-filter-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-}
+@layer app {
+  .runs-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+  }
 
-.runs-filter-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
+  .runs-filter-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
 
-.runs-filter-summary {
-  margin-left: auto;
-  font-size: 12px;
-  color: rgb(var(--canvas-fg-3));
-  white-space: nowrap;
-}
+  .runs-filter-summary {
+    margin-left: auto;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+    white-space: nowrap;
+  }
 
-.runs-table-grid {
-  display: flex;
-  flex-direction: column;
-}
+  .runs-table-grid {
+    display: flex;
+    flex-direction: column;
+  }
 
-.runs-table-header {
-  display: grid;
-  grid-template-columns: 140px 1fr 120px 160px 90px;
-  gap: 16px;
-  padding: 12px;
-  border-bottom: 1px solid rgb(var(--canvas-border));
-  font-size: 12px;
-  font-weight: 600;
-  color: rgb(var(--canvas-fg-2));
-}
+  .runs-table-header {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px 160px 90px;
+    gap: 16px;
+    padding: 12px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-2));
+  }
 
-.runs-table-header-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  .runs-table-header-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.runs-table-row {
-  display: grid;
-  grid-template-columns: 140px 1fr 120px 160px 90px;
-  gap: 16px;
-  padding: 12px;
-  border-bottom: 1px solid rgb(var(--canvas-border));
-  cursor: pointer;
-  transition: background-color 150ms ease;
-}
+  .runs-table-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px 160px 90px;
+    gap: 16px;
+    padding: 12px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
 
-.runs-table-row:hover {
-  background-color: rgb(var(--canvas-bg-hover));
-}
+  .runs-table-row:hover {
+    background-color: rgb(var(--canvas-bg-hover));
+  }
 
-.runs-table-row--selected {
-  background-color: rgb(var(--canvas-bg-hover));
-}
+  .runs-table-row--selected {
+    background-color: rgb(var(--canvas-bg-hover));
+  }
 
-.runs-table-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  .runs-table-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.runs-table-cell--date {
-  font-size: 12px;
-}
+  .runs-table-cell--date {
+    font-size: 12px;
+  }
 
-.date-filter-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-  min-width: 250px;
-}
+  .date-filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    min-width: 250px;
+  }
 
-.date-filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  .date-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-.date-filter-field label {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgb(var(--canvas-fg-1));
-}
+  .date-filter-field label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+  }
 
-.date-filter-field input {
-  padding: 6px;
-  font-size: 12px;
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: 4px;
-  background: rgb(var(--canvas-bg));
-  color: rgb(var(--canvas-fg-1));
-}
+  .date-filter-field input {
+    padding: 6px;
+    font-size: 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    background: rgb(var(--canvas-bg));
+    color: rgb(var(--canvas-fg-1));
+  }
 
-.date-filter-field input:focus {
-  outline: none;
-  border-color: rgb(var(--accent-primary));
-  box-shadow: 0 0 0 2px rgb(var(--accent-primary) / 0.1);
-}
+  .date-filter-field input:focus {
+    outline: none;
+    border-color: rgb(var(--accent-primary));
+    box-shadow: 0 0 0 2px rgb(var(--accent-primary) / 0.1);
+  }
 
-.date-filter-clear {
-  width: 100%;
-  margin-top: 8px;
+  .date-filter-clear {
+    width: 100%;
+    margin-top: 8px;
+  }
 }
