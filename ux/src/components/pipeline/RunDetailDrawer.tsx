@@ -13,7 +13,7 @@ interface RunDetailDrawerProps {
   onClose?: () => void;
 }
 
-export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
+export function RunDetailDrawer({ runId }: RunDetailDrawerProps) {
   const { data: run, isLoading, error } = usePipelineRun(runId);
 
   if (isLoading) {
