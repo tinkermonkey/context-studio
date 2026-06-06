@@ -190,9 +190,8 @@ test.describe("Pipeline Run Apply and Revert", () => {
 
     // Select all and apply
     const selectAllCheckbox = page.getByTestId("individual-extraction-select-all");
-    if (await selectAllCheckbox.isVisible()) {
-      await selectAllCheckbox.click();
-    }
+    await expect(selectAllCheckbox).toBeVisible();
+    await selectAllCheckbox.click();
 
     const applyButton = page.getByTestId("run-apply-button");
     await applyButton.click();
@@ -202,14 +201,8 @@ test.describe("Pipeline Run Apply and Revert", () => {
     const confirmButton = confirmDialog.getByRole("button", {
       name: /confirm|apply/i,
     });
-    if (await confirmButton.isVisible()) {
-      await confirmButton.click();
-    } else {
-      const buttons = await confirmDialog.getByRole("button").all();
-      if (buttons.length > 0) {
-        await buttons[buttons.length - 1].click();
-      }
-    }
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
 
     // Wait for apply result panel to appear
     const resultPanel = page.getByTestId("run-apply-result");

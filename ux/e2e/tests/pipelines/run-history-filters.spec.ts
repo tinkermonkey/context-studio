@@ -179,6 +179,10 @@ test.describe("Pipeline Run History Filtering", () => {
     // Verify filter bar is visible
     await expect(page.getByTestId("runs-filter-bar")).toBeVisible();
 
+    // Get initial row count
+    const initialRows = page.locator('[data-testid^="run-row-"]');
+    const initialCount = await initialRows.count();
+
     // Locate the Date Range filter control
     const dateRangeFilter = page.getByTestId("filter-date-range");
     await expect(dateRangeFilter).toBeVisible();
@@ -188,31 +192,32 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Wait for date picker to appear
     const datePicker = dateRangeFilter.locator("..").locator('[role="dialog"]');
-    if (await datePicker.isVisible().catch(() => false)) {
-      // Look for date inputs within the picker
-      const startDateInput = page.getByTestId("filter-start-date");
-      const endDateInput = page.getByTestId("filter-end-date");
+    await expect(datePicker).toBeVisible();
 
-      // If date inputs exist, fill them with a reasonable range
-      if (await startDateInput.isVisible().catch(() => false)) {
-        // Set start date to 30 days ago
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
-        await startDateInput.fill(startDate.toISOString().split("T")[0]);
-      }
+    // Look for date inputs within the picker
+    const startDateInput = page.getByTestId("filter-start-date");
+    const endDateInput = page.getByTestId("filter-end-date");
 
-      if (await endDateInput.isVisible().catch(() => false)) {
-        // Set end date to today
-        const endDate = new Date();
-        await endDateInput.fill(endDate.toISOString().split("T")[0]);
-      }
+    // Fill date inputs with a reasonable range
+    await expect(startDateInput).toBeVisible();
+    // Set start date to 30 days ago
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    await startDateInput.fill(startDate.toISOString().split("T")[0]);
 
-      // Wait for filter to apply
-      await page.waitForLoadState("networkidle");
-    }
+    await expect(endDateInput).toBeVisible();
+    // Set end date to today
+    const endDate = new Date();
+    await endDateInput.fill(endDate.toISOString().split("T")[0]);
 
-    // Verify the runs table is updated
+    // Wait for filter to apply
+    await page.waitForLoadState("networkidle");
+
+    // Verify the runs table is updated and results changed
     await expect(page.getByTestId("runs-table")).toBeVisible();
+    const filteredRows = page.locator('[data-testid^="run-row-"]');
+    const filteredCount = await filteredRows.count();
+    expect(filteredCount).toBeLessThanOrEqual(initialCount);
   });
 
   test("Verify Filter Summary and Active Filter Display", async ({ page }) => {
@@ -229,16 +234,14 @@ test.describe("Pipeline Run History Filtering", () => {
     await pipelineTypeFilter.click();
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await dropdown.isVisible().catch(() => false)) {
-      const firstOption = pipelineTypeFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(dropdown).toBeVisible();
+    const firstOption = pipelineTypeFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+    await page.waitForLoadState("networkidle");
 
     // Verify the runs table is visible with results
     await expect(page.getByTestId("runs-table")).toBeVisible();
@@ -252,27 +255,26 @@ test.describe("Pipeline Run History Filtering", () => {
     await page.goto("/app/pipelines/runs");
     await page.waitForLoadState("networkidle");
 
+    // Get initial row count
+    const initialRows = page.locator('[data-testid^="run-row-"]');
+    const initialCount = await initialRows.count();
+
     // Apply a filter
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");
     await pipelineTypeFilter.click();
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await dropdown.isVisible().catch(() => false)) {
-      const firstOption = pipelineTypeFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(dropdown).toBeVisible();
+    const firstOption = pipelineTypeFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+    await page.waitForLoadState("networkidle");
 
-    // Now clear the filter by clicking again or finding a clear button
-    // Click on the filter control again to deselect or clear
+    // Now clear the filter by clicking again to deselect
     await pipelineTypeFilter.click();
-
-    // Wait for filter to clear
     await page.waitForLoadState("networkidle");
 
     // Verify the runs table is still visible
@@ -280,6 +282,11 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Verify filter bar is visible
     await expect(page.getByTestId("runs-filter-bar")).toBeVisible();
+
+    // Verify results updated after clearing filter (should return to all results)
+    const clearedRows = page.locator('[data-testid^="run-row-"]');
+    const clearedCount = await clearedRows.count();
+    expect(clearedCount).toBeGreaterThanOrEqual(initialCount);
   });
 
   test("Clear All Filters and Verify Complete Results", async ({ page }) => {
@@ -292,20 +299,23 @@ test.describe("Pipeline Run History Filtering", () => {
     await pipelineTypeFilter.click();
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await dropdown.isVisible().catch(() => false)) {
-      const firstOption = pipelineTypeFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(dropdown).toBeVisible();
+    const firstOption = pipelineTypeFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+    await page.waitForLoadState("networkidle");
+
+    // Get filtered row count
+    const filteredRows = page.locator('[data-testid^="run-row-"]');
+    const filteredCount = await filteredRows.count();
 
     // Look for a clear all button or clear individual filters
     const clearDatesButton = page.getByTestId("filter-clear-dates");
-    if (await clearDatesButton.isVisible().catch(() => false)) {
+    const clearDatesVisible = await clearDatesButton.isVisible().catch(() => false);
+    if (clearDatesVisible) {
       await clearDatesButton.click();
       await page.waitForLoadState("networkidle");
     }
@@ -319,6 +329,11 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Verify filter bar is visible
     await expect(page.getByTestId("runs-filter-bar")).toBeVisible();
+
+    // Verify all filters cleared - should see more or equal results than when filtered
+    const clearedRows = page.locator('[data-testid^="run-row-"]');
+    const clearedCount = await clearedRows.count();
+    expect(clearedCount).toBeGreaterThanOrEqual(filteredCount);
   });
 
   test("Apply Filters Again and Verify Persistence Within Session", async ({ page }) => {
@@ -326,44 +341,51 @@ test.describe("Pipeline Run History Filtering", () => {
     await page.goto("/app/pipelines/runs");
     await page.waitForLoadState("networkidle");
 
+    // Get initial row count
+    const initialRows = page.locator('[data-testid^="run-row-"]');
+    const initialCount = await initialRows.count();
+
     // Apply Pipeline Type filter
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");
     await pipelineTypeFilter.click();
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await dropdown.isVisible().catch(() => false)) {
-      const firstOption = pipelineTypeFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(dropdown).toBeVisible();
+    const firstOption = pipelineTypeFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+    await page.waitForLoadState("networkidle");
 
     // Verify filter is applied
     await expect(page.getByTestId("runs-table")).toBeVisible();
+    const afterTypeFilter = page.locator('[data-testid^="run-row-"]');
+    const typeFilterCount = await afterTypeFilter.count();
 
     // Apply Status filter
     const statusFilter = page.getByTestId("filter-status");
     await statusFilter.click();
 
     const statusDropdown = statusFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await statusDropdown.isVisible().catch(() => false)) {
-      const firstStatusOption = statusFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstStatusOption.isVisible().catch(() => false)) {
-        await firstStatusOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(statusDropdown).toBeVisible();
+    const firstStatusOption = statusFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstStatusOption).toBeVisible();
+    await firstStatusOption.click();
+    await page.waitForLoadState("networkidle");
 
     // Verify both filters are applied
     await expect(page.getByTestId("runs-table")).toBeVisible();
     await expect(page.getByTestId("runs-filter-bar")).toBeVisible();
+
+    // Verify combined filters are more restrictive
+    const combinedRows = page.locator('[data-testid^="run-row-"]');
+    const combinedCount = await combinedRows.count();
+    expect(combinedCount).toBeLessThanOrEqual(typeFilterCount);
   });
 
   test("Pagination with Filters Applied", async ({ page }) => {
@@ -379,16 +401,14 @@ test.describe("Pipeline Run History Filtering", () => {
     await pipelineTypeFilter.click();
 
     const dropdown = pipelineTypeFilter.locator("..").locator('[role="listbox"], [role="dialog"]');
-    if (await dropdown.isVisible().catch(() => false)) {
-      const firstOption = pipelineTypeFilter
-        .locator("..")
-        .locator('[role="option"]')
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.click();
-        await page.waitForLoadState("networkidle");
-      }
-    }
+    await expect(dropdown).toBeVisible();
+    const firstOption = pipelineTypeFilter
+      .locator("..")
+      .locator('[role="option"]')
+      .first();
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+    await page.waitForLoadState("networkidle");
 
     // Verify the runs table
     await expect(page.getByTestId("runs-table")).toBeVisible();
@@ -410,6 +430,7 @@ test.describe("Pipeline Run History Filtering", () => {
       const prevButton = page.getByTestId("runs-pagination-prev");
       const prevVisible = await prevButton.isVisible().catch(() => false);
       if (prevVisible) {
+        await expect(prevButton).toBeEnabled();
         // Click Previous to return to page 1
         await prevButton.click();
         await page.waitForLoadState("networkidle");
