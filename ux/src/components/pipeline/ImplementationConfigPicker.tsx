@@ -12,7 +12,27 @@ export const encodeConfigSelection = (configRef: string, version: number): strin
 };
 
 export const decodeConfigSelection = (encoded: string): ConfigSelection => {
-  return JSON.parse(atob(encoded));
+  if (!encoded) {
+    throw new Error("Configuration selection is missing");
+  }
+
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(atob(encoded));
+  } catch {
+    throw new Error("Invalid configuration selection format");
+  }
+
+  if (!decoded || typeof decoded !== "object") {
+    throw new Error("Invalid configuration selection format");
+  }
+
+  const config = decoded as Record<string, unknown>;
+  if (typeof config.configRef !== "string" || typeof config.version !== "number") {
+    throw new Error("Invalid configuration selection format");
+  }
+
+  return { configRef: config.configRef, version: config.version };
 };
 
 export interface ImplementationConfigPickerProps {
