@@ -233,7 +233,7 @@ test.describe("Connection Refinement Run, Review, and Apply", () => {
     const acceptButtons = page.locator(
       '[data-testid^="connection-accept-"]',
     );
-    const acceptCount = await acceptButtons.count();
+    const _acceptCount = await acceptButtons.count();
 
     // Panel should be visible even if no deltas (empty state)
     await expect(reviewPanel).toBeVisible();

@@ -56,7 +56,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
     const scheme = await createConceptScheme(page, taxonomy.id, {
       title: "Test Scheme",
     });
-    const testClass = await createClass(page, scheme.id, {
+    const _testClass = await createClass(page, scheme.id, {
       title: "Test Class",
       description: "Original description that will not be refined",
     });
@@ -98,7 +98,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, {
+    const _testClass = await createClass(page, scheme.id, {
       title: "Test Class",
     });
 
@@ -125,7 +125,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
 
     // Wait for empty state or review panel
     const emptyState = page.getByTestId("definition-refinement-empty");
-    const reviewPanel = page.getByTestId("definition-refinement-review");
+    const _reviewPanel = page.getByTestId("definition-refinement-review");
 
     // Check if empty state appears (indicating no changes)
     const emptyStateVisible = await emptyState.isVisible().catch(() => false);
@@ -144,7 +144,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id);
+    const _testClass = await createClass(page, scheme.id);
 
     // Navigate to pipelines page
     await page.goto("/app/pipelines");
@@ -191,7 +191,7 @@ test.describe("Definition Refinement Pipeline No-Op Run", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id);
+    const _testClass = await createClass(page, scheme.id);
 
     // Navigate to pipelines page
     await page.goto("/app/pipelines");

@@ -48,7 +48,7 @@ test.describe("Pipeline Run History Filtering", () => {
     const runsTable = page.getByTestId("runs-table");
     await expect(runsTable).toBeVisible();
     const initialRows = page.locator('[data-testid^="run-row-"]');
-    const initialCount = await initialRows.count();
+    const _initialCount = await initialRows.count();
 
     // Locate the Pipeline Type filter control
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");
@@ -74,7 +74,7 @@ test.describe("Pipeline Run History Filtering", () => {
     const filteredCount = await filteredRows.count();
 
     // Verify filtering produced a result (count may be less than or equal to initial)
-    expect(filteredCount).toBeLessThanOrEqual(initialCount);
+    expect(filteredCount).toBeLessThanOrEqual(_initialCount);
   });
 
   test("Apply Status Filter and Verify Results", async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Get initial row count
     const initialRows = page.locator('[data-testid^="run-row-"]');
-    const initialCount = await initialRows.count();
+    const _initialCount = await initialRows.count();
 
     // Locate the Status filter control
     const statusFilter = page.getByTestId("filter-status");
@@ -114,7 +114,7 @@ test.describe("Pipeline Run History Filtering", () => {
     const filteredCount = await filteredRows.count();
 
     // Verify filtering produced a result
-    expect(filteredCount).toBeLessThanOrEqual(initialCount);
+    expect(filteredCount).toBeLessThanOrEqual(_initialCount);
   });
 
   test("Combine Pipeline Type and Status Filters with AND Logic", async ({ page }) => {
@@ -127,7 +127,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Get initial row count
     const initialRows = page.locator('[data-testid^="run-row-"]');
-    const initialCount = await initialRows.count();
+    const _initialCount = await initialRows.count();
 
     // Apply Pipeline Type filter
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");
@@ -343,7 +343,7 @@ test.describe("Pipeline Run History Filtering", () => {
 
     // Get initial row count
     const initialRows = page.locator('[data-testid^="run-row-"]');
-    const initialCount = await initialRows.count();
+    const _initialCount = await initialRows.count();
 
     // Apply Pipeline Type filter
     const pipelineTypeFilter = page.getByTestId("filter-pipeline-type");

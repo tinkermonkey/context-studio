@@ -15,7 +15,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology with classes for the extraction to target
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, {
+    const _testClass = await createClass(page, scheme.id, {
       title: "Person",
       description: "A person entity",
     });
@@ -62,7 +62,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page
     await page.goto("/app/pipelines");
@@ -107,7 +107,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page
     await page.goto("/app/pipelines");
@@ -164,7 +164,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page
     await page.goto("/app/pipelines");
@@ -216,7 +216,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page and execute a run
     await page.goto("/app/pipelines");
@@ -272,7 +272,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page and execute a run
     await page.goto("/app/pipelines");
@@ -281,7 +281,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     const runButton = page.getByTestId("pipeline-run-button-individual_extraction");
     await runButton.click();
 
-    const wizard = page.getByTestId("individual-extraction-wizard");
+    const _wizard = page.getByTestId("individual-extraction-wizard");
     const sourceInput = page.getByTestId("individual-extraction-source");
     await sourceInput.fill("John Smith is a person. Jane Doe is a person.");
 
@@ -355,7 +355,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page and execute a run
     await page.goto("/app/pipelines");
@@ -364,7 +364,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     const runButton = page.getByTestId("pipeline-run-button-individual_extraction");
     await runButton.click();
 
-    const wizard = page.getByTestId("individual-extraction-wizard");
+    const _wizard = page.getByTestId("individual-extraction-wizard");
     const sourceInput = page.getByTestId("individual-extraction-source");
     await sourceInput.fill("John Smith is a person. Jane Doe is a person.");
 
@@ -428,7 +428,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     // Create a test ontology
     const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
     const scheme = await createConceptScheme(page, taxonomy.id);
-    const testClass = await createClass(page, scheme.id, { title: "Person" });
+    const _testClass = await createClass(page, scheme.id, { title: "Person" });
 
     // Navigate to pipelines page and execute a run
     await page.goto("/app/pipelines");
@@ -437,7 +437,7 @@ test.describe("Pipeline Run Apply and Revert", () => {
     const runButton = page.getByTestId("pipeline-run-button-individual_extraction");
     await runButton.click();
 
-    const wizard = page.getByTestId("individual-extraction-wizard");
+    const _wizard = page.getByTestId("individual-extraction-wizard");
     const sourceInput = page.getByTestId("individual-extraction-source");
     await sourceInput.fill("John Smith is a person. Jane Doe is a person.");
 
