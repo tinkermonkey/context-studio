@@ -14,7 +14,6 @@ const WIZARD_MAP: Record<string, React.ComponentType> = {
   schema_node_connection_refinement: ConnectionRefinementWizard,
 };
 
-// @ts-expect-error - TanStack Router types haven't picked up this new route file yet
 export const Route = createFileRoute("/app/pipelines/types/$type/run")({
   component: RunWizardPage,
 });

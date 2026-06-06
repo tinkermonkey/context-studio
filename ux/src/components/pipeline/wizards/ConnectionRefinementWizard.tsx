@@ -6,6 +6,7 @@ import { useClass } from "@/api/hooks/ontology/useClasses";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
 import type { components } from "@/api/types";
+import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
@@ -63,9 +64,10 @@ export function ConnectionRefinementWizard() {
     }
 
     try {
+      const configRefPart = configRef.split("_v")[0];
       const request: PipelineRunRequest = {
         implementation_id: implementationId,
-        configuration_ref: configRef,
+        configuration_ref: configRefPart,
         scope_id: selectedScope!.id,
       };
 
@@ -107,58 +109,23 @@ export function ConnectionRefinementWizard() {
         <div
           className="neighborhood-preview"
           data-testid="connection-refinement-neighborhood"
-          style={{
-            padding: "12px",
-            borderRadius: "4px",
-            backgroundColor: "rgb(var(--canvas-bg-2))",
-            border: "1px solid rgb(var(--canvas-border))",
-            marginBottom: "12px",
-          }}
         >
-          <h4 style={{ marginBottom: "8px", fontSize: "var(--text-base)" }}>
+          <h4>
             {neighborhoodPreview.label} — Current Connections
           </h4>
 
           {neighborhoodPreview.outgoingRelationships.length > 0 ? (
             <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "var(--text-sm)",
-                }}
-              >
+              <table>
                 <thead>
-                  <tr
-                    style={{
-                      borderBottom: "1px solid rgb(var(--canvas-border))",
-                    }}
-                  >
-                    <th
-                      style={{
-                        padding: "6px",
-                        textAlign: "left",
-                        fontWeight: 600,
-                      }}
-                    >
+                  <tr>
+                    <th>
                       Subject
                     </th>
-                    <th
-                      style={{
-                        padding: "6px",
-                        textAlign: "left",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <th>
                       Predicate
                     </th>
-                    <th
-                      style={{
-                        padding: "6px",
-                        textAlign: "left",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <th>
                       Object
                     </th>
                   </tr>
@@ -169,17 +136,14 @@ export function ConnectionRefinementWizard() {
                     .map((rel: any) => (
                       <tr
                         key={rel.id || rel.target_id}
-                        style={{
-                          borderBottom: "1px solid rgb(var(--canvas-border))",
-                        }}
                       >
-                        <td style={{ padding: "6px" }}>
+                        <td>
                           {neighborhoodPreview.label}
                         </td>
-                        <td style={{ padding: "6px" }}>
+                        <td>
                           {rel.relationship_type}
                         </td>
-                        <td style={{ padding: "6px" }}>
+                        <td>
                           {rel.target_label || rel.target_id}
                         </td>
                       </tr>
@@ -215,20 +179,14 @@ export function ConnectionRefinementWizard() {
           setErrors((prev) => ({ ...prev, implementationId: undefined }));
           setConfigRef("");
         }}
-        onSelectConfig={(ref) => {
-          setConfigRef(ref);
+        onSelectConfig={(compositeValue) => {
+          setConfigRef(compositeValue);
           setErrors((prev) => ({ ...prev, configRef: undefined }));
         }}
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
-
-      {errors.submit && (
-        <FormCallout variant="error" data-testid="connection-refinement-error">
-          {errors.submit}
-        </FormCallout>
-      )}
 
       {isSubmitting && (
         <FormCallout

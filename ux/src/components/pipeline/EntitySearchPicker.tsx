@@ -17,6 +17,8 @@ export interface EntitySearchPickerProps {
   placeholder?: string;
   disabled?: boolean;
   "data-testid"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 export function EntitySearchPicker({
@@ -26,6 +28,8 @@ export function EntitySearchPicker({
   placeholder = "Search entities…",
   disabled = false,
   "data-testid": testId,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: EntitySearchPickerProps) {
   const [query, setQuery] = useState("");
 
@@ -105,6 +109,8 @@ export function EntitySearchPicker({
           placeholder={placeholder}
           disabled={disabled || currentQuery.isLoading}
           data-testid={testId ? `${testId}-input` : undefined}
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
         />
       )}
     </div>

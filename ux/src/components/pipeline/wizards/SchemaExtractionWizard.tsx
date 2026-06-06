@@ -52,9 +52,10 @@ export function SchemaExtractionWizard() {
     }
 
     try {
+      const configRefPart = configRef.split("_v")[0];
       const request: PipelineRunRequest = {
         implementation_id: implementationId,
-        configuration_ref: configRef,
+        configuration_ref: configRefPart,
         documents: [document],
         ...(selectedScope && { scope: selectedScope.id }),
       };
@@ -91,17 +92,7 @@ export function SchemaExtractionWizard() {
           aria-invalid={!!errors.document}
           aria-describedby={errors.document ? "document-error" : undefined}
           data-testid="schema-extraction-document"
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            borderRadius: "4px",
-            border: "1px solid rgb(var(--canvas-fg-4))",
-            backgroundColor: "rgb(var(--canvas-bg))",
-            fontSize: "var(--text-sm)",
-            fontFamily: "monospace",
-            color: "rgb(var(--canvas-fg-1))",
-            resize: "vertical",
-          }}
+          className="wizard-textarea"
         />
       </Field>
 
@@ -127,20 +118,14 @@ export function SchemaExtractionWizard() {
           setErrors((prev) => ({ ...prev, implementationId: undefined }));
           setConfigRef("");
         }}
-        onSelectConfig={(ref) => {
-          setConfigRef(ref);
+        onSelectConfig={(compositeValue) => {
+          setConfigRef(compositeValue);
           setErrors((prev) => ({ ...prev, configRef: undefined }));
         }}
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
-
-      {errors.submit && (
-        <FormCallout variant="error" data-testid="schema-extraction-error">
-          {errors.submit}
-        </FormCallout>
-      )}
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-extraction-loading">

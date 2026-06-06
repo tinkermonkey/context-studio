@@ -5,6 +5,7 @@ import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
 import type { components } from "@/api/types";
+import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
@@ -62,9 +63,10 @@ export function SchemaGroundingWizard() {
     }
 
     try {
+      const configRefPart = configRef.split("_v")[0];
       const request: PipelineRunRequest = {
         implementation_id: implementationId,
-        configuration_ref: configRef,
+        configuration_ref: configRefPart,
         nodes: selectedNodes.map((n) => ({ id: n.id })),
         sources: selectedSources,
       };
@@ -131,23 +133,11 @@ export function SchemaGroundingWizard() {
           aria-invalid={!!errors.sources}
           aria-describedby={errors.sources ? "sources-error" : undefined}
           data-testid="schema-grounding-sources"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-            padding: "8px 0",
-          }}
         >
           {KNOWLEDGE_SOURCES.map((source) => (
             <label
               key={source.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "var(--text-sm)",
-                color: "rgb(var(--canvas-fg-1))",
-              }}
+              className="sources-label"
             >
               <input
                 type="checkbox"
@@ -171,20 +161,14 @@ export function SchemaGroundingWizard() {
           setErrors((prev) => ({ ...prev, implementationId: undefined }));
           setConfigRef("");
         }}
-        onSelectConfig={(ref) => {
-          setConfigRef(ref);
+        onSelectConfig={(compositeValue) => {
+          setConfigRef(compositeValue);
           setErrors((prev) => ({ ...prev, configRef: undefined }));
         }}
         disabled={isSubmitting}
         implementationError={errors.implementationId}
         configError={errors.configRef}
       />
-
-      {errors.submit && (
-        <FormCallout variant="error" data-testid="schema-grounding-error">
-          {errors.submit}
-        </FormCallout>
-      )}
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">

@@ -37,15 +37,9 @@ export function useRunWizard(options: UseRunWizardOptions) {
         search: { selected: (run as PipelineRunResponse).id } as any,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to run pipeline";
-      setErrors({ submit: errorMessage });
       setIsSubmitting(false);
+      throw error;
     }
-  };
-
-  const updateField = (key: string, value: unknown) => {
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
   return {
@@ -53,6 +47,5 @@ export function useRunWizard(options: UseRunWizardOptions) {
     errors,
     setErrors,
     handleSubmit,
-    updateField,
   };
 }
