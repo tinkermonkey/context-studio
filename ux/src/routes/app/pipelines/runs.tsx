@@ -103,7 +103,7 @@ function RunsPageContent({
 
   const hasFilters = !!(filters.pipelineType || filters.status || filters.startDate || filters.endDate);
   const isGenuinelyEmpty = total === 0 && !hasFilters;
-  const isFilteredEmpty = total > 0 && runs.length === 0 && hasFilters;
+  const isFilteredEmpty = total === 0 && hasFilters;
 
   if (isGenuinelyEmpty && !isLoading) {
     return (
