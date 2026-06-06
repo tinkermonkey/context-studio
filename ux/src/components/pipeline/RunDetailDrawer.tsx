@@ -1,32 +1,15 @@
-import { useEffect, useState } from "react";
 import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   KVGrid,
-  Button,
   Chip,
 } from "@tinkermonkey/heimdall-ui";
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
-import type { components } from "@/api/types";
-
-type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
+import { formatDate } from "@/utils/dateFormatting";
 
 interface RunDetailDrawerProps {
   runId: string;
   onClose?: () => void;
-}
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {

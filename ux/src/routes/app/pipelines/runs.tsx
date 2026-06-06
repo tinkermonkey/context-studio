@@ -6,6 +6,7 @@ import {
   Icon,
   Chip,
   StatusBadge,
+  FilterDropdown,
 } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -13,17 +14,17 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RunDetailDrawer } from "@/components/pipeline/RunDetailDrawer";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
 import { usePipelineRuns } from "@/api/hooks/pipeline/usePipelineRuns";
-import type { components } from "@/api/types";
-
-type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
+import { formatDate } from "@/utils/dateFormatting";
+import type { RunListParams } from "@/api/services/pipeline";
+import "./runs.css";
 
 interface RunsSearchParams {
   selected?: string;
 }
 
 interface FilterState {
-  pipelineTypes: string[];
-  statuses: string[];
+  pipelineType?: string;
+  status?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -36,19 +37,6 @@ const PIPELINE_STATUS_OPTIONS = [
   { value: "FAILED", label: "Failed" },
 ];
 
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function RunsPageContent({
   selectedId,
   onSelectedIdChange,
@@ -56,25 +44,23 @@ function RunsPageContent({
   selectedId?: string;
   onSelectedIdChange: (id: string | undefined) => void;
 }) {
-  const [filters, setFilters] = useState<FilterState>({
-    pipelineTypes: [],
-    statuses: [],
-  });
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<FilterState>({});
   const [pageIndex, setPageIndex] = useState(0);
 
   const { data: typesData } = usePipelineTypes();
   const types = typesData || [];
 
-  const listParams = useMemo(() => {
-    const params: any = {
+  const listParams: RunListParams = useMemo(() => {
+    const params: RunListParams = {
       limit: PAGE_SIZE,
       offset: pageIndex * PAGE_SIZE,
     };
-    if (filters.pipelineTypes.length > 0) {
-      params.pipeline_type = filters.pipelineTypes[0];
+    if (filters.pipelineType) {
+      params.pipeline_type = filters.pipelineType;
     }
-    if (filters.statuses.length > 0) {
-      params.status = filters.statuses[0];
+    if (filters.status) {
+      params.status = filters.status;
     }
     if (filters.startDate) {
       params.start_date = filters.startDate;
@@ -115,7 +101,11 @@ function RunsPageContent({
     );
   }
 
-  if (total === 0 && !isLoading) {
+  const hasFilters = !!(filters.pipelineType || filters.status || filters.startDate || filters.endDate);
+  const isGenuinelyEmpty = total === 0 && !hasFilters;
+  const isFilteredEmpty = total > 0 && runs.length === 0 && hasFilters;
+
+  if (isGenuinelyEmpty && !isLoading) {
     return (
       <EmptyState
         title="No pipeline runs yet"
@@ -123,51 +113,23 @@ function RunsPageContent({
         action={{
           label: "Start a run",
           onClick: () => {
-            window.location.href = "/app/pipelines";
+            navigate({ to: "/app/pipelines" });
           },
         }}
       />
     );
   }
 
-  const hasFilters =
-    filters.pipelineTypes.length > 0 ||
-    filters.statuses.length > 0 ||
-    filters.startDate ||
-    filters.endDate;
-  const showFilteredEmpty = total > 0 && runs.length === 0 && hasFilters;
-
-  if (showFilteredEmpty) {
+  if (isFilteredEmpty) {
     return (
       <div className="stack">
-        <div data-testid="runs-filter-bar" style={{ padding: "12px 0" }}>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <div data-testid="filter-pipeline-type">
-              <FilterDropdownSelect
-                label="Pipeline Type"
-                options={types.map((t) => ({
-                  value: t.pipeline_type,
-                  label: t.pipeline_type
-                    .split("_")
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(" "),
-                }))}
-                selectedValues={filters.pipelineTypes}
-                onChange={(values) => handleFilterChange({ pipelineTypes: values })}
-                multiSelect
-              />
-            </div>
-            <div data-testid="filter-status">
-              <FilterDropdownSelect
-                label="Status"
-                options={PIPELINE_STATUS_OPTIONS}
-                selectedValues={filters.statuses}
-                onChange={(values) => handleFilterChange({ statuses: values })}
-                multiSelect
-              />
-            </div>
-          </div>
-        </div>
+        <FilterBarContent
+          types={types}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          total={total}
+          count={runs.length}
+        />
         <EmptyState
           title="No runs match your filters"
           description="Try adjusting your filter criteria to find the runs you're looking for."
@@ -175,8 +137,8 @@ function RunsPageContent({
             label: "Clear filters",
             onClick: () => {
               handleFilterChange({
-                pipelineTypes: [],
-                statuses: [],
+                pipelineType: undefined,
+                status: undefined,
                 startDate: undefined,
                 endDate: undefined,
               });
@@ -189,41 +151,13 @@ function RunsPageContent({
 
   return (
     <div data-testid="runs-page" className="stack">
-      <div data-testid="runs-filter-bar" style={{ padding: "12px 0", display: "flex", gap: "12px" }}>
-        <div data-testid="filter-pipeline-type">
-          <FilterDropdownSelect
-            label="Pipeline Type"
-            options={types.map((t) => ({
-              value: t.pipeline_type,
-              label: t.pipeline_type
-                .split("_")
-                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(" "),
-            }))}
-            selectedValues={filters.pipelineTypes}
-            onChange={(values) => handleFilterChange({ pipelineTypes: values })}
-            multiSelect
-          />
-        </div>
-        <div data-testid="filter-status">
-          <FilterDropdownSelect
-            label="Status"
-            options={PIPELINE_STATUS_OPTIONS}
-            selectedValues={filters.statuses}
-            onChange={(values) => handleFilterChange({ statuses: values })}
-            multiSelect
-          />
-        </div>
-        <FilterDropdownDateRange
-          label="Date Range"
-          startDate={filters.startDate}
-          endDate={filters.endDate}
-          onChange={(start, end) => handleFilterChange({ startDate: start, endDate: end })}
-        />
-        <div style={{ marginLeft: "auto", alignSelf: "center", fontSize: "12px", color: "rgb(var(--canvas-fg-3))" }}>
-          Showing {runs.length} of {total} runs
-        </div>
-      </div>
+      <FilterBarContent
+        types={types}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        total={total}
+        count={runs.length}
+      />
 
       <SchemaPageLayout
         data={runs}
@@ -237,57 +171,24 @@ function RunsPageContent({
         )}
       >
         <div className="schema-table-wrap" data-testid="runs-table">
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "140px 1fr 120px 160px 90px",
-                gap: "16px",
-                padding: "12px",
-                borderBottom: "1px solid rgb(var(--canvas-border))",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgb(var(--canvas-fg-2))",
-              }}
-            >
-              <div>Pipeline Type</div>
-              <div>Implementation</div>
-              <div>Status</div>
-              <div>Started</div>
-              <div>Candidates</div>
+          <div className="runs-table-grid">
+            <div className="runs-table-header">
+              <div className="runs-table-header-cell">Pipeline Type</div>
+              <div className="runs-table-header-cell">Implementation</div>
+              <div className="runs-table-header-cell">Status</div>
+              <div className="runs-table-header-cell">Started</div>
+              <div className="runs-table-header-cell">Candidates</div>
             </div>
             {runs.map((run) => (
               <div
                 key={run.id}
                 onClick={() => onSelectedIdChange(run.id)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "140px 1fr 120px 160px 90px",
-                  gap: "16px",
-                  padding: "12px",
-                  borderBottom: "1px solid rgb(var(--canvas-border))",
-                  cursor: "pointer",
-                  background:
-                    selectedId === run.id
-                      ? "rgb(var(--canvas-bg-hover))"
-                      : "transparent",
-                  transition: "background-color 150ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedId !== run.id) {
-                    e.currentTarget.style.background = "rgb(var(--canvas-bg-hover))";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedId !== run.id) {
-                    e.currentTarget.style.background = "transparent";
-                  }
-                }}
+                className={`runs-table-row ${selectedId === run.id ? "runs-table-row--selected" : ""}`}
                 data-testid={`run-row-${run.id}`}
                 role="row"
                 aria-selected={selectedId === run.id}
               >
-                <div>
+                <div className="runs-table-cell">
                   <Chip variant="neutral">
                     {run.pipeline_type
                       .split("_")
@@ -295,8 +196,8 @@ function RunsPageContent({
                       .join(" ")}
                   </Chip>
                 </div>
-                <div>{run.configuration_slug || "—"}</div>
-                <div>
+                <div className="runs-table-cell">{run.configuration_slug || "—"}</div>
+                <div className="runs-table-cell">
                   <StatusBadge
                     color={
                       run.status === "PENDING"
@@ -313,8 +214,8 @@ function RunsPageContent({
                     {run.status}
                   </StatusBadge>
                 </div>
-                <div style={{ fontSize: "12px" }}>{formatDate(run.started_at)}</div>
-                <div>
+                <div className="runs-table-cell runs-table-cell--date">{formatDate(run.started_at)}</div>
+                <div className="runs-table-cell">
                   <Chip variant="neutral">
                     {(run.output_summary as any)?.candidate_count ?? 0}
                   </Chip>
@@ -356,204 +257,136 @@ function RunsPageContent({
   );
 }
 
-interface FilterDropdownSelectProps {
-  label: string;
-  options: Array<{ value: string; label: string }>;
-  selectedValues: string[];
-  onChange: (values: string[]) => void;
-  multiSelect?: boolean;
+interface FilterBarContentProps {
+  types: Array<{ pipeline_type: string }>;
+  filters: FilterState;
+  onFilterChange: (newFilters: Partial<FilterState>) => void;
+  total: number;
+  count: number;
 }
 
-function FilterDropdownSelect({
-  label,
-  options,
-  selectedValues,
-  onChange,
-  multiSelect,
-}: FilterDropdownSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleOption = (value: string) => {
-    if (multiSelect) {
-      const newValues = selectedValues.includes(value)
-        ? selectedValues.filter((v) => v !== value)
-        : [...selectedValues, value];
-      onChange(newValues);
-    } else {
-      onChange(selectedValues.includes(value) ? [] : [value]);
-      setIsOpen(false);
-    }
-  };
-
+function FilterBarContent({
+  types,
+  filters,
+  onFilterChange,
+  total,
+  count,
+}: FilterBarContentProps) {
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        data-testid={`filter-${label.toLowerCase()}`}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-        }}
-      >
-        {label}
-        {selectedValues.length > 0 && (
-          <Chip variant="neutral" style={{ marginLeft: "4px" }}>
-            {selectedValues.length}
-          </Chip>
-        )}
-        <Icon name={isOpen ? "chevronUp" : "chevronDown"} size={13} />
-      </Button>
-
-      {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            zIndex: 10,
-            background: "rgb(var(--canvas-bg))",
-            border: "1px solid rgb(var(--canvas-border))",
-            borderRadius: "4px",
-            marginTop: "4px",
-            minWidth: "200px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-          }}
+    <div data-testid="runs-filter-bar" className="runs-filter-bar">
+      <div className="runs-filter-controls">
+        <FilterDropdown
+          mode="radio"
+          value={filters.pipelineType ? [filters.pipelineType] : []}
+          onChange={(values) =>
+            onFilterChange({ pipelineType: values[0] || undefined })
+          }
         >
-          {options.map((option) => (
-            <label
-              key={option.value}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 12px",
-                cursor: "pointer",
-                background: selectedValues.includes(option.value)
-                  ? "rgb(var(--canvas-bg-hover))"
-                  : "transparent",
-                borderBottom: "1px solid rgb(var(--canvas-border))",
-              }}
-            >
-              <input
-                type={multiSelect ? "checkbox" : "radio"}
-                checked={selectedValues.includes(option.value)}
-                onChange={() => toggleOption(option.value)}
-                style={{ marginRight: "8px" }}
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+          <FilterDropdown.Trigger
+            label="Pipeline Type"
+            summary={filters.pipelineType || "All"}
+          />
+          <FilterDropdown.Panel>
+            <FilterDropdown.Section>
+              {types.map((type) => (
+                <FilterDropdown.Radio
+                  key={type.pipeline_type}
+                  value={type.pipeline_type}
+                  label={type.pipeline_type
+                    .split("_")
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(" ")}
+                />
+              ))}
+            </FilterDropdown.Section>
+          </FilterDropdown.Panel>
+        </FilterDropdown>
 
-interface FilterDropdownDateRangeProps {
-  label: string;
-  startDate?: string;
-  endDate?: string;
-  onChange: (start?: string, end?: string) => void;
-}
-
-function FilterDropdownDateRange({
-  label,
-  startDate,
-  endDate,
-  onChange,
-}: FilterDropdownDateRangeProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        data-testid="filter-date-range"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-        }}
-      >
-        {label}
-        {(startDate || endDate) && (
-          <Chip variant="neutral" style={{ marginLeft: "4px" }}>
-            1
-          </Chip>
-        )}
-        <Icon name={isOpen ? "chevronUp" : "chevronDown"} size={13} />
-      </Button>
-
-      {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            zIndex: 10,
-            background: "rgb(var(--canvas-bg))",
-            border: "1px solid rgb(var(--canvas-border))",
-            borderRadius: "4px",
-            marginTop: "4px",
-            padding: "12px",
-            minWidth: "250px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-          }}
+        <FilterDropdown
+          mode="radio"
+          value={filters.status ? [filters.status] : []}
+          onChange={(values) =>
+            onFilterChange({ status: values[0] || undefined })
+          }
         >
-          <div style={{ marginBottom: "8px" }}>
-            <label style={{ display: "block", marginBottom: "4px", fontSize: "12px" }}>
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate ? startDate.split("T")[0] : ""}
-              onChange={(e) => onChange(e.target.value || undefined, endDate)}
-              style={{
-                width: "100%",
-                padding: "6px",
-                fontSize: "12px",
-                border: "1px solid rgb(var(--canvas-border))",
-                borderRadius: "4px",
-              }}
-              data-testid="filter-start-date"
-            />
-          </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "4px", fontSize: "12px" }}>
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate ? endDate.split("T")[0] : ""}
-              onChange={(e) => onChange(startDate, e.target.value || undefined)}
-              style={{
-                width: "100%",
-                padding: "6px",
-                fontSize: "12px",
-                border: "1px solid rgb(var(--canvas-border))",
-                borderRadius: "4px",
-              }}
-              data-testid="filter-end-date"
-            />
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onChange(undefined, undefined);
-              setIsOpen(false);
-            }}
-            style={{ marginTop: "8px", width: "100%" }}
-            data-testid="filter-clear-dates"
-          >
-            Clear
-          </Button>
-        </div>
-      )}
+          <FilterDropdown.Trigger
+            label="Status"
+            summary={
+              filters.status ||
+              "All"
+            }
+          />
+          <FilterDropdown.Panel>
+            <FilterDropdown.Section>
+              {PIPELINE_STATUS_OPTIONS.map((option) => (
+                <FilterDropdown.Radio
+                  key={option.value}
+                  value={option.value}
+                  label={option.label}
+                />
+              ))}
+            </FilterDropdown.Section>
+          </FilterDropdown.Panel>
+        </FilterDropdown>
+
+        <FilterDropdown
+          mode="checkbox"
+          value={[]}
+          onChange={() => {}}
+        >
+          <FilterDropdown.Trigger
+            label="Date Range"
+            summary={
+              filters.startDate || filters.endDate
+                ? "Set"
+                : "Any"
+            }
+          />
+          <FilterDropdown.Panel>
+            <div className="date-filter-content">
+              <div className="date-filter-field">
+                <label>Start Date</label>
+                <input
+                  type="date"
+                  value={filters.startDate ? filters.startDate.split("T")[0] : ""}
+                  onChange={(e) =>
+                    onFilterChange({ startDate: e.target.value || undefined })
+                  }
+                  data-testid="filter-start-date"
+                />
+              </div>
+              <div className="date-filter-field">
+                <label>End Date</label>
+                <input
+                  type="date"
+                  value={filters.endDate ? filters.endDate.split("T")[0] : ""}
+                  onChange={(e) =>
+                    onFilterChange({ endDate: e.target.value || undefined })
+                  }
+                  data-testid="filter-end-date"
+                />
+              </div>
+              {(filters.startDate || filters.endDate) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    onFilterChange({ startDate: undefined, endDate: undefined })
+                  }
+                  data-testid="filter-clear-dates"
+                  className="date-filter-clear"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </FilterDropdown.Panel>
+        </FilterDropdown>
+      </div>
+
+      <div className="runs-filter-summary">
+        Showing {count} of {total} runs
+      </div>
     </div>
   );
 }
