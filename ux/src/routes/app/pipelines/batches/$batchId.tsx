@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, Icon, FormCallout } from "@tinkermonkey/heimdall-ui";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader, FormCallout } from "@tinkermonkey/heimdall-ui";
 import "./batch-detail.css";
 
 export const Route = createFileRoute("/app/pipelines/batches/$batchId")({
