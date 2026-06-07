@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable
 
+from sqlalchemy import exists
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -377,8 +378,6 @@ class PipelineRepository:
         Raises:
             PipelineStorageError: If database operation fails
         """
-        from sqlalchemy import exists
-
         session = self._get_session()
         try:
             q = session.query(PipelineRun)

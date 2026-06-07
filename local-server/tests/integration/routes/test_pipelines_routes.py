@@ -493,6 +493,79 @@ class TestPipelineRunEndpoints:
         body = response.json()
         assert body["total"] == 0
 
+    def test_list_runs_filters_by_applied_status(self, client, registries, temp_local_db):
+        """GET /api/pipelines/runs?applied=... filters by applied status correctly."""
+        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+        from domain.versioning.value_objects import ChangeOperation
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        # Register implementation and configuration
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+        )
+
+        # Create two runs: one that will be applied, one that won't
+        response1 = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc1", "doc2"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run1_id = response1.json()["id"]
+        run1_batch_id = response1.json()["batch_run_id"]
+
+        response2 = client.post(
+            "/api/pipelines/schema_extraction/run",
+            json={
+                "documents": ["doc3", "doc4"],
+                "implementation_id": "default",
+                "configuration_ref": "default",
+            },
+        )
+        run2_id = response2.json()["id"]
+        run2_batch_id = response2.json()["batch_run_id"]
+
+        # Create a change repository using the same database as the test
+        engine = create_engine(temp_local_db)
+        SessionLocal = sessionmaker(bind=engine)
+        change_repo = SQLiteChangeRepository(session_factory=SessionLocal)
+
+        # Record a change event for the first run (making it "applied")
+        change_repo.record_change(
+            entity_id=str(uuid4()),
+            entity_type="Class",
+            operation=ChangeOperation.CREATE,
+            new_state={"title": "New Class"},
+            batch_run_id=run1_batch_id,
+        )
+
+        # Filter by applied=applied should return only run1
+        response = client.get("/api/pipelines/runs?applied=applied")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] == 1
+        assert body["items"][0]["id"] == run1_id
+
+        # Filter by applied=not-applied should return only run2
+        response = client.get("/api/pipelines/runs?applied=not-applied")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["total"] == 1
+        assert body["items"][0]["id"] == run2_id
+
+        # Test invalid value returns 400
+        response = client.get("/api/pipelines/runs?applied=invalid")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_create_run_response_contains_all_required_fields(self, client, registries):
         """POST /api/pipelines/run response contains all required fields."""
 

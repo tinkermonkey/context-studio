@@ -1643,6 +1643,7 @@ export interface paths {
      *         implementation_id: Filter by implementation ID (optional)
      *         start_date: Filter by start date (ISO 8601 format, optional)
      *         end_date: Filter by end date (ISO 8601 format, optional)
+     *         applied: Filter by applied status ('applied' or 'not-applied', optional)
      *         limit: Maximum number of results (1-500, default 100)
      *         offset: Number of results to skip for pagination (default 0)
      *         request: FastAPI request (for service access)
@@ -8939,6 +8940,8 @@ export interface operations {
         start_date?: string | null;
         /** @description Filter by end date (ISO 8601 format) */
         end_date?: string | null;
+        /** @description Filter by applied status: 'applied' or 'not-applied' */
+        applied?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */
