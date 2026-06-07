@@ -1460,7 +1460,7 @@ class TestRevertEndpoint:
         assert "not found" in data["detail"].lower()
 
     def test_get_change_events_with_no_events(self, revert_client, pipeline_run_repo):
-        """GET /api/pipelines/runs/{run_id}/change-events returns empty list when no events exist."""
+        """GET /api/pipelines/runs/{run_id}/change-events returns empty list when no events."""
         from domain.pipelines.entities import PipelineType
 
         run = pipeline_run_repo.create(
@@ -1522,7 +1522,9 @@ class TestRevertEndpoint:
         assert data["items"][0]["entity_type"] == "Taxonomy"
         assert data["items"][1]["entity_type"] == "Class"
 
-    def test_get_change_events_supports_pagination(self, revert_client, pipeline_run_repo, change_repo):
+    def test_get_change_events_supports_pagination(
+        self, revert_client, pipeline_run_repo, change_repo
+    ):
         """GET /api/pipelines/runs/{run_id}/change-events supports pagination."""
         from domain.pipelines.entities import PipelineType
         from domain.versioning.value_objects import ChangeOperation
