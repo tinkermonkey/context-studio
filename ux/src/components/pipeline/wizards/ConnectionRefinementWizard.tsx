@@ -11,6 +11,13 @@ import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
+interface RelationshipPreview {
+  id?: string;
+  target_id: string;
+  relationship_type: string;
+  target_label?: string;
+}
+
 export function ConnectionRefinementWizard() {
   const { toast } = useToasts();
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
@@ -29,7 +36,7 @@ export function ConnectionRefinementWizard() {
 
     return {
       label: scopeClassDetails.title || scopeClassDetails.id,
-      outgoingRelationships: (scopeClassDetails as any).outgoing_relationships || [],
+      outgoingRelationships: [] as RelationshipPreview[],
     };
   }, [scopeClassDetails]);
 
@@ -112,7 +119,7 @@ export function ConnectionRefinementWizard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {neighborhoodPreview.outgoingRelationships.slice(0, 10).map((rel: any) => (
+                  {neighborhoodPreview.outgoingRelationships.slice(0, 10).map((rel: RelationshipPreview) => (
                     <tr key={rel.id || rel.target_id}>
                       <td>{neighborhoodPreview.label}</td>
                       <td>{rel.relationship_type}</td>

@@ -22,6 +22,11 @@ export interface EntitySearchPickerProps {
   "aria-describedby"?: string;
 }
 
+interface ApiEntity {
+  id: string;
+  title?: string;
+}
+
 export function EntitySearchPicker({
   entityType,
   selectedId,
@@ -44,30 +49,30 @@ export function EntitySearchPicker({
       : `Failed to load ${entityType.toLowerCase()}s`
     : undefined;
 
-  const entities = useMemo(() => currentQuery.data?.items || [], [currentQuery.data?.items]);
+  const entities = useMemo(() => currentQuery.data?.items || [], [currentQuery.data?.items]) as ApiEntity[];
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
 
     const filtered = entities.filter(
-      (e: any) =>
+      (e: ApiEntity) =>
         e.title?.toLowerCase().includes(query.toLowerCase()) ||
         e.id?.toLowerCase().includes(query.toLowerCase()),
     );
 
-    return filtered.slice(0, 50).map((e: any) => ({
+    return filtered.slice(0, 50).map((e: ApiEntity) => ({
       id: e.id,
       label: e.title || e.id,
     }));
   }, [entities, query]);
 
   const selectedEntity = useMemo(
-    () => entities.find((e: any) => e.id === selectedId),
+    () => entities.find((e: ApiEntity) => e.id === selectedId),
     [entities, selectedId],
   );
 
   const selectedEntities = useMemo(
-    () => entities.filter((e: any) => selectedIds.includes(e.id)).map((e: any) => ({
+    () => entities.filter((e: ApiEntity) => selectedIds.includes(e.id)).map((e: ApiEntity) => ({
       id: e.id,
       label: e.title || e.id,
     })),

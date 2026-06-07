@@ -33,8 +33,8 @@ export function useRunWizard(options: UseRunWizardOptions) {
       });
 
       await navigate({
-        to: "/app/pipelines/runs" as any,
-        search: { selected: (run as PipelineRunResponse).id } as any,
+        to: "/app/pipelines/runs",
+        search: { selected: run.id },
       });
     } finally {
       setIsSubmitting(false);

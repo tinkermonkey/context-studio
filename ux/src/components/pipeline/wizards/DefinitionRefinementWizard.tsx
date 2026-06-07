@@ -11,6 +11,13 @@ import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
+interface RelationshipPreview {
+  id?: string;
+  target_id: string;
+  relationship_type: string;
+  target_label?: string;
+}
+
 export function DefinitionRefinementWizard() {
   const { toast } = useToasts();
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
@@ -31,7 +38,7 @@ export function DefinitionRefinementWizard() {
     return {
       label: selectedNodeDetails.title || selectedNodeDetails.id,
       definition: selectedNodeDetails.description,
-      outgoingRelationships: (selectedNodeDetails as any).outgoing_relationships || [],
+      outgoingRelationships: [] as RelationshipPreview[],
     };
   }, [selectedNodeDetails]);
 
@@ -123,7 +130,7 @@ export function DefinitionRefinementWizard() {
             <div>
               <h5>Relationships</h5>
               <ul>
-                {neighborhoodPreview.outgoingRelationships.slice(0, 5).map((rel: any) => (
+                {neighborhoodPreview.outgoingRelationships.slice(0, 5).map((rel: RelationshipPreview) => (
                   <li key={rel.id || rel.target_id}>
                     {rel.relationship_type} → {rel.target_label || rel.target_id}
                   </li>
