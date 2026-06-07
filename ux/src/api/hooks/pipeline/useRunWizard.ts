@@ -4,7 +4,6 @@ import { useRunPipeline } from "./usePipelineMutations";
 import type { components } from "@/api/types";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
-type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 
 export interface FormErrors {
   [key: string]: string | undefined;

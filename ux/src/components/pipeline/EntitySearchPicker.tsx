@@ -49,7 +49,7 @@ export function EntitySearchPicker({
       : `Failed to load ${entityType.toLowerCase()}s`
     : undefined;
 
-  const entities = useMemo(() => currentQuery.data?.items || [], [currentQuery.data?.items]) as ApiEntity[];
+  const entities = useMemo<ApiEntity[]>(() => currentQuery.data?.items || [], [currentQuery.data?.items]);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];

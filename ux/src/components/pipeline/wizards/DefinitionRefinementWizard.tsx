@@ -6,17 +6,11 @@ import { useClass } from "@/api/hooks/ontology/useClasses";
 import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
 import { BatchToggle } from "./BatchToggle";
+import { type RelationshipPreview } from "./types";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
-
-interface RelationshipPreview {
-  id?: string;
-  target_id: string;
-  relationship_type: string;
-  target_label?: string;
-}
 
 export function DefinitionRefinementWizard() {
   const { toast } = useToasts();
@@ -38,6 +32,7 @@ export function DefinitionRefinementWizard() {
     return {
       label: selectedNodeDetails.title || selectedNodeDetails.id,
       definition: selectedNodeDetails.description,
+      // TODO: wire to relationship API when available
       outgoingRelationships: [] as RelationshipPreview[],
     };
   }, [selectedNodeDetails]);
