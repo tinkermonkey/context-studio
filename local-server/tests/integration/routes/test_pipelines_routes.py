@@ -495,10 +495,11 @@ class TestPipelineRunEndpoints:
 
     def test_list_runs_filters_by_applied_status(self, client, registries, temp_local_db):
         """GET /api/pipelines/runs?applied=... filters by applied status correctly."""
-        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-        from domain.versioning.value_objects import ChangeOperation
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
+        from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+        from domain.versioning.value_objects import ChangeOperation
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
@@ -532,7 +533,7 @@ class TestPipelineRunEndpoints:
             },
         )
         run2_id = response2.json()["id"]
-        run2_batch_id = response2.json()["batch_run_id"]
+        response2.json()["batch_run_id"]
 
         # Create a change repository using the same database as the test
         engine = create_engine(temp_local_db)
