@@ -668,7 +668,9 @@ async def list_pipeline_runs(
     implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
     start_date: Optional[str] = Query(None, description="Filter by start date (ISO 8601 format)"),
     end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
-    applied: Optional[str] = Query(None, description="Filter by applied status: 'applied' or 'not-applied'"),
+    applied: Optional[str] = Query(
+        None, description="Filter by applied status: 'applied' or 'not-applied'"
+    ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
 ) -> ListResponse[PipelineRunResponse]:
