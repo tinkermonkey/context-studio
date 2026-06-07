@@ -32,7 +32,7 @@
   }
 
   .implementation-item.selected {
-    background: rgba(var(--accent-primary), 0.1);
+    background: rgb(var(--accent-primary) / 0.1);
     border-color: rgb(var(--accent-primary));
   }
 
