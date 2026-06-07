@@ -23,6 +23,7 @@ export interface RunListParams {
   status?: string;
   start_date?: string;
   end_date?: string;
+  applied?: "applied" | "not-applied";
 }
 
 export interface ApplyParams {

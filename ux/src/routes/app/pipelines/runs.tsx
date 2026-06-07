@@ -77,6 +77,9 @@ function RunsPageContent({
     if (filters.implementation) {
       params.implementation_id = filters.implementation;
     }
+    if (filters.applied) {
+      params.applied = filters.applied;
+    }
     return params;
   }, [filters, pageIndex]);
 
@@ -115,7 +118,8 @@ function RunsPageContent({
     filters.status ||
     filters.startDate ||
     filters.endDate ||
-    filters.implementation
+    filters.implementation ||
+    filters.applied
   );
   const isGenuinelyEmpty = total === 0 && !hasFilters;
   const isFilteredEmpty = total === 0 && hasFilters;
@@ -158,6 +162,7 @@ function RunsPageContent({
                 startDate: undefined,
                 endDate: undefined,
                 implementation: undefined,
+                applied: undefined,
               });
             },
           }}
@@ -418,20 +423,26 @@ function FilterBarContent({
           </FilterDropdown>
         )}
 
-        <FilterDropdown mode="radio" value={[]} onChange={() => {}}>
+        <FilterDropdown
+          mode="radio"
+          value={filters.applied ? [filters.applied] : []}
+          onChange={(values) => onFilterChange({ applied: (values[0] as "applied" | "not-applied") || undefined })}
+        >
           <FilterDropdown.Trigger
             label="Applied"
-            summary="All"
+            summary={filters.applied === "applied" ? "Applied" : filters.applied === "not-applied" ? "Not Applied" : "All"}
             data-testid="filter-applied"
-            title="Pending backend support for applied status filtering"
-            aria-disabled="true"
-            className="filter-disabled"
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
-              <div className="filter-pending-message">
-                Pending backend support
-              </div>
+              <FilterDropdown.Radio
+                value="applied"
+                label="Applied"
+              />
+              <FilterDropdown.Radio
+                value="not-applied"
+                label="Not Applied"
+              />
             </FilterDropdown.Section>
           </FilterDropdown.Panel>
         </FilterDropdown>

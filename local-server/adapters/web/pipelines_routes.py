@@ -668,6 +668,7 @@ async def list_pipeline_runs(
     implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
     start_date: Optional[str] = Query(None, description="Filter by start date (ISO 8601 format)"),
     end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
+    applied: Optional[str] = Query(None, description="Filter by applied status: 'applied' or 'not-applied'"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
 ) -> ListResponse[PipelineRunResponse]:
@@ -682,6 +683,7 @@ async def list_pipeline_runs(
         implementation_id: Filter by implementation ID (optional)
         start_date: Filter by start date (ISO 8601 format, optional)
         end_date: Filter by end date (ISO 8601 format, optional)
+        applied: Filter by applied status ('applied' or 'not-applied', optional)
         limit: Maximum number of results (1-500, default 100)
         offset: Number of results to skip for pagination (default 0)
         request: FastAPI request (for service access)
@@ -739,12 +741,25 @@ async def list_pipeline_runs(
                 detail=f"Invalid end_date format: {end_date} (use ISO 8601)",
             )
 
+    applied_filter: bool | None = None
+    if applied:
+        if applied == "applied":
+            applied_filter = True
+        elif applied == "not-applied":
+            applied_filter = False
+        else:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail="Invalid applied filter: must be 'applied' or 'not-applied'",
+            )
+
     filtered_runs, total = repo.list_filtered(
         pipeline_type=ptype,
         status=status_enum,
         implementation_id=implementation_id or None,
         start_date=start_dt,
         end_date=end_dt,
+        applied=applied_filter,
         limit=limit,
         offset=offset,
     )
