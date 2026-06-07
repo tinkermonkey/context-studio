@@ -1221,9 +1221,10 @@ class TestRevertEndpoint:
     @pytest.fixture
     def revert_client(self, client, change_repo, ontology_repo, pipeline_run_repo):
         """Wire revert service into the test client."""
+        from unittest.mock import MagicMock
+
         from domain.versioning.revert_service import RevertService
         from domain.versioning.services import VersioningService
-        from unittest.mock import MagicMock
 
         revert_service = RevertService(
             change_repo=change_repo,

@@ -53,7 +53,6 @@ from adapters.web.schemas.pipelines import (
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
-from domain.versioning.services import VersioningService
 from domain.pipelines.entities import (
     PipelineRun,
     PipelineRunStatus,
@@ -70,6 +69,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.versioning.services import VersioningService
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
