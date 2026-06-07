@@ -25,12 +25,12 @@ export function usePipelineRuns(params?: RunListParams) {
 
 export function usePipelineRunChangeEvents(
   runId: string,
-  options?: { offset?: number; limit?: number },
+  options?: { offset?: number; limit?: number; enabled?: boolean },
 ) {
   return useQuery({
     queryKey: QUERY_KEYS.pipelineRunChangeEvents(runId, options),
     queryFn: () =>
       pipelineService.getRunChangeEvents(runId, options?.offset || 0, options?.limit || 100),
-    enabled: !!runId,
+    enabled: !!runId && (options?.enabled !== false),
   });
 }

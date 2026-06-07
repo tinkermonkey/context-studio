@@ -646,15 +646,15 @@ async def get_pipeline_run_change_events(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    # Get change events for this run's batch_run_id
-    result = versioning_service.get_change_history(batch_run_id=run.batch_run_id)
+    # Get change events for this run's batch_run_id (fetch all for in-memory pagination)
+    result = versioning_service.get_change_history(batch_run_id=run.batch_run_id, limit=None)
 
     # Apply pagination
     paginated_events = result.events[offset : offset + limit]
 
     return ListResponse(
         items=[VersioningChangeEventResponse.model_validate(e) for e in paginated_events],
-        total=len(result.events),
+        total=result.total,
         offset=offset,
         limit=limit,
     )

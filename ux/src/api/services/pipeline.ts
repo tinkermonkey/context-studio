@@ -14,7 +14,6 @@ type BatchResponse = components["schemas"]["BatchResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
 type ResumeBatchResponse = components["schemas"]["ResumeBatchResponse"];
 type ListChangeEvents = components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
-type ChangeEventResponse = components["schemas"]["VersioningChangeEventResponse"];
 
 export interface RunListParams {
   limit?: number;

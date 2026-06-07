@@ -1222,14 +1222,22 @@ class TestRevertEndpoint:
     def revert_client(self, client, change_repo, ontology_repo, pipeline_run_repo):
         """Wire revert service into the test client."""
         from domain.versioning.revert_service import RevertService
+        from domain.versioning.services import VersioningService
+        from unittest.mock import MagicMock
 
         revert_service = RevertService(
             change_repo=change_repo,
             ontology_repo=ontology_repo,
         )
+        versioning_service = VersioningService(
+            change_repo=change_repo,
+            sync_target=MagicMock(),
+            event_publisher=MagicMock(),
+        )
         client.app.state.revert_service = revert_service
         client.app.state.change_repo = change_repo
         client.app.state.ontology_repo = ontology_repo
+        client.app.state.versioning_service = versioning_service
         return client
 
     def test_revert_nonexistent_run_returns_404(self, revert_client):
@@ -1440,3 +1448,108 @@ class TestRevertEndpoint:
         assert "events_reverted" in body
         assert body["run_id"] == run.id
         assert body["events_reverted"] == 0  # No events were recorded, so 0 reverted
+
+    def test_get_change_events_returns_404_for_nonexistent_run(self, revert_client):
+        """GET /api/pipelines/runs/{run_id}/change-events returns 404 for non-existent run."""
+        nonexistent_id = str(uuid4())
+        response = revert_client.get(f"/api/pipelines/runs/{nonexistent_id}/change-events")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        assert "not found" in data["detail"].lower()
+
+    def test_get_change_events_with_no_events(self, revert_client, pipeline_run_repo):
+        """GET /api/pipelines/runs/{run_id}/change-events returns empty list when no events exist."""
+        from domain.pipelines.entities import PipelineType
+
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-no-events",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        response = revert_client.get(f"/api/pipelines/runs/{run.id}/change-events")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["items"] == []
+        assert data["total"] == 0
+        assert data["offset"] == 0
+        assert data["limit"] == 100
+
+    def test_get_change_events_with_events(self, revert_client, pipeline_run_repo, change_repo):
+        """GET /api/pipelines/runs/{run_id}/change-events returns events for existing run."""
+        from domain.pipelines.entities import PipelineType
+        from domain.versioning.value_objects import ChangeOperation
+
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-with-events",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Record some change events
+        change_repo.record_change(
+            entity_id=str(uuid4()),
+            entity_type="Class",
+            operation=ChangeOperation.CREATE,
+            new_state={"title": "New Class"},
+            batch_run_id=run.batch_run_id,
+        )
+        change_repo.record_change(
+            entity_id=str(uuid4()),
+            entity_type="Taxonomy",
+            operation=ChangeOperation.UPDATE,
+            new_state={"description": "Updated"},
+            previous_state={"description": "Old"},
+            batch_run_id=run.batch_run_id,
+        )
+
+        response = revert_client.get(f"/api/pipelines/runs/{run.id}/change-events")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 2
+        assert len(data["items"]) == 2
+        # Events are ordered by timestamp DESC, so Taxonomy (recorded last) comes first
+        assert data["items"][0]["entity_type"] == "Taxonomy"
+        assert data["items"][1]["entity_type"] == "Class"
+
+    def test_get_change_events_supports_pagination(self, revert_client, pipeline_run_repo, change_repo):
+        """GET /api/pipelines/runs/{run_id}/change-events supports pagination."""
+        from domain.pipelines.entities import PipelineType
+        from domain.versioning.value_objects import ChangeOperation
+
+        run = pipeline_run_repo.create(
+            batch_run_id="batch-pagination",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+        # Record multiple events
+        for i in range(5):
+            change_repo.record_change(
+                entity_id=str(uuid4()),
+                entity_type="Class",
+                operation=ChangeOperation.CREATE,
+                new_state={"id": f"class-{i}", "title": f"Class {i}"},
+                batch_run_id=run.batch_run_id,
+            )
+
+        response = revert_client.get(f"/api/pipelines/runs/{run.id}/change-events?offset=1&limit=2")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["offset"] == 1
+        assert data["limit"] == 2
+        assert len(data["items"]) == 2
+        assert data["total"] == 5  # Total should be 5, not 2

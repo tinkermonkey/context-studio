@@ -36,7 +36,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
   const queryClient = useQueryClient();
 
   const { data: run, isLoading, error } = usePipelineRun(runId);
-  const { data: changeEventsData } = usePipelineRunChangeEvents(runId);
+  const { data: changeEventsData } = usePipelineRunChangeEvents(runId, {
+    enabled: run?.status === "COMPLETED",
+  });
 
   // Selection state for SchemaExtractionReview
   const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
