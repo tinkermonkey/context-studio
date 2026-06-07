@@ -207,4 +207,71 @@
     font-size: 12px;
     text-align: center;
   }
+
+  .run-detail-change-events {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .run-detail-change-event-item {
+    padding: 10px;
+    background-color: rgb(var(--canvas-bg-1));
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .change-event-operation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .change-event-op-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: rgb(var(--status-cyan) / 0.2);
+    color: rgb(var(--status-cyan));
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  .change-event-entity-type {
+    color: rgb(var(--canvas-fg-2));
+    font-weight: 500;
+  }
+
+  .change-event-entity-id {
+    margin: 6px 0;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .change-event-entity-id code {
+    background-color: rgb(var(--canvas-bg-2));
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .change-event-timestamp {
+    color: rgb(var(--canvas-fg-3));
+    font-size: 10px;
+    margin: 4px 0;
+  }
+
+  .change-event-reason {
+    margin-top: 6px;
+    padding: 6px;
+    background-color: rgb(var(--canvas-bg-2));
+    border-left: 2px solid rgb(var(--status-cyan) / 0.5);
+    color: rgb(var(--canvas-fg-2));
+    font-style: italic;
+    font-size: 11px;
+  }
 }

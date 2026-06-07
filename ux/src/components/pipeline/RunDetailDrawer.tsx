@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader, AlertCircle, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorPanel, KVGrid, Chip, Button } from "@tinkermonkey/heimdall-ui";
-import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
+import { usePipelineRun, usePipelineRunChangeEvents } from "@/api/hooks/pipeline/usePipelineRuns";
 import { formatDate } from "@/utils/dateFormatting";
 import {
   SchemaExtractionReview,
@@ -36,6 +36,7 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
   const queryClient = useQueryClient();
 
   const { data: run, isLoading, error } = usePipelineRun(runId);
+  const { data: changeEventsData } = usePipelineRunChangeEvents(runId);
 
   // Selection state for SchemaExtractionReview
   const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
@@ -261,8 +262,9 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
       )}
 
       {run.status === "COMPLETED" && (
-        <InspectorPanel.Section title="Results">
-          <div className="run-detail-results-section" data-testid="run-completed-section">
+        <>
+          <InspectorPanel.Section title="Results">
+            <div className="run-detail-results-section" data-testid="run-completed-section">
             <div className="run-detail-results-item">
               <strong>Review</strong>
               <div className="run-detail-results-item-content">{renderReviewComponent(run)}</div>
@@ -507,6 +509,35 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
             </div>
           </div>
         </InspectorPanel.Section>
+
+        {changeEventsData && changeEventsData.items && changeEventsData.items.length > 0 && (
+          <InspectorPanel.Section title="Produced Change Events">
+            <div className="run-detail-change-events" data-testid="run-change-events-section">
+              {changeEventsData.items.map((event) => (
+                <div
+                  key={event.id}
+                  className="run-detail-change-event-item"
+                  data-testid={`change-event-${event.id}`}
+                >
+                  <div className="change-event-operation">
+                    <span className="change-event-op-badge">{event.operation}</span>
+                    <span className="change-event-entity-type">{event.entity_type}</span>
+                  </div>
+                  <div className="change-event-entity-id">
+                    <code>{event.entity_id}</code>
+                  </div>
+                  <div className="change-event-timestamp">
+                    {new Date(event.timestamp).toLocaleString()}
+                  </div>
+                  {event.change_reason && (
+                    <div className="change-event-reason">{event.change_reason}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </InspectorPanel.Section>
+        )}
+      </>
       )}
 
       {run.status === "PENDING" && (

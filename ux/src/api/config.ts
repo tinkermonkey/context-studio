@@ -48,6 +48,8 @@ export const QUERY_KEYS = {
   pipelineRuns: (params?: object) => ["pipeline-runs", params] as const,
   pipelineRun: (runId: string) => ["pipeline-runs", runId] as const,
   pipelineCandidates: (runId: string) => ["pipeline-runs", runId, "candidates"] as const,
+  pipelineRunChangeEvents: (runId: string, options?: object) =>
+    ["pipeline-runs", runId, "change-events", options] as const,
   pipelineBatches: ["pipeline-batches"] as const,
   pipelineBatch: (batchId: string) => ["pipeline-batches", batchId] as const,
 } as const;

@@ -22,3 +22,15 @@ export function usePipelineRuns(params?: RunListParams) {
     queryFn: () => pipelineService.listRuns(params),
   });
 }
+
+export function usePipelineRunChangeEvents(
+  runId: string,
+  options?: { offset?: number; limit?: number },
+) {
+  return useQuery({
+    queryKey: QUERY_KEYS.pipelineRunChangeEvents(runId, options),
+    queryFn: () =>
+      pipelineService.getRunChangeEvents(runId, options?.offset || 0, options?.limit || 100),
+    enabled: !!runId,
+  });
+}

@@ -2003,3 +2003,8 @@ selectors:
   - selector: batch-child-runs-placeholder
     component: src/routes/app/pipelines/batches/$batchId.tsx
     description: Placeholder showing child runs list will be available when batch execution is implemented
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: run-change-events-section
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Container displaying change events produced by applying a pipeline run

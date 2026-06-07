@@ -85,6 +85,7 @@ class VersioningService:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
+        batch_run_id: Optional[str] = None,
     ) -> ChangeHistoryResult:
         """
         Retrieve change events with optional filters.
@@ -93,11 +94,14 @@ class VersioningService:
             entity_id: Optional filter to changes for a specific entity
             since: Optional filter to changes after a specific timestamp
             limit: Maximum number of results to return
+            batch_run_id: Optional filter to changes from a specific pipeline run
 
         Returns:
             ChangeHistoryResult with paginated events and total count without limit
         """
-        return self._repo.get_changes(entity_id=entity_id, since=since, limit=limit)
+        return self._repo.get_changes(
+            entity_id=entity_id, since=since, limit=limit, batch_run_id=batch_run_id
+        )
 
     def get_entity_version(self, entity_id: str, version: int) -> EntityVersion:
         """

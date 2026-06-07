@@ -3101,6 +3101,76 @@
         }
       }
     },
+    "/api/pipelines/runs/{run_id}/change-events": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Pipeline Run Change Events",
+        "description": "Get change events produced by applying a pipeline run.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n    versioning_service: VersioningService for change history queries\n    offset: Number of results to skip\n    limit: Maximum number of results to return\n\nReturns:\n    Paginated list of change events produced by this run\n\nRaises:\n    HTTPException: 404 if run not found",
+        "operationId": "get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_VersioningChangeEventResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines/runs": {
       "get": {
         "tags": [
@@ -9133,6 +9203,41 @@
           "offset"
         ],
         "title": "ListResponse[TaxonomyResponse]"
+      },
+      "ListResponse_VersioningChangeEventResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VersioningChangeEventResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[VersioningChangeEventResponse]"
       },
       "MergeResultResponse": {
         "properties": {

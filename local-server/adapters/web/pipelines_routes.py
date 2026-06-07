@@ -7,6 +7,8 @@ This module implements HTTP endpoints for generic pipeline execution:
 - GET /api/pipelines/types/{type}/implementations/{id}/configurations → Configs
 - POST /api/pipelines/{type}/run → Invoke a pipeline
 - GET /api/pipelines/runs/{run_id} → Fetch a PipelineRun by ID
+- GET /api/pipelines/runs/{run_id}/candidates → Get pipeline run candidates
+- GET /api/pipelines/runs/{run_id}/change-events → Get change events produced by a run
 - GET /api/pipelines/runs → List PipelineRuns with filters
 - POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
 
@@ -23,7 +25,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
 from sqlalchemy.exc import IntegrityError, OperationalError
 
@@ -32,6 +34,7 @@ from adapters.factories.orchestrator_factory import (
     create_orchestrator,
     create_pipeline_state,
 )
+from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
@@ -48,7 +51,9 @@ from adapters.web.schemas.pipelines import (
     ResumeBatchResponse,
     RevertRunResponse,
 )
+from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
+from domain.versioning.services import VersioningService
 from domain.pipelines.entities import (
     PipelineRun,
     PipelineRunStatus,
@@ -603,6 +608,56 @@ async def get_pipeline_candidates(
         )
         for cand in candidates_data
     ]
+
+
+@router.get(
+    "/runs/{run_id}/change-events",
+    response_model=ListResponse[VersioningChangeEventResponse],
+)
+async def get_pipeline_run_change_events(
+    run_id: str,
+    request: Request,
+    versioning_service: VersioningService = Depends(get_versioning_service),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
+) -> ListResponse[VersioningChangeEventResponse]:
+    """
+    Get change events produced by applying a pipeline run.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+        versioning_service: VersioningService for change history queries
+        offset: Number of results to skip
+        limit: Maximum number of results to return
+
+    Returns:
+        Paginated list of change events produced by this run
+
+    Raises:
+        HTTPException: 404 if run not found
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    # Get change events for this run's batch_run_id
+    result = versioning_service.get_change_history(batch_run_id=run.batch_run_id)
+
+    # Apply pagination
+    paginated_events = result.events[offset : offset + limit]
+
+    return ListResponse(
+        items=[VersioningChangeEventResponse.model_validate(e) for e in paginated_events],
+        total=len(result.events),
+        offset=offset,
+        limit=limit,
+    )
 
 
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])

@@ -1591,6 +1591,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/runs/{run_id}/change-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Run Change Events
+     * @description Get change events produced by applying a pipeline run.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *         versioning_service: VersioningService for change history queries
+     *         offset: Number of results to skip
+     *         limit: Maximum number of results to return
+     *
+     *     Returns:
+     *         Paginated list of change events produced by this run
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found
+     */
+    get: operations["get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/runs": {
     parameters: {
       query?: never;
@@ -5546,6 +5579,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[VersioningChangeEventResponse] */
+    ListResponse_VersioningChangeEventResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["VersioningChangeEventResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /**
      * MergeResultResponse
      * @description Response with merge operation results
@@ -8821,6 +8877,42 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["CandidateResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get: {
+    parameters: {
+      query?: {
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Maximum number of results */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
         };
       };
       /** @description Validation Error */

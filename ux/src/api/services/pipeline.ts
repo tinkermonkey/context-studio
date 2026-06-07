@@ -13,6 +13,8 @@ type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 type BatchResponse = components["schemas"]["BatchResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
 type ResumeBatchResponse = components["schemas"]["ResumeBatchResponse"];
+type ListChangeEvents = components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
+type ChangeEventResponse = components["schemas"]["VersioningChangeEventResponse"];
 
 export interface RunListParams {
   limit?: number;
@@ -68,6 +70,17 @@ class PipelineService extends BaseService {
 
   async getCandidates(runId: string): Promise<CandidateResponse[]> {
     return this.get<CandidateResponse[]>(`/api/pipelines/runs/${runId}/candidates`);
+  }
+
+  async getRunChangeEvents(
+    runId: string,
+    offset: number = 0,
+    limit: number = 100,
+  ): Promise<ListChangeEvents> {
+    return this.get<ListChangeEvents>(`/api/pipelines/runs/${runId}/change-events`, {
+      offset,
+      limit,
+    });
   }
 
   // Materialization
