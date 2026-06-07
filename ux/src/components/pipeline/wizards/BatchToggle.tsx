@@ -5,7 +5,12 @@ interface BatchToggleProps {
   testIdPrefix: string;
 }
 
-export function BatchToggle({ checked, onChange, disabled = false, testIdPrefix }: BatchToggleProps) {
+export function BatchToggle({
+  checked,
+  onChange,
+  disabled = false,
+  testIdPrefix,
+}: BatchToggleProps) {
   return (
     <div
       className="batch-toggle"

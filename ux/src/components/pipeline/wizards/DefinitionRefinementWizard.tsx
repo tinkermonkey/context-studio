@@ -125,11 +125,13 @@ export function DefinitionRefinementWizard() {
             <div>
               <h5>Relationships</h5>
               <ul>
-                {neighborhoodPreview.outgoingRelationships.slice(0, 5).map((rel: RelationshipPreview) => (
-                  <li key={rel.id || rel.target_id}>
-                    {rel.relationship_type} → {rel.target_label || rel.target_id}
-                  </li>
-                ))}
+                {neighborhoodPreview.outgoingRelationships
+                  .slice(0, 5)
+                  .map((rel: RelationshipPreview) => (
+                    <li key={rel.id || rel.target_id}>
+                      {rel.relationship_type} → {rel.target_label || rel.target_id}
+                    </li>
+                  ))}
                 {neighborhoodPreview.outgoingRelationships.length > 5 && (
                   <li>+{neighborhoodPreview.outgoingRelationships.length - 5} more</li>
                 )}

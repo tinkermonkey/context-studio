@@ -31,6 +31,6 @@ export function usePipelineRunChangeEvents(
     queryKey: QUERY_KEYS.pipelineRunChangeEvents(runId, options),
     queryFn: () =>
       pipelineService.getRunChangeEvents(runId, options?.offset || 0, options?.limit || 100),
-    enabled: !!runId && (options?.enabled !== false),
+    enabled: !!runId && options?.enabled !== false,
   });
 }

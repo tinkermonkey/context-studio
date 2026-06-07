@@ -114,13 +114,15 @@ export function ConnectionRefinementWizard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {neighborhoodPreview.outgoingRelationships.slice(0, 10).map((rel: RelationshipPreview) => (
-                    <tr key={rel.id || rel.target_id}>
-                      <td>{neighborhoodPreview.label}</td>
-                      <td>{rel.relationship_type}</td>
-                      <td>{rel.target_label || rel.target_id}</td>
-                    </tr>
-                  ))}
+                  {neighborhoodPreview.outgoingRelationships
+                    .slice(0, 10)
+                    .map((rel: RelationshipPreview) => (
+                      <tr key={rel.id || rel.target_id}>
+                        <td>{neighborhoodPreview.label}</td>
+                        <td>{rel.relationship_type}</td>
+                        <td>{rel.target_label || rel.target_id}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
               {neighborhoodPreview.outgoingRelationships.length > 10 && (

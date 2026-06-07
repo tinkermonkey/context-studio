@@ -426,23 +426,25 @@ function FilterBarContent({
         <FilterDropdown
           mode="radio"
           value={filters.applied ? [filters.applied] : []}
-          onChange={(values) => onFilterChange({ applied: (values[0] as "applied" | "not-applied") || undefined })}
+          onChange={(values) =>
+            onFilterChange({ applied: (values[0] as "applied" | "not-applied") || undefined })
+          }
         >
           <FilterDropdown.Trigger
             label="Applied"
-            summary={filters.applied === "applied" ? "Applied" : filters.applied === "not-applied" ? "Not Applied" : "All"}
+            summary={
+              filters.applied === "applied"
+                ? "Applied"
+                : filters.applied === "not-applied"
+                  ? "Not Applied"
+                  : "All"
+            }
             data-testid="filter-applied"
           />
           <FilterDropdown.Panel>
             <FilterDropdown.Section>
-              <FilterDropdown.Radio
-                value="applied"
-                label="Applied"
-              />
-              <FilterDropdown.Radio
-                value="not-applied"
-                label="Not Applied"
-              />
+              <FilterDropdown.Radio value="applied" label="Applied" />
+              <FilterDropdown.Radio value="not-applied" label="Not Applied" />
             </FilterDropdown.Section>
           </FilterDropdown.Panel>
         </FilterDropdown>

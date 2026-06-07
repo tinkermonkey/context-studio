@@ -49,7 +49,10 @@ export function EntitySearchPicker({
       : `Failed to load ${entityType.toLowerCase()}s`
     : undefined;
 
-  const entities = useMemo<ApiEntity[]>(() => currentQuery.data?.items || [], [currentQuery.data?.items]);
+  const entities = useMemo<ApiEntity[]>(
+    () => currentQuery.data?.items || [],
+    [currentQuery.data?.items],
+  );
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -72,10 +75,13 @@ export function EntitySearchPicker({
   );
 
   const selectedEntities = useMemo(
-    () => entities.filter((e: ApiEntity) => selectedIds.includes(e.id)).map((e: ApiEntity) => ({
-      id: e.id,
-      label: e.title || e.id,
-    })),
+    () =>
+      entities
+        .filter((e: ApiEntity) => selectedIds.includes(e.id))
+        .map((e: ApiEntity) => ({
+          id: e.id,
+          label: e.title || e.id,
+        })),
     [entities, selectedIds],
   );
 
@@ -117,7 +123,11 @@ export function EntitySearchPicker({
       {multiSelect ? (
         <>
           {selectedEntities.length > 0 && (
-            <div className="selected-entities-list" role="list" data-testid={testId ? `${testId}-list` : undefined}>
+            <div
+              className="selected-entities-list"
+              role="list"
+              data-testid={testId ? `${testId}-list` : undefined}
+            >
               {selectedEntities.map((entity) => (
                 <div key={entity.id} className="selected-entity-chip" role="listitem">
                   <span>{entity.label}</span>
