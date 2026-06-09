@@ -384,7 +384,7 @@ class TestQualitySchemaNodeGrounding:
                     {
                         "uri": "http://dbpedia.org/resource/Test",
                         "source": "DBpedia",
-                        "match_confidence": 0.95,
+                        "confidence": 0.95,
                         "label": "Test",
                         "description": "Test resource",
                         "match_rationale": "Good match",
@@ -392,7 +392,7 @@ class TestQualitySchemaNodeGrounding:
                     {
                         "uri": "http://www.wikidata.org/entity/Q123",
                         "source": "Wikidata",
-                        "match_confidence": 0.85,
+                        "confidence": 0.85,
                         "label": "Q123",
                         "description": "Wikidata item",
                         "match_rationale": "Good match",

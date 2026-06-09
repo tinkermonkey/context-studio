@@ -7,6 +7,8 @@ This module implements HTTP endpoints for generic pipeline execution:
 - GET /api/pipelines/types/{type}/implementations/{id}/configurations → Configs
 - POST /api/pipelines/{type}/run → Invoke a pipeline
 - GET /api/pipelines/runs/{run_id} → Fetch a PipelineRun by ID
+- GET /api/pipelines/runs/{run_id}/candidates → Get pipeline run candidates
+- GET /api/pipelines/runs/{run_id}/change-events → Get change events produced by a run
 - GET /api/pipelines/runs → List PipelineRuns with filters
 - POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
 
@@ -23,7 +25,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
 from sqlalchemy.exc import IntegrityError, OperationalError
 
@@ -32,6 +34,7 @@ from adapters.factories.orchestrator_factory import (
     create_orchestrator,
     create_pipeline_state,
 )
+from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
@@ -48,6 +51,7 @@ from adapters.web.schemas.pipelines import (
     ResumeBatchResponse,
     RevertRunResponse,
 )
+from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
 from domain.pipelines.entities import (
     PipelineRun,
@@ -65,6 +69,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.versioning.services import VersioningService
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
@@ -605,6 +610,56 @@ async def get_pipeline_candidates(
     ]
 
 
+@router.get(
+    "/runs/{run_id}/change-events",
+    response_model=ListResponse[VersioningChangeEventResponse],
+)
+async def get_pipeline_run_change_events(
+    run_id: str,
+    request: Request,
+    versioning_service: VersioningService = Depends(get_versioning_service),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
+) -> ListResponse[VersioningChangeEventResponse]:
+    """
+    Get change events produced by applying a pipeline run.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+        versioning_service: VersioningService for change history queries
+        offset: Number of results to skip
+        limit: Maximum number of results to return
+
+    Returns:
+        Paginated list of change events produced by this run
+
+    Raises:
+        HTTPException: 404 if run not found
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    # Get change events for this run's batch_run_id (fetch all for in-memory pagination)
+    result = versioning_service.get_change_history(batch_run_id=run.batch_run_id, limit=None)
+
+    # Apply pagination
+    paginated_events = result.events[offset : offset + limit]
+
+    return ListResponse(
+        items=[VersioningChangeEventResponse.model_validate(e) for e in paginated_events],
+        total=result.total,
+        offset=offset,
+        limit=limit,
+    )
+
+
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])
 async def list_pipeline_runs(
     request: Request,
@@ -613,6 +668,9 @@ async def list_pipeline_runs(
     implementation_id: Optional[str] = Query(None, description="Filter by implementation ID"),
     start_date: Optional[str] = Query(None, description="Filter by start date (ISO 8601 format)"),
     end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
+    applied: Optional[str] = Query(
+        None, description="Filter by applied status: 'applied' or 'not-applied'"
+    ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
 ) -> ListResponse[PipelineRunResponse]:
@@ -627,6 +685,7 @@ async def list_pipeline_runs(
         implementation_id: Filter by implementation ID (optional)
         start_date: Filter by start date (ISO 8601 format, optional)
         end_date: Filter by end date (ISO 8601 format, optional)
+        applied: Filter by applied status ('applied' or 'not-applied', optional)
         limit: Maximum number of results (1-500, default 100)
         offset: Number of results to skip for pagination (default 0)
         request: FastAPI request (for service access)
@@ -684,12 +743,25 @@ async def list_pipeline_runs(
                 detail=f"Invalid end_date format: {end_date} (use ISO 8601)",
             )
 
+    applied_filter: bool | None = None
+    if applied:
+        if applied == "applied":
+            applied_filter = True
+        elif applied == "not-applied":
+            applied_filter = False
+        else:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail="Invalid applied filter: must be 'applied' or 'not-applied'",
+            )
+
     filtered_runs, total = repo.list_filtered(
         pipeline_type=ptype,
         status=status_enum,
         implementation_id=implementation_id or None,
         start_date=start_dt,
         end_date=end_dt,
+        applied=applied_filter,
         limit=limit,
         offset=offset,
     )
@@ -914,14 +986,30 @@ async def revert_pipeline_run(
 
     revert_svc = request.app.state.revert_service
     try:
-        events_reverted = revert_svc.revert(run.batch_run_id)
-        return RevertRunResponse(run_id=run_id, events_reverted=events_reverted)
+        revert_result = revert_svc.revert_with_summary(run.batch_run_id)
+    except (PipelineStorageError, IntegrityError, OperationalError) as exc:
+        _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
+        status_code, message = _handle_domain_error(
+            exc if isinstance(exc, PipelineStorageError) else PipelineStorageError(str(exc))
+        )
+        raise HTTPException(status_code=status_code, detail=message) from exc
     except Exception as exc:
         _logger.error(f"Failed to revert run {run_id}: {exc}", exc_info=exc)
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to revert pipeline run due to an internal error",
         ) from exc
+    return RevertRunResponse(
+        run_id=run_id,
+        events_reverted=revert_result.events_reverted,
+        classes_deleted=revert_result.classes_deleted,
+        individuals_deleted=revert_result.individuals_deleted,
+        relationships_deleted=revert_result.relationships_deleted,
+        properties_deleted=revert_result.properties_deleted,
+        taxonomies_deleted=revert_result.taxonomies_deleted,
+        concept_schemes_deleted=revert_result.concept_schemes_deleted,
+        entities_restored=revert_result.entities_restored,
+    )
 
 
 # ==================== Batch Management ====================

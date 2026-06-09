@@ -9,6 +9,7 @@ the originating batch_run_id for auditability.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from domain.versioning.value_objects import ChangeOperation
@@ -56,6 +57,25 @@ class RevertService:
         Raises:
             ValueError: If batch_run_id is empty
         """
+        result = self.revert_with_summary(batch_run_id)
+        return result.events_reverted
+
+    def revert_with_summary(self, batch_run_id: str) -> RevertResult:
+        """
+        Revert all changes made by a specific batch run and return detailed summary.
+
+        Walks the change_events for the given batch_run_id in reverse chronological order
+        and applies the inverse of each operation. Already-reverted events are skipped.
+
+        Args:
+            batch_run_id: ID of the batch run to revert
+
+        Returns:
+            RevertResult with event count and detailed breakdown by entity type
+
+        Raises:
+            ValueError: If batch_run_id is empty
+        """
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
 
@@ -65,18 +85,47 @@ class RevertService:
 
         if not events:
             _logger.info(f"No events found for batch run {batch_run_id}")
-            return 0
+            return RevertResult(run_id=batch_run_id, events_reverted=0)
 
         reverted_count = 0
+        summary = {
+            "classes_deleted": 0,
+            "individuals_deleted": 0,
+            "relationships_deleted": 0,
+            "properties_deleted": 0,
+            "taxonomies_deleted": 0,
+            "concept_schemes_deleted": 0,
+            "entities_restored": 0,
+        }
+
         for event in reversed(events):
             if self._should_skip_revert(event, events):
                 continue
 
-            if self._apply_inverse(event, batch_run_id):
-                reverted_count += 1
+            try:
+                if self._apply_inverse(event, batch_run_id):
+                    reverted_count += 1
+                    self._update_summary(event, summary)
+            except Exception as exc:
+                _logger.error(
+                    f"Failed to revert event {event.id} for entity {event.entity_id}. "
+                    f"Partially reverted {reverted_count} events before failure.",
+                    exc_info=exc,
+                )
+                raise
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
-        return reverted_count
+        return RevertResult(
+            run_id=batch_run_id,
+            events_reverted=reverted_count,
+            classes_deleted=summary["classes_deleted"],
+            individuals_deleted=summary["individuals_deleted"],
+            relationships_deleted=summary["relationships_deleted"],
+            properties_deleted=summary["properties_deleted"],
+            taxonomies_deleted=summary["taxonomies_deleted"],
+            concept_schemes_deleted=summary["concept_schemes_deleted"],
+            entities_restored=summary["entities_restored"],
+        )
 
     def _should_skip_revert(self, event, all_events) -> bool:
         """Check if an event should be skipped during revert (already reverted)."""
@@ -353,3 +402,42 @@ class RevertService:
             return ChangeOperation.CREATE
         else:
             return ChangeOperation.UPDATE
+
+    @staticmethod
+    def _update_summary(event, summary: dict) -> None:
+        """Update summary counts based on the event being reverted."""
+        entity_type = RevertService._normalize_entity_type(event.entity_type)
+        operation = event.operation
+
+        if operation == ChangeOperation.CREATE:
+            if entity_type == "taxonomy":
+                summary["taxonomies_deleted"] += 1
+            elif entity_type == "concept_scheme":
+                summary["concept_schemes_deleted"] += 1
+            elif entity_type == "class":
+                summary["classes_deleted"] += 1
+            elif entity_type == "individual":
+                summary["individuals_deleted"] += 1
+            elif entity_type == "relationship":
+                summary["relationships_deleted"] += 1
+            elif entity_type == "property_definition":
+                summary["properties_deleted"] += 1
+        elif operation == ChangeOperation.DELETE:
+            summary["entities_restored"] += 1
+        elif operation == ChangeOperation.UPDATE:
+            summary["entities_restored"] += 1
+
+
+@dataclass
+class RevertResult:
+    """Result of a revert operation with detailed summary."""
+
+    run_id: str
+    events_reverted: int
+    classes_deleted: int = 0
+    individuals_deleted: int = 0
+    relationships_deleted: int = 0
+    properties_deleted: int = 0
+    taxonomies_deleted: int = 0
+    concept_schemes_deleted: int = 0
+    entities_restored: int = 0

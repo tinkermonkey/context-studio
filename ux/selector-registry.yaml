@@ -498,9 +498,6 @@ selectors:
   - selector: scheme-name-link-*
     component: routes/app/schema/schemes.index.tsx
     description: Clickable scheme name link in table with dynamic ID suffix
-  - selector: scheme-row-actions-*
-    component: routes/app/schema/schemes.index.tsx
-    description: Actions menu button for scheme row
 
   # Classes Page
   - selector: classes-page
@@ -660,12 +657,6 @@ selectors:
   - selector: individual-class-move-down-*
     component: components/ontology/IndividualDrawer.tsx
     description: Move down button for class chip with dynamic class ID suffix
-  - selector: individual-class-remove-*
-    component: components/ontology/IndividualDrawer.tsx
-    description: Remove button for class chip with dynamic class ID suffix
-  - selector: individual-class-option-*
-    component: components/ontology/IndividualDrawer.tsx
-    description: Class option in typeahead dropdown with dynamic class ID suffix
   - selector: individual-properties-panel
     component: components/ontology/IndividualDrawer.tsx
     description: Inherited properties panel in individual detail drawer
@@ -1060,6 +1051,11 @@ selectors:
     component: components/pipeline/FlavorDrawer.tsx
     description: Button to delete the flavor
 
+  # Pipeline Pickers
+  - selector: entity-picker-error
+    component: components/pipeline/EntitySearchPicker.tsx
+    description: Error message displayed when entity type query fails
+
   # Unit Test Fixtures
   - selector: action
     component: components/ui/__tests__/Panel.test.tsx
@@ -1419,7 +1415,10 @@ selectors:
     component: routes/app/settings.tsx
     description: Telemetry summary config tile
 
-  # Pipelines — list page
+  # Pipelines — hub page
+  - selector: pipeline-hub-page
+    component: routes/app/pipelines/index.tsx
+    description: Root container for the pipeline hub/registry page
   - selector: pipeline-add-button
     component: routes/app/pipelines/index.tsx
     description: New-pipeline button on the pipelines page
@@ -1430,16 +1429,89 @@ selectors:
     component: routes/app/pipelines/index.tsx
     description: Create/edit pipeline modal on the pipelines page
 
-  # Pipelines — runs and flavors pages
+  # Pipelines — type cards and detail page
+  - selector: pipeline-type-run-button-*
+    component: components/pipeline/PipelineTypeCard.tsx
+    description: Run button on pipeline type card with dynamic pipeline type suffix
+  - selector: pipeline-type-detail-page
+    component: components/pipeline/PipelineTypeDetail.tsx
+    description: Root container for the pipeline type detail page
+
+  # Pipelines — implementation and configuration lists
+  - selector: pipeline-implementation-list
+    component: components/pipeline/ImplementationList.tsx
+    description: List of pipeline implementations and their configurations
+  - selector: pipeline-configuration-list
+    component: components/pipeline/ConfigurationList.tsx
+    description: List of saved pipeline configurations
+  - selector: pipeline-configuration-drawer
+    component: components/pipeline/ConfigurationDrawer.tsx
+    description: Drawer showing configuration details and edit options
+
+  # Pipelines — run wizard
+  - selector: pipeline-run-wizard
+    component: components/pipeline/wizards/*.tsx
+    description: Root container for run wizard (varies by pipeline type)
+  - selector: pipeline-run-wizard-submit
+    component: components/pipeline/wizards/*.tsx
+    description: Submit/execute button in the run wizard
+  - selector: pipeline-run-wizard-source-input
+    component: components/pipeline/wizards/*.tsx
+    description: Source data input field in the run wizard
+  - selector: pipeline-run-target-picker
+    component: components/pipeline/wizards/*.tsx
+    description: Target entity/node picker in the run wizard
+  - selector: implementation-config-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Root container for implementation and configuration selection in run wizards
+
+  # Pipelines — runs page and filtering
   - selector: runs-filter-bar
     component: routes/app/pipelines/runs.tsx
     description: Filter bar on the pipeline runs page
+  - selector: pipeline-runs-filter-type
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline type filter dropdown on the runs page
+  - selector: pipeline-runs-filter-status
+    component: routes/app/pipelines/runs.tsx
+    description: Status filter dropdown on the runs page
+  - selector: pipeline-runs-filter-date
+    component: routes/app/pipelines/runs.tsx
+    description: Date range filter on the runs page
   - selector: runs-status-filter
     component: routes/app/pipelines/runs.tsx
     description: Status filter on the pipeline runs page
   - selector: flavors-filter-bar
     component: routes/app/pipelines/flavors.tsx
     description: Filter bar on the pipeline flavors page
+
+  # Pipelines — run detail and controls
+  - selector: pipeline-run-detail-drawer
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Drawer showing detailed information about a pipeline run
+  - selector: pipeline-run-status-badge
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status badge showing current run status (PENDING, RUNNING, COMPLETED, FAILED)
+  - selector: pipeline-run-apply-button
+    component: components/pipeline/RunApplyControls.tsx
+    description: Button to apply a completed run's changes to the ontology
+  - selector: pipeline-run-revert-button
+    component: components/pipeline/RunRevertControls.tsx
+    description: Button to revert a previously applied run
+  - selector: pipeline-run-apply-confirm
+    component: components/pipeline/RunApplyControls.tsx
+    description: Confirmation dialog for applying run changes
+  - selector: pipeline-run-revert-confirm
+    component: components/pipeline/RunRevertControls.tsx
+    description: Confirmation dialog for reverting run changes
+
+  # Pipelines — review and candidate tables
+  - selector: pipeline-run-candidate-table
+    component: components/pipeline/review/*.tsx
+    description: Table displaying candidates/results from pipeline execution
+  - selector: pipeline-run-candidate-select-all
+    component: components/pipeline/review/*.tsx
+    description: Select-all checkbox for pipeline run candidates
 
   # Pipeline create form
   - selector: pipeline-create-form
@@ -1565,3 +1637,374 @@ selectors:
   - selector: taxonomy-color-input
     component: src/components/schema/TaxonomyForm.tsx
     description: Hex color text input paired with the color picker on the taxonomy form
+
+  # Pipelines Hub
+  - selector: pipeline-types-grid
+    component: src/components/pipeline/PipelineHubContent.tsx
+    description: Grid container displaying all pipeline type cards
+  - selector: pipeline-type-card-*
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Individual pipeline type card with name, description, and run controls (wildcard matches pipeline-type-card-{type_identifier})
+  - selector: pipeline-run-status-*
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Run status chip and timestamp display on card (wildcard matches pipeline-run-status-{type_identifier})
+  - selector: pipeline-run-button-*
+    component: src/components/pipeline/PipelineTypeCard.tsx
+    description: Run button to navigate to execution wizard (wildcard matches pipeline-run-button-{type_identifier})
+
+  # Pipeline Type Detail
+  - selector: implementation-list
+    component: src/components/pipeline/ImplementationList.tsx
+    description: Left pane list of implementations for the selected pipeline type
+  - selector: configuration-list
+    component: src/components/pipeline/ConfigurationList.tsx
+    description: Center pane list of versioned configurations for the selected implementation
+  - selector: configuration-drawer-*
+    component: src/components/pipeline/ConfigurationDrawer.tsx
+    description: Right pane inspector showing read-only configuration details with dynamic ID suffix (pattern matches configuration-drawer-{ref}-{version})
+
+  # Pipeline Run Wizards
+  - selector: schema-extraction-wizard
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Schema extraction pipeline wizard form
+  - selector: schema-extraction-document
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Document text area input in schema extraction wizard
+  - selector: schema-extraction-taxonomy-picker
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Taxonomy/concept scheme entity picker in schema extraction wizard
+  - selector: schema-extraction-submit
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Submit button in schema extraction wizard
+  - selector: schema-extraction-error
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Error message callout in schema extraction wizard
+  - selector: schema-extraction-loading
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Loading state message in schema extraction wizard
+  - selector: schema-extraction-batch-toggle
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Container for run as batch toggle in schema extraction wizard
+  - selector: schema-extraction-batch-checkbox
+    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
+    description: Checkbox to enable batch execution in schema extraction wizard
+
+  - selector: individual-extraction-wizard
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Individual extraction pipeline wizard form
+  - selector: individual-extraction-source
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Source text area in individual extraction wizard
+  - selector: individual-extraction-ontology
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Target ontology entity picker in individual extraction wizard
+  - selector: individual-extraction-submit
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Submit button in individual extraction wizard
+  - selector: individual-extraction-error
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Error message callout in individual extraction wizard
+  - selector: individual-extraction-loading
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Loading state message in individual extraction wizard
+  - selector: individual-extraction-batch-toggle
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Container for run as batch toggle in individual extraction wizard
+  - selector: individual-extraction-batch-checkbox
+    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
+    description: Checkbox to enable batch execution in individual extraction wizard
+
+  - selector: schema-grounding-wizard
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Schema grounding pipeline wizard form
+  - selector: schema-grounding-nodes
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Target nodes entity picker in schema grounding wizard
+  - selector: schema-grounding-sources
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Knowledge sources multi-select checkboxes in schema grounding wizard
+  - selector: schema-grounding-source-dbpedia
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: DBpedia source checkbox
+  - selector: schema-grounding-source-conceptnet
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: ConceptNet source checkbox
+  - selector: schema-grounding-source-wikidata
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Wikidata source checkbox
+  - selector: schema-grounding-source-schema_org
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Schema.org source checkbox
+  - selector: schema-grounding-submit
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Submit button in schema grounding wizard
+  - selector: schema-grounding-error
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Error message callout in schema grounding wizard
+  - selector: schema-grounding-loading
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Loading state message in schema grounding wizard
+  - selector: schema-grounding-batch-toggle
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Container for run as batch toggle in schema grounding wizard
+  - selector: schema-grounding-batch-checkbox
+    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Checkbox to enable batch execution in schema grounding wizard
+
+  - selector: definition-refinement-wizard
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Definition refinement pipeline wizard form
+  - selector: definition-refinement-class
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Class to refine entity picker in definition refinement wizard
+  - selector: definition-refinement-neighborhood
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Neighborhood preview panel showing class context in definition refinement wizard
+  - selector: definition-refinement-definition
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Current definition text area in definition refinement wizard
+  - selector: definition-refinement-submit
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Submit button in definition refinement wizard
+  - selector: definition-refinement-error
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Error message callout in definition refinement wizard
+  - selector: definition-refinement-loading
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Loading state message in definition refinement wizard
+  - selector: definition-refinement-batch-toggle
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Container for run as batch toggle in definition refinement wizard
+  - selector: definition-refinement-batch-checkbox
+    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
+    description: Checkbox to enable batch execution in definition refinement wizard
+
+  - selector: connection-refinement-wizard
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Connection refinement pipeline wizard form
+  - selector: connection-refinement-scope
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Scope class entity picker in connection refinement wizard
+  - selector: connection-refinement-neighborhood
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Neighborhood preview table showing current connections in connection refinement wizard
+  - selector: connection-refinement-submit
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Submit button in connection refinement wizard
+  - selector: connection-refinement-error
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Error message callout in connection refinement wizard
+  - selector: connection-refinement-loading
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Loading state message in connection refinement wizard
+  - selector: connection-refinement-batch-toggle
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Container for run as batch toggle in connection refinement wizard
+  - selector: connection-refinement-batch-checkbox
+    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
+    description: Checkbox to enable batch execution in connection refinement wizard
+
+  - selector: implementation-select
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation dropdown selector shared across all wizards
+  - selector: configuration-select
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration dropdown selector shared across all wizards
+
+  # Pipeline Runs Page
+  - selector: runs-page
+    component: routes/app/pipelines/runs.tsx
+    description: Main pipeline runs list page container
+  - selector: runs-table
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline runs table wrapper container
+  - selector: run-row-*
+    component: routes/app/pipelines/runs.tsx
+    description: Table row for a pipeline run with dynamic ID suffix
+  - selector: runs-pagination-prev
+    component: routes/app/pipelines/runs.tsx
+    description: Previous page button in run pagination
+  - selector: runs-pagination-next
+    component: routes/app/pipelines/runs.tsx
+    description: Next page button in run pagination
+  - selector: filter-pipeline-type
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline type dropdown filter button
+  - selector: filter-status
+    component: routes/app/pipelines/runs.tsx
+    description: Pipeline status multi-select filter button
+  - selector: filter-date-range
+    component: routes/app/pipelines/runs.tsx
+    description: Date range filter button for filtering runs by start date
+  - selector: filter-start-date
+    component: routes/app/pipelines/runs.tsx
+    description: Start date input field in date range filter
+  - selector: filter-end-date
+    component: routes/app/pipelines/runs.tsx
+    description: End date input field in date range filter
+  - selector: filter-clear-dates
+    component: routes/app/pipelines/runs.tsx
+    description: Clear button to reset date range filter
+
+  # Pipeline Run Detail Drawer
+  - selector: run-detail-drawer
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Run detail inspector panel showing metadata and execution results
+  - selector: run-failure-reason
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Error message display for FAILED run status
+  - selector: run-completed-section
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Results section shown for COMPLETED runs with candidate summary
+  - selector: run-apply-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Placeholder for apply controls (Phase 7 feature)
+  - selector: run-pending-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status message shown when run is PENDING execution
+  - selector: run-running-placeholder
+    component: components/pipeline/RunDetailDrawer.tsx
+    description: Status message shown when run is RUNNING
+
+  - selector: connection-refinement-empty
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Empty state message when no connection deltas are available
+  - selector: connection-refinement-review
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Root container for connection refinement review component showing deltas grouped by operation type
+  - selector: definition-refinement-empty
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Empty state message when no definitions are available
+  - selector: definition-refinement-review
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Root container for definition refinement review component with radio-button definition selection
+  - selector: definition-refinement-current
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Current definition option card in definition refinement review
+  - selector: grounding-empty
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Empty state message when no grounding candidates are available
+  - selector: grounding-review
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Root container for grounding review component with per-node candidate lists
+  - selector: individual-extraction-empty
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Empty state message when no extraction candidates are available
+  - selector: individual-extraction-review
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Root container for individual extraction review component showing triples table
+  - selector: schema-extraction-empty
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Empty state message when no extraction candidates are available
+  - selector: schema-extraction-review
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Root container for schema extraction review component with tabbed Classes/Properties/Relationships interface
+  - selector: classes-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for classes tab in schema extraction review
+  - selector: properties-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for properties tab in schema extraction review
+  - selector: relationships-table-container
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Table container for relationships tab in schema extraction review
+
+  - selector: definition-refinement-radio-current
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Radio input for selecting the current (non-candidate) definition in definition refinement review
+  - selector: definition-refinement-radio-candidate-*
+    component: src/components/pipeline/review/DefinitionRefinementReview.tsx
+    description: Radio input for selecting a candidate definition with dynamic index suffix
+  - selector: individual-extraction-select-all
+    component: src/components/pipeline/review/IndividualExtractionReview.tsx
+    description: Select-all checkbox for triples table in individual extraction review
+  - selector: schema-extraction-select-all-classes
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for classes table in schema extraction review
+  - selector: schema-extraction-select-all-properties
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for properties table in schema extraction review
+  - selector: schema-extraction-select-all-relationships
+    component: src/components/pipeline/review/SchemaExtractionReview.tsx
+    description: Select-all checkbox for relationships table in schema extraction review
+  - selector: grounding-accept-*
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Accept button for grounding candidate with dynamic key suffix
+  - selector: grounding-reject-*
+    component: src/components/pipeline/review/GroundingReview.tsx
+    description: Reject button for grounding candidate with dynamic key suffix
+  - selector: connection-accept-*
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Accept button for connection delta with dynamic key suffix
+  - selector: connection-reject-*
+    component: src/components/pipeline/review/ConnectionRefinementReview.tsx
+    description: Reject button for connection delta with dynamic key suffix
+
+  - selector: run-apply-button-disabled
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Disabled Already applied button shown after a successful apply
+  - selector: run-apply-button
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Apply selected button to apply candidates to ontology
+  - selector: run-apply-section
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Container for apply and revert controls and results
+  - selector: run-apply-result
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Summary display of entities created/updated after successful apply
+  - selector: run-revert-result
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Summary display after successful revert showing events reverted count
+  - selector: run-status-reverted
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Status badge or indicator showing that a run has been reverted
+  - selector: run-revert-button-disabled
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Disabled Already reverted button shown after a successful revert
+  - selector: run-revert-button
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Revert this apply button to undo a successful apply
+  - selector: run-apply-confirm-dialog
+    component: src/components/pipeline/RunApplyControls.tsx
+    description: Confirmation dialog before applying selected candidates
+  - selector: run-revert-confirm-dialog
+    component: src/components/pipeline/RunRevertControls.tsx
+    description: Confirmation dialog before reverting an applied run
+
+  - selector: batch-detail-page
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Batch detail page placeholder showing deferred batch execution feature unavailability message
+
+  - selector: schema-grounding-node-type
+    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Container for node type selector (Class or PropertyDefinition) in grounding wizard
+  - selector: schema-grounding-node-type-class
+    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Button to select Class as target node type in grounding wizard
+  - selector: schema-grounding-node-type-property
+    component: src/components/pipeline/wizards/SchemaGroundingWizard.tsx
+    description: Button to select PropertyDefinition as target node type in grounding wizard
+
+  - selector: run-detail-close-button
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Close button in run details drawer header
+
+  - selector: filter-implementation
+    component: src/routes/app/pipelines/runs.tsx
+    description: Implementation dropdown filter button in run history filter bar
+  - selector: filter-applied
+    component: src/routes/app/pipelines/runs.tsx
+    description: Applied status dropdown filter button in run history filter bar
+
+  # Batch Detail Page
+  - selector: batch-unavailable-notice
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Warning notice indicating batch execution requires background task runner not yet available
+  - selector: batch-child-runs-placeholder
+    component: src/routes/app/pipelines/batches/$batchId.tsx
+    description: Placeholder showing child runs list will be available when batch execution is implemented
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: run-change-events-section
+    component: src/components/pipeline/RunDetailDrawer.tsx
+    description: Container displaying change events produced by applying a pipeline run

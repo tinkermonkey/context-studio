@@ -1,0 +1,51 @@
+@layer app {
+  .batch-detail-container {
+    padding: 24px;
+  }
+
+  .batch-section {
+    margin-top: 24px;
+  }
+
+  .batch-section-title {
+    margin: 0 0 16px 0;
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .batch-placeholder {
+    padding: 32px 24px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg));
+    text-align: center;
+  }
+
+  .batch-placeholder-text {
+    margin: 0 0 12px 0;
+    font-size: var(--text-sm);
+    color: rgb(var(--canvas-fg-2));
+    line-height: 1.5;
+  }
+
+  .batch-placeholder-subtext {
+    margin-top: 16px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .batch-placeholder-list {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+    list-style: disc;
+    text-align: left;
+    display: inline-block;
+    font-size: var(--text-sm);
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .batch-placeholder-list li {
+    margin-bottom: 4px;
+  }
+}

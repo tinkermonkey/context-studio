@@ -266,6 +266,7 @@ class PipelineRunRepository(Protocol):
         implementation_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        applied: bool | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple[PipelineRunList, int]:
@@ -278,6 +279,7 @@ class PipelineRunRepository(Protocol):
             implementation_id: Filter by implementation ID
             start_date: Include only runs created on or after this UTC datetime
             end_date: Include only runs created on or before this UTC datetime
+            applied: Filter by applied status (True for applied, False for not-applied)
             limit: Maximum number of rows to return
             offset: Number of rows to skip (for pagination)
 

@@ -1,0 +1,104 @@
+@layer app {
+  .configuration-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    padding: 12px;
+    background: rgb(var(--canvas-bg));
+    min-height: 120px;
+    overflow-y: auto;
+    max-height: 600px;
+  }
+
+  .configuration-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .configuration-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgb(var(--canvas-fg-2));
+    border-bottom: 1px solid rgb(var(--canvas-border));
+  }
+
+  .default-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgb(var(--accent-primary) / 0.2);
+    color: rgb(var(--accent-primary));
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .configuration-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: rgb(var(--canvas-fg-1));
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .configuration-item:hover {
+    background: rgb(var(--canvas-bg-hover));
+    border-color: rgb(var(--canvas-border));
+  }
+
+  .configuration-item.selected {
+    background: rgb(var(--accent-primary) / 0.1);
+    border-color: rgb(var(--accent-primary));
+  }
+
+  .configuration-version {
+    flex: 1;
+  }
+
+  .configuration-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: rgb(var(--accent-primary));
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .configuration-skeleton {
+    height: 36px;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-bg)) 0%,
+      rgb(var(--canvas-border)) 50%,
+      rgb(var(--canvas-bg)) 100%
+    );
+    background-size: 200% 100%;
+    animation: configuration-loading 1.5s infinite;
+  }
+
+  @keyframes configuration-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}

@@ -351,6 +351,7 @@ class PipelineRepository:
         implementation_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        applied: bool | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple["PipelineRunList", int]:
@@ -366,6 +367,7 @@ class PipelineRepository:
             implementation_id: Filter by implementation ID
             start_date: Include only runs created on or after this UTC datetime
             end_date: Include only runs created on or before this UTC datetime
+            applied: True for applied runs (have change_events), False for not-applied
             limit: Maximum number of rows to return
             offset: Number of rows to skip (for pagination)
 
@@ -388,6 +390,15 @@ class PipelineRepository:
                 q = q.filter(PipelineRun.created_at >= start_date)
             if end_date is not None:
                 q = q.filter(PipelineRun.created_at <= end_date)
+
+            if applied is not None:
+                subquery = session.query(ChangeEvent).filter(
+                    ChangeEvent.batch_run_id == PipelineRun.batch_id
+                ).exists()
+                if applied:
+                    q = q.filter(subquery)
+                else:
+                    q = q.filter(~subquery)
 
             q = q.order_by(PipelineRun.created_at.desc())
             total = q.count()

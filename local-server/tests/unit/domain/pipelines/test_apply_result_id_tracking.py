@@ -228,12 +228,12 @@ def test_schema_grounding_tracks_external_reference_ids(repo):
             {
                 "uri": "http://example.com/person",
                 "source": "test",
-                "match_confidence": 0.95,
+                "confidence": 0.95,
             },
             {
                 "uri": "http://example.com/homo-sapiens",
                 "source": "test",
-                "match_confidence": 0.90,
+                "confidence": 0.90,
             },
         ]
     }
@@ -369,7 +369,7 @@ def test_schema_grounding_uses_external_references_created(repo):
             {
                 "uri": "http://example.com/test",
                 "source": "test",
-                "match_confidence": 0.95,
+                "confidence": 0.95,
             }
         ]
     }

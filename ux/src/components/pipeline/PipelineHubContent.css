@@ -1,0 +1,22 @@
+@layer app {
+  .pipeline-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-4);
+    padding: var(--space-6) 0;
+  }
+
+  .pipeline-skeleton-card {
+    height: 160px;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--canvas-bg)),
+      rgb(var(--canvas-fg-4)),
+      rgb(var(--canvas-bg))
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+}

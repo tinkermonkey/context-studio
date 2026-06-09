@@ -1591,6 +1591,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/runs/{run_id}/change-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Pipeline Run Change Events
+     * @description Get change events produced by applying a pipeline run.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *         versioning_service: VersioningService for change history queries
+     *         offset: Number of results to skip
+     *         limit: Maximum number of results to return
+     *
+     *     Returns:
+     *         Paginated list of change events produced by this run
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found
+     */
+    get: operations["get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/runs": {
     parameters: {
       query?: never;
@@ -1610,6 +1643,7 @@ export interface paths {
      *         implementation_id: Filter by implementation ID (optional)
      *         start_date: Filter by start date (ISO 8601 format, optional)
      *         end_date: Filter by end date (ISO 8601 format, optional)
+     *         applied: Filter by applied status ('applied' or 'not-applied', optional)
      *         limit: Maximum number of results (1-500, default 100)
      *         offset: Number of results to skip for pagination (default 0)
      *         request: FastAPI request (for service access)
@@ -1686,12 +1720,15 @@ export interface paths {
      * Revert Pipeline Run
      * @description Revert all changes made by a specific pipeline run.
      *
-     *     Walks the change_events for the given run_id in reverse order and applies
+     *     Walks the change_events for the given run in reverse order and applies
      *     the inverse of each operation. This restores the ontology to its state
      *     before the run was applied.
      *
      *     The operation is idempotent — calling revert twice produces the same state
      *     without error.
+     *
+     *     This endpoint only supports reverting runs from single-run batches. For multi-run
+     *     batches, use the batch revert endpoint instead.
      *
      *     Args:
      *         run_id: ID of the pipeline run to revert
@@ -1700,7 +1737,7 @@ export interface paths {
      *         RevertRunResponse with count of events reverted
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 500 for revert errors
+     *         HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
      */
     post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
     delete?: never;
@@ -5543,6 +5580,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[VersioningChangeEventResponse] */
+    ListResponse_VersioningChangeEventResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["VersioningChangeEventResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /**
      * MergeResultResponse
      * @description Response with merge operation results
@@ -6286,6 +6346,48 @@ export interface components {
        * @description Number of change events reverted
        */
       events_reverted: number;
+      /**
+       * Classes Deleted
+       * @description Number of classes deleted during revert
+       * @default 0
+       */
+      classes_deleted: number;
+      /**
+       * Individuals Deleted
+       * @description Number of individuals deleted during revert
+       * @default 0
+       */
+      individuals_deleted: number;
+      /**
+       * Relationships Deleted
+       * @description Number of relationships deleted during revert
+       * @default 0
+       */
+      relationships_deleted: number;
+      /**
+       * Properties Deleted
+       * @description Number of properties deleted during revert
+       * @default 0
+       */
+      properties_deleted: number;
+      /**
+       * Taxonomies Deleted
+       * @description Number of taxonomies deleted during revert
+       * @default 0
+       */
+      taxonomies_deleted: number;
+      /**
+       * Concept Schemes Deleted
+       * @description Number of concept schemes deleted during revert
+       * @default 0
+       */
+      concept_schemes_deleted: number;
+      /**
+       * Entities Restored
+       * @description Number of entities restored during revert
+       * @default 0
+       */
+      entities_restored: number;
     };
     /**
      * RunCountsResponse
@@ -8789,6 +8891,42 @@ export interface operations {
       };
     };
   };
+  get_pipeline_run_change_events_api_pipelines_runs__run_id__change_events_get: {
+    parameters: {
+      query?: {
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Maximum number of results */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_pipeline_runs_api_pipelines_runs_get: {
     parameters: {
       query?: {
@@ -8802,6 +8940,8 @@ export interface operations {
         start_date?: string | null;
         /** @description Filter by end date (ISO 8601 format) */
         end_date?: string | null;
+        /** @description Filter by applied status: 'applied' or 'not-applied' */
+        applied?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

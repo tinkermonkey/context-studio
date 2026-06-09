@@ -1,0 +1,13 @@
+@layer app {
+  .configuration-drawer {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .configuration-empty {
+    padding: 20px;
+    text-align: center;
+    color: rgb(var(--canvas-fg-3));
+    font-size: 12px;
+  }
+}

@@ -36,3 +36,5 @@ export {
 } from "./useProperties";
 
 export { useRelationships, useCreateRelationship, useDeleteRelationship } from "./useRelationships";
+
+export { useEntityTypeQuery } from "./useEntityTypeQuery";

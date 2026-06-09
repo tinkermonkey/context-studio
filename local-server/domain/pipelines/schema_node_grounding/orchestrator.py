@@ -158,6 +158,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                     groundings=[],
                     current_status=PipelineRunStatus.COMPLETED,
                     result={
+                        "node_label": node_label,
                         "groundings": [],
                         "total_candidates_evaluated": 0,
                     },
@@ -175,13 +176,14 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                 groundings=groundings,
                 current_status=PipelineRunStatus.COMPLETED,
                 result={
+                    "node_label": node_label,
                     "groundings": [
                         {
                             "uri": c.uri,
                             "label": c.label,
                             "description": c.description,
                             "source": c.source,
-                            "match_confidence": c.match_confidence,
+                            "confidence": c.match_confidence,
                             "match_rationale": c.match_rationale,
                         }
                         for c in groundings
