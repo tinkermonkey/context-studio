@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { Table, Button, Icon, RowMenu, type Column } from "@tinkermonkey/heimdall-ui";
+import { Table, Button, Icon, RowMenu, type Column, type RowMenuAction } from "@tinkermonkey/heimdall-ui";
 
-export type RowMenuAction =
-  | { id: string; label: string; icon?: string; danger?: boolean; disabled?: boolean }
-  | { type: "separator" };
+export type { RowMenuAction } from "@tinkermonkey/heimdall-ui";
 
 interface SelectableTableProps<T extends { id: string }> {
   columns: Column<T>[];
