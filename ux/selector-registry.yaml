@@ -2008,3 +2008,43 @@ selectors:
   - selector: run-change-events-section
     component: src/components/pipeline/RunDetailDrawer.tsx
     description: Container displaying change events produced by applying a pipeline run
+
+  - selector: bulk-bar
+    component: src/components/crud/BulkBar.tsx
+    description: Floating bulk-action toolbar that appears when one or more table rows are selected
+  - selector: bulk-bar-clear
+    component: src/components/crud/BulkBar.tsx
+    description: X button in the bulk bar that clears the current row selection
+  - selector: bulk-action-*
+    component: src/components/crud/BulkBar.tsx
+    description: Individual action buttons in the bulk bar; suffix is the action id
+  - selector: cascade-delete-dialog
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Confirmation modal for deleting one or more entities with cascade-impact preview
+  - selector: cascade-delete-cancel
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Cancel button inside the cascade-delete confirmation dialog
+  - selector: cascade-delete-confirm
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Confirm/delete button inside the cascade-delete confirmation dialog
+  - selector: cascade-delete-content
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Body region of the cascade-delete dialog containing callout and impact details
+  - selector: cascade-impact-summary
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Stat grid showing counts of dependent entities that will be removed
+  - selector: cascade-impact-items
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Scrollable list of up to 60 individual dependent items affected by the delete
+  - selector: selectable-table
+    component: src/components/crud/SelectableTable.tsx
+    description: Root wrapper of the SelectableTable component (default testId value)
+  - selector: selectable-table-prev
+    component: src/components/crud/SelectableTable.tsx
+    description: Previous-page button in the SelectableTable pagination footer
+  - selector: selectable-table-next
+    component: src/components/crud/SelectableTable.tsx
+    description: Next-page button in the SelectableTable pagination footer
+  - selector: my-table
+    component: src/components/crud/SelectableTable.tsx
+    description: Root wrapper of SelectableTable when rendered with a custom testId prop

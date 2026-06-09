@@ -167,7 +167,7 @@ describe("SelectableTable", () => {
   });
 
   describe("selection", () => {
-    it("calls onSelectRows when Heimdall Table fires selection", () => {
+    it("renders with selection props", () => {
       const onSelectRows = vi.fn();
       render(
         <SelectableTable
@@ -178,6 +178,22 @@ describe("SelectableTable", () => {
         />,
       );
       expect(screen.getByTestId("selectable-table")).toBeInTheDocument();
+    });
+
+    it("calls onSelectRows when a row checkbox is clicked", async () => {
+      const user = userEvent.setup();
+      const onSelectRows = vi.fn();
+      render(
+        <SelectableTable
+          columns={columns}
+          data={makeRows(3)}
+          selectedRows={[]}
+          onSelectRows={onSelectRows}
+        />,
+      );
+      const checkbox = screen.getByRole("checkbox", { name: "Select row 1" });
+      await user.click(checkbox);
+      expect(onSelectRows).toHaveBeenCalledWith(["1"]);
     });
 
     it("calls onRowClick when a row is clicked", async () => {

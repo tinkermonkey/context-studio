@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Table, Button, Icon, RowMenu, type Column } from "@tinkermonkey/heimdall-ui";
 
-export type { Column } from "@tinkermonkey/heimdall-ui";
-
 export type RowMenuAction =
   | { id: string; label: string; icon?: string; danger?: boolean; disabled?: boolean }
   | { type: "separator" };
