@@ -124,9 +124,7 @@
   border: 1px solid rgb(var(--canvas-border, 30, 42, 68));
   border-radius: 5px;
   resize: none;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .chat-composer__input::placeholder {
@@ -189,9 +187,7 @@
   border-radius: 4px;
   color: rgb(var(--canvas-fg-2, 156, 163, 175));
   cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease;
   flex: 0 0 auto;
 }
 

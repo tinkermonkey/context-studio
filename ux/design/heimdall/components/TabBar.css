@@ -1,13 +1,13 @@
 .tab-bar {
   display: flex;
   flex-direction: column;
-  background: rgb(var(--canvas-card));
+  background: transparent;
   border-bottom: 1px solid rgb(var(--canvas-border));
 }
 
 .tab-bar__tabs {
   display: flex;
-  gap: 18px;
+  gap: 4px;
 }
 
 .tab-bar__tab {
@@ -16,7 +16,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 0;
+  padding: 10px 12px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;

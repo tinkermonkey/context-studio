@@ -16,7 +16,7 @@
   grid-template-columns: 1fr 1fr 32px;
   gap: 8px;
   padding: 8px 10px;
-  background-color: rgb(var(--canvas-bg));
+  background-color: rgb(var(--canvas-card));
   border-bottom: 1px solid rgb(var(--canvas-border));
   font-family: var(--font-mono);
   font-size: 10px;
@@ -42,7 +42,7 @@
   padding: 8px 10px;
   border-bottom: 1px solid rgb(var(--canvas-border));
   align-items: center;
-  background-color: rgb(var(--canvas-card));
+  background-color: rgb(var(--canvas-bg-2));
 }
 
 .key-value-editor--has-datatype .key-value-editor__row {

@@ -28,15 +28,17 @@
 /* Head region */
 .pipeline-card__head {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
+  gap: 8px;
   padding: 14px 16px;
   border-bottom: 1px solid rgb(var(--canvas-border));
 }
 
-.pipeline-card__head-left {
-  flex: 1;
+.pipeline-card__head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -44,7 +46,8 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .pipeline-card__name-mono {
@@ -156,7 +159,7 @@
   gap: 12px;
   align-items: center;
   padding: 16px;
-  background: linear-gradient(180deg, rgb(var(--canvas-card) / 0.5) 0%, transparent 100%);
+  background: rgb(var(--canvas-bg-2));
   overflow-x: auto;
 }
 
@@ -165,6 +168,53 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  padding: 8px 10px;
+  background-color: rgb(var(--canvas-card));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-md);
+}
+
+/* fill layout (default): nodes share the strip width evenly */
+.pipeline-card__flow[data-layout="fill"] .pipeline-card__node {
+  flex: 1;
+  min-width: 0;
+}
+
+.pipeline-card--compact .pipeline-card__node {
+  padding: 6px 8px;
+}
+
+/* Per-stage tone — drives node border + icon tile. Uses --status-* tokens so
+   dark-canvas support is automatic. Default (no data-color) keeps the amber accent. */
+.pipeline-card__node[data-color="cyan"] { border-color: rgb(var(--status-cyan) / 0.30); }
+.pipeline-card__node[data-color="cyan"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-cyan) / 0.15);
+  color: rgb(var(--status-cyan));
+}
+.pipeline-card__node[data-color="violet"] { border-color: rgb(var(--status-violet) / 0.30); }
+.pipeline-card__node[data-color="violet"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-violet) / 0.15);
+  color: rgb(var(--status-violet));
+}
+.pipeline-card__node[data-color="amber"] { border-color: rgb(var(--status-amber) / 0.30); }
+.pipeline-card__node[data-color="amber"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-amber) / 0.15);
+  color: rgb(var(--status-amber));
+}
+.pipeline-card__node[data-color="emerald"] { border-color: rgb(var(--status-emerald) / 0.30); }
+.pipeline-card__node[data-color="emerald"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-emerald) / 0.15);
+  color: rgb(var(--status-emerald));
+}
+.pipeline-card__node[data-color="rose"] { border-color: rgb(var(--status-rose) / 0.30); }
+.pipeline-card__node[data-color="rose"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-rose) / 0.15);
+  color: rgb(var(--status-rose));
+}
+.pipeline-card__node[data-color="neutral"] { border-color: rgb(var(--status-neutral) / 0.30); }
+.pipeline-card__node[data-color="neutral"] .pipeline-card__icon-tile {
+  background-color: rgb(var(--status-neutral) / 0.15);
+  color: rgb(var(--status-neutral));
 }
 
 .pipeline-card__icon-tile {
@@ -192,16 +242,20 @@
   font-size: 12px;
   font-weight: 500;
   color: rgb(var(--canvas-fg-1));
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pipeline-card__node-label {
   font-family: var(--font-mono);
   font-size: 10px;
   color: rgb(var(--canvas-fg-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pipeline-card__arrow {
-  width: 20px;
+  width: 26px;
   height: 1px;
   background-color: rgb(var(--canvas-border));
   flex-shrink: 0;
@@ -209,7 +263,7 @@
 }
 
 .pipeline-card__arrow::after {
-  content: "";
+  content: '';
   position: absolute;
   right: -3px;
   top: 50%;
@@ -224,13 +278,12 @@
 .pipeline-card__foot {
   padding: 0;
   border-top: 1px solid rgb(var(--canvas-border));
-  background-color: rgb(var(--canvas-bg));
-  overflow-x: auto;
+  background-color: rgb(var(--canvas-card));
 }
 
 .pipeline-card__foot-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   height: 100%;
   gap: 0;
 }
@@ -240,7 +293,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 100px;
+  min-width: 0;
   border-right: 1px solid rgb(var(--canvas-border));
 }
 
@@ -259,6 +312,9 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pipeline-card__foot-col--error .pipeline-card__foot-label {
@@ -271,6 +327,9 @@
   color: rgb(var(--canvas-fg-1));
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pipeline-card__foot-col--error .pipeline-card__foot-value {

@@ -27,11 +27,27 @@
   color: rgb(var(--shell-fg-3));
   cursor: pointer;
   flex-shrink: 0;
+  transition: background 80ms ease-out, color 80ms ease-out;
+}
+
+/* Standalone toggle (no AppTitle host) — right-align in the header row. */
+.sidebar > .sidebar__toggle {
   align-self: flex-end;
   margin-bottom: 4px;
-  transition:
-    background 80ms ease-out,
-    color 80ms ease-out;
+}
+
+.sidebar--collapsed > .sidebar__toggle {
+  align-self: center;
+}
+
+/* Embedded AppTitle header — extend to the sidebar edges,
+   neutralizing the sidebar's outer padding. */
+.sidebar > .app-title {
+  margin: -12px -8px 8px;
+}
+
+.sidebar--collapsed > .app-title {
+  margin: -12px -8px 4px;
 }
 
 .sidebar__toggle:hover {
@@ -108,7 +124,7 @@
 }
 
 .sidebar__item--active::before {
-  content: "";
+  content: '';
   position: absolute;
   left: -8px;
   top: 5px;
@@ -178,6 +194,18 @@
   left: 18px;
   top: 5px;
   bottom: 5px;
+}
+
+/* Footer slot — pinned to bottom, edge-to-edge with subtle separator */
+.sidebar__footer {
+  margin: 8px -8px -12px;
+  padding: 10px 12px;
+  border-top: 1px solid rgb(var(--shell-border));
+  flex-shrink: 0;
+}
+
+.sidebar--collapsed .sidebar__footer {
+  padding: 10px 8px;
 }
 
 /* Expand/collapse chevron */

@@ -1,3 +1,5 @@
+@import './dropdown-base.css';
+
 .filter-dropdown {
   position: relative;
   display: inline-block;
@@ -23,9 +25,7 @@
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background 0.08s,
-    border-color 0.08s;
+  transition: background 0.08s, border-color 0.08s;
   outline: none;
 }
 
@@ -39,15 +39,10 @@
   pointer-events: none;
 }
 
-/* Focus ring when panel is open */
-.filter-dropdown__trigger[aria-expanded="true"] {
+.filter-dropdown__trigger[aria-expanded='true'] {
   outline: none;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
 }
-
-/* ============================================================================
-   Trigger Label (Mono Uppercase)
-   ============================================================================ */
 
 .filter-dropdown__label {
   font-family: var(--font-mono);
@@ -58,20 +53,12 @@
   color: rgb(var(--canvas-fg-3));
 }
 
-/* ============================================================================
-   Trigger Summary
-   ============================================================================ */
-
 .filter-dropdown__summary {
   font-family: var(--font-sans);
   font-size: 13px;
   flex: 1;
   text-align: center;
 }
-
-/* ============================================================================
-   Trigger Chevron
-   ============================================================================ */
 
 .filter-dropdown__chevron {
   display: flex;
@@ -86,127 +73,18 @@
 }
 
 /* ============================================================================
-   Floating Panel
+   Panel — most chrome inherited from .dropdown-panel
    ============================================================================ */
 
 .filter-dropdown__panel {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
   min-width: 220px;
-  max-height: 320px;
-  overflow-y: auto;
-  background: rgb(var(--canvas-surface));
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
-  z-index: 1000;
 }
 
 .filter-dropdown__panel:not([hidden]) {
   display: block;
 }
 
-/* ============================================================================
-   Section Headers
-   ============================================================================ */
-
-.filter-dropdown__section {
-  display: flex;
-  flex-direction: column;
-}
-
-.filter-dropdown__section:not(:first-child) {
-  border-top: 1px solid rgb(var(--canvas-border));
-}
-
-.filter-dropdown__section-title {
-  padding: 8px 10px 6px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgb(var(--canvas-fg-3));
-}
-
 .filter-dropdown__section-content {
   display: flex;
   flex-direction: column;
-}
-
-/* ============================================================================
-   Rows (Checkbox / Radio)
-   ============================================================================ */
-
-.filter-dropdown__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  outline: none;
-  transition: background 0.08s;
-  text-align: left;
-}
-
-.filter-dropdown__row:hover {
-  background: rgb(var(--canvas-bg-2));
-}
-
-.filter-dropdown__row--focused {
-  background: rgb(var(--canvas-bg-2));
-  outline: 2px solid rgb(var(--accent-primary-hover));
-  outline-offset: -2px;
-}
-
-/* ============================================================================
-   Checkbox / Radio Container
-   ============================================================================ */
-
-.filter-dropdown__row-checkbox,
-.filter-dropdown__row-radio {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-}
-
-.filter-dropdown__row-checkbox input,
-.filter-dropdown__row-radio input {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: rgb(var(--accent-primary-deep));
-}
-
-/* ============================================================================
-   Row Content
-   ============================================================================ */
-
-.filter-dropdown__row-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.filter-dropdown__row-label {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: rgb(var(--canvas-fg-1));
-  font-weight: 500;
-}
-
-.filter-dropdown__row-description {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: rgb(var(--canvas-fg-3));
 }

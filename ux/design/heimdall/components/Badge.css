@@ -54,14 +54,14 @@
 }
 
 .status-badge::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: 9999px;
 }
 
 .status-badge::after {
-  content: "";
+  content: '';
   position: relative;
   display: block;
   width: 8px;

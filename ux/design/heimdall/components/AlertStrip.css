@@ -5,7 +5,6 @@
   padding: 12px;
   background-color: rgb(var(--canvas-bg-2));
   border-bottom: 1px solid rgb(var(--canvas-border));
-  margin-bottom: 16px;
 }
 
 .alert-strip__alert {

@@ -50,6 +50,7 @@
 
 .panel__body {
   padding: 16px;
+  background: rgb(var(--canvas-bg-2));
 }
 
 .panel__body--no-padding {

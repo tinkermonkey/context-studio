@@ -85,6 +85,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  background: rgb(var(--canvas-bg-2));
 }
 
 .command-palette__empty {
@@ -92,6 +93,20 @@
   text-align: center;
   font-size: 12px;
   color: rgb(var(--canvas-fg-3));
+}
+
+.command-palette__group + .command-palette__group {
+  border-top: 1px solid rgb(var(--canvas-border));
+}
+
+.command-palette__group-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--canvas-fg-3));
+  padding: 10px 16px 4px;
 }
 
 .command-palette__item {
@@ -110,7 +125,7 @@
 
 .command-palette__item:hover,
 .command-palette__item--selected {
-  background: rgb(var(--canvas-bg-2));
+  background: rgb(var(--canvas-card));
   color: rgb(var(--canvas-fg-1));
 }
 

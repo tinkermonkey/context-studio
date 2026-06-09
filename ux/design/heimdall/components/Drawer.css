@@ -86,9 +86,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition:
-    background 80ms ease-out,
-    color 80ms ease-out;
+  transition: background 80ms ease-out, color 80ms ease-out;
 }
 
 .drawer__close:hover {

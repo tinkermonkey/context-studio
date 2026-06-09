@@ -1,10 +1,21 @@
 .page-header {
   display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.page-header__text {
+  display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .page-header__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -13,11 +24,11 @@
   color: rgb(var(--canvas-fg-3));
 }
 
-.page-header__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+/* Element children (chips, formatted spans) keep their own casing/spacing —
+   only the bare-string eyebrow gets the uppercase mono treatment. */
+.page-header__eyebrow > * {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .page-header__title {
@@ -39,6 +50,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .page-header__subtitle {

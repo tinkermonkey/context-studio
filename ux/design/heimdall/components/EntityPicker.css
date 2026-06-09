@@ -1,3 +1,5 @@
+@import './dropdown-base.css';
+
 .entity-picker {
   position: relative;
   width: 100%;
@@ -56,42 +58,8 @@
   color: rgb(var(--canvas-fg-1));
 }
 
-.entity-picker__dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  background-color: rgb(var(--canvas-card));
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  z-index: 1000;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.entity-picker__result {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  color: rgb(var(--canvas-fg-1));
-  transition: background-color 80ms ease-out;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  user-select: none;
-}
-
-.entity-picker__result:hover,
-.entity-picker__result--selected {
-  background-color: rgb(var(--canvas-bg));
-}
+/* Panel chrome inherited from .dropdown-panel; positioning comes from the
+   placement modifier class (defaults to bottom-start). */
 
 .entity-picker__badge {
   flex-shrink: 0;
@@ -100,9 +68,6 @@
 .entity-picker__label {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .entity-picker--disabled {

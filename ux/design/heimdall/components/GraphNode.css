@@ -18,11 +18,11 @@
   outline: none;
 }
 
-.graph-node[role="button"] {
+.graph-node[role='button'] {
   cursor: pointer;
 }
 
-.graph-node[role="button"]:focus-visible {
+.graph-node[role='button']:focus-visible {
   box-shadow:
     0 0 0 3px rgba(245, 158, 11, 0.18),
     0 1px 2px rgba(15, 23, 42, 0.04);
@@ -55,15 +55,15 @@ body.dark-canvas .graph-node.selected {
   flex: none;
 }
 
-.graph-node[data-domain="life"] .graph-node__swatch {
+.graph-node[data-domain='life'] .graph-node__swatch {
   background: rgb(var(--dom-life));
 }
 
-.graph-node[data-domain="climate"] .graph-node__swatch {
+.graph-node[data-domain='climate'] .graph-node__swatch {
   background: rgb(var(--dom-climate));
 }
 
-.graph-node[data-domain="software"] .graph-node__swatch {
+.graph-node[data-domain='software'] .graph-node__swatch {
   background: rgb(var(--dom-software));
 }
 
@@ -89,7 +89,7 @@ body.dark-canvas .graph-node.selected {
   flex: none;
 }
 
-.graph-node[data-kind="individual"] .graph-node__kind {
+.graph-node[data-kind='individual'] .graph-node__kind {
   color: rgb(var(--accent-primary-deep));
   background: var(--status-amber-bg-alpha);
   border-color: var(--status-amber-border-alpha);

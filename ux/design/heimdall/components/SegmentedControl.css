@@ -1,27 +1,27 @@
 .segmented-control {
   display: inline-flex;
-  gap: 4px;
-  background: transparent;
+  gap: 2px;
+  padding: 2px;
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-sm);
 }
 
 .segmented-control__segment {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
-  padding: 0 12px;
+  height: 24px;
+  padding: 0 10px;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   color: rgb(var(--canvas-fg-2));
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: calc(var(--radius-sm) - 2px);
   cursor: pointer;
-  transition:
-    background 0.08s,
-    border-color 0.08s,
-    color 0.08s;
+  transition: background 0.08s, border-color 0.08s, color 0.08s;
   white-space: nowrap;
   outline: none;
 }
@@ -31,13 +31,12 @@
 }
 
 .segmented-control__segment:hover:not(.segmented-control__segment--active):not(:disabled) {
-  background: rgb(var(--canvas-bg-2));
   color: rgb(var(--canvas-fg-1));
 }
 
 .segmented-control__segment--active {
-  background: rgb(var(--canvas-surface-2));
-  border-color: rgb(var(--canvas-border-strong));
+  background: rgb(var(--canvas-surface));
+  border-color: rgb(var(--canvas-border));
   color: rgb(var(--canvas-fg-1));
 }
 

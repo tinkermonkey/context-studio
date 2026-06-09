@@ -8,9 +8,7 @@
   border: 1px solid rgb(var(--canvas-border));
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition:
-    background-color 80ms ease-out,
-    border-color 80ms ease-out;
+  transition: background-color 80ms ease-out, border-color 80ms ease-out;
   outline: none;
   text-align: left;
   width: 100%;
@@ -44,8 +42,8 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background-color: rgba(var(--accent-primary), 0.1);
-  border: 1px solid rgba(var(--accent-primary), 0.2);
+  background-color: rgba(var(--accent-primary), 0.10);
+  border: 1px solid rgba(var(--accent-primary), 0.20);
   color: rgb(var(--accent-primary));
   transition: background-color 80ms ease-out;
 }

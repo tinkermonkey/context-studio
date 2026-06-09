@@ -8,7 +8,7 @@
 }
 
 .stat-tile::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
@@ -64,7 +64,7 @@
   color: rgb(var(--canvas-fg-1));
   line-height: 1.1;
   margin-top: 6px;
-  font-feature-settings: "tnum";
+  font-feature-settings: 'tnum';
 }
 
 .stat-tile__footer {
@@ -81,7 +81,7 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
-  font-feature-settings: "tnum";
+  font-feature-settings: 'tnum';
 }
 
 .stat-tile__delta--up {

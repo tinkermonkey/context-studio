@@ -28,7 +28,7 @@
 }
 
 .split-pane__divider::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
 }

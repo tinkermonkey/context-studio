@@ -45,7 +45,7 @@
 }
 
 .cs-page-meta__health::before {
-  content: "";
+  content: '';
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -53,81 +53,8 @@
   box-shadow: 0 0 0 3px rgb(var(--status-emerald) / 0.18);
 }
 
-/* ============================================================================
-   OVERRIDES — pending library fix.
-   These CSS rules target Heimdall's own selectors to restore polish lost in
-   the v2 rebuild. They are scoped, additive, and use Heimdall tokens (no new
-   colors). REMOVE ONCE the corresponding library changes ship — see
-   HEIMDALL_DESIGN_SYSTEM_FEEDBACK.md §1.
-   ============================================================================ */
-
-/* (a) PipelineCard nodes should distribute evenly across the flow strip,
-       not clump to the left.
-       Library fix: PipelineCardProps['flowLayout'] = 'fill' | 'auto'. */
-.pipeline-card__flow {
-  align-items: stretch;
-}
-.pipeline-card__node {
-  flex: 1;
-  min-width: 0;
-}
-
-/* (b) PipelineCard nodes should sit inside a bordered tile so the eye groups
-       [icon + name + label] as one unit.
-       Library fix: ship this as default styling on .pipeline-card__node. */
-.pipeline-card__node {
-  padding: 8px 10px;
-  border: 1px solid rgb(var(--canvas-border));
-  border-radius: var(--radius-md);
-  background: rgb(var(--canvas-card));
-}
-
-/* (c) Each pipeline stage in our Graph-RAG workflow (source → extract → resolve → write)
-       carries a stage-specific tone. We can't pass tone per-node yet, so we use
-       :nth-child position. This is FRAGILE — it assumes every pipeline has exactly
-       four stages in source/extract/resolve/write order. Data in data.js does, but
-       this MUST go away once FlowNode.tone is in the public API.
-       Library fix: FlowNode['tone'] = 'cyan' | 'violet' | 'amber' | 'emerald' | …. */
-
-/* stage 1 — source (cyan) */
-.pipeline-card__flow > div:nth-child(1) {
-  border-color: rgb(var(--status-cyan) / 0.3);
-}
-.pipeline-card__flow > div:nth-child(1) .pipeline-card__icon-tile {
-  background: rgb(var(--status-cyan) / 0.1);
-  color: rgb(var(--status-cyan));
-}
-
-/* stage 2 — extract (violet) */
-.pipeline-card__flow > div:nth-child(3) {
-  border-color: rgb(var(--status-violet) / 0.3);
-}
-.pipeline-card__flow > div:nth-child(3) .pipeline-card__icon-tile {
-  background: rgb(var(--status-violet) / 0.1);
-  color: rgb(var(--status-violet));
-}
-
-/* stage 3 — resolve (amber, same as accent so we keep the existing token) */
-.pipeline-card__flow > div:nth-child(5) {
-  border-color: rgb(var(--status-amber) / 0.3);
-}
-.pipeline-card__flow > div:nth-child(5) .pipeline-card__icon-tile {
-  background: rgb(var(--status-amber) / 0.12);
-  color: rgb(var(--status-amber));
-}
-
-/* stage 4 — write (emerald) */
-.pipeline-card__flow > div:nth-child(7) {
-  border-color: rgb(var(--status-emerald) / 0.3);
-}
-.pipeline-card__flow > div:nth-child(7) .pipeline-card__icon-tile {
-  background: rgb(var(--status-emerald) / 0.1);
-  color: rgb(var(--status-emerald));
-}
-
-/* (d) Arrow width — bump from 20px → 26px so the visual rhythm matches the
-       newly-present node tiles.
-       Library fix: bump default .pipeline-card__arrow width to 24-26px. */
-.pipeline-card__arrow {
-  width: 26px;
-}
+/* NOTE: The PipelineCard override hacks that lived here (even flow distribution,
+   bordered node tiles, per-stage tone via :nth-child, wider arrows) have all
+   shipped in the library. Even distribution is now the default `flowLayout="fill"`,
+   node tiles + 26px arrows are baked into PipelineCard.css, and per-stage tone is
+   passed via FlowNode.color (see cs/pages.jsx → toHeimdallPipeline). Overrides removed. */

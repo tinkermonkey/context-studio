@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   background: rgb(var(--canvas-surface));
+  border: 1px solid rgb(var(--canvas-border));
+  border-radius: var(--radius-lg);
   height: 100%;
   overflow: hidden;
 }
@@ -56,6 +58,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background: rgb(var(--canvas-bg-2));
 }
 
 .inspector-panel__section {
@@ -137,7 +140,7 @@
   font-size: 10px;
   font-weight: 500;
   color: rgb(var(--canvas-fg-3));
-  background-color: rgb(var(--canvas-bg-2));
+  background-color: rgb(var(--canvas-card));
   border: 1px solid rgb(var(--canvas-border));
   border-radius: 3px;
   padding: 1px 5px;
@@ -157,15 +160,13 @@
   color: rgb(var(--canvas-fg-3));
   cursor: pointer;
   padding: 0;
-  transition:
-    color 80ms ease-out,
-    background-color 80ms ease-out;
+  transition: color 80ms ease-out, background-color 80ms ease-out;
   flex-shrink: 0;
 }
 
 .inspector-panel__property-section-action:hover {
   color: rgb(var(--canvas-fg-1));
-  background-color: rgb(var(--canvas-bg-2));
+  background-color: rgb(var(--canvas-card));
 }
 
 .inspector-panel__property-section-action:focus-visible {

@@ -4,321 +4,317 @@
   Light canvas is :root default; dark canvas is toggled via body.dark-canvas
   ========================================================================= */
 
-:root {
-  /* ---- Shell Surface (always dark — slate navy) ---- */
-  --shell-bg: 15 23 41; /* #0f1729 — outermost shell */
-  --shell-bg-2: 19 32 58; /* #13203a — secondary shell layer */
-  --shell-surface: 27 41 73; /* #1b2949 — surfaces/panels */
-  --shell-surface-2: 36 55 99; /* #243763 — elevated surfaces */
-  --shell-border: 30 42 68; /* #1e2a44 — shell dividers */
-  --shell-border-2: 42 58 92; /* #2a3a5c — input border, scrollbar thumb */
-  --shell-fg-1: 230 237 243; /* #e6edf3 */
-  --shell-fg-2: 166 177 189; /* #a6b1bd */
-  --shell-fg-3: 110 122 135; /* #6e7a87 */
-  --shell-fg-4: 74 85 99; /* #4a5563 */
+  :root {
+    /* ---- Shell Surface (always dark — slate navy) ---- */
+    --shell-bg: 15 23 41;          /* #0f1729 — outermost shell */
+    --shell-bg-2: 19 32 58;        /* #13203a — secondary shell layer */
+    --shell-surface: 27 41 73;     /* #1b2949 — surfaces/panels */
+    --shell-surface-2: 36 55 99;   /* #243763 — elevated surfaces */
+    --shell-border: 30 42 68;      /* #1e2a44 — shell dividers */
+    --shell-border-2: 42 58 92;    /* #2a3a5c — input border, scrollbar thumb */
+    --shell-fg-1: 230 237 243;   /* #e6edf3 */
+    --shell-fg-2: 166 177 189;   /* #a6b1bd */
+    --shell-fg-3: 110 122 135;   /* #6e7a87 */
+    --shell-fg-4: 74 85 99;      /* #4a5563 */
 
-  /* ---- Canvas Surface (light canvas default) ---- */
-  --canvas-bg: 255 255 255;
-  --canvas-surface: 255 255 255;
-  --canvas-surface-2: 243 244 246; /* #f3f4f6 — elevated surfaces */
-  --canvas-card: 255 255 255;
-  --canvas-bg-2: 247 249 251; /* #f7f9fb */
-  --canvas-fg-1: 11 18 32; /* #0b1220 */
-  --canvas-fg-2: 71 85 105; /* #475569 */
-  --canvas-fg-3: 100 116 139; /* #64748b */
-  --canvas-fg-4: 148 163 184; /* #94a3b8 */
-  --canvas-border: 229 233 238; /* #e5e9ee */
-  --canvas-border-2: 221 226 232; /* #dde2e8 — secondary border */
-  --canvas-border-strong: 214 220 227; /* #d6dce3 */
+    /* ---- Canvas Surface (light canvas default) ---- */
+    --canvas-bg: 255 255 255;
+    --canvas-surface: 255 255 255;
+    --canvas-surface-2: 243 244 246;  /* #f3f4f6 — elevated surfaces */
+    --canvas-card: 255 255 255;
+    --canvas-bg-2: 247 249 251;   /* #f7f9fb */
+    --canvas-fg-1: 11 18 32;      /* #0b1220 */
+    --canvas-fg-2: 71 85 105;     /* #475569 */
+    --canvas-fg-3: 100 116 139;   /* #64748b */
+    --canvas-fg-4: 148 163 184;   /* #94a3b8 */
+    --canvas-border: 229 233 238;         /* #e5e9ee */
+    --canvas-border-2: 221 226 232;       /* #dde2e8 — secondary border */
+    --canvas-border-strong: 214 220 227;  /* #d6dce3 */
 
-  /* ---- Accent Color (amber brand) ---- */
-  --accent-primary: 251 191 36; /* #fbbf24 — amber-400, active states */
-  --accent-primary-hover: 245 158 11; /* #f59e0b — amber-500, hover */
-  --accent-primary-deep: 180 83 9; /* #b45309 — amber-700, deep/CTA */
+    /* ---- Accent Color (amber brand) ---- */
+    --accent-primary: 251 191 36;        /* #fbbf24 — amber-400, active states */
+    --accent-primary-hover: 245 158 11;  /* #f59e0b — amber-500, hover */
+    --accent-primary-deep: 180 83 9;     /* #b45309 — amber-700, deep/CTA */
 
-  /* ---- Semantic Status Colors (unchanged from reference) ---- */
-  --status-ok-bg: 220 252 231;
-  --status-ok-fg: 21 128 61;
-  --status-ok: 34 197 94;
-  --status-warn-bg: 254 249 195;
-  --status-warn-fg: 133 77 14;
-  --status-warn: 234 179 8;
-  --status-error-bg: 254 226 226;
-  --status-error-fg: 185 28 28;
-  --status-error: 239 68 68;
-  --status-cyan: 34 211 238;
-  --status-cyan-deep: 14 180 160;
-  --status-emerald: 16 185 129;
-  --status-amber: 245 158 11;
-  --status-rose: 244 63 94;
-  --status-rose-deep: 159 18 57;
-  --status-rose-pressed: 120 10 40;
-  --status-violet: 139 92 246;
-  --status-neutral: 107 114 128;
+    /* ---- Semantic Status Colors (unchanged from reference) ---- */
+    --status-ok-bg: 220 252 231;
+    --status-ok-fg: 21 128 61;
+    --status-ok: 34 197 94;
+    --status-warn-bg: 254 249 195;
+    --status-warn-fg: 133 77 14;
+    --status-warn: 234 179 8;
+    --status-error-bg: 254 226 226;
+    --status-error-fg: 185 28 28;
+    --status-error: 239 68 68;
+    --status-cyan: 34 211 238;
+    --status-cyan-deep: 14 180 160;
+    --status-emerald: 16 185 129;
+    --status-amber: 245 158 11;
+    --status-rose: 244 63 94;
+    --status-rose-deep: 159 18 57;
+    --status-rose-pressed: 120 10 40;
+    --status-violet: 139 92 246;
+    --status-neutral: 107 114 128;
 
-  /* ---- Semantic Color Variants (light backgrounds, borders, text) ---- */
-  /* Cyan */
-  --semantic-cyan-fg: 14 116 144;
-  --semantic-cyan-bg: 236 255 255;
-  --semantic-cyan-border: 165 243 252;
+    /* ---- Semantic Color Variants (light backgrounds, borders, text) ---- */
+    /* Cyan */
+    --semantic-cyan-fg: 14 116 144;
+    --semantic-cyan-bg: 236 255 255;
+    --semantic-cyan-border: 165 243 252;
 
-  /* Amber */
-  --semantic-amber-fg: 146 64 14;
-  --semantic-amber-bg: 255 251 235;
-  --semantic-amber-border: 253 230 138;
+    /* Amber */
+    --semantic-amber-fg: 146 64 14;
+    --semantic-amber-bg: 255 251 235;
+    --semantic-amber-border: 253 230 138;
 
-  /* Violet */
-  --semantic-violet-fg: 91 33 182;
-  --semantic-violet-bg: 245 243 255;
-  --semantic-violet-border: 221 214 254;
+    /* Violet */
+    --semantic-violet-fg: 91 33 182;
+    --semantic-violet-bg: 245 243 255;
+    --semantic-violet-border: 221 214 254;
 
-  /* Emerald */
-  --semantic-emerald-fg: 6 95 70;
-  --semantic-emerald-bg: 236 253 245;
-  --semantic-emerald-border: 167 243 208;
+    /* Emerald */
+    --semantic-emerald-fg: 6 95 70;
+    --semantic-emerald-bg: 236 253 245;
+    --semantic-emerald-border: 167 243 208;
 
-  /* Rose */
-  --semantic-rose-fg: 159 18 57;
-  --semantic-rose-bg: 255 241 242;
-  --semantic-rose-border: 254 205 211;
+    /* Rose */
+    --semantic-rose-fg: 159 18 57;
+    --semantic-rose-bg: 255 241 242;
+    --semantic-rose-border: 254 205 211;
 
-  /* Neutral */
-  --semantic-neutral-fg: 71 85 105;
-  --semantic-neutral-bg: 247 249 251;
-  --semantic-neutral-border: 229 233 238;
+    /* Neutral */
+    --semantic-neutral-fg: 71 85 105;
+    --semantic-neutral-bg: 247 249 251;
+    --semantic-neutral-border: 229 233 238;
 
-  /* ID Tag (neutral) */
-  --semantic-id-tag-fg: 100 116 139;
-  --semantic-id-tag-bg: 247 249 251;
-  --semantic-id-tag-border: 229 233 238;
+    /* ID Tag (neutral) */
+    --semantic-id-tag-fg: 100 116 139;
+    --semantic-id-tag-bg: 247 249 251;
+    --semantic-id-tag-border: 229 233 238;
 
-  /* Version Badge */
-  --semantic-version-fg: 180 83 9;
-  --semantic-version-bg-alpha: rgba(245, 158, 11, 0.08);
-  --semantic-version-border-alpha: rgba(245, 158, 11, 0.18);
+    /* Version Badge */
+    --semantic-version-fg: 180 83 9;
+    --semantic-version-bg-alpha: rgba(245, 158, 11, 0.08);
+    --semantic-version-border-alpha: rgba(245, 158, 11, 0.18);
 
-  /* Environment Pill */
-  --semantic-env-fg: 245 158 11;
-  --semantic-env-bg-alpha: rgba(245, 158, 11, 0.12);
-  --semantic-env-border-alpha: rgba(245, 158, 11, 0.28);
+    /* Environment Pill */
+    --semantic-env-fg: 245 158 11;
+    --semantic-env-bg-alpha: rgba(245, 158, 11, 0.12);
+    --semantic-env-border-alpha: rgba(245, 158, 11, 0.28);
 
-  /* ---- White Overlay Variants (for dark-canvas translucent surfaces) ---- */
-  --white-overlay-xs: rgba(255, 255, 255, 0.04);
-  --white-overlay-sm: rgba(255, 255, 255, 0.05);
-  --white-overlay-md: rgba(255, 255, 255, 0.08);
-  --white-overlay-lg: rgba(255, 255, 255, 0.1);
-  --white-overlay-xl: rgba(255, 255, 255, 0.12);
+    /* ---- White Overlay Variants (for dark-canvas translucent surfaces) ---- */
+    --white-overlay-xs: rgba(255, 255, 255, 0.04);
+    --white-overlay-sm: rgba(255, 255, 255, 0.05);
+    --white-overlay-md: rgba(255, 255, 255, 0.08);
+    --white-overlay-lg: rgba(255, 255, 255, 0.10);
+    --white-overlay-xl: rgba(255, 255, 255, 0.12);
 
-  /* ---- Accent Alpha Variants (accent-primary #fbbf24 tints) ---- */
-  --accent-primary-bg-alpha-xs: rgba(251, 191, 36, 0.05);
-  --accent-primary-bg-alpha-sm: rgba(251, 191, 36, 0.1);
-  --accent-primary-bg-alpha-md: rgba(251, 191, 36, 0.12);
-  --accent-primary-border-alpha-sm: rgba(251, 191, 36, 0.2);
-  --accent-primary-border-alpha-md: rgba(251, 191, 36, 0.22);
-  --accent-primary-border-alpha-lg: rgba(251, 191, 36, 0.28);
+    /* ---- Accent Alpha Variants (accent-primary #fbbf24 tints) ---- */
+    --accent-primary-bg-alpha-xs: rgba(251, 191, 36, 0.05);
+    --accent-primary-bg-alpha-sm: rgba(251, 191, 36, 0.10);
+    --accent-primary-bg-alpha-md: rgba(251, 191, 36, 0.12);
+    --accent-primary-border-alpha-sm: rgba(251, 191, 36, 0.20);
+    --accent-primary-border-alpha-md: rgba(251, 191, 36, 0.22);
+    --accent-primary-border-alpha-lg: rgba(251, 191, 36, 0.28);
 
-  /* ---- Status Alpha Variants (for tinted backgrounds and borders) ---- */
-  --status-emerald-bg-alpha: rgba(16, 185, 129, 0.1);
-  --status-emerald-bg-alpha-md: rgba(16, 185, 129, 0.16);
-  --status-emerald-border-alpha: rgba(16, 185, 129, 0.2);
-  --status-emerald-border-alpha-md: rgba(16, 185, 129, 0.3);
-  --status-amber-bg-alpha: rgba(245, 158, 11, 0.08);
-  --status-amber-bg-alpha-md: rgba(245, 158, 11, 0.16);
-  --status-amber-border-alpha: rgba(245, 158, 11, 0.2);
-  --status-amber-border-alpha-md: rgba(245, 158, 11, 0.3);
-  --status-amber-border-alpha-strong: rgba(245, 158, 11, 0.5);
-  --status-rose-bg-alpha: rgba(244, 63, 94, 0.08);
-  --status-rose-bg-alpha-md: rgba(244, 63, 94, 0.16);
-  --status-rose-border-alpha: rgba(244, 63, 94, 0.13);
-  --status-rose-border-alpha-md: rgba(244, 63, 94, 0.3);
-  --status-cyan-bg-alpha-md: rgba(34, 211, 238, 0.16);
-  --status-violet-bg-alpha: rgba(129, 140, 248, 0.1);
-  --status-violet-border-alpha: rgba(129, 140, 248, 0.2);
-  --status-neutral-border-alpha: rgba(107, 114, 128, 0.2);
+    /* ---- Status Alpha Variants (for tinted backgrounds and borders) ---- */
+    --status-emerald-bg-alpha: rgba(16, 185, 129, 0.1);
+    --status-emerald-bg-alpha-md: rgba(16, 185, 129, 0.16);
+    --status-emerald-border-alpha: rgba(16, 185, 129, 0.2);
+    --status-emerald-border-alpha-md: rgba(16, 185, 129, 0.3);
+    --status-amber-bg-alpha: rgba(245, 158, 11, 0.08);
+    --status-amber-bg-alpha-md: rgba(245, 158, 11, 0.16);
+    --status-amber-border-alpha: rgba(245, 158, 11, 0.2);
+    --status-amber-border-alpha-md: rgba(245, 158, 11, 0.3);
+    --status-amber-border-alpha-strong: rgba(245, 158, 11, 0.5);
+    --status-rose-bg-alpha: rgba(244, 63, 94, 0.08);
+    --status-rose-bg-alpha-md: rgba(244, 63, 94, 0.16);
+    --status-rose-border-alpha: rgba(244, 63, 94, 0.13);
+    --status-rose-border-alpha-md: rgba(244, 63, 94, 0.3);
+    --status-cyan-bg-alpha-md: rgba(34, 211, 238, 0.16);
+    --status-violet-bg-alpha: rgba(129, 140, 248, 0.1);
+    --status-violet-border-alpha: rgba(129, 140, 248, 0.2);
+    --status-neutral-border-alpha: rgba(107, 114, 128, 0.2);
 
-  /* ---- Neutral Gray Scale ---- */
-  --gray-50: 249 250 251;
-  --gray-100: 243 244 246;
-  --gray-200: 229 231 235;
-  --gray-300: 209 213 219;
-  --gray-400: 156 163 175;
-  --gray-500: 107 114 128;
-  --gray-600: 75 85 99;
-  --gray-700: 55 65 81;
-  --gray-800: 31 41 55;
-  --gray-900: 17 24 39;
+    /* ---- Neutral Gray Scale ---- */
+    --gray-50: 249 250 251;
+    --gray-100: 243 244 246;
+    --gray-200: 229 231 235;
+    --gray-300: 209 213 219;
+    --gray-400: 156 163 175;
+    --gray-500: 107 114 128;
+    --gray-600: 75 85 99;
+    --gray-700: 55 65 81;
+    --gray-800: 31 41 55;
+    --gray-900: 17 24 39;
 
-  /* ---- Radius (from reference design) ---- */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-full: 9999px;
+    /* ---- Radius (from reference design) ---- */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-full: 9999px;
 
-  /* ---- Shadows ---- */
-  --shadow-none: 0 0 0 rgba(0, 0, 0, 0);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
-  --shadow-modal: 0 24px 64px -16px rgba(0, 0, 0, 0.55);
+    /* ---- Shadows ---- */
+    --shadow-none: 0 0 0 rgba(0, 0, 0, 0);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    --shadow-modal: 0 24px 64px -16px rgba(0, 0, 0, 0.55);
 
-  /* ---- Type Families (self-hosted fonts loaded separately) ---- */
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
-  --font-mono:
-    "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Menlo, Consolas,
-    "Courier New", monospace;
+    /* ---- Type Families (self-hosted fonts loaded separately) ---- */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, 'Courier New', monospace;
 
-  /* ---- Type Scale ---- */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
+    /* ---- Type Scale ---- */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
 
-  /* ---- Type Weights ---- */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
+    /* ---- Type Weights ---- */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
 
-  /* ---- Spacing Scale (4px base) ---- */
-  --space-0_5: 0.125rem;
-  --space-1: 0.25rem;
-  --space-1_5: 0.375rem;
-  --space-2: 0.5rem;
-  --space-2_5: 0.625rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+    /* ---- Spacing Scale (4px base) ---- */
+    --space-0_5: 0.125rem;
+    --space-1: 0.25rem;
+    --space-1_5: 0.375rem;
+    --space-2: 0.5rem;
+    --space-2_5: 0.625rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
 
-  /* ---- Domain Colors (graph/topology) ---- */
-  --dom-default: 107 114 128; /* #6b7280 — neutral gray */
-  --dom-life: 16 185 129; /* #10b981 — emerald */
-  --dom-climate: 245 158 11; /* #f59e0b — amber */
-  --dom-software: 129 140 248; /* #818cf8 — indigo */
+    /* ---- Domain Colors (graph/topology) ---- */
+    --dom-default: 107 114 128;         /* #6b7280 — neutral gray */
+    --dom-life: 16 185 129;             /* #10b981 — emerald */
+    --dom-climate: 245 158 11;          /* #f59e0b — amber */
+    --dom-software: 129 140 248;        /* #818cf8 — indigo */
 
-  /* ---- Focus Ring (amber accent) ---- */
-  --focus-ring: 0 0 0 3px rgba(245, 158, 11, 0.18);
-}
+    /* ---- Focus Ring (amber accent) ---- */
+    --focus-ring: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  }
 
-/* ---- Dark Canvas Mode (slate-toned navy) ---- */
-body.dark-canvas {
-  --canvas-bg: 11 20 38; /* #0b1426 — canvas page, deeper than shell-bg */
-  --canvas-surface: 27 41 73; /* #1b2949 — elevated panels */
-  --canvas-surface-2: 36 55 99; /* #243763 — more elevated surfaces */
-  --canvas-card: 27 41 73; /* #1b2949 — panels, stat tiles, drawer */
-  --canvas-bg-2: 19 32 58; /* #13203a — table-header / inset zones, matches shell-bg-2 */
-  --canvas-fg-1: 226 232 240; /* #e2e8f0 — slate-200 */
-  --canvas-fg-2: 148 163 184; /* #94a3b8 — slate-400 */
-  --canvas-fg-3: 100 116 139; /* #64748b — slate-500 */
-  --canvas-fg-4: 71 85 105; /* #475569 — slate-600 */
-  --canvas-border: 36 55 99; /* #243763 */
-  --canvas-border-2: 42 58 92; /* #2a3a5c — secondary border */
-  --canvas-border-strong: 53 73 115; /* #354973 */
-}
+  /* ---- Dark Canvas Mode (slate-toned navy) ---- */
+  body.dark-canvas {
+    --canvas-bg: 11 20 38;          /* #0b1426 — canvas page, deeper than shell-bg */
+    --canvas-surface: 27 41 73;     /* #1b2949 — elevated panels */
+    --canvas-surface-2: 36 55 99;   /* #243763 — more elevated surfaces */
+    --canvas-card: 27 41 73;        /* #1b2949 — panels, stat tiles, drawer */
+    --canvas-bg-2: 19 32 58;        /* #13203a — table-header / inset zones, matches shell-bg-2 */
+    --canvas-fg-1: 226 232 240;     /* #e2e8f0 — slate-200 */
+    --canvas-fg-2: 148 163 184;     /* #94a3b8 — slate-400 */
+    --canvas-fg-3: 100 116 139;     /* #64748b — slate-500 */
+    --canvas-fg-4: 71 85 105;       /* #475569 — slate-600 */
+    --canvas-border: 36 55 99;      /* #243763 */
+    --canvas-border-2: 42 58 92;    /* #2a3a5c — secondary border */
+    --canvas-border-strong: 53 73 115; /* #354973 */
+  }
 
-/* ---- Base Element Styles ---- */
-html {
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  /* ---- Base Element Styles ---- */
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: 1.5;
-  color: rgb(var(--canvas-fg-1));
-  background-color: rgb(var(--canvas-bg));
-}
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+    background-color: rgb(var(--canvas-bg));
+  }
 
-/* ---- Headings ---- */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0;
-  font-weight: var(--font-weight-bold);
-  line-height: 1.2;
-  color: rgb(var(--canvas-fg-1));
-}
+  /* ---- Headings ---- */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    color: rgb(var(--canvas-fg-1));
+  }
 
-h1 {
-  font-size: var(--text-5xl);
-  font-weight: var(--font-weight-extrabold);
-}
+  h1 {
+    font-size: var(--text-5xl);
+    font-weight: var(--font-weight-extrabold);
+  }
 
-h2 {
-  font-size: var(--text-4xl);
-  font-weight: var(--font-weight-extrabold);
-}
+  h2 {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-extrabold);
+  }
 
-h3 {
-  font-size: var(--text-3xl);
-}
+  h3 {
+    font-size: var(--text-3xl);
+  }
 
-h4 {
-  font-size: var(--text-2xl);
-}
+  h4 {
+    font-size: var(--text-2xl);
+  }
 
-h5 {
-  font-size: var(--text-xl);
-}
+  h5 {
+    font-size: var(--text-xl);
+  }
 
-h6 {
-  font-size: var(--text-lg);
-}
+  h6 {
+    font-size: var(--text-lg);
+  }
 
-p {
-  margin: 0;
-  color: rgb(var(--canvas-fg-2));
-  line-height: 1.625;
-}
+  p {
+    margin: 0;
+    color: rgb(var(--canvas-fg-2));
+    line-height: 1.625;
+  }
 
-a {
-  color: rgb(var(--accent-primary));
-  text-decoration: none;
-}
+  a {
+    color: rgb(var(--accent-primary));
+    text-decoration: none;
+  }
 
-a:hover {
-  color: rgb(var(--accent-primary-hover));
-}
+  a:hover {
+    color: rgb(var(--accent-primary-hover));
+  }
 
-/* ---- Monospace Code ---- */
-code,
-kbd,
-pre,
-samp {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-}
+  /* ---- Monospace Code ---- */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
 
-code {
-  padding: 0.1em 0.3em;
-  border-radius: var(--radius-sm);
-  background-color: rgb(var(--canvas-bg-2));
-  color: rgb(var(--canvas-fg-1));
-}
+  code {
+    padding: 0.1em 0.3em;
+    border-radius: var(--radius-sm);
+    background-color: rgb(var(--canvas-bg-2));
+    color: rgb(var(--canvas-fg-1));
+  }
 
-/* ---- Focus Visible Default ---- */
-:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
+  /* ---- Focus Visible Default ---- */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
