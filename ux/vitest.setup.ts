@@ -597,9 +597,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         columns = [],
         data = [],
         rowKey = "id",
-        selectable = true,
+        selectable = false,
         selectedRows = [],
-        _onSelectRows,
+        onSelectRows,
+        onRowClick,
         _onSort,
         className = "",
         ...props
@@ -612,6 +613,9 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         }
         return row[rowKey];
       };
+
+      const allSelected = data.length > 0 && selectedRows.length === data.length;
+      const someSelected = selectedRows.length > 0 && selectedRows.length < data.length;
 
       return React.createElement(
         "table",
@@ -632,9 +636,19 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                 { className: "table__header table__header--checkbox", style: { width: "30px" } },
                 React.createElement("input", {
                   type: "checkbox",
-                  className: "table__checkbox",
-                  checked: selectedRows.length === data.length && data.length > 0,
-                  onChange: () => {},
+                  className: "table__checkbox table__checkbox--header",
+                  checked: allSelected,
+                  ref: (el: any) => {
+                    if (el) el.indeterminate = someSelected;
+                  },
+                  onChange: (e: any) => {
+                    if (allSelected || someSelected) {
+                      onSelectRows?.([]);
+                    } else {
+                      onSelectRows?.(data.map((r: any) => getRowKey(r, 0)));
+                    }
+                  },
+                  "aria-label": "Select all",
                 }),
               ),
             columns.map((column: any) =>
@@ -661,6 +675,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                 key: rowKeyValue,
                 "data-row-key": rowKeyValue,
                 className: `table__row ${selectedRows.includes(rowKeyValue) ? "table__row--selected" : ""}`,
+                onClick: () => onRowClick?.(row, rowKeyValue),
               },
               selectable &&
                 React.createElement(
@@ -670,7 +685,14 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                     type: "checkbox",
                     className: "table__checkbox",
                     checked: selectedRows.includes(rowKeyValue),
-                    onChange: () => {},
+                    onChange: (e: any) => {
+                      e.stopPropagation();
+                      const next = selectedRows.includes(rowKeyValue)
+                        ? selectedRows.filter((k: any) => k !== rowKeyValue)
+                        : [...selectedRows, rowKeyValue];
+                      onSelectRows?.(next);
+                    },
+                    "aria-label": `Select row ${rowKeyValue}`,
                   }),
                 ),
               columns.map((column: any) =>
@@ -935,8 +957,20 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
+  FormCallout: ({ variant = "info", icon: _icon, children, className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      {
+        className: ["form-callout", `form-callout--${variant}`, className]
+          .filter(Boolean)
+          .join(" "),
+        role: variant === "warn" || variant === "error" ? "alert" : "note",
+        ...props,
+      },
+      children,
+    ),
   RowMenu: React.forwardRef(
-    ({ _actions = [], _onAction, className = "", ...props }: any, ref: any) =>
+    ({ actions = [], onAction, triggerLabel = "Menu", className = "", ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
@@ -949,10 +983,31 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
           {
             className: "row-menu__trigger",
             type: "button",
+            "aria-label": triggerLabel,
             onClick: (e: any) => e.stopPropagation(),
           },
           "⋮",
         ),
+        actions
+          .filter((a: any) => a.type !== "separator")
+          .map((action: any) =>
+            React.createElement(
+              "button",
+              {
+                key: action.id,
+                className: ["row-menu__item", action.danger && "row-menu__item--danger"]
+                  .filter(Boolean)
+                  .join(" "),
+                type: "button",
+                "data-action": action.id,
+                onClick: (e: any) => {
+                  e.stopPropagation();
+                  onAction?.(action.id);
+                },
+              },
+              action.label,
+            ),
+          ),
       ),
   ),
   HierarchyTree: React.forwardRef(({ children, className = "", ...props }: any, ref: any) =>
