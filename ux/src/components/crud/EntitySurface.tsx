@@ -16,6 +16,7 @@ import type { BulkBarAction } from "./BulkBar";
 import { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 import type { CascadeImpactData } from "./CascadeDeleteDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useToasts } from "@/components/ui/Toast";
 import { pluralize } from "./utils";
 
 export type { EntityType, FormValues };
@@ -102,6 +103,7 @@ function EntitySurfaceBase<T extends { id: string }>(
 ) {
   const label = entityLabel ?? entityType;
   const icon = ENTITY_ICON[entityType] ?? "component";
+  const { toast } = useToasts();
 
   // Mode and create context
   const [mode, setMode] = useState<"view" | "create">("view");
@@ -163,8 +165,13 @@ function EntitySurfaceBase<T extends { id: string }>(
           setCascadeImpact(data);
           setIsFetchingCascadeImpact(false);
         })
-        .catch(() => {
+        .catch((err: unknown) => {
           setIsFetchingCascadeImpact(false);
+          toast(
+            "error",
+            "Could not load cascade impact",
+            err instanceof Error ? err.message : "Dependent entities could not be retrieved. Proceed with caution.",
+          );
         });
     }
   }
@@ -188,8 +195,12 @@ function EntitySurfaceBase<T extends { id: string }>(
         setInspectorId(undefined);
       }
       closeDeleteDialog();
-    } catch {
-      closeDeleteDialog();
+    } catch (err: unknown) {
+      toast(
+        "error",
+        `Failed to delete ${label}`,
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -233,8 +244,12 @@ function EntitySurfaceBase<T extends { id: string }>(
       await activeBulkAction.onBulkConfirm(selectedRows, bulkModalValue);
       setSelectedRows([]);
       setActiveBulkAction(null);
-    } catch {
-      setActiveBulkAction(null);
+    } catch (err: unknown) {
+      toast(
+        "error",
+        `Failed to apply ${activeBulkAction.label}`,
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+      );
     } finally {
       setIsApplyingBulk(false);
     }
