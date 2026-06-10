@@ -16,6 +16,7 @@ interface CascadeDeleteDialogProps {
   entityType: string;
   impactData?: CascadeImpactData;
   isDeleting?: boolean;
+  isFetching?: boolean;
 }
 
 function getDialogTitle(
@@ -39,6 +40,7 @@ export function CascadeDeleteDialog({
   entityType,
   impactData,
   isDeleting = false,
+  isFetching = false,
 }: CascadeDeleteDialogProps) {
   const isBulk = ids && ids.length > 1;
   const title = getDialogTitle(target, ids, entityType);
@@ -71,7 +73,7 @@ export function CascadeDeleteDialog({
           <Button
             variant="danger"
             onClick={onConfirm}
-            disabled={isDeleting}
+            disabled={isDeleting || isFetching}
             data-testid="cascade-delete-confirm"
           >
             {isDeleting ? "Deleting…" : deleteLabel}
@@ -80,9 +82,15 @@ export function CascadeDeleteDialog({
       }
     >
       <div className="ce-cascade" data-testid="cascade-delete-content">
-        {!hasImpact ? (
+        {isFetching ? (
+          <FormCallout variant="info" icon="info">
+            Checking for dependent items…
+          </FormCallout>
+        ) : !hasImpact ? (
           <FormCallout variant="info" icon="check">
-            Safe to remove — no dependent items will be affected.
+            {impactData
+              ? "Safe to remove — no dependent items will be affected."
+              : "This action cannot be undone."}
           </FormCallout>
         ) : (
           <>

@@ -118,6 +118,7 @@ function EntitySurfaceBase<T extends { id: string }>(
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
   const [deleteIds, setDeleteIds] = useState<string[] | null>(null);
   const [cascadeImpact, setCascadeImpact] = useState<CascadeImpactData | undefined>(undefined);
+  const [isFetchingCascadeImpact, setIsFetchingCascadeImpact] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteDialogOpen = deleteTarget !== null || deleteIds !== null;
 
@@ -154,8 +155,17 @@ function EntitySurfaceBase<T extends { id: string }>(
       setDeleteIds(ids);
     }
     setCascadeImpact(undefined);
+    setIsFetchingCascadeImpact(false);
     if (getCascadeImpact) {
-      getCascadeImpact(ids).then(setCascadeImpact).catch(() => undefined);
+      setIsFetchingCascadeImpact(true);
+      getCascadeImpact(ids)
+        .then((data) => {
+          setCascadeImpact(data);
+          setIsFetchingCascadeImpact(false);
+        })
+        .catch(() => {
+          setIsFetchingCascadeImpact(false);
+        });
     }
   }
 
@@ -163,6 +173,7 @@ function EntitySurfaceBase<T extends { id: string }>(
     setDeleteTarget(null);
     setDeleteIds(null);
     setCascadeImpact(undefined);
+    setIsFetchingCascadeImpact(false);
     pendingDeleteIdsRef.current = [];
   }
 
@@ -171,12 +182,13 @@ function EntitySurfaceBase<T extends { id: string }>(
     setIsDeleting(true);
     try {
       await onDeleteEntity(pendingDeleteIdsRef.current);
-      // Deselect deleted entities
       const deleted = new Set(pendingDeleteIdsRef.current);
       setSelectedRows((prev) => prev.filter((id) => !deleted.has(id)));
       if (inspectorId && deleted.has(inspectorId)) {
         setInspectorId(undefined);
       }
+      closeDeleteDialog();
+    } catch {
       closeDeleteDialog();
     } finally {
       setIsDeleting(false);
@@ -221,6 +233,8 @@ function EntitySurfaceBase<T extends { id: string }>(
       await activeBulkAction.onBulkConfirm(selectedRows, bulkModalValue);
       setSelectedRows([]);
       setActiveBulkAction(null);
+    } catch {
+      setActiveBulkAction(null);
     } finally {
       setIsApplyingBulk(false);
     }
@@ -263,54 +277,55 @@ function EntitySurfaceBase<T extends { id: string }>(
   // ── Main layout ────────────────────────────────────────────────────────────
 
   return (
-    <div
-      data-testid={testId ?? "entity-surface"}
-      style={{
-        display: "grid",
-        gridTemplateColumns: showRight ? `1fr ${inspectorWidth}px` : "1fr",
-        gap: 14,
-        alignItems: "start",
-      }}
-    >
-      {/* Left: table */}
-      <div>
-        <SelectableTable
-          columns={columns}
-          data={data}
-          isLoading={isLoading}
-          selectedRows={selectedRows}
-          onSelectRows={setSelectedRows}
-          onRowClick={(row) => {
-            setInspectorId(row.id);
-            if (mode === "create") setMode("view");
-          }}
-          rowMenuActions={rowMenuActions}
-          onRowMenuAction={handleRowMenuAction}
-          rowMenuTestIdPrefix={`${entityType}-row-actions`}
-        />
-      </div>
-
-      {/* Right: inline CreateDrawer or entity inspector */}
-      {showRight && (
+    <div data-testid={testId ?? "entity-surface"}>
+      {/* Split-layout grid: left = table, right = inspector/create drawer */}
+      <div
+        data-testid="schema-page-layout"
+        className={showRight ? "split-2" : undefined}
+        style={showRight && inspectorWidth !== 420
+          ? { "--inspector-width": `${inspectorWidth}px` } as React.CSSProperties
+          : undefined}
+      >
+        {/* Left: table */}
         <div>
-          {mode === "create" ? (
-            <CreateDrawer
-              entityType={entityType}
-              isOpen
-              onClose={() => setMode("view")}
-              variant="inline"
-              initialValues={createContext}
-              initialIdentifierDirty={identifierDirty}
-              initialTaxonomyId={createContext.taxonomyId ?? initialTaxonomyId}
-              initialSchemeId={createContext.schemeId ?? initialSchemeId}
-              onSuccess={handleCreateSuccess}
-              data-testid="entity-surface-create-drawer"
-            />
-          ) : inspectorEntity ? (
-            renderInspector(inspectorEntity)
-          ) : null}
+          <SelectableTable
+            columns={columns}
+            data={data}
+            isLoading={isLoading}
+            selectedRows={selectedRows}
+            onSelectRows={setSelectedRows}
+            onRowClick={(row) => {
+              setInspectorId(row.id);
+              if (mode === "create") setMode("view");
+            }}
+            rowMenuActions={rowMenuActions}
+            onRowMenuAction={handleRowMenuAction}
+            rowMenuTestIdPrefix={`${entityType}-row-actions`}
+          />
         </div>
-      )}
+
+        {/* Right: inline CreateDrawer or entity inspector */}
+        {showRight && (
+          <div>
+            {mode === "create" ? (
+              <CreateDrawer
+                entityType={entityType}
+                isOpen
+                onClose={() => setMode("view")}
+                variant="inline"
+                initialValues={createContext}
+                initialIdentifierDirty={identifierDirty}
+                initialTaxonomyId={createContext.taxonomyId ?? initialTaxonomyId}
+                initialSchemeId={createContext.schemeId ?? initialSchemeId}
+                onSuccess={handleCreateSuccess}
+                data-testid="entity-surface-create-drawer"
+              />
+            ) : inspectorEntity ? (
+              renderInspector(inspectorEntity)
+            ) : null}
+          </div>
+        )}
+      </div>
 
       {/* Floating bulk bar */}
       {selectedRows.length > 0 && (
@@ -333,6 +348,7 @@ function EntitySurfaceBase<T extends { id: string }>(
         entityType={label}
         impactData={cascadeImpact}
         isDeleting={isDeleting}
+        isFetching={isFetchingCascadeImpact}
       />
 
       {/* Non-delete bulk op value-selection modal */}
