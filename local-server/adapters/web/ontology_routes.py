@@ -57,7 +57,7 @@ from domain.ontology.exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from domain.ontology.services import OntologyService, _UNSET
+from domain.ontology.services import _UNSET, OntologyService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
