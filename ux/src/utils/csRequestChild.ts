@@ -1,4 +1,4 @@
-import type { FormValues } from "@/components/crud/CreateDrawer";
+import type { EntityType, FormValues } from "@/components/crud/CreateDrawer";
 
 /**
  * Sets a pending create context that the target route will consume on mount via usePendingCreate.
@@ -6,7 +6,7 @@ import type { FormValues } from "@/components/crud/CreateDrawer";
  */
 export function csRequestChild(
   onNav: () => void,
-  type: string,
+  type: EntityType,
   ctx: Partial<FormValues>,
   identifierDirty?: boolean,
 ): void {

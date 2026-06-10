@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import type { EntitySurfaceHandle } from "@/components/crud/EntitySurface";
-import type { FormValues } from "@/components/crud/CreateDrawer";
+import type { EntityType, FormValues } from "@/components/crud/CreateDrawer";
 
 declare global {
   interface Window {
     __CS_PENDING?: {
-      type: string;
+      type: EntityType;
       ctx: Partial<FormValues>;
       identifierDirty?: boolean;
     };
@@ -13,7 +13,7 @@ declare global {
 }
 
 export function usePendingCreate(
-  type: string,
+  type: EntityType,
   surfaceRef: React.RefObject<EntitySurfaceHandle | null>,
 ): void {
   useEffect(() => {
