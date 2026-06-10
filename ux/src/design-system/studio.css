@@ -1397,6 +1397,38 @@ body.dark-canvas .diff-added {
   margin-top: 2px;
 }
 
+/* ------------ ClassChip ------------ */
+.class-chip {
+  padding: 4px 8px;
+  background: rgb(var(--canvas-bg-2));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.class-chip__controls {
+  display: flex;
+  gap: 2px;
+}
+
+.class-chip__btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  color: rgb(var(--canvas-fg-3));
+  display: flex;
+  align-items: center;
+}
+
+.class-chip__btn--disabled {
+  cursor: not-allowed;
+  color: rgb(var(--canvas-fg-4));
+  opacity: 0.5;
+}
+
 /* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */
 @media (max-width: 1400px) {
   .stat-grid--cols-4 {

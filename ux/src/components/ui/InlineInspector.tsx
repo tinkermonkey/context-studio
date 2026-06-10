@@ -78,15 +78,13 @@ export function InlineInspector({
 
   const editActions = (
     <>
-      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
+      <span className="drawer-autosave-status" data-testid="inspector-autosave-status">
         {autosaveStatus === "saving" && <Loader size={14} className="spin" />}
         {autosaveStatus === "saved" && lastSavedAt && (
-          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
-            Saved {formatTimeAgo(lastSavedAt)}
-          </span>
+          <span className="autosave-icon-saved">Saved {formatTimeAgo(lastSavedAt)}</span>
         )}
         {autosaveStatus === "error" && (
-          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
+          <AlertCircle size={14} className="autosave-icon-error" />
         )}
       </span>
       <Button

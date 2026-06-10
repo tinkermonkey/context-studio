@@ -1,19 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   InspectorPanel,
   TextInput as Input,
   Select,
   KVGrid,
-  Button,
 } from "@tinkermonkey/heimdall-ui";
-import { SuggestField, RelationshipSuggester, GroundingSection } from "./suggesters";
+import { RelationshipSuggester, GroundingSection } from "./suggesters";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
+import { EditableField } from "@/components/ui/EditableField";
 import { TypeToConfirmDialog } from "@/components/ui/TypeToConfirmDialog";
-import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
+import { useUpdateClass, useDeleteClass, useMoveClass, useCreateClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
@@ -26,22 +25,18 @@ type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface ClassDrawerProps {
   classData: ClassResponse | null;
-  onClose?: () => void;
 }
 
 export function ClassDrawer({ classData }: ClassDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState(classData?.title ?? "");
-  const [description, setDescription] = useState(classData?.description ?? "");
   const [domainId, setDomainId] = useState(classData?.concept_scheme_id ?? "");
-  const [parentClassId, setParentClassId] = useState(classData?.parent_class_id ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const lastSavedAtRef = useRef<Date | null>(null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateClass();
   const deleteMutation = useDeleteClass();
   const moveMutation = useMoveClass();
+  const createMutation = useCreateClass();
   const { data: schemesResponse } = useSchemes();
   const schemes = schemesResponse?.items || [];
   const { data: classesResponse } = useClasses();
@@ -84,35 +79,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   };
 
   useEffect(() => {
-    setTitle(classData?.title ?? "");
-    setDescription(classData?.description ?? "");
     setDomainId(classData?.concept_scheme_id ?? "");
-    setParentClassId(classData?.parent_class_id ?? "");
-    lastSavedAtRef.current = null;
     setMode("view");
   }, [classData]);
-
-  const isDirty = title !== classData?.title || description !== classData?.description;
-
-  const updateData = { title, description };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!classData || !isDirty || mode !== "edit") return;
-      await updateMutation.mutateAsync({
-        id: classData.id,
-        data: {
-          title: title || undefined,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
-    },
-  });
 
   const handleDelete = async () => {
     if (!classData) return;
@@ -128,9 +97,18 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
 
   if (!classData) return null;
 
+  const handleDuplicate = async () => {
+    try {
+      await createMutation.mutateAsync({ schemeId: classData.concept_scheme_id, data: { title: `Copy of ${classData.title}`, description: classData.description ?? undefined } });
+      toast("success", "Class duplicated");
+    } catch {
+      toast("error", "Failed to duplicate class");
+    }
+  };
+
   const selectedScheme = schemes.find((s) => s.id === domainId);
+  const parentClassId = classData.parent_class_id ?? "";
   const selectedParent = allClasses.find((c) => c.id === parentClassId);
-  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
   const propertyCount = classData.data_properties?.length ?? 0;
   const individualCount = individualsResponse?.total ?? 0;
   const allRelationships = relationshipsResponse?.items || [];
@@ -148,8 +126,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        autosaveStatus={autosaveStatus}
-        lastSavedAt={lastSavedAtRef.current}
+        onDuplicate={() => { void handleDuplicate(); }}
         data-testid="class-inspector"
       >
         {mode === "view" ? (
@@ -209,26 +186,26 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   />
                 </div>
 
-                <div>
-                  <label className="form-group-label">Name</label>
-                  <Input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    data-testid="class-drawer-name-input"
-                  />
-                </div>
+                <EditableField
+                  label="Name"
+                  value={classData.title}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: classData.id, data: { title: v } });
+                  }}
+                  validate={(v) => !v.trim() ? "Name is required" : undefined}
+                  data-testid="class-drawer-name-field"
+                />
 
-                <div>
-                  <label className="form-group-label">Description</label>
-                  <SuggestField
-                    entityId={classData.id}
-                    value={description}
-                    onChange={setDescription}
-                    rows={4}
-                    testId="class-drawer-description-input"
-                  />
-                </div>
+                <EditableField
+                  label="Description"
+                  type="textarea"
+                  rows={4}
+                  value={classData.description ?? ""}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: classData.id, data: { description: v || null } });
+                  }}
+                  data-testid="class-drawer-description-field"
+                />
 
                 <div>
                   <label className="form-group-label">Domain</label>
@@ -260,26 +237,6 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                     <div className="readonly-display muted">—</div>
                   )}
                 </div>
-
-                {isDirty && (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (classData) {
-                          setTitle(classData.title);
-                          setDescription(classData.description ?? "");
-                          setDomainId(classData.concept_scheme_id);
-                          setParentClassId(classData.parent_class_id ?? "");
-                        }
-                      }}
-                      data-testid="inspector-revert-button"
-                    >
-                      Revert
-                    </Button>
-                  </div>
-                )}
               </div>
             </InspectorPanel.Section>
 

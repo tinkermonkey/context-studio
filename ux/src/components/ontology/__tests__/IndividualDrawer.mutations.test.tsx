@@ -82,7 +82,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-drawer-name-input")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-drawer-description-input")).toBeInTheDocument();
@@ -159,7 +159,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-typeahead")).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();
@@ -240,7 +240,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByText("Person")).toBeInTheDocument();
@@ -280,7 +280,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();
@@ -315,7 +315,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByText("Person")).toBeInTheDocument();
@@ -335,7 +335,7 @@ describe("IndividualDrawer - Mutation Workflows", () => {
     it("disables move buttons appropriately", async () => {
       setupDefaultHandlers();
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();

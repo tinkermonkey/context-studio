@@ -8,11 +8,10 @@ import {
   KVGrid,
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
-import { SuggestField } from "./suggesters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
-import { useAutosave } from "@/hooks/useAutosave";
+import { EditableField } from "@/components/ui/EditableField";
 import { useToasts } from "@/components/ui/Toast";
 import {
   useIndividuals,
@@ -23,6 +22,7 @@ import {
   useRemoveClassFromIndividual,
   useIndividualInheritedProperties,
   useReorderIndividualClasses,
+  useCreateIndividual,
 } from "@/api/hooks/ontology/useIndividuals";
 import { useClasses } from "@/api/hooks/ontology";
 import { ApiError } from "@/api/client/interceptors";
@@ -34,7 +34,6 @@ type DataPropertyValueResponse = components["schemas"]["DataPropertyValueRespons
 
 interface IndividualDrawerProps {
   individualId: string | null;
-  onClose?: () => void;
   onSelectIndividual?: (id: string) => void;
 }
 
@@ -60,33 +59,14 @@ function ClassChip({
   isDisabled,
 }: ClassChipProps) {
   return (
-    <div
-      style={{
-        padding: "4px 8px",
-        background: "var(--canvas-bg-2)",
-        borderRadius: "var(--radius-sm)",
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-1)",
-        fontSize: "var(--text-sm)",
-      }}
-    >
+    <div className="class-chip">
       <span>{className}</span>
-      <div style={{ display: "flex", gap: "2px" }}>
+      <div className="class-chip__controls">
         <button
           type="button"
           onClick={() => onMoveUp(classId)}
           disabled={!canMoveUp || isDisabled}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: !canMoveUp || isDisabled ? "not-allowed" : "pointer",
-            padding: "0 2px",
-            color: !canMoveUp || isDisabled ? "rgb(var(--canvas-fg-4))" : "var(--canvas-fg-3)",
-            opacity: !canMoveUp || isDisabled ? 0.5 : 1,
-            display: "flex",
-            alignItems: "center",
-          }}
+          className={`class-chip__btn${(!canMoveUp || isDisabled) ? " class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-up-${classId}`}
           title="Move up"
         >
@@ -96,16 +76,7 @@ function ClassChip({
           type="button"
           onClick={() => onMoveDown(classId)}
           disabled={!canMoveDown || isDisabled}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: !canMoveDown || isDisabled ? "not-allowed" : "pointer",
-            padding: "0 2px",
-            color: !canMoveDown || isDisabled ? "rgb(var(--canvas-fg-4))" : "var(--canvas-fg-3)",
-            opacity: !canMoveDown || isDisabled ? 0.5 : 1,
-            display: "flex",
-            alignItems: "center",
-          }}
+          className={`class-chip__btn${(!canMoveDown || isDisabled) ? " class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-down-${classId}`}
           title="Move down"
         >
@@ -115,16 +86,7 @@ function ClassChip({
           type="button"
           onClick={() => onRemove(classId)}
           disabled={isDisabled}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: isDisabled ? "not-allowed" : "pointer",
-            padding: "0 2px",
-            color: isDisabled ? "rgb(var(--canvas-fg-4))" : "var(--canvas-fg-3)",
-            opacity: isDisabled ? 0.5 : 1,
-            display: "flex",
-            alignItems: "center",
-          }}
+          className={`class-chip__btn${isDisabled ? " class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-remove-${classId}`}
           title="Remove"
         >
@@ -137,19 +99,17 @@ function ClassChip({
 
 export function IndividualDrawer({ individualId, onSelectIndividual }: IndividualDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showClassOptions, setShowClassOptions] = useState(false);
   const [isAddingClass, setIsAddingClass] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const lastSavedAtRef = useRef<Date | null>(null);
   const { toast } = useToasts();
 
   const updateMutation = useUpdateIndividual();
   const deleteMutation = useDeleteIndividual();
+  const createMutation = useCreateIndividual();
   const addClassMutation = useAddClassToIndividual();
   const removeClassMutation = useRemoveClassFromIndividual();
   const reorderMutation = useReorderIndividualClasses();
@@ -189,33 +149,8 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
       )
       .slice(0, 10) || [];
 
-  const isDirty = title !== individual?.title || description !== (individual?.description || "");
-
-  const updateData = { title, description };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!individual || !isDirty || mode !== "edit") return;
-      await updateMutation.mutateAsync({
-        id: individual.id,
-        data: {
-          title,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `${individualsCopy.toasts.autosaveFailed}: ${error.message}`);
-    },
-  });
-
   useEffect(() => {
     if (individual) {
-      setTitle(individual.title);
-      setDescription(individual.description || "");
-      lastSavedAtRef.current = null;
       setMode("view");
     }
   }, [individual?.id]);
@@ -234,8 +169,6 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
   }, [showClassOptions]);
 
   if (!individualId) return null;
-
-  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   // Loading state
   if (isLoadingIndividual) {
@@ -366,11 +299,12 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     }
   };
 
-  const revert = () => {
-    if (individual) {
-      setTitle(individual.title);
-      setDescription(individual.description || "");
-      setSearchQuery("");
+  const handleDuplicate = async () => {
+    try {
+      await createMutation.mutateAsync({ title: `Copy of ${individual.title}`, class_ids: individual.class_ids, description: individual.description ?? undefined });
+      toast("success", "Individual duplicated");
+    } catch {
+      toast("error", "Failed to duplicate individual");
     }
   };
 
@@ -396,8 +330,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        autosaveStatus={autosaveStatus}
-        lastSavedAt={lastSavedAtRef.current}
+        onDuplicate={() => { void handleDuplicate(); }}
         data-testid="individual-detail-page"
       >
         {mode === "view" ? (
@@ -430,39 +363,26 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 />
               </div>
 
-              <div>
-                <label className="form-group-label">{individualsCopy.drawer.nameLabel}</label>
-                <Input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  data-testid="individual-drawer-name-input"
-                />
-              </div>
+              <EditableField
+                label={individualsCopy.drawer.nameLabel}
+                value={individual.title}
+                onSave={async (v) => {
+                  await updateMutation.mutateAsync({ id: individual.id, data: { title: v } });
+                }}
+                validate={(v) => !v.trim() ? "Name is required" : undefined}
+                data-testid="individual-drawer-name-field"
+              />
 
-              <div>
-                <label className="form-group-label">{individualsCopy.drawer.descriptionLabel}</label>
-                <SuggestField
-                  entityId={individual.id}
-                  value={description}
-                  onChange={setDescription}
-                  rows={4}
-                  testId="individual-drawer-description-input"
-                />
-              </div>
-
-              {isDirty && (
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={revert}
-                    data-testid="inspector-revert-button"
-                  >
-                    Revert
-                  </Button>
-                </div>
-              )}
+              <EditableField
+                label={individualsCopy.drawer.descriptionLabel}
+                type="textarea"
+                rows={4}
+                value={individual.description ?? ""}
+                onSave={async (v) => {
+                  await updateMutation.mutateAsync({ id: individual.id, data: { description: v || null } });
+                }}
+                data-testid="individual-drawer-description-field"
+              />
             </InspectorPanel.Section>
 
             <InspectorPanel.Section title={individualsCopy.drawer.classMembershipTitle}>

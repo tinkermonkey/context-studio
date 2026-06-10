@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   InspectorPanel,
   TextInput as Input,
@@ -7,10 +7,9 @@ import {
   VersionPill,
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
-import { SuggestField } from "./suggesters";
 import { InlineInspector } from "@/components/ui/InlineInspector";
-import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
-import { useAutosave } from "@/hooks/useAutosave";
+import { EditableField } from "@/components/ui/EditableField";
+import { useUpdateTaxonomy, useDeleteTaxonomy, useCreateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { taxonomiesCopy } from "@/routes/app/schema/taxonomies/-copy";
@@ -21,20 +20,17 @@ type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 
 interface TaxonomyDrawerProps {
   taxonomy: TaxonomyResponse | null;
-  onClose?: () => void;
 }
 
 export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState(taxonomy?.title ?? "");
-  const [description, setDescription] = useState(taxonomy?.description ?? "");
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const lastSavedAtRef = useRef<Date | null>(null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateTaxonomy();
   const deleteMutation = useDeleteTaxonomy();
+  const createMutation = useCreateTaxonomy();
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
     onDeleteError: (id: string, error: Error) => {
@@ -44,33 +40,8 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   });
 
   useEffect(() => {
-    setTitle(taxonomy?.title ?? "");
-    setDescription(taxonomy?.description ?? "");
-    lastSavedAtRef.current = null;
     setMode("view");
   }, [taxonomy]);
-
-  const isDirty = title !== taxonomy?.title || description !== taxonomy?.description;
-
-  const updateData = { title, description };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!taxonomy || !isDirty || mode !== "edit") return;
-      await updateMutation.mutateAsync({
-        id: taxonomy.id,
-        data: {
-          title,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
-    },
-  });
 
   const handleDelete = async () => {
     if (!taxonomy) return;
@@ -86,7 +57,14 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
 
   if (!taxonomy) return null;
 
-  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const handleDuplicate = async () => {
+    try {
+      await createMutation.mutateAsync({ title: `Copy of ${taxonomy.title}`, description: taxonomy.description ?? undefined });
+      toast("success", "Taxonomy duplicated");
+    } catch {
+      toast("error", "Failed to duplicate taxonomy");
+    }
+  };
 
   const publishAction =
     taxonomy.status === "draft" ? (
@@ -111,8 +89,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        autosaveStatus={autosaveStatus}
-        lastSavedAt={lastSavedAtRef.current}
+        onDuplicate={() => { void handleDuplicate(); }}
         extraViewActions={publishAction}
         data-testid="taxonomy-inspector"
       >
@@ -151,44 +128,26 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                   />
                 </div>
 
-                <div>
-                  <label className="form-group-label">Title</label>
-                  <Input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    data-testid="taxonomy-drawer-title-input"
-                  />
-                </div>
+                <EditableField
+                  label="Title"
+                  value={taxonomy.title}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: taxonomy.id, data: { title: v } });
+                  }}
+                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  data-testid="taxonomy-drawer-title-field"
+                />
 
-                <div>
-                  <label className="form-group-label">Description</label>
-                  <SuggestField
-                    entityId={taxonomy.id}
-                    value={description}
-                    onChange={setDescription}
-                    rows={4}
-                    testId="taxonomy-drawer-description-input"
-                  />
-                </div>
-
-                {isDirty && (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (taxonomy) {
-                          setTitle(taxonomy.title);
-                          setDescription(taxonomy.description ?? "");
-                        }
-                      }}
-                      data-testid="inspector-revert-button"
-                    >
-                      Revert
-                    </Button>
-                  </div>
-                )}
+                <EditableField
+                  label="Description"
+                  type="textarea"
+                  rows={4}
+                  value={taxonomy.description ?? ""}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: v || null } });
+                  }}
+                  data-testid="taxonomy-drawer-description-field"
+                />
               </div>
             </InspectorPanel.Section>
 

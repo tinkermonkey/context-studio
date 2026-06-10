@@ -23,7 +23,6 @@ interface RelationshipDrawerProps {
   sourceName: string;
   targetName: string;
   propertyName: string;
-  onClose?: () => void;
 }
 
 export function RelationshipDrawer({
@@ -95,12 +94,12 @@ export function RelationshipDrawer({
 
     setIsSaving(true);
     try {
-      await deleteMutation.mutateAsync(relationship.id);
       await createMutation.mutateAsync({
         source_id: editValue.source.id,
         target_id: editValue.target.id,
         relationship_type: editValue.predicate,
       });
+      await deleteMutation.mutateAsync(relationship.id);
       toast("success", "Relationship updated");
       setMode("view");
     } catch (error) {

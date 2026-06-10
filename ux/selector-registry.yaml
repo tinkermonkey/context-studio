@@ -2304,3 +2304,50 @@ selectors:
   - selector: my-drawer
     component: src/components/crud/CreateDrawer.tsx
     description: Custom testid accepted via data-testid prop on CreateDrawer (test fixture variant)
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: class-drawer-name-field
+    component: src/components/ontology/ClassDrawer.tsx
+    description: EditableField for the class name in the class inspector drawer (edit mode)
+  - selector: class-drawer-description-field
+    component: src/components/ontology/ClassDrawer.tsx
+    description: EditableField for the class description in the class inspector drawer (edit mode)
+  - selector: individual-drawer-name-field
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: EditableField for the individual name in the individual inspector drawer (edit mode)
+  - selector: individual-drawer-description-field
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: EditableField for the individual description in the individual inspector drawer (edit mode)
+  - selector: property-drawer-title-field
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: EditableField for the property title in the property inspector drawer (edit mode)
+  - selector: property-drawer-description-field
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: EditableField for the property description in the property inspector drawer (edit mode)
+  - selector: relationship-edit-cancel
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Cancel button in the relationship edit form inside the inspector drawer
+  - selector: relationship-edit-save
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Save button in the relationship edit form inside the inspector drawer
+  - selector: scheme-drawer-title-field
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: EditableField for the concept scheme title in the scheme inspector drawer (edit mode)
+  - selector: scheme-drawer-description-field
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: EditableField for the concept scheme description in the scheme inspector drawer (edit mode)
+  - selector: taxonomy-drawer-title-field
+    component: src/components/ontology/TaxonomyDrawer.tsx
+    description: EditableField for the taxonomy title in the taxonomy inspector drawer (edit mode)
+  - selector: taxonomy-drawer-description-field
+    component: src/components/ontology/TaxonomyDrawer.tsx
+    description: EditableField for the taxonomy description in the taxonomy inspector drawer (edit mode)
+  - selector: inline-inspector-edit-button
+    component: src/components/ui/InlineInspector.tsx
+    description: Edit icon button in the InlineInspector view-mode action bar
+  - selector: inline-inspector-row-menu
+    component: src/components/ui/InlineInspector.tsx
+    description: RowMenu trigger in the InlineInspector view-mode action bar (Edit, Duplicate, Delete)
+  - selector: inline-inspector-done-button
+    component: src/components/ui/InlineInspector.tsx
+    description: Done button in the InlineInspector edit-mode action bar to exit edit mode

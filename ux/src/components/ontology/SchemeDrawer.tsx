@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   InspectorPanel,
   TextInput as Input,
   KVGrid,
-  Button,
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
-import { SuggestField } from "./suggesters";
 import { InlineInspector } from "@/components/ui/InlineInspector";
-import { useUpdateScheme, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
+import { EditableField } from "@/components/ui/EditableField";
+import { useUpdateScheme, useDeleteScheme, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { schemesCopy } from "@/routes/app/schema/schemes/-copy";
@@ -21,19 +19,16 @@ type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 interface SchemeDrawerProps {
   scheme: ConceptSchemeResponse | null;
   taxonomyName: string;
-  onClose?: () => void;
 }
 
 export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState(scheme?.title ?? "");
-  const [description, setDescription] = useState(scheme?.description ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const lastSavedAtRef = useRef<Date | null>(null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateScheme();
   const deleteMutation = useDeleteScheme();
+  const createMutation = useCreateScheme();
   const { data: classesResponse } = useClasses({
     concept_scheme_id: scheme?.id,
   });
@@ -48,33 +43,8 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   });
 
   useEffect(() => {
-    setTitle(scheme?.title ?? "");
-    setDescription(scheme?.description ?? "");
-    lastSavedAtRef.current = null;
     setMode("view");
   }, [scheme]);
-
-  const isDirty = title !== scheme?.title || description !== scheme?.description;
-
-  const updateData = { title, description };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!scheme || !isDirty || mode !== "edit") return;
-      await updateMutation.mutateAsync({
-        id: scheme.id,
-        data: {
-          title,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
-    },
-  });
 
   const handleDelete = async () => {
     if (!scheme) return;
@@ -90,7 +60,14 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
 
   if (!scheme) return null;
 
-  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const handleDuplicate = async () => {
+    try {
+      await createMutation.mutateAsync({ taxonomyId: scheme.taxonomy_id, data: { title: `Copy of ${scheme.title}`, description: scheme.description ?? undefined } });
+      toast("success", "Concept scheme duplicated");
+    } catch {
+      toast("error", "Failed to duplicate concept scheme");
+    }
+  };
 
   const classCountText =
     classes.length === 1
@@ -109,8 +86,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        autosaveStatus={autosaveStatus}
-        lastSavedAt={lastSavedAtRef.current}
+        onDuplicate={() => { void handleDuplicate(); }}
         data-testid="scheme-inspector"
       >
         {mode === "view" ? (
@@ -145,26 +121,26 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                   />
                 </div>
 
-                <div>
-                  <label className="form-group-label">Title</label>
-                  <Input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    data-testid="scheme-drawer-title-input"
-                  />
-                </div>
+                <EditableField
+                  label="Title"
+                  value={scheme.title}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: scheme.id, data: { title: v } });
+                  }}
+                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  data-testid="scheme-drawer-title-field"
+                />
 
-                <div>
-                  <label className="form-group-label">Description</label>
-                  <SuggestField
-                    entityId={scheme.id}
-                    value={description}
-                    onChange={setDescription}
-                    rows={4}
-                    testId="scheme-drawer-description-input"
-                  />
-                </div>
+                <EditableField
+                  label="Description"
+                  type="textarea"
+                  rows={4}
+                  value={scheme.description ?? ""}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: scheme.id, data: { description: v || null } });
+                  }}
+                  data-testid="scheme-drawer-description-field"
+                />
 
                 <div>
                   <label className="form-group-label">Parent Taxonomy</label>
@@ -175,24 +151,6 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                     data-testid="scheme-drawer-parent-taxonomy"
                   />
                 </div>
-
-                {isDirty && (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (scheme) {
-                          setTitle(scheme.title);
-                          setDescription(scheme.description ?? "");
-                        }
-                      }}
-                      data-testid="inspector-revert-button"
-                    >
-                      Revert
-                    </Button>
-                  </div>
-                )}
               </div>
             </InspectorPanel.Section>
 

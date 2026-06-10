@@ -39,7 +39,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
-      const { container } = render(<IndividualDrawer individualId={null} onClose={() => {}} />);
+      const { container } = render(<IndividualDrawer individualId={null} />);
 
       expect(
         container.querySelector('[data-testid="individual-detail-page"]'),
@@ -77,7 +77,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue("John Doe")).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         const idInput = screen.getByTestId("individual-drawer-id") as HTMLInputElement;
@@ -143,7 +143,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         const nameInput = screen.getByTestId("individual-drawer-name-input") as HTMLInputElement;
@@ -177,7 +177,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         const descInput = screen.getByTestId(
@@ -216,7 +216,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-list")).toBeInTheDocument();
@@ -255,7 +255,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-remove-class-person")).toBeInTheDocument();
@@ -288,7 +288,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-typeahead")).toBeInTheDocument();
@@ -320,7 +320,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();
@@ -357,7 +357,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("related-individuals-panel")).toBeInTheDocument();
@@ -389,7 +389,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       // IndividualDrawer surfaces its actions (autosave status / revert) through the
       // InspectorPanel actions slot; the close affordance lives in the parent Drawer wrapper.
@@ -429,7 +429,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();

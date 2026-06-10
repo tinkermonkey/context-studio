@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   InspectorPanel,
   TextInput as Input,
   KVGrid,
-  Button,
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
-import { SuggestField } from "./suggesters";
 import { InlineInspector } from "@/components/ui/InlineInspector";
-import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
-import { useAutosave } from "@/hooks/useAutosave";
+import { EditableField } from "@/components/ui/EditableField";
+import { useUpdateProperty, useDeleteProperty, useCreateProperty } from "@/api/hooks/ontology/useProperties";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
@@ -19,19 +17,16 @@ type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionRespo
 
 interface PropertyDrawerProps {
   property: PropertyDefinitionResponse | null;
-  onClose?: () => void;
 }
 
 export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [title, setTitle] = useState(property?.title ?? "");
-  const [description, setDescription] = useState(property?.description ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const lastSavedAtRef = useRef<Date | null>(null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateProperty();
   const deleteMutation = useDeleteProperty();
+  const createMutation = useCreateProperty();
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
     onDeleteError: (id: string, error: Error) => {
@@ -41,36 +36,8 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   });
 
   useEffect(() => {
-    setTitle(property?.title ?? "");
-    setDescription(property?.description ?? "");
-    lastSavedAtRef.current = null;
     setMode("view");
   }, [property]);
-
-  const isDirty = title !== property?.title || description !== property?.description;
-
-  const updateData = {
-    title,
-    description: description || null,
-  };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!property || !isDirty || mode !== "edit") return;
-      await updateMutation.mutateAsync({
-        id: property.id,
-        data: {
-          title,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
-    },
-  });
 
   const handleDelete = async () => {
     if (!property) return;
@@ -86,7 +53,15 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
 
   if (!property) return null;
 
-  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const handleDuplicate = async () => {
+    try {
+      const baseIdentifier = property.identifier + "_copy";
+      await createMutation.mutateAsync({ identifier: baseIdentifier, title: `Copy of ${property.title}`, description: property.description ?? undefined });
+      toast("success", "Property duplicated");
+    } catch {
+      toast("error", "Failed to duplicate property");
+    }
+  };
 
   return (
     <>
@@ -98,8 +73,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        autosaveStatus={autosaveStatus}
-        lastSavedAt={lastSavedAtRef.current}
+        onDuplicate={() => { void handleDuplicate(); }}
         data-testid="property-inspector"
       >
         {mode === "view" ? (
@@ -133,44 +107,26 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                   />
                 </div>
 
-                <div>
-                  <label className="form-group-label">Title</label>
-                  <Input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    data-testid="property-drawer-title-input"
-                  />
-                </div>
+                <EditableField
+                  label="Title"
+                  value={property.title}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: property.id, data: { title: v } });
+                  }}
+                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  data-testid="property-drawer-title-field"
+                />
 
-                <div>
-                  <label className="form-group-label">Description</label>
-                  <SuggestField
-                    entityId={property.id}
-                    value={description}
-                    onChange={setDescription}
-                    rows={4}
-                    testId="property-drawer-description-input"
-                  />
-                </div>
-
-                {isDirty && (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (property) {
-                          setTitle(property.title);
-                          setDescription(property.description ?? "");
-                        }
-                      }}
-                      data-testid="inspector-revert-button"
-                    >
-                      Revert
-                    </Button>
-                  </div>
-                )}
+                <EditableField
+                  label="Description"
+                  type="textarea"
+                  rows={4}
+                  value={property.description ?? ""}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: property.id, data: { description: v || null } });
+                  }}
+                  data-testid="property-drawer-description-field"
+                />
               </div>
             </InspectorPanel.Section>
 
