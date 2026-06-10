@@ -19,9 +19,11 @@ export function usePendingCreate(
   useEffect(() => {
     const pending = window.__CS_PENDING;
     if (pending && pending.type === type) {
-      window.__CS_PENDING = undefined;
       requestAnimationFrame(() => {
-        surfaceRef.current?.startCreate(pending.ctx, pending.identifierDirty);
+        if (surfaceRef.current) {
+          window.__CS_PENDING = undefined;
+          surfaceRef.current.startCreate(pending.ctx, pending.identifierDirty);
+        }
       });
     }
     // intentionally runs once on mount
