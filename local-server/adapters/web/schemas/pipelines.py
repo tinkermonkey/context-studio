@@ -15,11 +15,7 @@ Response schemas (for GET/returns):
 - PipelineTypeResponse
 - ImplementationResponse
 - ConfigurationResponse
-
-Per-type request schemas are defined for forward compatibility and documentation of
-expected inputs per pipeline type. They are actively used in per-type implementation
-sub-issues. The generic PipelineRunRequest is used in the Wave B generic endpoint;
-type-specific fields are refined in later sub-issues.
+- PipelineConfigurationResponse (rich schema for user-editable configs)
 
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
@@ -58,6 +54,74 @@ class ConfigurationResponse(BaseModel):
     config_ref: str = Field(..., description="Configuration reference slug")
     version: int = Field(..., description="Configuration version number")
     config: dict[str, Any] = Field(..., description="Configuration data")
+
+
+class PipelineConfigurationParameters(BaseModel):
+    """LLM parameters for a pipeline configuration."""
+
+    temperature: float = Field(default=0.4, ge=0.0, le=2.0, description="Sampling temperature")
+    max_tokens: int = Field(default=800, ge=64, le=4096, description="Maximum tokens to generate")
+    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
+
+
+class PipelineConfigurationCreateRequest(BaseModel):
+    """Request body for creating a new user pipeline configuration."""
+
+    name: str = Field(..., min_length=1, max_length=120, description="Configuration display name")
+    description: Optional[str] = Field(None, max_length=1000, description="Optional description")
+    provider: str = Field(..., description="LLM provider (openai or anthropic)")
+    model: str = Field(..., description="Model identifier")
+    system_prompt: Optional[str] = Field(None, description="System prompt text")
+    user_prompt_template: str = Field(
+        ..., min_length=1, description="User prompt template (Jinja2)"
+    )
+    parameters: PipelineConfigurationParameters = Field(
+        default_factory=PipelineConfigurationParameters,
+        description="LLM generation parameters",
+    )
+    enabled: bool = Field(default=True, description="Whether this configuration is active")
+
+
+class PipelineConfigurationUpdateRequest(BaseModel):
+    """Request body for updating an existing user pipeline configuration."""
+
+    name: str = Field(..., min_length=1, max_length=120, description="Configuration display name")
+    description: Optional[str] = Field(None, max_length=1000, description="Optional description")
+    provider: str = Field(..., description="LLM provider (openai or anthropic)")
+    model: str = Field(..., description="Model identifier")
+    system_prompt: Optional[str] = Field(None, description="System prompt text")
+    user_prompt_template: str = Field(
+        ..., min_length=1, description="User prompt template (Jinja2)"
+    )
+    parameters: PipelineConfigurationParameters = Field(
+        ..., description="LLM generation parameters"
+    )
+    enabled: bool = Field(..., description="Whether this configuration is active")
+
+
+class PipelineConfigurationResponse(BaseModel):
+    """Rich response for a pipeline configuration (user-created or system-defined)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Stable configuration UUID (synthetic for system configs)")
+    config_ref: str = Field(..., description="Configuration reference slug (registry key)")
+    pipeline_type: str = Field(..., description="Pipeline type identifier")
+    implementation_id: str = Field(..., description="Implementation identifier")
+    name: str = Field(..., description="Configuration display name")
+    description: Optional[str] = Field(None, description="Optional description")
+    provider: Optional[str] = Field(None, description="LLM provider")
+    model: Optional[str] = Field(None, description="Model identifier")
+    system_prompt: Optional[str] = Field(None, description="System prompt text")
+    user_prompt_template: Optional[str] = Field(None, description="User prompt template")
+    parameters: Optional[PipelineConfigurationParameters] = Field(
+        None, description="LLM generation parameters"
+    )
+    enabled: bool = Field(default=True, description="Whether this configuration is active")
+    version: int = Field(..., description="Configuration version number")
+    is_system: bool = Field(..., description="True for code-defined system configurations")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
 
 class PipelineRunRequest(BaseModel):

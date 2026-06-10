@@ -1,61 +1,50 @@
-import { useMemo } from "react";
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, Icon } from "@tinkermonkey/heimdall-ui";
+import { PageHeader, Icon, Button } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
-import { usePipelineRuns } from "@/api/hooks/pipeline/usePipelineRuns";
-import { PipelineHubContent } from "@/components/pipeline/PipelineHubContent";
-import type { components } from "@/api/types";
-
-type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
+import { PipelineTypeContent } from "@/components/pipeline/PipelineTypeContent";
+import "./pipelines.css";
 
 export const Route = createFileRoute("/app/pipelines/")({
   component: PipelinesPage,
 });
 
 export function PipelinesPage() {
+  const navigate = useNavigate();
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
   const {
-    data: typesData,
-    isLoading: typesLoading,
-    error: typesError,
-    refetch: refetchTypes,
+    data: types,
+    isLoading,
+    error,
+    refetch,
   } = usePipelineTypes();
-  const { data: runsData, isLoading: runsLoading } = usePipelineRuns({ limit: 100 });
 
-  const runsByType = useMemo(() => {
-    if (!runsData?.items) return new Map<string, PipelineRunResponse>();
-    const map = new Map<string, PipelineRunResponse>();
-    runsData.items.forEach((run: PipelineRunResponse) => {
-      const existing = map.get(run.pipeline_type);
-      if (!existing) {
-        map.set(run.pipeline_type, run);
-      } else if (run.created_at && existing.created_at) {
-        const runDate = new Date(run.created_at).getTime();
-        const existingDate = new Date(existing.created_at).getTime();
-        if (runDate > existingDate) {
-          map.set(run.pipeline_type, run);
-        }
-      }
-    });
-    return map;
-  }, [runsData]);
+  const typeList = types ?? [];
+  const activeType = selectedType ?? (typeList[0]?.pipeline_type ?? null);
 
-  const types = typesData || [];
+  const handleNewConfig = () => {
+    if (!activeType) return;
+    // Navigate to type detail for creation via dedicated page
+    navigate({ to: `/app/pipelines/types/${activeType}` });
+  };
 
-  if (typesError) {
+  if (error) {
     return (
       <div data-testid="pipelines-page">
-        <PageHeader eyebrow="Pipelines" title="Pipeline Registry" />
-        <ErrorBanner error={typesError} onRetry={() => refetchTypes()} />
+        <PageHeader eyebrow="Pipelines" title="Pipeline Types" />
+        <ErrorBanner error={error} onRetry={() => refetch()} />
       </div>
     );
   }
 
-  if (!typesLoading && types.length === 0) {
+  if (!isLoading && typeList.length === 0) {
     return (
       <div data-testid="pipelines-page">
-        <PageHeader eyebrow="Pipelines" title="Pipeline Registry" />
+        <PageHeader eyebrow="Pipelines" title="Pipeline Types" />
         <EmptyState
           title="No pipeline types registered"
           description="The pipeline registry is empty. This should not occur during normal operation."
@@ -67,13 +56,59 @@ export function PipelinesPage() {
 
   return (
     <div data-testid="pipelines-page">
-      <PageHeader eyebrow="Pipelines" title="Pipeline Registry" />
-      <PipelineHubContent
-        types={types}
-        runsByType={runsByType}
-        isLoading={typesLoading}
-        isRunsLoading={runsLoading}
+      <PageHeader
+        eyebrow="Pipelines"
+        title="Pipeline Types"
+        subtitle="Pipeline types are system-defined. Curate their configurations — provider, model, prompts, and parameters."
+        actions={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => navigate({ to: "/app/pipelines/runs" })}
+            >
+              All runs
+            </Button>
+          </>
+        }
       />
+
+      <div className="pipelines-master-detail">
+        {/* Left: types list */}
+        <div className="pipelines-types-list" role="listbox" aria-label="Pipeline types">
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="pipeline-type-list-skeleton" />
+              ))
+            : typeList.map((t) => {
+                const isActive = t.pipeline_type === activeType;
+                return (
+                  <button
+                    key={t.pipeline_type}
+                    className={`pipeline-type-list-item ${isActive ? "pipeline-type-list-item--active" : ""}`}
+                    onClick={() => setSelectedType(t.pipeline_type)}
+                    data-testid={`pipeline-type-list-item-${t.pipeline_type}`}
+                    role="option"
+                    aria-selected={isActive}
+                  >
+                    <span className="pipeline-type-list-body">
+                      <span className="pipeline-type-list-name">{t.pipeline_type}</span>
+                      <span className="pipeline-type-list-desc">{t.description}</span>
+                    </span>
+                  </button>
+                );
+              })}
+        </div>
+
+        {/* Right: type configs + editor */}
+        {activeType ? (
+          <PipelineTypeContent pipelineType={activeType} />
+        ) : (
+          <div className="pipeline-type-list-empty" data-testid="pipeline-type-no-selection">
+            <Icon name="pipeline" size={32} />
+            <p>Select a pipeline type to manage its configurations.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

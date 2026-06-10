@@ -2908,7 +2908,7 @@
           "pipelines"
         ],
         "summary": "List Configurations",
-        "description": "List all configurations for a pipeline type and implementation.\n\nArgs:\n    pipeline_type: The pipeline type\n    impl_id: The implementation identifier\n    request: FastAPI request (for registry access)\n\nReturns:\n    List of ConfigurationResponse objects\n\nRaises:\n    HTTPException: 400 if pipeline type is invalid, 404 if implementation not found",
+        "description": "List all configurations for a pipeline type and implementation.\n\nReturns both system (code-defined) and user-created configurations.\n\nArgs:\n    pipeline_type: The pipeline type\n    impl_id: The implementation identifier\n    request: FastAPI request (for registry and repo access)\n\nReturns:\n    List of PipelineConfigurationResponse objects\n\nRaises:\n    HTTPException: 400 if pipeline type is invalid, 404 if implementation not found",
         "operationId": "list_configurations_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_get",
         "parameters": [
           {
@@ -2938,9 +2938,69 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ConfigurationResponse"
+                    "$ref": "#/components/schemas/PipelineConfigurationResponse"
                   },
                   "title": "Response List Configurations Api Pipelines Types  Pipeline Type  Implementations  Impl Id  Configurations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Create Configuration",
+        "description": "Create a new user pipeline configuration.\n\nStores the configuration in operations.db and registers it in the\nin-memory registry so it is immediately available for pipeline runs.\n\nArgs:\n    pipeline_type: The pipeline type\n    impl_id: The implementation identifier\n    body: Configuration create request\n    request: FastAPI request\n\nReturns:\n    PipelineConfigurationResponse for the created configuration\n\nRaises:\n    HTTPException: 400 if pipeline type invalid, 404 if implementation not found",
+        "operationId": "create_configuration_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_post",
+        "parameters": [
+          {
+            "name": "pipeline_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Type"
+            }
+          },
+          {
+            "name": "impl_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Impl Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineConfigurationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
                 }
               }
             }
@@ -3684,6 +3744,134 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline_configurations/{config_id}": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Configuration",
+        "description": "Get a single user pipeline configuration by ID.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nReturns:\n    PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 404 if not found or deleted",
+        "operationId": "get_configuration_api_pipeline_configurations__config_id__get",
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Update Configuration",
+        "description": "Update a user pipeline configuration, incrementing its version.\n\nEach update registers a new version in the in-memory registry so\npipeline runs using it will see the latest configuration.\n\nArgs:\n    config_id: The configuration UUID\n    body: Updated configuration fields\n    request: FastAPI request\n\nReturns:\n    PipelineConfigurationResponse with incremented version\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "update_configuration_api_pipeline_configurations__config_id__put",
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineConfigurationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Delete Configuration",
+        "description": "Soft-delete a user pipeline configuration.\n\nThe in-memory registry entry is preserved for run traceability.\nThe configuration will no longer appear in list responses.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
+        "operationId": "delete_configuration_api_pipeline_configurations__config_id__delete",
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -7032,34 +7220,6 @@
         "title": "ConfigSectionUpdateRequest",
         "description": "Request to update a configuration section."
       },
-      "ConfigurationResponse": {
-        "properties": {
-          "config_ref": {
-            "type": "string",
-            "title": "Config Ref",
-            "description": "Configuration reference slug"
-          },
-          "version": {
-            "type": "integer",
-            "title": "Version",
-            "description": "Configuration version number"
-          },
-          "config": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Config",
-            "description": "Configuration data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "config_ref",
-          "version",
-          "config"
-        ],
-        "title": "ConfigurationResponse",
-        "description": "Response containing configuration metadata."
-      },
       "ConflictReportResponse": {
         "properties": {
           "proposal_id": {
@@ -9407,6 +9567,334 @@
         ],
         "title": "PathResultResponse",
         "description": "Response containing a single path between two nodes."
+      },
+      "PipelineConfigurationCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Configuration display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "LLM provider (openai or anthropic)"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model identifier"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt",
+            "description": "System prompt text"
+          },
+          "user_prompt_template": {
+            "type": "string",
+            "minLength": 1,
+            "title": "User Prompt Template",
+            "description": "User prompt template (Jinja2)"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/PipelineConfigurationParameters",
+            "description": "LLM generation parameters"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this configuration is active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "provider",
+          "model",
+          "user_prompt_template"
+        ],
+        "title": "PipelineConfigurationCreateRequest",
+        "description": "Request body for creating a new user pipeline configuration."
+      },
+      "PipelineConfigurationParameters": {
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "description": "Sampling temperature",
+            "default": 0.4
+          },
+          "max_tokens": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 64.0,
+            "title": "Max Tokens",
+            "description": "Maximum tokens to generate",
+            "default": 800
+          },
+          "top_p": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Top P",
+            "description": "Nucleus sampling probability",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "PipelineConfigurationParameters",
+        "description": "LLM parameters for a pipeline configuration."
+      },
+      "PipelineConfigurationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable configuration UUID (synthetic for system configs)"
+          },
+          "config_ref": {
+            "type": "string",
+            "title": "Config Ref",
+            "description": "Configuration reference slug (registry key)"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "Pipeline type identifier"
+          },
+          "implementation_id": {
+            "type": "string",
+            "title": "Implementation Id",
+            "description": "Implementation identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Configuration display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "LLM provider"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model identifier"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt",
+            "description": "System prompt text"
+          },
+          "user_prompt_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Prompt Template",
+            "description": "User prompt template"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PipelineConfigurationParameters"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LLM generation parameters"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this configuration is active",
+            "default": true
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Configuration version number"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "description": "True for code-defined system configurations"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config_ref",
+          "pipeline_type",
+          "implementation_id",
+          "name",
+          "version",
+          "is_system"
+        ],
+        "title": "PipelineConfigurationResponse",
+        "description": "Rich response for a pipeline configuration (user-created or system-defined)."
+      },
+      "PipelineConfigurationUpdateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Configuration display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "LLM provider (openai or anthropic)"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model identifier"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt",
+            "description": "System prompt text"
+          },
+          "user_prompt_template": {
+            "type": "string",
+            "minLength": 1,
+            "title": "User Prompt Template",
+            "description": "User prompt template (Jinja2)"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/PipelineConfigurationParameters",
+            "description": "LLM generation parameters"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this configuration is active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "provider",
+          "model",
+          "user_prompt_template",
+          "parameters",
+          "enabled"
+        ],
+        "title": "PipelineConfigurationUpdateRequest",
+        "description": "Request body for updating an existing user pipeline configuration."
       },
       "PipelineRunRequest": {
         "properties": {

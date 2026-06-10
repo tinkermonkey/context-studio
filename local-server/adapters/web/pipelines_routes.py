@@ -36,6 +36,7 @@ from adapters.factories.orchestrator_factory import (
 )
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.ontology import ListResponse
+from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
     BatchResponse,
@@ -45,6 +46,10 @@ from adapters.web.schemas.pipelines import (
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     ImplementationResponse,
+    PipelineConfigurationCreateRequest,
+    PipelineConfigurationParameters,
+    PipelineConfigurationResponse,
+    PipelineConfigurationUpdateRequest,
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
@@ -73,6 +78,7 @@ from domain.versioning.services import VersioningService
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
+config_router = APIRouter(prefix="/api/pipeline_configurations", tags=["pipelines"])
 
 _logger = get_logger(__name__)
 
@@ -239,25 +245,99 @@ async def list_implementations(
     ]
 
 
+def _system_config_to_response(
+    pipeline_type: str,
+    impl_id: str,
+    config_ref: str,
+    version_obj: Any,
+) -> PipelineConfigurationResponse:
+    """Convert an in-memory system configuration to a response schema."""
+    cfg = version_obj.config
+    params = None
+    if any(k in cfg for k in ("temperature", "max_tokens", "top_p")):
+        params = PipelineConfigurationParameters(
+            temperature=cfg.get("temperature", 0.4),
+            max_tokens=cfg.get("max_tokens", 800),
+            top_p=cfg.get("top_p", 0.9),
+        )
+    provider = cfg.get("llm_provider") or cfg.get("provider")
+    return PipelineConfigurationResponse(
+        id=f"{pipeline_type}:{impl_id}:{config_ref}",
+        config_ref=config_ref,
+        pipeline_type=pipeline_type,
+        implementation_id=impl_id,
+        name=cfg.get("name") or config_ref,
+        description=cfg.get("description"),
+        provider=provider,
+        model=cfg.get("model"),
+        system_prompt=cfg.get("system_prompt"),
+        user_prompt_template=cfg.get("user_prompt_template"),
+        parameters=params,
+        enabled=cfg.get("enabled", True),
+        version=version_obj.version,
+        is_system=True,
+        created_at=None,
+        updated_at=None,
+    )
+
+
+def _db_config_to_response(record: Any) -> PipelineConfigurationResponse:
+    """Convert a DB pipeline configuration record to a response schema."""
+    from datetime import datetime, timezone
+
+    def _parse_dt(s: Optional[str]) -> Optional[datetime]:
+        if not s:
+            return None
+        try:
+            return datetime.fromisoformat(s)
+        except (ValueError, TypeError):
+            return None
+
+    return PipelineConfigurationResponse(
+        id=record.id,
+        config_ref=record.config_ref,
+        pipeline_type=record.pipeline_type,
+        implementation_id=record.implementation_id,
+        name=record.name,
+        description=record.description,
+        provider=record.provider,
+        model=record.model,
+        system_prompt=record.system_prompt,
+        user_prompt_template=record.user_prompt_template,
+        parameters=PipelineConfigurationParameters(
+            temperature=record.temperature,
+            max_tokens=record.max_tokens,
+            top_p=record.top_p,
+        ),
+        enabled=record.enabled,
+        version=record.version,
+        is_system=False,
+        created_at=_parse_dt(record.created_at),
+        updated_at=_parse_dt(record.updated_at),
+    )
+
+
 @router.get(
     "/types/{pipeline_type}/implementations/{impl_id}/configurations",
-    response_model=list[ConfigurationResponse],
+    response_model=list[PipelineConfigurationResponse],
 )
 async def list_configurations(
     pipeline_type: str,
     impl_id: str,
     request: Request,
-) -> list[ConfigurationResponse]:
+) -> list[PipelineConfigurationResponse]:
     """
     List all configurations for a pipeline type and implementation.
+
+    Returns both system (code-defined) and user-created configurations.
 
     Args:
         pipeline_type: The pipeline type
         impl_id: The implementation identifier
-        request: FastAPI request (for registry access)
+        request: FastAPI request (for registry and repo access)
 
     Returns:
-        List of ConfigurationResponse objects
+        List of PipelineConfigurationResponse objects
 
     Raises:
         HTTPException: 400 if pipeline type is invalid, 404 if implementation not found
@@ -280,15 +360,113 @@ async def list_configurations(
             detail=f"Implementation not found: {ptype.value}:{impl_id}",
         )
 
-    configs = config_registry.list_configs(ptype, impl_id)
-    return [
-        ConfigurationResponse(
-            config_ref=config_ref,
-            version=version.version,
-            config=version.config,
-        )
-        for config_ref, version in configs
+    # User-created configs from the database (collected first to deduplicate registry)
+    user_configs: list[Any] = []
+    known_user_refs: set[str] = set()
+    if hasattr(request.app.state, "pipeline_config_repo"):
+        config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+        try:
+            user_configs = config_repo.list_for_type(ptype.value, impl_id)
+            known_user_refs = config_repo.list_known_config_refs(ptype.value, impl_id)
+        except Exception:
+            _logger.warning("Failed to load user configurations from DB", exc_info=True)
+
+    # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
+    system_configs = config_registry.list_configs(ptype, impl_id)
+    result: list[PipelineConfigurationResponse] = [
+        _system_config_to_response(ptype.value, impl_id, config_ref, version_obj)
+        for config_ref, version_obj in system_configs
+        if config_ref not in known_user_refs
     ]
+
+    result.extend(_db_config_to_response(r) for r in user_configs)
+    return result
+
+
+@router.post(
+    "/types/{pipeline_type}/implementations/{impl_id}/configurations",
+    response_model=PipelineConfigurationResponse,
+    status_code=http_status.HTTP_201_CREATED,
+)
+async def create_configuration(
+    pipeline_type: str,
+    impl_id: str,
+    request: Request,
+    body: PipelineConfigurationCreateRequest = Body(...),
+) -> PipelineConfigurationResponse:
+    """
+    Create a new user pipeline configuration.
+
+    Stores the configuration in operations.db and registers it in the
+    in-memory registry so it is immediately available for pipeline runs.
+
+    Args:
+        pipeline_type: The pipeline type
+        impl_id: The implementation identifier
+        body: Configuration create request
+        request: FastAPI request
+
+    Returns:
+        PipelineConfigurationResponse for the created configuration
+
+    Raises:
+        HTTPException: 400 if pipeline type invalid, 404 if implementation not found
+    """
+    try:
+        ptype = PipelineType(pipeline_type)
+    except ValueError:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid pipeline type: {pipeline_type}",
+        )
+
+    impl_registry: PipelineImplementationRegistry = request.app.state.implementation_registry
+    config_registry: PipelineConfigurationRegistry = request.app.state.config_registry
+
+    if impl_registry.get(ptype, impl_id) is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Implementation not found: {ptype.value}:{impl_id}",
+        )
+
+    if not hasattr(request.app.state, "pipeline_config_repo"):
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Configuration persistence not available",
+        )
+
+    config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+    params = body.parameters
+
+    record = config_repo.create(
+        pipeline_type=ptype.value,
+        implementation_id=impl_id,
+        name=body.name,
+        provider=body.provider,
+        model=body.model,
+        user_prompt_template=body.user_prompt_template,
+        description=body.description,
+        system_prompt=body.system_prompt,
+        temperature=params.temperature,
+        max_tokens=params.max_tokens,
+        top_p=params.top_p,
+        enabled=body.enabled,
+    )
+
+    # Register in the in-memory registry so runs can use it immediately
+    config_dict = {
+        "provider": record.provider,
+        "model": record.model,
+        "system_prompt": record.system_prompt or "",
+        "user_prompt_template": record.user_prompt_template,
+        "temperature": record.temperature,
+        "max_tokens": record.max_tokens,
+        "top_p": record.top_p,
+        "enabled": record.enabled,
+    }
+    config_registry.register(ptype, impl_id, record.config_ref, config_dict)
+
+    return _db_config_to_response(record)
 
 
 # ==================== Pipeline Execution ====================
@@ -1327,3 +1505,154 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     except Exception as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
+
+
+# ==================== Pipeline Configuration CRUD ====================
+
+
+@config_router.get(
+    "/{config_id}",
+    response_model=PipelineConfigurationResponse,
+)
+async def get_configuration(
+    config_id: str,
+    request: Request,
+) -> PipelineConfigurationResponse:
+    """
+    Get a single user pipeline configuration by ID.
+
+    Args:
+        config_id: The configuration UUID
+        request: FastAPI request
+
+    Returns:
+        PipelineConfigurationResponse
+
+    Raises:
+        HTTPException: 404 if not found or deleted
+    """
+    if not hasattr(request.app.state, "pipeline_config_repo"):
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Configuration persistence not available",
+        )
+
+    config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+    record = config_repo.get(config_id)
+    if record is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Configuration not found: {config_id}",
+        )
+    return _db_config_to_response(record)
+
+
+@config_router.put(
+    "/{config_id}",
+    response_model=PipelineConfigurationResponse,
+)
+async def update_configuration(
+    config_id: str,
+    request: Request,
+    body: PipelineConfigurationUpdateRequest = Body(...),
+) -> PipelineConfigurationResponse:
+    """
+    Update a user pipeline configuration, incrementing its version.
+
+    Each update registers a new version in the in-memory registry so
+    pipeline runs using it will see the latest configuration.
+
+    Args:
+        config_id: The configuration UUID
+        body: Updated configuration fields
+        request: FastAPI request
+
+    Returns:
+        PipelineConfigurationResponse with incremented version
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    if not hasattr(request.app.state, "pipeline_config_repo"):
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Configuration persistence not available",
+        )
+
+    config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+    config_registry: PipelineConfigurationRegistry = request.app.state.config_registry
+
+    params = body.parameters
+    record = config_repo.update(
+        config_id=config_id,
+        name=body.name,
+        provider=body.provider,
+        model=body.model,
+        user_prompt_template=body.user_prompt_template,
+        description=body.description,
+        system_prompt=body.system_prompt,
+        temperature=params.temperature,
+        max_tokens=params.max_tokens,
+        top_p=params.top_p,
+        enabled=body.enabled,
+    )
+    if record is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Configuration not found: {config_id}",
+        )
+
+    # Register new version in the in-memory registry
+    try:
+        ptype = PipelineType(record.pipeline_type)
+        config_dict = {
+            "provider": record.provider,
+            "model": record.model,
+            "system_prompt": record.system_prompt or "",
+            "user_prompt_template": record.user_prompt_template,
+            "temperature": record.temperature,
+            "max_tokens": record.max_tokens,
+            "top_p": record.top_p,
+            "enabled": record.enabled,
+        }
+        config_registry.register(ptype, record.implementation_id, record.config_ref, config_dict)
+    except Exception:
+        _logger.warning("Failed to register updated config in registry", exc_info=True)
+
+    return _db_config_to_response(record)
+
+
+@config_router.delete(
+    "/{config_id}",
+    status_code=http_status.HTTP_204_NO_CONTENT,
+)
+async def delete_configuration(
+    config_id: str,
+    request: Request,
+) -> None:
+    """
+    Soft-delete a user pipeline configuration.
+
+    The in-memory registry entry is preserved for run traceability.
+    The configuration will no longer appear in list responses.
+
+    Args:
+        config_id: The configuration UUID
+        request: FastAPI request
+
+    Raises:
+        HTTPException: 404 if not found or already deleted
+    """
+    if not hasattr(request.app.state, "pipeline_config_repo"):
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Configuration persistence not available",
+        )
+
+    config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+    deleted = config_repo.soft_delete(config_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Configuration not found: {config_id}",
+        )
