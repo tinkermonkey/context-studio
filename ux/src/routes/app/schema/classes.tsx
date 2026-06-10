@@ -57,7 +57,7 @@ export function ClassesPage() {
   useEffect(() => {
     if (createForScheme && surfaceRef.current) {
       surfaceRef.current.startCreate({ schemeId: createForScheme }, false);
-      navigate({ to: "/app/schema/classes" as any, search: {}, replace: true });
+      navigate({ to: "/app/schema/classes" as any, search: {} as any, replace: true });
     }
   }, [createForScheme, navigate]);
 
@@ -96,10 +96,15 @@ export function ClassesPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", classesCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete class");
+      throw error;
     }
-    toast("success", classesCopy.delete.successToast);
   }
 
   function handleRowMenuAction(actionId: string, entity: ClassResponse) {
@@ -181,10 +186,10 @@ export function ClassesPage() {
   ];
 
   const rowMenuActions = [
-    { id: "duplicate", label: "Duplicate", icon: "copy" },
-    { id: "add-child-class", label: "Add child class", icon: "plus" },
+    { id: "duplicate", label: "Duplicate", icon: "copy" as const },
+    { id: "add-child-class", label: "Add child class", icon: "plus" as const },
     { type: "separator" as const },
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
   const bulkActions = [

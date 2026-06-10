@@ -72,10 +72,15 @@ export function RelationshipsPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", relationshipsCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete relationship");
+      throw error;
     }
-    toast("success", relationshipsCopy.delete.successToast);
   }
 
   const relationshipColumns: Column<RelationshipResponse>[] = [
@@ -144,7 +149,7 @@ export function RelationshipsPage() {
   ];
 
   const rowMenuActions = [
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
   const bulkActions = [

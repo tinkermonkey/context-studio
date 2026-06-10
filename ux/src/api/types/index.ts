@@ -4168,6 +4168,11 @@ export interface components {
        * @description New hex color '#rrggbb' or null to clear
        */
       color?: string | null;
+      /**
+       * Taxonomy Id
+       * @description Move scheme to a different taxonomy
+       */
+      taxonomy_id?: string | null;
     };
     /**
      * ConfigSectionUpdateRequest
@@ -5931,6 +5936,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Is Relevant
+       * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
+       */
+      is_relevant?: boolean | null;
     };
     /**
      * ProposalResponse

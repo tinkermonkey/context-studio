@@ -14,7 +14,7 @@ import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { PropertyDrawer } from "@/components/ontology/PropertyDrawer";
-import { useProperties, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
+import { useProperties, useDeleteProperty, useSetPropertyRelevance } from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -43,6 +43,7 @@ export function PropertiesPage() {
   const { data: relsData } = useRelationships();
 
   const deleteMutation = useDeleteProperty();
+  const relevanceMutation = useSetPropertyRelevance();
 
   const allData = listResponse?.items ?? [];
   const hasFilter = !!searchFilter;
@@ -73,10 +74,15 @@ export function PropertiesPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", propertiesCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete property");
+      throw error;
     }
-    toast("success", propertiesCopy.delete.successToast);
   }
 
   const propertyColumns: Column<PropertyDefinitionResponse>[] = [
@@ -120,13 +126,33 @@ export function PropertiesPage() {
   ];
 
   const rowMenuActions = [
-    { id: "duplicate", label: "Duplicate", icon: "copy" },
+    { id: "duplicate", label: "Duplicate", icon: "copy" as const },
     { type: "separator" as const },
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
+  ];
+
+  const relevanceOptions = [
+    { value: "true", label: "Relevant" },
+    { value: "false", label: "Irrelevant" },
+    { value: "null", label: "Unevaluated" },
   ];
 
   const bulkActions = [
     { id: "delete", label: "Delete", variant: "danger" as const },
+    {
+      id: "set-relevance",
+      label: "Set relevance",
+      variant: "neutral" as const,
+      fieldLabel: "Relevance",
+      options: relevanceOptions,
+      onBulkConfirm: async (ids: string[], value: string) => {
+        const isRelevant = value === "true" ? true : value === "false" ? false : null;
+        for (const id of ids) {
+          await relevanceMutation.mutateAsync({ id, isRelevant });
+        }
+        toast("success", `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`);
+      },
+    },
   ];
 
   const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;

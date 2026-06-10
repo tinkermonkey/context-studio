@@ -2266,3 +2266,8 @@ selectors:
   - selector: suggest-field-dismiss-all
     component: src/components/ontology/suggesters/SuggestField.tsx
     description: Button to dismiss all AI description proposals at once and clear the suggestion panel
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: scheme-export-button
+    component: src/routes/app/schema/schemes.index.tsx
+    description: Export button on the Concept Schemes page header

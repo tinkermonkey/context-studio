@@ -43,6 +43,18 @@ export function useUpdateProperty() {
   });
 }
 
+export function useSetPropertyRelevance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isRelevant }: { id: string; isRelevant: boolean | null }) =>
+      ontologyService.updateProperty(id, { is_relevant: isRelevant }),
+    onSuccess: (_result, { id }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.property(id) });
+    },
+  });
+}
+
 export function useDeleteProperty() {
   const queryClient = useQueryClient();
   return useMutation({

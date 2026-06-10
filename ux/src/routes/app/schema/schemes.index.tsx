@@ -14,7 +14,7 @@ import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
-import { useSchemes, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
+import { useSchemes, useDeleteScheme, useMoveScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -51,13 +51,14 @@ export function SchemesIndexPage() {
   const { data: relsData } = useRelationships();
 
   const deleteMutation = useDeleteScheme();
+  const moveMutation = useMoveScheme();
 
   // Cross-page create: open CreateDrawer with pre-filled taxonomy if directed from taxonomies page
   useEffect(() => {
     if (createForTaxonomy && surfaceRef.current) {
       surfaceRef.current.startCreate({ taxonomyId: createForTaxonomy }, false);
       // Clear the param so navigating back doesn't re-open
-      navigate({ to: "/app/schema/schemes/" as any, search: {}, replace: true });
+      navigate({ to: "/app/schema/schemes/" as any, search: {} as any, replace: true });
     }
   }, [createForTaxonomy, navigate]);
 
@@ -90,17 +91,22 @@ export function SchemesIndexPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", schemesCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete scheme");
+      throw error;
     }
-    toast("success", schemesCopy.delete.successToast);
   }
 
   function handleRowMenuAction(actionId: string, entity: ConceptSchemeResponse) {
     if (actionId === "add-class") {
       navigate({
         to: "/app/schema/classes" as any,
-        search: { createForScheme: entity.id },
+        search: { createForScheme: entity.id } as any,
       });
     }
   }
@@ -168,14 +174,27 @@ export function SchemesIndexPage() {
   ];
 
   const rowMenuActions = [
-    { id: "duplicate", label: "Duplicate", icon: "copy" },
-    { id: "add-class", label: "Add class", icon: "plus" },
+    { id: "duplicate", label: "Duplicate", icon: "copy" as const },
+    { id: "add-class", label: "Add class", icon: "plus" as const },
     { type: "separator" as const },
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
   const bulkActions = [
     { id: "delete", label: "Delete", variant: "danger" as const },
+    {
+      id: "move-to-taxonomy",
+      label: "Move to taxonomy",
+      variant: "neutral" as const,
+      fieldLabel: "Target taxonomy",
+      options: taxonomies.map((t) => ({ value: t.id, label: t.title })),
+      onBulkConfirm: async (ids: string[], taxonomyId: string) => {
+        for (const id of ids) {
+          await moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } });
+        }
+        toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
+      },
+    },
   ];
 
   const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;

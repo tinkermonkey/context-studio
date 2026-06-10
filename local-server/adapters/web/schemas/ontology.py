@@ -148,6 +148,7 @@ class ConceptSchemeUpdateRequest(BaseModel):
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
     color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
+    taxonomy_id: Optional[str] = Field(None, description="Move scheme to a different taxonomy")
 
     @field_validator("color")
     @classmethod
@@ -343,6 +344,10 @@ class PropertyDefinitionUpdateRequest(BaseModel):
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+    is_relevant: Optional[bool] = Field(
+        None,
+        description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
+    )
 
 
 class PropertyDefinitionResponse(BaseModel):

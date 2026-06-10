@@ -463,6 +463,7 @@ async def update_concept_scheme(
             title=request.title,
             description=request.description,
             color=request.color,
+            taxonomy_id=request.taxonomy_id,
         )
         return ConceptSchemeResponse.model_validate(scheme)
     except Exception as exc:
@@ -989,6 +990,7 @@ async def update_property_definition(
             property_id=property_id,
             title=request.title,
             description=request.description,
+            is_relevant=request.is_relevant,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:

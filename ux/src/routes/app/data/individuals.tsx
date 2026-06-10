@@ -43,10 +43,15 @@ export function IndividualsPage() {
   );
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", individualsCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete individual");
+      throw error;
     }
-    toast("success", individualsCopy.delete.successToast);
   }
 
   const individualColumns: Column<IndividualResponse>[] = [
@@ -113,7 +118,7 @@ export function IndividualsPage() {
   ];
 
   const rowMenuActions = [
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
   const bulkActions = [

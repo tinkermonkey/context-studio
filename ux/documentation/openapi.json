@@ -6998,6 +6998,18 @@
             ],
             "title": "Color",
             "description": "New hex color '#rrggbb' or null to clear"
+          },
+          "taxonomy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomy Id",
+            "description": "Move scheme to a different taxonomy"
           }
         },
         "type": "object",
@@ -9739,6 +9751,18 @@
             ],
             "title": "Description",
             "description": "New description"
+          },
+          "is_relevant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Relevant",
+            "description": "Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"
           }
         },
         "type": "object",

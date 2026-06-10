@@ -4,7 +4,6 @@ import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
   PageHeader,
-  Chip,
   FilterBar,
   TabBar,
   Icon,
@@ -133,26 +132,31 @@ function TaxonomiesPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    for (const id of ids) {
-      await deleteMutation.mutateAsync(id);
+    try {
+      for (const id of ids) {
+        await deleteMutation.mutateAsync(id);
+      }
+      toast("success", taxonomiesCopy.delete.successToast);
+    } catch (error) {
+      toast("error", error instanceof Error ? error.message : "Failed to delete taxonomy");
+      throw error;
     }
-    toast("success", taxonomiesCopy.delete.successToast);
   }
 
   function handleRowMenuAction(actionId: string, entity: TaxonomyResponse) {
     if (actionId === "add-scheme") {
       navigate({
         to: "/app/schema/schemes/" as any,
-        search: { createForTaxonomy: entity.id },
+        search: { createForTaxonomy: entity.id } as any,
       });
     }
   }
 
   const rowMenuActions = [
-    { id: "duplicate", label: "Duplicate", icon: "copy" },
-    { id: "add-scheme", label: "Add concept scheme", icon: "plus" },
+    { id: "duplicate", label: "Duplicate", icon: "copy" as const },
+    { id: "add-scheme", label: "Add concept scheme", icon: "plus" as const },
     { type: "separator" as const },
-    { id: "delete", label: "Delete", icon: "trash", danger: true },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
   const bulkActions = [
