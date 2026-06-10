@@ -24,6 +24,8 @@ import {
   useCreateIndividual,
 } from "@/api/hooks/ontology/useIndividuals";
 import { useClasses } from "@/api/hooks/ontology";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { ApiError } from "@/api/client/interceptors";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
@@ -129,6 +131,11 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
   } = useClasses();
   const classes = classesResponse?.items || [];
   const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
+
+  const { data: relationshipsResponse } = useRelationships();
+  const allRelationships = relationshipsResponse?.items || [];
+  const { data: propertiesResponse } = useProperties();
+  const propertyMap = new Map((propertiesResponse?.items || []).map((p) => [p.id, p.identifier]));
 
   const {
     data: inheritedPropertiesResponse,
@@ -347,6 +354,35 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                   { key: "Description", value: individual.description || "—" },
                 ]}
               />
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Relationships">
+              {(() => {
+                const individualClassIds = new Set(individual.class_ids);
+                const relevantRelationships = allRelationships.filter(
+                  (rel: any) => individualClassIds.has(rel.source_id) || individualClassIds.has(rel.target_id),
+                );
+                if (relevantRelationships.length === 0) {
+                  return (
+                    <p className="drawer-empty-note" data-testid="individual-relationships-empty">
+                      No relationships
+                    </p>
+                  );
+                }
+                return (
+                  <div className="stack" data-testid="individual-relationships-list">
+                    {relevantRelationships.slice(0, 10).map((rel: any) => (
+                      <div key={rel.id} className="drawer-triple" data-testid={`individual-relationship-${rel.id}`}>
+                        <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
+                        <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
+                        <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
+                      </div>
+                    ))}
+                    {relevantRelationships.length > 10 && (
+                      <p className="drawer-empty-note">+{relevantRelationships.length - 10} more</p>
+                    )}
+                  </div>
+                );
+              })()}
             </InspectorPanel.Section>
           </>
         ) : (

@@ -154,19 +154,27 @@ export function RelationshipDrawer({
         data-testid="relationship-inspector"
       >
         {mode === "view" ? (
-          <InspectorPanel.Section title="Details">
-            <KVGrid
-              rows={[
-                { key: "Source", value: sourceName },
-                { key: "Predicate", value: propertyName },
-                { key: "Target", value: targetName },
-                {
-                  key: "Created",
-                  value: new Date(relationship.created_at ?? "").toLocaleDateString(),
-                },
-              ]}
-            />
-          </InspectorPanel.Section>
+          <>
+            <InspectorPanel.Section title="Details">
+              <div className="drawer-triple" data-testid="relationship-triple">
+                <span className="drawer-triple-node">{sourceName}</span>
+                <span className="drawer-triple-predicate">{propertyName}</span>
+                <span className="drawer-triple-node">{targetName}</span>
+              </div>
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Provenance">
+              <KVGrid
+                rows={[
+                  {
+                    key: "Created",
+                    value: new Date(relationship.created_at ?? "").toLocaleDateString(),
+                  },
+                  { key: "Confidence", value: "—" },
+                  { key: "Source", value: "—" },
+                ]}
+              />
+            </InspectorPanel.Section>
+          </>
         ) : (
           <InspectorPanel.Section title="Edit Relationship">
             <div className="stack">

@@ -362,6 +362,36 @@
     padding-top: 4px;
   }
 
+  .grounding-existing-refs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .grounding-ref-item {
+    padding: 8px 10px;
+    background: rgb(var(--canvas-bg));
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .grounding-ref-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .grounding-ref-source {
+    font-size: 10px;
+    color: rgb(var(--canvas-fg-4));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
   /* Shared pipeline error state */
   .suggester-error {
     padding: 8px 10px;

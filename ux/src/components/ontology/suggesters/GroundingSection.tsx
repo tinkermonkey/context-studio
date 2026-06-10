@@ -3,13 +3,17 @@ import { Button } from "@tinkermonkey/heimdall-ui";
 import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
 import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
+import type { components } from "@/api/types";
 import "./Suggesters.css";
+
+type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
 
 interface GroundingSectionProps {
   classId: string;
+  externalRefs?: ExternalReferenceResponse[];
 }
 
-export function GroundingSection({ classId }: GroundingSectionProps) {
+export function GroundingSection({ classId, externalRefs = [] }: GroundingSectionProps) {
   const [runId, setRunId] = useState<string | null>(null);
   const [appliedUris, setAppliedUris] = useState<Set<string>>(new Set());
   const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
@@ -75,6 +79,19 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
 
   return (
     <div className="grounding-section" data-testid="grounding-section">
+      {externalRefs.length > 0 && (
+        <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
+          {externalRefs.map((ref, i) => (
+            <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+              <div className="grounding-ref-name">{ref.identifier}</div>
+              {ref.uri && (
+                <span className="grounding-proposal-url">{ref.uri}</span>
+              )}
+              <span className="grounding-ref-source">{ref.source}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {!hasRun && (
         <Button
           variant="ghost"

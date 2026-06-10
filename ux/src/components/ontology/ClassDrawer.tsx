@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   InspectorPanel,
   TextInput as Input,
   Select,
   KVGrid,
+  Chip,
 } from "@tinkermonkey/heimdall-ui";
 import { RelationshipSuggester, GroundingSection } from "./suggesters";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
@@ -18,11 +20,13 @@ import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { ApiError } from "@/api/client/interceptors";
 import { classesCopy } from "@/routes/app/schema/classes/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
+type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
 
 interface ClassDrawerProps {
   classData: ClassResponse | null;
@@ -34,6 +38,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(classData?.description ?? "");
 
+  const navigate = useNavigate();
   const { toast } = useToasts();
   const updateMutation = useUpdateClass();
   const deleteMutation = useDeleteClass();
@@ -43,6 +48,8 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const schemes = schemesResponse?.items || [];
   const { data: classesResponse } = useClasses();
   const allClasses = classesResponse?.items || [];
+  const { data: propertiesResponse } = useProperties();
+  const properties = propertiesResponse?.items || [];
   const {
     data: individualsResponse,
     error: individualsError,
@@ -127,9 +134,15 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const propertyCount = classData.data_properties?.length ?? 0;
   const individualCount = individualsResponse?.total ?? 0;
   const allRelationships = relationshipsResponse?.items || [];
-  const relationshipCount = allRelationships.filter(
+  const classRelationships = allRelationships.filter(
     (rel: any) => rel.source_id === classData.id || rel.target_id === classData.id,
-  ).length;
+  );
+  const relationshipCount = classRelationships.length;
+  const childClasses = allClasses.filter((c) => c.parent_class_id === classData.id);
+  const sampleIndividuals = (individualsResponse?.items ?? []).slice(0, 5);
+  const externalRefs: ExternalReferenceResponse[] = classData.external_references ?? [];
+  const classMap = new Map(allClasses.map((c) => [c.id, c.title]));
+  const propertyMap = new Map(properties.map((p) => [p.id, p.identifier]));
 
   return (
     <>
@@ -169,6 +182,75 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                 ]}
               />
             </InspectorPanel.Section>
+            <InspectorPanel.Section title="Children">
+              {childClasses.length === 0 ? (
+                <p className="drawer-empty-note" data-testid="class-children-empty">No subclasses</p>
+              ) : (
+                <div className="drawer-pill-row" data-testid="class-children-list">
+                  {childClasses.map((c) => (
+                    <Chip key={c.id} variant="neutral" data-testid={`class-child-${c.id}`}>
+                      {c.title}
+                    </Chip>
+                  ))}
+                </div>
+              )}
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Individuals">
+              {sampleIndividuals.length === 0 ? (
+                <p className="drawer-empty-note" data-testid="class-individuals-empty">No individuals</p>
+              ) : (
+                <div className="stack" data-testid="class-individuals-list">
+                  {sampleIndividuals.map((ind) => (
+                    <div key={ind.id} className="drawer-list-item" data-testid={`class-individual-${ind.id}`}>
+                      {ind.title}
+                    </div>
+                  ))}
+                  {individualCount > 5 && (
+                    <button
+                      type="button"
+                      className="drawer-show-all-link"
+                      onClick={() => navigate({ to: "/app/data/individuals" })}
+                      data-testid="class-individuals-show-all"
+                    >
+                      Show all {individualCount} individuals
+                    </button>
+                  )}
+                </div>
+              )}
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Relationships">
+              {classRelationships.length === 0 ? (
+                <p className="drawer-empty-note" data-testid="class-relationships-empty">No relationships</p>
+              ) : (
+                <div className="stack" data-testid="class-relationships-list">
+                  {classRelationships.slice(0, 10).map((rel: any) => (
+                    <div key={rel.id} className="drawer-triple" data-testid={`class-relationship-${rel.id}`}>
+                      <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
+                      <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
+                      <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
+                    </div>
+                  ))}
+                  {classRelationships.length > 10 && (
+                    <p className="drawer-empty-note">+{classRelationships.length - 10} more</p>
+                  )}
+                </div>
+              )}
+            </InspectorPanel.Section>
+            {externalRefs.length > 0 && (
+              <InspectorPanel.Section title="Grounding">
+                <div className="stack" data-testid="class-grounding-refs">
+                  {externalRefs.map((ref, i) => (
+                    <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`class-grounding-ref-${i}`}>
+                      <div className="grounding-ref-name">{ref.identifier}</div>
+                      {ref.uri && (
+                        <span className="grounding-proposal-url">{ref.uri}</span>
+                      )}
+                      <span className="grounding-ref-source">{ref.source}</span>
+                    </div>
+                  ))}
+                </div>
+              </InspectorPanel.Section>
+            )}
           </>
         ) : (
           <>
@@ -280,7 +362,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
 
             <InspectorPanel.Section title="Grounding">
-              <GroundingSection classId={classData.id} />
+              <GroundingSection classId={classData.id} externalRefs={externalRefs} />
             </InspectorPanel.Section>
           </>
         )}

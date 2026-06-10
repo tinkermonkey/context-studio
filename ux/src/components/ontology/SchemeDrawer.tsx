@@ -113,13 +113,25 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                   { key: "Title", value: scheme.title },
                   { key: "Parent Taxonomy", value: taxonomyName },
                   { key: "Description", value: scheme.description || "—" },
-                  { key: "Classes", value: String(classes.length) },
                   {
                     key: "Created",
                     value: new Date(scheme.created_at ?? "").toLocaleDateString(),
                   },
                 ]}
               />
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title={`Classes (${classes.length})`}>
+              {classes.length === 0 ? (
+                <p className="drawer-empty-note" data-testid="scheme-classes-empty">No classes</p>
+              ) : (
+                <div className="stack" data-testid="scheme-classes-list">
+                  {classes.map((cls) => (
+                    <div key={cls.id} className="drawer-list-item" data-testid={`scheme-class-${cls.id}`}>
+                      {cls.title}
+                    </div>
+                  ))}
+                </div>
+              )}
             </InspectorPanel.Section>
           </>
         ) : (
