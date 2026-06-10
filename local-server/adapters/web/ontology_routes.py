@@ -212,7 +212,7 @@ async def update_taxonomy(
     service: OntologyService = Depends(get_ontology_service),
 ) -> TaxonomyResponse:
     """
-    Update a taxonomy's title and/or description.
+    Update a taxonomy's title, description, and/or color.
 
     Args:
         taxonomy_id: The taxonomy ID
@@ -444,7 +444,7 @@ async def update_concept_scheme(
     service: OntologyService = Depends(get_ontology_service),
 ) -> ConceptSchemeResponse:
     """
-    Update a concept scheme's title and/or description.
+    Update a concept scheme's title, description, color, and/or taxonomy assignment.
 
     Args:
         scheme_id: The concept scheme ID
@@ -970,7 +970,7 @@ async def update_property_definition(
     service: OntologyService = Depends(get_ontology_service),
 ) -> PropertyDefinitionResponse:
     """
-    Update a property definition's title and/or description.
+    Update a property definition's title, description, and/or is_relevant flag.
 
     Note: identifier cannot be changed after creation.
 
@@ -1012,7 +1012,7 @@ async def delete_property_definition(
         service: OntologyService from dependency injection
 
     Raises:
-        HTTPException: 404 if not found
+        HTTPException: 404 if not found, 422 if property is in use by relationships
     """
     try:
         service.delete_property_definition(property_id)
