@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { usePendingCreate } from "../usePendingCreate";
 import type { EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import type { EntityType } from "@/components/crud/CreateDrawer";
 
 function makeRef(overrides?: Partial<EntitySurfaceHandle>) {
   const startCreate = vi.fn();
@@ -95,8 +96,8 @@ describe("usePendingCreate", () => {
     it("does not re-run when type prop changes", () => {
       window.__CS_PENDING = { type: "taxonomy", ctx: { title: "X" } };
       const { ref, startCreate } = makeRef();
-      const { rerender } = renderHook(({ t }) => usePendingCreate(t, ref), {
-        initialProps: { t: "taxonomy" },
+      const { rerender } = renderHook(({ t }: { t: EntityType }) => usePendingCreate(t, ref), {
+        initialProps: { t: "taxonomy" as EntityType },
       });
       rerender({ t: "scheme" });
       // Still called only once (on mount)
