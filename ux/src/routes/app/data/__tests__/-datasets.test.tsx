@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import {
   createDataset,
+  createDatasetMetrics,
   createListDatasets,
 } from "@/api/services/__tests__/fixtures/admin.fixtures";
 import { DatasetsPage } from "../datasets";
@@ -177,7 +178,7 @@ describe("Datasets Data Page", () => {
       });
 
       const filename = screen.getByText("test_data.csv");
-      expect(filename).toBeInTheDocument();
+      expect(filename).toHaveClass("mono");
     });
 
     it("displays status column with Active for active datasets", async () => {
@@ -198,7 +199,8 @@ describe("Datasets Data Page", () => {
         expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
       });
 
-      expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
+      const table = screen.getByTestId("datasets-table");
+      expect(within(table).getByText("Active")).toBeInTheDocument();
     });
 
     it("displays status column with Inactive for inactive datasets", async () => {
@@ -265,7 +267,7 @@ describe("Datasets Data Page", () => {
       expect(screen.getByText("2.1")).toBeInTheDocument();
     });
 
-    it("verifies row-level testids are present for delete actions", async () => {
+    it("verifies row-level testids are present for row actions", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
@@ -303,7 +305,7 @@ describe("Datasets Data Page", () => {
       });
 
       const nameCell = screen.getByTestId("dataset-name-dataset-001");
-      expect(nameCell).toHaveClass("cursor-pointer");
+      expect(nameCell).toHaveClass("link-cyan");
     });
 
     it("shows row actions menu for active datasets", async () => {
@@ -346,6 +348,110 @@ describe("Datasets Data Page", () => {
       });
 
       expect(screen.getByTestId("dataset-row-actions-dataset-001")).toBeInTheDocument();
+    });
+
+    it("displays active-dataset banner when at least one dataset is active", async () => {
+      const mockDatasets = createListDatasets([
+        createDataset({
+          id: "dataset-001",
+          title: "Active One",
+          filename: "active.csv",
+          is_active: true,
+        }),
+        createDataset({
+          id: "dataset-002",
+          title: "Inactive One",
+          filename: "inactive.csv",
+          is_active: false,
+        }),
+      ]);
+
+      server.use(http.get("*/api/v1/admin/datasets", () => HttpResponse.json(mockDatasets)));
+
+      render(<DatasetsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("active-dataset-banner")).toBeInTheDocument();
+      });
+    });
+
+    it("selecting a dataset row opens the InspectorPanel showing identity fields and metrics", async () => {
+      const user = userEvent.setup();
+      const mockDataset = createDataset({
+        id: "dataset-001",
+        title: "Inspectable Dataset",
+        filename: "inspect.csv",
+        description: "A dataset to inspect",
+        schema_version: "2.0",
+        is_active: false,
+        metrics: createDatasetMetrics({ layers_count: 3, terms_count: 50 }),
+      });
+
+      server.use(
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([mockDataset])),
+        ),
+      );
+
+      const { container } = render(<DatasetsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId("dataset-name-dataset-001"));
+
+      await waitFor(() => {
+        expect(container.querySelector('[data-testid="schema-page-layout"]')).toBeInTheDocument();
+        expect(screen.getByTestId("dataset-inspector-title")).toBeInTheDocument();
+      });
+
+      expect(screen.getByText("Layers")).toBeInTheDocument();
+      expect(screen.getByText("Terms")).toBeInTheDocument();
+    });
+
+    it("activating a non-active dataset from the inspector sets it active", async () => {
+      const user = userEvent.setup();
+      const inactiveDataset = createDataset({
+        id: "dataset-001",
+        title: "Inactive Dataset",
+        filename: "inactive.csv",
+        is_active: false,
+      });
+      const activatedDataset = { ...inactiveDataset, is_active: true };
+
+      server.use(
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([inactiveDataset])),
+        ),
+        http.post("*/api/v1/admin/datasets/dataset-001/activate", () =>
+          HttpResponse.json(activatedDataset),
+        ),
+      );
+
+      render(<DatasetsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId("dataset-name-dataset-001"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("dataset-inspector-activate-button")).toBeInTheDocument();
+      });
+
+      server.use(
+        http.get("*/api/v1/admin/datasets", () =>
+          HttpResponse.json(createListDatasets([activatedDataset])),
+        ),
+      );
+
+      await user.click(screen.getByTestId("dataset-inspector-activate-button"));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId("dataset-inspector-activate-button")).not.toBeInTheDocument();
+      });
     });
   });
 

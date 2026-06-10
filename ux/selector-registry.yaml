@@ -2271,3 +2271,28 @@ selectors:
   - selector: scheme-export-button
     component: src/routes/app/schema/schemes.index.tsx
     description: Export button on the Concept Schemes page header
+
+  - selector: datasets-table
+    component: src/routes/app/data/datasets.tsx
+    description: Root wrapper of the datasets SelectableTable
+  - selector: active-dataset-banner
+    component: src/routes/app/data/datasets.tsx
+    description: Banner shown at top of Datasets page when a dataset is active; displays title, filename, and metrics
+  - selector: dataset-inspector
+    component: src/routes/app/data/datasets.tsx
+    description: InspectorPanel shown in the right rail when a dataset row is selected
+  - selector: dataset-inspector-title
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Title field inside the dataset inspector Identity section
+  - selector: dataset-inspector-description
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Description field inside the dataset inspector Identity section
+  - selector: dataset-inspector-filename
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Filename field (mono) inside the dataset inspector Identity section
+  - selector: dataset-inspector-schema-version
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Schema Version field (mono) inside the dataset inspector Identity section
+  - selector: dataset-inspector-activate-button
+    component: src/routes/app/data/datasets.tsx
+    description: Activate button in dataset inspector header; visible only when the selected dataset is not active

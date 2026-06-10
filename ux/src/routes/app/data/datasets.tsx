@@ -9,6 +9,8 @@ import {
   InspectorPanel,
   KVGrid,
   TextInput as Input,
+  StatusBadge,
+  RowMenu,
 } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -36,74 +38,18 @@ function toIsoDate(input: string | null | undefined): string {
   return `${y}-${m}-${day}`;
 }
 
-function StatusDot({ active }: { active: boolean }) {
-  return (
-    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: active ? "rgb(var(--status-emerald))" : "transparent",
-          border: `1.5px solid ${active ? "rgb(var(--status-emerald))" : "rgb(var(--canvas-border))"}`,
-          display: "inline-block",
-          flexShrink: 0,
-        }}
-        aria-hidden="true"
-      />
-      <span>{active ? "Active" : "Inactive"}</span>
-    </span>
-  );
-}
-
 function ActiveDatasetBanner({ dataset }: { dataset: DatasetResponse }) {
   return (
-    <div
-      data-testid="active-dataset-banner"
-      style={{
-        background: "rgb(var(--canvas-bg-2))",
-        border: "1px solid rgb(var(--status-emerald))",
-        borderRadius: "var(--radius-md, 6px)",
-        padding: "12px 16px",
-        marginBottom: 16,
-        display: "flex",
-        alignItems: "center",
-        gap: 24,
-        flexWrap: "wrap",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: "rgb(var(--status-emerald))",
-            display: "inline-block",
-          }}
-          aria-hidden="true"
-        />
-        <span style={{ fontSize: 11, fontWeight: 600, color: "rgb(var(--status-emerald))", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          Active Dataset
-        </span>
+    <div data-testid="active-dataset-banner" className="active-dataset-banner">
+      <div className="active-dataset-banner__label">
+        <span className="active-dataset-banner__dot" aria-hidden="true" />
+        <span className="active-dataset-banner__title-text">Active Dataset</span>
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontWeight: 600, color: "rgb(var(--canvas-fg-1))", marginRight: 8 }}>
-          {dataset.title}
-        </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgb(var(--canvas-fg-3))" }}>
-          {dataset.filename}
-        </span>
+      <div className="active-dataset-banner__info">
+        <span className="active-dataset-banner__name">{dataset.title}</span>
+        <span className="mono muted">{dataset.filename}</span>
       </div>
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          fontFamily: "var(--font-mono)",
-          fontSize: 11,
-          color: "rgb(var(--canvas-fg-3))",
-        }}
-      >
+      <div className="active-dataset-banner__metrics">
         <span>{dataset.metrics.layers_count} layers</span>
         <span>{dataset.metrics.domains_count} domains</span>
         <span>{dataset.metrics.terms_count} terms</span>
@@ -224,7 +170,11 @@ export function DatasetsPage() {
       key: "is_active",
       label: "Status",
       width: "110px",
-      render: (value) => <StatusDot active={value as boolean} />,
+      render: (value) => (
+        <StatusBadge color={(value as boolean) ? "emerald" : "neutral"}>
+          {(value as boolean) ? "Active" : "Inactive"}
+        </StatusBadge>
+      ),
     },
     {
       key: "title",
@@ -232,8 +182,7 @@ export function DatasetsPage() {
       sortable: true,
       render: (value, row) => (
         <span
-          className="cursor-pointer font-medium"
-          style={{ color: "rgb(var(--accent-cyan, var(--status-cyan)))" }}
+          className="link-cyan"
           data-testid={`dataset-name-${row.id}`}
           onClick={() => setSelectedId(row.id)}
         >
@@ -244,34 +193,44 @@ export function DatasetsPage() {
     {
       key: "filename",
       label: "Filename",
-      render: (value) => (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{value as string}</span>
-      ),
+      render: (value) => <span className="mono">{value as string}</span>,
     },
     {
       key: "schema_version",
       label: "Schema",
       width: "100px",
-      render: (value) => (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{value as string}</span>
-      ),
+      render: (value) => <span className="mono">{value as string}</span>,
     },
     {
       key: "created_at",
       label: "Imported",
       width: "120px",
       render: (value) => (
-        <span style={{ fontSize: 12, color: "rgb(var(--canvas-fg-3))" }}>
-          {toIsoDate(value as string | null)}
-        </span>
+        <span className="muted">{toIsoDate(value as string | null)}</span>
       ),
     },
-  ];
-
-  const rowMenuActions = [
-    { id: "activate", label: "Activate" },
-    { type: "separator" as const },
-    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
+    {
+      key: "id",
+      label: "",
+      width: "48px",
+      render: (_: unknown, row: DatasetResponse) => {
+        const actions = [
+          ...(!row.is_active
+            ? [{ id: "activate", label: "Activate" }, { type: "separator" as const }]
+            : []),
+          { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
+        ];
+        return (
+          <div className="csb-rowmenu">
+            <RowMenu
+              data-testid={`dataset-row-actions-${row.id}`}
+              actions={actions}
+              onAction={(actionId: string) => handleRowMenuAction(actionId, row)}
+            />
+          </div>
+        );
+      },
+    },
   ];
 
   function handleRowMenuAction(actionId: string, dataset: DatasetResponse) {
@@ -438,9 +397,6 @@ export function DatasetsPage() {
                 columns={datasetColumns}
                 data={filteredData}
                 onRowClick={(row) => setSelectedId(row.id === selectedId ? undefined : row.id)}
-                rowMenuActions={rowMenuActions}
-                onRowMenuAction={handleRowMenuAction}
-                rowMenuTestIdPrefix="dataset-row-actions"
                 testId="datasets-table"
               />
             </SchemaPageLayout>
@@ -466,7 +422,7 @@ export function DatasetsPage() {
         )}
         <div className="stack">
           <div>
-            <label htmlFor="title" style={{ display: "block", marginBottom: "var(--space-1)" }}>
+            <label htmlFor="title" className="form-group-label">
               {datasetsCopy.form.nameLabel}
             </label>
             <input
@@ -483,7 +439,7 @@ export function DatasetsPage() {
             />
           </div>
           <div>
-            <label htmlFor="filename" style={{ display: "block", marginBottom: "var(--space-1)" }}>
+            <label htmlFor="filename" className="form-group-label">
               {datasetsCopy.form.sourceLabel}
             </label>
             <input
@@ -500,7 +456,7 @@ export function DatasetsPage() {
             />
           </div>
           <div>
-            <label htmlFor="description" style={{ display: "block", marginBottom: "var(--space-1)" }}>
+            <label htmlFor="description" className="form-group-label">
               {datasetsCopy.form.descriptionLabel}
             </label>
             <textarea
@@ -516,7 +472,7 @@ export function DatasetsPage() {
               rows={3}
             />
           </div>
-          <div className="row" style={{ gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <div className="form-actions">
             <Button variant="ghost" onClick={closeCreateModal}>
               Cancel
             </Button>
