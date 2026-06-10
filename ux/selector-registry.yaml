@@ -2293,3 +2293,14 @@ selectors:
   - selector: dataset-inspector-activate-button
     component: src/routes/app/data/datasets.tsx
     description: Activate button in dataset inspector header; visible only when the selected dataset is not active
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: create-drawer-panel
+    component: src/components/crud/CreateDrawer.tsx
+    description: Root element of CreateDrawer when rendered in "full" (drawer panel) variant
+  - selector: create-drawer-inline
+    component: src/components/crud/CreateDrawer.tsx
+    description: Root element of CreateDrawer when rendered in "inline" variant
+  - selector: my-drawer
+    component: src/components/crud/CreateDrawer.tsx
+    description: Custom testid accepted via data-testid prop on CreateDrawer (test fixture variant)

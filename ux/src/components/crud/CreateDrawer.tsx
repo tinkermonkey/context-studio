@@ -99,7 +99,6 @@ export interface FormValues {
   title: string;
   identifier: string;
   description: string;
-  domain: string;
   taxonomyId: string;
   schemeId: string;
   parentClassId: string;
@@ -117,7 +116,6 @@ function defaultValues(initialTaxonomyId?: string, initialSchemeId?: string): Fo
     title: "",
     identifier: "",
     description: "",
-    domain: "",
     taxonomyId: initialTaxonomyId ?? "",
     schemeId: initialSchemeId ?? "",
     parentClassId: "",
@@ -746,12 +744,6 @@ export function CreateDrawer({
   );
 }
 
-const DOMAIN_OPTIONS = [
-  { value: "life", label: "life" },
-  { value: "climate", label: "climate" },
-  { value: "software", label: "software" },
-];
-
 // ─── Form body sub-components ────────────────────────────────────────────────
 
 interface BaseBodyProps {
@@ -768,15 +760,6 @@ interface WithValidation extends BaseBodyProps {
 function TaxonomyBody({ values, setValues }: BaseBodyProps) {
   return (
     <>
-      <Field label="Domain">
-        <SegmentedControl
-          value={values.domain}
-          onChange={(v) => setValues((vals) => ({ ...vals, domain: v as string }))}
-          options={DOMAIN_OPTIONS}
-          data-testid="create-drawer-domain-control"
-        />
-      </Field>
-
       <Field label="Description">
         <SuggestField
           value={values.description}
@@ -1067,8 +1050,6 @@ function RelationshipBody({
   touched,
   touch,
 }: RelationshipBodyProps) {
-  const showFieldError = (field: string) => submitAttempted || touched.has(field);
-
   return (
     <>
       <RelationshipBuilder

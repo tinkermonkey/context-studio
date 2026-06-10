@@ -222,11 +222,6 @@ describe("CreateDrawer", () => {
       expect(screen.getByTestId("create-drawer-identifier-input")).toBeInTheDocument();
     });
 
-    it("taxonomy: renders domain segmented control", () => {
-      renderDrawer({ entityType: "taxonomy" });
-      expect(screen.getByTestId("create-drawer-domain-control")).toBeInTheDocument();
-    });
-
     it("taxonomy: renders description SuggestField", () => {
       renderDrawer({ entityType: "taxonomy" });
       expect(screen.getByTestId("create-drawer-description-input")).toBeInTheDocument();
