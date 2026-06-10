@@ -203,7 +203,7 @@
           "ontology"
         ],
         "summary": "Update Taxonomy",
-        "description": "Update a taxonomy's title and/or description.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
+        "description": "Update a taxonomy's title, description, and/or color.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
         "operationId": "update_taxonomy_api_taxonomies__taxonomy_id__put",
         "parameters": [
           {
@@ -609,7 +609,7 @@
           "ontology"
         ],
         "summary": "Update Concept Scheme",
-        "description": "Update a concept scheme's title and/or description.\n\nArgs:\n    scheme_id: The concept scheme ID\n    request: ConceptSchemeUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
+        "description": "Update a concept scheme's title, description, color, and/or taxonomy assignment.\n\nArgs:\n    scheme_id: The concept scheme ID\n    request: ConceptSchemeUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
         "operationId": "update_concept_scheme_api_schemes__scheme_id__put",
         "parameters": [
           {
@@ -1501,7 +1501,7 @@
           "ontology"
         ],
         "summary": "Update Property Definition",
-        "description": "Update a property definition's title and/or description.\n\nNote: identifier cannot be changed after creation.\n\nArgs:\n    property_id: The property definition ID\n    request: PropertyDefinitionUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "description": "Update a property definition's title, description, and/or is_relevant flag.\n\nNote: identifier cannot be changed after creation.\n\nArgs:\n    property_id: The property definition ID\n    request: PropertyDefinitionUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "update_property_definition_api_properties__property_id__put",
         "parameters": [
           {
@@ -1552,7 +1552,7 @@
           "ontology"
         ],
         "summary": "Delete Property Definition",
-        "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if property is in use by relationships",
         "operationId": "delete_property_definition_api_properties__property_id__delete",
         "parameters": [
           {
