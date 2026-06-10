@@ -439,7 +439,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         top: "100%",
                         left: 0,
                         right: 0,
-                        background: "var(--canvas-bg)",
+                        background: "rgb(var(--canvas-bg))",
                         border: "1px solid rgb(var(--canvas-fg-4))",
                         borderRadius: "var(--radius-sm)",
                         marginTop: "4px",
@@ -473,7 +473,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         >
                           <span
                             className="mono"
-                            style={{ fontSize: "var(--text-xs)", color: "var(--canvas-fg-3)" }}
+                            style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}
                           >
                             {cls.id.slice(0, 8)}
                           </span>
@@ -548,7 +548,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         <div>
                           <span
                             style={{
-                              backgroundColor: "var(--canvas-bg-2)",
+                              backgroundColor: "rgb(var(--canvas-bg-2))",
                               padding: "2px 6px",
                               borderRadius: "var(--radius-sm)",
                               fontSize: "var(--text-xs)",
@@ -559,11 +559,11 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                           </span>
                         </div>
                         <div>
-                          <span style={{ color: "var(--canvas-fg-3)" }}>—</span>
+                          <span style={{ color: "rgb(var(--canvas-fg-3))" }}>—</span>
                         </div>
                         <div>
                           <span
-                            style={{ color: "var(--canvas-fg-3)", fontSize: "var(--text-xs)" }}
+                            style={{ color: "rgb(var(--canvas-fg-3))", fontSize: "var(--text-xs)" }}
                           >
                             {individualsCopy.drawer.propertySourcePlaceholder}
                           </span>
@@ -597,7 +597,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                           key={ind.id}
                           style={{
                             padding: "var(--space-2)",
-                            background: "var(--canvas-bg-2)",
+                            background: "rgb(var(--canvas-bg-2))",
                             borderRadius: "var(--radius-sm)",
                           }}
                         >
@@ -621,7 +621,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                               <span
                                 key={classId}
                                 style={{
-                                  backgroundColor: "var(--canvas-bg-3)",
+                                  backgroundColor: "rgb(var(--canvas-bg-3))",
                                   color: "rgb(var(--canvas-fg-1))",
                                   padding: "2px 6px",
                                   borderRadius: "2px",
@@ -642,7 +642,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         style={{
                           textAlign: "center",
                           fontSize: "var(--text-sm)",
-                          color: "var(--canvas-fg-3)",
+                          color: "rgb(var(--canvas-fg-3))",
                           marginTop: "var(--space-2)",
                         }}
                       >
