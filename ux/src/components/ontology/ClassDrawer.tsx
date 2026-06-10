@@ -3,11 +3,11 @@ import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
   Select,
   KVGrid,
   Button,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField, RelationshipSuggester, GroundingSection } from "./suggesters";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useUpdateClass, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -233,11 +233,12 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
 
             <div>
               <label className="form-group-label">Description</label>
-              <Textarea
+              <SuggestField
+                entityId={classData.id}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                data-testid="class-drawer-description-input"
+                onChange={setDescription}
                 rows={4}
+                testId="class-drawer-description-input"
               />
             </div>
 
@@ -283,6 +284,14 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
               { key: "Created", value: new Date(classData.created_at ?? "").toLocaleDateString() },
             ]}
           />
+        </InspectorPanel.Section>
+
+        <InspectorPanel.Section title="Suggest Relationships">
+          <RelationshipSuggester classId={classData.id} />
+        </InspectorPanel.Section>
+
+        <InspectorPanel.Section title="Grounding">
+          <GroundingSection classId={classData.id} />
         </InspectorPanel.Section>
       </InspectorPanel>
 

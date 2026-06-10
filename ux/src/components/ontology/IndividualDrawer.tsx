@@ -3,10 +3,10 @@ import { ChevronUp, ChevronDown, Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
   Button,
   Panel,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField } from "./suggesters";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -417,11 +417,12 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
 
         <div>
           <label className="form-group-label">{individualsCopy.drawer.descriptionLabel}</label>
-          <Textarea
+          <SuggestField
+            entityId={individual.id}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            data-testid="individual-drawer-description-input"
+            onChange={setDescription}
             rows={4}
+            testId="individual-drawer-description-input"
           />
         </div>
       </InspectorPanel.Section>

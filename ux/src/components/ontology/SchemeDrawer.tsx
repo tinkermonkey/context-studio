@@ -3,10 +3,10 @@ import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
   Button,
   KVGrid,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField } from "./suggesters";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateScheme, useDeleteScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -169,11 +169,12 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
 
             <div>
               <label className="form-group-label">Description</label>
-              <Textarea
+              <SuggestField
+                entityId={scheme.id}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                data-testid="scheme-drawer-description-input"
+                onChange={setDescription}
                 rows={4}
+                testId="scheme-drawer-description-input"
               />
             </div>
 

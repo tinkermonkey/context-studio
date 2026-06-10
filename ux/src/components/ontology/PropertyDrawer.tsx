@@ -3,10 +3,10 @@ import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
   Button,
   KVGrid,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField } from "./suggesters";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -161,11 +161,12 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
 
             <div>
               <label className="form-group-label">Description</label>
-              <Textarea
+              <SuggestField
+                entityId={property.id}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                data-testid="property-drawer-description-input"
+                onChange={setDescription}
                 rows={4}
+                testId="property-drawer-description-input"
               />
             </div>
           </div>

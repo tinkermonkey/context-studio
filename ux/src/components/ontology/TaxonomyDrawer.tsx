@@ -3,11 +3,11 @@ import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
   Button,
   KVGrid,
   VersionPill,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField } from "./suggesters";
 import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
 import { useUpdateTaxonomy, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -174,11 +174,12 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
 
             <div>
               <label className="form-group-label">Description</label>
-              <Textarea
+              <SuggestField
+                entityId={taxonomy.id}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                data-testid="taxonomy-drawer-description-input"
+                onChange={setDescription}
                 rows={4}
+                testId="taxonomy-drawer-description-input"
               />
             </div>
           </div>
