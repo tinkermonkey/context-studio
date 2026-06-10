@@ -96,14 +96,17 @@ export function ClassesPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    try {
-      for (const id of ids) {
-        await deleteMutation.mutateAsync(id);
-      }
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
       toast("success", classesCopy.delete.successToast);
-    } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to delete class");
-      throw error;
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} class${failed === 1 ? "" : "es"}`;
+      toast("error", msg);
+      throw new Error(msg);
     }
   }
 
@@ -201,10 +204,20 @@ export function ClassesPage() {
       fieldLabel: "Target concept scheme",
       options: schemes.map((s) => ({ value: s.id, label: s.title })),
       onBulkConfirm: async (ids: string[], schemeId: string) => {
-        for (const id of ids) {
-          await moveMutation.mutateAsync({ id, data: { target_scheme_id: schemeId } });
+        const results = await Promise.allSettled(
+          ids.map((id) => moveMutation.mutateAsync({ id, data: { target_scheme_id: schemeId } })),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed === 0) {
+          toast("success", `Moved ${ids.length} class${ids.length === 1 ? "" : "es"} to new scheme`);
+        } else {
+          const succeeded = ids.length - failed;
+          const msg = succeeded > 0
+            ? `Moved ${succeeded}, failed to move ${failed}`
+            : `Failed to move ${failed} class${failed === 1 ? "" : "es"}`;
+          toast("error", msg);
+          throw new Error(msg);
         }
-        toast("success", `Moved ${ids.length} class${ids.length === 1 ? "" : "es"} to new scheme`);
       },
     },
   ];

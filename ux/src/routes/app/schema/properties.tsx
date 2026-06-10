@@ -74,14 +74,17 @@ export function PropertiesPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    try {
-      for (const id of ids) {
-        await deleteMutation.mutateAsync(id);
-      }
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
       toast("success", propertiesCopy.delete.successToast);
-    } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to delete property");
-      throw error;
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} propert${failed === 1 ? "y" : "ies"}`;
+      toast("error", msg);
+      throw new Error(msg);
     }
   }
 
@@ -147,14 +150,19 @@ export function PropertiesPage() {
       options: relevanceOptions,
       onBulkConfirm: async (ids: string[], value: string) => {
         const isRelevant = value === "true" ? true : value === "false" ? false : null;
-        try {
-          for (const id of ids) {
-            await relevanceMutation.mutateAsync({ id, isRelevant });
-          }
+        const results = await Promise.allSettled(
+          ids.map((id) => relevanceMutation.mutateAsync({ id, isRelevant })),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed === 0) {
           toast("success", `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`);
-        } catch (error) {
-          toast("error", error instanceof Error ? error.message : "Failed to update relevance");
-          throw error;
+        } else {
+          const succeeded = ids.length - failed;
+          const msg = succeeded > 0
+            ? `Updated ${succeeded}, failed to update ${failed}`
+            : `Failed to update ${failed} propert${failed === 1 ? "y" : "ies"}`;
+          toast("error", msg);
+          throw new Error(msg);
         }
       },
     },

@@ -91,14 +91,17 @@ export function SchemesIndexPage() {
   }
 
   async function handleDelete(ids: string[]) {
-    try {
-      for (const id of ids) {
-        await deleteMutation.mutateAsync(id);
-      }
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
       toast("success", schemesCopy.delete.successToast);
-    } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to delete scheme");
-      throw error;
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} scheme${failed === 1 ? "" : "s"}`;
+      toast("error", msg);
+      throw new Error(msg);
     }
   }
 
@@ -189,14 +192,19 @@ export function SchemesIndexPage() {
       fieldLabel: "Target taxonomy",
       options: taxonomies.map((t) => ({ value: t.id, label: t.title })),
       onBulkConfirm: async (ids: string[], taxonomyId: string) => {
-        try {
-          for (const id of ids) {
-            await moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } });
-          }
+        const results = await Promise.allSettled(
+          ids.map((id) => moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } })),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed === 0) {
           toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
-        } catch (error) {
-          toast("error", error instanceof Error ? error.message : "Failed to move schemes");
-          throw error;
+        } else {
+          const succeeded = ids.length - failed;
+          const msg = succeeded > 0
+            ? `Moved ${succeeded}, failed to move ${failed}`
+            : `Failed to move ${failed} scheme${failed === 1 ? "" : "s"}`;
+          toast("error", msg);
+          throw new Error(msg);
         }
       },
     },
