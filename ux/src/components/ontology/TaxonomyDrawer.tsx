@@ -9,11 +9,15 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
+import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { useUpdateTaxonomy, useDeleteTaxonomy, useCreateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { taxonomiesCopy } from "@/routes/app/schema/taxonomies/-copy";
 import { TaxonomyPublishDialog } from "./TaxonomyPublishDialog";
+import { ApiError } from "@/api/client/interceptors";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -26,11 +30,25 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(taxonomy?.description ?? "");
 
   const { toast } = useToasts();
   const updateMutation = useUpdateTaxonomy();
   const deleteMutation = useDeleteTaxonomy();
   const createMutation = useCreateTaxonomy();
+
+  const { data: schemesResponse } = useSchemes(taxonomy?.id);
+  const schemes = schemesResponse?.items || [];
+  const { data: allClassesResponse } = useClasses();
+  const allClasses = allClassesResponse?.items || [];
+
+  const classCountByScheme = Object.fromEntries(
+    schemes.map((s) => [s.id, allClasses.filter((c) => c.concept_scheme_id === s.id).length]),
+  );
+  const totalClassCount = allClasses.filter((c) =>
+    schemes.some((s) => s.id === c.concept_scheme_id),
+  ).length;
+
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
     onDeleteError: (id: string, error: Error) => {
@@ -41,6 +59,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
 
   useEffect(() => {
     setMode("view");
+    setDescriptionDraft(taxonomy?.description ?? "");
   }, [taxonomy]);
 
   const handleDelete = async () => {
@@ -61,8 +80,20 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
     try {
       await createMutation.mutateAsync({ title: `Copy of ${taxonomy.title}`, description: taxonomy.description ?? undefined });
       toast("success", "Taxonomy duplicated");
-    } catch {
-      toast("error", "Failed to duplicate taxonomy");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to duplicate taxonomy";
+      toast("error", message);
+    }
+  };
+
+  const handleSaveDescription = async (value: string) => {
+    if (value === (taxonomy.description ?? "")) return;
+    try {
+      await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: value || null } });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to save description";
+      toast("error", message);
+      setDescriptionDraft(taxonomy.description ?? "");
     }
   };
 
@@ -112,6 +143,28 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                 ]}
               />
             </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Concept Schemes">
+              {schemes.length === 0 ? (
+                <KVGrid rows={[{ key: "Schemes", value: "None" }]} />
+              ) : (
+                <KVGrid
+                  rows={schemes.map((s) => ({
+                    key: s.title,
+                    value: `${classCountByScheme[s.id] ?? 0} class${(classCountByScheme[s.id] ?? 0) === 1 ? "" : "es"}`,
+                  }))}
+                />
+              )}
+            </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Stats">
+              <KVGrid
+                rows={[
+                  { key: "Concept Schemes", value: String(schemes.length) },
+                  { key: "Classes", value: String(totalClassCount) },
+                ]}
+              />
+            </InspectorPanel.Section>
           </>
         ) : (
           <>
@@ -138,16 +191,22 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                   data-testid="taxonomy-drawer-title-field"
                 />
 
-                <EditableField
-                  label="Description"
-                  type="textarea"
-                  rows={4}
-                  value={taxonomy.description ?? ""}
-                  onSave={async (v) => {
-                    await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: v || null } });
+                <div
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      void handleSaveDescription(descriptionDraft);
+                    }
                   }}
-                  data-testid="taxonomy-drawer-description-field"
-                />
+                >
+                  <label className="form-group-label">Description</label>
+                  <SuggestField
+                    entityId={taxonomy.id}
+                    value={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    rows={4}
+                    testId="taxonomy-drawer-description-input"
+                  />
+                </div>
               </div>
             </InspectorPanel.Section>
 

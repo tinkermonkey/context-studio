@@ -101,8 +101,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     try {
       await createMutation.mutateAsync({ schemeId: classData.concept_scheme_id, data: { title: `Copy of ${classData.title}`, description: classData.description ?? undefined } });
       toast("success", "Class duplicated");
-    } catch {
-      toast("error", "Failed to duplicate class");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to duplicate class";
+      toast("error", message);
     }
   };
 

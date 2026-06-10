@@ -302,8 +302,9 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     try {
       await createMutation.mutateAsync({ title: `Copy of ${individual.title}`, class_ids: individual.class_ids, description: individual.description ?? undefined });
       toast("success", "Individual duplicated");
-    } catch {
-      toast("error", "Failed to duplicate individual");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to duplicate individual";
+      toast("error", message);
     }
   };
 

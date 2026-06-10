@@ -12,6 +12,7 @@ import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { schemesCopy } from "@/routes/app/schema/schemes/-copy";
+import { ApiError } from "@/api/client/interceptors";
 import type { components } from "@/api/types";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
@@ -64,8 +65,9 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
     try {
       await createMutation.mutateAsync({ taxonomyId: scheme.taxonomy_id, data: { title: `Copy of ${scheme.title}`, description: scheme.description ?? undefined } });
       toast("success", "Concept scheme duplicated");
-    } catch {
-      toast("error", "Failed to duplicate concept scheme");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to duplicate concept scheme";
+      toast("error", message);
     }
   };
 
