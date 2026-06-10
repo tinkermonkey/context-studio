@@ -43,14 +43,16 @@ export function IndividualsPage() {
   );
 
   async function handleDelete(ids: string[]) {
-    try {
-      for (const id of ids) {
-        await deleteMutation.mutateAsync(id);
-      }
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
       toast("success", individualsCopy.delete.successToast);
-    } catch (error) {
-      toast("error", error instanceof Error ? error.message : "Failed to delete individual");
-      throw error;
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} individual${failed === 1 ? "" : "s"}`;
+      toast("error", msg);
     }
   }
 
