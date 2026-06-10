@@ -6,8 +6,9 @@ verifying request validation, 404 handling, and the 503 when the repo
 is not wired into app.state.
 """
 
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
@@ -24,7 +25,6 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
-
 
 _CREATE_BODY = {
     "name": "Test Config",
@@ -134,7 +134,6 @@ class TestCreateConfiguration:
     def test_create_without_repo_returns_503(self, client_no_repo, impl_registry):
         # Rebuild a client that has impl_registry but no pipeline_config_repo,
         # wired to the type-scoped create endpoint via the main router
-        from domain.pipelines.entities import PipelineType
         app = FastAPI()
         app.include_router(router)
         app.state.config_registry = PipelineConfigurationRegistry()

@@ -34,15 +34,14 @@ from adapters.factories.orchestrator_factory import (
     create_orchestrator,
     create_pipeline_state,
 )
+from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.ontology import ListResponse
-from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
     BatchResponse,
     CancelBatchResponse,
     CandidateResponse,
-    ConfigurationResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     ImplementationResponse,
