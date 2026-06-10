@@ -1313,6 +1313,90 @@ body.dark-canvas .diff-added {
   justify-content: space-between;
 }
 
+/* ------------ InlineInspector ------------ */
+.inline-inspector {
+  display: flex;
+  flex-direction: column;
+}
+
+.inline-inspector__editing-note {
+  padding: 6px 16px;
+  background: rgb(var(--status-cyan) / 0.08);
+  border-bottom: 1px solid rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-3));
+  font-size: var(--text-xs);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ------------ EditableField ------------ */
+.editable-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.editable-field__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editable-field__view {
+  padding: 6px 10px;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+  color: rgb(var(--canvas-fg-1));
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+  display: flex;
+  align-items: center;
+}
+
+.editable-field__view:hover {
+  border-color: rgb(var(--canvas-border));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.editable-field__view:focus {
+  outline: none;
+  border-color: rgb(var(--accent-primary));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.editable-field__view--disabled {
+  cursor: default;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.editable-field__view--disabled:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.editable-field__placeholder {
+  color: rgb(var(--canvas-fg-4));
+}
+
+.editable-field__saved-indicator {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-emerald));
+  font-weight: 500;
+}
+
+.editable-field__error-indicator {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose));
+}
+
+.editable-field__validation-error {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose));
+  margin-top: 2px;
+}
+
 /* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */
 @media (max-width: 1400px) {
   .stat-grid--cols-4 {

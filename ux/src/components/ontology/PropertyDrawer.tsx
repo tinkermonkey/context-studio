@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader, AlertCircle } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  Button,
   KVGrid,
+  Button,
+  ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
 import { SuggestField } from "./suggesters";
-import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
+import { InlineInspector } from "@/components/ui/InlineInspector";
 import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
-import { formatTimeAgo } from "@/utils/dateFormatting";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
@@ -24,6 +23,7 @@ interface PropertyDrawerProps {
 }
 
 export function PropertyDrawer({ property }: PropertyDrawerProps) {
+  const [mode, setMode] = useState<"view" | "edit">("view");
   const [title, setTitle] = useState(property?.title ?? "");
   const [description, setDescription] = useState(property?.description ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -44,6 +44,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
     setTitle(property?.title ?? "");
     setDescription(property?.description ?? "");
     lastSavedAtRef.current = null;
+    setMode("view");
   }, [property]);
 
   const isDirty = title !== property?.title || description !== property?.description;
@@ -56,7 +57,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const { status } = useAutosave({
     data: updateData,
     mutationFn: async () => {
-      if (!property || !isDirty) return;
+      if (!property || !isDirty || mode !== "edit") return;
       await updateMutation.mutateAsync({
         id: property.id,
         data: {
@@ -71,13 +72,6 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
     },
   });
 
-  const revert = () => {
-    if (property) {
-      setTitle(property.title);
-      setDescription(property.description ?? "");
-    }
-  };
-
   const handleDelete = async () => {
     if (!property) return;
     await performDelete(property.id);
@@ -90,96 +84,109 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
     });
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
   if (!property) return null;
 
-  const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
-
-  const inspectorActions = (
-    <>
-      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
-        {autosaveState === "saving" && <Loader size={14} className="spin" />}
-        {autosaveState === "saved" && lastSavedAtRef.current && (
-          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
-            Saved {formatTimeAgo(lastSavedAtRef.current)}
-          </span>
-        )}
-        {autosaveState === "error" && (
-          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
-        )}
-      </span>
-      {isDirty && (
-        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
-          Revert
-        </Button>
-      )}
-      <Button
-        variant="danger"
-        size="sm"
-        onClick={handleDeleteClick}
-        data-testid="inspector-delete-button"
-      >
-        Delete
-      </Button>
-    </>
-  );
+  const autosaveStatus = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
 
   return (
     <>
-      <InspectorPanel
+      <InlineInspector
         eyebrow="property"
         title={property.title}
         id={property.id}
-        actions={inspectorActions}
+        mode={mode}
+        onEdit={() => setMode("edit")}
+        onDone={() => setMode("view")}
+        onDelete={() => setShowDeleteConfirm(true)}
+        autosaveStatus={autosaveStatus}
+        lastSavedAt={lastSavedAtRef.current}
         data-testid="property-inspector"
       >
-        <InspectorPanel.Section title="Details">
-          <div className="stack">
-            <div>
-              <label className="form-group-label">Identifier</label>
-              <Input
-                type="text"
-                value={property.identifier}
-                disabled
-                mono
-                data-testid="property-drawer-identifier"
+        {mode === "view" ? (
+          <>
+            <InspectorPanel.Section title="Details">
+              <KVGrid
+                rows={[
+                  { key: "Identifier", value: property.identifier },
+                  { key: "Title", value: property.title },
+                  { key: "Description", value: property.description || "—" },
+                  {
+                    key: "Created",
+                    value: new Date(property.created_at ?? "").toLocaleDateString(),
+                  },
+                ]}
               />
-            </div>
+            </InspectorPanel.Section>
+          </>
+        ) : (
+          <>
+            <InspectorPanel.Section title="Details">
+              <div className="stack">
+                <div>
+                  <label className="form-group-label">Identifier</label>
+                  <Input
+                    type="text"
+                    value={property.identifier}
+                    disabled
+                    mono
+                    data-testid="property-drawer-identifier"
+                  />
+                </div>
 
-            <div>
-              <label className="form-group-label">Title</label>
-              <Input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                data-testid="property-drawer-title-input"
+                <div>
+                  <label className="form-group-label">Title</label>
+                  <Input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    data-testid="property-drawer-title-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-group-label">Description</label>
+                  <SuggestField
+                    entityId={property.id}
+                    value={description}
+                    onChange={setDescription}
+                    rows={4}
+                    testId="property-drawer-description-input"
+                  />
+                </div>
+
+                {isDirty && (
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (property) {
+                          setTitle(property.title);
+                          setDescription(property.description ?? "");
+                        }
+                      }}
+                      data-testid="inspector-revert-button"
+                    >
+                      Revert
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Metrics">
+              <KVGrid
+                rows={[
+                  {
+                    key: "Created",
+                    value: new Date(property.created_at ?? "").toLocaleDateString(),
+                  },
+                ]}
               />
-            </div>
-
-            <div>
-              <label className="form-group-label">Description</label>
-              <SuggestField
-                entityId={property.id}
-                value={description}
-                onChange={setDescription}
-                rows={4}
-                testId="property-drawer-description-input"
-              />
-            </div>
-          </div>
-        </InspectorPanel.Section>
-
-        <InspectorPanel.Section title="Metrics">
-          <KVGrid
-            rows={[
-              { key: "Created", value: new Date(property.created_at ?? "").toLocaleDateString() },
-            ]}
-          />
-        </InspectorPanel.Section>
-      </InspectorPanel>
+            </InspectorPanel.Section>
+          </>
+        )}
+      </InlineInspector>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
