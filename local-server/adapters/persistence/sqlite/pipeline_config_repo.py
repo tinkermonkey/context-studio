@@ -106,7 +106,7 @@ class PipelineConfigurationRepository:
                     session.query(PipelineConfiguration)
                     .filter(
                         PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),
+                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
                     )
                     .first()
                 )
@@ -124,7 +124,7 @@ class PipelineConfigurationRepository:
                     .filter(
                         PipelineConfiguration.pipeline_type == pipeline_type,
                         PipelineConfiguration.implementation_id == implementation_id,
-                        PipelineConfiguration.deleted_at.is_(None),
+                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
                     )
                     .order_by(PipelineConfiguration.created_at)
                     .all()
@@ -140,7 +140,7 @@ class PipelineConfigurationRepository:
             with self._session() as session:
                 return (
                     session.query(PipelineConfiguration)
-                    .filter(PipelineConfiguration.deleted_at.is_(None))
+                    .filter(PipelineConfiguration.deleted_at.is_(None))  # type: ignore[union-attr]
                     .all()
                 )
         except SQLAlchemyError as exc:
@@ -169,7 +169,7 @@ class PipelineConfigurationRepository:
                     session.query(PipelineConfiguration)
                     .filter(
                         PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),
+                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
                     )
                     .first()
                 )
@@ -202,7 +202,7 @@ class PipelineConfigurationRepository:
         try:
             with self._session() as session:
                 rows = (
-                    session.query(PipelineConfiguration.config_ref)
+                    session.query(PipelineConfiguration.config_ref)  # type: ignore[call-overload]
                     .filter(
                         PipelineConfiguration.pipeline_type == pipeline_type,
                         PipelineConfiguration.implementation_id == implementation_id,
@@ -223,7 +223,7 @@ class PipelineConfigurationRepository:
                     session.query(PipelineConfiguration)
                     .filter(
                         PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),
+                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
                     )
                     .first()
                 )

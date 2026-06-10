@@ -61,7 +61,8 @@ def config_registry():
 def impl_registry():
     reg = PipelineImplementationRegistry()
     reg.register_impl(
-        __import__("domain.pipelines.entities", fromlist=["PipelineType"]).PipelineType.INDIVIDUAL_EXTRACTION,
+        __import__("domain.pipelines.entities", fromlist=["PipelineType"])
+        .PipelineType.INDIVIDUAL_EXTRACTION,
         "default",
         object,  # placeholder — CRUD routes don't invoke it
     )
@@ -237,7 +238,8 @@ class TestDeleteConfiguration:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_nonexistent_returns_404(self, client):
-        response = client.delete("/api/pipeline_configurations/00000000-0000-0000-0000-000000000000")
+        nonexistent_id = "00000000-0000-0000-0000-000000000000"
+        response = client.delete(f"/api/pipeline_configurations/{nonexistent_id}")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_twice_returns_404_second_time(self, client):
