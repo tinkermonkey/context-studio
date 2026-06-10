@@ -13,14 +13,6 @@
   letter-spacing: 0.02em;
 }
 
-/* ============= Split layout ============= */
-.split-2 {
-  display: grid;
-  gap: 14px;
-  align-items: start;
-  grid-template-columns: 1fr var(--inspector-width, 420px);
-}
-
 /* ============= Form fields ============= */
 .field {
   display: block;

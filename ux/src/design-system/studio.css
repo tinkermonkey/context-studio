@@ -429,7 +429,7 @@ select.input {
 /* ------------ Two-pane layouts ------------ */
 .split-2 {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr var(--inspector-width, 380px);
   gap: 16px;
   align-items: start;
 }

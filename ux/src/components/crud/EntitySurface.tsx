@@ -306,7 +306,7 @@ function EntitySurfaceBase<T extends { id: string }>(
 
         {/* Right: inline CreateDrawer or entity inspector */}
         {showRight && (
-          <div>
+          <div data-testid="schema-inspector-container">
             {mode === "create" ? (
               <CreateDrawer
                 entityType={entityType}
