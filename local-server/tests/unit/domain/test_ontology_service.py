@@ -1510,9 +1510,7 @@ class TestUpdatePropertyDefinition:
         assert prop_with_value.is_relevant is True
 
         # Now update without touching is_relevant
-        updated = service.update_property_definition(
-            property_id=prop.id, title="Is A Type"
-        )
+        updated = service.update_property_definition(property_id=prop.id, title="Is A Type")
         assert updated.is_relevant is True
 
     def test_is_relevant_set_to_none_clears_flag(self, service):
@@ -1610,9 +1608,7 @@ class TestUpdateConceptScheme:
         tax2 = service.create_taxonomy(title="Chemistry")
         scheme = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
 
-        updated = service.update_concept_scheme(
-            concept_scheme_id=scheme.id, taxonomy_id=tax2.id
-        )
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
         assert updated.taxonomy_id == tax2.id
 
         retrieved = service.get_concept_scheme(scheme.id)
@@ -1625,13 +1621,10 @@ class TestUpdateConceptScheme:
         service.create_scheme(taxonomy_id=tax2.id, title="Other Scheme")
         scheme = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
 
-        updated = service.update_concept_scheme(
-            concept_scheme_id=scheme.id, taxonomy_id=tax2.id
-        )
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
         assert updated.taxonomy_id == tax2.id
 
     def test_move_with_duplicate_title_in_target_taxonomy_raises(self, service):
-        """Moving a scheme to a taxonomy where the title already exists raises DuplicateEntityError."""
         tax1 = service.create_taxonomy(title="Biology")
         tax2 = service.create_taxonomy(title="Chemistry")
         service.create_scheme(taxonomy_id=tax2.id, title="Animals")
@@ -1641,7 +1634,6 @@ class TestUpdateConceptScheme:
             service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
 
     def test_update_duplicate_title_in_same_taxonomy_raises(self, service):
-        """Updating a scheme's title to one that already exists in the same taxonomy raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
@@ -1668,9 +1660,7 @@ class TestUpdateConceptScheme:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
         with pytest.raises(EntityNotFoundError, match="Taxonomy"):
-            service.update_concept_scheme(
-                concept_scheme_id=scheme.id, taxonomy_id="nonexistent"
-            )
+            service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id="nonexistent")
 
     def test_same_title_different_taxonomy_allowed(self, service):
         """A scheme can have the same title as one in a different taxonomy."""
