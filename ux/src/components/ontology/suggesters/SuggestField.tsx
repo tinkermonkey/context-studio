@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
-import { useRunPipeline } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
-import type { SchemaNodeDefinitionRefinementOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
+import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
+import { useToasts } from "@/components/ui/Toast";
+import type { components } from "@/api/types";
 import "./Suggesters.css";
+
+type CandidateResponse = components["schemas"]["CandidateResponse"];
 
 interface SuggestFieldProps {
   entityId: string;
@@ -17,7 +20,9 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
   const [runId, setRunId] = useState<string | null>(null);
   const [dismissedIndices, setDismissedIndices] = useState<Set<number>>(new Set());
 
+  const { toast } = useToasts();
   const runMutation = useRunPipeline();
+  const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
   const isRunning =
@@ -26,13 +31,10 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
     run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
 
-  const outputSummary = isCompleted
-    ? (run?.output_summary as SchemaNodeDefinitionRefinementOutputSummary | null)
-    : null;
-  const allCandidates = outputSummary?.candidates ?? [];
-  const visibleCandidates = allCandidates
-    .map((c, i) => ({ ...c, originalIdx: i }))
-    .filter((c) => !dismissedIndices.has(c.originalIdx));
+  const { data: allCandidatesRaw = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+
+  const allCandidates = allCandidatesRaw.map((c, i) => ({ ...c, originalIdx: i }));
+  const visibleCandidates = allCandidates.filter((c) => !dismissedIndices.has(c.originalIdx));
 
   const handleSuggest = async () => {
     setRunId(null);
@@ -48,18 +50,32 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
         },
       });
       setRunId(result.id);
-    } catch {
-      // error visible via toast from mutation
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to run suggestion pipeline");
     }
   };
 
-  const handleReplace = (definition: string) => {
-    onChange(definition);
+  const applyCandidate = async (candidate: CandidateResponse & { originalIdx: number }) => {
+    if (!runId) return;
+    try {
+      await applyMutation.mutateAsync({
+        runId,
+        params: { confidence_threshold: candidate.confidence, node_id: entityId },
+      });
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to apply suggestion");
+    }
+  };
+
+  const handleReplace = async (candidate: CandidateResponse & { originalIdx: number }) => {
+    onChange(candidate.description);
+    await applyCandidate(candidate);
     setRunId(null);
   };
 
-  const handleAppend = (definition: string) => {
-    onChange(value ? `${value}\n\n${definition}` : definition);
+  const handleAppend = async (candidate: CandidateResponse & { originalIdx: number }) => {
+    onChange(value ? `${value}\n\n${candidate.description}` : candidate.description);
+    await applyCandidate(candidate);
     setRunId(null);
   };
 
@@ -126,9 +142,9 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
               className="suggest-field-candidate"
               data-testid={`suggest-candidate-${candidate.originalIdx}`}
             >
-              <p className="suggest-field-candidate-text">{candidate.definition}</p>
-              {candidate.rationale && (
-                <p className="suggest-field-candidate-rationale">{candidate.rationale}</p>
+              <p className="suggest-field-candidate-text">{candidate.description}</p>
+              {candidate.provenance && (
+                <p className="suggest-field-candidate-rationale">{candidate.provenance}</p>
               )}
               <div className="suggest-field-candidate-meta">
                 <span>{(candidate.confidence * 100).toFixed(0)}% confidence</span>
@@ -139,7 +155,8 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
                 <button
                   type="button"
                   className="suggest-field-action-btn suggest-field-action-replace"
-                  onClick={() => handleReplace(candidate.definition)}
+                  onClick={() => void handleReplace(candidate)}
+                  disabled={applyMutation.isPending}
                   data-testid={`suggest-candidate-replace-${candidate.originalIdx}`}
                 >
                   Replace
@@ -147,7 +164,8 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
                 <button
                   type="button"
                   className="suggest-field-action-btn suggest-field-action-append"
-                  onClick={() => handleAppend(candidate.definition)}
+                  onClick={() => void handleAppend(candidate)}
+                  disabled={applyMutation.isPending}
                   data-testid={`suggest-candidate-append-${candidate.originalIdx}`}
                 >
                   Append

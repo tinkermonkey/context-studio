@@ -2242,9 +2242,6 @@ selectors:
   - selector: grounding-suggest-retry-btn
     component: src/components/ontology/suggesters/GroundingSection.tsx
     description: Button to re-trigger the grounding pipeline after a completed or empty run
-  - selector: grounding-section-info
-    component: src/components/ontology/suggesters/GroundingSection.tsx
-    description: Informational callout explaining that grounding suggestions are not persisted yet
   - selector: relationship-suggester
     component: src/components/ontology/suggesters/RelationshipSuggester.tsx
     description: Root container for the AI relationship suggestion panel in the Class inspector

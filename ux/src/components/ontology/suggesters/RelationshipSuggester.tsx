@@ -1,28 +1,22 @@
 import { useState } from "react";
 import { Button } from "@tinkermonkey/heimdall-ui";
-import { useRunPipeline } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
-import { useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
+import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
-import type { SchemaNodeConnectionRefinementOutputSummary, Delta } from "@/api/hooks/pipeline/outputSummaryTypes";
 import "./Suggesters.css";
 
 interface RelationshipSuggesterProps {
   classId: string;
 }
 
-function getDeltaKey(delta: Delta): string {
-  return `${delta.source_id}:${delta.relationship_type}:${delta.target_id}`;
-}
-
 export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
   const [runId, setRunId] = useState<string | null>(null);
-  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
-  const [acceptingKey, setAcceptingKey] = useState<string | null>(null);
+  const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
+  const [acceptingUri, setAcceptingUri] = useState<string | null>(null);
 
-  const runMutation = useRunPipeline();
-  const createRelationship = useCreateRelationship();
   const { toast } = useToasts();
+  const runMutation = useRunPipeline();
+  const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
   const isRunning =
@@ -31,17 +25,15 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
 
-  const outputSummary = isCompleted
-    ? (run?.output_summary as SchemaNodeConnectionRefinementOutputSummary | null)
-    : null;
+  const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 
-  const visibleDeltas = (outputSummary?.deltas ?? [])
-    .filter((d) => d.operation === "add")
-    .filter((d) => !dismissedKeys.has(getDeltaKey(d)));
+  const visibleCandidates = allCandidates
+    .map((c, i) => ({ ...c, originalIdx: i }))
+    .filter((c) => !dismissedUris.has(c.uri));
 
   const handleSuggest = async () => {
     setRunId(null);
-    setDismissedKeys(new Set());
+    setDismissedUris(new Set());
     try {
       const result = await runMutation.mutateAsync({
         type: "schema_node_connection_refinement",
@@ -52,31 +44,30 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         },
       });
       setRunId(result.id);
-    } catch {
-      // error visible via toast from mutation
-    }
-  };
-
-  const handleAccept = async (delta: Delta) => {
-    const key = getDeltaKey(delta);
-    setAcceptingKey(key);
-    try {
-      await createRelationship.mutateAsync({
-        source_id: delta.source_id,
-        target_id: delta.target_id,
-        relationship_type: delta.relationship_type,
-      });
-      setDismissedKeys((prev) => new Set([...prev, key]));
-      toast("success", "Relationship created");
     } catch (err) {
-      toast("error", err instanceof Error ? err.message : "Failed to create relationship");
-    } finally {
-      setAcceptingKey(null);
+      toast("error", err instanceof Error ? err.message : "Failed to run relationship pipeline");
     }
   };
 
-  const handleDismiss = (delta: Delta) => {
-    setDismissedKeys((prev) => new Set([...prev, getDeltaKey(delta)]));
+  const handleAccept = async (uri: string, confidence: number) => {
+    if (!runId) return;
+    setAcceptingUri(uri);
+    try {
+      await applyMutation.mutateAsync({
+        runId,
+        params: { confidence_threshold: confidence, node_id: classId },
+      });
+      setDismissedUris((prev) => new Set([...prev, uri]));
+      toast("success", "Relationship applied");
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to apply relationship");
+    } finally {
+      setAcceptingUri(null);
+    }
+  };
+
+  const handleDismiss = (uri: string) => {
+    setDismissedUris((prev) => new Set([...prev, uri]));
   };
 
   const hasRun = isCompleted || isRunning;
@@ -101,7 +92,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         </div>
       )}
 
-      {isCompleted && visibleDeltas.length === 0 && (
+      {isCompleted && visibleCandidates.length === 0 && (
         <>
           <p className="relationship-suggester-empty">No relationship suggestions available</p>
           <div className="relationship-suggester-footer">
@@ -117,55 +108,52 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         </>
       )}
 
-      {isCompleted && visibleDeltas.length > 0 && (
+      {isCompleted && visibleCandidates.length > 0 && (
         <>
-          {visibleDeltas.map((delta) => {
-            const key = getDeltaKey(delta);
-            const isAccepting = acceptingKey === key;
+          {visibleCandidates.map((candidate) => {
+            const isAccepting = acceptingUri === candidate.uri;
             return (
               <div
-                key={key}
+                key={candidate.uri}
                 className="relationship-suggestion-card"
-                data-testid={`relationship-suggestion-${key}`}
+                data-testid={`relationship-suggestion-${candidate.originalIdx}`}
               >
                 <div className="relationship-suggestion-triple">
-                  <span className="relationship-suggestion-source">
-                    {delta.source_label || delta.source_id.slice(0, 8)}
-                  </span>
-                  <span className="relationship-suggestion-predicate">
-                    {delta.relationship_type}
-                  </span>
-                  <span className="relationship-suggestion-target">
-                    {delta.target_label || delta.target_id.slice(0, 8)}
-                  </span>
+                  <span className="relationship-suggestion-source">{candidate.label}</span>
                 </div>
+                {candidate.description && (
+                  <p className="suggest-field-candidate-text">{candidate.description}</p>
+                )}
+                {candidate.provenance && (
+                  <p className="suggest-field-candidate-rationale">{candidate.provenance}</p>
+                )}
                 <div className="relationship-suggestion-confidence">
                   <div
                     className="relationship-suggestion-confidence-fill"
-                    style={{ width: `${delta.confidence * 100}%` }}
-                    aria-label={`${(delta.confidence * 100).toFixed(0)}% confidence`}
+                    style={{ width: `${candidate.confidence * 100}%` }}
+                    aria-label={`${(candidate.confidence * 100).toFixed(0)}% confidence`}
                   />
                 </div>
                 <div className="relationship-suggestion-meta">
-                  <span>{(delta.confidence * 100).toFixed(0)}% confidence</span>
+                  <span>{(candidate.confidence * 100).toFixed(0)}% confidence</span>
                   <span>·</span>
-                  <span>{delta.source}</span>
+                  <span>{candidate.source}</span>
                 </div>
                 <div className="relationship-suggestion-actions">
                   <button
                     type="button"
                     className="relationship-suggestion-accept-btn"
-                    onClick={() => void handleAccept(delta)}
-                    disabled={isAccepting}
-                    data-testid={`relationship-accept-${key}`}
+                    onClick={() => void handleAccept(candidate.uri, candidate.confidence)}
+                    disabled={isAccepting || applyMutation.isPending}
+                    data-testid={`relationship-accept-${candidate.originalIdx}`}
                   >
-                    {isAccepting ? "Creating…" : "Accept"}
+                    {isAccepting ? "Applying…" : "Accept"}
                   </button>
                   <button
                     type="button"
                     className="relationship-suggestion-dismiss-btn"
-                    onClick={() => handleDismiss(delta)}
-                    data-testid={`relationship-dismiss-${key}`}
+                    onClick={() => handleDismiss(candidate.uri)}
+                    data-testid={`relationship-dismiss-${candidate.originalIdx}`}
                   >
                     Dismiss
                   </button>

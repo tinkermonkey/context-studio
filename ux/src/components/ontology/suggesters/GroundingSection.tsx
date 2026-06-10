@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@tinkermonkey/heimdall-ui";
-import { useRunPipeline } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
-import type { SchemaNodeGroundingOutputSummary } from "@/api/hooks/pipeline/outputSummaryTypes";
+import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
+import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
+import { useToasts } from "@/components/ui/Toast";
 import "./Suggesters.css";
 
 interface GroundingSectionProps {
@@ -11,10 +11,12 @@ interface GroundingSectionProps {
 
 export function GroundingSection({ classId }: GroundingSectionProps) {
   const [runId, setRunId] = useState<string | null>(null);
-  const [addedIndices, setAddedIndices] = useState<Set<number>>(new Set());
-  const [dismissedIndices, setDismissedIndices] = useState<Set<number>>(new Set());
+  const [appliedUris, setAppliedUris] = useState<Set<string>>(new Set());
+  const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
 
+  const { toast } = useToasts();
   const runMutation = useRunPipeline();
+  const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
   const isRunning =
@@ -23,19 +25,16 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
     run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
 
-  const outputSummary = isCompleted
-    ? (run?.output_summary as SchemaNodeGroundingOutputSummary | null)
-    : null;
+  const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 
-  const allGroundings = outputSummary?.groundings ?? [];
-  const visibleGroundings = allGroundings
-    .map((g, i) => ({ ...g, originalIdx: i }))
-    .filter((g) => !dismissedIndices.has(g.originalIdx));
+  const visibleCandidates = allCandidates
+    .map((c, i) => ({ ...c, originalIdx: i }))
+    .filter((c) => !dismissedUris.has(c.uri));
 
   const handleSuggest = async () => {
     setRunId(null);
-    setAddedIndices(new Set());
-    setDismissedIndices(new Set());
+    setAppliedUris(new Set());
+    setDismissedUris(new Set());
     try {
       const result = await runMutation.mutateAsync({
         type: "schema_node_grounding",
@@ -46,19 +45,27 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
         },
       });
       setRunId(result.id);
-    } catch {
-      // error visible via toast from mutation
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to run grounding pipeline");
     }
   };
 
-  const handleAdd = (originalIdx: number) => {
-    // Marks the candidate locally only — no API endpoint exists for individual
-    // external references yet. The label deliberately avoids implying persistence.
-    setAddedIndices((prev) => new Set([...prev, originalIdx]));
+  const handleAdd = async (uri: string, confidence: number) => {
+    if (!runId) return;
+    try {
+      await applyMutation.mutateAsync({
+        runId,
+        params: { confidence_threshold: confidence, node_id: classId },
+      });
+      setAppliedUris((prev) => new Set([...prev, uri]));
+      toast("success", "Grounding applied");
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to apply grounding");
+    }
   };
 
-  const handleDismiss = (originalIdx: number) => {
-    setDismissedIndices((prev) => new Set([...prev, originalIdx]));
+  const handleDismiss = (uri: string) => {
+    setDismissedUris((prev) => new Set([...prev, uri]));
   };
 
   const hasRun = isCompleted || isRunning;
@@ -83,7 +90,7 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
         </div>
       )}
 
-      {isCompleted && allGroundings.length === 0 && (
+      {isCompleted && allCandidates.length === 0 && (
         <>
           <p className="grounding-section-empty">No grounding candidates found</p>
           <div className="grounding-section-footer">
@@ -99,59 +106,56 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
         </>
       )}
 
-      {isCompleted && visibleGroundings.length > 0 && (
+      {isCompleted && visibleCandidates.length > 0 && (
         <>
-          <p className="grounding-section-info" data-testid="grounding-section-info">
-            Grounding suggestions are informational. Individual external references cannot yet be persisted — use the pipeline apply workflow to save grounding to an entity.
-          </p>
-          {visibleGroundings.map((grounding) => {
-            const isAdded = addedIndices.has(grounding.originalIdx);
+          {visibleCandidates.map((candidate) => {
+            const isApplied = appliedUris.has(candidate.uri);
             return (
               <div
-                key={grounding.originalIdx}
+                key={candidate.uri}
                 className="grounding-proposal-card"
-                data-testid={`grounding-proposal-${grounding.originalIdx}`}
+                data-testid={`grounding-proposal-${candidate.originalIdx}`}
               >
                 <div className="grounding-proposal-header">
-                  <span className="grounding-proposal-name">{grounding.label}</span>
+                  <span className="grounding-proposal-name">{candidate.label}</span>
                 </div>
-                {grounding.uri && (
-                  <span className="grounding-proposal-url">{grounding.uri}</span>
+                {candidate.uri && (
+                  <span className="grounding-proposal-url">{candidate.uri}</span>
                 )}
-                {grounding.description && (
-                  <p className="suggest-field-candidate-text">{grounding.description}</p>
+                {candidate.description && (
+                  <p className="suggest-field-candidate-text">{candidate.description}</p>
                 )}
-                {grounding.match_rationale && (
-                  <p className="grounding-proposal-rationale">{grounding.match_rationale}</p>
+                {candidate.provenance && (
+                  <p className="grounding-proposal-rationale">{candidate.provenance}</p>
                 )}
                 <div className="grounding-proposal-confidence">
                   <div
                     className="grounding-proposal-confidence-fill"
-                    style={{ width: `${grounding.confidence * 100}%` }}
-                    aria-label={`${(grounding.confidence * 100).toFixed(0)}% confidence`}
+                    style={{ width: `${candidate.confidence * 100}%` }}
+                    aria-label={`${(candidate.confidence * 100).toFixed(0)}% confidence`}
                   />
                 </div>
                 <div className="suggest-field-candidate-meta">
-                  <span>{(grounding.confidence * 100).toFixed(0)}% confidence</span>
+                  <span>{(candidate.confidence * 100).toFixed(0)}% confidence</span>
                   <span>·</span>
-                  <span>{grounding.source}</span>
+                  <span>{candidate.source}</span>
                 </div>
                 <div className="grounding-proposal-actions">
                   <button
                     type="button"
                     className="grounding-proposal-add-btn"
-                    onClick={() => handleAdd(grounding.originalIdx)}
-                    data-added={isAdded}
-                    disabled={isAdded}
-                    data-testid={`grounding-add-${grounding.originalIdx}`}
+                    onClick={() => void handleAdd(candidate.uri, candidate.confidence)}
+                    data-added={isApplied}
+                    disabled={isApplied || applyMutation.isPending}
+                    data-testid={`grounding-add-${candidate.originalIdx}`}
                   >
-                    {isAdded ? "✓ Noted" : "Note"}
+                    {isApplied ? "✓ Applied" : "Apply"}
                   </button>
                   <button
                     type="button"
                     className="grounding-proposal-dismiss-btn"
-                    onClick={() => handleDismiss(grounding.originalIdx)}
-                    data-testid={`grounding-dismiss-${grounding.originalIdx}`}
+                    onClick={() => handleDismiss(candidate.uri)}
+                    data-testid={`grounding-dismiss-${candidate.originalIdx}`}
                   >
                     Dismiss
                   </button>
@@ -172,7 +176,7 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
         </>
       )}
 
-      {isCompleted && allGroundings.length > 0 && visibleGroundings.length === 0 && (
+      {isCompleted && allCandidates.length > 0 && visibleCandidates.length === 0 && (
         <p className="grounding-section-empty">All candidates dismissed</p>
       )}
     </div>
