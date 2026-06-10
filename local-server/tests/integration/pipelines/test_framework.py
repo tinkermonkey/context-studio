@@ -355,8 +355,9 @@ class TestConfigurationRegistry:
 
         assert "config_ref" in config
         assert "version" in config
-        assert "config" in config
-        assert isinstance(config["config"], dict)
+        assert "name" in config
+        assert "is_system" in config
+        assert isinstance(config["version"], int)
 
 
 class TestLineageAndChangeEvents:

@@ -256,10 +256,25 @@ def quality_llm_provider_factory(request):
 
             return RecordingLLMProvider(real_llm_provider, cassette_path)
 
-        # Cassette mode: require cassette to exist
+        # Cassette mode: require cassette to exist and contain recorded responses
         if not cassette_path.exists():
             pytest.skip(
                 f"Cassette not found at {cassette_path}. " "Run with --refresh-cassettes to record."
+            )
+
+        try:
+            import json as _json
+            with open(cassette_path, "r") as _f:
+                _data = _json.load(_f)
+            if not _data:
+                pytest.skip(
+                    f"Cassette at {cassette_path} is empty. "
+                    "Run with --refresh-cassettes to record."
+                )
+        except (ValueError, OSError):
+            pytest.skip(
+                f"Cassette at {cassette_path} is unreadable. "
+                "Run with --refresh-cassettes to record."
             )
 
         return CassetteLLMProvider(cassette_path)
