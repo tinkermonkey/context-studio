@@ -6729,6 +6729,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
     };
     /**
      * TaxonomyPublishRequest

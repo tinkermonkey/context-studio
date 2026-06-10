@@ -10979,6 +10979,18 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color",
+            "description": "Optional hex color '#rrggbb'"
           }
         },
         "type": "object",

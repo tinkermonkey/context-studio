@@ -93,17 +93,15 @@ const ENTITY_CONFIG: Record<EntityType, EntityConfig> = {
   },
 };
 
-export type RelevanceValue = "relevant" | "optional" | "excluded";
-
 export interface FormValues {
   title: string;
   identifier: string;
   description: string;
+  domain: string;
   taxonomyId: string;
   schemeId: string;
   parentClassId: string;
   classIds: string[];
-  relevance: RelevanceValue;
   sourceId: string;
   targetId: string;
   relationshipType: string;
@@ -111,16 +109,29 @@ export interface FormValues {
   sourceText: string;
 }
 
+// Exhaustiveness: adding a new EntityType requires a matching entry here (satisfies enforces it)
+const ENTITY_FORM_FIELDS = {
+  taxonomy: ["title", "description", "domain"],
+  scheme: ["title", "description", "taxonomyId"],
+  class: ["title", "description", "schemeId", "parentClassId"],
+  property: ["title", "identifier", "description"],
+  individual: ["title", "description", "classIds", "confidence", "sourceText"],
+  relationship: ["sourceId", "targetId", "relationshipType", "confidence", "sourceText"],
+} as const satisfies Record<EntityType, ReadonlyArray<keyof FormValues>>;
+
+// Suppress unused variable warning — ENTITY_FORM_FIELDS exists for compile-time safety
+void ENTITY_FORM_FIELDS;
+
 function defaultValues(initialTaxonomyId?: string, initialSchemeId?: string): FormValues {
   return {
     title: "",
     identifier: "",
     description: "",
+    domain: "",
     taxonomyId: initialTaxonomyId ?? "",
     schemeId: initialSchemeId ?? "",
     parentClassId: "",
     classIds: [],
-    relevance: "relevant",
     sourceId: "",
     targetId: "",
     relationshipType: "",
@@ -317,6 +328,7 @@ export function CreateDrawer({
           result = await createTaxonomy.mutateAsync({
             title: values.title,
             description: values.description || null,
+            color: values.domain || null,
           });
           break;
         case "scheme":
@@ -757,9 +769,24 @@ interface WithValidation extends BaseBodyProps {
   fieldError: (field: string) => string | undefined;
 }
 
+const DOMAIN_OPTIONS = [
+  { value: "#34d399", label: "Life" },
+  { value: "#fbbf24", label: "Climate" },
+  { value: "#818cf8", label: "Software" },
+] as const;
+
 function TaxonomyBody({ values, setValues }: BaseBodyProps) {
   return (
     <>
+      <Field label="Domain" hint="optional">
+        <SegmentedControl
+          value={values.domain}
+          onChange={(v) => setValues((vals) => ({ ...vals, domain: String(v) }))}
+          options={DOMAIN_OPTIONS as unknown as Array<{ value: string; label: string }>}
+          data-testid="create-drawer-domain-control"
+        />
+      </Field>
+
       <Field label="Description">
         <SuggestField
           value={values.description}
@@ -908,19 +935,6 @@ function PropertyBody({ values, setValues, touch: _touch }: BaseBodyProps) {
           placeholder="Describe this property's meaning and usage…"
           rows={3}
           testId="create-drawer-description-input"
-        />
-      </Field>
-
-      <Field label="Relevance">
-        <SegmentedControl
-          value={values.relevance}
-          onChange={(v) => setValues((vals) => ({ ...vals, relevance: v as RelevanceValue }))}
-          options={[
-            { value: "relevant", label: "Relevant" },
-            { value: "optional", label: "Optional" },
-            { value: "excluded", label: "Excluded" },
-          ]}
-          data-testid="create-drawer-relevance-control"
         />
       </Field>
     </>

@@ -123,7 +123,7 @@ async def create_taxonomy(
             service.create_taxonomy,
             request.title,
             request.description,
-            None,
+            request.color,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:

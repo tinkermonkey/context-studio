@@ -237,9 +237,9 @@ describe("CreateDrawer", () => {
       expect(screen.getByTestId("create-drawer-scheme-select")).toBeInTheDocument();
     });
 
-    it("property: renders relevance segmented control", () => {
+    it("property: does not render relevance segmented control (not supported at create time)", () => {
       renderDrawer({ entityType: "property" });
-      expect(screen.getByTestId("create-drawer-relevance-control")).toBeInTheDocument();
+      expect(screen.queryByTestId("create-drawer-relevance-control")).not.toBeInTheDocument();
     });
 
     it("individual: renders class multi-select list", () => {
@@ -259,7 +259,7 @@ describe("CreateDrawer", () => {
   });
 
   describe("successful create — taxonomy", () => {
-    it("calls mutateAsync with title and description", async () => {
+    it("calls mutateAsync with title, description, and color", async () => {
       const user = userEvent.setup();
       mockCreateTaxonomy.mockResolvedValue({ id: "tax-new", title: "Life Sciences" });
 
@@ -271,6 +271,7 @@ describe("CreateDrawer", () => {
         expect(mockCreateTaxonomy).toHaveBeenCalledWith({
           title: "Life Sciences",
           description: null,
+          color: null,
         });
       });
     });
@@ -458,10 +459,10 @@ describe("CreateDrawer", () => {
     });
   });
 
-  describe("FormValues.relevance type", () => {
-    it("property form renders relevance control with correct options", () => {
-      renderDrawer({ entityType: "property" });
-      expect(screen.getByTestId("create-drawer-relevance-control")).toBeInTheDocument();
+  describe("taxonomy domain control", () => {
+    it("taxonomy form renders domain segmented control", () => {
+      renderDrawer({ entityType: "taxonomy" });
+      expect(screen.getByTestId("create-drawer-domain-control")).toBeInTheDocument();
     });
   });
 
