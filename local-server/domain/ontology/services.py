@@ -1775,7 +1775,12 @@ class OntologyService:
             property_id: The property definition ID
             title: New title (optional)
             description: New description (optional)
-            is_relevant: New relevance flag (optional; pass False to mark irrelevant)
+            is_relevant: New relevance flag (optional); only applied when
+                ``update_is_relevant=True`` — passing ``is_relevant=False``
+                alone has no effect
+            update_is_relevant: Set to True to apply the ``is_relevant`` value;
+                defaults to False so callers that do not intend to change
+                relevance are unaffected
 
         Returns:
             The updated PropertyDefinition
@@ -1900,6 +1905,8 @@ class OntologyService:
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
+        original_taxonomy_id = scheme.taxonomy_id
+
         # Resolve the effective taxonomy for uniqueness checks
         effective_taxonomy_id = taxonomy_id if taxonomy_id is not None else scheme.taxonomy_id
 
@@ -1919,9 +1926,18 @@ class OntologyService:
             )
             if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{title}' already exists in this" " taxonomy"
+                    f"ConceptScheme with title '{title}' already exists in this taxonomy"
                 )
             scheme.title = title
+        elif taxonomy_id is not None and taxonomy_id != original_taxonomy_id:
+            # Moving without changing title — verify existing title is unique in target taxonomy
+            existing_schemes = self._repository.list_concept_schemes(
+                taxonomy_id=taxonomy_id, limit=None
+            )
+            if any(s.id != concept_scheme_id and s.title == scheme.title for s in existing_schemes):
+                raise DuplicateEntityError(
+                    f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy"
+                )
 
         if description is not None:
             scheme.description = description
