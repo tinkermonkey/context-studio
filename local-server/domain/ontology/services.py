@@ -56,8 +56,6 @@ from .exceptions import (
 from .ports import EmbeddingService, OntologyRepository
 from .value_objects import DataPropertyValue, Status
 
-_UNSET = object()  # sentinel — distinguishes "not provided" from an explicit None
-
 _logger = logging.getLogger(__name__)
 
 
@@ -1765,7 +1763,8 @@ class OntologyService:
         property_id: str,
         title: str | None = None,
         description: str | None = None,
-        is_relevant: bool | None | object = _UNSET,
+        is_relevant: bool | None = None,
+        update_is_relevant: bool = False,
     ) -> PropertyDefinition:
         """
         Update a property definition's title, description, and/or relevance flag.
@@ -1804,8 +1803,8 @@ class OntologyService:
         if description is not None:
             prop_def.description = description
 
-        if is_relevant is not _UNSET:
-            prop_def.is_relevant = is_relevant  # type: ignore[assignment]
+        if update_is_relevant:
+            prop_def.is_relevant = is_relevant
 
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
