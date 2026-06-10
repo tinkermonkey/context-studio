@@ -53,6 +53,7 @@ export function IndividualsPage() {
         ? `Deleted ${succeeded}, failed to delete ${failed}`
         : `Failed to delete ${failed} individual${failed === 1 ? "" : "s"}`;
       toast("error", msg);
+      throw new Error(msg);
     }
   }
 

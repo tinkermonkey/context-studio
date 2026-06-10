@@ -2358,3 +2358,23 @@ selectors:
   - selector: individual-drawer-description-field-input
     component: src/components/ui/EditableField.tsx
     description: Textarea for the individual description EditableField (visible after clicking the view element)
+
+  # Suggester error states
+  - selector: grounding-section-error
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Error banner shown when the grounding section fails to load
+  - selector: grounding-error-retry-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Retry button in the grounding section error state
+  - selector: relationship-suggester-error
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Error banner shown when the relationship suggester fails to load
+  - selector: relationship-error-retry-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Retry button in the relationship suggester error state
+  - selector: suggest-field-error
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Error banner shown when the suggest field fails to load
+  - selector: suggest-field-retry-btn
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Retry button in the suggest field error state
