@@ -2144,3 +2144,88 @@ selectors:
   - selector: taxonomy-create-drawer
     component: src/routes/app/schema/taxonomies.tsx
     description: CreateDrawer panel opened from the Taxonomies page; used to distinguish entity type in E2E tests
+
+  # ── EntitySurface production selectors ──
+  - selector: entity-surface
+    component: src/components/crud/EntitySurface.tsx
+    description: Root element of EntitySurface container; defaults to "entity-surface", overridable via testId prop
+  - selector: entity-surface-create-drawer
+    component: src/components/crud/EntitySurface.tsx
+    description: Inline CreateDrawer rendered in the right column of EntitySurface when mode is "create"
+  - selector: bulk-modal-cancel
+    component: src/components/crud/EntitySurface.tsx
+    description: Cancel button in the non-delete bulk action value-selection modal
+  - selector: bulk-modal-confirm
+    component: src/components/crud/EntitySurface.tsx
+    description: Confirm button in the non-delete bulk action value-selection modal; applies the bulk operation
+  - selector: bulk-modal-segmented
+    component: src/components/crud/EntitySurface.tsx
+    description: SegmentedControl in the bulk action modal when options count is 4 or fewer
+  - selector: bulk-modal-select
+    component: src/components/crud/EntitySurface.tsx
+    description: Select dropdown in the bulk action modal when options count exceeds 4
+
+  # ── EntitySurface test mock selectors (internal to unit tests) ──
+  - selector: create-drawer-initial-values
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — serialised initialValues passed to the mocked CreateDrawer
+  - selector: create-drawer-identifier-dirty
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — initialIdentifierDirty value passed to the mocked CreateDrawer
+  - selector: create-drawer-cancel
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — cancel button in the mocked CreateDrawer stub
+  - selector: create-drawer-submit
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — submit/create button in the mocked CreateDrawer stub; fires onSuccess
+  - selector: bulk-count
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selected-row count display in the mocked BulkBar stub
+  - selector: bulk-clear
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clear-selection button in the mocked BulkBar stub
+  - selector: delete-target-label
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — target entity label in the mocked CascadeDeleteDialog stub
+  - selector: delete-ids-count
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — bulk delete ID count in the mocked CascadeDeleteDialog stub
+  - selector: cascade-confirm
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — confirm button in the mocked CascadeDeleteDialog stub
+  - selector: cascade-cancel
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — cancel button in the mocked CascadeDeleteDialog stub
+  - selector: inspector
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — inspector panel rendered via the renderInspector prop in EntitySurface tests
+  - selector: my-surface
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — custom testId value used in the testId prop test case
+  - selector: row-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-1"
+  - selector: row-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-2"
+  - selector: row-row-3
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-3"
+  - selector: click-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clickable row span in mocked SelectableTable for fixture row "row-1"
+  - selector: click-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clickable row span in mocked SelectableTable for fixture row "row-2"
+  - selector: checkbox-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selection checkbox in mocked SelectableTable for fixture row "row-1"
+  - selector: checkbox-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selection checkbox in mocked SelectableTable for fixture row "row-2"
+  - selector: action-delete-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — "delete" row-menu action button in mocked SelectableTable for fixture row "row-1"
+  - selector: action-duplicate-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — "duplicate" row-menu action button in mocked SelectableTable for fixture row "row-1"

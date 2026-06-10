@@ -21,7 +21,7 @@ export function usePendingCreate(
     if (pending && pending.type === type) {
       window.__CS_PENDING = undefined;
       requestAnimationFrame(() => {
-        surfaceRef.current?.startCreate(pending.ctx);
+        surfaceRef.current?.startCreate(pending.ctx, pending.identifierDirty);
       });
     }
     // intentionally runs once on mount

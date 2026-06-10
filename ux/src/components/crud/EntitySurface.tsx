@@ -30,7 +30,7 @@ const ENTITY_ICON: Record<EntityType, string> = {
 };
 
 export interface EntitySurfaceHandle {
-  startCreate(ctx?: Partial<FormValues>): void;
+  startCreate(ctx?: Partial<FormValues>, identifierDirty?: boolean): void;
 }
 
 export interface EntitySurfaceBulkAction extends BulkBarAction {
@@ -123,9 +123,9 @@ function EntitySurfaceBase<T extends { id: string }>(
 
   // Imperative handle
   useImperativeHandle(ref, () => ({
-    startCreate(ctx?: Partial<FormValues>) {
+    startCreate(ctx?: Partial<FormValues>, identifierDirty?: boolean) {
       setCreateContext(ctx ?? {});
-      setIdentifierDirty(!!(ctx?.identifier));
+      setIdentifierDirty(identifierDirty !== undefined ? identifierDirty : !!(ctx?.identifier));
       setMode("create");
     },
   }));
@@ -333,7 +333,7 @@ function EntitySurfaceBase<T extends { id: string }>(
           title={`Apply: ${activeBulkAction.label}`}
           size="sm"
           footer={
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <div className="form-actions">
               <Button
                 variant="ghost"
                 onClick={() => setActiveBulkAction(null)}

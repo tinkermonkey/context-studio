@@ -6,7 +6,6 @@ import type { FormValues } from "@/components/crud/CreateDrawer";
  */
 export function csRequestChild(
   onNav: () => void,
-  _route: string,
   type: string,
   ctx: Partial<FormValues>,
   identifierDirty?: boolean,
