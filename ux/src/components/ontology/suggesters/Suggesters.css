@@ -379,10 +379,33 @@
     gap: 3px;
   }
 
+  .grounding-ref-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
   .grounding-ref-name {
     font-size: 13px;
     font-weight: 500;
     color: rgb(var(--canvas-fg-1));
+    flex: 1;
+  }
+
+  .grounding-ref-remove-btn {
+    background: none;
+    border: none;
+    padding: 0 2px;
+    cursor: pointer;
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-4));
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .grounding-ref-remove-btn:hover {
+    color: rgb(var(--status-error, var(--canvas-fg-1)));
   }
 
   .grounding-ref-source {

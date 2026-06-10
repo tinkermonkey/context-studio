@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   InspectorPanel,
   TextInput as Input,
@@ -23,11 +24,14 @@ interface SchemeDrawerProps {
   taxonomyName: string;
 }
 
+const CLASSES_DISPLAY_CAP = 20;
+
 export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(scheme?.description ?? "");
 
+  const navigate = useNavigate();
   const { toast } = useToasts();
   const updateMutation = useUpdateScheme();
   const deleteMutation = useDeleteScheme();
@@ -125,11 +129,21 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                 <p className="drawer-empty-note" data-testid="scheme-classes-empty">No classes</p>
               ) : (
                 <div className="stack" data-testid="scheme-classes-list">
-                  {classes.map((cls) => (
+                  {classes.slice(0, CLASSES_DISPLAY_CAP).map((cls) => (
                     <div key={cls.id} className="drawer-list-item" data-testid={`scheme-class-${cls.id}`}>
                       {cls.title}
                     </div>
                   ))}
+                  {classes.length > CLASSES_DISPLAY_CAP && (
+                    <button
+                      type="button"
+                      className="drawer-show-all-link"
+                      onClick={() => navigate({ to: "/app/schema/classes" })}
+                      data-testid="scheme-classes-show-all"
+                    >
+                      Show all {classes.length} classes
+                    </button>
+                  )}
                 </div>
               )}
             </InspectorPanel.Section>

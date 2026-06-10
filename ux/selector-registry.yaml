@@ -2378,3 +2378,46 @@ selectors:
   - selector: suggest-field-retry-btn
     component: src/components/ontology/suggesters/SuggestField.tsx
     description: Retry button in the suggest field error state
+
+  - selector: class-children-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Children section when no subclasses exist
+  - selector: class-children-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Pill row listing immediate subclasses in the class inspector Children section
+  - selector: class-individuals-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Individuals section when no individuals exist
+  - selector: class-individuals-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: List of up to 5 sample individuals in the class inspector Individuals section
+  - selector: class-individuals-show-all
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Link button to navigate to the individuals page showing all individuals for this class
+  - selector: class-relationships-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Relationships section when no relationships exist
+  - selector: class-relationships-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: List of relationship triples in the class inspector Relationships section
+  - selector: individual-relationships-empty
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: Empty state message in the individual inspector Relationships section when no relationships exist
+  - selector: individual-relationships-list
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: List of class-level relationship triples in the individual inspector Relationships section
+  - selector: relationship-triple
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Triple display row showing source, predicate, and target in the relationship inspector
+  - selector: scheme-classes-empty
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: Empty state message in the scheme inspector Classes section when no classes exist
+  - selector: scheme-classes-list
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: List of classes (up to 20) in the scheme inspector Classes section
+  - selector: scheme-classes-show-all
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: Link button to navigate to the classes page when the scheme has more than 20 classes
+  - selector: grounding-existing-refs
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Container for the list of existing external reference items in the grounding section

@@ -11,9 +11,11 @@ type ExternalReferenceResponse = components["schemas"]["ExternalReferenceRespons
 interface GroundingSectionProps {
   classId: string;
   externalRefs?: ExternalReferenceResponse[];
+  readOnly?: boolean;
+  onRemoveRef?: (ref: ExternalReferenceResponse) => void;
 }
 
-export function GroundingSection({ classId, externalRefs = [] }: GroundingSectionProps) {
+export function GroundingSection({ classId, externalRefs = [], readOnly = false, onRemoveRef }: GroundingSectionProps) {
   const [runId, setRunId] = useState<string | null>(null);
   const [appliedUris, setAppliedUris] = useState<Set<string>>(new Set());
   const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
@@ -77,16 +79,45 @@ export function GroundingSection({ classId, externalRefs = [] }: GroundingSectio
 
   const hasRun = isCompleted || isRunning || isFailed;
 
+  if (readOnly) {
+    return (
+      <div className="grounding-section" data-testid="grounding-section">
+        {externalRefs.length > 0 && (
+          <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
+            {externalRefs.map((ref, i) => (
+              <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+                <div className="grounding-ref-name">{ref.identifier}</div>
+                {ref.uri && <span className="grounding-proposal-url">{ref.uri}</span>}
+                <span className="grounding-ref-source">{ref.source}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="grounding-section" data-testid="grounding-section">
       {externalRefs.length > 0 && (
         <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
           {externalRefs.map((ref, i) => (
             <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
-              <div className="grounding-ref-name">{ref.identifier}</div>
-              {ref.uri && (
-                <span className="grounding-proposal-url">{ref.uri}</span>
-              )}
+              <div className="grounding-ref-header">
+                <div className="grounding-ref-name">{ref.identifier}</div>
+                {onRemoveRef && (
+                  <button
+                    type="button"
+                    className="grounding-ref-remove-btn"
+                    onClick={() => onRemoveRef(ref)}
+                    data-testid={`grounding-ref-remove-${i}`}
+                    aria-label={`Remove ${ref.identifier}`}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {ref.uri && <span className="grounding-proposal-url">{ref.uri}</span>}
               <span className="grounding-ref-source">{ref.source}</span>
             </div>
           ))}

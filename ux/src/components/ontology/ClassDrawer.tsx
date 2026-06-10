@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   InspectorPanel,
@@ -105,6 +105,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     });
   };
 
+  const classMap = useMemo(() => new Map(allClasses.map((c) => [c.id, c.title])), [allClasses]);
+  const propertyMap = useMemo(() => new Map(properties.map((p) => [p.id, p.identifier])), [properties]);
+
   if (!classData) return null;
 
   const handleSaveDescription = async (value: string) => {
@@ -141,8 +144,6 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const childClasses = allClasses.filter((c) => c.parent_class_id === classData.id);
   const sampleIndividuals = (individualsResponse?.items ?? []).slice(0, 5);
   const externalRefs: ExternalReferenceResponse[] = classData.external_references ?? [];
-  const classMap = new Map(allClasses.map((c) => [c.id, c.title]));
-  const propertyMap = new Map(properties.map((p) => [p.id, p.identifier]));
 
   return (
     <>
@@ -238,17 +239,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
             {externalRefs.length > 0 && (
               <InspectorPanel.Section title="Grounding">
-                <div className="stack" data-testid="class-grounding-refs">
-                  {externalRefs.map((ref, i) => (
-                    <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`class-grounding-ref-${i}`}>
-                      <div className="grounding-ref-name">{ref.identifier}</div>
-                      {ref.uri && (
-                        <span className="grounding-proposal-url">{ref.uri}</span>
-                      )}
-                      <span className="grounding-ref-source">{ref.source}</span>
-                    </div>
-                  ))}
-                </div>
+                <GroundingSection classId={classData.id} externalRefs={externalRefs} readOnly />
               </InspectorPanel.Section>
             )}
           </>
@@ -362,7 +353,13 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
 
             <InspectorPanel.Section title="Grounding">
-              <GroundingSection classId={classData.id} externalRefs={externalRefs} />
+              <GroundingSection
+                classId={classData.id}
+                externalRefs={externalRefs}
+                onRemoveRef={() => {
+                  toast("error", "Removing grounding references is not yet supported by the API.");
+                }}
+              />
             </InspectorPanel.Section>
           </>
         )}

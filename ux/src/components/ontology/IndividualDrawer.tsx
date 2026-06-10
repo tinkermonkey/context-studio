@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment, useMemo } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   InspectorPanel,
@@ -130,12 +130,18 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     refetch: refetchClasses,
   } = useClasses();
   const classes = classesResponse?.items || [];
-  const classMap = new Map(classes.map((c: ClassResponse) => [c.id, c.title]));
+  const classMap = useMemo(
+    () => new Map(classes.map((c: ClassResponse) => [c.id, c.title])),
+    [classes],
+  );
 
   const { data: relationshipsResponse } = useRelationships();
   const allRelationships = relationshipsResponse?.items || [];
   const { data: propertiesResponse } = useProperties();
-  const propertyMap = new Map((propertiesResponse?.items || []).map((p) => [p.id, p.identifier]));
+  const propertyMap = useMemo(
+    () => new Map((propertiesResponse?.items || []).map((p) => [p.id, p.identifier])),
+    [propertiesResponse],
+  );
 
   const {
     data: inheritedPropertiesResponse,
@@ -327,6 +333,11 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
       ? (classMap.get(individual.class_ids[0]) ?? "—")
       : "—";
 
+  const individualClassIds = new Set(individual.class_ids);
+  const relevantRelationships = allRelationships.filter(
+    (rel: any) => individualClassIds.has(rel.source_id) || individualClassIds.has(rel.target_id),
+  );
+
   return (
     <>
       <InlineInspector
@@ -356,33 +367,24 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
               />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Relationships">
-              {(() => {
-                const individualClassIds = new Set(individual.class_ids);
-                const relevantRelationships = allRelationships.filter(
-                  (rel: any) => individualClassIds.has(rel.source_id) || individualClassIds.has(rel.target_id),
-                );
-                if (relevantRelationships.length === 0) {
-                  return (
-                    <p className="drawer-empty-note" data-testid="individual-relationships-empty">
-                      No relationships
-                    </p>
-                  );
-                }
-                return (
-                  <div className="stack" data-testid="individual-relationships-list">
-                    {relevantRelationships.slice(0, 10).map((rel: any) => (
-                      <div key={rel.id} className="drawer-triple" data-testid={`individual-relationship-${rel.id}`}>
-                        <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
-                        <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
-                        <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
-                      </div>
-                    ))}
-                    {relevantRelationships.length > 10 && (
-                      <p className="drawer-empty-note">+{relevantRelationships.length - 10} more</p>
-                    )}
-                  </div>
-                );
-              })()}
+              {relevantRelationships.length === 0 ? (
+                <p className="drawer-empty-note" data-testid="individual-relationships-empty">
+                  No relationships
+                </p>
+              ) : (
+                <div className="stack" data-testid="individual-relationships-list">
+                  {relevantRelationships.slice(0, 10).map((rel: any) => (
+                    <div key={rel.id} className="drawer-triple" data-testid={`individual-relationship-${rel.id}`}>
+                      <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
+                      <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
+                      <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
+                    </div>
+                  ))}
+                  {relevantRelationships.length > 10 && (
+                    <p className="drawer-empty-note">+{relevantRelationships.length - 10} more</p>
+                  )}
+                </div>
+              )}
             </InspectorPanel.Section>
           </>
         ) : (
