@@ -2351,3 +2351,16 @@ selectors:
   - selector: inline-inspector-done-button
     component: src/components/ui/InlineInspector.tsx
     description: Done button in the InlineInspector edit-mode action bar to exit edit mode
+
+  - selector: individual-drawer-name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display for the individual name EditableField (click to enter edit mode)
+  - selector: individual-drawer-name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Text input for the individual name EditableField (visible after clicking the view element)
+  - selector: individual-drawer-description-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display for the individual description EditableField (click to enter edit mode)
+  - selector: individual-drawer-description-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Textarea for the individual description EditableField (visible after clicking the view element)
