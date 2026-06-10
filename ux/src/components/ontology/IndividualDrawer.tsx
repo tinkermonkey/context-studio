@@ -375,7 +375,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
 
               <EditableField
                 label={individualsCopy.drawer.descriptionLabel}
-                type="textarea"
+                kind="TextArea"
                 rows={4}
                 value={individual.description ?? ""}
                 onSave={async (v) => {

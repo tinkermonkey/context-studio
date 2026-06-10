@@ -1,13 +1,20 @@
 import { useState, useRef } from "react";
-import { TextInput, TextArea } from "@tinkermonkey/heimdall-ui";
+import { TextInput, TextArea, NumberInput, Select } from "@tinkermonkey/heimdall-ui";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type FieldKind = "TextInput" | "TextArea" | "NumberInput" | "Select";
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface EditableFieldProps {
   label: string;
   value: string;
   onSave: (value: string) => void | Promise<void>;
-  type?: "text" | "textarea";
+  kind?: FieldKind;
+  options?: SelectOption[];
   disabled?: boolean;
   validate?: (value: string) => string | undefined;
   mono?: boolean;
@@ -20,7 +27,8 @@ export function EditableField({
   label,
   value,
   onSave,
-  type = "text",
+  kind = "TextInput",
+  options,
   disabled,
   validate,
   mono,
@@ -31,6 +39,7 @@ export function EditableField({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveError, setSaveError] = useState<string | undefined>();
   const [validationError, setValidationError] = useState<string | undefined>();
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,8 +57,24 @@ export function EditableField({
     }
   };
 
+  const performSave = async (val: string) => {
+    setSaveError(undefined);
+    setSaveStatus("saving");
+    try {
+      await onSave(val);
+      setSaveStatus("saved");
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      savedTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1600);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Save failed";
+      setSaveError(message);
+      setSaveStatus("error");
+      setIsEditing(true);
+    }
+  };
+
   const handleBlur = async () => {
-    const trimmed = editValue.trim();
+    const trimmed = kind === "NumberInput" ? editValue : editValue.trim();
     const err = validate?.(trimmed);
     if (err) {
       setValidationError(err);
@@ -61,16 +86,14 @@ export function EditableField({
 
     if (trimmed === value) return;
 
-    setSaveStatus("saving");
-    try {
-      await onSave(trimmed);
-      setSaveStatus("saved");
-      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
-      savedTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1600);
-    } catch {
-      setSaveStatus("error");
-      setIsEditing(true);
-    }
+    await performSave(trimmed);
+  };
+
+  const handleSelectChange = async (newValue: string) => {
+    setEditValue(newValue);
+    setIsEditing(false);
+    if (newValue === value) return;
+    await performSave(newValue);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -78,51 +101,99 @@ export function EditableField({
       setEditValue(value);
       setIsEditing(false);
       setValidationError(undefined);
-    } else if (e.key === "Enter" && type !== "textarea") {
+    } else if (e.key === "Enter" && kind !== "TextArea") {
       (e.target as HTMLElement).blur();
     }
   };
+
+  const renderInput = () => {
+    const inputTestId = testId ? `${testId}-input` : undefined;
+
+    switch (kind) {
+      case "TextArea":
+        return (
+          <TextArea
+            value={editValue}
+            onChange={(e) => handleChange(e.target.value)}
+            onBlur={() => void handleBlur()}
+            onKeyDown={handleKeyDown}
+            rows={rows}
+            placeholder={placeholder}
+            autoFocus
+            data-testid={inputTestId}
+          />
+        );
+      case "NumberInput":
+        return (
+          <NumberInput
+            value={editValue}
+            onChange={(e) => handleChange(e.target.value)}
+            onBlur={() => void handleBlur()}
+            onKeyDown={handleKeyDown}
+            mono={mono}
+            placeholder={placeholder}
+            autoFocus
+            data-testid={inputTestId}
+          />
+        );
+      case "Select":
+        return (
+          <Select
+            value={editValue}
+            onChange={(v) => void handleSelectChange(v)}
+            data-testid={inputTestId}
+          >
+            {options?.map((opt) => (
+              <Select.Item key={opt.value} value={opt.value}>
+                {opt.label}
+              </Select.Item>
+            ))}
+          </Select>
+        );
+      default:
+        return (
+          <TextInput
+            type="text"
+            value={editValue}
+            onChange={(e) => handleChange(e.target.value)}
+            onBlur={() => void handleBlur()}
+            onKeyDown={handleKeyDown}
+            mono={mono}
+            placeholder={placeholder}
+            autoFocus
+            data-testid={inputTestId}
+          />
+        );
+    }
+  };
+
+  const displayValue =
+    kind === "Select" && options
+      ? (options.find((opt) => opt.value === value)?.label ?? value)
+      : value;
 
   return (
     <div className="editable-field" data-testid={testId}>
       <div className="editable-field__header">
         <label className="form-group-label">{label}</label>
         {saveStatus === "saved" && (
-          <span className="editable-field__saved-indicator" data-testid={testId ? `${testId}-saved` : undefined}>
+          <span
+            className="editable-field__saved-indicator"
+            data-testid={testId ? `${testId}-saved` : undefined}
+          >
             Saved
           </span>
         )}
         {saveStatus === "error" && (
-          <span className="editable-field__error-indicator">Save failed</span>
+          <span className="editable-field__error-indicator">
+            {saveError ?? "Save failed"}
+          </span>
         )}
       </div>
 
       {isEditing ? (
         <>
-          {type === "textarea" ? (
-            <TextArea
-              value={editValue}
-              onChange={(e) => handleChange(e.target.value)}
-              onBlur={() => void handleBlur()}
-              onKeyDown={handleKeyDown}
-              rows={rows}
-              placeholder={placeholder}
-              autoFocus
-              data-testid={testId ? `${testId}-input` : undefined}
-            />
-          ) : (
-            <TextInput
-              type="text"
-              value={editValue}
-              onChange={(e) => handleChange(e.target.value)}
-              onBlur={() => void handleBlur()}
-              onKeyDown={handleKeyDown}
-              mono={mono}
-              placeholder={placeholder}
-              autoFocus
-              data-testid={testId ? `${testId}-input` : undefined}
-            />
-          )}
+          {renderInput()}
           {validationError && (
             <div className="editable-field__validation-error" role="alert">
               {validationError}
@@ -139,7 +210,7 @@ export function EditableField({
           aria-label={disabled ? undefined : `Edit ${label}`}
           data-testid={testId ? `${testId}-view` : undefined}
         >
-          {value || (
+          {displayValue || (
             <span className="editable-field__placeholder">{placeholder ?? "—"}</span>
           )}
         </div>
