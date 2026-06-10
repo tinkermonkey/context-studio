@@ -189,10 +189,15 @@ export function SchemesIndexPage() {
       fieldLabel: "Target taxonomy",
       options: taxonomies.map((t) => ({ value: t.id, label: t.title })),
       onBulkConfirm: async (ids: string[], taxonomyId: string) => {
-        for (const id of ids) {
-          await moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } });
+        try {
+          for (const id of ids) {
+            await moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } });
+          }
+          toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
+        } catch (error) {
+          toast("error", error instanceof Error ? error.message : "Failed to move schemes");
+          throw error;
         }
-        toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
       },
     },
   ];

@@ -57,7 +57,7 @@ from domain.ontology.exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from domain.ontology.services import OntologyService
+from domain.ontology.services import OntologyService, _UNSET
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -986,11 +986,14 @@ async def update_property_definition(
         HTTPException: 400 if invalid, 404 if not found
     """
     try:
+        is_relevant_arg = (
+            request.is_relevant if "is_relevant" in request.model_fields_set else _UNSET
+        )
         prop_def = service.update_property_definition(
             property_id=property_id,
             title=request.title,
             description=request.description,
-            is_relevant=request.is_relevant,
+            is_relevant=is_relevant_arg,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:

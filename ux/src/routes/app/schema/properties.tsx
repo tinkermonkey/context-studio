@@ -147,10 +147,15 @@ export function PropertiesPage() {
       options: relevanceOptions,
       onBulkConfirm: async (ids: string[], value: string) => {
         const isRelevant = value === "true" ? true : value === "false" ? false : null;
-        for (const id of ids) {
-          await relevanceMutation.mutateAsync({ id, isRelevant });
+        try {
+          for (const id of ids) {
+            await relevanceMutation.mutateAsync({ id, isRelevant });
+          }
+          toast("success", `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`);
+        } catch (error) {
+          toast("error", error instanceof Error ? error.message : "Failed to update relevance");
+          throw error;
         }
-        toast("success", `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`);
       },
     },
   ];
