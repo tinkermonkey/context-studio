@@ -2048,3 +2048,99 @@ selectors:
   - selector: my-table
     component: src/components/crud/SelectableTable.tsx
     description: Root wrapper of SelectableTable when rendered with a custom testId prop
+
+  # ── CreateDrawer — universal entity creation surface ──
+  - selector: create-drawer
+    component: src/components/crud/CreateDrawer.tsx
+    description: Inner content wrapper of CreateDrawer (shared by full and inline variants)
+  - selector: create-drawer-success
+    component: src/components/crud/CreateDrawer.tsx
+    description: Transient success banner shown after "Create another" completes; displays the name of the just-created entity
+  - selector: create-drawer-error
+    component: src/components/crud/CreateDrawer.tsx
+    description: Error banner shown when the create mutation fails; displays the error message
+  - selector: create-drawer-title-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the entity title input (carries label and error state)
+  - selector: create-drawer-title-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Text input for the entity title; receives focus on drawer open and on first-error focus
+  - selector: create-drawer-relink-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Button that resets a customised identifier back to the auto-slug derived from the title
+  - selector: create-drawer-identifier-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Mono text input for the entity identifier (auto-populated from title slug; editable)
+  - selector: create-drawer-another-label
+    component: src/components/crud/CreateDrawer.tsx
+    description: Label wrapping the "Create another" checkbox in the sticky footer
+  - selector: create-drawer-another-checkbox
+    component: src/components/crud/CreateDrawer.tsx
+    description: Checkbox that, when checked, keeps the drawer open and retains context after creation
+  - selector: create-drawer-cancel-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Footer button that dismisses the drawer without saving
+  - selector: create-drawer-create-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Footer primary button that submits the create form; also responds to Cmd+Enter
+  - selector: create-drawer-description-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Textarea for the entity description (optional for all entity types)
+  - selector: create-drawer-taxonomy-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the taxonomy select in the SchemeBody form (carries label and validation error)
+  - selector: create-drawer-taxonomy-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Select control for choosing the parent taxonomy when creating a concept scheme
+  - selector: create-drawer-domain-pill
+    component: src/components/crud/CreateDrawer.tsx
+    description: Read-only pill showing the selected taxonomy's title beneath the taxonomy select
+  - selector: create-drawer-scheme-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the concept scheme select in the ClassBody form (carries label and validation error)
+  - selector: create-drawer-scheme-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Select control for choosing the parent concept scheme when creating a class
+  - selector: create-drawer-parent-class-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Optional select for choosing a parent class; disabled until a concept scheme is selected
+  - selector: create-drawer-relevance-control
+    component: src/components/crud/CreateDrawer.tsx
+    description: Segmented control for property relevance (Relevant / Optional / Excluded)
+  - selector: create-drawer-classes-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the class multi-select in the IndividualBody form (carries label and validation error)
+  - selector: create-drawer-classes-list
+    component: src/components/crud/CreateDrawer.tsx
+    description: Scrollable checkbox list for selecting one or more classes when creating an individual
+  - selector: create-drawer-source-text-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Textarea for an optional source passage that supports the individual or relationship being created
+  - selector: create-drawer-confidence-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Wrapper containing the confidence label and slider for individual and relationship creation
+  - selector: create-drawer-confidence-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Range slider for setting extraction confidence (0–1) on individuals and relationships
+  - selector: create-drawer-relationship-builder
+    component: src/components/crud/CreateDrawer.tsx
+    description: RelationshipBuilder widget for selecting source, predicate, and target when creating a relationship
+  # ── Entity-specific CreateDrawer instances (forwarded data-testid) ──
+  - selector: individual-create-drawer
+    component: src/routes/app/data/individuals.tsx
+    description: CreateDrawer panel opened from the Individuals page; used to distinguish entity type in E2E tests
+  - selector: class-create-drawer
+    component: src/routes/app/schema/classes.tsx
+    description: CreateDrawer panel opened from the Classes page; used to distinguish entity type in E2E tests
+  - selector: property-create-drawer
+    component: src/routes/app/schema/properties.tsx
+    description: CreateDrawer panel opened from the Properties page; used to distinguish entity type in E2E tests
+  - selector: relationship-create-drawer
+    component: src/routes/app/schema/relationships.tsx
+    description: CreateDrawer panel opened from the Relationships page; used to distinguish entity type in E2E tests
+  - selector: scheme-create-drawer
+    component: src/routes/app/schema/schemes.index.tsx
+    description: CreateDrawer panel opened from the Concept Schemes page; used to distinguish entity type in E2E tests
+  - selector: taxonomy-create-drawer
+    component: src/routes/app/schema/taxonomies.tsx
+    description: CreateDrawer panel opened from the Taxonomies page; used to distinguish entity type in E2E tests

@@ -1309,6 +1309,35 @@ body.dark-canvas .csb-bar__badge { color: rgb(var(--accent-primary)); }
   margin-left: 4px;
 }
 
+/* ── Identifier hint & re-link affordance ── */
+.cd-id-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgb(var(--canvas-fg-4));
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.cd-relink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: rgb(var(--accent-primary-deep));
+  background: var(--accent-primary-bg-alpha-sm);
+  border: 1px solid var(--accent-primary-border-alpha-sm);
+  transition: background 0.12s;
+}
+.cd-relink:hover {
+  background: var(--accent-primary-bg-alpha-md);
+}
+body.dark-canvas .cd-relink {
+  color: rgb(var(--accent-primary));
+}
+
 /* ── Multi-select class list ── */
 .class-multi-select {
   border: 1px solid rgb(var(--canvas-border));

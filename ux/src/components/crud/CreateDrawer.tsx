@@ -13,8 +13,7 @@ import {
 import { useCreateTaxonomy, useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useCreateScheme, useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useCreateClass, useClasses } from "@/api/hooks/ontology/useClasses";
-import { useCreateProperty } from "@/api/hooks/ontology/useProperties";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useCreateProperty, useProperties } from "@/api/hooks/ontology/useProperties";
 import { useCreateIndividual } from "@/api/hooks/ontology/useIndividuals";
 import { useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
 
@@ -182,6 +181,7 @@ export interface CreateDrawerProps {
   initialTaxonomyId?: string;
   initialSchemeId?: string;
   onSuccess?: (entity: { id: string; title?: string }) => void;
+  "data-testid"?: string;
 }
 
 export function CreateDrawer({
@@ -192,6 +192,7 @@ export function CreateDrawer({
   initialTaxonomyId,
   initialSchemeId,
   onSuccess,
+  "data-testid": testId,
 }: CreateDrawerProps) {
   const config = ENTITY_CONFIG[entityType];
 
@@ -278,6 +279,18 @@ export function CreateDrawer({
         !relValue.source?.id || !relValue.target?.id || !relValue.predicate;
       if (relIncomplete) return;
     } else if (incomplete.length > 0) {
+      const firstMissing = incomplete[0];
+      setTimeout(() => {
+        if (firstMissing === "title") {
+          titleRef.current?.focus();
+        } else if (firstMissing === "taxonomyId") {
+          (document.querySelector('[data-testid="create-drawer-taxonomy-select"]') as HTMLElement)?.focus();
+        } else if (firstMissing === "schemeId") {
+          (document.querySelector('[data-testid="create-drawer-scheme-select"]') as HTMLElement)?.focus();
+        } else if (firstMissing === "classIds") {
+          (document.querySelector('[data-testid="create-drawer-classes-list"]') as HTMLElement)?.focus();
+        }
+      }, 0);
       return;
     }
 
@@ -301,6 +314,7 @@ export function CreateDrawer({
           data: {
             title: values.title,
             description: values.description || null,
+            parent_class_id: values.parentClassId || undefined,
           },
         });
       } else if (entityType === "property") {
@@ -524,11 +538,11 @@ export function CreateDrawer({
                   label="Identifier"
                   hint={
                     identifierCustomized ? (
-                      <span className="id-hint">
+                      <span className="cd-id-hint">
                         custom ·{" "}
                         <button
                           type="button"
-                          className="id-relink"
+                          className="cd-relink"
                           onClick={() => {
                             setIdentifierCustomized(false);
                             const slug = toSlug(values.title);
@@ -543,7 +557,7 @@ export function CreateDrawer({
                         </button>
                       </span>
                     ) : (
-                      <span className="id-hint">auto from title</span>
+                      <span className="cd-id-hint">auto from title</span>
                     )
                   }
                 >
@@ -674,7 +688,14 @@ export function CreateDrawer({
 
   if (variant === "inline") {
     if (!isOpen) return null;
-    return <div className="create-drawer-inline" data-testid="create-drawer-inline">{content}</div>;
+    return (
+      <div
+        className="create-drawer-inline"
+        data-testid={testId ?? "create-drawer-inline"}
+      >
+        {content}
+      </div>
+    );
   }
 
   if (!isOpen) return null;
@@ -690,7 +711,7 @@ export function CreateDrawer({
       <div
         className="create-drawer-panel"
         onClick={(e) => e.stopPropagation()}
-        data-testid="create-drawer-panel"
+        data-testid={testId ?? "create-drawer-panel"}
       >
         {content}
       </div>
