@@ -3,7 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { pipelineService, type RunListParams } from "@/api/services/pipeline";
 import type { components } from "@/api/types";
 
-type CandidateResponse = components["schemas"]["CandidateResponse"];
+export type CandidateResponse = components["schemas"]["CandidateResponse"];
 
 export function usePipelineRun(runId: string, options?: { refetchInterval?: number }) {
   return useQuery({

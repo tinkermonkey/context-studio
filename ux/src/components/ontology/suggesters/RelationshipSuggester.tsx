@@ -57,7 +57,9 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         runId,
         params: { confidence_threshold: confidence, node_id: classId },
       });
-      setDismissedUris((prev) => new Set([...prev, uri]));
+      // The apply endpoint applies all candidates at or above the threshold; dismiss them all
+      const applied = new Set(allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri));
+      setDismissedUris((prev) => new Set([...prev, ...applied]));
       toast("success", "Relationship applied");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply relationship");
@@ -118,7 +120,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
                 className="relationship-suggestion-card"
                 data-testid={`relationship-suggestion-${candidate.originalIdx}`}
               >
-                <div className="relationship-suggestion-triple">
+                <div className="relationship-suggestion-label">
                   <span className="relationship-suggestion-source">{candidate.label}</span>
                 </div>
                 {candidate.description && (

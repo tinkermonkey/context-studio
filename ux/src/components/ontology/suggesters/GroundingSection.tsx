@@ -57,7 +57,9 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
         runId,
         params: { confidence_threshold: confidence, node_id: classId },
       });
-      setAppliedUris((prev) => new Set([...prev, uri]));
+      // The apply endpoint applies all candidates at or above the threshold
+      const applied = new Set(allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri));
+      setAppliedUris((prev) => new Set([...prev, ...applied]));
       toast("success", "Grounding applied");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply grounding");
