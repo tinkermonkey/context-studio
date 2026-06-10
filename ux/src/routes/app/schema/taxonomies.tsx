@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
-  Modal,
   PageHeader,
   RowMenu,
   Chip,
@@ -15,9 +14,9 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { TaxonomyForm } from "@/components/schema/TaxonomyForm";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import { TaxonomyDrawer } from "@/components/ontology/TaxonomyDrawer";
-import { useTaxonomies, useCreateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -27,7 +26,6 @@ import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
-type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
 
 const SWATCH_PALETTE = [
   "rgb(var(--status-emerald))",
@@ -268,12 +266,10 @@ function TaxonomiesPageContent({
 }
 
 function TaxonomiesPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/schema/taxonomies" });
   const selectedId = searchParams.selected;
-  const createMutation = useCreateTaxonomy();
   const { toast } = useToasts();
 
   const { data: taxData } = useTaxonomies();
@@ -313,16 +309,9 @@ function TaxonomiesPageWrapper() {
     });
   };
 
-  const handleCreateSubmit = async (data: TaxonomyCreateRequest) => {
-    setCreateError(null);
-    try {
-      const result = await createMutation.mutateAsync(data);
-      setShowCreateModal(false);
-      handleSelectedIdChange(result.id);
-      toast("success", taxonomiesCopy.create.successToast(result.id));
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create taxonomy");
-    }
+  const handleCreateSuccess = (entity: { id: string; title?: string }) => {
+    handleSelectedIdChange(entity.id);
+    toast("success", taxonomiesCopy.create.successToast(entity.id));
   };
 
   return (
@@ -339,7 +328,7 @@ function TaxonomiesPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateDrawer(true)}
               data-testid="taxonomy-add-button"
             >
               <Icon name="plus" size={13} /> New taxonomy
@@ -352,32 +341,19 @@ function TaxonomiesPageWrapper() {
 
       <div data-testid="taxonomies-content">
         <TaxonomiesPageContent
-          onCreateClick={() => setShowCreateModal(true)}
+          onCreateClick={() => setShowCreateDrawer(true)}
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
         />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Taxonomy"
-        data-testid="taxonomy-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create taxonomy"
-            />
-          </div>
-        )}
-        <TaxonomyForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-      </Modal>
+      <CreateDrawer
+        entityType="taxonomy"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="taxonomy-create-drawer"
+      />
     </div>
   );
 }

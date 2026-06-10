@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button, Modal, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
+import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
-import { RelationshipForm } from "@/components/schema/RelationshipForm";
-import { useRelationships, useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
@@ -222,8 +222,7 @@ function RelationshipsPageContent({
 }
 
 function RelationshipsPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const navigate = useNavigate();
   const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
   const {
@@ -231,7 +230,6 @@ function RelationshipsPageWrapper() {
     error: propertiesError,
     refetch: refetchProperties,
   } = useProperties();
-  const createMutation = useCreateRelationship();
   const { toast } = useToasts();
 
   const classes = classesResponse?.items || [];
@@ -270,15 +268,8 @@ function RelationshipsPageWrapper() {
     navigate({ to: routes[tabId] as any });
   };
 
-  const handleCreateSubmit = async (data: components["schemas"]["RelationshipCreateRequest"]) => {
-    setCreateError(null);
-    try {
-      await createMutation.mutateAsync(data);
-      setShowCreateModal(false);
-      toast("success", "Relationship created successfully");
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create relationship");
-    }
+  const handleCreateSuccess = (_entity: { id: string; title?: string }) => {
+    toast("success", "Relationship created successfully");
   };
 
   return (
@@ -295,7 +286,7 @@ function RelationshipsPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateDrawer(true)}
               data-testid="relationship-add-button"
             >
               <Icon name="plus" size={13} /> New relationship
@@ -314,35 +305,17 @@ function RelationshipsPageWrapper() {
           onRetryClasses={() => refetchClasses()}
           propertiesError={propertiesError}
           onRetryProperties={() => refetchProperties()}
-          onCreateClick={() => setShowCreateModal(true)}
+          onCreateClick={() => setShowCreateDrawer(true)}
         />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Relationship"
-        data-testid="relationship-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create relationship"
-            />
-          </div>
-        )}
-        <RelationshipForm
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-          classes={classes}
-          properties={properties}
-        />
-      </Modal>
+      <CreateDrawer
+        entityType="relationship"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="relationship-create-drawer"
+      />
     </div>
   );
 }

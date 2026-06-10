@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
-  Modal,
   PageHeader,
   RowMenu,
   Chip,
@@ -16,9 +15,9 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { SchemeForm } from "@/components/schema/SchemeForm";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
-import { useSchemes, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -27,7 +26,6 @@ import { schemesCopy } from "./schemes/-copy";
 import type { components } from "@/api/types";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
-type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 
 interface SchemesSearchParams {
   selected?: string;
@@ -232,12 +230,10 @@ function SchemesPageContent({
 }
 
 export function SchemesIndexPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/schema/schemes/" });
   const selectedId = searchParams.selected;
-  const createMutation = useCreateScheme();
   const { toast } = useToasts();
   const {
     data: taxonomiesResponse,
@@ -283,24 +279,8 @@ export function SchemesIndexPage() {
     });
   };
 
-  const handleCreateSubmit = async (data: ConceptSchemeCreateRequest) => {
-    setCreateError(null);
-    const taxonomyId = taxonomies[0]?.id;
-    if (!taxonomyId) {
-      setCreateError("No taxonomies available");
-      return;
-    }
-
-    try {
-      const result = await createMutation.mutateAsync({
-        taxonomyId,
-        data,
-      });
-      setShowCreateModal(false);
-      toast("success", schemesCopy.create.successToast(result.id));
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create scheme");
-    }
+  const handleCreateSuccess = (entity: { id: string; title?: string }) => {
+    toast("success", schemesCopy.create.successToast(entity.id));
   };
 
   return (
@@ -317,7 +297,7 @@ export function SchemesIndexPage() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateDrawer(true)}
               data-testid="scheme-add-button"
             >
               <Icon name="plus" size={13} /> New scheme
@@ -330,7 +310,7 @@ export function SchemesIndexPage() {
 
       <div data-testid="schemes-content">
         <SchemesPageContent
-          onCreateClick={() => setShowCreateModal(true)}
+          onCreateClick={() => setShowCreateDrawer(true)}
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
           taxonomiesById={taxonomiesById}
@@ -339,27 +319,13 @@ export function SchemesIndexPage() {
         />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Concept Scheme"
-        data-testid="scheme-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create scheme"
-              daemonLogPath="/local-server/logs/context_studio.log"
-            />
-          </div>
-        )}
-        <SchemeForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-      </Modal>
+      <CreateDrawer
+        entityType="scheme"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="scheme-create-drawer"
+      />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
-  Modal,
   PageHeader,
   RowMenu,
   Chip,
@@ -16,20 +15,17 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { PropertyDefinitionForm } from "@/components/schema/PropertyDefinitionForm";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import { PropertyDrawer } from "@/components/ontology/PropertyDrawer";
-import { useProperties, useCreateProperty } from "@/api/hooks/ontology/useProperties";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
-import { ApiError } from "@/api/client/interceptors";
 import { propertiesCopy } from "./properties/-copy";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
-type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
-type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 
 interface PropertiesPageContentProps {
   onCreateClick: () => void;
@@ -172,8 +168,7 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
 }
 
 function PropertiesPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const createMutation = useCreateProperty();
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToasts();
 
@@ -206,19 +201,8 @@ function PropertiesPageWrapper() {
     navigate({ to: routes[tabId] as any });
   };
 
-  const handleCreateSubmit = async (
-    data: PropertyDefinitionCreateRequest | PropertyDefinitionUpdateRequest,
-  ) => {
-    try {
-      if ("identifier" in data) {
-        await createMutation.mutateAsync(data as PropertyDefinitionCreateRequest);
-      }
-      setShowCreateModal(false);
-      toast("success", propertiesCopy.create.successToast);
-    } catch (error) {
-      const message = error instanceof ApiError ? error.detail : "Failed to create property";
-      toast("error", message);
-    }
+  const handleCreateSuccess = (_entity: { id: string; title?: string }) => {
+    toast("success", propertiesCopy.create.successToast);
   };
 
   return (
@@ -235,7 +219,7 @@ function PropertiesPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateDrawer(true)}
               data-testid="property-add-button"
             >
               <Icon name="plus" size={13} /> New property
@@ -247,20 +231,16 @@ function PropertiesPageWrapper() {
       <TabBar tabs={schemaTabs} activeTabId="properties" onSelectTab={handleTabNavigate} />
 
       <div data-testid="properties-content">
-        <PropertiesPageContent onCreateClick={() => setShowCreateModal(true)} />
+        <PropertiesPageContent onCreateClick={() => setShowCreateDrawer(true)} />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Create Property"
-        data-testid="property-create-modal"
-      >
-        <PropertyDefinitionForm
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-        />
-      </Modal>
+      <CreateDrawer
+        entityType="property"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="property-create-drawer"
+      />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
-  Modal,
   PageHeader,
   RowMenu,
   Chip,
@@ -17,9 +16,9 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { ClassEditor } from "@/components/ontology/ClassEditor";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import { ClassDrawer } from "@/components/ontology/ClassDrawer";
-import { useClasses, useCreateClass } from "@/api/hooks/ontology/useClasses";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -257,12 +256,10 @@ function ClassesPageContent({
 }
 
 function ClassesPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/schema/classes" });
   const selectedId = searchParams.selected;
-  const createMutation = useCreateClass();
   const { toast } = useToasts();
 
   const { data: taxData } = useTaxonomies();
@@ -302,29 +299,8 @@ function ClassesPageWrapper() {
     });
   };
 
-  const handleCreateSubmit = async (
-    data: { title: string; description?: string | null; parent_class_id?: string | null },
-    schemeId?: string,
-  ) => {
-    setCreateError(null);
-    try {
-      if (!schemeId) {
-        setCreateError("Please select a domain");
-        return;
-      }
-      await createMutation.mutateAsync({
-        schemeId,
-        data: {
-          title: data.title,
-          description: data.description,
-          parent_class_id: data.parent_class_id,
-        },
-      });
-      setShowCreateModal(false);
-      toast("success", classesCopy.create.successToast);
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create class");
-    }
+  const handleCreateSuccess = (_entity: { id: string; title?: string }) => {
+    toast("success", classesCopy.create.successToast);
   };
 
   return (
@@ -341,7 +317,7 @@ function ClassesPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowCreateDrawer(true)}
               data-testid="class-add-button"
             >
               <Icon name="plus" size={13} /> New class
@@ -354,33 +330,19 @@ function ClassesPageWrapper() {
 
       <div data-testid="classes-content">
         <ClassesPageContent
-          onCreateClick={() => setShowCreateModal(true)}
+          onCreateClick={() => setShowCreateDrawer(true)}
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
         />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Class"
-        data-testid="class-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create class"
-              daemonLogPath="/local-server/logs/context_studio.log"
-            />
-          </div>
-        )}
-        <ClassEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-      </Modal>
+      <CreateDrawer
+        entityType="class"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="class-create-drawer"
+      />
     </div>
   );
 }

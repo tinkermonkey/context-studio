@@ -17,9 +17,9 @@ import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { IndividualEditor } from "@/components/ontology/IndividualEditor";
 import { IndividualDrawer } from "@/components/ontology/IndividualDrawer";
+import { CreateDrawer } from "@/components/crud/CreateDrawer";
 import {
   useIndividuals,
-  useCreateIndividual,
   useUpdateIndividual,
   useDeleteIndividual,
   useIndividual,
@@ -243,15 +243,13 @@ function IndividualsPageContent({
 }
 
 function IndividualsPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const navigate = useNavigate();
   const searchParams = useSearch({ from: "/app/data/individuals" });
   const selectedId = searchParams.selected;
-  const createMutation = useCreateIndividual();
   const updateMutation = useUpdateIndividual();
   const deleteMutation = useDeleteIndividual();
   const { toast } = useToasts();
@@ -281,26 +279,9 @@ function IndividualsPageWrapper() {
     });
   };
 
-  const handleCreateSubmit = async (data: {
-    title: string;
-    description?: string | null;
-    class_ids: string[];
-  }) => {
-    setCreateError(null);
-    try {
-      const result = await createMutation.mutateAsync({
-        title: data.title,
-        description: data.description,
-        class_ids: data.class_ids,
-      });
-      setShowCreateModal(false);
-      handleSelectedIdChange(result.id);
-      toast("success", individualsCopy.create.successToast);
-    } catch (error) {
-      setCreateError(
-        error instanceof Error ? error.message : individualsCopy.errors.failedToCreate,
-      );
-    }
+  const handleCreateSuccess = (entity: { id: string; title?: string }) => {
+    handleSelectedIdChange(entity.id);
+    toast("success", individualsCopy.create.successToast);
   };
 
   const handleEditClick = (id: string) => {
@@ -360,7 +341,7 @@ function IndividualsPageWrapper() {
         actions={
           <Button
             variant="primary"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => setShowCreateDrawer(true)}
             data-testid="individual-add-button"
           >
             <Icon name="plus" size={13} /> {individualsCopy.create.buttonLabel}
@@ -370,7 +351,7 @@ function IndividualsPageWrapper() {
 
       <div data-testid="individuals-content">
         <IndividualsPageContent
-          onCreateClick={() => setShowCreateModal(true)}
+          onCreateClick={() => setShowCreateDrawer(true)}
           selectedId={selectedId}
           onSelectedIdChange={handleSelectedIdChange}
           classMap={classMap}
@@ -382,37 +363,13 @@ function IndividualsPageWrapper() {
         />
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title={individualsCopy.create.modalTitle}
-        data-testid="individual-create-modal"
-      >
-        {classesError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
-              onRetry={() => refetchClasses()}
-              message={individualsCopy.errors.failedToLoadClasses}
-              daemonLogPath="/local-server/logs/context_studio.log"
-            />
-          </div>
-        )}
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
-            <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message={individualsCopy.errors.failedToCreate}
-              daemonLogPath="/local-server/logs/context_studio.log"
-            />
-          </div>
-        )}
-        <IndividualEditor onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-      </Modal>
+      <CreateDrawer
+        entityType="individual"
+        isOpen={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onSuccess={handleCreateSuccess}
+        data-testid="individual-create-drawer"
+      />
 
       <Modal
         isOpen={showEditModal}

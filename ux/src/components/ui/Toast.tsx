@@ -45,7 +45,9 @@ export function ToastProvider({ children }: ToastProviderProps) {
       sub?: string,
       options?: { action?: ToastItem["action"]; autoDismissMs?: number },
     ) => {
-      const id = crypto.randomUUID();
+      const id = typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
       setToasts((prev) => [...prev, { id, type, title, sub, action: options?.action }]);
       const dismissDelay = options?.autoDismissMs ?? 8000;
       setTimeout(() => dismiss(id), dismissDelay);
