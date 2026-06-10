@@ -82,6 +82,21 @@ describe("usePendingCreate", () => {
       expect(window.__CS_PENDING).toBeUndefined();
     });
 
+    it("does not call startCreate when surfaceRef is null at RAF time", () => {
+      window.__CS_PENDING = { type: "taxonomy", ctx: { title: "My Tax" } };
+      const startCreate = vi.fn();
+      const ref = { current: null } as React.RefObject<EntitySurfaceHandle | null>;
+      renderHook(() => usePendingCreate("taxonomy", ref));
+      expect(startCreate).not.toHaveBeenCalled();
+    });
+
+    it("does not clear window.__CS_PENDING when surfaceRef is null at RAF time", () => {
+      window.__CS_PENDING = { type: "taxonomy", ctx: { title: "My Tax" } };
+      const ref = { current: null } as React.RefObject<EntitySurfaceHandle | null>;
+      renderHook(() => usePendingCreate("taxonomy", ref));
+      expect(window.__CS_PENDING).toBeDefined();
+    });
+
     it("dispatches via requestAnimationFrame", () => {
       window.__CS_PENDING = { type: "taxonomy", ctx: {} };
       const { ref } = makeRef();
