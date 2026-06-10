@@ -283,8 +283,6 @@ def _system_config_to_response(
 
 def _db_config_to_response(record: Any) -> PipelineConfigurationResponse:
     """Convert a DB pipeline configuration record to a response schema."""
-    from datetime import datetime, timezone
-
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
         if not s:
             return None

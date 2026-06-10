@@ -60,7 +60,12 @@ class PipelineConfigurationRepository:
     ) -> PipelineConfiguration:
         """Create and persist a new user pipeline configuration."""
         config_id = str(uuid.uuid4())
-        config_ref = _slugify_name(name)
+        base_ref = _slugify_name(name)
+        existing_refs = self.list_known_config_refs(pipeline_type, implementation_id)
+        if base_ref in existing_refs:
+            config_ref = f"{base_ref}_{uuid.uuid4().hex[:6]}"
+        else:
+            config_ref = base_ref
         now = _now_iso()
 
         record = PipelineConfiguration(

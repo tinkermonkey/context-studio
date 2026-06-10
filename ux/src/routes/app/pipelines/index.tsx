@@ -26,12 +26,6 @@ export function PipelinesPage() {
   const typeList = types ?? [];
   const activeType = selectedType ?? (typeList[0]?.pipeline_type ?? null);
 
-  const handleNewConfig = () => {
-    if (!activeType) return;
-    // Navigate to type detail for creation via dedicated page
-    navigate({ to: `/app/pipelines/types/${activeType}` });
-  };
-
   if (error) {
     return (
       <div data-testid="pipelines-page">

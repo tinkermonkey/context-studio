@@ -2421,3 +2421,56 @@ selectors:
   - selector: grounding-existing-refs
     component: src/components/ontology/suggesters/GroundingSection.tsx
     description: Container for the list of existing external reference items in the grounding section
+
+  # Pipeline Configuration Editor
+  - selector: config-editor-done-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Button to exit edit/create mode and return to view state
+  - selector: config-editor-menu-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Row menu button for edit, duplicate, and delete actions on a configuration
+  - selector: config-editor
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Root container for the pipeline configuration editor panel
+  - selector: config-name-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Name input field for a pipeline configuration
+  - selector: config-description-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Optional description input for a pipeline configuration
+  - selector: config-provider-select
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: LLM provider selector (anthropic or openai)
+  - selector: config-model-select
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Model identifier selector for the chosen LLM provider
+  - selector: config-status-control
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Toggle control for enabling or disabling a pipeline configuration
+  - selector: config-system-prompt-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: System prompt textarea in the configuration editor
+  - selector: config-user-prompt-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: User prompt template textarea in the configuration editor
+  - selector: config-create-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Submit button to save a new pipeline configuration
+  - selector: config-cancel-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Cancel button to discard unsaved changes and exit create/edit mode
+  - selector: pipeline-cfg-empty-inspector
+    component: src/components/pipeline/PipelineTypeContent.tsx
+    description: Placeholder shown in the inspector column when no configuration is selected
+  - selector: pipeline-new-config-btn
+    component: src/components/pipeline/PipelineTypeDetail.tsx
+    description: Button to open the create-new-configuration form in the detail view
+  - selector: pipeline-new-config-icon-btn
+    component: src/components/pipeline/PipelineTypeDetail.tsx
+    description: Icon-only button to create a new configuration in the configs list header
+  - selector: variable-chips
+    component: src/components/pipeline/VariableChips.tsx
+    description: Container for the set of available template variable chips
+  - selector: pipeline-type-no-selection
+    component: src/routes/app/pipelines/index.tsx
+    description: Empty state shown in the right panel when no pipeline type is selected

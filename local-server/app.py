@@ -366,10 +366,9 @@ async def lifespan(app: FastAPI):
                         "top_p": user_cfg.top_p,
                         "enabled": user_cfg.enabled,
                     }
-                    for _ in range(user_cfg.version):
-                        config_registry.register(
-                            ptype, user_cfg.implementation_id, user_cfg.config_ref, config_dict
-                        )
+                    config_registry.register(
+                        ptype, user_cfg.implementation_id, user_cfg.config_ref, config_dict
+                    )
                 except Exception as load_exc:
                     logger.warning(
                         f"Failed to load user config {user_cfg.id} into registry: {load_exc}"

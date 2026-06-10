@@ -71,7 +71,7 @@ export function PipelineTypeContent({ pipelineType }: PipelineTypeContentProps) 
       {implId && (
         <div className="pipeline-cfg-list-col">
           <div className="pipeline-cfg-list-header">
-            <span className="cfg-section-title" style={{ margin: 0 }}>
+            <span className="cfg-section-title cfg-section-title--flush">
               Configurations · {configurations?.length ?? 0}
             </span>
             <Button
@@ -117,12 +117,7 @@ export function PipelineTypeContent({ pipelineType }: PipelineTypeContentProps) 
                   data-testid={`pipeline-cfg-row-${cfg.config_ref}`}
                 >
                   <span
-                    className="pipeline-cfg-dot"
-                    style={{
-                      background: cfg.enabled
-                        ? "rgb(var(--status-emerald))"
-                        : "rgb(var(--canvas-fg-4))",
-                    }}
+                    className={`pipeline-cfg-dot ${cfg.enabled ? "pipeline-cfg-dot--enabled" : "pipeline-cfg-dot--disabled"}`}
                   />
                   <span className="pipeline-cfg-body">
                     <span className="pipeline-cfg-name">{cfg.name}</span>
