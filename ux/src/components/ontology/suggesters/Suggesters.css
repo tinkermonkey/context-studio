@@ -361,4 +361,26 @@
     justify-content: flex-end;
     padding-top: 4px;
   }
+
+  /* Shared pipeline error state */
+  .suggester-error {
+    padding: 8px 10px;
+    background: rgb(var(--status-rose) / 0.06);
+    border: 1px solid rgb(var(--status-rose) / 0.25);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .suggester-error-message {
+    margin: 0;
+    font-size: 12px;
+    color: rgb(var(--status-rose));
+  }
+
+  .suggester-error-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
 }

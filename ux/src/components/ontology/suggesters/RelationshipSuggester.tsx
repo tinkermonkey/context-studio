@@ -24,6 +24,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     run?.status === "PENDING" ||
     run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
+  const isFailed = run?.status === "FAILED";
 
   const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 
@@ -72,7 +73,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     setDismissedUris((prev) => new Set([...prev, uri]));
   };
 
-  const hasRun = isCompleted || isRunning;
+  const hasRun = isCompleted || isRunning || isFailed;
 
   return (
     <div className="relationship-suggester" data-testid="relationship-suggester">
@@ -91,6 +92,24 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         <div className="relationship-suggester-shimmer" data-testid="relationship-suggester-loading">
           <div className="skeleton" style={{ height: 72 }} />
           <div className="skeleton" style={{ height: 72 }} />
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="suggester-error" data-testid="relationship-suggester-error">
+          <p className="suggester-error-message">
+            {run?.failure_reason ?? "Relationship pipeline failed"}
+          </p>
+          <div className="suggester-error-actions">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleSuggest()}
+              data-testid="relationship-error-retry-btn"
+            >
+              Try again
+            </Button>
+          </div>
         </div>
       )}
 

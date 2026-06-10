@@ -28,6 +28,7 @@ export function SuggestField({ entityId, value, onChange, placeholder, rows = 4,
     run?.status === "PENDING" ||
     run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
+  const isFailed = run?.status === "FAILED";
 
   const { data: allCandidatesRaw = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 
@@ -122,6 +123,24 @@ export function SuggestField({ entityId, value, onChange, placeholder, rows = 4,
         <div className="suggest-field-shimmer" data-testid="suggest-field-loading">
           <div className="skeleton" style={{ height: 52 }} />
           <div className="skeleton" style={{ height: 52 }} />
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="suggester-error" data-testid="suggest-field-error">
+          <p className="suggester-error-message">
+            {run?.failure_reason ?? "Suggestion pipeline failed"}
+          </p>
+          <div className="suggester-error-actions">
+            <button
+              type="button"
+              className="suggest-field-action-btn"
+              onClick={() => void handleSuggest()}
+              data-testid="suggest-field-retry-btn"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       )}
 
