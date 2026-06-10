@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { csRequestChild } from "../csRequestChild";
 
-declare global {
-  interface Window {
-    __CS_PENDING?: {
-      type: string;
-      ctx: Record<string, unknown>;
-      identifierDirty?: boolean;
-    };
-  }
-}
-
 describe("csRequestChild", () => {
   beforeEach(() => {
     window.__CS_PENDING = undefined;
