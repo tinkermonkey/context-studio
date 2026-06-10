@@ -94,17 +94,26 @@ export function RelationshipDrawer({
 
     setIsSaving(true);
     try {
+      await deleteMutation.mutateAsync(relationship.id);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to update relationship";
+      toast("error", message);
+      setIsSaving(false);
+      return;
+    }
+
+    try {
       await createMutation.mutateAsync({
         source_id: editValue.source.id,
         target_id: editValue.target.id,
         relationship_type: editValue.predicate,
       });
-      await deleteMutation.mutateAsync(relationship.id);
       toast("success", "Relationship updated");
       setMode("view");
     } catch (error) {
       const message =
-        error instanceof ApiError ? error.detail : "Failed to update relationship";
+        error instanceof ApiError ? error.detail : "Failed to create updated relationship — the original has been removed";
       toast("error", message);
     } finally {
       setIsSaving(false);
