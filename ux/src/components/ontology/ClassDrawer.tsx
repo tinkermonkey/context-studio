@@ -6,6 +6,7 @@ import {
   KVGrid,
 } from "@tinkermonkey/heimdall-ui";
 import { RelationshipSuggester, GroundingSection } from "./suggesters";
+import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
@@ -31,6 +32,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [domainId, setDomainId] = useState(classData?.concept_scheme_id ?? "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(classData?.description ?? "");
 
   const { toast } = useToasts();
   const updateMutation = useUpdateClass();
@@ -81,6 +83,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   useEffect(() => {
     setDomainId(classData?.concept_scheme_id ?? "");
     setMode("view");
+    setDescriptionDraft(classData?.description ?? "");
   }, [classData]);
 
   const handleDelete = async () => {
@@ -96,6 +99,17 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   };
 
   if (!classData) return null;
+
+  const handleSaveDescription = async (value: string) => {
+    if (value === (classData.description ?? "")) return;
+    try {
+      await updateMutation.mutateAsync({ id: classData.id, data: { description: value || null } });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to save description";
+      toast("error", message);
+      setDescriptionDraft(classData.description ?? "");
+    }
+  };
 
   const handleDuplicate = async () => {
     try {
@@ -197,16 +211,22 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   data-testid="class-drawer-name-field"
                 />
 
-                <EditableField
-                  label="Description"
-                  type="textarea"
-                  rows={4}
-                  value={classData.description ?? ""}
-                  onSave={async (v) => {
-                    await updateMutation.mutateAsync({ id: classData.id, data: { description: v || null } });
+                <div
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      void handleSaveDescription(descriptionDraft);
+                    }
                   }}
-                  data-testid="class-drawer-description-field"
-                />
+                >
+                  <label className="form-group-label">Description</label>
+                  <SuggestField
+                    entityId={classData.id}
+                    value={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    rows={4}
+                    testId="class-drawer-description-input"
+                  />
+                </div>
 
                 <div>
                   <label className="form-group-label">Domain</label>

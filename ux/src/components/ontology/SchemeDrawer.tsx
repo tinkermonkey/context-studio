@@ -7,6 +7,7 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
+import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { useUpdateScheme, useDeleteScheme, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
@@ -25,6 +26,7 @@ interface SchemeDrawerProps {
 export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(scheme?.description ?? "");
 
   const { toast } = useToasts();
   const updateMutation = useUpdateScheme();
@@ -45,6 +47,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
 
   useEffect(() => {
     setMode("view");
+    setDescriptionDraft(scheme?.description ?? "");
   }, [scheme]);
 
   const handleDelete = async () => {
@@ -60,6 +63,17 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   };
 
   if (!scheme) return null;
+
+  const handleSaveDescription = async (value: string) => {
+    if (value === (scheme.description ?? "")) return;
+    try {
+      await updateMutation.mutateAsync({ id: scheme.id, data: { description: value || null } });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to save description";
+      toast("error", message);
+      setDescriptionDraft(scheme.description ?? "");
+    }
+  };
 
   const handleDuplicate = async () => {
     try {
@@ -133,16 +147,22 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                   data-testid="scheme-drawer-title-field"
                 />
 
-                <EditableField
-                  label="Description"
-                  type="textarea"
-                  rows={4}
-                  value={scheme.description ?? ""}
-                  onSave={async (v) => {
-                    await updateMutation.mutateAsync({ id: scheme.id, data: { description: v || null } });
+                <div
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      void handleSaveDescription(descriptionDraft);
+                    }
                   }}
-                  data-testid="scheme-drawer-description-field"
-                />
+                >
+                  <label className="form-group-label">Description</label>
+                  <SuggestField
+                    entityId={scheme.id}
+                    value={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    rows={4}
+                    testId="scheme-drawer-description-input"
+                  />
+                </div>
 
                 <div>
                   <label className="form-group-label">Parent Taxonomy</label>

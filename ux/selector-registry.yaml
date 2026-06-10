@@ -2086,6 +2086,9 @@ selectors:
   - selector: create-drawer-description-input
     component: src/components/crud/CreateDrawer.tsx
     description: Textarea for the entity description (optional for all entity types)
+  - selector: create-drawer-domain-control
+    component: src/components/crud/CreateDrawer.tsx
+    description: SegmentedControl for selecting the taxonomy domain scope in the create drawer
   - selector: create-drawer-taxonomy-field
     component: src/components/crud/CreateDrawer.tsx
     description: Field wrapper for the taxonomy select in the SchemeBody form (carries label and validation error)
@@ -2309,9 +2312,6 @@ selectors:
   - selector: class-drawer-name-field
     component: src/components/ontology/ClassDrawer.tsx
     description: EditableField for the class name in the class inspector drawer (edit mode)
-  - selector: class-drawer-description-field
-    component: src/components/ontology/ClassDrawer.tsx
-    description: EditableField for the class description in the class inspector drawer (edit mode)
   - selector: individual-drawer-name-field
     component: src/components/ontology/IndividualDrawer.tsx
     description: EditableField for the individual name in the individual inspector drawer (edit mode)
@@ -2321,9 +2321,9 @@ selectors:
   - selector: property-drawer-title-field
     component: src/components/ontology/PropertyDrawer.tsx
     description: EditableField for the property title in the property inspector drawer (edit mode)
-  - selector: property-drawer-description-field
+  - selector: property-drawer-relevance-control
     component: src/components/ontology/PropertyDrawer.tsx
-    description: EditableField for the property description in the property inspector drawer (edit mode)
+    description: SegmentedControl for setting property relevance (Not Evaluated / Relevant / Irrelevant) in the property inspector drawer (edit mode)
   - selector: relationship-edit-cancel
     component: src/components/ontology/RelationshipDrawer.tsx
     description: Cancel button in the relationship edit form inside the inspector drawer
@@ -2333,15 +2333,9 @@ selectors:
   - selector: scheme-drawer-title-field
     component: src/components/ontology/SchemeDrawer.tsx
     description: EditableField for the concept scheme title in the scheme inspector drawer (edit mode)
-  - selector: scheme-drawer-description-field
-    component: src/components/ontology/SchemeDrawer.tsx
-    description: EditableField for the concept scheme description in the scheme inspector drawer (edit mode)
   - selector: taxonomy-drawer-title-field
     component: src/components/ontology/TaxonomyDrawer.tsx
     description: EditableField for the taxonomy title in the taxonomy inspector drawer (edit mode)
-  - selector: taxonomy-drawer-description-field
-    component: src/components/ontology/TaxonomyDrawer.tsx
-    description: EditableField for the taxonomy description in the taxonomy inspector drawer (edit mode)
   - selector: inline-inspector-edit-button
     component: src/components/ui/InlineInspector.tsx
     description: Edit icon button in the InlineInspector view-mode action bar
