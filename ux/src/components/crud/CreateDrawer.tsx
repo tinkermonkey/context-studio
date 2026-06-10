@@ -10,6 +10,7 @@ import {
   RelationshipBuilder,
   type RelationshipBuilderValue,
 } from "@tinkermonkey/heimdall-ui";
+import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { useCreateTaxonomy, useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useCreateScheme, useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useCreateClass, useClasses } from "@/api/hooks/ontology/useClasses";
@@ -92,15 +93,18 @@ const ENTITY_CONFIG: Record<EntityType, EntityConfig> = {
   },
 };
 
+export type RelevanceValue = "relevant" | "optional" | "excluded";
+
 export interface FormValues {
   title: string;
   identifier: string;
   description: string;
+  domain: string;
   taxonomyId: string;
   schemeId: string;
   parentClassId: string;
   classIds: string[];
-  relevance: string;
+  relevance: RelevanceValue;
   sourceId: string;
   targetId: string;
   relationshipType: string;
@@ -113,6 +117,7 @@ function defaultValues(initialTaxonomyId?: string, initialSchemeId?: string): Fo
     title: "",
     identifier: "",
     description: "",
+    domain: "",
     taxonomyId: initialTaxonomyId ?? "",
     schemeId: initialSchemeId ?? "",
     parentClassId: "",
@@ -309,44 +314,56 @@ export function CreateDrawer({
     try {
       let result: { id: string; title?: string };
 
-      if (entityType === "taxonomy") {
-        result = await createTaxonomy.mutateAsync({
-          title: values.title,
-          description: values.description || null,
-        });
-      } else if (entityType === "scheme") {
-        result = await createScheme.mutateAsync({
-          taxonomyId: values.taxonomyId,
-          data: { title: values.title, description: values.description || null },
-        });
-      } else if (entityType === "class") {
-        result = await createClass.mutateAsync({
-          schemeId: values.schemeId,
-          data: {
+      switch (entityType) {
+        case "taxonomy":
+          result = await createTaxonomy.mutateAsync({
             title: values.title,
             description: values.description || null,
-            parent_class_id: values.parentClassId || undefined,
-          },
-        });
-      } else if (entityType === "property") {
-        const slug = toSlug(values.title);
-        result = await createProperty.mutateAsync({
-          identifier: values.identifier || slug,
-          title: values.title,
-          description: values.description || null,
-        });
-      } else if (entityType === "individual") {
-        result = await createIndividual.mutateAsync({
-          class_ids: values.classIds,
-          title: values.title,
-          description: values.description || null,
-        });
-      } else {
-        result = await createRelationship.mutateAsync({
-          source_id: relValue.source!.id,
-          target_id: relValue.target!.id,
-          relationship_type: relValue.predicate,
-        });
+          });
+          break;
+        case "scheme":
+          result = await createScheme.mutateAsync({
+            taxonomyId: values.taxonomyId,
+            data: { title: values.title, description: values.description || null },
+          });
+          break;
+        case "class":
+          result = await createClass.mutateAsync({
+            schemeId: values.schemeId,
+            data: {
+              title: values.title,
+              description: values.description || null,
+              parent_class_id: values.parentClassId || undefined,
+            },
+          });
+          break;
+        case "property": {
+          const slug = toSlug(values.title);
+          result = await createProperty.mutateAsync({
+            identifier: values.identifier || slug,
+            title: values.title,
+            description: values.description || null,
+          });
+          break;
+        }
+        case "individual":
+          result = await createIndividual.mutateAsync({
+            class_ids: values.classIds,
+            title: values.title,
+            description: values.description || null,
+          });
+          break;
+        case "relationship":
+          result = await createRelationship.mutateAsync({
+            source_id: relValue.source!.id,
+            target_id: relValue.target!.id,
+            relationship_type: relValue.predicate,
+          });
+          break;
+        default: {
+          const _exhaustive: never = entityType;
+          throw new Error(`Unhandled entity type: ${_exhaustive}`);
+        }
       }
 
       if (createAnother) {
@@ -685,8 +702,7 @@ export function CreateDrawer({
           variant="primary"
           size="sm"
           onClick={() => void handleCreate()}
-          disabled={isSubmitting}
-          aria-disabled={!isComplete}
+          disabled={isSubmitting || !isComplete}
           data-testid="create-drawer-create-btn"
           title={!isComplete ? "Fill all required fields to create" : undefined}
         >
@@ -730,6 +746,12 @@ export function CreateDrawer({
   );
 }
 
+const DOMAIN_OPTIONS = [
+  { value: "life", label: "life" },
+  { value: "climate", label: "climate" },
+  { value: "software", label: "software" },
+];
+
 // ─── Form body sub-components ────────────────────────────────────────────────
 
 interface BaseBodyProps {
@@ -743,20 +765,28 @@ interface WithValidation extends BaseBodyProps {
   fieldError: (field: string) => string | undefined;
 }
 
-function TaxonomyBody({ values, setValues, touch }: BaseBodyProps) {
+function TaxonomyBody({ values, setValues }: BaseBodyProps) {
   return (
-    <Field label="Description">
-      <TextArea
-        placeholder="Describe this taxonomy's scope and purpose…"
-        value={values.description}
-        onChange={(e) => {
-          setValues((v) => ({ ...v, description: e.target.value }));
-          touch("description");
-        }}
-        rows={3}
-        data-testid="create-drawer-description-input"
-      />
-    </Field>
+    <>
+      <Field label="Domain">
+        <SegmentedControl
+          value={values.domain}
+          onChange={(v) => setValues((vals) => ({ ...vals, domain: v as string }))}
+          options={DOMAIN_OPTIONS}
+          data-testid="create-drawer-domain-control"
+        />
+      </Field>
+
+      <Field label="Description">
+        <SuggestField
+          value={values.description}
+          onChange={(v) => setValues((vals) => ({ ...vals, description: v }))}
+          placeholder="Describe this taxonomy's scope and purpose…"
+          rows={3}
+          testId="create-drawer-description-input"
+        />
+      </Field>
+    </>
   );
 }
 
@@ -806,12 +836,12 @@ function SchemeBody({
       )}
 
       <Field label="Description">
-        <TextArea
-          placeholder="Describe the scope of this concept scheme…"
+        <SuggestField
           value={values.description}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          onChange={(v) => setValues((vals) => ({ ...vals, description: v }))}
+          placeholder="Describe the scope of this concept scheme…"
           rows={3}
-          data-testid="create-drawer-description-input"
+          testId="create-drawer-description-input"
         />
       </Field>
     </>
@@ -873,12 +903,12 @@ function ClassBody({
       </Field>
 
       <Field label="Description">
-        <TextArea
-          placeholder="Describe what this class represents…"
+        <SuggestField
           value={values.description}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          onChange={(v) => setValues((vals) => ({ ...vals, description: v }))}
+          placeholder="Describe what this class represents…"
           rows={3}
-          data-testid="create-drawer-description-input"
+          testId="create-drawer-description-input"
         />
       </Field>
     </>
@@ -889,19 +919,19 @@ function PropertyBody({ values, setValues, touch: _touch }: BaseBodyProps) {
   return (
     <>
       <Field label="Description">
-        <TextArea
-          placeholder="Describe this property's meaning and usage…"
+        <SuggestField
           value={values.description}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          onChange={(v) => setValues((vals) => ({ ...vals, description: v }))}
+          placeholder="Describe this property's meaning and usage…"
           rows={3}
-          data-testid="create-drawer-description-input"
+          testId="create-drawer-description-input"
         />
       </Field>
 
       <Field label="Relevance">
         <SegmentedControl
           value={values.relevance}
-          onChange={(v) => setValues((vals) => ({ ...vals, relevance: v as string }))}
+          onChange={(v) => setValues((vals) => ({ ...vals, relevance: v as RelevanceValue }))}
           options={[
             { value: "relevant", label: "Relevant" },
             { value: "optional", label: "Optional" },
@@ -964,12 +994,12 @@ function IndividualBody({
       </Field>
 
       <Field label="Description">
-        <TextArea
-          placeholder="Describe this individual…"
+        <SuggestField
           value={values.description}
-          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          onChange={(v) => setValues((vals) => ({ ...vals, description: v }))}
+          placeholder="Describe this individual…"
           rows={3}
-          data-testid="create-drawer-description-input"
+          testId="create-drawer-description-input"
         />
       </Field>
 

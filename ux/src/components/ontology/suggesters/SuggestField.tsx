@@ -6,14 +6,15 @@ import { useToasts } from "@/components/ui/Toast";
 import "./Suggesters.css";
 
 interface SuggestFieldProps {
-  entityId: string;
+  entityId?: string;
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   rows?: number;
   testId?: string;
 }
 
-export function SuggestField({ entityId, value, onChange, rows = 4, testId }: SuggestFieldProps) {
+export function SuggestField({ entityId, value, onChange, placeholder, rows = 4, testId }: SuggestFieldProps) {
   const [runId, setRunId] = useState<string | null>(null);
   const [dismissedIndices, setDismissedIndices] = useState<Set<number>>(new Set());
 
@@ -101,6 +102,7 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         data-testid={testId}
         rows={rows}
       />

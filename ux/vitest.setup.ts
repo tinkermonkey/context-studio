@@ -49,17 +49,41 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         ...props,
       }),
   ),
-  Select: React.forwardRef(({ error = false, className = "", children, ...props }: any, ref: any) =>
-    React.createElement(
-      "select",
-      {
-        ref,
-        className: ["select", error && "select--error", className].filter(Boolean).join(" "),
-        ...props,
-      },
-      children,
-    ),
-  ),
+  Select: (() => {
+    const S: any = React.forwardRef(
+      ({ error = false, className = "", children, ...props }: any, ref: any) =>
+        React.createElement(
+          "select",
+          {
+            ref,
+            className: ["select", error && "select--error", className].filter(Boolean).join(" "),
+            ...props,
+          },
+          children,
+        ),
+    );
+    S.Item = ({ value, children, description: _d }: any) =>
+      React.createElement("option", { value }, children);
+    S.CheckboxItem = ({ value, children, description: _d }: any) =>
+      React.createElement("option", { value }, children);
+    return S;
+  })(),
+  RelationshipBuilder: ({
+    "data-testid": testId,
+    value: _value,
+    onChange: _onChange,
+    sourceQuery: _sq,
+    onSourceQueryChange: _osqc,
+    targetQuery: _tq,
+    onTargetQueryChange: _otqc,
+    sourceResults: _sr,
+    targetResults: _tr,
+    onSourceClear: _osc,
+    onTargetClear: _otc,
+    predicates: _predicates,
+    ...props
+  }: any) =>
+    React.createElement("div", { "data-testid": testId ?? "relationship-builder", ...props }),
   Toast: ({ isOpen, onClose, title, subtitle, _variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
       if (isOpen && duration) {
