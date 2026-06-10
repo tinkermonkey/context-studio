@@ -16,6 +16,8 @@ import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SelectableTable } from "@/components/crud/SelectableTable";
+import { CascadeDeleteDialog } from "@/components/crud/CascadeDeleteDialog";
+import type { CascadeImpactData } from "@/components/crud/CascadeDeleteDialog";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import {
   useDatasets,
@@ -140,6 +142,33 @@ function DatasetInspector({ dataset, onActivate, isActivating }: DatasetInspecto
   );
 }
 
+function buildDatasetImpactData(dataset: DatasetResponse): CascadeImpactData | undefined {
+  const { layers_count, domains_count, terms_count, relationships_count, individuals_count } =
+    dataset.metrics;
+  const totalCount =
+    layers_count + domains_count + terms_count + relationships_count + individuals_count;
+
+  if (totalCount === 0 && !dataset.is_active) return undefined;
+
+  const stats = [
+    { label: "layers", count: layers_count },
+    { label: "domains", count: domains_count },
+    { label: "terms", count: terms_count },
+    { label: "relationships", count: relationships_count },
+    { label: "individuals", count: individuals_count },
+  ].filter((s) => s.count > 0);
+
+  if (dataset.is_active && stats.length === 0) {
+    stats.push({ label: "active dataset (currently in use)", count: 1 });
+  }
+
+  return {
+    totalCount: Math.max(totalCount, dataset.is_active ? 1 : 0),
+    stats,
+    items: [],
+  };
+}
+
 export function DatasetsPage() {
   const [searchFilter, setSearchFilter] = useState("");
   const [selectedId, setSelectedId] = useState<string | undefined>();
@@ -148,6 +177,8 @@ export function DatasetsPage() {
   const [createFilename, setCreateFilename] = useState("");
   const [createDescription, setCreateDescription] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DatasetResponse | undefined>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: datasets, isLoading, error, refetch } = useDatasets();
   const activateMutation = useActivateDataset();
@@ -240,14 +271,25 @@ export function DatasetsPage() {
       });
     }
     if (actionId === "delete") {
-      if (confirm(datasetsCopy.delete.confirmMessage)) {
-        deleteMutation.mutateAsync(dataset.id).then(() => {
-          if (selectedId === dataset.id) setSelectedId(undefined);
-          toast("success", datasetsCopy.delete.successToast);
-        }).catch((err) => {
-          toast("error", err instanceof Error ? err.message : datasetsCopy.errors.failedToDelete);
-        });
-      }
+      setDeleteTarget(dataset);
+      setDeleteDialogOpen(true);
+    }
+  }
+
+  function closeDeleteDialog() {
+    setDeleteDialogOpen(false);
+    setDeleteTarget(undefined);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      if (selectedId === deleteTarget.id) setSelectedId(undefined);
+      closeDeleteDialog();
+      toast("success", datasetsCopy.delete.successToast);
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : datasetsCopy.errors.failedToDelete);
     }
   }
 
@@ -403,6 +445,16 @@ export function DatasetsPage() {
           )}
         </>
       )}
+
+      <CascadeDeleteDialog
+        isOpen={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={() => void handleDeleteConfirm()}
+        target={deleteTarget ? { id: deleteTarget.id, label: deleteTarget.title } : undefined}
+        entityType="dataset"
+        impactData={deleteTarget ? buildDatasetImpactData(deleteTarget) : undefined}
+        isDeleting={deleteMutation.isPending}
+      />
 
       <Modal
         isOpen={showCreateModal}
