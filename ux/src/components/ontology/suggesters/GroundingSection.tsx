@@ -52,6 +52,8 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
   };
 
   const handleAdd = (originalIdx: number) => {
+    // Marks the candidate locally only — no API endpoint exists for individual
+    // external references yet. The label deliberately avoids implying persistence.
     setAddedIndices((prev) => new Set([...prev, originalIdx]));
   };
 
@@ -99,6 +101,9 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
 
       {isCompleted && visibleGroundings.length > 0 && (
         <>
+          <p className="grounding-section-info" data-testid="grounding-section-info">
+            Grounding suggestions are informational. Individual external references cannot yet be persisted — use the pipeline apply workflow to save grounding to an entity.
+          </p>
           {visibleGroundings.map((grounding) => {
             const isAdded = addedIndices.has(grounding.originalIdx);
             return (
@@ -137,9 +142,10 @@ export function GroundingSection({ classId }: GroundingSectionProps) {
                     className="grounding-proposal-add-btn"
                     onClick={() => handleAdd(grounding.originalIdx)}
                     data-added={isAdded}
+                    disabled={isAdded}
                     data-testid={`grounding-add-${grounding.originalIdx}`}
                   >
-                    {isAdded ? "✓ Added" : "Add"}
+                    {isAdded ? "✓ Noted" : "Note"}
                   </button>
                   <button
                     type="button"

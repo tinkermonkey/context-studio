@@ -2229,3 +2229,40 @@ selectors:
   - selector: action-duplicate-row-1
     component: src/components/crud/__tests__/EntitySurface.test.tsx
     description: Test mock only — "duplicate" row-menu action button in mocked SelectableTable for fixture row "row-1"
+
+  - selector: grounding-section
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Root container for the AI grounding suggestion panel in the Class inspector
+  - selector: grounding-suggest-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Button that triggers the schema_node_grounding pipeline to fetch grounding candidates
+  - selector: grounding-section-loading
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Shimmer skeleton shown while the grounding pipeline run is PENDING or RUNNING
+  - selector: grounding-suggest-retry-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Button to re-trigger the grounding pipeline after a completed or empty run
+  - selector: grounding-section-info
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Informational callout explaining that grounding suggestions are not persisted yet
+  - selector: relationship-suggester
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Root container for the AI relationship suggestion panel in the Class inspector
+  - selector: relationship-suggester-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Button that triggers the schema_node_connection_refinement pipeline
+  - selector: relationship-suggester-loading
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Shimmer skeleton shown while the relationship suggestion pipeline run is PENDING or RUNNING
+  - selector: relationship-suggester-retry-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Button to re-trigger the relationship suggestion pipeline after a completed or empty run
+  - selector: suggest-field-loading
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Shimmer skeleton shown while the definition refinement pipeline run is PENDING or RUNNING
+  - selector: suggest-field-proposals
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Container listing AI-generated description candidates with Replace/Append/Dismiss actions
+  - selector: suggest-field-dismiss-all
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Button to dismiss all AI description proposals at once and clear the suggestion panel

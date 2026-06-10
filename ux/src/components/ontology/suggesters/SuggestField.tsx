@@ -90,7 +90,6 @@ export function SuggestField({ entityId, value, onChange, rows = 4, testId }: Su
           onClick={() => void handleSuggest()}
           disabled={isRunning || !entityId}
           data-testid={testId ? `${testId}-suggest-btn` : "suggest-field-btn"}
-          style={{ fontSize: 11, padding: "2px 8px" }}
         >
           {isRunning ? "Suggesting…" : "✦ Suggest"}
         </button>
