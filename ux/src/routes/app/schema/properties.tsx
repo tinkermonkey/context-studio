@@ -1,23 +1,20 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
   PageHeader,
-  RowMenu,
   Chip,
   FilterBar,
   TabBar,
   Icon,
   VersionPill,
 } from "@tinkermonkey/heimdall-ui";
+import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { CreateDrawer } from "@/components/crud/CreateDrawer";
+import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { PropertyDrawer } from "@/components/ontology/PropertyDrawer";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useProperties, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -27,28 +24,60 @@ import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
 
-interface PropertiesPageContentProps {
-  onCreateClick: () => void;
-}
-
 function relevanceChip(isRelevant: boolean | null | undefined) {
   if (isRelevant === true) return <Chip variant="emerald">relevant</Chip>;
   if (isRelevant === false) return <Chip variant="rose">irrelevant</Chip>;
   return <Chip variant="neutral">unevaluated</Chip>;
 }
 
-function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
-  const [selectedId, setSelectedId] = useState<string>();
+export function PropertiesPage() {
+  const surfaceRef = useRef<EntitySurfaceHandle>(null);
+  const navigate = useNavigate();
+  const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
-  const { data: listResponse, isLoading, error, refetch } = useProperties();
-  const properties = listResponse?.items || [];
 
-  const filteredData = properties.filter(
+  const { data: listResponse, isLoading, error, refetch } = useProperties();
+  const { data: taxData } = useTaxonomies();
+  const { data: schemesData } = useSchemes();
+  const { data: classesData } = useClasses();
+  const { data: relsData } = useRelationships();
+
+  const deleteMutation = useDeleteProperty();
+
+  const allData = listResponse?.items ?? [];
+  const hasFilter = !!searchFilter;
+  const filteredData = allData.filter(
     (prop: PropertyDefinitionResponse) =>
       prop.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      prop.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (prop.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
       prop.identifier.toLowerCase().includes(searchFilter.toLowerCase()),
   );
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
+    { id: "schemes", label: "Schemes", count: schemesData?.total },
+    { id: "classes", label: "Classes", count: classesData?.total },
+    { id: "properties", label: "Properties", count: listResponse?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  function handleTabNavigate(tabId: string) {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  }
+
+  async function handleDelete(ids: string[]) {
+    for (const id of ids) {
+      await deleteMutation.mutateAsync(id);
+    }
+    toast("success", propertiesCopy.delete.successToast);
+  }
 
   const propertyColumns: Column<PropertyDefinitionResponse>[] = [
     {
@@ -88,125 +117,28 @@ function PropertiesPageContent({ onCreateClick }: PropertiesPageContentProps) {
       width: "60px",
       render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
-    {
-      key: "created_at",
-      label: "",
-      width: "40px",
-      render: (_, row) => (
-        <RowMenu
-          data-testid={`property-row-actions-${row.id}`}
-          actions={[
-            { id: "edit", label: "Edit", icon: "edit" },
-            { id: "clone", label: "Clone", icon: "copy" },
-            { type: "separator" },
-            { id: "delete", label: "Delete", icon: "trash", danger: true },
-          ]}
-          onAction={(actionId) => console.log(`Action ${actionId} on property ${row.id}`)}
-        />
-      ),
-    },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="stack">
-        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load properties" />
-      </div>
-    );
-  }
-
-  if (properties.length === 0) {
-    return (
-      <EmptyState
-        title={propertiesCopy.emptyState.title}
-        description={propertiesCopy.emptyState.description}
-        action={{
-          label: propertiesCopy.emptyState.actionLabel,
-          onClick: onCreateClick,
-        }}
-      />
-    );
-  }
-
-  return (
-    <div data-testid="properties-page" className="stack">
-      <FilterBar
-        data-testid="schema-filter-bar"
-        onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by identifier, title, or description…"
-        showingCount={filteredData.length}
-        totalCount={properties.length}
-      />
-      <SchemaPageLayout
-        data={filteredData}
-        selectedId={selectedId}
-        renderInspectorContent={(prop) => (
-          <PropertyDrawer key={prop.id} property={prop} onClose={() => setSelectedId(undefined)} />
-        )}
-      >
-        <SchemaTable
-          columns={propertyColumns}
-          data={filteredData}
-          onRowSelect={setSelectedId}
-          selectedId={selectedId}
-        />
-      </SchemaPageLayout>
-    </div>
-  );
-}
-
-function PropertiesPageWrapper() {
-  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToasts();
-
-  const { data: taxData } = useTaxonomies();
-  const { data: schemesData } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
-    },
+  const rowMenuActions = [
+    { id: "duplicate", label: "Duplicate", icon: "copy" },
+    { type: "separator" as const },
+    { id: "delete", label: "Delete", icon: "trash", danger: true },
   ];
 
-  const handleTabNavigate = (tabId: string) => {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  };
+  const bulkActions = [
+    { id: "delete", label: "Delete", variant: "danger" as const },
+  ];
 
-  const handleCreateSuccess = (_entity: { id: string; title?: string }) => {
-    toast("success", propertiesCopy.create.successToast);
-  };
+  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const emptyStateTitle = filteredEmpty
+    ? propertiesCopy.filteredEmpty.title
+    : propertiesCopy.emptyState.title;
+  const emptyStateDescription = filteredEmpty
+    ? propertiesCopy.filteredEmpty.description
+    : propertiesCopy.emptyState.description;
 
   return (
-    <div className="stack">
+    <div className="stack" data-testid="properties-page">
       <PageHeader
         eyebrow="SCHEMA · node_type · property_definition"
         title="Properties"
@@ -219,7 +151,7 @@ function PropertiesPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateDrawer(true)}
+              onClick={() => surfaceRef.current?.startCreate()}
               data-testid="property-add-button"
             >
               <Icon name="plus" size={13} /> New property
@@ -230,23 +162,40 @@ function PropertiesPageWrapper() {
 
       <TabBar tabs={schemaTabs} activeTabId="properties" onSelectTab={handleTabNavigate} />
 
-      <div data-testid="properties-content">
-        <PropertiesPageContent onCreateClick={() => setShowCreateDrawer(true)} />
-      </div>
+      {error ? (
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load properties" />
+      ) : (
+        <>
+          <FilterBar
+            data-testid="schema-filter-bar"
+            onSearchChange={setSearchFilter}
+            searchPlaceholder="Search by identifier, title, or description…"
+            showingCount={filteredData.length}
+            totalCount={allData.length}
+          />
 
-      <CreateDrawer
-        entityType="property"
-        isOpen={showCreateDrawer}
-        onClose={() => setShowCreateDrawer(false)}
-        onSuccess={handleCreateSuccess}
-        data-testid="property-create-drawer"
-      />
+          <EntitySurface
+            ref={surfaceRef}
+            entityType="property"
+            data={filteredData}
+            isLoading={isLoading}
+            columns={propertyColumns}
+            renderInspector={(entity) => (
+              <PropertyDrawer key={entity.id} property={entity} />
+            )}
+            rowMenuActions={rowMenuActions}
+            onDeleteEntity={handleDelete}
+            bulkActions={bulkActions}
+            emptyStateTitle={emptyStateTitle}
+            emptyStateDescription={emptyStateDescription}
+            emptyStateShowAction={!filteredEmpty}
+            emptyStateActionLabel={propertiesCopy.emptyState.actionLabel}
+            testId="properties-surface"
+          />
+        </>
+      )}
     </div>
   );
-}
-
-export function PropertiesPage() {
-  return <PropertiesPageWrapper />;
 }
 
 export const Route = createFileRoute("/app/schema/properties")({

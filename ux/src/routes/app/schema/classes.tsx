@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
   PageHeader,
-  RowMenu,
   Chip,
   FilterBar,
   TabBar,
@@ -12,13 +11,11 @@ import {
   VersionPill,
   SegmentedControl,
 } from "@tinkermonkey/heimdall-ui";
+import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { CreateDrawer } from "@/components/crud/CreateDrawer";
+import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { ClassDrawer } from "@/components/ontology/ClassDrawer";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClasses, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -29,47 +26,90 @@ import type { components } from "@/api/types";
 type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface ClassesSearchParams {
-  selected?: string;
+  createForScheme?: string;
 }
 
-interface ClassesPageContentProps {
-  onCreateClick: () => void;
-  selectedId?: string;
-  onSelectedIdChange: (id?: string) => void;
-}
-
-function ClassesPageContent({
-  onCreateClick,
-  selectedId,
-  onSelectedIdChange,
-}: ClassesPageContentProps) {
+export function ClassesPage() {
+  const surfaceRef = useRef<EntitySurfaceHandle>(null);
+  const navigate = useNavigate();
+  const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
   const [domainFilter, setDomainFilter] = useState<string>("all");
 
+  const searchParams = useSearch({ from: "/app/schema/classes" });
+  const createForScheme = searchParams.createForScheme;
+
   const { data: listResponse, isLoading, error, refetch } = useClasses();
-  const classes = listResponse?.items || [];
-
   const { data: schemesResponse, error: schemesError, refetch: refetchSchemes } = useSchemes();
-  const schemes = schemesResponse?.items || [];
+  const { data: taxData } = useTaxonomies();
+  const { data: propsData } = useProperties();
+  const { data: relsData } = useRelationships();
 
+  const deleteMutation = useDeleteClass();
+  const moveMutation = useMoveClass();
+
+  const allData = listResponse?.items ?? [];
+  const schemes = schemesResponse?.items ?? [];
   const schemeMap = new Map(schemes.map((s) => [s.id, s.title]));
-  const classMap = new Map(classes.map((c) => [c.id, c.title]));
+  const classMap = new Map(allData.map((c) => [c.id, c.title]));
+
+  // Cross-page create: open CreateDrawer with pre-filled scheme if directed from schemes page
+  useEffect(() => {
+    if (createForScheme && surfaceRef.current) {
+      surfaceRef.current.startCreate({ schemeId: createForScheme }, false);
+      navigate({ to: "/app/schema/classes" as any, search: {}, replace: true });
+    }
+  }, [createForScheme, navigate]);
 
   const domainOptions = [
     { value: "all", label: "All domains" },
     ...schemes.map((s) => ({ value: s.id, label: s.title })),
   ];
 
-  const filteredData = classes
-    .filter(
-      (cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter,
-    )
+  const hasFilter = !!searchFilter || domainFilter !== "all";
+  const filteredData = allData
+    .filter((cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter)
     .filter(
       (cls: ClassResponse) =>
         cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        cls.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (cls.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
         cls.id.toLowerCase().includes(searchFilter.toLowerCase()),
     );
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
+    { id: "schemes", label: "Schemes", count: schemesResponse?.total },
+    { id: "classes", label: "Classes", count: listResponse?.total },
+    { id: "properties", label: "Properties", count: propsData?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  function handleTabNavigate(tabId: string) {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  }
+
+  async function handleDelete(ids: string[]) {
+    for (const id of ids) {
+      await deleteMutation.mutateAsync(id);
+    }
+    toast("success", classesCopy.delete.successToast);
+  }
+
+  function handleRowMenuAction(actionId: string, entity: ClassResponse) {
+    if (actionId === "add-child-class") {
+      surfaceRef.current?.startCreate(
+        { schemeId: entity.concept_scheme_id, parentClassId: entity.id },
+        false,
+      );
+    }
+  }
 
   const classColumns: Column<ClassResponse>[] = [
     {
@@ -138,173 +178,42 @@ function ClassesPageContent({
       width: "60px",
       render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
+  ];
+
+  const rowMenuActions = [
+    { id: "duplicate", label: "Duplicate", icon: "copy" },
+    { id: "add-child-class", label: "Add child class", icon: "plus" },
+    { type: "separator" as const },
+    { id: "delete", label: "Delete", icon: "trash", danger: true },
+  ];
+
+  const bulkActions = [
+    { id: "delete", label: "Delete", variant: "danger" as const },
     {
-      key: "created_at",
-      label: "",
-      width: "40px",
-      render: (_, row) => (
-        <RowMenu
-          data-testid={`class-row-actions-${row.id}`}
-          actions={[
-            { id: "edit", label: "Edit", icon: "edit" },
-            { id: "clone", label: "Clone", icon: "copy" },
-            { type: "separator" },
-            { id: "delete", label: "Delete", icon: "trash", danger: true },
-          ]}
-          onAction={(actionId) => console.log(`Action ${actionId} on class ${row.id}`)}
-        />
-      ),
+      id: "move-to-scheme",
+      label: "Move to scheme",
+      variant: "neutral" as const,
+      fieldLabel: "Target concept scheme",
+      options: schemes.map((s) => ({ value: s.id, label: s.title })),
+      onBulkConfirm: async (ids: string[], schemeId: string) => {
+        for (const id of ids) {
+          await moveMutation.mutateAsync({ id, data: { target_scheme_id: schemeId } });
+        }
+        toast("success", `Moved ${ids.length} class${ids.length === 1 ? "" : "es"} to new scheme`);
+      },
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="stack">
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load classes"
-          daemonLogPath="/local-server/logs/context_studio.log"
-        />
-      </div>
-    );
-  }
-
-  if (classes.length === 0) {
-    return (
-      <EmptyState
-        title={classesCopy.emptyState.title}
-        description={classesCopy.emptyState.description}
-        action={{
-          label: classesCopy.emptyState.actionLabel,
-          onClick: onCreateClick,
-        }}
-      />
-    );
-  }
-
-  const hasFilters = !!searchFilter || domainFilter !== "all";
-  const showFilteredEmpty = classes.length > 0 && filteredData.length === 0 && hasFilters;
+  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const emptyStateTitle = filteredEmpty
+    ? classesCopy.filteredEmpty.title
+    : classesCopy.emptyState.title;
+  const emptyStateDescription = filteredEmpty
+    ? classesCopy.filteredEmpty.description
+    : classesCopy.emptyState.description;
 
   return (
-    <div data-testid="classes-page" className="stack">
-      <FilterBar
-        data-testid="schema-filter-bar"
-        onSearchChange={setSearchFilter}
-        searchPlaceholder="Search classes, descriptions, ids…"
-        showingCount={filteredData.length}
-        totalCount={classes.length}
-      >
-        {schemes.length > 0 && (
-          <SegmentedControl
-            value={domainFilter}
-            onChange={(v) => setDomainFilter(v as string)}
-            options={domainOptions}
-          />
-        )}
-      </FilterBar>
-
-      {schemesError && (
-        <ErrorBanner
-          error={schemesError as Error}
-          onRetry={() => refetchSchemes()}
-          message="Failed to load domains"
-          compact
-          daemonLogPath="/local-server/logs/context_studio.log"
-        />
-      )}
-
-      {showFilteredEmpty ? (
-        <EmptyState
-          title={classesCopy.filteredEmpty.title}
-          description={classesCopy.filteredEmpty.description}
-        />
-      ) : (
-        <SchemaPageLayout
-          data={filteredData}
-          selectedId={selectedId}
-          renderInspectorContent={(cls) => (
-            <ClassDrawer
-              key={cls.id}
-              classData={cls}
-              onClose={() => onSelectedIdChange(undefined)}
-            />
-          )}
-        >
-          <SchemaTable
-            columns={classColumns}
-            data={filteredData}
-            onRowSelect={onSelectedIdChange}
-            selectedId={selectedId}
-          />
-        </SchemaPageLayout>
-      )}
-    </div>
-  );
-}
-
-function ClassesPageWrapper() {
-  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
-  const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/schema/classes" });
-  const selectedId = searchParams.selected;
-  const { toast } = useToasts();
-
-  const { data: taxData } = useTaxonomies();
-  const { data: schemesData } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
-    },
-  ];
-
-  const handleTabNavigate = (tabId: string) => {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  };
-
-  const handleSelectedIdChange = (id?: string) => {
-    navigate({
-      to: "/app/schema/classes",
-      search: id ? { selected: id } : {},
-      replace: true,
-    });
-  };
-
-  const handleCreateSuccess = (_entity: { id: string; title?: string }) => {
-    toast("success", classesCopy.create.successToast);
-  };
-
-  return (
-    <div className="stack">
+    <div className="stack" data-testid="classes-page">
       <PageHeader
         eyebrow="SCHEMA · node_type · class"
         title="Classes"
@@ -317,7 +226,7 @@ function ClassesPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateDrawer(true)}
+              onClick={() => surfaceRef.current?.startCreate()}
               data-testid="class-add-button"
             >
               <Icon name="plus" size={13} /> New class
@@ -328,32 +237,66 @@ function ClassesPageWrapper() {
 
       <TabBar tabs={schemaTabs} activeTabId="classes" onSelectTab={handleTabNavigate} />
 
-      <div data-testid="classes-content">
-        <ClassesPageContent
-          onCreateClick={() => setShowCreateDrawer(true)}
-          selectedId={selectedId}
-          onSelectedIdChange={handleSelectedIdChange}
+      {error ? (
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message="Failed to load classes"
         />
-      </div>
+      ) : (
+        <>
+          {schemesError && (
+            <ErrorBanner
+              error={schemesError as Error}
+              onRetry={() => refetchSchemes()}
+              message="Failed to load domains"
+              compact
+            />
+          )}
 
-      <CreateDrawer
-        entityType="class"
-        isOpen={showCreateDrawer}
-        onClose={() => setShowCreateDrawer(false)}
-        onSuccess={handleCreateSuccess}
-        data-testid="class-create-drawer"
-      />
+          <FilterBar
+            data-testid="schema-filter-bar"
+            onSearchChange={setSearchFilter}
+            searchPlaceholder="Search classes, descriptions, ids…"
+            showingCount={filteredData.length}
+            totalCount={allData.length}
+          >
+            {schemes.length > 0 && (
+              <SegmentedControl
+                value={domainFilter}
+                onChange={(v) => setDomainFilter(v as string)}
+                options={domainOptions}
+              />
+            )}
+          </FilterBar>
+
+          <EntitySurface
+            ref={surfaceRef}
+            entityType="class"
+            data={filteredData}
+            isLoading={isLoading}
+            columns={classColumns}
+            renderInspector={(entity) => (
+              <ClassDrawer key={entity.id} classData={entity} />
+            )}
+            rowMenuActions={rowMenuActions}
+            onRowMenuAction={handleRowMenuAction}
+            onDeleteEntity={handleDelete}
+            bulkActions={bulkActions}
+            emptyStateTitle={emptyStateTitle}
+            emptyStateDescription={emptyStateDescription}
+            emptyStateShowAction={!filteredEmpty}
+            testId="classes-surface"
+          />
+        </>
+      )}
     </div>
   );
-}
-
-export function ClassesPage() {
-  return <ClassesPageWrapper />;
 }
 
 export const Route = createFileRoute("/app/schema/classes")({
   component: ClassesPage,
   validateSearch: (search: Record<string, unknown>): ClassesSearchParams => ({
-    selected: typeof search.selected === "string" ? search.selected : undefined,
+    createForScheme: typeof search.createForScheme === "string" ? search.createForScheme : undefined,
   }),
 });

@@ -116,9 +116,9 @@ describe("Properties Schema Page", () => {
       render(<PropertiesPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("No properties on this class")).toBeInTheDocument();
+        expect(screen.getByText("No properties yet")).toBeInTheDocument();
         expect(
-          screen.getByText("Properties are typed attributes — name, latitude, accuracy, etc."),
+          screen.getByText("Property definitions are the named predicates used by relationships."),
         ).toBeInTheDocument();
       });
     });
@@ -129,7 +129,8 @@ describe("Properties Schema Page", () => {
       render(<PropertiesPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /\+ Add property/i })).toBeInTheDocument();
+        expect(screen.getByTestId("empty-state-action")).toBeInTheDocument();
+        expect(screen.getByTestId("empty-state-action")).toHaveTextContent("+ Add property");
       });
     });
   });

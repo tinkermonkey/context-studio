@@ -12,6 +12,7 @@ interface SelectableTableProps<T extends { id: string }> {
   onRowClick?: (row: T) => void;
   rowMenuActions?: RowMenuAction[];
   onRowMenuAction?: (actionId: string, row: T) => void;
+  rowMenuTestIdPrefix?: string;
   testId?: string;
 }
 
@@ -26,6 +27,7 @@ export function SelectableTable<T extends { id: string }>({
   onRowClick,
   rowMenuActions,
   onRowMenuAction,
+  rowMenuTestIdPrefix,
   testId = "selectable-table",
 }: SelectableTableProps<T>) {
   const [pageIndex, setPageIndex] = useState(0);
@@ -55,6 +57,7 @@ export function SelectableTable<T extends { id: string }>({
                   actions={rowMenuActions}
                   onAction={(actionId) => onRowMenuAction(actionId, row)}
                   triggerLabel="Row actions"
+                  data-testid={rowMenuTestIdPrefix ? `${rowMenuTestIdPrefix}-${row.id}` : undefined}
                 />
               </div>
             ),

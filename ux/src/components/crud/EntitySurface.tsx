@@ -57,6 +57,10 @@ interface EntitySurfaceProps<T extends { id: string }> {
   onCreateSuccess?: (entity: { id: string; title?: string }) => void;
   inspectorWidth?: number;
   testId?: string;
+  emptyStateTitle?: string;
+  emptyStateDescription?: string;
+  emptyStateShowAction?: boolean;
+  emptyStateActionLabel?: string;
 }
 
 function defaultDuplicateContext<T extends { id: string }>(entity: T): Partial<FormValues> {
@@ -89,6 +93,10 @@ function EntitySurfaceBase<T extends { id: string }>(
     onCreateSuccess,
     inspectorWidth = 420,
     testId,
+    emptyStateTitle,
+    emptyStateDescription,
+    emptyStateShowAction = true,
+    emptyStateActionLabel,
   }: EntitySurfaceProps<T>,
   ref: React.ForwardedRef<EntitySurfaceHandle>,
 ) {
@@ -232,20 +240,21 @@ function EntitySurfaceBase<T extends { id: string }>(
   // ── Empty state ────────────────────────────────────────────────────────────
 
   if (data.length === 0 && !isLoading && mode === "view") {
+    const showAction = emptyStateShowAction !== false;
     return (
       <div data-testid={testId ?? "entity-surface"}>
         <EmptyState
           icon={<Icon name={icon as any} size={22} />}
-          title={`No ${label}s yet`}
-          description={`Create your first ${label} to get started.`}
-          action={{
-            label: `New ${label}`,
+          title={emptyStateTitle ?? `No ${label}s yet`}
+          description={emptyStateDescription ?? `Create your first ${label} to get started.`}
+          action={showAction ? {
+            label: emptyStateActionLabel ?? `New ${label}`,
             onClick: () => {
               setCreateContext({});
               setIdentifierDirty(false);
               setMode("create");
             },
-          }}
+          } : undefined}
         />
       </div>
     );
@@ -277,6 +286,7 @@ function EntitySurfaceBase<T extends { id: string }>(
           }}
           rowMenuActions={rowMenuActions}
           onRowMenuAction={handleRowMenuAction}
+          rowMenuTestIdPrefix={`${entityType}-row-actions`}
         />
       </div>
 
