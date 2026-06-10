@@ -89,7 +89,7 @@ const taxonomyColumns: Column<TaxonomyResponse>[] = [
   },
 ];
 
-function TaxonomiesPage() {
+export function TaxonomiesPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
   const navigate = useNavigate();
   const { toast } = useToasts();
@@ -231,8 +231,6 @@ function TaxonomiesPage() {
     </div>
   );
 }
-
-export { TaxonomiesPage };
 
 export const Route = createFileRoute("/app/schema/taxonomies")({
   component: TaxonomiesPage,

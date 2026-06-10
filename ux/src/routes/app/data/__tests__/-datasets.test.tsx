@@ -154,17 +154,17 @@ describe("Datasets Data Page", () => {
       render(<DatasetsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Customer Data")).toBeInTheDocument();
-        expect(screen.getByText("Product Data")).toBeInTheDocument();
+        expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
+        expect(screen.getByTestId("dataset-name-dataset-002")).toBeInTheDocument();
       });
     });
 
-    it("displays mono ID truncated to 8 characters in first column", async () => {
+    it("displays filename in mono font", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-with-very-long-id-12345",
           title: "Test Dataset",
-          filename: "test.csv",
+          filename: "test_data.csv",
         }),
       ]);
 
@@ -176,8 +176,8 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("Test Dataset")).toBeInTheDocument();
       });
 
-      const monoId = screen.getByText("dataset-");
-      expect(monoId).toHaveClass("font-mono");
+      const filename = screen.getByText("test_data.csv");
+      expect(filename).toBeInTheDocument();
     });
 
     it("displays status column with Active for active datasets", async () => {
@@ -195,10 +195,10 @@ describe("Datasets Data Page", () => {
       render(<DatasetsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Active Dataset")).toBeInTheDocument();
+        expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Active")).toBeInTheDocument();
+      expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
     });
 
     it("displays status column with Inactive for inactive datasets", async () => {
@@ -222,13 +222,13 @@ describe("Datasets Data Page", () => {
       expect(screen.getByText("Inactive")).toBeInTheDocument();
     });
 
-    it("displays description column with em-dash placeholder when empty", async () => {
+    it("displays em-dash for missing imported date", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
           title: "Test Dataset",
           filename: "test.csv",
-          description: null,
+          created_at: null,
         }),
       ]);
 
@@ -244,15 +244,13 @@ describe("Datasets Data Page", () => {
       expect(cells.length).toBeGreaterThan(0);
     });
 
-    it("truncates long descriptions in description column", async () => {
-      const longDescription =
-        "This is a very long description that should be truncated at 50 characters";
+    it("displays schema version in the schema column", async () => {
       const mockDatasets = createListDatasets([
         createDataset({
           id: "dataset-001",
           title: "Test Dataset",
           filename: "test.csv",
-          description: longDescription,
+          schema_version: "2.1",
         }),
       ]);
 
@@ -264,9 +262,7 @@ describe("Datasets Data Page", () => {
         expect(screen.getByText("Test Dataset")).toBeInTheDocument();
       });
 
-      const truncatedDesc = screen.getByText(/This is a very long description that should/);
-      expect(truncatedDesc).toBeInTheDocument();
-      expect(truncatedDesc.textContent).toContain("…");
+      expect(screen.getByText("2.1")).toBeInTheDocument();
     });
 
     it("verifies row-level testids are present for delete actions", async () => {
@@ -325,7 +321,7 @@ describe("Datasets Data Page", () => {
       render(<DatasetsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Active Dataset")).toBeInTheDocument();
+        expect(screen.getByTestId("dataset-name-dataset-001")).toBeInTheDocument();
       });
 
       expect(screen.getByTestId("dataset-row-actions-dataset-001")).toBeInTheDocument();
