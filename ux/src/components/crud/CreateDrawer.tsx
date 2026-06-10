@@ -92,7 +92,7 @@ const ENTITY_CONFIG: Record<EntityType, EntityConfig> = {
   },
 };
 
-interface FormValues {
+export interface FormValues {
   title: string;
   identifier: string;
   description: string;
@@ -180,6 +180,8 @@ export interface CreateDrawerProps {
   variant?: "full" | "inline";
   initialTaxonomyId?: string;
   initialSchemeId?: string;
+  initialValues?: Partial<FormValues>;
+  initialIdentifierDirty?: boolean;
   onSuccess?: (entity: { id: string; title?: string }) => void;
   "data-testid"?: string;
 }
@@ -191,6 +193,8 @@ export function CreateDrawer({
   variant = "full",
   initialTaxonomyId,
   initialSchemeId,
+  initialValues,
+  initialIdentifierDirty,
   onSuccess,
   "data-testid": testId,
 }: CreateDrawerProps) {
@@ -216,6 +220,11 @@ export function CreateDrawer({
 
   const titleRef = useRef<HTMLInputElement>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs to read latest prop values inside the open effect without triggering re-runs
+  const initialValuesRef = useRef(initialValues);
+  initialValuesRef.current = initialValues;
+  const initialIdentifierDirtyRef = useRef(initialIdentifierDirty);
+  initialIdentifierDirtyRef.current = initialIdentifierDirty;
 
   // Mutations
   const createTaxonomy = useCreateTaxonomy();
@@ -243,8 +252,10 @@ export function CreateDrawer({
   // Reset on open
   useEffect(() => {
     if (isOpen) {
-      setValues(defaultValues(initialTaxonomyId, initialSchemeId));
-      setIdentifierCustomized(false);
+      const base = defaultValues(initialTaxonomyId, initialSchemeId);
+      const overrides = initialValuesRef.current;
+      setValues(overrides ? { ...base, ...overrides } : base);
+      setIdentifierCustomized(initialIdentifierDirtyRef.current ?? false);
       setTouched(new Set());
       setSubmitAttempted(false);
       setSubmitError(null);
