@@ -3,7 +3,6 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   InspectorPanel,
   TextInput as Input,
-  Button,
   Panel,
   KVGrid,
   ConfirmDialog,
@@ -150,7 +149,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
       .slice(0, 10) || [];
 
   useEffect(() => {
-    if (individual) {
+    if (individual?.id) {
       setMode("view");
     }
   }, [individual?.id]);

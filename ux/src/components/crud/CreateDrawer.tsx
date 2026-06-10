@@ -1047,7 +1047,7 @@ function RelationshipBody({
   values,
   setValues,
   submitAttempted,
-  touched,
+  touched: _touched,
   touch,
 }: RelationshipBodyProps) {
   return (
