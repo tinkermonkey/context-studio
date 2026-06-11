@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import {
   PageHeader,
   Icon,
   Button,
-  Panel,
   Chip,
   VersionPill,
 } from "@tinkermonkey/heimdall-ui";
@@ -23,7 +22,6 @@ type EditorMode = "view" | "edit" | "create";
 
 export function PipelineTypeDetail() {
   const { type } = useParams({ from: "/app/pipelines/types/$type" as any });
-  const navigate = useNavigate();
 
   const [selectedImplId, setSelectedImplId] = useState<string | undefined>();
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
