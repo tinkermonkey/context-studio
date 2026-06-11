@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, Fragment, useMemo } from "react";
+import "./IndividualDrawer.css";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import {
   InspectorPanel,
@@ -193,10 +194,10 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
       >
         <InspectorPanel.Section title="Details">
           <div className="stack-lg">
-            <div className="skeleton" style={{ height: 40 }} />
-            <div className="skeleton" style={{ height: 40 }} />
-            <div className="skeleton" style={{ height: 80 }} />
-            <div className="skeleton" style={{ height: 200 }} />
+            <div className="skeleton skeleton-h40" />
+            <div className="skeleton skeleton-h40" />
+            <div className="skeleton skeleton-h80" />
+            <div className="skeleton skeleton-h200" />
           </div>
         </InspectorPanel.Section>
       </InspectorPanel>
@@ -430,7 +431,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 className="stack-lg"
               >
                 {classesError && (
-                  <div style={{ marginBottom: "var(--space-3)" }}>
+                  <div className="drawer-error-wrap">
                     <ErrorBanner
                       error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
                       onRetry={() => refetchClasses()}
@@ -440,7 +441,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                   </div>
                 )}
                 {individual.class_ids.length > 0 && (
-                  <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                  <div className="class-chips-row">
                     {individual.class_ids.map((classId, index) => (
                       <ClassChip
                         key={classId}
@@ -457,7 +458,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                   </div>
                 )}
 
-                <div style={{ position: "relative" }} ref={dropdownRef}>
+                <div className="typeahead-wrap" ref={dropdownRef}>
                   <Input
                     type="text"
                     placeholder={individualsCopy.drawer.classSearchPlaceholder}
@@ -471,48 +472,17 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                     data-testid="individual-class-typeahead"
                   />
                   {showClassOptions && availableClasses.length > 0 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        background: "rgb(var(--canvas-bg))",
-                        border: "1px solid rgb(var(--canvas-fg-4))",
-                        borderRadius: "var(--radius-sm)",
-                        marginTop: "4px",
-                        zIndex: 10,
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                      }}
-                    >
+                    <div className="class-dropdown-list">
                       {availableClasses.map((cls) => (
                         <button
                           key={cls.id}
                           type="button"
                           onClick={() => handleAddClass(cls.id)}
                           disabled={isAddingClass}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "var(--space-2)",
-                            padding: "var(--space-2) var(--space-3)",
-                            width: "100%",
-                            background: "none",
-                            border: "none",
-                            cursor: isAddingClass ? "not-allowed" : "pointer",
-                            textAlign: "left",
-                            fontSize: "var(--text-sm)",
-                            color: "rgb(var(--canvas-fg-1))",
-                            borderBottom: "1px solid rgb(var(--canvas-fg-4))",
-                            opacity: isAddingClass ? 0.5 : 1,
-                          }}
+                          className="class-dropdown-option"
                           data-testid={`individual-class-option-${cls.id}`}
                         >
-                          <span
-                            className="mono"
-                            style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}
-                          >
+                          <span className="mono class-option-id">
                             {cls.id.slice(0, 8)}
                           </span>
                           <span>{cls.title}</span>
@@ -531,7 +501,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 className="stack-lg"
               >
                 {inheritedPropertiesError && (
-                  <div style={{ marginBottom: "var(--space-3)" }}>
+                  <div className="drawer-error-wrap">
                     <ErrorBanner
                       error={
                         inheritedPropertiesErrorObj ||
@@ -545,9 +515,9 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 )}
                 {isLoadingProperties ? (
                   <div className="stack">
-                    <div className="skeleton" style={{ height: 40 }} />
-                    <div className="skeleton" style={{ height: 40 }} />
-                    <div className="skeleton" style={{ height: 40 }} />
+                    <div className="skeleton skeleton-h40" />
+                    <div className="skeleton skeleton-h40" />
+                    <div className="skeleton skeleton-h40" />
                   </div>
                 ) : inheritedPropertiesError ? null : inheritedProperties.length === 0 ? (
                   <EmptyState
@@ -555,54 +525,37 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                     description={individualsCopy.drawer.noPropertiesDescription}
                   />
                 ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 100px 1fr 120px",
-                      gap: "var(--space-2)",
-                      fontSize: "var(--text-sm)",
-                    }}
-                  >
-                    <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                  <div className="props-grid">
+                    <div className="props-grid-header">
                       {individualsCopy.drawer.propertyGridHeaders.property}
                     </div>
-                    <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                    <div className="props-grid-header">
                       {individualsCopy.drawer.propertyGridHeaders.type}
                     </div>
-                    <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                    <div className="props-grid-header">
                       {individualsCopy.drawer.propertyGridHeaders.value}
                     </div>
-                    <div style={{ fontWeight: 500, paddingBottom: "var(--space-2)" }}>
+                    <div className="props-grid-header">
                       {individualsCopy.drawer.propertyGridHeaders.source}
                     </div>
 
                     {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
                       <Fragment key={`${prop.property_identifier}-${idx}`}>
                         <div>
-                          <span className="mono" style={{ fontSize: "var(--text-xs)" }}>
+                          <span className="mono prop-identifier">
                             {prop.property_identifier}
                           </span>
                         </div>
                         <div>
-                          <span
-                            style={{
-                              backgroundColor: "rgb(var(--canvas-bg-2))",
-                              padding: "2px 6px",
-                              borderRadius: "var(--radius-sm)",
-                              fontSize: "var(--text-xs)",
-                              display: "inline-block",
-                            }}
-                          >
+                          <span className="prop-type-badge">
                             {prop.datatype || individualsCopy.drawer.propertyTypeDefault}
                           </span>
                         </div>
                         <div>
-                          <span style={{ color: "rgb(var(--canvas-fg-3))" }}>—</span>
+                          <span className="prop-placeholder">—</span>
                         </div>
                         <div>
-                          <span
-                            style={{ color: "rgb(var(--canvas-fg-3))", fontSize: "var(--text-xs)" }}
-                          >
+                          <span className="prop-source-label">
                             {individualsCopy.drawer.propertySourcePlaceholder}
                           </span>
                         </div>
@@ -631,40 +584,21 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         individual.class_ids.includes(id),
                       );
                       return (
-                        <div
-                          key={ind.id}
-                          style={{
-                            padding: "var(--space-2)",
-                            background: "rgb(var(--canvas-bg-2))",
-                            borderRadius: "var(--radius-sm)",
-                          }}
-                        >
-                          <div style={{ fontWeight: 500, marginBottom: "var(--space-1)" }}>
+                        <div key={ind.id} className="related-individual-card">
+                          <div className="related-individual-card__title">
                             <span
-                              style={{
-                                color: "var(--cyan-600, #0891b2)",
-                                cursor: "pointer",
-                                textDecoration: "underline",
-                              }}
+                              className="related-individual-link"
                               onClick={() => onSelectIndividual?.(ind.id)}
                               data-testid={`related-individual-name-${ind.id}`}
                             >
                               {ind.title}
                             </span>
                           </div>
-                          <div
-                            style={{ display: "flex", gap: "var(--space-1)", flexWrap: "wrap" }}
-                          >
+                          <div className="related-class-chips">
                             {sharedClasses.map((classId) => (
                               <span
                                 key={classId}
-                                style={{
-                                  backgroundColor: "rgb(var(--canvas-bg-3))",
-                                  color: "rgb(var(--canvas-fg-1))",
-                                  padding: "2px 6px",
-                                  borderRadius: "2px",
-                                  fontSize: "var(--text-xs)",
-                                }}
+                                className="related-class-badge"
                                 data-testid={`related-individual-class-${classId}`}
                               >
                                 {classMap.get(classId) ||
@@ -676,14 +610,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                       );
                     })}
                     {relatedIndividuals.length === 10 && (
-                      <div
-                        style={{
-                          textAlign: "center",
-                          fontSize: "var(--text-sm)",
-                          color: "rgb(var(--canvas-fg-3))",
-                          marginTop: "var(--space-2)",
-                        }}
-                      >
+                      <div className="related-show-more-note">
                         {individualsCopy.drawer.showingResults}
                       </div>
                     )}

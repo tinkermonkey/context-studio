@@ -1,0 +1,165 @@
+@layer app {
+  /* Skeleton fixed-height variants used in loading states */
+  .skeleton-h40 {
+    height: 40px;
+  }
+
+  .skeleton-h80 {
+    height: 80px;
+  }
+
+  .skeleton-h200 {
+    height: 200px;
+  }
+
+  /* Error banner bottom spacing wrapper */
+  .drawer-error-wrap {
+    margin-bottom: var(--space-3);
+  }
+
+  /* Flex row of class chips */
+  .class-chips-row {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  /* Positioning context for the typeahead dropdown */
+  .typeahead-wrap {
+    position: relative;
+  }
+
+  /* Full-width scrollable dropdown for class search */
+  .class-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgb(var(--canvas-bg));
+    border: 1px solid rgb(var(--canvas-fg-4));
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Option button inside the class dropdown */
+  .class-dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: var(--text-sm);
+    color: rgb(var(--canvas-fg-1));
+    border-bottom: 1px solid rgb(var(--canvas-fg-4));
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .class-dropdown-option:last-child {
+    border-bottom: none;
+  }
+
+  .class-dropdown-option:hover {
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .class-dropdown-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Short ID label inside a class option */
+  .class-option-id {
+    font-size: var(--text-xs);
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* Inherited properties four-column grid */
+  .props-grid {
+    display: grid;
+    grid-template-columns: 1fr 100px 1fr 120px;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  /* Header cell in the properties grid */
+  .props-grid-header {
+    font-weight: 500;
+    padding-bottom: var(--space-2);
+  }
+
+  /* Property identifier shown in monospace xs */
+  .prop-identifier {
+    font-size: var(--text-xs);
+  }
+
+  /* Property datatype badge */
+  .prop-type-badge {
+    background: rgb(var(--canvas-bg-2));
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    display: inline-block;
+  }
+
+  /* Muted placeholder dash in grid value cell */
+  .prop-placeholder {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* Muted xs source label */
+  .prop-source-label {
+    color: rgb(var(--canvas-fg-3));
+    font-size: var(--text-xs);
+  }
+
+  /* Related individual card background */
+  .related-individual-card {
+    padding: var(--space-2);
+    background: rgb(var(--canvas-bg-2));
+    border-radius: var(--radius-sm);
+  }
+
+  /* Title row inside a related individual card */
+  .related-individual-card__title {
+    font-weight: 500;
+    margin-bottom: var(--space-1);
+  }
+
+  /* Clickable individual name styled with cyan accent */
+  .related-individual-link {
+    color: var(--accent-cyan);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* Row of shared class mini-badges */
+  .related-class-chips {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+  }
+
+  /* Mini class badge shown under a related individual */
+  .related-class-badge {
+    background: var(--canvas-bg-3);
+    color: rgb(var(--canvas-fg-1));
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: var(--text-xs);
+  }
+
+  /* "Showing first N results" footer note */
+  .related-show-more-note {
+    text-align: center;
+    font-size: var(--text-sm);
+    color: rgb(var(--canvas-fg-3));
+    margin-top: var(--space-2);
+  }
+}
