@@ -51,12 +51,13 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   ),
   Select: (() => {
     const S: any = React.forwardRef(
-      ({ error = false, className = "", children, ...props }: any, ref: any) =>
+      ({ error = false, className = "", onChange, children, ...props }: any, ref: any) =>
         React.createElement(
           "select",
           {
             ref,
             className: ["select", error && "select--error", className].filter(Boolean).join(" "),
+            onChange: onChange ? (e: any) => onChange(e.target.value) : undefined,
             ...props,
           },
           children,

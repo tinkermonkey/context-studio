@@ -550,7 +550,7 @@ describe("EditableField", () => {
       await user.click(screen.getByTestId("status-field-view"));
       fireEvent.change(screen.getByRole("combobox"), { target: { value: "inactive" } });
       await waitFor(() => {
-        expect(onSave).toHaveBeenCalled();
+        expect(onSave).toHaveBeenCalledWith("inactive");
       });
     });
   });

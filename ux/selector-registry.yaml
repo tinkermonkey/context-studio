@@ -2474,3 +2474,45 @@ selectors:
   - selector: pipeline-type-no-selection
     component: src/routes/app/pipelines/index.tsx
     description: Empty state shown in the right panel when no pipeline type is selected
+
+  # ── EditableField unit-test fixtures ──
+  - selector: name-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (TextInput kind) in unit tests
+  - selector: name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the name EditableField in unit tests
+  - selector: name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: TextInput in edit mode of the name EditableField in unit tests
+  - selector: name-field-saved
+    component: src/components/ui/EditableField.tsx
+    description: Saved status indicator on the name EditableField in unit tests
+  - selector: status-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (Select kind) in unit tests
+  - selector: status-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the status EditableField in unit tests
+  - selector: notes-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (TextArea kind) in unit tests
+  - selector: notes-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the notes EditableField in unit tests
+  - selector: notes-field-input
+    component: src/components/ui/EditableField.tsx
+    description: TextArea in edit mode of the notes EditableField in unit tests
+  - selector: count-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (NumberInput kind) in unit tests
+  - selector: count-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the count EditableField in unit tests
+  - selector: count-field-input
+    component: src/components/ui/EditableField.tsx
+    description: NumberInput in edit mode of the count EditableField in unit tests
+  # ── InlineInspector unit-test fixtures ──
+  - selector: my-inspector
+    component: src/components/ui/InlineInspector.tsx
+    description: InlineInspector root element fixture in unit tests
