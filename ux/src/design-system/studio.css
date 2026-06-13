@@ -429,7 +429,7 @@ select.input {
 /* ------------ Two-pane layouts ------------ */
 .split-2 {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr var(--inspector-width, 380px);
   gap: 16px;
   align-items: start;
 }
@@ -1010,6 +1010,68 @@ body.dark-canvas .input:focus {
   border-color: rgb(var(--accent-primary));
   box-shadow: 0 0 0 3px color-mix(in oklab, rgb(var(--accent-primary)) 15%, transparent);
 }
+/* ------------ Active Dataset Banner ------------ */
+.active-dataset-banner {
+  background: rgb(var(--canvas-bg-2));
+  border: 1px solid rgb(var(--status-emerald));
+  border-radius: var(--radius-md, 6px);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.active-dataset-banner__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.active-dataset-banner__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--status-emerald));
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.active-dataset-banner__title-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgb(var(--status-emerald));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.active-dataset-banner__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-dataset-banner__name {
+  font-weight: 600;
+  color: rgb(var(--canvas-fg-1));
+  margin-right: 8px;
+}
+
+.active-dataset-banner__metrics {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+}
+
+/* Link cell styled with cyan accent (dataset titles, etc.) */
+.link-cyan {
+  color: var(--accent-cyan);
+  font-weight: 500;
+  cursor: pointer;
+}
+
 /* ------------ Error Banner ------------ */
 .error-banner {
   display: flex;
@@ -1249,6 +1311,122 @@ body.dark-canvas .diff-added {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* ------------ InlineInspector ------------ */
+.inline-inspector {
+  display: flex;
+  flex-direction: column;
+}
+
+.inline-inspector__editing-note {
+  padding: 6px 16px;
+  background: rgb(var(--status-cyan) / 0.08);
+  border-bottom: 1px solid rgb(var(--canvas-border));
+  color: rgb(var(--canvas-fg-3));
+  font-size: var(--text-xs);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ------------ EditableField ------------ */
+.editable-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.editable-field__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editable-field__view {
+  padding: 6px 10px;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+  color: rgb(var(--canvas-fg-1));
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+  display: flex;
+  align-items: center;
+}
+
+.editable-field__view:hover {
+  border-color: rgb(var(--canvas-border));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.editable-field__view:focus {
+  outline: none;
+  border-color: rgb(var(--accent-primary));
+  background: rgb(var(--canvas-bg-2));
+}
+
+.editable-field__view--disabled {
+  cursor: default;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.editable-field__view--disabled:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.editable-field__placeholder {
+  color: rgb(var(--canvas-fg-4));
+}
+
+.editable-field__saved-indicator {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-emerald));
+  font-weight: 500;
+}
+
+.editable-field__error-indicator {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose));
+}
+
+.editable-field__validation-error {
+  font-size: var(--text-xs);
+  color: rgb(var(--status-rose));
+  margin-top: 2px;
+}
+
+/* ------------ ClassChip ------------ */
+.class-chip {
+  padding: 4px 8px;
+  background: rgb(var(--canvas-bg-2));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.class-chip__controls {
+  display: flex;
+  gap: 2px;
+}
+
+.class-chip__btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  color: rgb(var(--canvas-fg-3));
+  display: flex;
+  align-items: center;
+}
+
+.class-chip__btn--disabled {
+  cursor: not-allowed;
+  color: rgb(var(--canvas-fg-4));
+  opacity: 0.5;
 }
 
 /* ------------ Stat grid 4-col override (keep 4 cols down to 1024px) ------------ */

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
@@ -39,7 +40,7 @@ describe("Individual Detail Page (Drawer Component)", () => {
         http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
       );
 
-      const { container } = render(<IndividualDrawer individualId={null} onClose={() => {}} />);
+      const { container } = render(<IndividualDrawer individualId={null} />);
 
       expect(
         container.querySelector('[data-testid="individual-detail-page"]'),
@@ -77,14 +78,16 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
-        expect(screen.getByDisplayValue("John Doe")).toBeInTheDocument();
+        expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
       });
     });
 
     it("displays read-only ID field", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -109,7 +112,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         const idInput = screen.getByTestId("individual-drawer-id") as HTMLInputElement;
@@ -119,6 +127,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("displays editable name input field", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -143,15 +153,25 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
-        const nameInput = screen.getByTestId("individual-drawer-name-input") as HTMLInputElement;
-        expect(nameInput.value).toBe("Original Title");
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
       });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("individual-drawer-name-field-view")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("individual-drawer-name-field-view"));
+
+      const nameInput = screen.getByTestId("individual-drawer-name-field-input") as HTMLInputElement;
+      expect(nameInput.value).toBe("Original Title");
     });
 
     it("displays editable description textarea", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -177,17 +197,27 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
       await waitFor(() => {
-        const descInput = screen.getByTestId(
-          "individual-drawer-description-input",
-        ) as HTMLTextAreaElement;
-        expect(descInput.value).toBe("This is a test description");
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
       });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("individual-drawer-description-field-view")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("individual-drawer-description-field-view"));
+
+      const descInput = screen.getByTestId(
+        "individual-drawer-description-field-input",
+      ) as HTMLTextAreaElement;
+      expect(descInput.value).toBe("This is a test description");
     });
 
     it("displays class membership panel with class chips", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -216,7 +246,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-list")).toBeInTheDocument();
@@ -227,6 +262,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("displays class remove buttons with correct testids", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -255,7 +292,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-remove-class-person")).toBeInTheDocument();
@@ -264,6 +306,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("displays class typeahead input for adding classes", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -288,7 +332,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-typeahead")).toBeInTheDocument();
@@ -296,6 +345,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("displays inherited properties panel", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -320,7 +371,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();
@@ -328,6 +384,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("displays related individuals panel", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -357,7 +415,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("related-individuals-panel")).toBeInTheDocument();
@@ -365,6 +428,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
     });
 
     it("renders the inspector actions region (autosave status)", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -389,11 +454,14 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
-      // IndividualDrawer surfaces its actions (autosave status / revert) through the
-      // InspectorPanel actions slot; the close affordance lives in the parent Drawer wrapper.
-      // Poll for the populated state, whose InspectorPanel renders the actions region.
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
+
+      // In edit mode the InlineInspector renders inspector-autosave-status in the actions slot.
       await waitFor(() => {
         expect(screen.getByTestId("inspector-autosave-status")).toBeInTheDocument();
       });
@@ -405,6 +473,8 @@ describe("Individual Detail Page (Drawer Component)", () => {
   // ========================================================================
   describe("drawer error state", () => {
     it("handles error loading inherited properties gracefully", async () => {
+      const user = userEvent.setup();
+
       const mockIndividuals = createListIndividuals([
         createIndividual({
           id: "ind-001",
@@ -429,7 +499,12 @@ describe("Individual Detail Page (Drawer Component)", () => {
         ),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId("inline-inspector-edit-button"));
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-properties-panel")).toBeInTheDocument();

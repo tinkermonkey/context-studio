@@ -1763,9 +1763,11 @@ class OntologyService:
         property_id: str,
         title: str | None = None,
         description: str | None = None,
+        is_relevant: bool | None = None,
+        update_is_relevant: bool = False,
     ) -> PropertyDefinition:
         """
-        Update a property definition's title and/or description.
+        Update a property definition's title, description, and/or relevance flag.
 
         Note: identifier cannot be changed after creation.
 
@@ -1773,6 +1775,12 @@ class OntologyService:
             property_id: The property definition ID
             title: New title (optional)
             description: New description (optional)
+            is_relevant: New relevance flag (optional); only applied when
+                ``update_is_relevant=True`` — passing ``is_relevant=False``
+                alone has no effect
+            update_is_relevant: Set to True to apply the ``is_relevant`` value;
+                defaults to False so callers that do not intend to change
+                relevance are unaffected
 
         Returns:
             The updated PropertyDefinition
@@ -1799,6 +1807,9 @@ class OntologyService:
 
         if description is not None:
             prop_def.description = description
+
+        if update_is_relevant:
+            prop_def.is_relevant = is_relevant
 
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
@@ -1868,9 +1879,10 @@ class OntologyService:
         title: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> ConceptScheme:
         """
-        Update a concept scheme's title, description, and/or color.
+        Update a concept scheme's title, description, color, and/or parent taxonomy.
 
         Identifier is immutable post-create and cannot be updated.
 
@@ -1879,31 +1891,53 @@ class OntologyService:
             title: New title (optional)
             description: New description (optional)
             color: New hex color string (optional)
+            taxonomy_id: Move scheme to this taxonomy ID (optional)
 
         Returns:
             The updated ConceptScheme
 
         Raises:
-            EntityNotFoundError: If the concept scheme does not exist
-            DuplicateEntityError: If the title already exists
+            EntityNotFoundError: If the concept scheme or target taxonomy does not exist
+            DuplicateEntityError: If the title already exists in the target taxonomy
             ValueError: If the title is empty or color is invalid
         """
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
-        # Check if new title is unique
+        original_taxonomy_id = scheme.taxonomy_id
+
+        # Resolve the effective taxonomy for uniqueness checks
+        effective_taxonomy_id = taxonomy_id if taxonomy_id is not None else scheme.taxonomy_id
+
+        # Validate target taxonomy exists before any mutation
+        if taxonomy_id is not None and taxonomy_id != scheme.taxonomy_id:
+            target_taxonomy = self._repository.get_taxonomy(taxonomy_id)
+            if target_taxonomy is None:
+                raise EntityNotFoundError("Taxonomy", taxonomy_id)
+            scheme.taxonomy_id = taxonomy_id
+
+        # Check if new title is unique within the effective taxonomy
         if title is not None and title != scheme.title:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             existing_schemes = self._repository.list_concept_schemes(
-                taxonomy_id=scheme.taxonomy_id, limit=None
+                taxonomy_id=effective_taxonomy_id, limit=None
             )
             if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
                 raise DuplicateEntityError(
-                    f"ConceptScheme with title '{title}' already exists in this" " taxonomy"
+                    f"ConceptScheme with title '{title}' already exists in this taxonomy"
                 )
             scheme.title = title
+        elif taxonomy_id is not None and taxonomy_id != original_taxonomy_id:
+            # Moving without changing title — verify existing title is unique in target taxonomy
+            existing_schemes = self._repository.list_concept_schemes(
+                taxonomy_id=taxonomy_id, limit=None
+            )
+            if any(s.id != concept_scheme_id and s.title == scheme.title for s in existing_schemes):
+                raise DuplicateEntityError(
+                    f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy"
+                )
 
         if description is not None:
             scheme.description = description

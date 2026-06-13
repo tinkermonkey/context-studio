@@ -1,49 +1,45 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button, Modal, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
+import { useToasts } from "@/components/ui/Toast";
+import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
+import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
+import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
-import { RelationshipForm } from "@/components/schema/RelationshipForm";
-import { useRelationships, useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import { useRelationships, useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useToasts } from "@/components/ui/Toast";
 import { relationshipsCopy } from "./relationships/-copy";
 import type { components } from "@/api/types";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
-interface RelationshipsPageContentProps {
-  classesById: Map<string, string>;
-  propertiesById: Map<string, { title: string; identifier: string }>;
-  classesError?: Error | null;
-  onRetryClasses?: () => void;
-  propertiesError?: Error | null;
-  onRetryProperties?: () => void;
-  onCreateClick?: () => void;
-}
-
-function RelationshipsPageContent({
-  classesById,
-  propertiesById,
-  classesError,
-  onRetryClasses,
-  propertiesError,
-  onRetryProperties,
-  onCreateClick,
-}: RelationshipsPageContentProps) {
-  const [selectedId, setSelectedId] = useState<string>();
+export function RelationshipsPage() {
+  const surfaceRef = useRef<EntitySurfaceHandle>(null);
+  const navigate = useNavigate();
+  const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
 
   const { data: listResponse, isLoading, error, refetch } = useRelationships();
-  const relationships = listResponse?.items || [];
+  const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
+  const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
+  const { data: taxData } = useTaxonomies();
+  const { data: schemesData } = useSchemes();
 
-  const filteredData = relationships.filter((rel: RelationshipResponse) => {
+  const deleteMutation = useDeleteRelationship();
+
+  const classes = classesResponse?.items ?? [];
+  const properties = propertiesResponse?.items ?? [];
+  const classesById = new Map(classes.map((c) => [c.id, c.title]));
+  const propertiesById = new Map(
+    properties.map((p) => [p.id, { title: p.title, identifier: p.identifier }]),
+  );
+
+  const allData = listResponse?.items ?? [];
+  const hasFilter = !!searchFilter;
+  const filteredData = allData.filter((rel: RelationshipResponse) => {
     const sourceClassName = classesById.get(rel.source_id)?.toLowerCase() ?? "";
     const targetClassName = classesById.get(rel.target_id)?.toLowerCase() ?? "";
     const prop = propertiesById.get(rel.property_definition_id);
@@ -55,6 +51,40 @@ function RelationshipsPageContent({
       propertyName.includes(search)
     );
   });
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
+    { id: "schemes", label: "Schemes", count: schemesData?.total },
+    { id: "classes", label: "Classes", count: classesResponse?.total },
+    { id: "properties", label: "Properties", count: propertiesResponse?.total },
+    { id: "relationships", label: "Relationships", count: listResponse?.items?.length ?? listResponse?.total },
+  ];
+
+  function handleTabNavigate(tabId: string) {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  }
+
+  async function handleDelete(ids: string[]) {
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
+      toast("success", relationshipsCopy.delete.successToast);
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} relationship${failed === 1 ? "" : "s"}`;
+      toast("error", msg);
+      throw new Error(msg);
+    }
+  }
 
   const relationshipColumns: Column<RelationshipResponse>[] = [
     {
@@ -121,168 +151,24 @@ function RelationshipsPageContent({
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="stack">
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load relationships"
-        />
-      </div>
-    );
-  }
-
-  if (relationships.length === 0) {
-    return (
-      <EmptyState
-        title={relationshipsCopy.emptyState.title}
-        description={relationshipsCopy.emptyState.description}
-        action={{
-          label: relationshipsCopy.emptyState.actionLabel,
-          onClick: () => onCreateClick?.(),
-        }}
-      />
-    );
-  }
-
-  const hasFilters = !!searchFilter;
-  const showFilteredEmpty = relationships.length > 0 && filteredData.length === 0 && hasFilters;
-
-  return (
-    <div data-testid="relationships-page" className="stack">
-      <FilterBar
-        data-testid="schema-filter-bar"
-        onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by source, predicate, or target…"
-        showingCount={filteredData.length}
-        totalCount={relationships.length}
-      />
-
-      {classesError && onRetryClasses && (
-        <ErrorBanner
-          error={classesError}
-          onRetry={onRetryClasses}
-          message="Failed to load classes"
-          compact
-        />
-      )}
-
-      {propertiesError && onRetryProperties && (
-        <ErrorBanner
-          error={propertiesError}
-          onRetry={onRetryProperties}
-          message="Failed to load properties"
-          compact
-        />
-      )}
-
-      {showFilteredEmpty ? (
-        <EmptyState
-          title={relationshipsCopy.filteredEmpty.title}
-          description={relationshipsCopy.filteredEmpty.description}
-        />
-      ) : (
-        <SchemaPageLayout
-          data={filteredData}
-          selectedId={selectedId}
-          renderInspectorContent={(rel) => (
-            <RelationshipDrawer
-              key={rel.id}
-              relationship={rel}
-              sourceName={classesById.get(rel.source_id) || "—"}
-              targetName={classesById.get(rel.target_id) || "—"}
-              propertyName={propertiesById.get(rel.property_definition_id)?.title || "—"}
-              onClose={() => setSelectedId(undefined)}
-            />
-          )}
-        >
-          <SchemaTable
-            columns={relationshipColumns}
-            data={filteredData}
-            onRowSelect={setSelectedId}
-            selectedId={selectedId}
-          />
-        </SchemaPageLayout>
-      )}
-    </div>
-  );
-}
-
-function RelationshipsPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
-  const {
-    data: propertiesResponse,
-    error: propertiesError,
-    refetch: refetchProperties,
-  } = useProperties();
-  const createMutation = useCreateRelationship();
-  const { toast } = useToasts();
-
-  const classes = classesResponse?.items || [];
-  const properties = propertiesResponse?.items || [];
-
-  const classesById = new Map(classes.map((c) => [c.id, c.title]));
-  const propertiesById = new Map(
-    properties.map((p) => [p.id, { title: p.title, identifier: p.identifier }]),
-  );
-
-  const { data: taxData } = useTaxonomies();
-  const { data: schemesData } = useSchemes();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesResponse?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
-    },
+  const rowMenuActions = [
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
-  const handleTabNavigate = (tabId: string) => {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  };
+  const bulkActions = [
+    { id: "delete", label: "Delete", variant: "danger" as const },
+  ];
 
-  const handleCreateSubmit = async (data: components["schemas"]["RelationshipCreateRequest"]) => {
-    setCreateError(null);
-    try {
-      await createMutation.mutateAsync(data);
-      setShowCreateModal(false);
-      toast("success", "Relationship created successfully");
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create relationship");
-    }
-  };
+  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const emptyStateTitle = filteredEmpty
+    ? relationshipsCopy.filteredEmpty.title
+    : relationshipsCopy.emptyState.title;
+  const emptyStateDescription = filteredEmpty
+    ? relationshipsCopy.filteredEmpty.description
+    : relationshipsCopy.emptyState.description;
 
   return (
-    <div className="stack">
+    <div className="stack" data-testid="relationships-page">
       <PageHeader
         eyebrow="SCHEMA · node_type · relationship"
         title="Relationships"
@@ -295,7 +181,7 @@ function RelationshipsPageWrapper() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => surfaceRef.current?.startCreate()}
               data-testid="relationship-add-button"
             >
               <Icon name="plus" size={13} /> New relationship
@@ -306,49 +192,66 @@ function RelationshipsPageWrapper() {
 
       <TabBar tabs={schemaTabs} activeTabId="relationships" onSelectTab={handleTabNavigate} />
 
-      <div data-testid="relationships-content">
-        <RelationshipsPageContent
-          classesById={classesById}
-          propertiesById={propertiesById}
-          classesError={classesError}
-          onRetryClasses={() => refetchClasses()}
-          propertiesError={propertiesError}
-          onRetryProperties={() => refetchProperties()}
-          onCreateClick={() => setShowCreateModal(true)}
+      {error ? (
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message="Failed to load relationships"
         />
-      </div>
-
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Relationship"
-        data-testid="relationship-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
+      ) : (
+        <>
+          {classesError && (
             <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create relationship"
+              error={classesError}
+              onRetry={() => refetchClasses()}
+              message="Failed to load classes"
+              compact
             />
-          </div>
-        )}
-        <RelationshipForm
-          onSubmit={handleCreateSubmit}
-          isLoading={createMutation.isPending}
-          classes={classes}
-          properties={properties}
-        />
-      </Modal>
+          )}
+          {propertiesError && (
+            <ErrorBanner
+              error={propertiesError}
+              onRetry={() => refetchProperties()}
+              message="Failed to load properties"
+              compact
+            />
+          )}
+
+          <FilterBar
+            data-testid="schema-filter-bar"
+            onSearchChange={setSearchFilter}
+            searchPlaceholder="Search by source, predicate, or target…"
+            showingCount={filteredData.length}
+            totalCount={allData.length}
+          />
+
+          <EntitySurface
+            ref={surfaceRef}
+            entityType="relationship"
+            data={filteredData}
+            isLoading={isLoading}
+            columns={relationshipColumns}
+            renderInspector={(entity) => (
+              <RelationshipDrawer
+                key={entity.id}
+                relationship={entity}
+                sourceName={classesById.get(entity.source_id) || "—"}
+                targetName={classesById.get(entity.target_id) || "—"}
+                propertyName={propertiesById.get(entity.property_definition_id)?.title || "—"}
+              />
+            )}
+            rowMenuActions={rowMenuActions}
+            onDeleteEntity={handleDelete}
+            bulkActions={bulkActions}
+            emptyStateTitle={emptyStateTitle}
+            emptyStateDescription={emptyStateDescription}
+            emptyStateShowAction={!filteredEmpty}
+            testId="relationships-surface"
+          />
+        </>
+      )}
     </div>
   );
-}
-
-export function RelationshipsPage() {
-  return <RelationshipsPageWrapper />;
 }
 
 export const Route = createFileRoute("/app/schema/relationships")({

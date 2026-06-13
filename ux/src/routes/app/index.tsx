@@ -175,7 +175,7 @@ export function Dashboard() {
         message="Could not load taxonomies"
         compact
       />
-      <StatGrid columns={3}>
+      <StatGrid columns={4}>
         <StatTile
           label="Taxonomies"
           value={taxonomiesLoading ? "—" : String(taxonomyCount)}
@@ -183,6 +183,12 @@ export function Dashboard() {
           icon="schema"
           meta={taxonomiesLoading ? undefined : `${taxonomyCount} active`}
           sparkData={meaningfulSparkData(trends?.taxonomies)}
+        />
+        <StatTile
+          label="Concept Schemes"
+          value={schemesLoading ? "—" : String(schemeCount)}
+          color="amber"
+          icon="layout"
         />
         <StatTile
           label="Classes"

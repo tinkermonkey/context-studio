@@ -384,7 +384,7 @@ Before using any `@tinkermonkey/heimdall-ui` component, read the relevant skill 
 <SchemaPageLayout
   data={filteredData}
   selectedId={selectedId}
-  renderDrawerContent={(entity) => <MyDrawer ... />}
+  renderInspectorContent={(entity) => <MyDrawer ... />}
 >
   <MyTable ... />
 </SchemaPageLayout>

@@ -143,12 +143,9 @@ describe("Relationships Schema Page", () => {
       render(<RelationshipsPage />);
 
       await waitFor(() => {
-        // Page renders without errors.
-        expect(screen.getByTestId("relationships-page")).toBeInTheDocument();
+        expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
       });
 
-      // The Predicate column resolves the property identifier ("— works_for →").
-      expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
       // Source and target columns resolve the class titles.
       expect(screen.getByText("Person")).toBeInTheDocument();
       expect(screen.getByText("Company")).toBeInTheDocument();
@@ -174,14 +171,8 @@ describe("Relationships Schema Page", () => {
 
       render(<RelationshipsPage />);
 
-      await waitFor(() => {
-        // Verify the component loads
-        expect(screen.getByTestId("relationships-page")).toBeInTheDocument();
-      });
-
-      // The identifier cell renders the id ("rel-123") in a mono-font span,
-      // no longer a <code> element.
-      const monoId = screen.getByText("rel-123");
+      // The identifier cell renders the id ("rel-123") in a mono-font span.
+      const monoId = await waitFor(() => screen.getByText("rel-123"));
       expect(monoId.tagName.toLowerCase()).toBe("span");
       expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
     });

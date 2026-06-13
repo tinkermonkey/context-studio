@@ -44,6 +44,9 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 )
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.pipeline_config_repo import (
+    PipelineConfigurationRepository as PipelineConfigRepo,
+)
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -65,6 +68,7 @@ from adapters.web.interchange_routes import router as interchange_router
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
+from adapters.web.pipelines_routes import config_router as pipeline_config_router
 from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
@@ -211,10 +215,11 @@ async def lifespan(app: FastAPI):
             " InterchangeRepository created"
         )
 
-        db_manager.get_operations_session_factory()
+        operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_run_repo = PipelineRepository(local_session_factory)
         batch_repo = BatchRepository(local_session_factory)
-        logger.info("PipelineRunRepository and BatchRepository created")
+        pipeline_config_repo = PipelineConfigRepo(operations_session_factory)
+        logger.info("PipelineRunRepository, BatchRepository, and PipelineConfigRepo created")
 
         # Initialize pipeline registries (currently empty—implementations/configs added at startup)
         implementation_registry = PipelineImplementationRegistry()
@@ -343,6 +348,35 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Schema node connection refinement pipeline registered")
+
+        # Load user-created pipeline configurations from DB into the in-memory registry
+        try:
+            from domain.pipelines.entities import PipelineType as _PipelineType
+            user_configs = pipeline_config_repo.list_all()
+            for user_cfg in user_configs:
+                try:
+                    ptype = _PipelineType(user_cfg.pipeline_type)
+                    config_dict = {
+                        "provider": user_cfg.provider,
+                        "model": user_cfg.model,
+                        "system_prompt": user_cfg.system_prompt or "",
+                        "user_prompt_template": user_cfg.user_prompt_template,
+                        "temperature": user_cfg.temperature,
+                        "max_tokens": user_cfg.max_tokens,
+                        "top_p": user_cfg.top_p,
+                        "enabled": user_cfg.enabled,
+                    }
+                    config_registry.register(
+                        ptype, user_cfg.implementation_id, user_cfg.config_ref, config_dict
+                    )
+                except Exception as load_exc:
+                    logger.warning(
+                        f"Failed to load user config {user_cfg.id} into registry: {load_exc}"
+                    )
+            if user_configs:
+                logger.info(f"Loaded {len(user_configs)} user pipeline configurations from DB")
+        except Exception as cfg_exc:
+            logger.warning(f"Failed to load user pipeline configurations: {cfg_exc}")
 
         # Versioning service with sync adapter
         sync_config = settings.sync
@@ -603,6 +637,7 @@ async def lifespan(app: FastAPI):
         app.state.implementation_registry = implementation_registry
         app.state.config_registry = config_registry
         app.state.type_registry = type_registry
+        app.state.pipeline_config_repo = pipeline_config_repo
 
         # Pipeline apply services — materialize pipeline output into ontology entities
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
@@ -673,6 +708,7 @@ app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipelines_router)
+app.include_router(pipeline_config_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)

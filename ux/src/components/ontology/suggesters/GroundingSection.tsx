@@ -1,0 +1,253 @@
+import { useState } from "react";
+import { Button } from "@tinkermonkey/heimdall-ui";
+import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
+import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
+import { useToasts } from "@/components/ui/Toast";
+import type { components } from "@/api/types";
+import "./Suggesters.css";
+
+type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
+
+interface GroundingSectionProps {
+  classId: string;
+  externalRefs?: ExternalReferenceResponse[];
+  readOnly?: boolean;
+  onRemoveRef?: (ref: ExternalReferenceResponse) => void;
+}
+
+export function GroundingSection({ classId, externalRefs = [], readOnly = false, onRemoveRef }: GroundingSectionProps) {
+  const [runId, setRunId] = useState<string | null>(null);
+  const [appliedUris, setAppliedUris] = useState<Set<string>>(new Set());
+  const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
+
+  const { toast } = useToasts();
+  const runMutation = useRunPipeline();
+  const applyMutation = useApplyRun();
+  const { data: run } = usePipelineRun(runId ?? "");
+
+  const isRunning =
+    runMutation.isPending ||
+    run?.status === "PENDING" ||
+    run?.status === "RUNNING";
+  const isCompleted = run?.status === "COMPLETED";
+  const isFailed = run?.status === "FAILED";
+
+  const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+
+  const visibleCandidates = allCandidates
+    .map((c, i) => ({ ...c, originalIdx: i }))
+    .filter((c) => !dismissedUris.has(c.uri));
+
+  const handleSuggest = async () => {
+    setRunId(null);
+    setAppliedUris(new Set());
+    setDismissedUris(new Set());
+    try {
+      const result = await runMutation.mutateAsync({
+        type: "schema_node_grounding",
+        request: {
+          implementation_id: "default",
+          configuration_ref: "default",
+          node_id: classId,
+        },
+      });
+      setRunId(result.id);
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to run grounding pipeline");
+    }
+  };
+
+  const handleAdd = async (uri: string, confidence: number) => {
+    if (!runId) return;
+    try {
+      await applyMutation.mutateAsync({
+        runId,
+        params: { confidence_threshold: confidence, node_id: classId },
+      });
+      // The apply endpoint applies all candidates at or above the threshold
+      const applied = new Set(allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri));
+      setAppliedUris((prev) => new Set([...prev, ...applied]));
+      toast("success", "Grounding applied");
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : "Failed to apply grounding");
+    }
+  };
+
+  const handleDismiss = (uri: string) => {
+    setDismissedUris((prev) => new Set([...prev, uri]));
+  };
+
+  const hasRun = isCompleted || isRunning || isFailed;
+
+  if (readOnly) {
+    return (
+      <div className="grounding-section" data-testid="grounding-section">
+        {externalRefs.length > 0 && (
+          <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
+            {externalRefs.map((ref, i) => (
+              <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+                <div className="grounding-ref-name">{ref.identifier}</div>
+                {ref.uri && <span className="grounding-proposal-url">{ref.uri}</span>}
+                <span className="grounding-ref-source">{ref.source}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grounding-section" data-testid="grounding-section">
+      {externalRefs.length > 0 && (
+        <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
+          {externalRefs.map((ref, i) => (
+            <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+              <div className="grounding-ref-header">
+                <div className="grounding-ref-name">{ref.identifier}</div>
+                {onRemoveRef && (
+                  <button
+                    type="button"
+                    className="grounding-ref-remove-btn"
+                    onClick={() => onRemoveRef(ref)}
+                    data-testid={`grounding-ref-remove-${i}`}
+                    aria-label={`Remove ${ref.identifier}`}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {ref.uri && <span className="grounding-proposal-url">{ref.uri}</span>}
+              <span className="grounding-ref-source">{ref.source}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {!hasRun && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void handleSuggest()}
+          data-testid="grounding-suggest-btn"
+        >
+          ✦ Suggest grounding
+        </Button>
+      )}
+
+      {isRunning && (
+        <div className="grounding-section-shimmer" data-testid="grounding-section-loading">
+          <div className="skeleton" style={{ height: 80 }} />
+          <div className="skeleton" style={{ height: 80 }} />
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="suggester-error" data-testid="grounding-section-error">
+          <p className="suggester-error-message">
+            {run?.failure_reason ?? "Grounding pipeline failed"}
+          </p>
+          <div className="suggester-error-actions">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleSuggest()}
+              data-testid="grounding-error-retry-btn"
+            >
+              Try again
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isCompleted && allCandidates.length === 0 && (
+        <>
+          <p className="grounding-section-empty">No grounding candidates found</p>
+          <div className="grounding-section-footer">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleSuggest()}
+              data-testid="grounding-suggest-retry-btn"
+            >
+              ✦ Suggest again
+            </Button>
+          </div>
+        </>
+      )}
+
+      {isCompleted && visibleCandidates.length > 0 && (
+        <>
+          {visibleCandidates.map((candidate) => {
+            const isApplied = appliedUris.has(candidate.uri);
+            return (
+              <div
+                key={candidate.uri}
+                className="grounding-proposal-card"
+                data-testid={`grounding-proposal-${candidate.originalIdx}`}
+              >
+                <div className="grounding-proposal-header">
+                  <span className="grounding-proposal-name">{candidate.label}</span>
+                </div>
+                {candidate.uri && (
+                  <span className="grounding-proposal-url">{candidate.uri}</span>
+                )}
+                {candidate.description && (
+                  <p className="suggest-field-candidate-text">{candidate.description}</p>
+                )}
+                {candidate.provenance && (
+                  <p className="grounding-proposal-rationale">{candidate.provenance}</p>
+                )}
+                <div className="grounding-proposal-confidence">
+                  <div
+                    className="grounding-proposal-confidence-fill"
+                    style={{ width: `${candidate.confidence * 100}%` }}
+                    aria-label={`${(candidate.confidence * 100).toFixed(0)}% confidence`}
+                  />
+                </div>
+                <div className="suggest-field-candidate-meta">
+                  <span>{(candidate.confidence * 100).toFixed(0)}% confidence</span>
+                  <span>·</span>
+                  <span>{candidate.source}</span>
+                </div>
+                <div className="grounding-proposal-actions">
+                  <button
+                    type="button"
+                    className="grounding-proposal-add-btn"
+                    onClick={() => void handleAdd(candidate.uri, candidate.confidence)}
+                    data-added={isApplied}
+                    disabled={isApplied || applyMutation.isPending}
+                    data-testid={`grounding-add-${candidate.originalIdx}`}
+                  >
+                    {isApplied ? "✓ Applied" : "Apply"}
+                  </button>
+                  <button
+                    type="button"
+                    className="grounding-proposal-dismiss-btn"
+                    onClick={() => handleDismiss(candidate.uri)}
+                    data-testid={`grounding-dismiss-${candidate.originalIdx}`}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          <div className="grounding-section-footer">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleSuggest()}
+              data-testid="grounding-suggest-retry-btn"
+            >
+              ✦ Suggest again
+            </Button>
+          </div>
+        </>
+      )}
+
+      {isCompleted && allCandidates.length > 0 && visibleCandidates.length === 0 && (
+        <p className="grounding-section-empty">All candidates dismissed</p>
+      )}
+    </div>
+  );
+}

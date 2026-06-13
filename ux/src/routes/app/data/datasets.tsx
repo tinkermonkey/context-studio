@@ -1,10 +1,24 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import { Button, Modal, FilterBar, PageHeader, RowMenu } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Modal,
+  FilterBar,
+  PageHeader,
+  InspectorPanel,
+  KVGrid,
+  TextInput as Input,
+  StatusBadge,
+  RowMenu,
+} from "@tinkermonkey/heimdall-ui";
+import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
+import { SelectableTable } from "@/components/crud/SelectableTable";
+import { CascadeDeleteDialog } from "@/components/crud/CascadeDeleteDialog";
+import type { CascadeImpactData } from "@/components/crud/CascadeDeleteDialog";
+import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import {
   useDatasets,
   useCreateDataset,
@@ -16,51 +30,192 @@ import type { components } from "@/api/types";
 
 type DatasetResponse = components["schemas"]["DatasetResponse"];
 
-interface DatasetsSearchParams {
-  selected?: string;
+function toIsoDate(input: string | null | undefined): string {
+  if (!input) return "—";
+  const d = new Date(input);
+  if (Number.isNaN(d.getTime())) return "—";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
-interface DatasetsPageContentProps {
-  onCreateClick: () => void;
-  selectedId?: string;
-  onSelectedIdChange: (id?: string) => void;
-  onDeleteClick: (id: string) => void;
+function ActiveDatasetBanner({ dataset }: { dataset: DatasetResponse }) {
+  return (
+    <div data-testid="active-dataset-banner" className="active-dataset-banner">
+      <div className="active-dataset-banner__label">
+        <span className="active-dataset-banner__dot" aria-hidden="true" />
+        <span className="active-dataset-banner__title-text">Active Dataset</span>
+      </div>
+      <div className="active-dataset-banner__info">
+        <span className="active-dataset-banner__name">{dataset.title}</span>
+        <span className="mono muted">{dataset.filename}</span>
+      </div>
+      <div className="active-dataset-banner__metrics">
+        <span>{dataset.metrics.layers_count} layers</span>
+        <span>{dataset.metrics.domains_count} domains</span>
+        <span>{dataset.metrics.terms_count} terms</span>
+        <span>{dataset.metrics.relationships_count} relationships</span>
+        <span>{dataset.metrics.individuals_count} individuals</span>
+      </div>
+    </div>
+  );
 }
 
-function DatasetsPageContent({
-  onCreateClick,
-  selectedId,
-  onSelectedIdChange,
-  onDeleteClick,
-}: DatasetsPageContentProps) {
+interface DatasetInspectorProps {
+  dataset: DatasetResponse;
+  onActivate: () => void;
+  isActivating: boolean;
+}
+
+function DatasetInspector({ dataset, onActivate, isActivating }: DatasetInspectorProps) {
+  const inspectorActions = dataset.is_active ? null : (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={onActivate}
+      disabled={isActivating}
+      data-testid="dataset-inspector-activate-button"
+    >
+      {isActivating ? "Activating…" : "Activate"}
+    </Button>
+  );
+
+  return (
+    <InspectorPanel
+      eyebrow="dataset"
+      title={dataset.title}
+      id={dataset.id}
+      actions={inspectorActions}
+      data-testid="dataset-inspector"
+    >
+      <InspectorPanel.Section title="Identity">
+        <div className="stack">
+          <div>
+            <label className="form-group-label">Title</label>
+            <Input type="text" value={dataset.title} disabled data-testid="dataset-inspector-title" />
+          </div>
+          <div>
+            <label className="form-group-label">Description</label>
+            <Input
+              type="text"
+              value={dataset.description ?? ""}
+              disabled
+              data-testid="dataset-inspector-description"
+            />
+          </div>
+          <div>
+            <label className="form-group-label">Filename</label>
+            <Input
+              type="text"
+              value={dataset.filename}
+              disabled
+              mono
+              data-testid="dataset-inspector-filename"
+            />
+          </div>
+          <div>
+            <label className="form-group-label">Schema version</label>
+            <Input
+              type="text"
+              value={dataset.schema_version}
+              disabled
+              mono
+              data-testid="dataset-inspector-schema-version"
+            />
+          </div>
+        </div>
+      </InspectorPanel.Section>
+
+      <InspectorPanel.Section title="Metrics">
+        <KVGrid
+          rows={[
+            { key: "Layers", value: String(dataset.metrics.layers_count) },
+            { key: "Domains", value: String(dataset.metrics.domains_count) },
+            { key: "Terms", value: String(dataset.metrics.terms_count) },
+            { key: "Relationships", value: String(dataset.metrics.relationships_count) },
+            { key: "Individuals", value: String(dataset.metrics.individuals_count) },
+          ]}
+        />
+      </InspectorPanel.Section>
+    </InspectorPanel>
+  );
+}
+
+function buildDatasetImpactData(dataset: DatasetResponse): CascadeImpactData | undefined {
+  const { layers_count, domains_count, terms_count, relationships_count, individuals_count } =
+    dataset.metrics;
+  const totalCount =
+    layers_count + domains_count + terms_count + relationships_count + individuals_count;
+
+  if (totalCount === 0 && !dataset.is_active) return undefined;
+
+  const stats = [
+    { label: "layers", count: layers_count },
+    { label: "domains", count: domains_count },
+    { label: "terms", count: terms_count },
+    { label: "relationships", count: relationships_count },
+    { label: "individuals", count: individuals_count },
+  ].filter((s) => s.count > 0);
+
+  if (dataset.is_active && stats.length === 0) {
+    stats.push({ label: "active dataset (currently in use)", count: 1 });
+  }
+
+  return {
+    totalCount: Math.max(totalCount, dataset.is_active ? 1 : 0),
+    stats,
+    items: [],
+  };
+}
+
+export function DatasetsPage() {
   const [searchFilter, setSearchFilter] = useState("");
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createFilename, setCreateFilename] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DatasetResponse | undefined>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { data: listResponse, isLoading, error, refetch } = useDatasets();
-  const activateDataset = useActivateDataset();
-  const datasets = listResponse || [];
+  const { data: datasets, isLoading, error, refetch } = useDatasets();
+  const activateMutation = useActivateDataset();
+  const deleteMutation = useDeleteDataset();
+  const createMutation = useCreateDataset();
+  const { toast } = useToasts();
 
-  const filteredData = datasets.filter(
-    (dataset: DatasetResponse) =>
+  const allDatasets: DatasetResponse[] = datasets || [];
+  const activeDataset = allDatasets.find((d) => d.is_active);
+
+  const filteredData = allDatasets.filter(
+    (dataset) =>
       dataset.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      dataset.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (dataset.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
       dataset.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
 
   const datasetColumns: Column<DatasetResponse>[] = [
     {
-      key: "id",
-      label: "ID",
-      render: (value) => <code className="font-mono text-xs">{(value as string).slice(0, 8)}</code>,
+      key: "is_active",
+      label: "Status",
+      width: "110px",
+      render: (value) => (
+        <StatusBadge color={(value as boolean) ? "emerald" : "neutral"}>
+          {(value as boolean) ? "Active" : "Inactive"}
+        </StatusBadge>
+      ),
     },
     {
       key: "title",
-      label: "Name",
+      label: "Title",
       sortable: true,
       render: (value, row) => (
         <span
-          className="cursor-pointer font-medium text-cyan-400"
+          className="link-cyan"
           data-testid={`dataset-name-${row.id}`}
-          onClick={() => onSelectedIdChange(row.id)}
+          onClick={() => setSelectedId(row.id)}
         >
           {value as string}
         </span>
@@ -69,140 +224,76 @@ function DatasetsPageContent({
     {
       key: "filename",
       label: "Filename",
-      render: (value) => <span>{value as string}</span>,
+      render: (value) => <span className="mono">{value as string}</span>,
     },
     {
-      key: "description",
-      label: "Description",
-      render: (value) => {
-        const desc = value as string | null | undefined;
-        if (!desc) return <span className="opacity-60">—</span>;
-        const truncated = desc.length > 50 ? desc.slice(0, 50) + "…" : desc;
-        return <span>{truncated}</span>;
-      },
+      key: "schema_version",
+      label: "Schema",
+      width: "100px",
+      render: (value) => <span className="mono">{value as string}</span>,
     },
     {
-      key: "is_active",
-      label: "Status",
-      render: (value) => {
-        const isActive = value as boolean;
-        return isActive ? (
-          <span className="text-emerald-400">Active</span>
-        ) : (
-          <span className="opacity-60">Inactive</span>
-        );
-      },
+      key: "created_at",
+      label: "Imported",
+      width: "120px",
+      render: (value) => (
+        <span className="muted">{toIsoDate(value as string | null)}</span>
+      ),
     },
     {
       key: "id",
       label: "",
-      width: "40px",
-      render: (_, row) => (
-        <RowMenu
-          data-testid={`dataset-row-actions-${row.id}`}
-          actions={[
-            { id: "activate", label: row.is_active ? "Active (current)" : "Activate" },
-            { type: "separator" },
-            { id: "delete", label: "Delete", icon: "trash", danger: true },
-          ]}
-          onAction={(actionId) => {
-            if (actionId === "activate" && !row.is_active) {
-              activateDataset.mutate(row.id);
-            }
-            if (actionId === "delete") onDeleteClick(row.id);
-          }}
-        />
-      ),
+      width: "48px",
+      render: (_: unknown, row: DatasetResponse) => {
+        const actions = [
+          ...(!row.is_active
+            ? [{ id: "activate", label: "Activate" }, { type: "separator" as const }]
+            : []),
+          { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
+        ];
+        return (
+          <div className="csb-rowmenu">
+            <RowMenu
+              data-testid={`dataset-row-actions-${row.id}`}
+              actions={actions}
+              onAction={(actionId: string) => handleRowMenuAction(actionId, row)}
+            />
+          </div>
+        );
+      },
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
-        ))}
-      </div>
-    );
+  function handleRowMenuAction(actionId: string, dataset: DatasetResponse) {
+    if (actionId === "activate" && !dataset.is_active) {
+      activateMutation.mutate(dataset.id, {
+        onError: (err) => toast("error", err instanceof Error ? err.message : "Failed to activate"),
+      });
+    }
+    if (actionId === "delete") {
+      setDeleteTarget(dataset);
+      setDeleteDialogOpen(true);
+    }
   }
 
-  if (error) {
-    return (
-      <div className="stack">
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message={datasetsCopy.errors.failedToLoad}
-          daemonLogPath="/local-server/logs/context_studio.log"
-        />
-      </div>
-    );
+  function closeDeleteDialog() {
+    setDeleteDialogOpen(false);
+    setDeleteTarget(undefined);
   }
 
-  if (datasets.length === 0) {
-    return (
-      <EmptyState
-        title={datasetsCopy.emptyState.title}
-        description={datasetsCopy.emptyState.description}
-        action={{ label: "New Dataset", onClick: onCreateClick }}
-      />
-    );
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      if (selectedId === deleteTarget.id) setSelectedId(undefined);
+      closeDeleteDialog();
+      toast("success", datasetsCopy.delete.successToast);
+    } catch (err) {
+      toast("error", err instanceof Error ? err.message : datasetsCopy.errors.failedToDelete);
+    }
   }
 
-  const hasFilters = !!searchFilter;
-  const showFilteredEmpty = datasets.length > 0 && filteredData.length === 0 && hasFilters;
-
-  return (
-    <div>
-      <FilterBar
-        data-testid="schema-filter-bar"
-        onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by title or description…"
-        showingCount={filteredData.length}
-        totalCount={datasets.length}
-      />
-
-      {showFilteredEmpty ? (
-        <div style={{ marginTop: "var(--space-6)" }}>
-          <EmptyState title="No datasets found" description="Try adjusting your search filter" />
-        </div>
-      ) : (
-        <SchemaTable
-          columns={datasetColumns}
-          data={filteredData}
-          onRowSelect={onSelectedIdChange}
-          selectedId={selectedId}
-          testIdPrefix="dataset"
-        />
-      )}
-    </div>
-  );
-}
-
-function DatasetsPageWrapper() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createTitle, setCreateTitle] = useState("");
-  const [createFilename, setCreateFilename] = useState("");
-  const [createDescription, setCreateDescription] = useState("");
-  const [createError, setCreateError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/data/datasets" });
-  const selectedId = searchParams.selected;
-  const createMutation = useCreateDataset();
-  const deleteMutation = useDeleteDataset();
-  const { toast } = useToasts();
-
-  const handleSelectedIdChange = (id?: string) => {
-    navigate({
-      to: "/app/data/datasets",
-      search: id ? { selected: id } : {},
-      replace: true,
-    });
-  };
-
-  const handleCreateSubmit = async () => {
+  async function handleCreateSubmit() {
     setCreateError(null);
     if (!createTitle.trim()) {
       setCreateError("Title is required");
@@ -212,7 +303,6 @@ function DatasetsPageWrapper() {
       setCreateError("Filename is required");
       return;
     }
-
     try {
       const result = await createMutation.mutateAsync({
         title: createTitle,
@@ -223,31 +313,70 @@ function DatasetsPageWrapper() {
       setCreateTitle("");
       setCreateFilename("");
       setCreateDescription("");
-      handleSelectedIdChange(result.id);
+      setSelectedId(result.id);
       toast("success", datasetsCopy.create.successToast);
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : datasetsCopy.errors.failedToCreate);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : datasetsCopy.errors.failedToCreate);
     }
-  };
+  }
 
-  const handleDeleteClick = (id: string) => {
-    if (confirm(datasetsCopy.delete.confirmMessage)) {
-      deleteMutation
-        .mutateAsync(id)
-        .then(() => {
-          if (selectedId === id) {
-            handleSelectedIdChange(undefined);
+  function closeCreateModal() {
+    setShowCreateModal(false);
+    setCreateError(null);
+    setCreateTitle("");
+    setCreateFilename("");
+    setCreateDescription("");
+  }
+
+  if (isLoading) {
+    return (
+      <div className="stack" data-testid="datasets-page">
+        <PageHeader
+          eyebrow="Data"
+          title={datasetsCopy.pageTitle}
+          idChip="/data/datasets"
+          actions={
+            <Button variant="primary" data-testid="dataset-add-button" onClick={() => setShowCreateModal(true)}>
+              New Dataset
+            </Button>
           }
-          toast("success", datasetsCopy.delete.successToast);
-        })
-        .catch((error) => {
-          toast(
-            "error",
-            error instanceof Error ? error.message : datasetsCopy.errors.failedToDelete,
-          );
-        });
-    }
-  };
+        />
+        <div className="stack">
+          <div className="skeleton" style={{ height: 32, width: 200 }} />
+          <div className="skeleton" style={{ height: 40 }} />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="skeleton" style={{ height: 40 }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="stack" data-testid="datasets-page">
+        <PageHeader
+          eyebrow="Data"
+          title={datasetsCopy.pageTitle}
+          idChip="/data/datasets"
+          actions={
+            <Button variant="primary" data-testid="dataset-add-button" onClick={() => setShowCreateModal(true)}>
+              New Dataset
+            </Button>
+          }
+        />
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message={datasetsCopy.errors.failedToLoad}
+          daemonLogPath="/local-server/logs/context_studio.log"
+        />
+      </div>
+    );
+  }
+
+  const hasFilter = !!searchFilter;
+  const showFilteredEmpty = allDatasets.length > 0 && filteredData.length === 0 && hasFilter;
 
   return (
     <div className="stack" data-testid="datasets-page">
@@ -265,22 +394,71 @@ function DatasetsPageWrapper() {
           </Button>
         }
       />
-      <DatasetsPageContent
-        onCreateClick={() => setShowCreateModal(true)}
-        selectedId={selectedId}
-        onSelectedIdChange={handleSelectedIdChange}
-        onDeleteClick={handleDeleteClick}
+
+      {activeDataset && <ActiveDatasetBanner dataset={activeDataset} />}
+
+      {allDatasets.length === 0 ? (
+        <EmptyState
+          title={datasetsCopy.emptyState.title}
+          description={datasetsCopy.emptyState.description}
+          action={{ label: "New Dataset", onClick: () => setShowCreateModal(true) }}
+        />
+      ) : (
+        <>
+          <FilterBar
+            data-testid="schema-filter-bar"
+            onSearchChange={setSearchFilter}
+            searchPlaceholder="Search by title or description…"
+            showingCount={filteredData.length}
+            totalCount={allDatasets.length}
+          />
+
+          {showFilteredEmpty ? (
+            <div style={{ marginTop: "var(--space-6)" }}>
+              <EmptyState title="No datasets found" description="Try adjusting your search filter" />
+            </div>
+          ) : (
+            <SchemaPageLayout
+              data={filteredData}
+              selectedId={selectedId}
+              renderInspectorContent={(dataset) => (
+                <DatasetInspector
+                  key={dataset.id}
+                  dataset={dataset}
+                  onActivate={() =>
+                    activateMutation.mutate(dataset.id, {
+                      onError: (err) =>
+                        toast("error", err instanceof Error ? err.message : "Failed to activate"),
+                    })
+                  }
+                  isActivating={activateMutation.isPending}
+                />
+              )}
+            >
+              <SelectableTable
+                columns={datasetColumns}
+                data={filteredData}
+                onRowClick={(row) => setSelectedId(row.id === selectedId ? undefined : row.id)}
+                testId="datasets-table"
+              />
+            </SchemaPageLayout>
+          )}
+        </>
+      )}
+
+      <CascadeDeleteDialog
+        isOpen={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={() => void handleDeleteConfirm()}
+        target={deleteTarget ? { id: deleteTarget.id, label: deleteTarget.title } : undefined}
+        entityType="dataset"
+        impactData={deleteTarget ? buildDatasetImpactData(deleteTarget) : undefined}
+        isDeleting={deleteMutation.isPending}
       />
 
       <Modal
         isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-          setCreateTitle("");
-          setCreateFilename("");
-          setCreateDescription("");
-        }}
+        onClose={closeCreateModal}
         title={datasetsCopy.create.modalTitle}
         data-testid="dataset-create-modal"
       >
@@ -296,7 +474,7 @@ function DatasetsPageWrapper() {
         )}
         <div className="stack">
           <div>
-            <label htmlFor="title" style={{ display: "block", marginBottom: "var(--space-1)" }}>
+            <label htmlFor="title" className="form-group-label">
               {datasetsCopy.form.nameLabel}
             </label>
             <input
@@ -313,7 +491,7 @@ function DatasetsPageWrapper() {
             />
           </div>
           <div>
-            <label htmlFor="filename" style={{ display: "block", marginBottom: "var(--space-1)" }}>
+            <label htmlFor="filename" className="form-group-label">
               {datasetsCopy.form.sourceLabel}
             </label>
             <input
@@ -330,10 +508,7 @@ function DatasetsPageWrapper() {
             />
           </div>
           <div>
-            <label
-              htmlFor="description"
-              style={{ display: "block", marginBottom: "var(--space-1)" }}
-            >
+            <label htmlFor="description" className="form-group-label">
               {datasetsCopy.form.descriptionLabel}
             </label>
             <textarea
@@ -349,22 +524,13 @@ function DatasetsPageWrapper() {
               rows={3}
             />
           </div>
-          <div className="row" style={{ gap: "var(--space-2)", justifyContent: "flex-end" }}>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setShowCreateModal(false);
-                setCreateError(null);
-                setCreateTitle("");
-                setCreateFilename("");
-                setCreateDescription("");
-              }}
-            >
+          <div className="form-actions">
+            <Button variant="ghost" onClick={closeCreateModal}>
               Cancel
             </Button>
             <Button
               variant="primary"
-              onClick={handleCreateSubmit}
+              onClick={() => void handleCreateSubmit()}
               disabled={createMutation.isPending}
               data-testid="dataset-submit-button"
             >
@@ -377,13 +543,6 @@ function DatasetsPageWrapper() {
   );
 }
 
-export function DatasetsPage() {
-  return <DatasetsPageWrapper />;
-}
-
 export const Route = createFileRoute("/app/data/datasets")({
   component: DatasetsPage,
-  validateSearch: (search: Record<string, unknown>): DatasetsSearchParams => ({
-    selected: typeof search.selected === "string" ? search.selected : undefined,
-  }),
 });

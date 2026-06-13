@@ -1,0 +1,102 @@
+@layer app {
+  .pipelines-master-detail {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+    align-items: start;
+    margin-top: 20px;
+  }
+
+  .pipelines-types-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pipeline-type-list-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid rgb(var(--canvas-border));
+    background: rgb(var(--canvas-bg));
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, border-color 0.1s;
+    width: 100%;
+  }
+
+  .pipeline-type-list-item:hover {
+    background: rgb(var(--canvas-border));
+    border-color: rgb(var(--canvas-border-strong));
+  }
+
+  .pipeline-type-list-item--active {
+    border-color: rgb(var(--accent-primary));
+    background: rgba(var(--accent-primary), 0.08);
+  }
+
+  .pipeline-type-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-type-list-name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pipeline-type-list-desc {
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .pipeline-type-list-skeleton {
+    height: 56px;
+    border-radius: 6px;
+    background: rgb(var(--canvas-border));
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  .pipeline-type-list-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 32px;
+    border-radius: 8px;
+    border: 1px dashed rgb(var(--canvas-border));
+    color: rgb(var(--canvas-fg-3));
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .pipeline-type-list-empty p {
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .pipelines-master-detail {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+}

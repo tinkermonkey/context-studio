@@ -62,6 +62,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
     );
   }
 
+  async function enterEditMode(user: ReturnType<typeof userEvent.setup>) {
+    await waitFor(() => {
+      expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId("inline-inspector-edit-button"));
+  }
+
   describe("title/description autosave mutation", () => {
     it("triggers autosave mutation when title changes", async () => {
       const user = userEvent.setup();
@@ -82,15 +89,16 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId("individual-drawer-name-input")).toBeInTheDocument();
-      });
+      await enterEditMode(user);
 
-      const titleInput = screen.getByTestId("individual-drawer-name-input") as HTMLInputElement;
+      await user.click(screen.getByTestId("individual-drawer-name-field-view"));
+
+      const titleInput = screen.getByTestId("individual-drawer-name-field-input") as HTMLInputElement;
       await user.clear(titleInput);
       await user.type(titleInput, "Updated Title");
+      await user.tab();
 
       await waitFor(
         () => {
@@ -119,17 +127,18 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId("individual-drawer-description-input")).toBeInTheDocument();
-      });
+      await enterEditMode(user);
+
+      await user.click(screen.getByTestId("individual-drawer-description-field-view"));
 
       const descInput = screen.getByTestId(
-        "individual-drawer-description-input",
+        "individual-drawer-description-field-input",
       ) as HTMLTextAreaElement;
       await user.clear(descInput);
       await user.type(descInput, "Updated description");
+      await user.tab();
 
       await waitFor(
         () => {
@@ -159,7 +168,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByTestId("individual-class-typeahead")).toBeInTheDocument();
@@ -204,7 +215,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();
@@ -235,12 +248,15 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       setupDefaultHandlers();
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(singleClassIndividual)),
+        http.get("*/api/individuals/ind-001", () => HttpResponse.json(singleClassIndividual.items[0])),
         http.delete(/.*\/api\/individuals\/.*\/classes\/.*/, () => {
           return HttpResponse.json({ detail: "Cannot remove last class" }, { status: 400 });
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByText("Person")).toBeInTheDocument();
@@ -280,7 +296,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();
@@ -315,7 +333,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
         }),
       );
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByText("Person")).toBeInTheDocument();
@@ -333,9 +353,13 @@ describe("IndividualDrawer - Mutation Workflows", () => {
     });
 
     it("disables move buttons appropriately", async () => {
+      const user = userEvent.setup();
+
       setupDefaultHandlers();
 
-      render(<IndividualDrawer individualId="ind-001" onClose={() => {}} />);
+      render(<IndividualDrawer individualId="ind-001" />);
+
+      await enterEditMode(user);
 
       await waitFor(() => {
         expect(screen.getByText("Employee")).toBeInTheDocument();

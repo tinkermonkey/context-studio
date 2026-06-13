@@ -6,6 +6,10 @@ import type { components } from "@/api/types";
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 type ConceptSchemeUpdateRequest = components["schemas"]["ConceptSchemeUpdateRequest"];
 
+interface SchemeMoveRequest {
+  target_taxonomy_id: string;
+}
+
 export function useSchemes(taxonomyId?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.schemes(taxonomyId),
@@ -40,6 +44,17 @@ export function useUpdateScheme() {
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.scheme(id) });
+    },
+  });
+}
+
+export function useMoveScheme() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SchemeMoveRequest }) =>
+      ontologyService.updateScheme(id, { taxonomy_id: data.target_taxonomy_id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
     },
   });
 }

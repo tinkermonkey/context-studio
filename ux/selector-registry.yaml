@@ -2008,3 +2008,511 @@ selectors:
   - selector: run-change-events-section
     component: src/components/pipeline/RunDetailDrawer.tsx
     description: Container displaying change events produced by applying a pipeline run
+
+  - selector: bulk-bar
+    component: src/components/crud/BulkBar.tsx
+    description: Floating bulk-action toolbar that appears when one or more table rows are selected
+  - selector: bulk-bar-clear
+    component: src/components/crud/BulkBar.tsx
+    description: X button in the bulk bar that clears the current row selection
+  - selector: bulk-action-*
+    component: src/components/crud/BulkBar.tsx
+    description: Individual action buttons in the bulk bar; suffix is the action id
+  - selector: cascade-delete-dialog
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Confirmation modal for deleting one or more entities with cascade-impact preview
+  - selector: cascade-delete-cancel
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Cancel button inside the cascade-delete confirmation dialog
+  - selector: cascade-delete-confirm
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Confirm/delete button inside the cascade-delete confirmation dialog
+  - selector: cascade-delete-content
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Body region of the cascade-delete dialog containing callout and impact details
+  - selector: cascade-impact-summary
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Stat grid showing counts of dependent entities that will be removed
+  - selector: cascade-impact-items
+    component: src/components/crud/CascadeDeleteDialog.tsx
+    description: Scrollable list of up to 60 individual dependent items affected by the delete
+  - selector: selectable-table
+    component: src/components/crud/SelectableTable.tsx
+    description: Root wrapper of the SelectableTable component (default testId value)
+  - selector: selectable-table-prev
+    component: src/components/crud/SelectableTable.tsx
+    description: Previous-page button in the SelectableTable pagination footer
+  - selector: selectable-table-next
+    component: src/components/crud/SelectableTable.tsx
+    description: Next-page button in the SelectableTable pagination footer
+  - selector: my-table
+    component: src/components/crud/SelectableTable.tsx
+    description: Root wrapper of SelectableTable when rendered with a custom testId prop
+
+  # ── CreateDrawer — universal entity creation surface ──
+  - selector: create-drawer
+    component: src/components/crud/CreateDrawer.tsx
+    description: Inner content wrapper of CreateDrawer (shared by full and inline variants)
+  - selector: create-drawer-success
+    component: src/components/crud/CreateDrawer.tsx
+    description: Transient success banner shown after "Create another" completes; displays the name of the just-created entity
+  - selector: create-drawer-error
+    component: src/components/crud/CreateDrawer.tsx
+    description: Error banner shown when the create mutation fails; displays the error message
+  - selector: create-drawer-title-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the entity title input (carries label and error state)
+  - selector: create-drawer-title-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Text input for the entity title; receives focus on drawer open and on first-error focus
+  - selector: create-drawer-relink-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Button that resets a customised identifier back to the auto-slug derived from the title
+  - selector: create-drawer-identifier-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Mono text input for the entity identifier (auto-populated from title slug; editable)
+  - selector: create-drawer-another-label
+    component: src/components/crud/CreateDrawer.tsx
+    description: Label wrapping the "Create another" checkbox in the sticky footer
+  - selector: create-drawer-another-checkbox
+    component: src/components/crud/CreateDrawer.tsx
+    description: Checkbox that, when checked, keeps the drawer open and retains context after creation
+  - selector: create-drawer-cancel-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Footer button that dismisses the drawer without saving
+  - selector: create-drawer-create-btn
+    component: src/components/crud/CreateDrawer.tsx
+    description: Footer primary button that submits the create form; also responds to Cmd+Enter
+  - selector: create-drawer-description-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Textarea for the entity description (optional for all entity types)
+  - selector: create-drawer-domain-control
+    component: src/components/crud/CreateDrawer.tsx
+    description: SegmentedControl for selecting the taxonomy domain scope in the create drawer
+  - selector: create-drawer-taxonomy-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the taxonomy select in the SchemeBody form (carries label and validation error)
+  - selector: create-drawer-taxonomy-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Select control for choosing the parent taxonomy when creating a concept scheme
+  - selector: create-drawer-domain-pill
+    component: src/components/crud/CreateDrawer.tsx
+    description: Read-only pill showing the selected taxonomy's title beneath the taxonomy select
+  - selector: create-drawer-scheme-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the concept scheme select in the ClassBody form (carries label and validation error)
+  - selector: create-drawer-scheme-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Select control for choosing the parent concept scheme when creating a class
+  - selector: create-drawer-parent-class-select
+    component: src/components/crud/CreateDrawer.tsx
+    description: Optional select for choosing a parent class; disabled until a concept scheme is selected
+  - selector: create-drawer-relevance-control
+    component: src/components/crud/CreateDrawer.tsx
+    description: Segmented control for property relevance (Relevant / Optional / Excluded)
+  - selector: create-drawer-classes-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Field wrapper for the class multi-select in the IndividualBody form (carries label and validation error)
+  - selector: create-drawer-classes-list
+    component: src/components/crud/CreateDrawer.tsx
+    description: Scrollable checkbox list for selecting one or more classes when creating an individual
+  - selector: create-drawer-source-text-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Textarea for an optional source passage that supports the individual or relationship being created
+  - selector: create-drawer-confidence-field
+    component: src/components/crud/CreateDrawer.tsx
+    description: Wrapper containing the confidence label and slider for individual and relationship creation
+  - selector: create-drawer-confidence-input
+    component: src/components/crud/CreateDrawer.tsx
+    description: Range slider for setting extraction confidence (0–1) on individuals and relationships
+  - selector: create-drawer-relationship-builder
+    component: src/components/crud/CreateDrawer.tsx
+    description: RelationshipBuilder widget for selecting source, predicate, and target when creating a relationship
+  # ── Entity-specific CreateDrawer instances (forwarded data-testid) ──
+  - selector: individual-create-drawer
+    component: src/routes/app/data/individuals.tsx
+    description: CreateDrawer panel opened from the Individuals page; used to distinguish entity type in E2E tests
+  - selector: class-create-drawer
+    component: src/routes/app/schema/classes.tsx
+    description: CreateDrawer panel opened from the Classes page; used to distinguish entity type in E2E tests
+  - selector: property-create-drawer
+    component: src/routes/app/schema/properties.tsx
+    description: CreateDrawer panel opened from the Properties page; used to distinguish entity type in E2E tests
+  - selector: relationship-create-drawer
+    component: src/routes/app/schema/relationships.tsx
+    description: CreateDrawer panel opened from the Relationships page; used to distinguish entity type in E2E tests
+  - selector: scheme-create-drawer
+    component: src/routes/app/schema/schemes.index.tsx
+    description: CreateDrawer panel opened from the Concept Schemes page; used to distinguish entity type in E2E tests
+  - selector: taxonomy-create-drawer
+    component: src/routes/app/schema/taxonomies.tsx
+    description: CreateDrawer panel opened from the Taxonomies page; used to distinguish entity type in E2E tests
+
+  # ── EntitySurface production selectors ──
+  - selector: entity-surface
+    component: src/components/crud/EntitySurface.tsx
+    description: Root element of EntitySurface container; defaults to "entity-surface", overridable via testId prop
+  - selector: entity-surface-create-drawer
+    component: src/components/crud/EntitySurface.tsx
+    description: Inline CreateDrawer rendered in the right column of EntitySurface when mode is "create"
+  - selector: bulk-modal-cancel
+    component: src/components/crud/EntitySurface.tsx
+    description: Cancel button in the non-delete bulk action value-selection modal
+  - selector: bulk-modal-confirm
+    component: src/components/crud/EntitySurface.tsx
+    description: Confirm button in the non-delete bulk action value-selection modal; applies the bulk operation
+  - selector: bulk-modal-segmented
+    component: src/components/crud/EntitySurface.tsx
+    description: SegmentedControl in the bulk action modal when options count is 4 or fewer
+  - selector: bulk-modal-select
+    component: src/components/crud/EntitySurface.tsx
+    description: Select dropdown in the bulk action modal when options count exceeds 4
+
+  # ── EntitySurface test mock selectors (internal to unit tests) ──
+  - selector: create-drawer-initial-values
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — serialised initialValues passed to the mocked CreateDrawer
+  - selector: create-drawer-identifier-dirty
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — initialIdentifierDirty value passed to the mocked CreateDrawer
+  - selector: create-drawer-cancel
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — cancel button in the mocked CreateDrawer stub
+  - selector: create-drawer-submit
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — submit/create button in the mocked CreateDrawer stub; fires onSuccess
+  - selector: bulk-count
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selected-row count display in the mocked BulkBar stub
+  - selector: bulk-clear
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clear-selection button in the mocked BulkBar stub
+  - selector: delete-target-label
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — target entity label in the mocked CascadeDeleteDialog stub
+  - selector: delete-ids-count
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — bulk delete ID count in the mocked CascadeDeleteDialog stub
+  - selector: cascade-confirm
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — confirm button in the mocked CascadeDeleteDialog stub
+  - selector: cascade-cancel
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — cancel button in the mocked CascadeDeleteDialog stub
+  - selector: inspector
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — inspector panel rendered via the renderInspector prop in EntitySurface tests
+  - selector: my-surface
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — custom testId value used in the testId prop test case
+  - selector: row-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-1"
+  - selector: row-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-2"
+  - selector: row-row-3
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — mocked SelectableTable row container for fixture row "row-3"
+  - selector: click-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clickable row span in mocked SelectableTable for fixture row "row-1"
+  - selector: click-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — clickable row span in mocked SelectableTable for fixture row "row-2"
+  - selector: checkbox-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selection checkbox in mocked SelectableTable for fixture row "row-1"
+  - selector: checkbox-row-2
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — selection checkbox in mocked SelectableTable for fixture row "row-2"
+  - selector: action-delete-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — "delete" row-menu action button in mocked SelectableTable for fixture row "row-1"
+  - selector: action-duplicate-row-1
+    component: src/components/crud/__tests__/EntitySurface.test.tsx
+    description: Test mock only — "duplicate" row-menu action button in mocked SelectableTable for fixture row "row-1"
+
+  - selector: grounding-section
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Root container for the AI grounding suggestion panel in the Class inspector
+  - selector: grounding-suggest-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Button that triggers the schema_node_grounding pipeline to fetch grounding candidates
+  - selector: grounding-section-loading
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Shimmer skeleton shown while the grounding pipeline run is PENDING or RUNNING
+  - selector: grounding-suggest-retry-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Button to re-trigger the grounding pipeline after a completed or empty run
+  - selector: relationship-suggester
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Root container for the AI relationship suggestion panel in the Class inspector
+  - selector: relationship-suggester-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Button that triggers the schema_node_connection_refinement pipeline
+  - selector: relationship-suggester-loading
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Shimmer skeleton shown while the relationship suggestion pipeline run is PENDING or RUNNING
+  - selector: relationship-suggester-retry-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Button to re-trigger the relationship suggestion pipeline after a completed or empty run
+  - selector: suggest-field-loading
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Shimmer skeleton shown while the definition refinement pipeline run is PENDING or RUNNING
+  - selector: suggest-field-proposals
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Container listing AI-generated description candidates with Replace/Append/Dismiss actions
+  - selector: suggest-field-dismiss-all
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Button to dismiss all AI description proposals at once and clear the suggestion panel
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: scheme-export-button
+    component: src/routes/app/schema/schemes.index.tsx
+    description: Export button on the Concept Schemes page header
+
+  - selector: datasets-table
+    component: src/routes/app/data/datasets.tsx
+    description: Root wrapper of the datasets SelectableTable
+  - selector: active-dataset-banner
+    component: src/routes/app/data/datasets.tsx
+    description: Banner shown at top of Datasets page when a dataset is active; displays title, filename, and metrics
+  - selector: dataset-inspector
+    component: src/routes/app/data/datasets.tsx
+    description: InspectorPanel shown in the right rail when a dataset row is selected
+  - selector: dataset-inspector-title
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Title field inside the dataset inspector Identity section
+  - selector: dataset-inspector-description
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Description field inside the dataset inspector Identity section
+  - selector: dataset-inspector-filename
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Filename field (mono) inside the dataset inspector Identity section
+  - selector: dataset-inspector-schema-version
+    component: src/routes/app/data/datasets.tsx
+    description: Read-only Schema Version field (mono) inside the dataset inspector Identity section
+  - selector: dataset-inspector-activate-button
+    component: src/routes/app/data/datasets.tsx
+    description: Activate button in dataset inspector header; visible only when the selected dataset is not active
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: create-drawer-panel
+    component: src/components/crud/CreateDrawer.tsx
+    description: Root element of CreateDrawer when rendered in "full" (drawer panel) variant
+  - selector: create-drawer-inline
+    component: src/components/crud/CreateDrawer.tsx
+    description: Root element of CreateDrawer when rendered in "inline" variant
+  - selector: my-drawer
+    component: src/components/crud/CreateDrawer.tsx
+    description: Custom testid accepted via data-testid prop on CreateDrawer (test fixture variant)
+
+  # ── Auto-added by `validate-selectors --write` — review the TODO descriptions ──
+  - selector: class-drawer-name-field
+    component: src/components/ontology/ClassDrawer.tsx
+    description: EditableField for the class name in the class inspector drawer (edit mode)
+  - selector: individual-drawer-name-field
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: EditableField for the individual name in the individual inspector drawer (edit mode)
+  - selector: individual-drawer-description-field
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: EditableField for the individual description in the individual inspector drawer (edit mode)
+  - selector: property-drawer-title-field
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: EditableField for the property title in the property inspector drawer (edit mode)
+  - selector: property-drawer-relevance-control
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: SegmentedControl for setting property relevance (Not Evaluated / Relevant / Irrelevant) in the property inspector drawer (edit mode)
+  - selector: relationship-edit-cancel
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Cancel button in the relationship edit form inside the inspector drawer
+  - selector: relationship-edit-save
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Save button in the relationship edit form inside the inspector drawer
+  - selector: scheme-drawer-title-field
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: EditableField for the concept scheme title in the scheme inspector drawer (edit mode)
+  - selector: taxonomy-drawer-title-field
+    component: src/components/ontology/TaxonomyDrawer.tsx
+    description: EditableField for the taxonomy title in the taxonomy inspector drawer (edit mode)
+  - selector: inline-inspector-edit-button
+    component: src/components/ui/InlineInspector.tsx
+    description: Edit icon button in the InlineInspector view-mode action bar
+  - selector: inline-inspector-row-menu
+    component: src/components/ui/InlineInspector.tsx
+    description: RowMenu trigger in the InlineInspector view-mode action bar (Edit, Duplicate, Delete)
+  - selector: inline-inspector-done-button
+    component: src/components/ui/InlineInspector.tsx
+    description: Done button in the InlineInspector edit-mode action bar to exit edit mode
+
+  - selector: individual-drawer-name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display for the individual name EditableField (click to enter edit mode)
+  - selector: individual-drawer-name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Text input for the individual name EditableField (visible after clicking the view element)
+  - selector: individual-drawer-description-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display for the individual description EditableField (click to enter edit mode)
+  - selector: individual-drawer-description-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Textarea for the individual description EditableField (visible after clicking the view element)
+
+  # Suggester error states
+  - selector: grounding-section-error
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Error banner shown when the grounding section fails to load
+  - selector: grounding-error-retry-btn
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Retry button in the grounding section error state
+  - selector: relationship-suggester-error
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Error banner shown when the relationship suggester fails to load
+  - selector: relationship-error-retry-btn
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Retry button in the relationship suggester error state
+  - selector: suggest-field-error
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Error banner shown when the suggest field fails to load
+  - selector: suggest-field-retry-btn
+    component: src/components/ontology/suggesters/SuggestField.tsx
+    description: Retry button in the suggest field error state
+
+  - selector: class-children-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Children section when no subclasses exist
+  - selector: class-children-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Pill row listing immediate subclasses in the class inspector Children section
+  - selector: class-individuals-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Individuals section when no individuals exist
+  - selector: class-individuals-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: List of up to 5 sample individuals in the class inspector Individuals section
+  - selector: class-individuals-show-all
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Link button to navigate to the individuals page showing all individuals for this class
+  - selector: class-relationships-empty
+    component: src/components/ontology/ClassDrawer.tsx
+    description: Empty state message in the class inspector Relationships section when no relationships exist
+  - selector: class-relationships-list
+    component: src/components/ontology/ClassDrawer.tsx
+    description: List of relationship triples in the class inspector Relationships section
+  - selector: individual-relationships-empty
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: Empty state message in the individual inspector Relationships section when no relationships exist
+  - selector: individual-relationships-list
+    component: src/components/ontology/IndividualDrawer.tsx
+    description: List of class-level relationship triples in the individual inspector Relationships section
+  - selector: relationship-triple
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Triple display row showing source, predicate, and target in the relationship inspector
+  - selector: scheme-classes-empty
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: Empty state message in the scheme inspector Classes section when no classes exist
+  - selector: scheme-classes-list
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: List of classes (up to 20) in the scheme inspector Classes section
+  - selector: scheme-classes-show-all
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: Link button to navigate to the classes page when the scheme has more than 20 classes
+  - selector: grounding-existing-refs
+    component: src/components/ontology/suggesters/GroundingSection.tsx
+    description: Container for the list of existing external reference items in the grounding section
+
+  # Pipeline Configuration Editor
+  - selector: config-editor-done-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Button to exit edit/create mode and return to view state
+  - selector: config-editor-menu-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Row menu button for edit, duplicate, and delete actions on a configuration
+  - selector: config-editor
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Root container for the pipeline configuration editor panel
+  - selector: config-name-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Name input field for a pipeline configuration
+  - selector: config-description-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Optional description input for a pipeline configuration
+  - selector: config-provider-select
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: LLM provider selector (anthropic or openai)
+  - selector: config-model-select
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Model identifier selector for the chosen LLM provider
+  - selector: config-status-control
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Toggle control for enabling or disabling a pipeline configuration
+  - selector: config-system-prompt-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: System prompt textarea in the configuration editor
+  - selector: config-user-prompt-input
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: User prompt template textarea in the configuration editor
+  - selector: config-create-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Submit button to save a new pipeline configuration
+  - selector: config-cancel-btn
+    component: src/components/pipeline/ConfigEditor.tsx
+    description: Cancel button to discard unsaved changes and exit create/edit mode
+  - selector: pipeline-cfg-empty-inspector
+    component: src/components/pipeline/PipelineTypeContent.tsx
+    description: Placeholder shown in the inspector column when no configuration is selected
+  - selector: pipeline-new-config-btn
+    component: src/components/pipeline/PipelineTypeDetail.tsx
+    description: Button to open the create-new-configuration form in the detail view
+  - selector: pipeline-new-config-icon-btn
+    component: src/components/pipeline/PipelineTypeDetail.tsx
+    description: Icon-only button to create a new configuration in the configs list header
+  - selector: variable-chips
+    component: src/components/pipeline/VariableChips.tsx
+    description: Container for the set of available template variable chips
+  - selector: pipeline-type-no-selection
+    component: src/routes/app/pipelines/index.tsx
+    description: Empty state shown in the right panel when no pipeline type is selected
+
+  # ── EditableField unit-test fixtures ──
+  - selector: name-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (TextInput kind) in unit tests
+  - selector: name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the name EditableField in unit tests
+  - selector: name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: TextInput in edit mode of the name EditableField in unit tests
+  - selector: name-field-saved
+    component: src/components/ui/EditableField.tsx
+    description: Saved status indicator on the name EditableField in unit tests
+  - selector: status-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (Select kind) in unit tests
+  - selector: status-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the status EditableField in unit tests
+  - selector: notes-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (TextArea kind) in unit tests
+  - selector: notes-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the notes EditableField in unit tests
+  - selector: notes-field-input
+    component: src/components/ui/EditableField.tsx
+    description: TextArea in edit mode of the notes EditableField in unit tests
+  - selector: count-field
+    component: src/components/ui/EditableField.tsx
+    description: EditableField root element (NumberInput kind) in unit tests
+  - selector: count-field-view
+    component: src/components/ui/EditableField.tsx
+    description: View-mode display element of the count EditableField in unit tests
+  - selector: count-field-input
+    component: src/components/ui/EditableField.tsx
+    description: NumberInput in edit mode of the count EditableField in unit tests
+  # ── InlineInspector unit-test fixtures ──
+  - selector: my-inspector
+    component: src/components/ui/InlineInspector.tsx
+    description: InlineInspector root element fixture in unit tests

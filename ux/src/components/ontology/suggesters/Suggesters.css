@@ -1,0 +1,439 @@
+@layer app {
+  /* SuggestField */
+  .suggest-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .suggest-field-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .suggest-field-shimmer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .suggest-field-proposals {
+    margin-top: 8px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .suggest-field-proposals-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgb(var(--canvas-bg-hover));
+    border-bottom: 1px solid rgb(var(--canvas-border));
+    font-size: 11px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-2));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .suggest-field-dismiss-all-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgb(var(--canvas-fg-3));
+    font-size: 12px;
+    padding: 0 2px;
+    line-height: 1;
+  }
+
+  .suggest-field-dismiss-all-btn:hover {
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .suggest-field-candidate {
+    padding: 10px;
+    border-bottom: 1px solid rgb(var(--canvas-border));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .suggest-field-candidate:last-child {
+    border-bottom: none;
+  }
+
+  .suggest-field-candidate-text {
+    margin: 0;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+    line-height: 1.5;
+  }
+
+  .suggest-field-candidate-rationale {
+    margin: 0;
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    font-style: italic;
+  }
+
+  .suggest-field-candidate-meta {
+    display: flex;
+    gap: 6px;
+    font-size: 10px;
+    color: rgb(var(--canvas-fg-4));
+  }
+
+  .suggest-field-candidate-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .suggest-field-action-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgb(var(--canvas-border));
+    background: transparent;
+    color: rgb(var(--canvas-fg-2));
+    font-weight: 500;
+  }
+
+  .suggest-field-action-btn:hover {
+    background: rgb(var(--canvas-bg-hover));
+  }
+
+  .suggest-field-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .suggest-field-action-replace {
+    border-color: rgb(var(--status-cyan) / 0.5);
+    color: rgb(var(--status-cyan));
+  }
+
+  .suggest-field-action-replace:hover {
+    background: rgb(var(--status-cyan) / 0.08);
+  }
+
+  .suggest-field-action-append {
+    border-color: rgb(var(--status-emerald) / 0.5);
+    color: rgb(var(--status-emerald));
+  }
+
+  .suggest-field-action-append:hover {
+    background: rgb(var(--status-emerald) / 0.08);
+  }
+
+  .suggest-field-empty {
+    padding: 8px 10px;
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-4));
+    text-align: center;
+  }
+
+  /* RelationshipSuggester */
+  .relationship-suggester {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .relationship-suggester-shimmer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .relationship-suggestion-card {
+    padding: 10px;
+    background: rgb(var(--status-emerald) / 0.03);
+    border: 1px solid rgb(var(--status-emerald) / 0.3);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .relationship-suggestion-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .relationship-suggestion-source {
+    font-weight: 500;
+  }
+
+  .relationship-suggestion-confidence {
+    height: 3px;
+    background: rgb(var(--canvas-bg-hover));
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .relationship-suggestion-confidence-fill {
+    height: 100%;
+    background: rgb(var(--status-emerald));
+    border-radius: 2px;
+  }
+
+  .relationship-suggestion-meta {
+    display: flex;
+    gap: 6px;
+    font-size: 10px;
+    color: rgb(var(--canvas-fg-4));
+  }
+
+  .relationship-suggestion-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .relationship-suggestion-accept-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgb(var(--status-emerald) / 0.5);
+    background: transparent;
+    color: rgb(var(--status-emerald));
+    font-weight: 500;
+  }
+
+  .relationship-suggestion-accept-btn:hover:not(:disabled) {
+    background: rgb(var(--status-emerald) / 0.08);
+  }
+
+  .relationship-suggestion-accept-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .relationship-suggestion-dismiss-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgb(var(--canvas-border));
+    background: transparent;
+    color: rgb(var(--canvas-fg-3));
+    font-weight: 500;
+  }
+
+  .relationship-suggestion-dismiss-btn:hover {
+    background: rgb(var(--canvas-bg-hover));
+  }
+
+  .relationship-suggester-empty {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-4));
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .relationship-suggester-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+  }
+
+  /* GroundingSection */
+  .grounding-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grounding-section-shimmer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .grounding-proposal-card {
+    padding: 10px;
+    background: rgb(var(--canvas-bg));
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .grounding-proposal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .grounding-proposal-name {
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .grounding-proposal-url {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgb(var(--status-cyan));
+    word-break: break-all;
+  }
+
+  .grounding-proposal-rationale {
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    font-style: italic;
+  }
+
+  .grounding-proposal-confidence {
+    height: 3px;
+    background: rgb(var(--canvas-bg-hover));
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .grounding-proposal-confidence-fill {
+    height: 100%;
+    background: rgb(var(--status-emerald));
+    border-radius: 2px;
+  }
+
+  .grounding-proposal-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .grounding-proposal-add-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgb(var(--status-emerald) / 0.5);
+    background: transparent;
+    color: rgb(var(--status-emerald));
+    font-weight: 500;
+  }
+
+  .grounding-proposal-add-btn[data-added="true"] {
+    background: rgb(var(--status-emerald) / 0.1);
+  }
+
+  .grounding-proposal-add-btn:hover:not(:disabled) {
+    background: rgb(var(--status-emerald) / 0.08);
+  }
+
+  .grounding-proposal-add-btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  .grounding-proposal-dismiss-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgb(var(--canvas-border));
+    background: transparent;
+    color: rgb(var(--canvas-fg-3));
+    font-weight: 500;
+  }
+
+  .grounding-proposal-dismiss-btn:hover {
+    background: rgb(var(--canvas-bg-hover));
+  }
+
+  .grounding-section-empty {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-4));
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .grounding-section-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+  }
+
+  .grounding-existing-refs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .grounding-ref-item {
+    padding: 8px 10px;
+    background: rgb(var(--canvas-bg));
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .grounding-ref-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .grounding-ref-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+    flex: 1;
+  }
+
+  .grounding-ref-remove-btn {
+    background: none;
+    border: none;
+    padding: 0 2px;
+    cursor: pointer;
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-4));
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .grounding-ref-remove-btn:hover {
+    color: rgb(var(--status-error, var(--canvas-fg-1)));
+  }
+
+  .grounding-ref-source {
+    font-size: 10px;
+    color: rgb(var(--canvas-fg-4));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Shared pipeline error state */
+  .suggester-error {
+    padding: 8px 10px;
+    background: rgb(var(--status-rose) / 0.06);
+    border: 1px solid rgb(var(--status-rose) / 0.25);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .suggester-error-message {
+    margin: 0;
+    font-size: 12px;
+    color: rgb(var(--status-rose));
+  }
+
+  .suggester-error-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

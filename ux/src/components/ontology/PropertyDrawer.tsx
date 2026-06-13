@@ -1,37 +1,63 @@
-import { useState, useEffect, useRef } from "react";
-import { Loader, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
   InspectorPanel,
   TextInput as Input,
-  TextArea as Textarea,
-  Button,
   KVGrid,
+  ConfirmDialog,
+  SegmentedControl,
 } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
-import { useUpdateProperty, useDeleteProperty } from "@/api/hooks/ontology/useProperties";
-import { useAutosave } from "@/hooks/useAutosave";
+import { InlineInspector } from "@/components/ui/InlineInspector";
+import { EditableField } from "@/components/ui/EditableField";
+import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
+import { useUpdateProperty, useDeleteProperty, useCreateProperty } from "@/api/hooks/ontology/useProperties";
+import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
-import { formatTimeAgo } from "@/utils/dateFormatting";
+import { ApiError } from "@/api/client/interceptors";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
 
 interface PropertyDrawerProps {
   property: PropertyDefinitionResponse | null;
-  onClose?: () => void;
+}
+
+const RELEVANCE_OPTIONS = [
+  { value: "none", label: "Not Evaluated" },
+  { value: "true", label: "Relevant" },
+  { value: "false", label: "Irrelevant" },
+];
+
+function relevanceToString(value: boolean | null | undefined): string {
+  if (value === true) return "true";
+  if (value === false) return "false";
+  return "none";
+}
+
+function stringToRelevance(value: string): boolean | null {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
 }
 
 export function PropertyDrawer({ property }: PropertyDrawerProps) {
-  const [title, setTitle] = useState(property?.title ?? "");
-  const [description, setDescription] = useState(property?.description ?? "");
+  const [mode, setMode] = useState<"view" | "edit">("view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const lastSavedAtRef = useRef<Date | null>(null);
+  const [descriptionDraft, setDescriptionDraft] = useState(property?.description ?? "");
+  const [relevanceValue, setRelevanceValue] = useState<boolean | null>(property?.is_relevant ?? null);
 
   const { toast } = useToasts();
   const updateMutation = useUpdateProperty();
   const deleteMutation = useDeleteProperty();
+  const createMutation = useCreateProperty();
+
+  const { data: relationshipsResponse } = useRelationships({ property_id: property?.id });
+  const propertyRelationships = relationshipsResponse?.items || [];
+  const { data: classesResponse } = useClasses();
+  const classMap = new Map((classesResponse?.items || []).map((c) => [c.id, c.title]));
+
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
     onDeleteError: (id: string, error: Error) => {
@@ -41,42 +67,10 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   });
 
   useEffect(() => {
-    setTitle(property?.title ?? "");
-    setDescription(property?.description ?? "");
-    lastSavedAtRef.current = null;
+    setMode("view");
+    setDescriptionDraft(property?.description ?? "");
+    setRelevanceValue(property?.is_relevant ?? null);
   }, [property]);
-
-  const isDirty = title !== property?.title || description !== property?.description;
-
-  const updateData = {
-    title,
-    description: description || null,
-  };
-
-  const { status } = useAutosave({
-    data: updateData,
-    mutationFn: async () => {
-      if (!property || !isDirty) return;
-      await updateMutation.mutateAsync({
-        id: property.id,
-        data: {
-          title,
-          description: description || null,
-        },
-      });
-      lastSavedAtRef.current = new Date();
-    },
-    onError: (error) => {
-      toast("error", `Autosave failed: ${error.message}`);
-    },
-  });
-
-  const revert = () => {
-    if (property) {
-      setTitle(property.title);
-      setDescription(property.description ?? "");
-    }
-  };
 
   const handleDelete = async () => {
     if (!property) return;
@@ -90,95 +84,154 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
     });
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
   if (!property) return null;
 
-  const autosaveState = status === "idle" ? undefined : (status as "saving" | "saved" | "error");
+  const handleDuplicate = async () => {
+    try {
+      const baseIdentifier = property.identifier + "_copy";
+      await createMutation.mutateAsync({ identifier: baseIdentifier, title: `Copy of ${property.title}`, description: property.description ?? undefined });
+      toast("success", "Property duplicated");
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to duplicate property";
+      toast("error", message);
+    }
+  };
 
-  const inspectorActions = (
-    <>
-      <span data-testid="inspector-autosave-status" style={{ display: "contents" }}>
-        {autosaveState === "saving" && <Loader size={14} className="spin" />}
-        {autosaveState === "saved" && lastSavedAtRef.current && (
-          <span style={{ fontSize: "var(--text-xs)", color: "rgb(var(--canvas-fg-3))" }}>
-            Saved {formatTimeAgo(lastSavedAtRef.current)}
-          </span>
-        )}
-        {autosaveState === "error" && (
-          <AlertCircle size={14} style={{ color: "rgb(var(--status-rose))" }} />
-        )}
-      </span>
-      {isDirty && (
-        <Button variant="ghost" size="sm" onClick={revert} data-testid="inspector-revert-button">
-          Revert
-        </Button>
-      )}
-      <Button
-        variant="danger"
-        size="sm"
-        onClick={handleDeleteClick}
-        data-testid="inspector-delete-button"
-      >
-        Delete
-      </Button>
-    </>
-  );
+  const handleSaveDescription = async (value: string) => {
+    if (value === (property.description ?? "")) return;
+    try {
+      await updateMutation.mutateAsync({ id: property.id, data: { description: value || null } });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to save description";
+      toast("error", message);
+      setDescriptionDraft(property.description ?? "");
+    }
+  };
+
+  const handleRelevanceChange = async (value: string) => {
+    const newIsRelevant = stringToRelevance(value);
+    setRelevanceValue(newIsRelevant);
+    try {
+      await updateMutation.mutateAsync({ id: property.id, data: { is_relevant: newIsRelevant } });
+    } catch (error) {
+      const message = error instanceof ApiError ? error.detail : "Failed to update relevance";
+      toast("error", message);
+      setRelevanceValue(property.is_relevant ?? null);
+    }
+  };
 
   return (
     <>
-      <InspectorPanel
+      <InlineInspector
         eyebrow="property"
         title={property.title}
         id={property.id}
-        actions={inspectorActions}
+        mode={mode}
+        onEdit={() => setMode("edit")}
+        onDone={() => setMode("view")}
+        onDelete={() => setShowDeleteConfirm(true)}
+        onDuplicate={() => { void handleDuplicate(); }}
         data-testid="property-inspector"
       >
-        <InspectorPanel.Section title="Details">
-          <div className="stack">
-            <div>
-              <label className="form-group-label">Identifier</label>
-              <Input
-                type="text"
-                value={property.identifier}
-                disabled
-                mono
-                data-testid="property-drawer-identifier"
+        {mode === "view" ? (
+          <>
+            <InspectorPanel.Section title="Details">
+              <KVGrid
+                rows={[
+                  { key: "Identifier", value: property.identifier },
+                  { key: "Title", value: property.title },
+                  { key: "Description", value: property.description || "—" },
+                  {
+                    key: "Created",
+                    value: new Date(property.created_at ?? "").toLocaleDateString(),
+                  },
+                ]}
               />
-            </div>
+            </InspectorPanel.Section>
 
-            <div>
-              <label className="form-group-label">Title</label>
-              <Input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                data-testid="property-drawer-title-input"
+            <InspectorPanel.Section title="Used By Relationships">
+              {propertyRelationships.length === 0 ? (
+                <KVGrid rows={[{ key: "Relationships", value: "None" }]} />
+              ) : (
+                <KVGrid
+                  rows={[
+                    { key: "Total", value: String(propertyRelationships.length) },
+                    ...propertyRelationships.slice(0, 5).map((rel) => ({
+                      key: classMap.get(rel.source_id) ?? rel.source_id.slice(0, 8),
+                      value: `→ ${classMap.get(rel.target_id) ?? rel.target_id.slice(0, 8)}`,
+                    })),
+                  ]}
+                />
+              )}
+            </InspectorPanel.Section>
+          </>
+        ) : (
+          <>
+            <InspectorPanel.Section title="Details">
+              <div className="stack">
+                <div>
+                  <label className="form-group-label">Identifier</label>
+                  <Input
+                    type="text"
+                    value={property.identifier}
+                    disabled
+                    mono
+                    data-testid="property-drawer-identifier"
+                  />
+                </div>
+
+                <EditableField
+                  label="Title"
+                  value={property.title}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({ id: property.id, data: { title: v } });
+                  }}
+                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  data-testid="property-drawer-title-field"
+                />
+
+                <div
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      void handleSaveDescription(descriptionDraft);
+                    }
+                  }}
+                >
+                  <label className="form-group-label">Description</label>
+                  <SuggestField
+                    entityId={property.id}
+                    value={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    rows={4}
+                    testId="property-drawer-description-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="form-group-label">Relevance</label>
+                  <SegmentedControl
+                    value={relevanceToString(relevanceValue)}
+                    onChange={(v) => { void handleRelevanceChange(String(v)); }}
+                    options={RELEVANCE_OPTIONS}
+                    data-testid="property-drawer-relevance-control"
+                  />
+                </div>
+              </div>
+            </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Metrics">
+              <KVGrid
+                rows={[
+                  {
+                    key: "Created",
+                    value: new Date(property.created_at ?? "").toLocaleDateString(),
+                  },
+                ]}
               />
-            </div>
-
-            <div>
-              <label className="form-group-label">Description</label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                data-testid="property-drawer-description-input"
-                rows={4}
-              />
-            </div>
-          </div>
-        </InspectorPanel.Section>
-
-        <InspectorPanel.Section title="Metrics">
-          <KVGrid
-            rows={[
-              { key: "Created", value: new Date(property.created_at ?? "").toLocaleDateString() },
-            ]}
-          />
-        </InspectorPanel.Section>
-      </InspectorPanel>
+            </InspectorPanel.Section>
+          </>
+        )}
+      </InlineInspector>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

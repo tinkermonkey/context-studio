@@ -1470,6 +1470,212 @@ class TestCreatePropertyDefinition:
             service.create_property_definition(identifier="is_a", title="")
 
 
+class TestUpdatePropertyDefinition:
+    """Tests for update_property_definition."""
+
+    def test_update_title_success(self, service):
+        """Update title of a property definition."""
+        from domain.ontology.events import PropertyDefinitionUpdated
+
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        service._event_publisher.clear()
+
+        updated = service.update_property_definition(property_id=prop.id, title="Is A Type")
+        assert updated.title == "Is A Type"
+
+        retrieved = service.get_property_definition(prop.id)
+        assert retrieved.title == "Is A Type"
+
+        events = service._event_publisher.get_events_of_type(PropertyDefinitionUpdated)
+        assert len(events) == 1
+        assert events[0].property_id == prop.id
+        assert events[0].title == "Is A Type"
+
+    def test_update_description_success(self, service):
+        """Update description of a property definition."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        service._event_publisher.clear()
+
+        updated = service.update_property_definition(
+            property_id=prop.id, description="New description"
+        )
+        assert updated.description == "New description"
+
+    def test_is_relevant_not_provided_preserves_existing_value(self, service):
+        """When update_is_relevant is False, the is_relevant field is not changed."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        prop_with_value = service.update_property_definition(
+            property_id=prop.id, is_relevant=True, update_is_relevant=True
+        )
+        assert prop_with_value.is_relevant is True
+
+        # Now update without touching is_relevant
+        updated = service.update_property_definition(property_id=prop.id, title="Is A Type")
+        assert updated.is_relevant is True
+
+    def test_is_relevant_set_to_none_clears_flag(self, service):
+        """Explicitly passing is_relevant=None with update_is_relevant=True clears the flag."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        service.update_property_definition(
+            property_id=prop.id, is_relevant=True, update_is_relevant=True
+        )
+
+        updated = service.update_property_definition(
+            property_id=prop.id, is_relevant=None, update_is_relevant=True
+        )
+        assert updated.is_relevant is None
+
+    def test_is_relevant_set_to_true(self, service):
+        """Set is_relevant to True."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        updated = service.update_property_definition(
+            property_id=prop.id, is_relevant=True, update_is_relevant=True
+        )
+        assert updated.is_relevant is True
+
+    def test_is_relevant_set_to_false(self, service):
+        """Set is_relevant to False."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        updated = service.update_property_definition(
+            property_id=prop.id, is_relevant=False, update_is_relevant=True
+        )
+        assert updated.is_relevant is False
+
+    def test_update_duplicate_title_raises(self, service):
+        """Updating to a duplicate title raises DuplicateEntityError."""
+        service.create_property_definition(identifier="is_a", title="Is A")
+        prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.update_property_definition(property_id=prop2.id, title="Is A")
+
+    def test_update_empty_title_raises(self, service):
+        """Updating to an empty title raises ValueError."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.update_property_definition(property_id=prop.id, title="")
+
+    def test_update_nonexistent_property_raises(self, service):
+        """Update of a nonexistent property raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="PropertyDefinition"):
+            service.update_property_definition(property_id="nonexistent", title="New Title")
+
+
+class TestUpdateConceptScheme:
+    """Tests for update_concept_scheme."""
+
+    def test_update_title_success(self, service):
+        """Update the title of a concept scheme."""
+        from domain.ontology.events import ConceptSchemeUpdated
+
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        service._event_publisher.clear()
+
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, title="Animal Kingdom")
+        assert updated.title == "Animal Kingdom"
+
+        retrieved = service.get_concept_scheme(scheme.id)
+        assert retrieved.title == "Animal Kingdom"
+
+        events = service._event_publisher.get_events_of_type(ConceptSchemeUpdated)
+        assert len(events) == 1
+        assert events[0].concept_scheme_id == scheme.id
+        assert events[0].title == "Animal Kingdom"
+
+    def test_update_description_success(self, service):
+        """Update the description of a concept scheme."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        updated = service.update_concept_scheme(
+            concept_scheme_id=scheme.id, description="Revised description"
+        )
+        assert updated.description == "Revised description"
+
+    def test_update_color_success(self, service):
+        """Update the color of a concept scheme."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, color="#ff0000")
+        assert updated.color == "#ff0000"
+
+    def test_move_to_different_taxonomy_success(self, service):
+        """Move a concept scheme to a different taxonomy."""
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        scheme = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
+
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
+        assert updated.taxonomy_id == tax2.id
+
+        retrieved = service.get_concept_scheme(scheme.id)
+        assert retrieved.taxonomy_id == tax2.id
+
+    def test_move_with_title_unique_in_target_taxonomy_succeeds(self, service):
+        """Moving a scheme to a target taxonomy where the title is unique succeeds."""
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        service.create_scheme(taxonomy_id=tax2.id, title="Other Scheme")
+        scheme = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
+
+        updated = service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
+        assert updated.taxonomy_id == tax2.id
+
+    def test_move_with_duplicate_title_in_target_taxonomy_raises(self, service):
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        service.create_scheme(taxonomy_id=tax2.id, title="Animals")
+        scheme = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=tax2.id)
+
+    def test_update_duplicate_title_in_same_taxonomy_raises(self, service):
+        tax = service.create_taxonomy(title="Biology")
+        service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.update_concept_scheme(concept_scheme_id=scheme2.id, title="Animals")
+
+    def test_update_empty_title_raises(self, service):
+        """Updating a scheme's title to an empty string raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.update_concept_scheme(concept_scheme_id=scheme.id, title="")
+
+    def test_update_nonexistent_scheme_raises(self, service):
+        """Updating a nonexistent scheme raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
+            service.update_concept_scheme(concept_scheme_id="nonexistent", title="New Title")
+
+    def test_move_to_nonexistent_taxonomy_raises(self, service):
+        """Moving a scheme to a nonexistent taxonomy raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(EntityNotFoundError, match="Taxonomy"):
+            service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id="nonexistent")
+
+    def test_same_title_different_taxonomy_allowed(self, service):
+        """A scheme can have the same title as one in a different taxonomy."""
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        service.create_scheme(taxonomy_id=tax1.id, title="Elements")
+        scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Elements")
+
+        # Updating title to same value (no-op check) should not raise
+        updated = service.update_concept_scheme(
+            concept_scheme_id=scheme2.id, description="Chemistry elements"
+        )
+        assert updated.description == "Chemistry elements"
+
+
 class TestGetOrCreatePropertyDefinitionByIdentifier:
     """Tests for get_or_create_property_definition_by_identifier."""
 

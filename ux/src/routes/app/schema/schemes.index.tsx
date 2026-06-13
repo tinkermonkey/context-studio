@@ -1,24 +1,20 @@
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
-  Modal,
   PageHeader,
-  RowMenu,
   Chip,
   FilterBar,
   TabBar,
   Icon,
   VersionPill,
 } from "@tinkermonkey/heimdall-ui";
+import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SchemaTable, type Column } from "@/components/schema/SchemaTable";
-import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
-import { SchemeForm } from "@/components/schema/SchemeForm";
+import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
-import { useSchemes, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
+import { useSchemes, useDeleteScheme, useMoveScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
@@ -27,40 +23,96 @@ import { schemesCopy } from "./schemes/-copy";
 import type { components } from "@/api/types";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
-type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 
 interface SchemesSearchParams {
-  selected?: string;
+  createForTaxonomy?: string;
 }
 
-interface SchemesPageContentProps {
-  onCreateClick: () => void;
-  selectedId?: string;
-  onSelectedIdChange: (id?: string) => void;
-  taxonomiesById: Map<string, string>;
-  taxonomiesError?: Error | null;
-  onRetryTaxonomies?: () => void;
-}
-
-function SchemesPageContent({
-  onCreateClick,
-  selectedId,
-  onSelectedIdChange,
-  taxonomiesById,
-  taxonomiesError,
-  onRetryTaxonomies,
-}: SchemesPageContentProps) {
+export function SchemesIndexPage() {
+  const surfaceRef = useRef<EntitySurfaceHandle>(null);
+  const navigate = useNavigate();
+  const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
 
-  const { data: listResponse, isLoading, error, refetch } = useSchemes();
-  const schemes = listResponse?.items || [];
+  const searchParams = useSearch({ from: "/app/schema/schemes/" });
+  const createForTaxonomy = searchParams.createForTaxonomy;
 
-  const filteredData = schemes.filter(
+  const {
+    data: taxonomiesResponse,
+    error: taxonomiesError,
+    refetch: refetchTaxonomies,
+  } = useTaxonomies();
+  const taxonomies = taxonomiesResponse?.items ?? [];
+  const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
+
+  const { data: listResponse, isLoading, error, refetch } = useSchemes();
+  const { data: classesData } = useClasses();
+  const { data: propsData } = useProperties();
+  const { data: relsData } = useRelationships();
+
+  const deleteMutation = useDeleteScheme();
+  const moveMutation = useMoveScheme();
+
+  // Cross-page create: open CreateDrawer with pre-filled taxonomy if directed from taxonomies page
+  useEffect(() => {
+    if (createForTaxonomy && surfaceRef.current) {
+      surfaceRef.current.startCreate({ taxonomyId: createForTaxonomy }, false);
+      // Clear the param so navigating back doesn't re-open
+      navigate({ to: "/app/schema/schemes/" as any, search: {} as any, replace: true });
+    }
+  }, [createForTaxonomy, navigate]);
+
+  const allData = listResponse?.items ?? [];
+  const hasFilter = !!searchFilter;
+  const filteredData = allData.filter(
     (scheme: ConceptSchemeResponse) =>
       scheme.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      scheme.description?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (scheme.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
       scheme.id.toLowerCase().includes(searchFilter.toLowerCase()),
   );
+
+  const schemaTabs = [
+    { id: "taxonomies", label: "Taxonomies", count: taxonomiesResponse?.total },
+    { id: "schemes", label: "Schemes", count: listResponse?.total },
+    { id: "classes", label: "Classes", count: classesData?.total },
+    { id: "properties", label: "Properties", count: propsData?.total },
+    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+  ];
+
+  function handleTabNavigate(tabId: string) {
+    const routes: Record<string, string> = {
+      taxonomies: "/app/schema/taxonomies",
+      schemes: "/app/schema/schemes",
+      classes: "/app/schema/classes",
+      properties: "/app/schema/properties",
+      relationships: "/app/schema/relationships",
+    };
+    navigate({ to: routes[tabId] as any });
+  }
+
+  async function handleDelete(ids: string[]) {
+    const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
+      toast("success", schemesCopy.delete.successToast);
+    } else {
+      const succeeded = ids.length - failed;
+      const msg = succeeded > 0
+        ? `Deleted ${succeeded}, failed to delete ${failed}`
+        : `Failed to delete ${failed} scheme${failed === 1 ? "" : "s"}`;
+      toast("error", msg);
+      throw new Error(msg);
+    }
+  }
+
+  function handleRowMenuAction(actionId: string, entity: ConceptSchemeResponse) {
+    if (actionId === "add-class") {
+      navigate({
+        to: "/app/schema/classes" as any,
+        search: { createForScheme: entity.id } as any,
+      });
+    }
+  }
 
   const schemeColumns: Column<ConceptSchemeResponse>[] = [
     {
@@ -122,189 +174,52 @@ function SchemesPageContent({
       width: "60px",
       render: (value) => <VersionPill>{value as number}</VersionPill>,
     },
+  ];
+
+  const rowMenuActions = [
+    { id: "duplicate", label: "Duplicate", icon: "copy" as const },
+    { id: "add-class", label: "Add class", icon: "plus" as const },
+    { type: "separator" as const },
+    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
+  ];
+
+  const bulkActions = [
+    { id: "delete", label: "Delete", variant: "danger" as const },
     {
-      key: "created_at",
-      label: "",
-      width: "40px",
-      render: (_, row) => (
-        <RowMenu
-          data-testid={`scheme-row-actions-${row.id}`}
-          actions={[
-            { id: "edit", label: "Edit", icon: "edit" },
-            { id: "clone", label: "Clone", icon: "copy" },
-            { type: "separator" },
-            { id: "delete", label: "Delete", icon: "trash", danger: true },
-          ]}
-          onAction={(actionId) => console.log(`Action ${actionId} on scheme ${row.id}`)}
-        />
-      ),
+      id: "move-to-taxonomy",
+      label: "Move to taxonomy",
+      variant: "neutral" as const,
+      fieldLabel: "Target taxonomy",
+      options: taxonomies.map((t) => ({ value: t.id, label: t.title })),
+      onBulkConfirm: async (ids: string[], taxonomyId: string) => {
+        const results = await Promise.allSettled(
+          ids.map((id) => moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } })),
+        );
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed === 0) {
+          toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
+        } else {
+          const succeeded = ids.length - failed;
+          const msg = succeeded > 0
+            ? `Moved ${succeeded}, failed to move ${failed}`
+            : `Failed to move ${failed} scheme${failed === 1 ? "" : "s"}`;
+          toast("error", msg);
+          throw new Error(msg);
+        }
+      },
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="stack">
-        <div className="skeleton" style={{ height: 32, width: 200 }} />
-        <div className="skeleton" style={{ height: 40 }} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ height: 40 }} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="stack">
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load concept schemes"
-        />
-      </div>
-    );
-  }
-
-  if (schemes.length === 0) {
-    return (
-      <EmptyState
-        title={schemesCopy.emptyState.title}
-        description={schemesCopy.emptyState.description}
-        action={{
-          label: schemesCopy.emptyState.actionLabel,
-          onClick: onCreateClick,
-        }}
-      />
-    );
-  }
-
-  const hasFilters = !!searchFilter;
-  const showFilteredEmpty = schemes.length > 0 && filteredData.length === 0 && hasFilters;
+  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const emptyStateTitle = filteredEmpty
+    ? schemesCopy.filteredEmpty.title
+    : schemesCopy.emptyState.title;
+  const emptyStateDescription = filteredEmpty
+    ? schemesCopy.filteredEmpty.description
+    : schemesCopy.emptyState.description;
 
   return (
-    <div data-testid="schemes-page" className="stack">
-      <FilterBar
-        data-testid="schema-filter-bar"
-        onSearchChange={setSearchFilter}
-        searchPlaceholder="Search by title or description…"
-        showingCount={filteredData.length}
-        totalCount={schemes.length}
-      />
-
-      {taxonomiesError && onRetryTaxonomies && (
-        <ErrorBanner
-          error={taxonomiesError}
-          onRetry={onRetryTaxonomies}
-          message="Failed to load parent taxonomies"
-          compact
-          daemonLogPath="/local-server/logs/context_studio.log"
-        />
-      )}
-
-      {showFilteredEmpty ? (
-        <EmptyState
-          title={schemesCopy.filteredEmpty.title}
-          description={schemesCopy.filteredEmpty.description}
-        />
-      ) : (
-        <SchemaPageLayout
-          data={filteredData}
-          selectedId={selectedId}
-          renderInspectorContent={(scheme) => (
-            <SchemeDrawer
-              key={scheme.id}
-              scheme={scheme}
-              taxonomyName={taxonomiesById.get(scheme.taxonomy_id) || "—"}
-              onClose={() => onSelectedIdChange(undefined)}
-            />
-          )}
-        >
-          <SchemaTable
-            columns={schemeColumns}
-            data={filteredData}
-            onRowSelect={onSelectedIdChange}
-            selectedId={selectedId}
-          />
-        </SchemaPageLayout>
-      )}
-    </div>
-  );
-}
-
-export function SchemesIndexPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const searchParams = useSearch({ from: "/app/schema/schemes/" });
-  const selectedId = searchParams.selected;
-  const createMutation = useCreateScheme();
-  const { toast } = useToasts();
-  const {
-    data: taxonomiesResponse,
-    error: taxonomiesError,
-    refetch: refetchTaxonomies,
-  } = useTaxonomies();
-  const taxonomies = taxonomiesResponse?.items || [];
-  const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
-
-  const { data: schemesData } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxonomiesResponse?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
-    },
-  ];
-
-  const handleTabNavigate = (tabId: string) => {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  };
-
-  const handleSelectedIdChange = (id?: string) => {
-    navigate({
-      to: "/app/schema/schemes",
-      search: id ? { selected: id } : {},
-      replace: true,
-    });
-  };
-
-  const handleCreateSubmit = async (data: ConceptSchemeCreateRequest) => {
-    setCreateError(null);
-    const taxonomyId = taxonomies[0]?.id;
-    if (!taxonomyId) {
-      setCreateError("No taxonomies available");
-      return;
-    }
-
-    try {
-      const result = await createMutation.mutateAsync({
-        taxonomyId,
-        data,
-      });
-      setShowCreateModal(false);
-      toast("success", schemesCopy.create.successToast(result.id));
-    } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create scheme");
-    }
-  };
-
-  return (
-    <div className="stack">
+    <div className="stack" data-testid="schemes-page">
       <PageHeader
         eyebrow="SCHEMA · node_type · concept_scheme"
         title="Concept Schemes"
@@ -312,12 +227,12 @@ export function SchemesIndexPage() {
         subtitle="A concept scheme is a focused vocabulary inside a taxonomy. Classes belong to exactly one scheme."
         actions={
           <>
-            <Button variant="ghost" onClick={() => {}}>
+            <Button variant="ghost" onClick={() => {}} data-testid="scheme-export-button">
               <Icon name="download" size={13} /> Export
             </Button>
             <Button
               variant="primary"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => surfaceRef.current?.startCreate()}
               data-testid="scheme-add-button"
             >
               <Icon name="plus" size={13} /> New scheme
@@ -328,38 +243,55 @@ export function SchemesIndexPage() {
 
       <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
 
-      <div data-testid="schemes-content">
-        <SchemesPageContent
-          onCreateClick={() => setShowCreateModal(true)}
-          selectedId={selectedId}
-          onSelectedIdChange={handleSelectedIdChange}
-          taxonomiesById={taxonomiesById}
-          taxonomiesError={taxonomiesError}
-          onRetryTaxonomies={() => refetchTaxonomies()}
+      {error ? (
+        <ErrorBanner
+          error={error}
+          onRetry={() => refetch()}
+          message="Failed to load concept schemes"
         />
-      </div>
-
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setCreateError(null);
-        }}
-        title="Create Concept Scheme"
-        data-testid="scheme-create-modal"
-      >
-        {createError && (
-          <div style={{ marginBottom: "var(--space-3)" }}>
+      ) : (
+        <>
+          {taxonomiesError && (
             <ErrorBanner
-              error={new Error(createError)}
-              onRetry={() => setCreateError(null)}
-              message="Failed to create scheme"
-              daemonLogPath="/local-server/logs/context_studio.log"
+              error={taxonomiesError}
+              onRetry={() => refetchTaxonomies()}
+              message="Failed to load parent taxonomies"
+              compact
             />
-          </div>
-        )}
-        <SchemeForm onSubmit={handleCreateSubmit} isLoading={createMutation.isPending} />
-      </Modal>
+          )}
+
+          <FilterBar
+            data-testid="schema-filter-bar"
+            onSearchChange={setSearchFilter}
+            searchPlaceholder="Search by title or description…"
+            showingCount={filteredData.length}
+            totalCount={allData.length}
+          />
+
+          <EntitySurface
+            ref={surfaceRef}
+            entityType="scheme"
+            data={filteredData}
+            isLoading={isLoading}
+            columns={schemeColumns}
+            renderInspector={(entity) => (
+              <SchemeDrawer
+                key={entity.id}
+                scheme={entity}
+                taxonomyName={taxonomiesById.get(entity.taxonomy_id) || "—"}
+              />
+            )}
+            rowMenuActions={rowMenuActions}
+            onRowMenuAction={handleRowMenuAction}
+            onDeleteEntity={handleDelete}
+            bulkActions={bulkActions}
+            emptyStateTitle={emptyStateTitle}
+            emptyStateDescription={emptyStateDescription}
+            emptyStateShowAction={!filteredEmpty}
+            testId="schemes-surface"
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -367,6 +299,6 @@ export function SchemesIndexPage() {
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,
   validateSearch: (search: Record<string, unknown>): SchemesSearchParams => ({
-    selected: typeof search.selected === "string" ? search.selected : undefined,
+    createForTaxonomy: typeof search.createForTaxonomy === "string" ? search.createForTaxonomy : undefined,
   }),
 });

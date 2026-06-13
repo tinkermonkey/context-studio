@@ -3,7 +3,11 @@ import type { components } from "@/api/types";
 
 type PipelineTypeResponse = components["schemas"]["PipelineTypeResponse"];
 type ImplementationResponse = components["schemas"]["ImplementationResponse"];
-type ConfigurationResponse = components["schemas"]["ConfigurationResponse"];
+type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
+type PipelineConfigurationCreateRequest =
+  components["schemas"]["PipelineConfigurationCreateRequest"];
+type PipelineConfigurationUpdateRequest =
+  components["schemas"]["PipelineConfigurationUpdateRequest"];
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 type ListPipelineRuns = components["schemas"]["ListResponse_PipelineRunResponse_"];
@@ -43,10 +47,43 @@ class PipelineService extends BaseService {
     return this.get<ImplementationResponse[]>(`/api/pipelines/types/${type}/implementations`);
   }
 
-  async listConfigurations(type: string, implId: string): Promise<ConfigurationResponse[]> {
-    return this.get<ConfigurationResponse[]>(
+  async listConfigurations(
+    type: string,
+    implId: string,
+  ): Promise<PipelineConfigurationResponse[]> {
+    return this.get<PipelineConfigurationResponse[]>(
       `/api/pipelines/types/${type}/implementations/${implId}/configurations`,
     );
+  }
+
+  // Configuration CRUD
+  async createConfiguration(
+    type: string,
+    implId: string,
+    body: PipelineConfigurationCreateRequest,
+  ): Promise<PipelineConfigurationResponse> {
+    return this.post<PipelineConfigurationResponse>(
+      `/api/pipelines/types/${type}/implementations/${implId}/configurations`,
+      body,
+    );
+  }
+
+  async getConfiguration(configId: string): Promise<PipelineConfigurationResponse> {
+    return this.get<PipelineConfigurationResponse>(`/api/pipeline_configurations/${configId}`);
+  }
+
+  async updateConfiguration(
+    configId: string,
+    body: PipelineConfigurationUpdateRequest,
+  ): Promise<PipelineConfigurationResponse> {
+    return this.put<PipelineConfigurationResponse>(
+      `/api/pipeline_configurations/${configId}`,
+      body,
+    );
+  }
+
+  async deleteConfiguration(configId: string): Promise<void> {
+    return this.delete<void>(`/api/pipeline_configurations/${configId}`);
   }
 
   // Execution

@@ -1,9 +1,17 @@
 import { useState } from "react";
-import { InspectorPanel, TextInput as Input, Button, KVGrid } from "@tinkermonkey/heimdall-ui";
-import { ConfirmDialog } from "@tinkermonkey/heimdall-ui";
-import { useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
+import {
+  InspectorPanel,
+  RelationshipBuilder,
+  type RelationshipBuilderValue,
+  KVGrid,
+  Button,
+  ConfirmDialog,
+} from "@tinkermonkey/heimdall-ui";
+import { InlineInspector } from "@/components/ui/InlineInspector";
+import { useDeleteRelationship, useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useToasts } from "@/components/ui/Toast";
-import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { ApiError } from "@/api/client/interceptors";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
@@ -15,7 +23,6 @@ interface RelationshipDrawerProps {
   sourceName: string;
   targetName: string;
   propertyName: string;
-  onClose?: () => void;
 }
 
 export function RelationshipDrawer({
@@ -24,116 +31,196 @@ export function RelationshipDrawer({
   targetName,
   propertyName,
 }: RelationshipDrawerProps) {
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [editValue, setEditValue] = useState<RelationshipBuilderValue>({ predicate: "" });
+  const [sourceQuery, setSourceQuery] = useState("");
+  const [targetQuery, setTargetQuery] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const { toast } = useToasts();
   const deleteMutation = useDeleteRelationship();
-  const { performDelete, undo } = useUndoDelete({
-    onDelete: (id: string) => deleteMutation.mutateAsync(id),
-    onDeleteError: (id: string, error: Error) => {
-      toast("error", `Failed to delete relationship: ${error.message}`);
-    },
-    undoWindowMs: 8000,
-  });
+  const createMutation = useCreateRelationship();
+  const { data: classesResponse } = useClasses();
+  const { data: propertiesResponse } = useProperties();
+
+  const allClasses = classesResponse?.items || [];
+  const properties = propertiesResponse?.items || [];
+
+  const predicates = properties.length > 0
+    ? properties.map((p) => p.identifier)
+    : ["related_to", "contains", "depends_on", "is_used_by"];
+
+  const sourcePickerResults = allClasses
+    .filter((c) => !sourceQuery || c.title.toLowerCase().includes(sourceQuery.toLowerCase()))
+    .slice(0, 20)
+    .map((c) => ({ id: c.id, label: c.title }));
+
+  const targetPickerResults = allClasses
+    .filter((c) => !targetQuery || c.title.toLowerCase().includes(targetQuery.toLowerCase()))
+    .slice(0, 20)
+    .map((c) => ({ id: c.id, label: c.title }));
+
+  const handleEditStart = () => {
+    if (!relationship) return;
+    const sourceClass = allClasses.find((c) => c.id === relationship.source_id);
+    const targetClass = allClasses.find((c) => c.id === relationship.target_id);
+    const prop = properties.find((p) => p.id === relationship.property_definition_id);
+    setEditValue({
+      source: sourceClass ? { id: sourceClass.id, label: sourceClass.title } : undefined,
+      target: targetClass ? { id: targetClass.id, label: targetClass.title } : undefined,
+      predicate: prop?.identifier ?? "",
+    });
+    setSourceQuery("");
+    setTargetQuery("");
+    setMode("edit");
+  };
+
+  const handleSave = async () => {
+    if (!relationship || !editValue.source?.id || !editValue.target?.id || !editValue.predicate) {
+      return;
+    }
+
+    const prop = properties.find((p) => p.id === relationship.property_definition_id);
+    const unchanged =
+      editValue.source.id === relationship.source_id &&
+      editValue.target.id === relationship.target_id &&
+      editValue.predicate === (prop?.identifier ?? "");
+
+    if (unchanged) {
+      setMode("view");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await deleteMutation.mutateAsync(relationship.id);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to update relationship";
+      toast("error", message);
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      await createMutation.mutateAsync({
+        source_id: editValue.source.id,
+        target_id: editValue.target.id,
+        relationship_type: editValue.predicate,
+      });
+      toast("success", "Relationship updated");
+      setMode("view");
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to create updated relationship — the original has been removed";
+      toast("error", message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!relationship) return;
     try {
-      await performDelete(relationship.id);
-      toast("success", relationshipsCopy.delete.successToast, "Undo", {
-        action: {
-          label: "Undo",
-          onAction: undo,
-        },
-        autoDismissMs: 8000,
-      });
+      await deleteMutation.mutateAsync(relationship.id);
+      toast("success", relationshipsCopy.delete.successToast);
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : "Failed to delete relationship";
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to delete relationship";
       toast("error", message);
     }
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
   if (!relationship) return null;
 
-  const inspectorActions = (
-    <Button
-      variant="danger"
-      size="sm"
-      onClick={handleDeleteClick}
-      data-testid="inspector-delete-button"
-    >
-      Delete
-    </Button>
-  );
+  const canSave =
+    !!editValue.source?.id && !!editValue.target?.id && !!editValue.predicate && !isSaving;
 
   return (
     <>
-      <InspectorPanel
+      <InlineInspector
         eyebrow="relationship"
         title={`${sourceName} → ${targetName}`}
         id={relationship.id}
-        actions={inspectorActions}
+        mode={mode}
+        onEdit={handleEditStart}
+        onDone={() => {
+          if (mode === "edit") void handleSave();
+          else setMode("view");
+        }}
+        onDelete={() => setShowDeleteConfirm(true)}
+        editNote={false}
         data-testid="relationship-inspector"
       >
-        <InspectorPanel.Section title="Details">
-          <div className="stack">
-            <div>
-              <label className="form-group-label">ID</label>
-              <Input
-                type="text"
-                value={relationship.id}
-                disabled
-                mono
-                data-testid="relationship-drawer-id"
+        {mode === "view" ? (
+          <>
+            <InspectorPanel.Section title="Details">
+              <div className="drawer-triple" data-testid="relationship-triple">
+                <span className="drawer-triple-node">{sourceName}</span>
+                <span className="drawer-triple-predicate">{propertyName}</span>
+                <span className="drawer-triple-node">{targetName}</span>
+              </div>
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Provenance">
+              <KVGrid
+                rows={[
+                  {
+                    key: "Created",
+                    value: new Date(relationship.created_at ?? "").toLocaleDateString(),
+                  },
+                  { key: "Confidence", value: "—" },
+                  { key: "Source", value: "—" },
+                ]}
               />
-            </div>
-
-            <div>
-              <label className="form-group-label">Source Class</label>
-              <Input
-                type="text"
-                value={sourceName}
-                disabled
-                data-testid="relationship-drawer-source-class"
+            </InspectorPanel.Section>
+          </>
+        ) : (
+          <InspectorPanel.Section title="Edit Relationship">
+            <div className="stack">
+              <RelationshipBuilder
+                value={editValue}
+                onChange={setEditValue}
+                sourceResults={sourcePickerResults}
+                targetResults={targetPickerResults}
+                sourceQuery={sourceQuery}
+                onSourceQueryChange={setSourceQuery}
+                targetQuery={targetQuery}
+                onTargetQueryChange={setTargetQuery}
+                predicates={predicates}
+                onSourceClear={() => {
+                  setSourceQuery("");
+                  setEditValue((v) => ({ ...v, source: undefined }));
+                }}
+                onTargetClear={() => {
+                  setTargetQuery("");
+                  setEditValue((v) => ({ ...v, target: undefined }));
+                }}
               />
+              <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setMode("view")}
+                  disabled={isSaving}
+                  data-testid="relationship-edit-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => void handleSave()}
+                  disabled={!canSave}
+                  data-testid="relationship-edit-save"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </Button>
+              </div>
             </div>
-
-            <div>
-              <label className="form-group-label">Target Class</label>
-              <Input
-                type="text"
-                value={targetName}
-                disabled
-                data-testid="relationship-drawer-target-class"
-              />
-            </div>
-
-            <div>
-              <label className="form-group-label">Relationship Type</label>
-              <Input
-                type="text"
-                value={propertyName}
-                disabled
-                data-testid="relationship-drawer-property-type"
-              />
-            </div>
-          </div>
-        </InspectorPanel.Section>
-
-        <InspectorPanel.Section title="Metrics">
-          <KVGrid
-            rows={[
-              {
-                key: "Created",
-                value: new Date(relationship.created_at ?? "").toLocaleDateString(),
-              },
-            ]}
-          />
-        </InspectorPanel.Section>
-      </InspectorPanel>
+          </InspectorPanel.Section>
+        )}
+      </InlineInspector>
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}

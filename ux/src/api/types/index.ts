@@ -1461,20 +1461,41 @@ export interface paths {
      * List Configurations
      * @description List all configurations for a pipeline type and implementation.
      *
+     *     Returns both system (code-defined) and user-created configurations.
+     *
      *     Args:
      *         pipeline_type: The pipeline type
      *         impl_id: The implementation identifier
-     *         request: FastAPI request (for registry access)
+     *         request: FastAPI request (for registry and repo access)
      *
      *     Returns:
-     *         List of ConfigurationResponse objects
+     *         List of PipelineConfigurationResponse objects
      *
      *     Raises:
      *         HTTPException: 400 if pipeline type is invalid, 404 if implementation not found
      */
     get: operations["list_configurations_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Configuration
+     * @description Create a new user pipeline configuration.
+     *
+     *     Stores the configuration in operations.db and registers it in the
+     *     in-memory registry so it is immediately available for pipeline runs.
+     *
+     *     Args:
+     *         pipeline_type: The pipeline type
+     *         impl_id: The implementation identifier
+     *         body: Configuration create request
+     *         request: FastAPI request
+     *
+     *     Returns:
+     *         PipelineConfigurationResponse for the created configuration
+     *
+     *     Raises:
+     *         HTTPException: 400 if pipeline type invalid, 404 if implementation not found
+     */
+    post: operations["create_configuration_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1891,6 +1912,68 @@ export interface paths {
      */
     post: operations["resume_batch_runs_api_pipelines_batches__batch_id__resume_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipeline_configurations/{config_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Configuration
+     * @description Get a single user pipeline configuration by ID.
+     *
+     *     Args:
+     *         config_id: The configuration UUID
+     *         request: FastAPI request
+     *
+     *     Returns:
+     *         PipelineConfigurationResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found or deleted
+     */
+    get: operations["get_configuration_api_pipeline_configurations__config_id__get"];
+    /**
+     * Update Configuration
+     * @description Update a user pipeline configuration, incrementing its version.
+     *
+     *     Each update registers a new version in the in-memory registry so
+     *     pipeline runs using it will see the latest configuration.
+     *
+     *     Args:
+     *         config_id: The configuration UUID
+     *         body: Updated configuration fields
+     *         request: FastAPI request
+     *
+     *     Returns:
+     *         PipelineConfigurationResponse with incremented version
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    put: operations["update_configuration_api_pipeline_configurations__config_id__put"];
+    post?: never;
+    /**
+     * Delete Configuration
+     * @description Soft-delete a user pipeline configuration.
+     *
+     *     The in-memory registry entry is preserved for run traceability.
+     *     The configuration will no longer appear in list responses.
+     *
+     *     Args:
+     *         config_id: The configuration UUID
+     *         request: FastAPI request
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found or already deleted
+     */
+    delete: operations["delete_configuration_api_pipeline_configurations__config_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -4168,6 +4251,11 @@ export interface components {
        * @description New hex color '#rrggbb' or null to clear
        */
       color?: string | null;
+      /**
+       * Taxonomy Id
+       * @description Move scheme to a different taxonomy
+       */
+      taxonomy_id?: string | null;
     };
     /**
      * ConfigSectionUpdateRequest
@@ -4179,29 +4267,6 @@ export interface components {
        * @description Dictionary of key-value pairs to update in the section
        */
       updates: {
-        [key: string]: unknown;
-      };
-    };
-    /**
-     * ConfigurationResponse
-     * @description Response containing configuration metadata.
-     */
-    ConfigurationResponse: {
-      /**
-       * Config Ref
-       * @description Configuration reference slug
-       */
-      config_ref: string;
-      /**
-       * Version
-       * @description Configuration version number
-       */
-      version: number;
-      /**
-       * Config
-       * @description Configuration data
-       */
-      config: {
         [key: string]: unknown;
       };
     };
@@ -5700,6 +5765,201 @@ export interface components {
       relationships: string[];
     };
     /**
+     * PipelineConfigurationCreateRequest
+     * @description Request body for creating a new user pipeline configuration.
+     */
+    PipelineConfigurationCreateRequest: {
+      /**
+       * Name
+       * @description Configuration display name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Provider
+       * @description LLM provider (openai or anthropic)
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model identifier
+       */
+      model: string;
+      /**
+       * System Prompt
+       * @description System prompt text
+       */
+      system_prompt?: string | null;
+      /**
+       * User Prompt Template
+       * @description User prompt template (Jinja2)
+       */
+      user_prompt_template: string;
+      /** @description LLM generation parameters */
+      parameters?: components["schemas"]["PipelineConfigurationParameters"];
+      /**
+       * Enabled
+       * @description Whether this configuration is active
+       * @default true
+       */
+      enabled: boolean;
+    };
+    /**
+     * PipelineConfigurationParameters
+     * @description LLM parameters for a pipeline configuration.
+     */
+    PipelineConfigurationParameters: {
+      /**
+       * Temperature
+       * @description Sampling temperature
+       * @default 0.4
+       */
+      temperature: number;
+      /**
+       * Max Tokens
+       * @description Maximum tokens to generate
+       * @default 800
+       */
+      max_tokens: number;
+      /**
+       * Top P
+       * @description Nucleus sampling probability
+       * @default 0.9
+       */
+      top_p: number;
+    };
+    /**
+     * PipelineConfigurationResponse
+     * @description Rich response for a pipeline configuration (user-created or system-defined).
+     */
+    PipelineConfigurationResponse: {
+      /**
+       * Id
+       * @description Stable configuration UUID (synthetic for system configs)
+       */
+      id: string;
+      /**
+       * Config Ref
+       * @description Configuration reference slug (registry key)
+       */
+      config_ref: string;
+      /**
+       * Pipeline Type
+       * @description Pipeline type identifier
+       */
+      pipeline_type: string;
+      /**
+       * Implementation Id
+       * @description Implementation identifier
+       */
+      implementation_id: string;
+      /**
+       * Name
+       * @description Configuration display name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Provider
+       * @description LLM provider
+       */
+      provider?: string | null;
+      /**
+       * Model
+       * @description Model identifier
+       */
+      model?: string | null;
+      /**
+       * System Prompt
+       * @description System prompt text
+       */
+      system_prompt?: string | null;
+      /**
+       * User Prompt Template
+       * @description User prompt template
+       */
+      user_prompt_template?: string | null;
+      /** @description LLM generation parameters */
+      parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
+      /**
+       * Enabled
+       * @description Whether this configuration is active
+       * @default true
+       */
+      enabled: boolean;
+      /**
+       * Version
+       * @description Configuration version number
+       */
+      version: number;
+      /**
+       * Is System
+       * @description True for code-defined system configurations
+       */
+      is_system: boolean;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Updated At
+       * @description Last update timestamp
+       */
+      updated_at?: string | null;
+    };
+    /**
+     * PipelineConfigurationUpdateRequest
+     * @description Request body for updating an existing user pipeline configuration.
+     */
+    PipelineConfigurationUpdateRequest: {
+      /**
+       * Name
+       * @description Configuration display name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Provider
+       * @description LLM provider (openai or anthropic)
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model identifier
+       */
+      model: string;
+      /**
+       * System Prompt
+       * @description System prompt text
+       */
+      system_prompt?: string | null;
+      /**
+       * User Prompt Template
+       * @description User prompt template (Jinja2)
+       */
+      user_prompt_template: string;
+      /** @description LLM generation parameters */
+      parameters: components["schemas"]["PipelineConfigurationParameters"];
+      /**
+       * Enabled
+       * @description Whether this configuration is active
+       */
+      enabled: boolean;
+    };
+    /**
      * PipelineRunRequest
      * @description Base request to invoke a pipeline (polymorphic).
      */
@@ -5931,6 +6191,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Is Relevant
+       * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
+       */
+      is_relevant?: boolean | null;
     };
     /**
      * ProposalResponse
@@ -6719,6 +6984,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Color
+       * @description Optional hex color '#rrggbb'
+       */
+      color?: string | null;
     };
     /**
      * TaxonomyPublishRequest
@@ -8780,7 +9050,43 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ConfigurationResponse"][];
+          "application/json": components["schemas"]["PipelineConfigurationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_configuration_api_pipelines_types__pipeline_type__implementations__impl_id__configurations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_type: string;
+        impl_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineConfigurationCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
         };
       };
       /** @description Validation Error */
@@ -9180,6 +9486,101 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ResumeBatchResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_configuration_api_pipeline_configurations__config_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_configuration_api_pipeline_configurations__config_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineConfigurationUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_configuration_api_pipeline_configurations__config_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

@@ -24,6 +24,7 @@ export function useApplyRun() {
     onSuccess: (_result, { runId }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineRun(runId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineRuns() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pipelineCandidates(runId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });

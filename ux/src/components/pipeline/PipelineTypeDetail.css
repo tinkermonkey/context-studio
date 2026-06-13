@@ -13,43 +13,171 @@
 
   .pipeline-detail-layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 200px 280px;
     gap: 14px;
     align-items: start;
   }
 
-  .pipeline-detail-layout.has-drawer {
-    grid-template-columns: 200px 1fr 380px;
+  .pipeline-detail-layout.has-editor {
+    grid-template-columns: 200px 280px 1fr;
   }
 
-  /* Responsive adjustments */
+  /* Config list column */
+  .pipeline-cfg-list-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pipeline-cfg-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .pipeline-cfg-skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pipeline-cfg-skeleton {
+    height: 52px;
+    border-radius: 6px;
+    background: rgb(var(--canvas-border));
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  .pipeline-cfg-empty {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+    padding: 8px 2px;
+  }
+
+  .pipeline-cfg-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgb(var(--canvas-border));
+    background: rgb(var(--canvas-bg));
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, border-color 0.1s;
+    width: 100%;
+  }
+
+  .pipeline-cfg-row:hover {
+    background: rgb(var(--canvas-bg-hover, var(--canvas-border)));
+    border-color: rgb(var(--canvas-border-strong));
+  }
+
+  .pipeline-cfg-row--active {
+    border-color: rgb(var(--accent-primary));
+    background: rgba(var(--accent-primary), 0.08);
+  }
+
+  .pipeline-cfg-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pipeline-cfg-dot--enabled {
+    background: rgb(var(--status-emerald));
+  }
+
+  .pipeline-cfg-dot--disabled {
+    background: rgb(var(--canvas-fg-4));
+  }
+
+  .cfg-section-title--flush {
+    margin: 0;
+  }
+
+  .pipeline-cfg-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pipeline-cfg-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pipeline-cfg-model {
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    font-family: var(--font-mono);
+  }
+
+  .pipeline-cfg-badges {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .pipeline-cfg-empty-inspector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px;
+    border-radius: 8px;
+    border: 1px dashed rgb(var(--canvas-border));
+    color: rgb(var(--canvas-fg-3));
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .pipeline-cfg-empty-inspector p {
+    margin: 0;
+  }
+
+  /* PipelineTypeContent — no implementations column */
+  .pipeline-type-content-layout {
+    display: grid;
+    grid-template-columns: 280px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .pipeline-type-content-layout.has-editor {
+    grid-template-columns: 280px 1fr;
+  }
+
+  /* Responsive */
   @media (max-width: 1440px) {
     .pipeline-detail-layout {
-      grid-template-columns: 180px 1fr;
+      grid-template-columns: 180px 260px;
     }
 
-    .pipeline-detail-layout.has-drawer {
-      grid-template-columns: 180px 1fr 360px;
-    }
-  }
-
-  @media (max-width: 1200px) {
-    .pipeline-detail-layout {
-      grid-template-columns: 160px 1fr;
-    }
-
-    .pipeline-detail-layout.has-drawer {
-      grid-template-columns: 160px 1fr 340px;
+    .pipeline-detail-layout.has-editor {
+      grid-template-columns: 180px 260px 1fr;
     }
   }
 
   @media (max-width: 900px) {
-    .pipeline-detail-layout {
+    .pipeline-detail-layout,
+    .pipeline-detail-layout.has-editor {
       grid-template-columns: 1fr;
     }
+  }
 
-    .pipeline-detail-layout.has-drawer {
-      grid-template-columns: 1fr;
-    }
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 }
