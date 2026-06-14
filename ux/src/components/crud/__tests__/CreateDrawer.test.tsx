@@ -211,6 +211,9 @@ describe("CreateDrawer", () => {
           .getAllByRole("generic")
           .find((el) => el.getAttribute("aria-label") === "title: satisfied");
         expect(chip).toBeInTheDocument();
+        // The modifier must be a separate class (regression guard against the
+        // conditional className losing its leading space → "create-drawer__chipsatisfied").
+        expect(chip).toHaveClass("create-drawer__chip", "satisfied");
       });
     });
   });
