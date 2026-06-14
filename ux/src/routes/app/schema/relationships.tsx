@@ -5,6 +5,7 @@ import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimd
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
 import { useRelationships, useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -24,7 +25,11 @@ export function RelationshipsPage() {
 
   const { data: listResponse, isLoading, error, refetch } = useRelationships();
   const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
-  const { data: propertiesResponse, error: propertiesError, refetch: refetchProperties } = useProperties();
+  const {
+    data: propertiesResponse,
+    error: propertiesError,
+    refetch: refetchProperties,
+  } = useProperties();
   const { data: taxData } = useTaxonomies();
   const { data: schemesData } = useSchemes();
 
@@ -57,7 +62,11 @@ export function RelationshipsPage() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesResponse?.total },
     { id: "properties", label: "Properties", count: propertiesResponse?.total },
-    { id: "relationships", label: "Relationships", count: listResponse?.items?.length ?? listResponse?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: listResponse?.items?.length ?? listResponse?.total,
+    },
   ];
 
   function handleTabNavigate(tabId: string) {
@@ -73,17 +82,12 @@ export function RelationshipsPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", relationshipsCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} relationship${failed === 1 ? "" : "s"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason if the delete is rejected.
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   const relationshipColumns: Column<RelationshipResponse>[] = [
@@ -151,13 +155,9 @@ export function RelationshipsPage() {
     },
   ];
 
-  const rowMenuActions = [
-    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
-  ];
+  const rowMenuActions = [{ id: "delete", label: "Delete", icon: "trash" as const, danger: true }];
 
-  const bulkActions = [
-    { id: "delete", label: "Delete", variant: "danger" as const },
-  ];
+  const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
   const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
   const emptyStateTitle = filteredEmpty

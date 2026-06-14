@@ -9,7 +9,11 @@ import {
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
-import { useUpdateProperty, useDeleteProperty, useCreateProperty } from "@/api/hooks/ontology/useProperties";
+import {
+  useUpdateProperty,
+  useDeleteProperty,
+  useCreateProperty,
+} from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
@@ -46,7 +50,9 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(property?.description ?? "");
-  const [relevanceValue, setRelevanceValue] = useState<boolean | null>(property?.is_relevant ?? null);
+  const [relevanceValue, setRelevanceValue] = useState<boolean | null>(
+    property?.is_relevant ?? null,
+  );
 
   const { toast } = useToasts();
   const updateMutation = useUpdateProperty();
@@ -89,7 +95,11 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const handleDuplicate = async () => {
     try {
       const baseIdentifier = property.identifier + "_copy";
-      await createMutation.mutateAsync({ identifier: baseIdentifier, title: `Copy of ${property.title}`, description: property.description ?? undefined });
+      await createMutation.mutateAsync({
+        identifier: baseIdentifier,
+        title: `Copy of ${property.title}`,
+        description: property.description ?? undefined,
+      });
       toast("success", "Property duplicated");
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to duplicate property";
@@ -130,7 +140,9 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        onDuplicate={() => { void handleDuplicate(); }}
+        onDuplicate={() => {
+          void handleDuplicate();
+        }}
         data-testid="property-inspector"
       >
         {mode === "view" ? (
@@ -186,7 +198,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                   onSave={async (v) => {
                     await updateMutation.mutateAsync({ id: property.id, data: { title: v } });
                   }}
-                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  validate={(v) => (!v.trim() ? "Title is required" : undefined)}
                   data-testid="property-drawer-title-field"
                 />
 
@@ -211,7 +223,9 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                   <label className="form-group-label">Relevance</label>
                   <SegmentedControl
                     value={relevanceToString(relevanceValue)}
-                    onChange={(v) => { void handleRelevanceChange(String(v)); }}
+                    onChange={(v) => {
+                      void handleRelevanceChange(String(v));
+                    }}
                     options={RELEVANCE_OPTIONS}
                     data-testid="property-drawer-relevance-control"
                   />
@@ -237,7 +251,11 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={propertiesCopy.delete.confirmTitle}
-        message="This property will be permanently deleted."
+        message={
+          <span data-testid="property-delete-confirm">
+            This property will be permanently deleted.
+          </span>
+        }
         confirmLabel={propertiesCopy.delete.confirmButton}
         onConfirm={() => {
           void handleDelete();

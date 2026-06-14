@@ -4,7 +4,6 @@ import {
   Field,
   Icon,
   Select,
-  TextArea,
   TextInput,
   SegmentedControl,
   RelationshipBuilder,
@@ -78,7 +77,7 @@ const ENTITY_CONFIG: Record<EntityType, EntityConfig> = {
     eyebrow: "NEW · INDIVIDUAL",
     title: "Individual",
     description: "An individual is a specific instance of one or more classes.",
-    idPrefix: "ind_",
+    idPrefix: null,
     requiredFields: ["title", "classIds"],
     requirementLabels: { title: "title", classIds: "class" },
   },
@@ -105,8 +104,6 @@ export interface FormValues {
   sourceId: string;
   targetId: string;
   relationshipType: string;
-  confidence: number;
-  sourceText: string;
 }
 
 // Exhaustiveness: adding a new EntityType requires a matching entry here (satisfies enforces it)
@@ -115,8 +112,8 @@ const ENTITY_FORM_FIELDS = {
   scheme: ["title", "description", "taxonomyId"],
   class: ["title", "description", "schemeId", "parentClassId"],
   property: ["title", "identifier", "description"],
-  individual: ["title", "description", "classIds", "confidence", "sourceText"],
-  relationship: ["sourceId", "targetId", "relationshipType", "confidence", "sourceText"],
+  individual: ["title", "description", "classIds"],
+  relationship: ["sourceId", "targetId", "relationshipType"],
 } as const satisfies Record<EntityType, ReadonlyArray<keyof FormValues>>;
 
 // Suppress unused variable warning — ENTITY_FORM_FIELDS exists for compile-time safety
@@ -135,8 +132,6 @@ function defaultValues(initialTaxonomyId?: string, initialSchemeId?: string): Fo
     sourceId: "",
     targetId: "",
     relationshipType: "",
-    confidence: 0.8,
-    sourceText: "",
   };
 }
 
@@ -171,10 +166,7 @@ function isFieldFilled(values: FormValues, field: string): boolean {
   }
 }
 
-function contextFieldsForAnother(
-  entityType: EntityType,
-  values: FormValues,
-): Partial<FormValues> {
+function contextFieldsForAnother(entityType: EntityType, values: FormValues): Partial<FormValues> {
   switch (entityType) {
     case "scheme":
       return { taxonomyId: values.taxonomyId };
@@ -300,8 +292,7 @@ export function CreateDrawer({
     const requiredFields = config.requiredFields;
     const incomplete = requiredFields.filter((f) => !isFieldFilled(values, f));
     if (entityType === "relationship") {
-      const relIncomplete =
-        !relValue.source?.id || !relValue.target?.id || !relValue.predicate;
+      const relIncomplete = !relValue.source?.id || !relValue.target?.id || !relValue.predicate;
       if (relIncomplete) return;
     } else if (incomplete.length > 0) {
       const firstMissing = incomplete[0];
@@ -309,11 +300,17 @@ export function CreateDrawer({
         if (firstMissing === "title") {
           titleRef.current?.focus();
         } else if (firstMissing === "taxonomyId") {
-          (document.querySelector('[data-testid="create-drawer-taxonomy-select"]') as HTMLElement)?.focus();
+          (
+            document.querySelector('[data-testid="create-drawer-taxonomy-select"]') as HTMLElement
+          )?.focus();
         } else if (firstMissing === "schemeId") {
-          (document.querySelector('[data-testid="create-drawer-scheme-select"]') as HTMLElement)?.focus();
+          (
+            document.querySelector('[data-testid="create-drawer-scheme-select"]') as HTMLElement
+          )?.focus();
         } else if (firstMissing === "classIds") {
-          (document.querySelector('[data-testid="create-drawer-classes-list"]') as HTMLElement)?.focus();
+          (
+            document.querySelector('[data-testid="create-drawer-classes-list"]') as HTMLElement
+          )?.focus();
         }
       }, 0);
       return;
@@ -327,6 +324,7 @@ export function CreateDrawer({
         case "taxonomy":
           result = await createTaxonomy.mutateAsync({
             title: values.title,
+            identifier: values.identifier || undefined,
             description: values.description || null,
             color: values.domain || null,
           });
@@ -334,7 +332,11 @@ export function CreateDrawer({
         case "scheme":
           result = await createScheme.mutateAsync({
             taxonomyId: values.taxonomyId,
-            data: { title: values.title, description: values.description || null },
+            data: {
+              title: values.title,
+              identifier: values.identifier || undefined,
+              description: values.description || null,
+            },
           });
           break;
         case "class":
@@ -342,6 +344,7 @@ export function CreateDrawer({
             schemeId: values.schemeId,
             data: {
               title: values.title,
+              identifier: values.identifier || undefined,
               description: values.description || null,
               parent_class_id: values.parentClassId || undefined,
             },
@@ -385,7 +388,7 @@ export function CreateDrawer({
         setRelValue({ predicate: "" });
         setSourceQuery("");
         setTargetQuery("");
-        const name = "title" in result ? result.title ?? result.id : result.id;
+        const name = "title" in result ? (result.title ?? result.id) : result.id;
         setSuccessBanner(name);
         if (successTimerRef.current) clearTimeout(successTimerRef.current);
         successTimerRef.current = setTimeout(() => setSuccessBanner(null), 3500);
@@ -451,12 +454,12 @@ export function CreateDrawer({
 
   const touch = (field: string) => setTouched((t) => new Set([...t, field]));
 
-  const showError = (field: string): boolean =>
-    submitAttempted || touched.has(field);
+  const showError = (field: string): boolean => submitAttempted || touched.has(field);
 
   const fieldError = (field: string): string | undefined => {
     if (!showError(field)) return undefined;
-    if (!isFieldFilled(values, field)) return `${config.requirementLabels[field] ?? field} is required`;
+    if (!isFieldFilled(values, field))
+      return `${config.requirementLabels[field] ?? field} is required`;
     return undefined;
   };
 
@@ -479,9 +482,10 @@ export function CreateDrawer({
     .slice(0, 20)
     .map((c) => ({ id: c.id, label: c.title }));
 
-  const predicates = properties.length > 0
-    ? properties.map((p) => p.identifier)
-    : ["related_to", "contains", "depends_on", "is_used_by"];
+  const predicates =
+    properties.length > 0
+      ? properties.map((p) => p.identifier)
+      : ["related_to", "contains", "depends_on", "is_used_by"];
 
   const content = (
     <div className="create-drawer" data-testid="create-drawer">
@@ -499,7 +503,7 @@ export function CreateDrawer({
       <div className="create-drawer__progress">
         <div className="create-drawer__bar-track">
           <div
-            className={`create-drawer__bar-fill${isComplete ? " complete" : ""}`}
+            className={`create-drawer__bar-fill${isComplete ? "complete" : ""}`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -511,7 +515,7 @@ export function CreateDrawer({
             return (
               <span
                 key={f}
-                className={`create-drawer__chip${filled ? " satisfied" : ""}`}
+                className={`create-drawer__chip${filled ? "satisfied" : ""}`}
                 aria-label={`${config.requirementLabels[f] ?? f}: ${filled ? "satisfied" : "required"}`}
               >
                 {filled ? (
@@ -523,7 +527,7 @@ export function CreateDrawer({
               </span>
             );
           })}
-          <span className={`create-drawer__readout${isComplete ? " ready" : ""}`}>
+          <span className={`create-drawer__readout${isComplete ? "ready" : ""}`}>
             {isComplete ? "ready" : `${filledCount} / ${totalRequired}`}
           </span>
         </div>
@@ -679,8 +683,6 @@ export function CreateDrawer({
               sourceResults={classPickerResults}
               targetResults={targetPickerResults}
               predicates={predicates}
-              values={values}
-              setValues={setValues}
               submitAttempted={submitAttempted}
               touched={touched}
               touch={touch}
@@ -700,12 +702,7 @@ export function CreateDrawer({
           />
           Create another
         </label>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          data-testid="create-drawer-cancel-btn"
-        >
+        <Button variant="ghost" size="sm" onClick={onClose} data-testid="create-drawer-cancel-btn">
           Cancel
         </Button>
         <Button
@@ -716,8 +713,7 @@ export function CreateDrawer({
           data-testid="create-drawer-create-btn"
           title={!isComplete ? "Fill all required fields to create" : undefined}
         >
-          Create{" "}
-          <kbd className="create-drawer__kbd">⌘↵</kbd>
+          Create <kbd className="create-drawer__kbd">⌘↵</kbd>
         </Button>
       </div>
     </div>
@@ -726,10 +722,7 @@ export function CreateDrawer({
   if (variant === "inline") {
     if (!isOpen) return null;
     return (
-      <div
-        className="create-drawer-inline"
-        data-testid={testId ?? "create-drawer-inline"}
-      >
+      <div className="create-drawer-inline" data-testid={testId ?? "create-drawer-inline"}>
         {content}
       </div>
     );
@@ -968,7 +961,7 @@ function IndividualBody({
         data-testid="create-drawer-classes-field"
       >
         <div
-          className={`class-multi-select${fieldError("classIds") ? " error" : ""}`}
+          className={`class-multi-select${fieldError("classIds") ? "error" : ""}`}
           role="group"
           aria-label="Select classes"
           data-testid="create-drawer-classes-list"
@@ -999,34 +992,6 @@ function IndividualBody({
           testId="create-drawer-description-input"
         />
       </Field>
-
-      <Field label="Source text" hint="optional">
-        <TextArea
-          placeholder="Paste the source passage that mentions this individual…"
-          value={values.sourceText}
-          onChange={(e) => setValues((v) => ({ ...v, sourceText: e.target.value }))}
-          rows={2}
-          data-testid="create-drawer-source-text-input"
-        />
-      </Field>
-
-      <div className="ce-param" data-testid="create-drawer-confidence-field">
-        <div className="ce-param__top">
-          <span className="ce-param__label">Confidence</span>
-          <span className="ce-param__val">{(values.confidence * 100).toFixed(0)}%</span>
-        </div>
-        <input
-          type="range"
-          className="ce-range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={values.confidence}
-          onChange={(e) => setValues((v) => ({ ...v, confidence: parseFloat(e.target.value) }))}
-          data-testid="create-drawer-confidence-input"
-          aria-label="Confidence"
-        />
-      </div>
     </>
   );
 }
@@ -1041,8 +1006,6 @@ interface RelationshipBodyProps {
   sourceResults: Array<{ id: string; label: string }>;
   targetResults: Array<{ id: string; label: string }>;
   predicates: string[];
-  values: FormValues;
-  setValues: React.Dispatch<React.SetStateAction<FormValues>>;
   submitAttempted: boolean;
   touched: Set<string>;
   touch: (field: string) => void;
@@ -1058,8 +1021,6 @@ function RelationshipBody({
   sourceResults,
   targetResults,
   predicates,
-  values,
-  setValues,
   submitAttempted,
   touched: _touched,
   touch,
@@ -1093,44 +1054,20 @@ function RelationshipBody({
       />
 
       {submitAttempted && !relValue.source?.id && (
-        <div className="field-error" role="alert">Source is required</div>
+        <div className="field-error" role="alert">
+          Source is required
+        </div>
       )}
       {submitAttempted && !relValue.target?.id && (
-        <div className="field-error" role="alert">Target is required</div>
+        <div className="field-error" role="alert">
+          Target is required
+        </div>
       )}
       {submitAttempted && !relValue.predicate && (
-        <div className="field-error" role="alert">Predicate is required</div>
-      )}
-
-      <Field label="Source text" hint="optional">
-        <TextArea
-          placeholder="Paste the source passage that supports this relationship…"
-          value={values.sourceText}
-          onChange={(e) => setValues((v) => ({ ...v, sourceText: e.target.value }))}
-          rows={2}
-          data-testid="create-drawer-source-text-input"
-        />
-      </Field>
-
-      <div className="ce-param" data-testid="create-drawer-confidence-field">
-        <div className="ce-param__top">
-          <span className="ce-param__label">Confidence</span>
-          <span className="ce-param__val">{(values.confidence * 100).toFixed(0)}%</span>
+        <div className="field-error" role="alert">
+          Predicate is required
         </div>
-        <input
-          type="range"
-          className="ce-range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={values.confidence}
-          onChange={(e) =>
-            setValues((v) => ({ ...v, confidence: parseFloat(e.target.value) }))
-          }
-          data-testid="create-drawer-confidence-input"
-          aria-label="Confidence"
-        />
-      </div>
+      )}
     </>
   );
 }

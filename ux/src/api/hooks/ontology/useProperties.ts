@@ -8,7 +8,10 @@ type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinition
 
 export function useProperties(isRelevant?: boolean) {
   return useQuery({
-    queryKey: QUERY_KEYS.properties,
+    // Include isRelevant in the key so relevance-filtered and unfiltered
+    // queries do not collide on one cache entry. Mutations invalidate the
+    // ["properties"] prefix, which still matches both.
+    queryKey: [...QUERY_KEYS.properties, isRelevant ?? null],
     queryFn: () => ontologyService.listProperties(isRelevant),
   });
 }
@@ -58,6 +61,7 @@ export function useSetPropertyRelevance() {
 export function useDeleteProperty() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteProperty(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });

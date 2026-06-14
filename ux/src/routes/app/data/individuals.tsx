@@ -1,17 +1,11 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import {
-  Button,
-  PageHeader,
-  FilterBar,
-  Icon,
-  Chip,
-  VersionPill,
-} from "@tinkermonkey/heimdall-ui";
+import { Button, PageHeader, FilterBar, Icon, Chip, VersionPill } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { IndividualDrawer } from "@/components/ontology/IndividualDrawer";
 import { useIndividuals, useDeleteIndividual } from "@/api/hooks/ontology/useIndividuals";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -44,17 +38,12 @@ export function IndividualsPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", individualsCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} individual${failed === 1 ? "" : "s"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason if the delete is rejected.
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   const individualColumns: Column<IndividualResponse>[] = [
@@ -120,13 +109,9 @@ export function IndividualsPage() {
     },
   ];
 
-  const rowMenuActions = [
-    { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
-  ];
+  const rowMenuActions = [{ id: "delete", label: "Delete", icon: "trash" as const, danger: true }];
 
-  const bulkActions = [
-    { id: "delete", label: "Delete", variant: "danger" as const },
-  ];
+  const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
   const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
   const emptyStateTitle = filteredEmpty
@@ -185,8 +170,12 @@ export function IndividualsPage() {
             data={filteredData}
             isLoading={isLoading}
             columns={individualColumns}
-            renderInspector={(entity) => (
-              <IndividualDrawer key={entity.id} individualId={entity.id} />
+            renderInspector={(entity, { selectEntity }) => (
+              <IndividualDrawer
+                key={entity.id}
+                individualId={entity.id}
+                onSelectIndividual={selectEntity}
+              />
             )}
             rowMenuActions={rowMenuActions}
             onDeleteEntity={handleDelete}

@@ -541,6 +541,18 @@ selectors:
   - selector: class-delete-confirm
     component: components/ontology/ClassDrawer.tsx
     description: Confirmation dialog for class deletion
+  - selector: taxonomy-delete-confirm
+    component: src/components/ontology/TaxonomyDrawer.tsx
+    description: Message body of the taxonomy delete confirmation dialog
+  - selector: scheme-delete-confirm
+    component: src/components/ontology/SchemeDrawer.tsx
+    description: Message body of the concept-scheme delete confirmation dialog
+  - selector: property-delete-confirm
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: Message body of the property delete confirmation dialog
+  - selector: relationship-delete-confirm
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Message body of the relationship delete confirmation dialog
 
   # Class Editor Form
   - selector: class-editor-form
@@ -669,6 +681,9 @@ selectors:
   - selector: related-individual-class-*
     component: components/ontology/IndividualDrawer.tsx
     description: Class chip for related individual with dynamic class ID suffix
+  - selector: prop-value-*
+    component: components/ontology/IndividualDrawer.tsx
+    description: Inherited data-property value cell, suffixed by the property identifier
   - selector: individual-drawer-close-button
     component: components/ontology/IndividualDrawer.tsx
     description: Close button in individual detail drawer
@@ -2116,15 +2131,6 @@ selectors:
   - selector: create-drawer-classes-list
     component: src/components/crud/CreateDrawer.tsx
     description: Scrollable checkbox list for selecting one or more classes when creating an individual
-  - selector: create-drawer-source-text-input
-    component: src/components/crud/CreateDrawer.tsx
-    description: Textarea for an optional source passage that supports the individual or relationship being created
-  - selector: create-drawer-confidence-field
-    component: src/components/crud/CreateDrawer.tsx
-    description: Wrapper containing the confidence label and slider for individual and relationship creation
-  - selector: create-drawer-confidence-input
-    component: src/components/crud/CreateDrawer.tsx
-    description: Range slider for setting extraction confidence (0–1) on individuals and relationships
   - selector: create-drawer-relationship-builder
     component: src/components/crud/CreateDrawer.tsx
     description: RelationshipBuilder widget for selecting source, predicate, and target when creating a relationship

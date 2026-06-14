@@ -113,6 +113,12 @@
     color: rgb(var(--canvas-fg-3));
   }
 
+  /* Actual data-property value in grid value cell */
+  .prop-value {
+    color: rgb(var(--canvas-fg-1));
+    font-size: var(--text-sm);
+  }
+
   /* Muted xs source label */
   .prop-source-label {
     color: rgb(var(--canvas-fg-3));

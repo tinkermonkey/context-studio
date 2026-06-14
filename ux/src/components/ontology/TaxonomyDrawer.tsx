@@ -10,7 +10,11 @@ import {
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
-import { useUpdateTaxonomy, useDeleteTaxonomy, useCreateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import {
+  useUpdateTaxonomy,
+  useDeleteTaxonomy,
+  useCreateTaxonomy,
+} from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
@@ -78,7 +82,10 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
 
   const handleDuplicate = async () => {
     try {
-      await createMutation.mutateAsync({ title: `Copy of ${taxonomy.title}`, description: taxonomy.description ?? undefined });
+      await createMutation.mutateAsync({
+        title: `Copy of ${taxonomy.title}`,
+        description: taxonomy.description ?? undefined,
+      });
       toast("success", "Taxonomy duplicated");
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to duplicate taxonomy";
@@ -120,7 +127,9 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        onDuplicate={() => { void handleDuplicate(); }}
+        onDuplicate={() => {
+          void handleDuplicate();
+        }}
         extraViewActions={publishAction}
         data-testid="taxonomy-inspector"
       >
@@ -187,7 +196,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                   onSave={async (v) => {
                     await updateMutation.mutateAsync({ id: taxonomy.id, data: { title: v } });
                   }}
-                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  validate={(v) => (!v.trim() ? "Title is required" : undefined)}
                   data-testid="taxonomy-drawer-title-field"
                 />
 
@@ -243,7 +252,11 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={taxonomiesCopy.delete.confirmTitle}
-        message="This taxonomy and all its concept schemes will be permanently deleted."
+        message={
+          <span data-testid="taxonomy-delete-confirm">
+            This taxonomy and all its concept schemes will be permanently deleted.
+          </span>
+        }
         confirmLabel={taxonomiesCopy.delete.confirmButton}
         onConfirm={() => {
           void handleDelete();

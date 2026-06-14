@@ -31,7 +31,7 @@ export function useCreateScheme() {
     mutationFn: ({ taxonomyId, data }: { taxonomyId: string; data: ConceptSchemeCreateRequest }) =>
       ontologyService.createScheme(taxonomyId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }
@@ -41,9 +41,8 @@ export function useUpdateScheme() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ConceptSchemeUpdateRequest }) =>
       ontologyService.updateScheme(id, data),
-    onSuccess: (_result, { id }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.scheme(id) });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }
@@ -54,7 +53,8 @@ export function useMoveScheme() {
     mutationFn: ({ id, data }: { id: string; data: SchemeMoveRequest }) =>
       ontologyService.updateScheme(id, { taxonomy_id: data.target_taxonomy_id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
     },
   });
 }
@@ -62,9 +62,13 @@ export function useMoveScheme() {
 export function useDeleteScheme() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteScheme(id),
+    // The backend rejects deleting a scheme that still has classes, so a
+    // successful delete only removes an empty scheme. The schemesRoot prefix
+    // also refreshes the parent taxonomy's scheme list.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }

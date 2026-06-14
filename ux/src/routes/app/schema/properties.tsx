@@ -13,8 +13,13 @@ import {
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { PropertyDrawer } from "@/components/ontology/PropertyDrawer";
-import { useProperties, useDeleteProperty, useSetPropertyRelevance } from "@/api/hooks/ontology/useProperties";
+import {
+  useProperties,
+  useDeleteProperty,
+  useSetPropertyRelevance,
+} from "@/api/hooks/ontology/useProperties";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
@@ -59,7 +64,11 @@ export function PropertiesPage() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: listResponse?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   function handleTabNavigate(tabId: string) {
@@ -75,17 +84,12 @@ export function PropertiesPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", propertiesCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} propert${failed === 1 ? "y" : "ies"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason if the delete is rejected.
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   const propertyColumns: Column<PropertyDefinitionResponse>[] = [
@@ -155,12 +159,16 @@ export function PropertiesPage() {
         );
         const failed = results.filter((r) => r.status === "rejected").length;
         if (failed === 0) {
-          toast("success", `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`);
+          toast(
+            "success",
+            `Updated relevance for ${ids.length} propert${ids.length === 1 ? "y" : "ies"}`,
+          );
         } else {
           const succeeded = ids.length - failed;
-          const msg = succeeded > 0
-            ? `Updated ${succeeded}, failed to update ${failed}`
-            : `Failed to update ${failed} propert${failed === 1 ? "y" : "ies"}`;
+          const msg =
+            succeeded > 0
+              ? `Updated ${succeeded}, failed to update ${failed}`
+              : `Failed to update ${failed} propert${failed === 1 ? "y" : "ies"}`;
           toast("error", msg);
           throw new Error(msg);
         }
@@ -219,9 +227,7 @@ export function PropertiesPage() {
             data={filteredData}
             isLoading={isLoading}
             columns={propertyColumns}
-            renderInspector={(entity) => (
-              <PropertyDrawer key={entity.id} property={entity} />
-            )}
+            renderInspector={(entity) => <PropertyDrawer key={entity.id} property={entity} />}
             rowMenuActions={rowMenuActions}
             onDeleteEntity={handleDelete}
             bulkActions={bulkActions}

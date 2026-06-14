@@ -13,6 +13,7 @@ import {
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
 import { useSchemes, useDeleteScheme, useMoveScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
@@ -76,7 +77,11 @@ export function SchemesIndexPage() {
     { id: "schemes", label: "Schemes", count: listResponse?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   function handleTabNavigate(tabId: string) {
@@ -92,17 +97,12 @@ export function SchemesIndexPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", schemesCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} scheme${failed === 1 ? "" : "s"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason (e.g. "Cannot delete: it has N class(es)").
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   function handleRowMenuAction(actionId: string, entity: ConceptSchemeResponse) {
@@ -193,16 +193,22 @@ export function SchemesIndexPage() {
       options: taxonomies.map((t) => ({ value: t.id, label: t.title })),
       onBulkConfirm: async (ids: string[], taxonomyId: string) => {
         const results = await Promise.allSettled(
-          ids.map((id) => moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } })),
+          ids.map((id) =>
+            moveMutation.mutateAsync({ id, data: { target_taxonomy_id: taxonomyId } }),
+          ),
         );
         const failed = results.filter((r) => r.status === "rejected").length;
         if (failed === 0) {
-          toast("success", `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`);
+          toast(
+            "success",
+            `Moved ${ids.length} scheme${ids.length === 1 ? "" : "s"} to new taxonomy`,
+          );
         } else {
           const succeeded = ids.length - failed;
-          const msg = succeeded > 0
-            ? `Moved ${succeeded}, failed to move ${failed}`
-            : `Failed to move ${failed} scheme${failed === 1 ? "" : "s"}`;
+          const msg =
+            succeeded > 0
+              ? `Moved ${succeeded}, failed to move ${failed}`
+              : `Failed to move ${failed} scheme${failed === 1 ? "" : "s"}`;
           toast("error", msg);
           throw new Error(msg);
         }
@@ -299,6 +305,7 @@ export function SchemesIndexPage() {
 export const Route = createFileRoute("/app/schema/schemes/")({
   component: SchemesIndexPage,
   validateSearch: (search: Record<string, unknown>): SchemesSearchParams => ({
-    createForTaxonomy: typeof search.createForTaxonomy === "string" ? search.createForTaxonomy : undefined,
+    createForTaxonomy:
+      typeof search.createForTaxonomy === "string" ? search.createForTaxonomy : undefined,
   }),
 });

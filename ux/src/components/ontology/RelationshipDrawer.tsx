@@ -8,7 +8,10 @@ import {
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
 import { InlineInspector } from "@/components/ui/InlineInspector";
-import { useDeleteRelationship, useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import {
+  useDeleteRelationship,
+  useCreateRelationship,
+} from "@/api/hooks/ontology/useRelationships";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useToasts } from "@/components/ui/Toast";
@@ -47,9 +50,10 @@ export function RelationshipDrawer({
   const allClasses = classesResponse?.items || [];
   const properties = propertiesResponse?.items || [];
 
-  const predicates = properties.length > 0
-    ? properties.map((p) => p.identifier)
-    : ["related_to", "contains", "depends_on", "is_used_by"];
+  const predicates =
+    properties.length > 0
+      ? properties.map((p) => p.identifier)
+      : ["related_to", "contains", "depends_on", "is_used_by"];
 
   const sourcePickerResults = allClasses
     .filter((c) => !sourceQuery || c.title.toLowerCase().includes(sourceQuery.toLowerCase()))
@@ -77,7 +81,9 @@ export function RelationshipDrawer({
   };
 
   const handleSave = async () => {
-    if (!relationship || !editValue.source?.id || !editValue.target?.id || !editValue.predicate) {
+    if (!relationship) return;
+    if (!editValue.source?.id || !editValue.target?.id || !editValue.predicate) {
+      toast("error", "Source, target, and predicate are all required");
       return;
     }
 
@@ -92,30 +98,33 @@ export function RelationshipDrawer({
       return;
     }
 
+    // There is no relationship-update endpoint, so editing is create + delete.
+    // Create the replacement FIRST so a failure cannot destroy the original.
     setIsSaving(true);
-    try {
-      await deleteMutation.mutateAsync(relationship.id);
-    } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to update relationship";
-      toast("error", message);
-      setIsSaving(false);
-      return;
-    }
-
     try {
       await createMutation.mutateAsync({
         source_id: editValue.source.id,
         target_id: editValue.target.id,
         relationship_type: editValue.predicate,
       });
-      toast("success", "Relationship updated");
-      setMode("view");
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to create updated relationship — the original has been removed";
+      const message = error instanceof ApiError ? error.detail : "Failed to update relationship";
       toast("error", message);
+      setIsSaving(false);
+      return; // original is left untouched
+    }
+
+    // Replacement exists; now remove the original triple.
+    try {
+      await deleteMutation.mutateAsync(relationship.id);
+      toast("success", "Relationship updated");
+    } catch {
+      toast(
+        "error",
+        "Updated relationship created, but the original could not be removed — you may now have a duplicate.",
+      );
     } finally {
+      setMode("view");
       setIsSaving(false);
     }
   };
@@ -126,8 +135,7 @@ export function RelationshipDrawer({
       await deleteMutation.mutateAsync(relationship.id);
       toast("success", relationshipsCopy.delete.successToast);
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.detail : "Failed to delete relationship";
+      const message = error instanceof ApiError ? error.detail : "Failed to delete relationship";
       toast("error", message);
     }
   };
@@ -226,7 +234,11 @@ export function RelationshipDrawer({
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={relationshipsCopy.delete.confirmTitle}
-        message="This relationship and all its instances will be permanently deleted."
+        message={
+          <span data-testid="relationship-delete-confirm">
+            This relationship and all its instances will be permanently deleted.
+          </span>
+        }
         confirmLabel={relationshipsCopy.delete.confirmButton}
         onConfirm={() => {
           void handleDelete();

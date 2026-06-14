@@ -17,7 +17,10 @@ export function useCreateRelationship() {
   return useMutation({
     mutationFn: (data: RelationshipCreateRequest) => ontologyService.createRelationship(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationshipsRoot });
+      // Class drawers and property drawers show relationship counts / "used by".
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },
   });
 }
@@ -25,9 +28,12 @@ export function useCreateRelationship() {
 export function useDeleteRelationship() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteRelationship(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationshipsRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },
   });
 }
