@@ -169,6 +169,16 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
     embedding = Column(
         LargeBinary, nullable=True, doc="Binary embedding vector (for class, optional)"
     )
+    title_embedding = Column(
+        LargeBinary,
+        nullable=True,
+        doc="float32 blob: embedding of title alone, for schema vector search",
+    )
+    definition_embedding = Column(
+        LargeBinary,
+        nullable=True,
+        doc="float32 blob: embedding of description alone, for schema vector search",
+    )
     is_indexed = Column(
         Boolean,
         nullable=False,

@@ -10,6 +10,10 @@ from domain.pipelines.individual_extraction.configurations.default import (
     get_default_config,
     get_openrouter_config,
 )
+from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.open_orchestrator import (
+    OpenIndividualExtractionOrchestrator,
+)
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
 )
@@ -36,12 +40,17 @@ def register_individual_extraction(
         impl_registry: PipelineImplementationRegistry instance (optional)
         config_registry: PipelineConfigurationRegistry instance (optional)
     """
-    # Register the default implementation
+    # Register implementations (LLM-only "default" + open spaCy "open_v1")
     if impl_registry is not None:
         impl_registry.register_impl(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             IndividualExtractionOrchestrator,
+        )
+        impl_registry.register_impl(
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "open_v1",
+            OpenIndividualExtractionOrchestrator,
         )
 
     # Register configurations
@@ -60,4 +69,12 @@ def register_individual_extraction(
             "default",
             "extraction-openrouter-default",
             get_openrouter_config(),
+        )
+
+        # Open spaCy-based config
+        config_registry.register(
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "open_v1",
+            "extraction-open-v1",
+            get_open_v1_config(),
         )

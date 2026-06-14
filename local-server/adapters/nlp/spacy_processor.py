@@ -13,7 +13,13 @@ except ImportError:
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from domain.extraction.ports import NLPEntity, NLPResult
+from domain.extraction.ports import (
+    NLPEntity,
+    NLPResult,
+    NounChunkSpan,
+    OpenExtractionResult,
+    OpenToken,
+)
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -35,23 +41,29 @@ class SpacyNLPProcessor:
 
     MODEL_NAME = "en_core_web_sm"
 
-    def __init__(self) -> None:
+    def __init__(self, model_name: Optional[str] = None) -> None:
         """
         Initialize the spaCy NLP processor.
 
         Attempts to load the configured spaCy model. If loading fails, logs a warning
         and continues in a degraded state where is_ready() returns False.
+
+        Args:
+            model_name: spaCy model to load (e.g. 'en_core_web_sm', 'en_core_web_lg').
+                Defaults to MODEL_NAME. Exposed so the open-extraction pipeline can
+                tune the model as an optimization knob.
         """
+        self._model_name = model_name or self.MODEL_NAME
         self._nlp: Optional[Any] = None
         if not HAS_SPACY:
             logger.warning("spaCy not installed. NLP processing will be unavailable.")
             return
         try:
-            self._nlp = spacy.load(self.MODEL_NAME)
-            logger.info(f"Loaded spaCy model: {self.MODEL_NAME}")
+            self._nlp = spacy.load(self._model_name)
+            logger.info(f"Loaded spaCy model: {self._model_name}")
         except OSError as e:
             logger.warning(
-                f"spaCy model '{self.MODEL_NAME}' not available: {e}. "
+                f"spaCy model '{self._model_name}' not available: {e}. "
                 "NLP processing will be unavailable."
             )
 
@@ -77,7 +89,7 @@ class SpacyNLPProcessor:
             Returns empty results if the processor is not ready.
         """
         with tracer.start_as_current_span("nlp.process") as span:
-            span.set_attribute("nlp.model", self.MODEL_NAME)
+            span.set_attribute("nlp.model", self._model_name)
             span.set_attribute("nlp.text_length", len(text))
 
             try:
@@ -117,7 +129,7 @@ class SpacyNLPProcessor:
             Returns empty list if the processor is not ready.
         """
         with tracer.start_as_current_span("nlp.process") as span:
-            span.set_attribute("nlp.model", self.MODEL_NAME)
+            span.set_attribute("nlp.model", self._model_name)
             span.set_attribute("nlp.text_length", len(text))
 
             try:
@@ -166,6 +178,115 @@ class SpacyNLPProcessor:
             )
 
         return entities
+
+    def process_open(self, text: str) -> OpenExtractionResult:
+        """
+        Perform open-extraction NLP processing on text.
+
+        Produces per-token POS + dependency metadata and noun-chunk spans for
+        the open knowledge-graph extraction flow. Returns an empty result if the
+        processor is not ready.
+
+        Args:
+            text: Text to process
+
+        Returns:
+            OpenExtractionResult with tokens, noun-chunk spans, sentence count,
+            and language.
+        """
+        with tracer.start_as_current_span("nlp.process_open") as span:
+            span.set_attribute("nlp.model", self._model_name)
+            span.set_attribute("nlp.text_length", len(text))
+
+            try:
+                if not self.is_ready():
+                    logger.warning(
+                        "NLP processor not ready. Returning empty open result for text:"
+                        f" {text[:100]}"
+                    )
+                    return OpenExtractionResult(
+                        tokens=[], noun_chunks=[], sentence_count=0, language="unknown"
+                    )
+
+                assert self._nlp is not None
+                doc = self._nlp(text)
+                return self._build_open_result(doc)
+            except Exception as e:
+                span.set_status(Status(StatusCode.ERROR))
+                span.record_exception(e)
+                raise
+
+    def _build_open_result(self, doc) -> OpenExtractionResult:
+        """
+        Build an OpenExtractionResult from a processed spaCy Doc.
+
+        Args:
+            doc: Processed spaCy Doc object
+
+        Returns:
+            OpenExtractionResult with per-token POS/dependency metadata and
+            noun-chunk spans.
+        """
+        # Map each token index to the index of its sentence.
+        sentence_index_by_token: dict[int, int] = {}
+        sentence_count = 0
+        for sentence_count, sent in enumerate(doc.sents):
+            for tok in sent:
+                sentence_index_by_token[tok.i] = sentence_count
+        sentence_count = sentence_count + 1 if sentence_index_by_token else 0
+
+        tokens = [
+            OpenToken(
+                index=tok.i,
+                text=tok.text,
+                lemma=tok.lemma_.lower(),
+                pos=tok.pos_,
+                tag=tok.tag_,
+                dep=tok.dep_,
+                head_index=tok.head.i,
+                start=tok.idx,
+                end=tok.idx + len(tok.text),
+                sentence_index=sentence_index_by_token.get(tok.i, 0),
+                is_stop=bool(tok.is_stop),
+                is_alpha=bool(tok.is_alpha),
+            )
+            for tok in doc
+        ]
+
+        noun_chunks = [
+            NounChunkSpan(
+                text=chunk.text,
+                start_token=chunk.start,
+                end_token=chunk.end,
+                root_index=chunk.root.i,
+                start=chunk.start_char,
+                end=chunk.end_char,
+                sentence_index=sentence_index_by_token.get(chunk.root.i, 0),
+            )
+            for chunk in doc.noun_chunks
+        ]
+
+        return OpenExtractionResult(
+            tokens=tokens,
+            noun_chunks=noun_chunks,
+            sentence_count=sentence_count,
+            language="en",
+        )
+
+    async def process_open_async(self, text: str) -> OpenExtractionResult:
+        """
+        Perform open-extraction NLP processing on text (async version).
+
+        Runs the processing in a thread pool to avoid blocking the event loop.
+
+        Args:
+            text: Text to process
+
+        Returns:
+            OpenExtractionResult with tokens, noun-chunk spans, sentence count,
+            and language.
+        """
+        return await run_sync_in_executor(self.process_open, text)
 
     async def process_async(self, text: str) -> NLPResult:
         """

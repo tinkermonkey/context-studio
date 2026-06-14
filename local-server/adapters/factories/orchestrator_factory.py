@@ -9,6 +9,9 @@ from hashlib import sha256
 from typing import Any, Callable, Type
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.individual_extraction.open_orchestrator import (
+    OpenIndividualExtractionOrchestrator,
+)
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -20,6 +23,9 @@ from domain.pipelines.orchestration.noop import (
 )
 from domain.pipelines.ports import LLMProvider
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+from domain.pipelines.schema_extraction.open_orchestrator import (
+    OpenSchemaExtractionOrchestrator,
+)
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
@@ -69,6 +75,50 @@ def _build_schema_extraction(
     return SchemaExtractionOrchestrator(
         llm_provider=llm_provider,
         ontology_repo=services.get("ontology_repo"),
+        run_id=services.get("run_id"),
+        status_writer=services.get("status_writer"),
+    )
+
+
+def _build_open_individual_extraction(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
+    nlp_processor = services.get("nlp_processor")
+    embedding_service = services.get("embedding_service")
+    if not nlp_processor or not embedding_service:
+        raise ValueError(
+            "nlp_processor and embedding_service are required for "
+            "OpenIndividualExtractionOrchestrator"
+        )
+    return OpenIndividualExtractionOrchestrator(
+        llm_provider=llm_provider,
+        nlp_processor=nlp_processor,
+        embedding_service=embedding_service,
+        schema_index=services.get("schema_index"),
+        config=services.get("open_individual_config"),
+        run_id=services.get("run_id"),
+        status_writer=services.get("status_writer"),
+    )
+
+
+def _build_open_schema_extraction(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
+    nlp_processor = services.get("nlp_processor")
+    embedding_service = services.get("embedding_service")
+    clusterer = services.get("clusterer")
+    if not nlp_processor or not embedding_service or not clusterer:
+        raise ValueError(
+            "nlp_processor, embedding_service, and clusterer are required for "
+            "OpenSchemaExtractionOrchestrator"
+        )
+    return OpenSchemaExtractionOrchestrator(
+        llm_provider=llm_provider,
+        nlp_processor=nlp_processor,
+        embedding_service=embedding_service,
+        clusterer=clusterer,
+        ontology_repo=services.get("ontology_repo"),
+        config=services.get("open_schema_config"),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
     )
@@ -139,7 +189,9 @@ _ORCHESTRATOR_BUILDERS: dict[
 ] = {
     NoOpPipelineOrchestrator: _build_noop,
     IndividualExtractionOrchestrator: _build_individual_extraction,
+    OpenIndividualExtractionOrchestrator: _build_open_individual_extraction,
     SchemaExtractionOrchestrator: _build_schema_extraction,
+    OpenSchemaExtractionOrchestrator: _build_open_schema_extraction,
     SchemaGroundingOrchestrator: _build_schema_grounding,
     DefinitionRefinementOrchestrator: _build_definition_refinement,
     ConnectionRefinementOrchestrator: _build_connection_refinement,

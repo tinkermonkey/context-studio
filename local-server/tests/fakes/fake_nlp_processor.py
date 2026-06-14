@@ -1,6 +1,12 @@
 """Fake implementation of NLPProcessor for testing."""
 
-from domain.extraction.ports import NLPEntity, NLPResult
+from domain.extraction.ports import (
+    NLPEntity,
+    NLPResult,
+    NounChunkSpan,
+    OpenExtractionResult,
+    OpenToken,
+)
 
 
 class FakeNLPProcessor:
@@ -80,6 +86,74 @@ class FakeNLPProcessor:
                 linked_uri=None,
             )
         ]
+
+    def process_open(self, text: str) -> OpenExtractionResult:
+        """
+        Perform open-extraction NLP processing on text.
+
+        Produces deterministic per-token data by whitespace tokenization: each
+        word becomes a NOUN token heading the sentence root, and each alphabetic
+        word also becomes a single-token noun chunk. Enough structure for
+        consumers to exercise the open-extraction code paths.
+
+        Args:
+            text: Text to process
+
+        Returns:
+            OpenExtractionResult with tokens and noun-chunk spans.
+
+        Raises:
+            RuntimeError: If should_fail is True
+        """
+        if self.should_fail:
+            raise RuntimeError("NLP processor error")
+
+        self.call_count += 1
+        self.last_text_processed = text
+
+        words = text.split() if text else []
+        tokens: list[OpenToken] = []
+        chunks: list[NounChunkSpan] = []
+        offset = 0
+        for i, word in enumerate(words):
+            start = offset
+            end = offset + len(word)
+            offset = end + 1
+            tokens.append(
+                OpenToken(
+                    index=i,
+                    text=word,
+                    lemma=word.lower(),
+                    pos="NOUN",
+                    tag="NN",
+                    dep="ROOT" if i == 0 else "nsubj",
+                    head_index=0,
+                    start=start,
+                    end=end,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=word.isalpha(),
+                )
+            )
+            if word.isalpha():
+                chunks.append(
+                    NounChunkSpan(
+                        text=word,
+                        start_token=i,
+                        end_token=i + 1,
+                        root_index=i,
+                        start=start,
+                        end=end,
+                        sentence_index=0,
+                    )
+                )
+
+        return OpenExtractionResult(
+            tokens=tokens,
+            noun_chunks=chunks,
+            sentence_count=1 if tokens else 0,
+            language=self.language,
+        )
 
     def is_ready(self) -> bool:
         """

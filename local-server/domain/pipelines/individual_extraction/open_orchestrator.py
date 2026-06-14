@@ -1,0 +1,203 @@
+"""
+Open individual-extraction orchestrator (implementation "open_v1").
+
+A spaCy-driven alternative to the LLM-only default: open extraction produces
+subject--(verb)-->object dependency triples directly, formatted as individual
+triples. Optionally grounds extracted individuals to existing schema classes via
+the SchemaVectorIndex (semantic search over class titles/definitions).
+
+Pipeline: open extraction → dependency relations → individual triples →
+(optional) schema grounding → result contract.
+
+Output uses the same {triples, warnings, metadata} contract as the default
+implementation, so the quality suite runs against it unchanged. Coexists with
+"default" for A/B comparison.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import replace
+from typing import Any
+
+from domain.extraction.open_extraction import (
+    build_relation_candidates,
+    snake_label,
+)
+from domain.extraction.ports import NLPProcessor
+from domain.ontology.ports import EmbeddingService, SchemaVectorIndex
+from domain.pipelines.entities import PipelineRunStatus
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
+
+_logger = logging.getLogger(__name__)
+
+
+class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
+    """
+    Individual extraction via open spaCy dependency parsing + optional grounding.
+
+    Injected ports keep the domain pure: an NLP processor (open extraction), an
+    embedding service (grounding queries), and an optional SchemaVectorIndex
+    (semantic search over existing schema nodes). The LLM provider is only used
+    by the optional disambiguation pass.
+    """
+
+    def __init__(
+        self,
+        llm_provider: LLMProvider | None,
+        nlp_processor: NLPProcessor,
+        embedding_service: EmbeddingService,
+        schema_index: SchemaVectorIndex | None = None,
+        run_id: str | None = None,
+        status_writer: PipelineRunStatusWriter | None = None,
+        config: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(llm_provider, run_id, status_writer)
+        self._nlp = nlp_processor
+        self._embedding = embedding_service
+        self._schema_index = schema_index
+        self._config = config or get_open_v1_config()
+
+    async def execute(self, state: PipelineState) -> PipelineState:
+        """Run the open individual-extraction pipeline and populate state.result."""
+        self._write_running_status()
+
+        text = state.input_data.get("text", "")
+        if not text or not text.strip():
+            raise PipelineInputError("text is required and cannot be empty")
+
+        try:
+            open_result = self._nlp.process_open(text)
+            relations = build_relation_candidates(open_result)
+            triples = self._build_triples(open_result, relations)
+
+            if self._config.get("ground_to_schema") or self._config.get("require_schema_match"):
+                triples = self._ground_to_schema(triples)
+
+            result = {
+                "triples": triples,
+                "warnings": [],
+                "metadata": {
+                    "implementation": "open_v1",
+                    "relation_count": len(relations),
+                    "triple_count": len(triples),
+                },
+            }
+        except PipelineInputError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - re-wrapped as a pipeline error
+            _logger.error("Open individual extraction failed: %s", exc, exc_info=True)
+            raise PipelineExecutionError(
+                "Open individual extraction encountered an unexpected error"
+            ) from exc
+
+        if not isinstance(state, IndividualExtractionState):
+            state = IndividualExtractionState(
+                run_id=state.run_id,
+                pipeline_type=state.pipeline_type,
+                input_data=state.input_data,
+                current_status=state.current_status,
+                llm_provider=state.llm_provider,
+                result=state.result,
+            )
+        return replace(
+            state,
+            extracted_triples=result["triples"],
+            warnings=result["warnings"],
+            metadata=result["metadata"],
+            result=result,
+            current_status=PipelineRunStatus.COMPLETED,
+        )
+
+    # ------------------------------------------------------------------
+    # Stages
+    # ------------------------------------------------------------------
+
+    def _build_triples(self, open_result, relations) -> list[dict[str, Any]]:
+        """Format dependency relations as individual triples, de-duplicated."""
+        confidence = float(self._config.get("relation_confidence", 0.7))
+        predicate_form = self._config.get("predicate_form", "lemma")
+        triples: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, str]] = set()
+
+        for rel in relations:
+            subject = snake_label(rel.subject_lemmas) or _snake(rel.subject)
+            obj = snake_label(rel.object_lemmas) or _snake(rel.object)
+            if predicate_form == "surface":
+                predicate = open_result.tokens[rel.verb_index].text.lower()
+            else:
+                predicate = rel.predicate
+            if not subject or not predicate or not obj:
+                continue
+            key = (subject, predicate, obj)
+            if key in seen:
+                continue
+            seen.add(key)
+            triples.append(
+                {
+                    "subject": {"label": subject, "kind": "individual"},
+                    "predicate": {"label": predicate, "kind": "property"},
+                    "object": {"label": obj, "kind": "individual"},
+                    "confidence": confidence,
+                }
+            )
+        return triples
+
+    def _ground_to_schema(self, triples: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Use the SchemaVectorIndex to match individuals to existing schema classes.
+
+        Adds rdf:type triples for individuals whose phrase matches a class above
+        the similarity threshold. When require_schema_match is set, drops triples
+        whose subject AND object both fail to match any schema node.
+        """
+        if self._schema_index is None:
+            return triples
+
+        threshold = float(self._config.get("similarity_threshold", 0.45))
+        kinds = self._config.get("kinds_to_search", ["class"])
+        emit_types = bool(self._config.get("ground_to_schema"))
+        require_match = bool(self._config.get("require_schema_match"))
+
+        # Resolve each distinct individual label to its best schema match.
+        individuals = {
+            t[role]["label"] for t in triples for role in ("subject", "object")
+        }
+        matched: dict[str, Any] = {}
+        for label in individuals:
+            query = self._embedding.embed(label.replace("_", " "))
+            results = self._schema_index.search(query, kinds=kinds, top_k=1, threshold=threshold)
+            if results:
+                matched[label] = results[0]
+
+        kept = triples
+        if require_match:
+            kept = [
+                t
+                for t in triples
+                if t["subject"]["label"] in matched or t["object"]["label"] in matched
+            ]
+
+        if emit_types:
+            type_triples: list[dict[str, Any]] = []
+            for label, match in matched.items():
+                type_triples.append(
+                    {
+                        "subject": {"label": label, "kind": "individual"},
+                        "predicate": {"label": "rdf:type", "kind": "property"},
+                        "object": {"label": match.label, "kind": "class"},
+                        "confidence": round(match.score, 4),
+                    }
+                )
+            kept = kept + type_triples
+
+        return kept
+
+
+def _snake(phrase: str) -> str:
+    """Fallback snake_case from a surface phrase."""
+    return "_".join(word.lower() for word in phrase.split() if word)
