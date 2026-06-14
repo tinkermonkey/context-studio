@@ -36,6 +36,11 @@ from domain.pipelines.schema_extraction.open_orchestrator import (
     OpenSchemaExtractionOrchestrator,
 )
 from domain.extraction.open_extraction import RelationCandidate
+from domain.extraction.ports import ReferenceRelation
+from domain.pipelines.schema_extraction.open_orchestrator import (
+    _concept_term,
+    _concept_term_from_uri,
+)
 from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     SchemaExtractionState,
@@ -200,3 +205,89 @@ def test_build_relations_drops_unmatched_relations():
     properties, connections = _orchestrator_no_models()._build_relations([rel], classes)
     assert connections == []
     assert properties == []
+
+
+# ---------------------------------------------------------------------------
+# ConceptNet enrichment (Phase 7) — model-free, fake reference source
+# ---------------------------------------------------------------------------
+
+
+def test_concept_term_pascal_to_conceptnet():
+    assert _concept_term("ConsensusAlgorithm") == "consensus_algorithm"
+    assert _concept_term("Replication") == "replication"
+    assert _concept_term("APIGateway") == "api_gateway"
+
+
+def test_concept_term_from_uri():
+    assert _concept_term_from_uri("/c/en/algorithm") == "algorithm"
+    assert _concept_term_from_uri("/c/en/algorithm/n") == "algorithm"
+    assert _concept_term_from_uri("/r/IsA") is None
+
+
+class _FakeConceptNet:
+    """Fake ReferenceSource returning canned relations per concept URI."""
+
+    def __init__(self, relations_by_uri):
+        self._relations = relations_by_uri
+
+    async def get_relations_async(self, uri, limit=10):
+        return self._relations.get(uri, [])
+
+
+def _enrich_orchestrator(reference_source):
+    return OpenSchemaExtractionOrchestrator(
+        llm_provider=None,
+        nlp_processor=None,
+        embedding_service=None,
+        clusterer=None,
+        reference_source=reference_source,
+        config={**get_open_v1_config(), "use_conceptnet": True},
+    )
+
+
+@pytest.mark.asyncio
+async def test_conceptnet_enrichment_adds_grounded_connections_and_boosts():
+    classes = [
+        CandidateClass(label="ConsensusAlgorithm", confidence=0.6),
+        CandidateClass(label="ConsistencyModel", confidence=0.6),
+    ]
+    fake = _FakeConceptNet(
+        {
+            "/c/en/consensus_algorithm": [
+                ReferenceRelation(
+                    subject_uri="/c/en/consensus_algorithm",
+                    predicate="RelatedTo",
+                    object_uri="/c/en/consistency_model",
+                )
+            ]
+        }
+    )
+    boosted, connections = await _enrich_orchestrator(fake)._enrich_with_conceptnet(classes, [])
+
+    assert any(
+        c.subject_ref == "ConsensusAlgorithm"
+        and c.predicate == "RelatedTo"
+        and c.object_ref == "ConsistencyModel"
+        for c in connections
+    )
+    by_label = {c.label: c for c in boosted}
+    assert by_label["ConsensusAlgorithm"].confidence > 0.6  # recognized → boosted
+    assert by_label["ConsistencyModel"].confidence == 0.6  # no relations → unchanged
+
+
+@pytest.mark.asyncio
+async def test_conceptnet_enrichment_ignores_non_class_targets():
+    classes = [CandidateClass(label="ConsensusAlgorithm", confidence=0.6)]
+    fake = _FakeConceptNet(
+        {
+            "/c/en/consensus_algorithm": [
+                ReferenceRelation(
+                    subject_uri="/c/en/consensus_algorithm",
+                    predicate="RelatedTo",
+                    object_uri="/c/en/banana",  # not an extracted class
+                )
+            ]
+        }
+    )
+    _, connections = await _enrich_orchestrator(fake)._enrich_with_conceptnet(classes, [])
+    assert connections == []

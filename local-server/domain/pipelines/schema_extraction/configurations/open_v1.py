@@ -32,5 +32,11 @@ def get_open_v1_config() -> dict:
         "confidence_important": 0.6,
         "confidence_contextual": 0.4,
         "relation_confidence": 0.5,
+        # --- ConceptNet enrichment (external knowledge; off by default for
+        #     offline/deterministic runs — toggled by the closed loop) ---
+        "use_conceptnet": False,
+        "conceptnet_relation_limit": 50,
+        "conceptnet_confidence": 0.7,  # confidence for ConceptNet-grounded connections
+        "conceptnet_confidence_boost": 0.1,  # bump for classes ConceptNet recognizes
         "description": "Open spaCy extraction + clustering + synthesis schema extraction",
     }

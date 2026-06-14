@@ -118,6 +118,7 @@ def _build_open_schema_extraction(
         embedding_service=embedding_service,
         clusterer=clusterer,
         ontology_repo=services.get("ontology_repo"),
+        reference_source=services.get("reference_source"),
         config=services.get("open_schema_config"),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),

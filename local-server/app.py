@@ -636,6 +636,8 @@ async def lifespan(app: FastAPI):
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
+        # Cached ConceptNet source for open-extraction enrichment (first/only entry).
+        app.state.conceptnet_source = reference_sources[0] if reference_sources else None
         app.state.ontology_repo = ontology_repo
         app.state.change_repo = change_repo
         app.state.interchange_repo = interchange_repo

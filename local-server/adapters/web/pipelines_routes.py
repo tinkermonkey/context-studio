@@ -593,6 +593,7 @@ async def run_pipeline(
         "embedding_service": getattr(request.app.state, "embedding_service", None),
         "clusterer": getattr(request.app.state, "clusterer", None),
         "schema_index": getattr(request.app.state, "schema_vector_index", None),
+        "reference_source": getattr(request.app.state, "conceptnet_source", None),
         "open_schema_config": config_version.config,
         "open_individual_config": config_version.config,
         "run_id": run_id,

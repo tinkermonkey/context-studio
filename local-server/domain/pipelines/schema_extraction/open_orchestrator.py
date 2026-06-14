@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import replace
 from typing import Any
 
@@ -32,7 +33,7 @@ from domain.extraction.open_extraction import (
     select_cluster_representatives,
     synthesize_label,
 )
-from domain.extraction.ports import ClusteringPort, NLPProcessor
+from domain.extraction.ports import ClusteringPort, NLPProcessor, ReferenceSource
 from domain.ontology.ports import EmbeddingService
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
@@ -53,6 +54,21 @@ def _pascal(phrase: str) -> str:
     return "".join(word.capitalize() for word in phrase.split() if word)
 
 
+def _concept_term(label: str) -> str:
+    """PascalCase class label -> ConceptNet concept term ('ConsensusAlgorithm' -> 'consensus_algorithm')."""
+    words = re.findall(r"[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|[0-9]+", label)
+    return "_".join(w.lower() for w in words) if words else label.lower()
+
+
+def _concept_term_from_uri(uri: str) -> str | None:
+    """Extract the concept term from a ConceptNet URI ('/c/en/algorithm/n' -> 'algorithm')."""
+    parts = uri.split("/")
+    # ['', 'c', 'en', '<term>', optional pos] -> term at index 3
+    if len(parts) >= 4 and parts[1] == "c":
+        return parts[3] or None
+    return None
+
+
 class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
     """
     Schema extraction via open spaCy extraction + clustering + synthesis.
@@ -69,6 +85,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         embedding_service: EmbeddingService,
         clusterer: ClusteringPort,
         ontology_repo: Any = None,
+        reference_source: ReferenceSource | None = None,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
@@ -78,6 +95,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         self._embedding = embedding_service
         self._clusterer = clusterer
         self._ontology_repo = ontology_repo
+        self._reference_source = reference_source
         self._config = config or get_open_v1_config()
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -104,6 +122,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             classes = await self._synthesize_classes(top, source_text)
             relations = build_relation_candidates(open_result)
             properties, connections = self._build_relations(relations, classes)
+
+            if self._config.get("use_conceptnet") and self._reference_source is not None:
+                classes, connections = await self._enrich_with_conceptnet(classes, connections)
 
             result = self._finalize(classes, properties, connections)
         except PipelineInputError:
@@ -205,6 +226,59 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
                 )
 
         return properties, connections
+
+    async def _enrich_with_conceptnet(
+        self, classes: list[CandidateClass], connections: list[CandidateConnection]
+    ) -> tuple[list[CandidateClass], list[CandidateConnection]]:
+        """
+        Enrich the extracted schema with ConceptNet's external relation graph.
+
+        For each synthesized class, query ConceptNet for the relations leaving its
+        concept; when a related concept is ANOTHER extracted class, emit a
+        ConceptNet-grounded connection between them (e.g. IsA / PartOf / RelatedTo).
+        Classes ConceptNet recognizes (returns any relations for) get a small
+        confidence boost. ConceptNet failures are non-fatal (the adapter returns
+        empty on any error), so enrichment only ever adds signal.
+        """
+        assert self._reference_source is not None
+        limit = int(self._config.get("conceptnet_relation_limit", 50))
+        rel_confidence = float(self._config.get("conceptnet_confidence", 0.7))
+        boost = float(self._config.get("conceptnet_confidence_boost", 0.1))
+
+        # Map each class to its ConceptNet concept term ('ConsensusAlgorithm' ->
+        # 'consensus_algorithm') and back, so related-concept URIs resolve to classes.
+        term_by_label = {c.label: _concept_term(c.label) for c in classes}
+        label_by_term = {term: label for label, term in term_by_label.items()}
+
+        existing = {(c.subject_ref, c.predicate, c.object_ref) for c in connections}
+        enriched = list(connections)
+        boosted: list[CandidateClass] = []
+
+        for cls in classes:
+            uri = f"/c/en/{term_by_label[cls.label]}"
+            relations = await self._reference_source.get_relations_async(uri, limit=limit)
+            if relations:
+                cls = replace(cls, confidence=min(1.0, cls.confidence + boost))
+            boosted.append(cls)
+            for rel in relations:
+                obj_term = _concept_term_from_uri(rel.object_uri)
+                obj_label = label_by_term.get(obj_term)
+                if obj_label is None or obj_label == cls.label:
+                    continue
+                key = (cls.label, rel.predicate, obj_label)
+                if key in existing:
+                    continue
+                existing.add(key)
+                enriched.append(
+                    CandidateConnection(
+                        subject_ref=cls.label,
+                        predicate=rel.predicate,
+                        object_ref=obj_label,
+                        confidence=rel_confidence,
+                    )
+                )
+
+        return boosted, enriched
 
     def _finalize(
         self,
