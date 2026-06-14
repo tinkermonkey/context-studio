@@ -503,7 +503,7 @@ export function CreateDrawer({
       <div className="create-drawer__progress">
         <div className="create-drawer__bar-track">
           <div
-            className={`create-drawer__bar-fill${isComplete ? "complete" : ""}`}
+            className={`create-drawer__bar-fill ${isComplete ? "complete" : ""}`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -515,7 +515,7 @@ export function CreateDrawer({
             return (
               <span
                 key={f}
-                className={`create-drawer__chip${filled ? "satisfied" : ""}`}
+                className={`create-drawer__chip ${filled ? "satisfied" : ""}`}
                 aria-label={`${config.requirementLabels[f] ?? f}: ${filled ? "satisfied" : "required"}`}
               >
                 {filled ? (
@@ -527,7 +527,7 @@ export function CreateDrawer({
               </span>
             );
           })}
-          <span className={`create-drawer__readout${isComplete ? "ready" : ""}`}>
+          <span className={`create-drawer__readout ${isComplete ? "ready" : ""}`}>
             {isComplete ? "ready" : `${filledCount} / ${totalRequired}`}
           </span>
         </div>
@@ -961,7 +961,7 @@ function IndividualBody({
         data-testid="create-drawer-classes-field"
       >
         <div
-          className={`class-multi-select${fieldError("classIds") ? "error" : ""}`}
+          className={`class-multi-select ${fieldError("classIds") ? "error" : ""}`}
           role="group"
           aria-label="Select classes"
           data-testid="create-drawer-classes-list"

@@ -68,7 +68,7 @@ function ClassChip({
           type="button"
           onClick={() => onMoveUp(classId)}
           disabled={!canMoveUp || isDisabled}
-          className={`class-chip__btn${!canMoveUp || isDisabled ? "class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${!canMoveUp || isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-up-${classId}`}
           title="Move up"
         >
@@ -78,7 +78,7 @@ function ClassChip({
           type="button"
           onClick={() => onMoveDown(classId)}
           disabled={!canMoveDown || isDisabled}
-          className={`class-chip__btn${!canMoveDown || isDisabled ? "class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${!canMoveDown || isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-down-${classId}`}
           title="Move down"
         >
@@ -88,7 +88,7 @@ function ClassChip({
           type="button"
           onClick={() => onRemove(classId)}
           disabled={isDisabled}
-          className={`class-chip__btn${isDisabled ? "class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-remove-${classId}`}
           title="Remove"
         >

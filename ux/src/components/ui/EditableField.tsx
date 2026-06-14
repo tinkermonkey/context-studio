@@ -216,7 +216,7 @@ export function EditableField({
         </>
       ) : (
         <div
-          className={`editable-field__view${disabled ? " editable-field__view--disabled" : ""}`}
+          className={`editable-field__view ${disabled ? "editable-field__view--disabled" : ""}`}
           onClick={startEditing}
           onKeyDown={(e) => e.key === "Enter" && startEditing()}
           role={disabled ? undefined : "button"}
