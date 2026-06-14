@@ -50,10 +50,15 @@ def open_orchestrator():
     nlp = SpacyNLPProcessor()
     if not nlp.is_ready():
         pytest.skip("spaCy model not installed")
+    embedding = SentenceTransformerEmbedding()
+    try:
+        embedding.embed_batch(["probe"])
+    except Exception:
+        pytest.skip("embedding model not available (offline cache miss)")
     return OpenIndividualExtractionOrchestrator(
         llm_provider=None,
         nlp_processor=nlp,
-        embedding_service=SentenceTransformerEmbedding(),
+        embedding_service=embedding,
         schema_index=None,
         config=get_open_v1_config(),  # rule mode, no grounding
     )
