@@ -1,0 +1,9 @@
+{
+  "455f6f306d9d9b1f6f18362a312f2d5dbc7c7c559cf5d780f0f38a5c966ecc04": {
+    "content": "```json\n{\n  \"Entities\": {\n    \"label\": \"Entity\",\n    \"definition\": \"An object defined by its unique identity and continuity over time rather than its attributes.\"\n  },\n  \"Bounded\": {\n    \"label\": \"BoundedContext\",\n    \"definition\": \"A specific responsibility or boundary within which a particular domain model is defined and applicable.\"\n  },\n  \"Value objects\": {\n    \"label\": \"ValueObject\",\n    \"definition\": \"An immutable object that represents a descriptive aspect of the domain and has no conceptual identity.\"\n  },\n  \"Aggregates group\": {\n    \"label\": \"Aggregate\",\n    \"definition\": \"A cluster of domain objects that can be treated as a single unit for data changes, controlled by a root entity.\"\n  },\n  \"Ubiquitous language\": {\n    \"label\": \"UbiquitousLanguage\",\n    \"definition\": \"A common, shared language developed by team members to connect the domain model with the software implementation.\"\n  },\n  \"Domain-Driven Design\": {\n    \"label\": \"DomainDrivenDesign\",\n    \"definition\": \"An approach to software development that centers the design on a complex domain model and its logic.\"\n  },\n  \"clear boundaries\": {\n    \"label\": \"BoundedContext\",\n    \"definition\": \"A specific responsibility or boundary within which a particular domain model is defined and applicable.\"\n  },\n  \"models\": {\n    \"label\": \"DomainModel\",\n    \"definition\": \"A conceptual representation of the business domain used to solve specific problems within a bounded context.\"\n  }\n}\n```",
+    "tokens_in": 204,
+    "tokens_out": 354,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

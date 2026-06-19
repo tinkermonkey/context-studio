@@ -1,0 +1,9 @@
+{
+  "5cd21dbb55dd21719d26045081e76b9f3178e02417052d928c4d2597c7e7328c": {
+    "content": "```json\n{\n  \"derived classes\": {\n    \"label\": \"DerivedClass\",\n    \"definition\": \"A class that inherits members and behavior from another class, known as a base or parent class.\"\n  },\n  \"Composition\": {\n    \"label\": \"ObjectComposition\",\n    \"definition\": \"A design principle where complex objects are formed by combining simpler objects rather than inheriting from a base class.\"\n  },\n  \"Encapsulation\": {\n    \"label\": \"Encapsulation\",\n    \"definition\": \"The bundling of data and methods that operate on that data into a single unit while restricting direct access to some components.\"\n  },\n  \"Polymorphism\": {\n    \"label\": \"Polymorphism\",\n    \"definition\": \"The ability of different objects to respond to the same message or method call in a way specific to their individual types.\"\n  },\n  \"objects\": {\n    \"label\": \"Object\",\n    \"definition\": \"An instance of a class that contains real values instead of variables and represents a specific entity in a system.\"\n  },\n  \"Interfaces\": {\n    \"label\": \"Interface\",\n    \"definition\": \"A reference type that defines a contract of methods and properties without providing the underlying implementation.\"\n  },\n  \"Object-oriented design\": {\n    \"label\": \"ObjectOrientedDesign\",\n    \"definition\": \"A methodology for designing a software system by modeling it as a collection of interacting objects.\"\n  },\n  \"The Liskov Substitution Principle\": {\n    \"label\": \"LiskovSubstitutionPrinciple\",\n    \"definition\": \"A principle stating that objects of a superclass should be replaceable with objects of its subclasses without breaking the application.\"\n  }\n}\n```",
+    "tokens_in": 201,
+    "tokens_out": 381,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

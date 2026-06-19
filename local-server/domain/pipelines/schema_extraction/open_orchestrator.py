@@ -60,6 +60,12 @@ def _concept_term(label: str) -> str:
     return "_".join(w.lower() for w in words) if words else label.lower()
 
 
+def _extract_json_obj(content: str) -> str:
+    """Extract the first {...} JSON object from an LLM response (tolerates code fences/prose)."""
+    match = re.search(r"\{.*\}", content, re.DOTALL)
+    return match.group(0) if match else content
+
+
 def _concept_term_from_uri(uri: str) -> str | None:
     """Extract the concept term from a ConceptNet URI ('/c/en/algorithm/n' -> 'algorithm')."""
     parts = uri.split("/")
@@ -156,8 +162,19 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
     async def _synthesize_classes(
         self, representatives: list[ConceptCandidate], source_text: str
     ) -> list[CandidateClass]:
-        """Turn cluster representatives into CandidateClass objects."""
-        # PascalCase label per representative, de-duplicated in priority order.
+        """
+        Turn cluster representatives into CandidateClass objects per synthesis_mode:
+
+        - rule: rule-derived PascalCase labels + template definitions (offline).
+        - hybrid: rule-derived labels + LLM-written definitions.
+        - llm: the LLM proposes the canonical labels AND definitions (this is the
+          lever that can move class_jaccard, since labels are no longer rule-bound).
+        """
+        mode = self._config.get("synthesis_mode", "rule")
+        if mode == "llm" and self._llm_provider is not None:
+            return await self._llm_synthesize_classes(representatives, source_text)
+
+        # rule / hybrid: rule-derived PascalCase labels, de-duplicated in priority order.
         pairs: list[tuple[ConceptCandidate, str]] = []
         seen: set[str] = set()
         for rep in representatives:
@@ -166,14 +183,49 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
                 seen.add(label)
                 pairs.append((rep, label))
 
-        mode = self._config.get("synthesis_mode", "rule")
         definitions: dict[str, str] = {}
-        if mode in ("llm", "hybrid"):
+        if mode == "hybrid" and self._llm_provider is not None:
             definitions = await self._llm_definitions([label for _, label in pairs], source_text)
 
         classes: list[CandidateClass] = []
         for rep, label in pairs:
             definition = definitions.get(label) or f"{label}: a domain concept."
+            classes.append(
+                CandidateClass(
+                    label=label,
+                    proposed_definition=definition,
+                    confidence=self._confidence(rep.priority),
+                    provenance=self._provenance(rep, source_text),
+                )
+            )
+        return classes
+
+    async def _llm_synthesize_classes(
+        self, representatives: list[ConceptCandidate], source_text: str
+    ) -> list[CandidateClass]:
+        """LLM proposes a canonical PascalCase label + definition per representative phrase."""
+        rep_by_phrase: dict[str, ConceptCandidate] = {}
+        phrases: list[str] = []
+        for rep in representatives:
+            text = rep.text.strip()
+            if text and text not in rep_by_phrase:
+                rep_by_phrase[text] = rep
+                phrases.append(text)
+        if not phrases:
+            return []
+
+        mapping = await self._llm_labels_and_definitions(phrases, source_text)
+
+        classes: list[CandidateClass] = []
+        seen_labels: set[str] = set()
+        for phrase in phrases:
+            rep = rep_by_phrase[phrase]
+            entry = mapping.get(phrase) or {}
+            label = (entry.get("label") or synthesize_label(rep)).strip()
+            if not label or label in seen_labels:
+                continue
+            seen_labels.add(label)
+            definition = entry.get("definition") or f"{label}: a domain concept."
             classes.append(
                 CandidateClass(
                     label=label,
@@ -343,9 +395,51 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             max_tokens=int(self._config.get("max_tokens", 1500)),
         )
         try:
-            parsed = json.loads(response.content)
+            parsed = json.loads(_extract_json_obj(response.content))
             if isinstance(parsed, dict):
                 return {str(k): str(v) for k, v in parsed.items()}
         except json.JSONDecodeError:
             _logger.warning("open_v1 definition synthesis: JSON parse failed; using fallbacks")
         return {}
+
+    async def _llm_labels_and_definitions(
+        self, phrases: list[str], source_text: str
+    ) -> dict[str, dict[str, str]]:
+        """
+        One batched LLM call mapping each candidate phrase to a canonical
+        PascalCase ontology label + a definition (llm synthesis mode).
+        """
+        if not phrases or self._llm_provider is None:
+            return {}
+        phrase_list = "\n".join(f"- {p}" for p in phrases)
+        system_prompt = (
+            "You are an ontology engineer. Given candidate concept phrases extracted from a "
+            "text, produce a canonical ontology class label for each: PascalCase, singular, no "
+            "spaces, merging synonyms/duplicates onto the same label. Return ONLY a JSON object "
+            "mapping each input phrase EXACTLY as given to an object "
+            '{"label": "PascalCaseLabel", "definition": "1-2 sentence definition"}.'
+        )
+        user_prompt = (
+            f"Context:\n{source_text[:3000]}\n\nCandidate phrases:\n{phrase_list}\n\n"
+            'Return the JSON object: {"<phrase>": {"label": "...", "definition": "..."}, ...}'
+        )
+        response = await self._call_llm(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=self._config.get("model", "google/gemini-3-flash-preview"),
+            temperature=float(self._config.get("temperature", 0.0)),
+            max_tokens=int(self._config.get("max_tokens", 1500)),
+        )
+        out: dict[str, dict[str, str]] = {}
+        try:
+            parsed = json.loads(_extract_json_obj(response.content))
+            if isinstance(parsed, dict):
+                for key, value in parsed.items():
+                    if isinstance(value, dict):
+                        out[str(key)] = {
+                            "label": str(value.get("label", "")).strip(),
+                            "definition": str(value.get("definition", "")).strip(),
+                        }
+        except json.JSONDecodeError:
+            _logger.warning("open_v1 llm synthesis: JSON parse failed; falling back to rule labels")
+        return out

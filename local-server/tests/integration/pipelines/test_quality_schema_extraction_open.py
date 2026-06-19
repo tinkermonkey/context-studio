@@ -45,7 +45,10 @@ from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     SchemaExtractionState,
 )
+from pathlib import Path
+
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 from tests.integration.pipelines.test_quality_schema_extraction import (
     QUALITY_SCENARIOS,
     compute_quality_metrics,
@@ -291,3 +294,82 @@ async def test_conceptnet_enrichment_ignores_non_class_targets():
     )
     _, connections = await _enrich_orchestrator(fake)._enrich_with_conceptnet(classes, [])
     assert connections == []
+
+
+# ---------------------------------------------------------------------------
+# LLM label synthesis A/B (cassette-backed; records with --refresh-cassettes)
+# ---------------------------------------------------------------------------
+
+
+def _models_or_skip():
+    nlp = SpacyNLPProcessor()
+    if not nlp.is_ready():
+        pytest.skip("spaCy model not installed")
+    embedding = SentenceTransformerEmbedding()
+    try:
+        embedding.embed_batch(["probe"])
+    except Exception:
+        pytest.skip("embedding model not available (offline cache miss)")
+    return nlp, embedding, SklearnClusterer()
+
+
+def _cassette_dir() -> Path:
+    d = Path(__file__).parent / "_cassettes" / Path(__file__).stem
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+@pytest.mark.nlp
+@pytest.mark.external_network
+@pytest.mark.asyncio
+async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
+    """
+    open_v1 with LLM-driven label synthesis, A/B'd against the rule baseline.
+
+    Cassette-backed: skips in cassette mode if cassettes are absent; records the
+    LLM calls when run with --refresh-cassettes. Prints the metric table and the
+    llm-vs-rule class_jaccard delta.
+    """
+    nlp, embedding, clusterer = _models_or_skip()
+    cassette_dir = _cassette_dir()
+
+    llm_rows = []
+    for scenario in QUALITY_SCENARIOS:
+        provider = quality_llm_provider_factory(scenario, cassette_dir, "schema_open_llm_")
+        orch = OpenSchemaExtractionOrchestrator(
+            llm_provider=provider,
+            nlp_processor=nlp,
+            embedding_service=embedding,
+            clusterer=clusterer,
+            config={**get_open_v1_config(), "synthesis_mode": "llm"},
+        )
+        fixture = dict(load_fixture("schema_extraction", scenario))
+        if "text" in fixture and "documents" not in fixture:
+            fixture["documents"] = [fixture.pop("text")]
+        state = SchemaExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=fixture,
+        )
+        result_state = await orch.execute(state)
+        if isinstance(provider, RecordingLLMProvider):
+            provider.flush()
+        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        metrics = compute_quality_metrics(load_expected_output("schema_extraction", scenario), actual)
+        llm_rows.append((scenario, metrics))
+        assert any(
+            c.get("kind") == "class" for c in (result_state.result or {}).get("candidates", [])
+        ), f"{scenario} produced no class candidates"
+
+    mean_llm = sum(m["class_jaccard"] for _, m in llm_rows) / len(llm_rows)
+    print("\n── open_v1 LLM-synthesis quality (cassette-backed) ──")
+    print(f"{'scenario':<28} class_jac  prop_jac  conn_ovl  brier")
+    for scenario, m in llm_rows:
+        print(
+            f"{scenario:<28} {m['class_jaccard']:>8.2f}  {m['property_jaccard']:>8.2f}  "
+            f"{m['connection_overlap']:>8.2f}  {m['brier']:>6.2f}"
+        )
+    print(f"{'MEAN class_jaccard':<28} {mean_llm:>8.3f}  (rule baseline ~0.37, prod floor 0.60)")
+
+    # Sanity floor — the real number is reported above; tighten once observed.
+    assert mean_llm >= 0.30

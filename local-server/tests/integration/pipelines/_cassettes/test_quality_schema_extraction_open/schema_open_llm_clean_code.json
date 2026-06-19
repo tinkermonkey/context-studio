@@ -1,0 +1,9 @@
+{
+  "df247d7a045c5364c0a7e14abbe1dff1dc8beb37141abc675659fb49933b6e4e": {
+    "content": "```json\n{\n  \"Meaningful names\": {\n    \"label\": \"MeaningfulName\",\n    \"definition\": \"A descriptive and intentional identifier used in source code to enhance clarity and intent.\"\n  },\n  \"Clean code\": {\n    \"label\": \"CleanCode\",\n    \"definition\": \"Source code that is easy to read, understand, and maintain by following established best practices.\"\n  },\n  \"Functions\": {\n    \"label\": \"Function\",\n    \"definition\": \"A self-contained block of code designed to perform a specific task or calculation.\"\n  },\n  \"Classes\": {\n    \"label\": \"Class\",\n    \"definition\": \"An extensible program-code-template for creating objects, providing initial values for state and implementations of behavior.\"\n  },\n  \"Comments\": {\n    \"label\": \"Comment\",\n    \"definition\": \"Non-executable text within source code used to provide context, explanations, or metadata for developers.\"\n  },\n  \"Methods\": {\n    \"label\": \"Function\",\n    \"definition\": \"A self-contained block of code designed to perform a specific task or calculation.\"\n  },\n  \"a single responsibility\": {\n    \"label\": \"SingleResponsibility\",\n    \"definition\": \"The design principle stating that a software component should have only one reason to change or one primary purpose.\"\n  },\n  \"code comprehension\": {\n    \"label\": \"CodeComprehension\",\n    \"definition\": \"The cognitive process of understanding the logic, structure, and intent of a software program.\"\n  }\n}\n```",
+    "tokens_in": 202,
+    "tokens_out": 348,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}
