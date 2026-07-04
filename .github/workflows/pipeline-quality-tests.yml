@@ -34,6 +34,14 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
+    - name: Pre-cache embedding model
+      working-directory: local-server
+      run: |
+        # The cassette-mode quality tests replay LLM calls but compute embeddings
+        # live with the pinned all-MiniLM-L12-v2 model. Download it once here (with
+        # network) so the tests load it from cache; the run step then blocks network.
+        python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L12-v2')"
+
     - name: Run pipeline quality tests (cassette mode)
       working-directory: local-server
       run: |
@@ -43,6 +51,8 @@ jobs:
           -v
       env:
         PYTHONPATH: .
+        HF_HUB_OFFLINE: '1'
+        TRANSFORMERS_OFFLINE: '1'
 
     - name: Generate metrics report
       if: always()
