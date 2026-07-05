@@ -5,7 +5,15 @@ This module provides factories for creating SQLAlchemy engines and sessions
 for both local.db and operations.db databases.
 
 Key design decisions:
-- StaticPool for SQLite (no real connection pooling needed)
+- File-based SQLite uses SQLAlchemy's default QueuePool so each thread/session
+  gets its own connection. The FastAPI app runs synchronous DB code on a thread
+  pool (run_sync_in_executor), so concurrent queries must not share a single
+  SQLite connection (SQLite connections are not safe for concurrent statement
+  execution). WAL journaling + a busy_timeout are enabled per-connection so
+  concurrent reads and writes are safe.
+- In-memory SQLite (":memory:" / "mode=memory") uses StaticPool, which is
+  required so every connection sees the same in-memory database instead of a
+  fresh empty one. WAL is invalid for in-memory databases and is not applied.
 - check_same_thread=False for multi-threaded server environments
 - expire_on_commit=False to reduce unnecessary re-queries
 - Separate engines for local.db and operations.db to support independent lifecycle
@@ -13,12 +21,67 @@ Key design decisions:
 
 from typing import Any, Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 # Type alias for SQLAlchemy Engine (mypy compatibility)
 Engine = Any  # type: ignore[misc]
+
+
+def _is_memory_url(database_url: str) -> bool:
+    """
+    Return True if the SQLite URL refers to an in-memory database.
+
+    In-memory databases are identified by the ":memory:" path or a
+    "mode=memory" query parameter (shared-cache URI form).
+    """
+    lowered = database_url.lower()
+    return ":memory:" in lowered or "mode=memory" in lowered
+
+
+def _create_sqlite_engine(database_url: str) -> Engine:
+    """
+    Create a SQLite engine tuned for the database's storage type.
+
+    File-based databases use the default QueuePool so each thread/session gets
+    its own connection, and every new connection is configured with WAL
+    journaling and a busy_timeout for safe concurrent access.
+
+    In-memory databases use StaticPool so all connections share the same
+    underlying database; WAL is not applied (it is invalid for :memory:).
+
+    Args:
+        database_url: SQLite connection string.
+
+    Returns:
+        A configured SQLAlchemy Engine.
+    """
+    if _is_memory_url(database_url):
+        return create_engine(
+            database_url,
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+            echo=False,  # Set to True for SQL debugging
+        )
+
+    engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False},
+        echo=False,  # Set to True for SQL debugging
+    )
+
+    @event.listens_for(engine, "connect")
+    def _configure_file_connection(dbapi_connection: Any, connection_record: Any) -> None:
+        """Enable WAL journaling and a busy_timeout on every new connection."""
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=5000")
+        finally:
+            cursor.close()
+
+    return engine
 
 
 def create_local_db_engine(database_url: str = "sqlite:///./local.db") -> Engine:
@@ -31,12 +94,7 @@ def create_local_db_engine(database_url: str = "sqlite:///./local.db") -> Engine
     Returns:
         SQLAlchemy Engine configured for SQLite with appropriate defaults
     """
-    return create_engine(
-        database_url,
-        poolclass=StaticPool,
-        connect_args={"check_same_thread": False},
-        echo=False,  # Set to True for SQL debugging
-    )
+    return _create_sqlite_engine(database_url)
 
 
 def create_operations_db_engine(
@@ -53,12 +111,7 @@ def create_operations_db_engine(
     Returns:
         SQLAlchemy Engine configured for SQLite with appropriate defaults
     """
-    return create_engine(
-        database_url,
-        poolclass=StaticPool,
-        connect_args={"check_same_thread": False},
-        echo=False,  # Set to True for SQL debugging
-    )
+    return _create_sqlite_engine(database_url)
 
 
 def create_session_factory(engine: Engine) -> sessionmaker:
