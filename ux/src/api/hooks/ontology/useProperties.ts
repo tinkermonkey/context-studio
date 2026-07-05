@@ -66,5 +66,13 @@ export function useDeleteProperty() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },
+    // The drawer defers this delete behind an undo window and shows an
+    // optimistic "deleted" toast up front. The backend rejects deleting a
+    // property still referenced by relationships, so on rejection re-fetch the
+    // list so the still-present row reflects server truth instead of
+    // contradicting the error toast.
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+    },
   });
 }

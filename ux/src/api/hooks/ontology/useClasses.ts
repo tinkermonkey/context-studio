@@ -70,5 +70,13 @@ export function useDeleteClass() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
+    // The drawer defers this delete behind an undo window and shows an
+    // optimistic "deleted" toast up front. When the backend then rejects the
+    // delete, re-fetch so the still-present row reflects server truth instead
+    // of contradicting the error toast.
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
+    },
   });
 }
