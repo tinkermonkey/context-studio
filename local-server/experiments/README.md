@@ -12,7 +12,8 @@ for the rationale behind it.
 ```
 experiments/
 ├── reports/<run_id>.{json,md}   # error reports (§3.2) — one pair per evaluation run
-├── ledger.jsonl                 # append-only experiment record (accepted + rejected) — Loop C, not yet built
+├── ledger.py                    # read/write helpers + CLI for ledger.jsonl (Loop C)
+├── ledger.jsonl                 # append-only experiment record (accepted + rejected)
 └── README.md                    # this file
 ```
 
@@ -51,8 +52,67 @@ why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
   (gitignored, same JSONL schema `quality_loop.py` uses).
 
-## `ledger.jsonl`
+## Loop C: `.claude/workflows/karpathy-loop.js`
 
-Not yet built — this is Loop C's append-only record of every experiment
-(accepted and rejected) per `documentation/karpathy_loop_design.md` §6. Listed
-here so the layout matches the design doc ahead of time.
+`documentation/karpathy_loop_design.md` §4.3/§4.4 — the agent-in-the-loop
+refinement cycle. Each invocation of the Workflow runs exactly **one**
+iteration:
+
+1. **Evaluate** — runs Loop B (`quality_tournament.py`) and reads back the
+   incumbent's scoreboard + error report.
+2. **Select** — reads `ledger.jsonl` for hypotheses already rejected, then
+   ranks the incumbent's failure classes (`failure_stage_counts` in the error
+   report) by GT-triple count and maps the top ones to hypotheses from the
+   seeded backlog (design doc §7 items 1–6; item 0, the live-LLM-path bugfix,
+   already landed in Phase 2).
+3. **Experiment** — fans out one experimenter agent per selected hypothesis,
+   each in its own git worktree (`isolation: 'worktree'`), each implementing
+   exactly one change and reporting a Loop-A-tuned dev/holdout evaluation of
+   it.
+4. **Verify** — an adversarial agent checks each candidate for gate integrity
+   (no edits to the harness/GT fixtures/split/ledger, tests reproduce, single
+   change, diff matches the stated hypothesis).
+5. **Decide** — the accept gate (design doc §6: dev soft-F1 improves by
+   > 0.005, dev strict-F1 doesn't regress, holdout strict-F1 doesn't collapse
+   by more than 0.02) is applied to the best verified candidate. Accepted →
+   merge into `experiment/karpathy-loop`, refresh cassettes if the change
+   touched a prompt, append a ledger entry. Everything else (including a
+   verified-but-not-best candidate) → discard the worktree, append a ledger
+   entry with the rejection reason.
+
+Invoke it with the `Workflow` tool, e.g. `{name: "karpathy-loop", args:
+{iteration: 1}}`. Because each call is one iteration, driving the full loop
+means calling it repeatedly (e.g. via `/loop`) and threading state through
+`args` from the previous call's return value — see the workflow's own
+`meta.whenToUse` for the exact fields (`iteration`, `consecutiveNoAccept`,
+`hypothesisCount`, `integrationBranch`, `holdoutFloors`,
+`maxConsecutiveNoAccept`, `cumulativeCostUsd`, `totalBudgetUsd`). The
+returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
+and `stop` field tell the driver whether to keep iterating — stop conditions
+are the holdout floors being met, three consecutive no-accept iterations
+(plateau), or the cost/iteration budget in `args` being exhausted (design doc
+§4.3 step 6).
+
+Running this against the real corpus is expensive (a full Loop B tournament
+plus several worktree-isolated coding agents per iteration) and is Phase 7 in
+the design doc's build plan — out of scope for the infrastructure itself.
+
+## `ledger.py` / `ledger.jsonl`
+
+Loop C's append-only record of every experiment (accepted and rejected), per
+`documentation/karpathy_loop_design.md` §8. `experiments/ledger.py` provides
+the read/write helpers (`append_entry`, `read_entries`,
+`rejected_hypotheses`) plus a small CLI so a Loop C sub-agent — which has
+shell access but no in-process import path into this package — can record a
+decision without hand-writing JSON:
+
+```bash
+# from local-server/, venv active
+python experiments/ledger.py append '{"experiment_id": "12-copular", ...}'
+python experiments/ledger.py rejected-hypotheses
+```
+
+The ledger is append-only by construction (`append_entry` only ever opens the
+file in `"a"` mode) — rewriting or truncating it is one of the accept gate's
+integrity violations (§6 item 4), enforced by the Loop C verifier agent via a
+path check on `git diff`.
