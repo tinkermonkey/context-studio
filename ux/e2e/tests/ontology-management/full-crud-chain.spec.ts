@@ -5,7 +5,6 @@ import {
   createClass,
   createPropertyDefinition,
   createRelationship,
-  clearTestData,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -16,10 +15,6 @@ import {
  * they surface in the current `selectable-table` at the `/app/schema/*` routes.
  */
 test.describe("Ontology Management Full CRUD Chain", () => {
-  test.afterEach(async ({ page }) => {
-    await clearTestData(page);
-  });
-
   test("creates the full ontology chain and deletes a leaf class", async ({ page }) => {
     const taxonomy = await createTaxonomy(page, {
       title: "Full Chain Taxonomy",

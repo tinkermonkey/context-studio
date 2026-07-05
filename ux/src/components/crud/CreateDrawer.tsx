@@ -975,6 +975,7 @@ function IndividualBody({
                 type="checkbox"
                 checked={values.classIds.includes(c.id)}
                 onChange={() => toggleClass(c.id)}
+                aria-label={c.title}
                 data-testid={`create-drawer-class-${c.id}`}
               />
               {c.title}
