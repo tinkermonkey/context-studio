@@ -6717,6 +6717,18 @@
             "title": "Title",
             "description": "Display name for the class"
           },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier",
+            "description": "Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted"
+          },
           "description": {
             "anyOf": [
               {
@@ -7028,6 +7040,18 @@
             "minLength": 1,
             "title": "Title",
             "description": "Display name for the concept scheme"
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier",
+            "description": "Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted"
           },
           "description": {
             "anyOf": [
@@ -11455,6 +11479,18 @@
             "minLength": 1,
             "title": "Title",
             "description": "Display name for the taxonomy"
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier",
+            "description": "Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted"
           },
           "description": {
             "anyOf": [

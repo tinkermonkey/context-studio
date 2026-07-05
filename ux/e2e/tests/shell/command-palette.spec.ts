@@ -1,352 +1,220 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../../fixtures/app-test";
+
+// The app wraps Heimdall's CommandPalette. When open it renders inside the
+// `command-palette` wrapper as `.command-palette` (role=dialog) with a
+// `.command-palette__input` (role=combobox) and `.command-palette__item`
+// (role=option) rows; the selected row carries `.command-palette__item--selected`.
+// There are no per-element data-testids beyond the `command-palette` wrapper.
+const PALETTE = '[data-testid="command-palette"] .command-palette';
+const INPUT = ".command-palette__input";
+const ITEM = ".command-palette__item";
+const EMPTY = ".command-palette__empty";
+const BACKDROP = ".command-palette-backdrop";
 
 test.describe("Command Palette", () => {
   test.beforeEach(async ({ page }) => {
-    // Set a workspace path in localStorage before any page scripts run
-    await page.addInitScript(() => {
-      localStorage.setItem("context-studio:workspace-path", "/tmp/test-workspace");
-    });
-
-    // Navigate to app to ensure command palette is available
+    // Workspace path is seeded by the app-test fixture; just land in the app.
     await page.goto("/app");
     await page.waitForLoadState("networkidle");
   });
 
   test("Test Case 1: Open Palette via ⌘K and Assert Focus", async ({ page }) => {
-    // Press ⌘K to open the palette
     await page.keyboard.press("Meta+k");
 
-    // Assert the palette overlay appears
-    const palette = page.getByTestId("command-palette");
+    const palette = page.locator(PALETTE);
     await expect(palette).toBeVisible();
 
-    // Assert the search input has keyboard focus
-    const input = page.getByTestId("command-palette-input");
+    // The search input auto-focuses when the palette opens.
+    const input = page.locator(INPUT);
     await expect(input).toBeFocused();
 
-    // Assert at least one result exists and first result is highlighted
-    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
+    // At least one result exists and the first is highlighted.
+    const firstItem = page.locator(ITEM).first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
 
   test("Test Case 2: Fuzzy Filter on Typed Query", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    const input = page.locator(INPUT);
 
-    const input = page.getByTestId("command-palette-input");
-
-    // Get baseline: count initial results
-    const baselineItems = page.locator('[data-testid^="command-palette-item-"]');
-    const baselineCount = await baselineItems.count();
+    const baselineCount = await page.locator(ITEM).count();
     expect(baselineCount).toBeGreaterThan(0);
 
-    // Type a partial query to filter
     await input.fill("schema");
-
-    // Assert results are filtered to matching items
-    const filteredItems = page.locator('[data-testid^="command-palette-item-"]');
-    const filteredCount = await filteredItems.count();
+    const filteredCount = await page.locator(ITEM).count();
     expect(filteredCount).toBeGreaterThan(0);
+    await expect(page.locator(ITEM).first()).toBeVisible();
 
-    // Verify at least one result is visible (fuzzy matching is working)
-    const firstFilteredItem = filteredItems.first();
-    await expect(firstFilteredItem).toBeVisible();
-
-    // Verify case-insensitive matching by typing uppercase
+    // Case-insensitive matching.
     await input.fill("SCHEMA");
-    const uppercaseItems = page.locator('[data-testid^="command-palette-item-"]');
-    const uppercaseCount = await uppercaseItems.count();
-    expect(uppercaseCount).toBeGreaterThan(0);
-    const firstUppercaseItem = uppercaseItems.first();
-    await expect(firstUppercaseItem).toBeVisible();
+    expect(await page.locator(ITEM).count()).toBeGreaterThan(0);
+    await expect(page.locator(ITEM).first()).toBeVisible();
 
-    // Type additional characters to further narrow results
-    await input.fill("schema/classes");
-    const narrowedItems = page.locator('[data-testid^="command-palette-item-"]');
-    const narrowedCount = await narrowedItems.count();
-    // Results should either be empty or contain filtered items (no vacuous assertion)
+    // Narrow to a query that has no substring match → empty state.
+    await input.fill("schema/no-such-command");
+    const narrowedCount = await page.locator(ITEM).count();
     if (narrowedCount > 0) {
-      const firstNarrowedItem = narrowedItems.first();
-      await expect(firstNarrowedItem).toBeVisible();
+      await expect(page.locator(ITEM).first()).toBeVisible();
     } else {
-      // If no results, empty state should be visible
-      const emptyState = page.getByTestId("command-palette-empty-state");
-      await expect(emptyState).toBeVisible();
+      await expect(page.locator(EMPTY)).toBeVisible();
     }
   });
 
   test("Test Case 3: Keyboard Navigation (↓ Arrow Key)", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    await page.locator(INPUT).fill("schema");
 
-    const input = page.getByTestId("command-palette-input");
-
-    // Type to ensure we have results
-    await input.fill("schema");
-
-    const allItems = page.locator('[data-testid^="command-palette-item-"]');
-    // Assert we have at least 2 items for navigation testing
+    const allItems = page.locator(ITEM);
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
 
-    // Get first item and assert it's active
-    const firstItem = allItems.nth(0);
-    await expect(firstItem).toHaveClass(/command-palette__item--selected/);
+    await expect(allItems.nth(0)).toHaveClass(/command-palette__item--selected/);
 
-    // Press down arrow
     await page.keyboard.press("ArrowDown");
+    await expect(allItems.nth(1)).toHaveClass(/command-palette__item--selected/);
+    await expect(allItems.nth(0)).not.toHaveClass(/command-palette__item--selected/);
 
-    // Assert focus moves to second result
-    const secondItem = allItems.nth(1);
-    await expect(secondItem).toHaveClass(/command-palette__item--selected/);
-    await expect(firstItem).not.toHaveClass(/command-palette__item--selected/);
-
-    // Press down again
-    await page.keyboard.press("ArrowDown");
-
-    // Check if there are at least 3 items
     const itemCount = await allItems.count();
-    if (itemCount >= 3) {
-      // Assert focus moves to third result
-      const thirdItem = allItems.nth(2);
-      await expect(thirdItem).toHaveClass(/command-palette__item--selected/);
-    }
-
-    // Navigate to the last item
-    const lastItem = allItems.nth(itemCount - 1);
-    // Press down repeatedly until we reach the last item
-    for (let i = 2; i < itemCount; i++) {
+    // Walk to the last item.
+    for (let i = 1; i < itemCount - 1; i++) {
       await page.keyboard.press("ArrowDown");
     }
+    await expect(allItems.nth(itemCount - 1)).toHaveClass(/command-palette__item--selected/);
 
-    // Verify focus is now on last item
-    await expect(lastItem).toHaveClass(/command-palette__item--selected/);
-
-    // Press down once more and verify it wraps back to first item (Heimdall wraps with modular arithmetic)
+    // Wraps back to the first.
     await page.keyboard.press("ArrowDown");
-    await expect(firstItem).toHaveClass(/command-palette__item--selected/);
+    await expect(allItems.nth(0)).toHaveClass(/command-palette__item--selected/);
   });
 
   test("Test Case 4: Keyboard Navigation (↑ Arrow Key)", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    await page.locator(INPUT).fill("schema");
 
-    const input = page.getByTestId("command-palette-input");
-
-    // Type to ensure we have results
-    await input.fill("schema");
-
-    const allItems = page.locator('[data-testid^="command-palette-item-"]');
-    // Assert we have at least 2 items for navigation testing
+    const allItems = page.locator(ITEM);
     await expect(allItems.nth(0)).toBeVisible();
     await expect(allItems.nth(1)).toBeVisible();
 
-    const firstItem = allItems.nth(0);
-    const secondItem = allItems.nth(1);
-
-    // Navigate to the second item using ArrowDown
     await page.keyboard.press("ArrowDown");
+    await expect(allItems.nth(1)).toHaveClass(/command-palette__item--selected/);
 
-    // Assert we're at the second item
-    await expect(secondItem).toHaveClass(/command-palette__item--selected/);
-
-    // Press up arrow
     await page.keyboard.press("ArrowUp");
+    await expect(allItems.nth(0)).toHaveClass(/command-palette__item--selected/);
 
-    // Assert focus moves backward to first result
-    await expect(firstItem).toHaveClass(/command-palette__item--selected/);
-
-    // Press up once more and verify it wraps to last item (Heimdall wraps with modular arithmetic)
+    // Up at index 0 wraps to the last item.
     const itemCount = await allItems.count();
     await page.keyboard.press("ArrowUp");
-    const lastItem = allItems.nth(itemCount - 1);
-    await expect(lastItem).toHaveClass(/command-palette__item--selected/);
+    await expect(allItems.nth(itemCount - 1)).toHaveClass(/command-palette__item--selected/);
   });
 
   test("Test Case 5: Execute Command via Enter Key", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    const palette = page.locator(PALETTE);
+    await page.locator(INPUT).fill("schema");
+    await expect(page.locator(ITEM).first()).toBeVisible();
 
-    const palette = page.getByTestId("command-palette");
-    const input = page.getByTestId("command-palette-input");
-
-    // Type to get filtered results
-    await input.fill("schema");
-
-    const allItems = page.locator('[data-testid^="command-palette-item-"]');
-    // Assert at least one result exists
-    await expect(allItems.nth(0)).toBeVisible();
-
-    // Press Enter to execute the focused command
     await page.keyboard.press("Enter");
 
-    // Assert the palette closes (verifies the command's onSelect() callback fired)
+    // Executing a command closes the palette.
     await expect(palette).not.toBeVisible();
   });
 
   test("Test Case 6: Execute Command via Mouse Click", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    const palette = page.locator(PALETTE);
+    await page.locator(INPUT).fill("schema");
 
-    const palette = page.getByTestId("command-palette");
-    const input = page.getByTestId("command-palette-input");
+    await expect(page.locator(ITEM).first()).toBeVisible();
+    await page.locator(ITEM).first().click();
 
-    // Type to get results
-    await input.fill("schema");
-
-    const allItems = page.locator('[data-testid^="command-palette-item-"]');
-    // Assert at least one result exists
-    await expect(allItems.nth(0)).toBeVisible();
-
-    // Click on the first item to execute it
-    const firstItem = allItems.nth(0);
-    await firstItem.click();
-
-    // Assert the palette closes after command execution
     await expect(palette).not.toBeVisible();
   });
 
   test("Test Case 7: Close Palette via Escape Key", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
-
-    // Assert palette is open
-    const palette = page.getByTestId("command-palette");
+    const palette = page.locator(PALETTE);
     await expect(palette).toBeVisible();
 
-    // Press Escape
     await page.keyboard.press("Escape");
-
-    // Assert palette is hidden (auto-retries until hidden)
     await expect(palette).not.toBeVisible();
-
-    // Assert the underlying page is still visible
     await expect(page).toHaveURL(/\/app/);
   });
 
   test("Test Case 8: Close Palette via Backdrop Click", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
-
-    const palette = page.getByTestId("command-palette");
-    const backdrop = page.getByTestId("command-palette-backdrop");
-
-    // Assert palette is open
+    const palette = page.locator(PALETTE);
     await expect(palette).toBeVisible();
 
-    // Click on the backdrop (outside the palette dialog)
-    await backdrop.click({ position: { x: 10, y: 10 } });
-
-    // Assert palette is closed
+    // Click the backdrop at a corner, away from the dialog.
+    await page.locator(BACKDROP).click({ position: { x: 5, y: 5 } });
     await expect(palette).not.toBeVisible();
 
-    // Test that clicking on the palette itself does NOT close it
+    // Clicking inside the palette input must NOT close it.
     await page.keyboard.press("Meta+k");
-
-    const input = page.getByTestId("command-palette-input");
-    await input.click();
-
-    // Palette should still be open
+    await page.locator(INPUT).click();
     await expect(palette).toBeVisible();
   });
 
   test("Test Case 9: Reopen Palette After Close", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
-
-    const palette = page.getByTestId("command-palette");
-    const input = page.getByTestId("command-palette-input");
-
-    // Assert palette is open
+    const palette = page.locator(PALETTE);
+    const input = page.locator(INPUT);
     await expect(palette).toBeVisible();
 
-    // Type some query
     await input.fill("test-query");
 
-    // Close the palette by pressing ⌘K again
+    // Toggle closed with ⌘K.
     await page.keyboard.press("Meta+k");
-
-    // Assert palette is hidden
     await expect(palette).not.toBeVisible();
 
-    // Press ⌘K again to reopen
+    // Reopen.
     await page.keyboard.press("Meta+k");
-
-    // Assert palette opens again
     await expect(palette).toBeVisible();
-
-    // Assert input is focused
     await expect(input).toBeFocused();
-
-    // Assert query is cleared (state reset)
     await expect(input).toHaveValue("");
 
-    // Assert first result is highlighted
-    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
+    const firstItem = page.locator(ITEM).first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
 
-  test("Test Case 10: Reopen via Topbar ⌘K Chip", async ({ page }) => {
-    const palette = page.getByTestId("command-palette");
+  test("Test Case 10: Reopen via Topbar Search (⌘K hint)", async ({ page }) => {
+    const palette = page.locator(PALETTE);
 
-    // Locate the ⌘K chip button in the Topbar
-    const topbarButton = page.getByTestId("topbar-palette-button");
-    await expect(topbarButton).toBeVisible();
+    // The Topbar search field opens the palette on input (searchHint "⌘K";
+    // Heimdall wires the search <input> onChange → onSearch → openPalette).
+    const topbarSearch = page.locator(".topbar__search");
+    await expect(topbarSearch).toBeVisible();
+    await topbarSearch.pressSequentially("k");
 
-    // Click the button
-    await topbarButton.click();
-
-    // Assert the palette opens
     await expect(palette).toBeVisible();
+    await expect(page.locator(INPUT)).toBeFocused();
 
-    // Assert input is focused
-    const input = page.getByTestId("command-palette-input");
-    await expect(input).toBeFocused();
-
-    // Assert first result is highlighted
-    const firstItem = page.locator('[data-testid^="command-palette-item-"]').first();
+    const firstItem = page.locator(ITEM).first();
     await expect(firstItem).toBeVisible();
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
 
   test("Test Case 11: Empty State (No Results Match Query)", async ({ page }) => {
-    // Open palette
     await page.keyboard.press("Meta+k");
+    const palette = page.locator(PALETTE);
+    const input = page.locator(INPUT);
 
-    const palette = page.getByTestId("command-palette");
-    const input = page.getByTestId("command-palette-input");
-
-    // Type a query that matches no registered actions
     const nonMatchingQuery = "xyzzzzzz-no-results";
     await input.fill(nonMatchingQuery);
 
-    // Assert the results area shows empty state
-    const emptyState = page.getByTestId("command-palette-empty-state");
+    const emptyState = page.locator(EMPTY);
     await expect(emptyState).toBeVisible();
-
-    // Assert the message contains text
     await expect(emptyState).toContainText("No commands found");
-
-    // Assert palette remains open (does not auto-close)
     await expect(palette).toBeVisible();
 
-    // Type additional characters
     await input.fill(nonMatchingQuery + "more");
-
-    // Empty state should still show
     await expect(emptyState).toBeVisible();
 
-    // Clear and type a query that should match
+    // A matching query restores results.
     await input.fill("schema");
-
-    // Assert results appear for matching query
-    const items = page.locator('[data-testid^="command-palette-item-"]');
-    const itemCount = await items.count();
-    expect(itemCount).toBeGreaterThan(0);
-
-    // Assert at least first item is visible
+    const items = page.locator(ITEM);
+    expect(await items.count()).toBeGreaterThan(0);
     await expect(items.first()).toBeVisible();
   });
 });

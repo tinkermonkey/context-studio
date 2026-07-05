@@ -53,7 +53,7 @@ from .exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from .ports import EmbeddingService, OntologyRepository
+from .ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
 from .value_objects import DataPropertyValue, Status
 
 _logger = logging.getLogger(__name__)
@@ -73,6 +73,7 @@ class OntologyService:
         repository: OntologyRepository,
         embedding_service: EmbeddingService,
         event_publisher: EventPublisher,
+        schema_index: SchemaVectorIndex | None = None,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -81,10 +82,36 @@ class OntologyService:
             repository: Port for persisting and retrieving entities
             embedding_service: Port for generating semantic embeddings
             event_publisher: Port for publishing domain events
+            schema_index: Optional vector index kept in sync on write so schema
+                nodes are immediately searchable. No-op when not provided.
         """
         self._repository = repository
         self._embedding_service = embedding_service
         self._event_publisher = event_publisher
+        self._schema_index = schema_index
+
+    def _sync_vector_index(self, entity_id: str, title: str, description: str | None) -> None:
+        """
+        Keep the schema vector index in sync after a title/description write.
+
+        Best-effort secondary side-effect: a failure here (e.g. embedding model
+        unavailable, index DB locked) must NOT fail the already-persisted
+        create/update — that would surface a spurious error for a succeeded
+        write and cause confusing duplicate-on-retry. Mirrors how event-publish
+        failures are treated as non-fatal. The entity is saved but unsearchable
+        until the next reindex.
+        """
+        if self._schema_index is None:
+            return
+        try:
+            self._schema_index.index_entity(entity_id, title, description)
+        except Exception:  # noqa: BLE001 - index sync must not fail the primary write
+            _logger.error(
+                "Vector index sync failed for entity %s; entity saved but not "
+                "searchable until reindex.",
+                entity_id,
+                exc_info=True,
+            )
 
     # Taxonomy operations
 
@@ -849,6 +876,7 @@ class OntologyService:
             last_modified=now,
         )
         cls = self._repository.save_class(cls)
+        self._sync_vector_index(cls.id, cls.title, cls.description)
 
         failures = self._event_publisher.publish(
             ClassCreated(
@@ -993,6 +1021,8 @@ class OntologyService:
 
         cls.last_modified = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
+        if title_changed or desc_changed:
+            self._sync_vector_index(cls.id, cls.title, cls.description)
 
         changed = tuple(
             f
@@ -1625,6 +1655,7 @@ class OntologyService:
             last_modified=now,
         )
         prop_def = self._repository.save_property_definition(prop_def)
+        self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
 
         failures = self._event_publisher.publish(
             PropertyDefinitionCreated(
@@ -1794,8 +1825,11 @@ class OntologyService:
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_id)
 
+        title_changed = title is not None and title != prop_def.title
+        desc_changed = description is not None and description != prop_def.description
+
         # Check if new title is unique
-        if title is not None and title != prop_def.title:
+        if title_changed:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             existing_props = self._repository.list_property_definitions(limit=None)
@@ -1805,7 +1839,7 @@ class OntologyService:
                 )
             prop_def.title = title
 
-        if description is not None:
+        if desc_changed:
             prop_def.description = description
 
         if update_is_relevant:
@@ -1813,6 +1847,10 @@ class OntologyService:
 
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
+        # Only re-embed when the embedded text actually changed; updating just
+        # is_relevant must not trigger a needless title+description re-embed.
+        if title_changed or desc_changed:
+            self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
 
         failures = self._event_publisher.publish(
             PropertyDefinitionUpdated(

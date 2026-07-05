@@ -62,3 +62,4 @@ ux/e2e/tests/**/*-snapshots/
 
 .env
 **/.env*
+.claude/worktrees/

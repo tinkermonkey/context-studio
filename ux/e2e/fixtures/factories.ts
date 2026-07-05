@@ -102,35 +102,6 @@ export interface Dataset {
   version: number;
 }
 
-// Type definitions for pipelines
-export interface Pipeline {
-  id: string;
-  title: string;
-  provider: string;
-  model: string;
-  system_prompt: string;
-  user_prompt: string;
-  config?: Record<string, unknown>;
-  version: number;
-  enabled: boolean;
-  created_at: string;
-  last_updated: string;
-}
-
-export interface Execution {
-  id: string;
-  pipeline_config_id: string;
-  output_text: string;
-  provider: string;
-  model: string;
-  tokens_in: number;
-  tokens_out: number;
-  duration_ms: number;
-  status: "success" | "error" | "timeout";
-  error_message?: string | null;
-  timestamp: string;
-}
-
 /**
  * Create a test taxonomy
  */
@@ -257,6 +228,7 @@ export async function createRelationship(
   sourceClassId: string,
   targetClassId: string,
   propertyDefinitionId: string,
+  relationshipType: string,
 ): Promise<Relationship> {
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
@@ -264,6 +236,7 @@ export async function createRelationship(
       source_id: sourceClassId,
       target_id: targetClassId,
       property_definition_id: propertyDefinitionId,
+      relationship_type: relationshipType,
     },
   });
 
@@ -326,168 +299,61 @@ export async function createDataset(
   return response;
 }
 
-/**
- * Create a test pipeline configuration
- */
-export async function createPipeline(
-  page: Page,
-  overrides?: {
-    title?: string;
-    provider?: string;
-    model?: string;
-    system_prompt?: string;
-    user_prompt?: string;
-    config?: Record<string, unknown>;
-    pipeline?: string;
-  },
-): Promise<Pipeline> {
-  const timestamp = getRunTimestamp();
-  const pipeline = overrides?.pipeline || `test-pipeline-slug-${timestamp}`;
-  const title = overrides?.title || `test-pipeline-${timestamp}`;
-  const provider = overrides?.provider || "openai";
-  const model = overrides?.model || "gpt-4";
-  const system_prompt = overrides?.system_prompt || "You are a helpful assistant.";
-  const user_prompt = overrides?.user_prompt || "Process the following: {input}";
-  const config = overrides?.config || {};
-
-  const response = await apiRequest<Pipeline>(page, "/api/pipelines", {
-    method: "POST",
-    body: {
-      pipeline,
-      title,
-      provider,
-      model,
-      system_prompt,
-      user_prompt,
-      config,
-    },
-  });
-
-  return response;
-}
-
-/**
- * Execute a pipeline and get the execution result
- */
-export async function executePipeline(page: Page, pipelineId: string): Promise<Execution> {
-  const response = await apiRequest<Execution>(page, `/api/pipelines/${pipelineId}/execute`, {
-    method: "POST",
-    body: {
-      input_text: "Test input for pipeline execution",
-    },
-  });
-
-  return response;
-}
-
-/**
- * Get pipeline executions
- */
-export async function getPipelineExecutions(page: Page, pipelineId: string): Promise<Execution[]> {
-  const response = await apiRequest<Execution[]>(page, `/api/pipelines/${pipelineId}/executions`);
-  return response;
-}
-
 interface PaginatedResponse<T> {
   items: T[];
 }
 
+// The ontology API has no cascade delete and rejects deleting a non-empty
+// parent (a taxonomy with schemes, a scheme with classes, a class with
+// subclasses/individuals). So test data must be torn down children-first.
+//
+// Each collection is drained in repeated passes at the max page size: a pass
+// deletes every currently-deletable item and re-lists; a pass that deletes
+// nothing (or an empty list) stops the loop. This also clears the class
+// hierarchy leaf-first without the tests needing to know its shape.
+const CLEANUP_PAGE_SIZE = 1000;
+const MAX_DRAIN_PASSES = 12;
+
+async function drainCollection(page: Page, path: string): Promise<void> {
+  for (let pass = 0; pass < MAX_DRAIN_PASSES; pass++) {
+    let items: { id: string }[];
+    try {
+      const res = await apiRequest<PaginatedResponse<{ id: string }>>(
+        page,
+        `${path}?limit=${CLEANUP_PAGE_SIZE}`,
+      );
+      items = res.items ?? [];
+    } catch {
+      return; // endpoint unavailable — nothing to clean
+    }
+    if (items.length === 0) return;
+
+    let deleted = 0;
+    for (const item of items) {
+      try {
+        await apiRequest(page, `${path}/${item.id}`, { method: "DELETE" });
+        deleted++;
+      } catch {
+        // Blocked (non-empty parent) or already gone — a later pass retries it
+        // once its children have been removed.
+      }
+    }
+    if (deleted === 0) return; // no progress — avoid an infinite loop
+  }
+}
+
 /**
- * Clear all test data by deleting all non-default entities
- * Handles cascading deletes and soft-deleted entities
+ * Delete all test-created ontology data, children-first, so every test starts
+ * from a clean slate regardless of what prior tests left behind. Best-effort:
+ * failures are swallowed (a test may not have created data).
  */
 export async function clearTestData(page: Page): Promise<void> {
-  try {
-    // Delete individuals first (they have fewer dependencies)
-    const individualsResponse = await apiRequest<PaginatedResponse<Individual>>(
-      page,
-      "/api/individuals",
-    );
-    if (individualsResponse.items) {
-      for (const individual of individualsResponse.items) {
-        try {
-          await apiRequest(page, `/api/individuals/${individual.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore - already deleted or other error
-        }
-      }
-    }
-
-    // Delete all relationships (depends on classes and properties)
-    const relationshipsResponse = await apiRequest<PaginatedResponse<Relationship>>(
-      page,
-      "/api/relationships",
-    );
-    if (relationshipsResponse.items) {
-      for (const relationship of relationshipsResponse.items) {
-        try {
-          await apiRequest(page, `/api/relationships/${relationship.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore - may already be deleted
-        }
-      }
-    }
-
-    // Delete all pipelines
-    try {
-      const pipelinesResponse = await apiRequest<Pipeline[]>(page, "/api/pipelines");
-      if (Array.isArray(pipelinesResponse)) {
-        for (const pipeline of pipelinesResponse) {
-          try {
-            await apiRequest(page, `/api/pipelines/${pipeline.id}`, { method: "DELETE" });
-          } catch {
-            // Ignore deletion errors
-          }
-        }
-      }
-    } catch {
-      // Ignore if pipelines endpoint doesn't exist
-    }
-
-    // Delete all properties (can be used by relationships)
-    const propertiesResponse = await apiRequest<PaginatedResponse<PropertyDefinition>>(
-      page,
-      "/api/properties",
-    );
-    if (propertiesResponse.items) {
-      for (const prop of propertiesResponse.items) {
-        try {
-          await apiRequest(page, `/api/properties/${prop.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore deletion errors
-        }
-      }
-    }
-
-    // Delete all taxonomies (will cascade to schemes and classes)
-    const taxonomiesResponse = await apiRequest<PaginatedResponse<Taxonomy>>(
-      page,
-      "/api/taxonomies",
-    );
-    if (taxonomiesResponse.items) {
-      for (const taxonomy of taxonomiesResponse.items) {
-        try {
-          await apiRequest(page, `/api/taxonomies/${taxonomy.id}`, {
-            method: "DELETE",
-          });
-        } catch {
-          // Ignore - may be in use or already deleted
-        }
-      }
-    }
-
-    // Add a small delay to ensure database operations complete
-    await page.waitForLoadState("networkidle");
-  } catch {
-    // Ignore errors during cleanup - tests may not have created data
-    // but we still want cleanup to succeed
-  }
+  await drainCollection(page, "/api/individuals");
+  await drainCollection(page, "/api/relationships");
+  await drainCollection(page, "/api/classes"); // multi-pass clears the hierarchy leaf-first
+  await drainCollection(page, "/api/schemes");
+  await drainCollection(page, "/api/properties");
+  await drainCollection(page, "/api/taxonomies");
 }
 
 /**

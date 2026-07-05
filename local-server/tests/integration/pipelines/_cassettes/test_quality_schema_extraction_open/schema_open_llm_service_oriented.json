@@ -1,0 +1,9 @@
+{
+  "78558c34cef1a7a32590ba69f20e2cf4c72ef3df2d4888bd6c0517c8a149ad8b": {
+    "content": "```json\n{\n  \"Services\": {\n    \"label\": \"Service\",\n    \"definition\": \"A self-contained, loosely coupled unit of functionality that can be independently deployed and accessed via a contract.\"\n  },\n  \"Composition\": {\n    \"label\": \"ServiceComposition\",\n    \"definition\": \"The process of combining multiple individual services into a single higher-level composite service or application.\"\n  },\n  \"Orchestration\": {\n    \"label\": \"Orchestration\",\n    \"definition\": \"The automated arrangement and coordination of multiple services through a centralized workflow to execute a business process.\"\n  },\n  \"Governance\": {\n    \"label\": \"Governance\",\n    \"definition\": \"The set of policies, standards, and practices used to manage service lifecycles, versioning, and quality assurance.\"\n  },\n  \"collections\": {\n    \"label\": \"ServiceCollection\",\n    \"definition\": \"A grouping or set of services that together form the architecture of a system.\"\n  },\n  \"contracts\": {\n    \"label\": \"ServiceContract\",\n    \"definition\": \"A formal specification that defines the interfaces, data formats, and functional expectations of a service.\"\n  },\n  \"functionality\": {\n    \"label\": \"Functionality\",\n    \"definition\": \"The specific capabilities or business logic provided by a service to its consumers.\"\n  },\n  \"business processes\": {\n    \"label\": \"BusinessProcess\",\n    \"definition\": \"A series of structured activities or tasks performed by services to achieve a specific organizational goal.\"\n  }\n}\n```",
+    "tokens_in": 188,
+    "tokens_out": 348,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

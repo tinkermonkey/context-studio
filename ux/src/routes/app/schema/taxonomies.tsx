@@ -1,16 +1,11 @@
 import { useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
-import {
-  Button,
-  PageHeader,
-  FilterBar,
-  TabBar,
-  Icon,
-} from "@tinkermonkey/heimdall-ui";
+import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { TaxonomyDrawer } from "@/components/ontology/TaxonomyDrawer";
 import { useTaxonomies, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -117,7 +112,11 @@ export function TaxonomiesPage() {
     { id: "schemes", label: "Schemes", count: schemesData?.total },
     { id: "classes", label: "Classes", count: classesData?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   function handleTabNavigate(tabId: string) {
@@ -133,17 +132,12 @@ export function TaxonomiesPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", taxonomiesCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} taxonom${failed === 1 ? "y" : "ies"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason (e.g. "Cannot delete: it has N concept scheme(s)").
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   function handleRowMenuAction(actionId: string, entity: TaxonomyResponse) {
@@ -162,9 +156,7 @@ export function TaxonomiesPage() {
     { id: "delete", label: "Delete", icon: "trash" as const, danger: true },
   ];
 
-  const bulkActions = [
-    { id: "delete", label: "Delete", variant: "danger" as const },
-  ];
+  const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
   const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
   const emptyStateTitle = filteredEmpty
@@ -217,9 +209,7 @@ export function TaxonomiesPage() {
             data={filteredData}
             isLoading={isLoading}
             columns={taxonomyColumns}
-            renderInspector={(entity) => (
-              <TaxonomyDrawer key={entity.id} taxonomy={entity} />
-            )}
+            renderInspector={(entity) => <TaxonomyDrawer key={entity.id} taxonomy={entity} />}
             rowMenuActions={rowMenuActions}
             onRowMenuAction={handleRowMenuAction}
             onDeleteEntity={handleDelete}

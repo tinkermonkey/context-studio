@@ -1,0 +1,9 @@
+{
+  "60c66005de41ca3ca92541a539285becd45f221b0860d4ff883a780371501111": {
+    "content": "```json\n{\n  \"Streams\": {\n    \"label\": \"DataStream\",\n    \"definition\": \"A sequence of ongoing, asynchronous events or data elements ordered in time.\"\n  },\n  \"Observables\": {\n    \"label\": \"Observable\",\n    \"definition\": \"A data source or provider that emits a sequence of items or events to its subscribers over time.\"\n  },\n  \"Reactive programming\": {\n    \"label\": \"ReactiveProgramming\",\n    \"definition\": \"A declarative programming paradigm concerned with data streams and the propagation of change.\"\n  },\n  \"Operators\": {\n    \"label\": \"Operator\",\n    \"definition\": \"A function used to transform, filter, or combine data streams and observables.\"\n  },\n  \"Subscriptions\": {\n    \"label\": \"Subscription\",\n    \"definition\": \"The connection or contract between an observer and an observable that manages the execution of the stream.\"\n  },\n  \"Backpressure\": {\n    \"label\": \"Backpressure\",\n    \"definition\": \"A mechanism that allows a data consumer to signal to a producer that it is receiving data too fast, controlling the rate of emission.\"\n  },\n  \"consumers\": {\n    \"label\": \"Consumer\",\n    \"definition\": \"An entity or observer that receives and processes data emitted by a stream or observable.\"\n  },\n  \"data sources\": {\n    \"label\": \"Observable\",\n    \"definition\": \"A data source or provider that emits a sequence of items or events to its subscribers over time.\"\n  }\n}\n```",
+    "tokens_in": 194,
+    "tokens_out": 340,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

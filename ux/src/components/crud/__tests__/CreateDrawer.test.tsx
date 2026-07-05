@@ -196,9 +196,9 @@ describe("CreateDrawer", () => {
   describe("progress meter", () => {
     it("shows unsatisfied chip for required title field initially", () => {
       renderDrawer({ entityType: "taxonomy" });
-      const chip = screen.getAllByRole("generic").find(
-        (el) => el.getAttribute("aria-label") === "title: required",
-      );
+      const chip = screen
+        .getAllByRole("generic")
+        .find((el) => el.getAttribute("aria-label") === "title: required");
       expect(chip).toBeInTheDocument();
     });
 
@@ -207,10 +207,13 @@ describe("CreateDrawer", () => {
       renderDrawer({ entityType: "taxonomy" });
       await user.type(screen.getByTestId("create-drawer-title-input"), "Test");
       await waitFor(() => {
-        const chip = screen.getAllByRole("generic").find(
-          (el) => el.getAttribute("aria-label") === "title: satisfied",
-        );
+        const chip = screen
+          .getAllByRole("generic")
+          .find((el) => el.getAttribute("aria-label") === "title: satisfied");
         expect(chip).toBeInTheDocument();
+        // The modifier must be a separate class (regression guard against the
+        // conditional className losing its leading space → "create-drawer__chipsatisfied").
+        expect(chip).toHaveClass("create-drawer__chip", "satisfied");
       });
     });
   });
@@ -259,7 +262,7 @@ describe("CreateDrawer", () => {
   });
 
   describe("successful create — taxonomy", () => {
-    it("calls mutateAsync with title, description, and color", async () => {
+    it("calls mutateAsync with title, auto-generated identifier, description, and color", async () => {
       const user = userEvent.setup();
       mockCreateTaxonomy.mockResolvedValue({ id: "tax-new", title: "Life Sciences" });
 
@@ -270,6 +273,7 @@ describe("CreateDrawer", () => {
       await waitFor(() => {
         expect(mockCreateTaxonomy).toHaveBeenCalledWith({
           title: "Life Sciences",
+          identifier: "tax_life_sciences",
           description: null,
           color: null,
         });
@@ -304,7 +308,7 @@ describe("CreateDrawer", () => {
   });
 
   describe("successful create — scheme", () => {
-    it("calls mutateAsync with taxonomyId and title", async () => {
+    it("calls mutateAsync with taxonomyId, title, and auto-generated identifier", async () => {
       const user = userEvent.setup();
       mockCreateScheme.mockResolvedValue({ id: "sch-new", title: "Cell Biology" });
 
@@ -315,7 +319,7 @@ describe("CreateDrawer", () => {
       await waitFor(() => {
         expect(mockCreateScheme).toHaveBeenCalledWith({
           taxonomyId: "tax-1",
-          data: { title: "Cell Biology", description: null },
+          data: { title: "Cell Biology", identifier: "sch_cell_biology", description: null },
         });
       });
     });
@@ -360,9 +364,7 @@ describe("CreateDrawer", () => {
       await user.type(screen.getByTestId("create-drawer-title-input"), "Life Sciences");
       await user.click(screen.getByTestId("create-drawer-create-btn"));
 
-      await waitFor(() =>
-        expect(screen.getByTestId("create-drawer-success")).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByTestId("create-drawer-success")).toBeInTheDocument());
       expect(onClose).not.toHaveBeenCalled();
     });
   });
@@ -389,9 +391,7 @@ describe("CreateDrawer", () => {
       await user.type(screen.getByTestId("create-drawer-title-input"), "Life Sciences");
       await user.click(screen.getByTestId("create-drawer-create-btn"));
 
-      await waitFor(() =>
-        expect(screen.getByTestId("create-drawer-error")).toBeInTheDocument(),
-      );
+      await waitFor(() => expect(screen.getByTestId("create-drawer-error")).toBeInTheDocument());
       expect(onClose).not.toHaveBeenCalled();
     });
   });
@@ -435,23 +435,11 @@ describe("CreateDrawer", () => {
       await user.type(screen.getByTestId("create-drawer-title-input"), "Some Title");
 
       act(() => {
-        rerender(
-          <CreateDrawer
-            entityType="taxonomy"
-            isOpen={false}
-            onClose={vi.fn()}
-          />,
-        );
+        rerender(<CreateDrawer entityType="taxonomy" isOpen={false} onClose={vi.fn()} />);
       });
 
       act(() => {
-        rerender(
-          <CreateDrawer
-            entityType="taxonomy"
-            isOpen={true}
-            onClose={vi.fn()}
-          />,
-        );
+        rerender(<CreateDrawer entityType="taxonomy" isOpen={true} onClose={vi.fn()} />);
       });
 
       const titleInput = screen.getByTestId("create-drawer-title-input") as HTMLInputElement;

@@ -68,7 +68,7 @@ function ClassChip({
           type="button"
           onClick={() => onMoveUp(classId)}
           disabled={!canMoveUp || isDisabled}
-          className={`class-chip__btn${(!canMoveUp || isDisabled) ? " class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${!canMoveUp || isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-up-${classId}`}
           title="Move up"
         >
@@ -78,7 +78,7 @@ function ClassChip({
           type="button"
           onClick={() => onMoveDown(classId)}
           disabled={!canMoveDown || isDisabled}
-          className={`class-chip__btn${(!canMoveDown || isDisabled) ? " class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${!canMoveDown || isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-move-down-${classId}`}
           title="Move down"
         >
@@ -88,7 +88,7 @@ function ClassChip({
           type="button"
           onClick={() => onRemove(classId)}
           disabled={isDisabled}
-          className={`class-chip__btn${isDisabled ? " class-chip__btn--disabled" : ""}`}
+          className={`class-chip__btn ${isDisabled ? "class-chip__btn--disabled" : ""}`}
           data-testid={`individual-class-remove-${classId}`}
           title="Remove"
         >
@@ -314,7 +314,11 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
 
   const handleDuplicate = async () => {
     try {
-      await createMutation.mutateAsync({ title: `Copy of ${individual.title}`, class_ids: individual.class_ids, description: individual.description ?? undefined });
+      await createMutation.mutateAsync({
+        title: `Copy of ${individual.title}`,
+        class_ids: individual.class_ids,
+        description: individual.description ?? undefined,
+      });
       toast("success", "Individual duplicated");
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to duplicate individual";
@@ -330,9 +334,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
   );
 
   const primaryClassName =
-    individual.class_ids.length > 0
-      ? (classMap.get(individual.class_ids[0]) ?? "—")
-      : "—";
+    individual.class_ids.length > 0 ? (classMap.get(individual.class_ids[0]) ?? "—") : "—";
 
   const individualClassIds = new Set(individual.class_ids);
   const relevantRelationships = allRelationships.filter(
@@ -349,7 +351,9 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        onDuplicate={() => { void handleDuplicate(); }}
+        onDuplicate={() => {
+          void handleDuplicate();
+        }}
         data-testid="individual-detail-page"
       >
         {mode === "view" ? (
@@ -375,10 +379,20 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
               ) : (
                 <div className="stack" data-testid="individual-relationships-list">
                   {relevantRelationships.slice(0, 10).map((rel: any) => (
-                    <div key={rel.id} className="drawer-triple" data-testid={`individual-relationship-${rel.id}`}>
-                      <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
-                      <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
-                      <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
+                    <div
+                      key={rel.id}
+                      className="drawer-triple"
+                      data-testid={`individual-relationship-${rel.id}`}
+                    >
+                      <span className="drawer-triple-node">
+                        {classMap.get(rel.source_id) ?? "—"}
+                      </span>
+                      <span className="drawer-triple-predicate">
+                        {propertyMap.get(rel.property_definition_id) ?? "—"}
+                      </span>
+                      <span className="drawer-triple-node">
+                        {classMap.get(rel.target_id) ?? "—"}
+                      </span>
                     </div>
                   ))}
                   {relevantRelationships.length > 10 && (
@@ -408,7 +422,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 onSave={async (v) => {
                   await updateMutation.mutateAsync({ id: individual.id, data: { title: v } });
                 }}
-                validate={(v) => !v.trim() ? "Name is required" : undefined}
+                validate={(v) => (!v.trim() ? "Name is required" : undefined)}
                 data-testid="individual-drawer-name-field"
               />
 
@@ -418,7 +432,10 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 rows={4}
                 value={individual.description ?? ""}
                 onSave={async (v) => {
-                  await updateMutation.mutateAsync({ id: individual.id, data: { description: v || null } });
+                  await updateMutation.mutateAsync({
+                    id: individual.id,
+                    data: { description: v || null },
+                  });
                 }}
                 data-testid="individual-drawer-description-field"
               />
@@ -433,7 +450,9 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 {classesError && (
                   <div className="drawer-error-wrap">
                     <ErrorBanner
-                      error={classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)}
+                      error={
+                        classesErrorObj || new Error(individualsCopy.errors.failedToLoadClasses)
+                      }
                       onRetry={() => refetchClasses()}
                       message={individualsCopy.errors.failedToLoadClasses}
                       compact={true}
@@ -446,7 +465,9 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                       <ClassChip
                         key={classId}
                         classId={classId}
-                        className={classMap.get(classId) || individualsCopy.drawer.classNameFallback}
+                        className={
+                          classMap.get(classId) || individualsCopy.drawer.classNameFallback
+                        }
                         onRemove={handleRemoveClass}
                         onMoveUp={() => handleMoveClass(classId, "up")}
                         onMoveDown={() => handleMoveClass(classId, "down")}
@@ -482,9 +503,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                           className="class-dropdown-option"
                           data-testid={`individual-class-option-${cls.id}`}
                         >
-                          <span className="mono class-option-id">
-                            {cls.id.slice(0, 8)}
-                          </span>
+                          <span className="mono class-option-id">{cls.id.slice(0, 8)}</span>
                           <span>{cls.title}</span>
                         </button>
                       ))}
@@ -542,9 +561,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                     {inheritedProperties.map((prop: DataPropertyValueResponse, idx) => (
                       <Fragment key={`${prop.property_identifier}-${idx}`}>
                         <div>
-                          <span className="mono prop-identifier">
-                            {prop.property_identifier}
-                          </span>
+                          <span className="mono prop-identifier">{prop.property_identifier}</span>
                         </div>
                         <div>
                           <span className="prop-type-badge">
@@ -552,12 +569,19 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                           </span>
                         </div>
                         <div>
-                          <span className="prop-placeholder">—</span>
+                          {prop.value === null || prop.value === undefined ? (
+                            <span className="prop-placeholder">—</span>
+                          ) : (
+                            <span
+                              className="prop-value"
+                              data-testid={`prop-value-${prop.property_identifier}`}
+                            >
+                              {String(prop.value)}
+                            </span>
+                          )}
                         </div>
                         <div>
-                          <span className="prop-source-label">
-                            {individualsCopy.drawer.propertySourcePlaceholder}
-                          </span>
+                          <span className="prop-source-label">—</span>
                         </div>
                       </Fragment>
                     ))}
@@ -601,8 +625,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                                 className="related-class-badge"
                                 data-testid={`related-individual-class-${classId}`}
                               >
-                                {classMap.get(classId) ||
-                                  individualsCopy.drawer.classNameFallback}
+                                {classMap.get(classId) || individualsCopy.drawer.classNameFallback}
                               </span>
                             ))}
                           </div>

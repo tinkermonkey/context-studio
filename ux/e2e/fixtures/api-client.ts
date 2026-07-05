@@ -29,7 +29,12 @@ export async function apiRequest<T>(
     throw new Error(`API request failed: ${response.status()} ${error}`);
   }
 
-  return response.json();
+  // 204 No Content (e.g. DELETE) and other empty bodies have no JSON to parse.
+  if (response.status() === 204) {
+    return undefined as T;
+  }
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export class APIError extends Error {

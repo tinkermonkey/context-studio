@@ -14,6 +14,7 @@ import {
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/EntitySurface";
+import { deleteFailureMessage } from "@/api/mutationErrors";
 import { ClassDrawer } from "@/components/ontology/ClassDrawer";
 import { useClasses, useDeleteClass, useMoveClass } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
@@ -68,7 +69,9 @@ export function ClassesPage() {
 
   const hasFilter = !!searchFilter || domainFilter !== "all";
   const filteredData = allData
-    .filter((cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter)
+    .filter(
+      (cls: ClassResponse) => domainFilter === "all" || cls.concept_scheme_id === domainFilter,
+    )
     .filter(
       (cls: ClassResponse) =>
         cls.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -81,7 +84,11 @@ export function ClassesPage() {
     { id: "schemes", label: "Schemes", count: schemesResponse?.total },
     { id: "classes", label: "Classes", count: listResponse?.total },
     { id: "properties", label: "Properties", count: propsData?.total },
-    { id: "relationships", label: "Relationships", count: relsData?.items?.length ?? relsData?.total },
+    {
+      id: "relationships",
+      label: "Relationships",
+      count: relsData?.items?.length ?? relsData?.total,
+    },
   ];
 
   function handleTabNavigate(tabId: string) {
@@ -97,17 +104,12 @@ export function ClassesPage() {
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed === 0) {
+    if (results.every((r) => r.status === "fulfilled")) {
       toast("success", classesCopy.delete.successToast);
-    } else {
-      const succeeded = ids.length - failed;
-      const msg = succeeded > 0
-        ? `Deleted ${succeeded}, failed to delete ${failed}`
-        : `Failed to delete ${failed} class${failed === 1 ? "" : "es"}`;
-      toast("error", msg);
-      throw new Error(msg);
+      return;
     }
+    // Surface the backend's reason (e.g. "Cannot delete: it has N subclass(es)").
+    throw new Error(deleteFailureMessage(results, ids.length));
   }
 
   function handleRowMenuAction(actionId: string, entity: ClassResponse) {
@@ -209,12 +211,16 @@ export function ClassesPage() {
         );
         const failed = results.filter((r) => r.status === "rejected").length;
         if (failed === 0) {
-          toast("success", `Moved ${ids.length} class${ids.length === 1 ? "" : "es"} to new scheme`);
+          toast(
+            "success",
+            `Moved ${ids.length} class${ids.length === 1 ? "" : "es"} to new scheme`,
+          );
         } else {
           const succeeded = ids.length - failed;
-          const msg = succeeded > 0
-            ? `Moved ${succeeded}, failed to move ${failed}`
-            : `Failed to move ${failed} class${failed === 1 ? "" : "es"}`;
+          const msg =
+            succeeded > 0
+              ? `Moved ${succeeded}, failed to move ${failed}`
+              : `Failed to move ${failed} class${failed === 1 ? "" : "es"}`;
           toast("error", msg);
           throw new Error(msg);
         }
@@ -256,11 +262,7 @@ export function ClassesPage() {
       <TabBar tabs={schemaTabs} activeTabId="classes" onSelectTab={handleTabNavigate} />
 
       {error ? (
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load classes"
-        />
+        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" />
       ) : (
         <>
           {schemesError && (
@@ -294,9 +296,7 @@ export function ClassesPage() {
             data={filteredData}
             isLoading={isLoading}
             columns={classColumns}
-            renderInspector={(entity) => (
-              <ClassDrawer key={entity.id} classData={entity} />
-            )}
+            renderInspector={(entity) => <ClassDrawer key={entity.id} classData={entity} />}
             rowMenuActions={rowMenuActions}
             onRowMenuAction={handleRowMenuAction}
             onDeleteEntity={handleDelete}
@@ -315,6 +315,7 @@ export function ClassesPage() {
 export const Route = createFileRoute("/app/schema/classes")({
   component: ClassesPage,
   validateSearch: (search: Record<string, unknown>): ClassesSearchParams => ({
-    createForScheme: typeof search.createForScheme === "string" ? search.createForScheme : undefined,
+    createForScheme:
+      typeof search.createForScheme === "string" ? search.createForScheme : undefined,
   }),
 });

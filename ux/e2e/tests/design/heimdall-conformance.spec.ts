@@ -40,26 +40,10 @@ test("S-3: dark canvas is active by default", async ({ page }) => {
   expect(hasDarkCanvas).toBe(true);
 });
 
-// ─── Behavioral: pipeline tab labels (P-1) ───────────────────────────────────
-// Status-based tabs vs state-based tabs — must check text content, not pixels.
-
-test("P-1: pipeline tabs use status labels (Running / Success / Idle / Failed)", async ({
-  page,
-}) => {
-  await setupWorkspace(page);
-  await page.goto("/app/pipelines");
-  await page.waitForLoadState("networkidle");
-
-  const tabBar = page.locator('[data-testid="pipeline-status-filter"], .segmented-control');
-  await expect(tabBar.first()).toBeVisible();
-
-  await expect(tabBar.first().getByText("Running")).toBeVisible();
-  await expect(tabBar.first().getByText("Success")).toBeVisible();
-  await expect(tabBar.first().getByText("Failed")).toBeVisible();
-
-  await expect(tabBar.first().getByText("Enabled")).not.toBeVisible();
-  await expect(tabBar.first().getByText("Disabled")).not.toBeVisible();
-});
+// Note: the P-1 pipeline-status-filter conformance check was removed with the
+// old-UX pipeline E2E specs — it targeted the pre-rewrite pipelines UI and is
+// coupled to the run flow (#1108). It will be reintroduced when the pipeline
+// E2E suite is rebuilt against the current UI.
 
 // ─── Behavioral: settings eyebrow casing (ST-4) ──────────────────────────────
 // The eyebrow must be lowercase — a visual reviewer cannot reliably distinguish
@@ -98,7 +82,9 @@ test.describe("Audit screenshots", () => {
     for (const { route, name } of pages) {
       await page.goto(route);
       await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(500);
+      // Wait for the page's own content to render (not a fixed delay) so the
+      // screenshot captures a settled page.
+      await expect(page.getByRole("heading").first()).toBeVisible();
       await captureAuditScreenshot(page, name);
     }
   });

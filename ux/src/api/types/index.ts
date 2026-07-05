@@ -73,7 +73,7 @@ export interface paths {
     get: operations["get_taxonomy_api_taxonomies__taxonomy_id__get"];
     /**
      * Update Taxonomy
-     * @description Update a taxonomy's title and/or description.
+     * @description Update a taxonomy's title, description, and/or color.
      *
      *     Args:
      *         taxonomy_id: The taxonomy ID
@@ -253,7 +253,7 @@ export interface paths {
     get: operations["get_concept_scheme_api_schemes__scheme_id__get"];
     /**
      * Update Concept Scheme
-     * @description Update a concept scheme's title and/or description.
+     * @description Update a concept scheme's title, description, color, and/or taxonomy assignment.
      *
      *     Args:
      *         scheme_id: The concept scheme ID
@@ -591,7 +591,7 @@ export interface paths {
     get: operations["get_property_definition_api_properties__property_id__get"];
     /**
      * Update Property Definition
-     * @description Update a property definition's title and/or description.
+     * @description Update a property definition's title, description, and/or is_relevant flag.
      *
      *     Note: identifier cannot be changed after creation.
      *
@@ -617,7 +617,7 @@ export interface paths {
      *         service: OntologyService from dependency injection
      *
      *     Raises:
-     *         HTTPException: 404 if not found
+     *         HTTPException: 404 if not found, 422 if property is in use by relationships
      */
     delete: operations["delete_property_definition_api_properties__property_id__delete"];
     options?: never;
@@ -3996,6 +3996,11 @@ export interface components {
        */
       title: string;
       /**
+       * Identifier
+       * @description Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted
+       */
+      identifier?: string | null;
+      /**
        * Description
        * @description Optional longer description
        */
@@ -4166,6 +4171,11 @@ export interface components {
        * @description Display name for the concept scheme
        */
       title: string;
+      /**
+       * Identifier
+       * @description Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted
+       */
+      identifier?: string | null;
       /**
        * Description
        * @description Optional longer description
@@ -6979,6 +6989,11 @@ export interface components {
        * @description Display name for the taxonomy
        */
       title: string;
+      /**
+       * Identifier
+       * @description Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted
+       */
+      identifier?: string | null;
       /**
        * Description
        * @description Optional longer description

@@ -81,6 +81,40 @@ class MetricsEmitter:
             raise IOError(f"Failed to write metrics to {metrics_file}: {e}") from e
 
 
+def read_scoreboard(metrics_file: Path | str) -> dict[str, dict]:
+    """
+    Read a _metrics JSONL file and return the latest row per config_ref.
+
+    Used by the closed-loop optimizer to render a baseline-vs-candidate
+    leaderboard: for each config_ref, the row with the highest config_version
+    wins; on an equal config_version the later-written (last) row wins.
+
+    Args:
+        metrics_file: Path to a {pipeline_type}.jsonl metrics file.
+
+    Returns:
+        Dict mapping config_ref → the latest metrics row (full row dict).
+        Empty dict if the file does not exist.
+    """
+    path = Path(metrics_file)
+    if not path.exists():
+        return {}
+    latest: dict[str, dict] = {}
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            config_ref = row.get("config_ref", "?")
+            incumbent = latest.get(config_ref)
+            if incumbent is None or row.get("config_version", 0) >= incumbent.get(
+                "config_version", 0
+            ):
+                latest[config_ref] = row
+    return latest
+
+
 class FloorGate:
     """Asserts pipeline quality metrics against configurable floors."""
 

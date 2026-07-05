@@ -28,7 +28,9 @@ export function useCreateClass() {
     mutationFn: ({ schemeId, data }: { schemeId: string; data: ClassCreateRequest }) =>
       ontologyService.createClass(schemeId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      // Scheme drawers show per-scheme class counts.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }
@@ -38,9 +40,8 @@ export function useUpdateClass() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ClassUpdateRequest }) =>
       ontologyService.updateClass(id, data),
-    onSuccess: (_result, { id }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.class(id) });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
     },
   });
 }
@@ -51,7 +52,8 @@ export function useMoveClass() {
     mutationFn: ({ id, data }: { id: string; data: ClassMoveRequest }) =>
       ontologyService.moveClass(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }
@@ -59,9 +61,22 @@ export function useMoveClass() {
 export function useDeleteClass() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteClass(id),
+    // The backend rejects deleting a class that still has subclasses or
+    // individuals, so a successful delete only removes a leaf class. Refresh
+    // the class list and the parent scheme's class count.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classes() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
+    },
+    // The drawer defers this delete behind an undo window and shows an
+    // optimistic "deleted" toast up front. When the backend then rejects the
+    // delete, re-fetch so the still-present row reflects server truth instead
+    // of contradicting the error toast.
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
     },
   });
 }

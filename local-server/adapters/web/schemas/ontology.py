@@ -70,6 +70,10 @@ class TaxonomyCreateRequest(BaseModel):
     """Request to create a new taxonomy."""
 
     title: str = Field(..., description="Display name for the taxonomy", min_length=1)
+    identifier: Optional[str] = Field(
+        None,
+        description="Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted",
+    )
     description: Optional[str] = Field(None, description="Optional longer description")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
 
@@ -138,6 +142,10 @@ class ConceptSchemeCreateRequest(BaseModel):
     """Request to create a new concept scheme."""
 
     title: str = Field(..., description="Display name for the concept scheme", min_length=1)
+    identifier: Optional[str] = Field(
+        None,
+        description="Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted",
+    )
     description: Optional[str] = Field(None, description="Optional longer description")
 
     @field_validator("title")
@@ -215,6 +223,10 @@ class ClassCreateRequest(BaseModel):
     """Request to create a new class."""
 
     title: str = Field(..., description="Display name for the class", min_length=1)
+    identifier: Optional[str] = Field(
+        None,
+        description="Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted",
+    )
     description: Optional[str] = Field(None, description="Optional longer description")
     parent_class_id: Optional[str] = Field(
         None, description="Optional ID of parent class for hierarchy"

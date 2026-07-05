@@ -29,3 +29,6 @@ logs/
 
 # Metrics artifacts (only ignores root-level _metrics/, not test fixtures)
 /_metrics/
+
+# Closed-loop optimizer telemetry (generated; run-specific timestamps/run-ids)
+tests/integration/fixtures/pipelines/_metrics/quality_loop_*.jsonl

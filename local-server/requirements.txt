@@ -5,7 +5,11 @@ sqlalchemy[mypy]>=2.0
 alembic
 pydantic
 sentence-transformers
+scikit-learn
 spacy
+# spaCy English model used by the NLP adapter (open-extraction POS/dependency parsing).
+# If the pinned URL is unreachable, install with: python -m spacy download en_core_web_sm
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 networkx>=3.1
 rdflib
 duckdb

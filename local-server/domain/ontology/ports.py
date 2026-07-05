@@ -11,6 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Literal, Protocol, Sequence
 
 from .entities import (
@@ -22,6 +23,9 @@ from .entities import (
     Taxonomy,
 )
 from .value_objects import SearchCriteria
+
+SchemaKind = Literal["class", "property_definition", "relationship"]
+MatchedField = Literal["title", "definition"]
 
 
 class OntologyRepository(Protocol):
@@ -581,5 +585,90 @@ class EmbeddingService(Protocol):
 
         Returns:
             Similarity score as float (typically 0.0 to 1.0)
+        """
+        ...
+
+
+@dataclass(frozen=True)
+class SchemaMatch:
+    """
+    A schema entity matched by vector similarity to a query embedding.
+
+    Used by the open-extraction individuals flow to find which existing schema
+    nodes and relation types an extracted phrase plausibly instantiates.
+
+    Attributes:
+        entity_id: ID of the matched entity (class id, property_definition id,
+            or relationship id)
+        kind: Which kind of schema entity matched
+        label: Human-readable title of the matched entity
+        score: Similarity score in 0.0-1.0 (1.0 = identical)
+        matched_field: Whether the title or the definition embedding produced the
+            best score
+
+    Raises:
+        ValueError: If score is not 0.0-1.0
+    """
+
+    entity_id: str
+    kind: SchemaKind
+    label: str
+    score: float
+    matched_field: MatchedField
+
+    def __post_init__(self) -> None:
+        """Validate schema match invariants."""
+        if not 0.0 <= self.score <= 1.0:
+            raise ValueError(f"score must be 0.0-1.0, got {self.score}")
+
+
+class SchemaVectorIndex(Protocol):
+    """
+    Port for semantic vector search over existing schema entities.
+
+    A first-class persistence capability: it both maintains the title/definition
+    embeddings of schema entities (kept in sync on write) and searches them by a
+    query embedding. Classes and property definitions carry their own
+    embeddings; a relationship is matched via its property definition's
+    embeddings. The backing adapter lives in adapters/persistence/sqlite/.
+    """
+
+    def index_entity(
+        self, entity_id: str, title: str, description: str | None
+    ) -> None:
+        """
+        (Re)compute and persist the title and definition embeddings for one
+        schema entity, keeping the vector index in sync with its text.
+
+        Args:
+            entity_id: ID of the class or property definition to index.
+            title: Current title text (embedded as the title vector).
+            description: Current description text (embedded as the definition
+                vector); None/empty leaves the definition vector unset.
+        """
+        ...
+
+    def search(
+        self,
+        query_embedding: list[float],
+        kinds: Sequence[SchemaKind],
+        top_k: int = 20,
+        threshold: float = 0.0,
+    ) -> list[SchemaMatch]:
+        """
+        Find schema entities whose title or definition is similar to the query.
+
+        For each candidate, the higher of its title-similarity and
+        definition-similarity is taken; matched_field records which one won.
+
+        Args:
+            query_embedding: The query vector (e.g. an extracted-phrase embedding).
+            kinds: Which schema kinds to include in the search.
+            top_k: Maximum number of matches to return, highest score first.
+            threshold: Minimum similarity score (0.0-1.0) for inclusion.
+
+        Returns:
+            SchemaMatch objects sorted by descending score (length <= top_k).
+            Empty if nothing meets the threshold.
         """
         ...

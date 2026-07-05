@@ -81,10 +81,14 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
 
   const handleDuplicate = async () => {
     try {
-      await createMutation.mutateAsync({ taxonomyId: scheme.taxonomy_id, data: { title: `Copy of ${scheme.title}`, description: scheme.description ?? undefined } });
+      await createMutation.mutateAsync({
+        taxonomyId: scheme.taxonomy_id,
+        data: { title: `Copy of ${scheme.title}`, description: scheme.description ?? undefined },
+      });
       toast("success", "Concept scheme duplicated");
     } catch (error) {
-      const message = error instanceof ApiError ? error.detail : "Failed to duplicate concept scheme";
+      const message =
+        error instanceof ApiError ? error.detail : "Failed to duplicate concept scheme";
       toast("error", message);
     }
   };
@@ -106,7 +110,9 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        onDuplicate={() => { void handleDuplicate(); }}
+        onDuplicate={() => {
+          void handleDuplicate();
+        }}
         data-testid="scheme-inspector"
       >
         {mode === "view" ? (
@@ -126,11 +132,17 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
             </InspectorPanel.Section>
             <InspectorPanel.Section title={`Classes (${classes.length})`}>
               {classes.length === 0 ? (
-                <p className="drawer-empty-note" data-testid="scheme-classes-empty">No classes</p>
+                <p className="drawer-empty-note" data-testid="scheme-classes-empty">
+                  No classes
+                </p>
               ) : (
                 <div className="stack" data-testid="scheme-classes-list">
                   {classes.slice(0, CLASSES_DISPLAY_CAP).map((cls) => (
-                    <div key={cls.id} className="drawer-list-item" data-testid={`scheme-class-${cls.id}`}>
+                    <div
+                      key={cls.id}
+                      className="drawer-list-item"
+                      data-testid={`scheme-class-${cls.id}`}
+                    >
                       {cls.title}
                     </div>
                   ))}
@@ -169,7 +181,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                   onSave={async (v) => {
                     await updateMutation.mutateAsync({ id: scheme.id, data: { title: v } });
                   }}
-                  validate={(v) => !v.trim() ? "Title is required" : undefined}
+                  validate={(v) => (!v.trim() ? "Title is required" : undefined)}
                   data-testid="scheme-drawer-title-field"
                 />
 
@@ -220,7 +232,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         title={schemesCopy.delete.confirmTitle}
-        message={deleteMessage}
+        message={<span data-testid="scheme-delete-confirm">{deleteMessage}</span>}
         confirmLabel={schemesCopy.delete.confirmButton}
         onConfirm={() => {
           void handleDelete();

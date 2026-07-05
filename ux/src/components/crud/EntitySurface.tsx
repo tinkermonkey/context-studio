@@ -1,10 +1,4 @@
-import {
-  useState,
-  useRef,
-  useImperativeHandle,
-  forwardRef,
-  type ReactNode,
-} from "react";
+import { useState, useRef, useImperativeHandle, forwardRef, type ReactNode } from "react";
 import { Button, Icon, Modal, SegmentedControl, Select } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { SelectableTable } from "./SelectableTable";
@@ -46,7 +40,7 @@ interface EntitySurfaceProps<T extends { id: string }> {
   data: T[];
   isLoading?: boolean;
   columns: Column<T>[];
-  renderInspector: (entity: T) => ReactNode;
+  renderInspector: (entity: T, helpers: { selectEntity: (id: string) => void }) => ReactNode;
   rowMenuActions?: RowMenuAction[];
   onRowMenuAction?: (actionId: string, entity: T) => void;
   getDuplicateContext?: (entity: T) => Partial<FormValues>;
@@ -72,6 +66,11 @@ function defaultDuplicateContext<T extends { id: string }>(entity: T): Partial<F
     title: title ? `${title} (copy)` : "(copy)",
     ...(identifier ? { identifier: `${identifier}_copy` } : {}),
     description: typeof e.description === "string" ? e.description : undefined,
+    // Carry the parent so duplicating a scheme/class does not open the create
+    // drawer with its required parent selector empty.
+    ...(typeof e.taxonomy_id === "string" ? { taxonomyId: e.taxonomy_id } : {}),
+    ...(typeof e.concept_scheme_id === "string" ? { schemeId: e.concept_scheme_id } : {}),
+    ...(typeof e.parent_class_id === "string" ? { parentClassId: e.parent_class_id } : {}),
   };
 }
 
@@ -136,7 +135,7 @@ function EntitySurfaceBase<T extends { id: string }>(
   useImperativeHandle(ref, () => ({
     startCreate(ctx?: Partial<FormValues>, identifierDirty?: boolean) {
       setCreateContext(ctx ?? {});
-      setIdentifierDirty(identifierDirty !== undefined ? identifierDirty : !!(ctx?.identifier));
+      setIdentifierDirty(identifierDirty !== undefined ? identifierDirty : !!ctx?.identifier);
       setMode("create");
     },
   }));
@@ -149,7 +148,7 @@ function EntitySurfaceBase<T extends { id: string }>(
       const entity = data.find((d) => d.id === ids[0]);
       const entityLabel =
         label ??
-        (entity ? (entity as Record<string, unknown>).title as string ?? entity.id : ids[0]);
+        (entity ? (((entity as Record<string, unknown>).title as string) ?? entity.id) : ids[0]);
       setDeleteTarget({ id: ids[0], label: entityLabel });
       setDeleteIds(null);
     } else {
@@ -170,7 +169,9 @@ function EntitySurfaceBase<T extends { id: string }>(
           toast(
             "error",
             "Could not load cascade impact",
-            err instanceof Error ? err.message : "Dependent entities could not be retrieved. Proceed with caution.",
+            err instanceof Error
+              ? err.message
+              : "Dependent entities could not be retrieved. Proceed with caution.",
           );
         });
     }
@@ -214,7 +215,7 @@ function EntitySurfaceBase<T extends { id: string }>(
         ? getDuplicateContext(entity)
         : defaultDuplicateContext(entity);
       setCreateContext(ctx);
-      setIdentifierDirty(!!(ctx.identifier));
+      setIdentifierDirty(!!ctx.identifier);
       setMode("create");
     } else {
       onRowMenuAction?.(actionId, entity);
@@ -276,14 +277,18 @@ function EntitySurfaceBase<T extends { id: string }>(
           icon={<Icon name={icon as any} size={22} />}
           title={emptyStateTitle ?? `No ${label}s yet`}
           description={emptyStateDescription ?? `Create your first ${label} to get started.`}
-          action={showAction ? {
-            label: emptyStateActionLabel ?? `New ${label}`,
-            onClick: () => {
-              setCreateContext({});
-              setIdentifierDirty(false);
-              setMode("create");
-            },
-          } : undefined}
+          action={
+            showAction
+              ? {
+                  label: emptyStateActionLabel ?? `New ${label}`,
+                  onClick: () => {
+                    setCreateContext({});
+                    setIdentifierDirty(false);
+                    setMode("create");
+                  },
+                }
+              : undefined
+          }
         />
       </div>
     );
@@ -297,9 +302,11 @@ function EntitySurfaceBase<T extends { id: string }>(
       <div
         data-testid="schema-page-layout"
         className={showRight ? "split-2" : undefined}
-        style={showRight && inspectorWidth !== 420
-          ? { "--inspector-width": `${inspectorWidth}px` } as React.CSSProperties
-          : undefined}
+        style={
+          showRight && inspectorWidth !== 420
+            ? ({ "--inspector-width": `${inspectorWidth}px` } as React.CSSProperties)
+            : undefined
+        }
       >
         {/* Left: table */}
         <div>
@@ -336,7 +343,12 @@ function EntitySurfaceBase<T extends { id: string }>(
                 data-testid="entity-surface-create-drawer"
               />
             ) : inspectorEntity ? (
-              renderInspector(inspectorEntity)
+              renderInspector(inspectorEntity, {
+                selectEntity: (id: string) => {
+                  setInspectorId(id);
+                  setMode("view");
+                },
+              })
             ) : null}
           </div>
         )}
@@ -430,5 +442,5 @@ function EntitySurfaceBase<T extends { id: string }>(
 }
 
 export const EntitySurface = forwardRef(EntitySurfaceBase) as <T extends { id: string }>(
-  props: EntitySurfaceProps<T> & React.RefAttributes<EntitySurfaceHandle>
+  props: EntitySurfaceProps<T> & React.RefAttributes<EntitySurfaceHandle>,
 ) => React.ReactElement | null;

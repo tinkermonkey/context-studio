@@ -46,7 +46,10 @@ export function useUpdateTaxonomy() {
 export function useDeleteTaxonomy() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteTaxonomy(id),
+    // The backend rejects deleting a taxonomy that still has schemes, so a
+    // successful delete only removes an empty taxonomy.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
     },

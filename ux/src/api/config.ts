@@ -9,17 +9,23 @@ export const QUERY_KEYS = {
   dataset: (id: string) => ["datasets", id] as const,
   demoDatasets: ["demo-datasets"] as const,
   // Ontology
+  // Root prefixes for invalidation — a 1-element key partial-matches every
+  // parameterized sub-key (e.g. ["schemes"] matches ["schemes", taxId] and ["schemes", id]).
   taxonomies: ["taxonomies"] as const,
   taxonomy: (id: string) => ["taxonomies", id] as const,
+  schemesRoot: ["schemes"] as const,
   schemes: (taxonomyId?: string) => ["schemes", taxonomyId] as const,
   scheme: (id: string) => ["schemes", id] as const,
+  classesRoot: ["classes"] as const,
   classes: (params?: object) => ["classes", params] as const,
   class: (id: string) => ["classes", id] as const,
+  individualsRoot: ["individuals"] as const,
   individuals: (params?: object) => ["individuals", params] as const,
   individual: (id: string, resource?: string) =>
     resource ? (["individuals", id, resource] as const) : (["individuals", id] as const),
   properties: ["properties"] as const,
   property: (id: string) => ["properties", id] as const,
+  relationshipsRoot: ["relationships"] as const,
   relationships: (params?: object) => ["relationships", params] as const,
   // Graph
   graph: ["graph"] as const,

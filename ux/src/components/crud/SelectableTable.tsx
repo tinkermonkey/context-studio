@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Table, Button, Icon, RowMenu, type Column, type RowMenuAction } from "@tinkermonkey/heimdall-ui";
+import {
+  Table,
+  Button,
+  Icon,
+  RowMenu,
+  type Column,
+  type RowMenuAction,
+} from "@tinkermonkey/heimdall-ui";
 
 export type { RowMenuAction } from "@tinkermonkey/heimdall-ui";
 
@@ -43,16 +50,34 @@ export function SelectableTable<T extends { id: string }>({
   const endIndex = Math.min(startIndex + PAGE_SIZE, data.length);
   const pagedData = data.slice(startIndex, endIndex);
 
+  // Heimdall computes select-all against the rows it renders (the current page
+  // slice) and REPLACES the whole selection with the page's ids. Merge the
+  // page-scoped change back with selections from other pages so paginating
+  // never silently drops prior selections.
+  const handleSelectRows = (keys: Array<string | number>) => {
+    if (!onSelectRows) return;
+    const nextOnPage = new Set(keys.map(String));
+    const pageIds = pagedData.map((r) => r.id);
+    const pageIdSet = new Set(pageIds);
+    const offPageSelected = selectedRows.filter((id) => !pageIdSet.has(id));
+    const pageSelected = pageIds.filter((id) => nextOnPage.has(id));
+    onSelectRows([...offPageSelected, ...pageSelected]);
+  };
+
   const tableColumns: Column<T>[] = [
     ...columns,
     ...(rowMenuActions && onRowMenuAction
       ? [
           {
-            key: "id" as keyof T,
+            // Unique key so this column does not collide with an existing
+            // "id" column (which would produce duplicate React cell keys).
+            key: "__rowmenu__" as keyof T,
             label: "",
             width: "48px",
             render: (_value: T[keyof T], row: T) => (
-              <div className="csb-rowmenu">
+              // Stop propagation so opening the action menu does not also
+              // trigger the row click (which opens the inspector).
+              <div className="csb-rowmenu" onClick={(e) => e.stopPropagation()}>
                 <RowMenu
                   actions={rowMenuActions}
                   onAction={(actionId) => onRowMenuAction(actionId, row)}
@@ -97,7 +122,7 @@ export function SelectableTable<T extends { id: string }>({
         rowKey="id"
         selectable
         selectedRows={selectedRows}
-        onSelectRows={(keys) => onSelectRows?.(keys.map(String))}
+        onSelectRows={handleSelectRows}
         onRowClick={onRowClick}
       />
 

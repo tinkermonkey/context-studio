@@ -1,0 +1,9 @@
+{
+  "cb1cbf1575ebaf5faeb94953b58d0cd9b17360e741c3dad273ac097b8059f086": {
+    "content": "```json\n{\n  \"An event loop\": {\n    \"label\": \"EventLoop\",\n    \"definition\": \"A central control structure that orchestrates the execution of asynchronous tasks and handles events by polling for readiness.\"\n  },\n  \"Multiple tasks\": {\n    \"label\": \"Task\",\n    \"definition\": \"A unit of work that wraps a coroutine and is scheduled to run independently within an event loop.\"\n  },\n  \"a coroutine\": {\n    \"label\": \"Coroutine\",\n    \"definition\": \"A specialized function that can suspend its execution and yield control back to the caller or event loop without losing its state.\"\n  },\n  \"Asynchronous programming\": {\n    \"label\": \"AsynchronousProgramming\",\n    \"definition\": \"A programming paradigm that allows tasks to execute concurrently without blocking the main execution thread.\"\n  },\n  \"a program\": {\n    \"label\": \"Program\",\n    \"definition\": \"A collection of instructions and logic designed to be executed by a computer to perform specific operations.\"\n  },\n  \"Callbacks\": {\n    \"label\": \"Callback\",\n    \"definition\": \"A function passed as an argument to be executed automatically upon the completion of an asynchronous task or event.\"\n  },\n  \"A future\": {\n    \"label\": \"Future\",\n    \"definition\": \"An object that acts as a placeholder for a result that is initially unknown but will be available at a later point in time.\"\n  },\n  \"the kitchen\": {\n    \"label\": \"Kitchen\",\n    \"definition\": \"A physical environment or room designated for the preparation of food and maintenance of culinary cleanliness.\"\n  }\n}\n```",
+    "tokens_in": 268,
+    "tokens_out": 364,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

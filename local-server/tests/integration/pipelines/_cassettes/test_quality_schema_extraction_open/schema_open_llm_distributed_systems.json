@@ -1,0 +1,9 @@
+{
+  "8ac75ac52bf51bd0cacaea95e0f14e2ee271d3bc8ed5a5f429090dba10d86965": {
+    "content": "```json\n{\n  \"Consistency models\": {\n    \"label\": \"ConsistencyModel\",\n    \"definition\": \"A set of rules that defines the order and visibility of data updates across multiple nodes in a distributed system.\"\n  },\n  \"Distributed systems\": {\n    \"label\": \"DistributedSystem\",\n    \"definition\": \"A collection of independent computers that appear to its users as a single coherent system.\"\n  },\n  \"Consensus algorithms\": {\n    \"label\": \"ConsensusAlgorithm\",\n    \"definition\": \"A process used in distributed systems to achieve agreement on a single data value or state among multiple nodes.\"\n  },\n  \"Replication\": {\n    \"label\": \"Replication\",\n    \"definition\": \"The process of storing multiple copies of data across different nodes to ensure high availability and fault tolerance.\"\n  },\n  \"Partitioning\": {\n    \"label\": \"Partitioning\",\n    \"definition\": \"The practice of dividing a large dataset into smaller, distinct parts distributed across multiple nodes to improve scalability.\"\n  },\n  \"challenges\": {\n    \"label\": \"DistributedSystemChallenge\",\n    \"definition\": \"A technical difficulty or constraint, such as latency or failure, inherent in the design and operation of distributed environments.\"\n  },\n  \"network latency\": {\n    \"label\": \"NetworkLatency\",\n    \"definition\": \"The time delay experienced in a system for data to travel from its source to its destination across a network.\"\n  },\n  \"Raft\": {\n    \"label\": \"RaftConsensusAlgorithm\",\n    \"definition\": \"A specific consensus algorithm designed as an alternative to Paxos, focused on understandability and managing a replicated log.\"\n  }\n}\n```",
+    "tokens_in": 200,
+    "tokens_out": 374,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

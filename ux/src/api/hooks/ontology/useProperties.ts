@@ -8,7 +8,10 @@ type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinition
 
 export function useProperties(isRelevant?: boolean) {
   return useQuery({
-    queryKey: QUERY_KEYS.properties,
+    // Include isRelevant in the key so relevance-filtered and unfiltered
+    // queries do not collide on one cache entry. Mutations invalidate the
+    // ["properties"] prefix, which still matches both.
+    queryKey: [...QUERY_KEYS.properties, isRelevant ?? null],
     queryFn: () => ontologyService.listProperties(isRelevant),
   });
 }
@@ -58,8 +61,17 @@ export function useSetPropertyRelevance() {
 export function useDeleteProperty() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { skipGlobalErrorToast: true },
     mutationFn: (id: string) => ontologyService.deleteProperty(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+    },
+    // The drawer defers this delete behind an undo window and shows an
+    // optimistic "deleted" toast up front. The backend rejects deleting a
+    // property still referenced by relationships, so on rejection re-fetch the
+    // list so the still-present row reflects server truth instead of
+    // contradicting the error toast.
+    onError: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },
   });

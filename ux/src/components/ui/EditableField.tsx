@@ -42,6 +42,7 @@ export function EditableField({
   const [saveError, setSaveError] = useState<string | undefined>();
   const [validationError, setValidationError] = useState<string | undefined>();
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const startEditing = () => {
     if (disabled) return;
@@ -63,13 +64,16 @@ export function EditableField({
     try {
       await onSave(val);
       setSaveStatus("saved");
+      setIsEditing(false);
       if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
       savedTimeoutRef.current = setTimeout(() => setSaveStatus("idle"), 1600);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Save failed";
       setSaveError(message);
       setSaveStatus("error");
+      // Stay in edit mode and return focus so the user can correct and retry.
       setIsEditing(true);
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
@@ -80,12 +84,15 @@ export function EditableField({
       setValidationError(err);
       return;
     }
-
-    setIsEditing(false);
     setValidationError(undefined);
 
-    if (trimmed === value) return;
+    if (trimmed === value) {
+      setIsEditing(false);
+      return;
+    }
 
+    // Keep edit mode active during the save; performSave exits on success or
+    // restores focus on failure.
     await performSave(trimmed);
   };
 
@@ -113,6 +120,7 @@ export function EditableField({
       case "TextArea":
         return (
           <TextArea
+            ref={inputRef as any}
             value={editValue}
             onChange={(e) => handleChange(e.target.value)}
             onBlur={() => void handleBlur()}
@@ -126,6 +134,7 @@ export function EditableField({
       case "NumberInput":
         return (
           <NumberInput
+            ref={inputRef as any}
             value={editValue}
             onChange={(e) => handleChange(e.target.value)}
             onBlur={() => void handleBlur()}
@@ -153,6 +162,7 @@ export function EditableField({
       default:
         return (
           <TextInput
+            ref={inputRef as any}
             type="text"
             value={editValue}
             onChange={(e) => handleChange(e.target.value)}
@@ -185,7 +195,11 @@ export function EditableField({
           </span>
         )}
         {saveStatus === "error" && (
-          <span className="editable-field__error-indicator">
+          <span
+            className="editable-field__error-indicator"
+            role="alert"
+            data-testid={testId ? `${testId}-error` : undefined}
+          >
             {saveError ?? "Save failed"}
           </span>
         )}
@@ -202,7 +216,7 @@ export function EditableField({
         </>
       ) : (
         <div
-          className={`editable-field__view${disabled ? " editable-field__view--disabled" : ""}`}
+          className={`editable-field__view ${disabled ? "editable-field__view--disabled" : ""}`}
           onClick={startEditing}
           onKeyDown={(e) => e.key === "Enter" && startEditing()}
           role={disabled ? undefined : "button"}

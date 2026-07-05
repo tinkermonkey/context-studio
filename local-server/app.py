@@ -47,7 +47,9 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
+from adapters.clustering.sklearn_clusterer import SklearnClusterer
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
@@ -231,6 +233,10 @@ async def lifespan(app: FastAPI):
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         logger.info("EmbeddingService created")
 
+        # Clustering adapter (open-extraction schema distillation)
+        clusterer = SklearnClusterer()
+        logger.info("SklearnClusterer created")
+
         # LLM provider router
         llm_router = LLMProviderRouter(
             openai_api_key=settings.llm.openai_api_key,
@@ -270,10 +276,14 @@ async def lifespan(app: FastAPI):
 
         # --- Domain Services ---
 
+        schema_vector_index = SqliteSchemaVectorIndex(local_session_factory, embedding_service)
+        logger.info("SchemaVectorIndex created")
+
         ontology_service = OntologyService(
             repository=ontology_repo,
             embedding_service=embedding_service,
             event_publisher=event_publisher,
+            schema_index=schema_vector_index,
         )
         logger.info("OntologyService created and wired with adapters")
 
@@ -626,6 +636,8 @@ async def lifespan(app: FastAPI):
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
+        # Cached ConceptNet source for open-extraction enrichment (first/only entry).
+        app.state.conceptnet_source = reference_sources[0] if reference_sources else None
         app.state.ontology_repo = ontology_repo
         app.state.change_repo = change_repo
         app.state.interchange_repo = interchange_repo
@@ -658,6 +670,11 @@ async def lifespan(app: FastAPI):
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
         app.state.llm_router = llm_router
+
+        # Ports for the open extraction pipelines (open_v1 implementations)
+        app.state.embedding_service = embedding_service
+        app.state.clusterer = clusterer
+        app.state.schema_vector_index = schema_vector_index
 
         logger.info("Services registered in app.state for dependency injection")
 

@@ -124,6 +124,7 @@ async def create_taxonomy(
             request.title,
             request.description,
             request.color,
+            request.identifier,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
@@ -351,6 +352,7 @@ async def create_concept_scheme(
             title=request.title,
             description=request.description,
             color=None,
+            identifier=request.identifier,
         )
         return ConceptSchemeResponse.model_validate(scheme)
     except Exception as exc:
@@ -527,6 +529,7 @@ async def create_class(
             description=request.description,
             color=None,
             parent_class_id=request.parent_class_id,
+            identifier=request.identifier,
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
