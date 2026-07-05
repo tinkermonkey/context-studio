@@ -244,6 +244,7 @@ All imports point inward. `domain/` has **zero imports** from `adapters/`, `data
 - When comparing UUID values, always cast them to strings, as SQLite stores UUIDs as text
 - Do not import from `legacy-server/` — use it as a reading reference only
 - Do not add backwards compatibility shims for the legacy API or database schema
+- Do not switch file-based SQLite engines back to `StaticPool`. File DBs use SQLAlchemy's default `QueuePool` (one connection per thread/session) with `PRAGMA journal_mode=WAL` and a `busy_timeout` set per-connection, because the app runs synchronous DB code on a thread pool and SQLite connections cannot be shared for concurrent statement execution. Only in-memory DBs (`:memory:`) use `StaticPool` (required so every connection sees the same database; WAL is invalid there). See `adapters/persistence/sqlite/connection.py`.
 
 ### Testing
 
