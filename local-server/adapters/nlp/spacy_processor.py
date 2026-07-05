@@ -98,11 +98,11 @@ class SpacyNLPProcessor:
                         "NLP processor not ready. Returning empty results for text:"
                         f" {text[:100]}"
                     )
-                    return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
+                    return NLPResult(tokens=(), entities=[], noun_chunks=[], language="unknown")
 
                 assert self._nlp is not None
                 doc = self._nlp(text)
-                tokens = [token.text for token in doc]
+                tokens = tuple(token.text for token in doc)
                 entities = self._extract_from_doc(doc)
                 noun_chunks = [chunk.text for chunk in doc.noun_chunks]
 
@@ -205,7 +205,7 @@ class SpacyNLPProcessor:
                         f" {text[:100]}"
                     )
                     return OpenExtractionResult(
-                        tokens=[], noun_chunks=[], sentence_count=0, language="unknown"
+                        tokens=(), noun_chunks=(), sentence_count=0, language="unknown"
                     )
 
                 assert self._nlp is not None
@@ -235,7 +235,7 @@ class SpacyNLPProcessor:
                 sentence_index_by_token[tok.i] = sentence_count
         sentence_count = sentence_count + 1 if sentence_index_by_token else 0
 
-        tokens = [
+        tokens = tuple(
             OpenToken(
                 index=tok.i,
                 text=tok.text,
@@ -251,9 +251,9 @@ class SpacyNLPProcessor:
                 is_alpha=bool(tok.is_alpha),
             )
             for tok in doc
-        ]
+        )
 
-        noun_chunks = [
+        noun_chunks = tuple(
             NounChunkSpan(
                 text=chunk.text,
                 start_token=chunk.start,
@@ -264,7 +264,7 @@ class SpacyNLPProcessor:
                 sentence_index=sentence_index_by_token.get(chunk.root.i, 0),
             )
             for chunk in doc.noun_chunks
-        ]
+        )
 
         return OpenExtractionResult(
             tokens=tokens,

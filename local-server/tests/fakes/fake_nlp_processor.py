@@ -45,7 +45,7 @@ class FakeNLPProcessor:
         self.call_count += 1
         self.last_text_processed = text
 
-        tokens = text.split() if text else []
+        tokens = tuple(text.split()) if text else ()
         entities = self.extract_entities(text)
 
         return NLPResult(
@@ -149,8 +149,8 @@ class FakeNLPProcessor:
                 )
 
         return OpenExtractionResult(
-            tokens=tokens,
-            noun_chunks=chunks,
+            tokens=tuple(tokens),
+            noun_chunks=tuple(chunks),
             sentence_count=1 if tokens else 0,
             language=self.language,
         )

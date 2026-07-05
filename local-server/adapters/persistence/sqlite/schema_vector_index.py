@@ -26,9 +26,17 @@ from adapters.persistence.sqlite.mappers import (
 from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.models import Relationship as RelationshipORM
 from domain.ontology.ports import EmbeddingService, MatchedField, SchemaKind, SchemaMatch
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # SchemaKind values that map directly to ontology_entities.node_type rows.
 _ENTITY_KINDS = ("class", "property_definition")
+
+# One-time guard so a fully-stale index (every stored vector a different
+# dimension after an embedding-model swap) surfaces a WARNING instead of
+# silently returning no matches. Reset only matters for tests.
+_dim_mismatch_warned = False
 
 
 class SqliteSchemaVectorIndex:
@@ -57,6 +65,11 @@ class SqliteSchemaVectorIndex:
         with self._session_factory() as session:
             row = session.get(OntologyEntity, entity_id)
             if row is None:
+                logger.warning(
+                    "index_entity requested for entity_id=%s but no such entity was "
+                    "found; nothing indexed.",
+                    entity_id,
+                )
                 return
             row.title_embedding = _serialize_embedding(title_vec)
             row.definition_embedding = _serialize_embedding(def_vec)
@@ -81,10 +94,12 @@ class SqliteSchemaVectorIndex:
             descriptions = [row.description or "" for row in rows]
             title_vecs = self._embedding.embed_batch(titles)
             def_vecs = self._embedding.embed_batch(descriptions)
-            for row, title_vec, def_vec, description in zip(
-                rows, title_vecs, def_vecs, descriptions
+            for row, title_vec, def_vec, title, description in zip(
+                rows, title_vecs, def_vecs, titles, descriptions
             ):
-                row.title_embedding = _serialize_embedding(title_vec)
+                row.title_embedding = _serialize_embedding(
+                    title_vec if title.strip() else None
+                )
                 row.definition_embedding = _serialize_embedding(
                     def_vec if description.strip() else None
                 )
@@ -203,8 +218,20 @@ class SqliteSchemaVectorIndex:
                 continue
             candidate = np.asarray(vec, dtype=np.float32)
             # Skip stale-dimension vectors (e.g. after an embedding-model swap or
-            # a truncated blob) rather than letting numpy raise mid-search.
+            # a truncated blob) rather than letting numpy raise mid-search. Warn
+            # once so a fully-stale index (which would silently return no matches)
+            # is diagnosable.
             if candidate.shape != query_norm.shape:
+                global _dim_mismatch_warned
+                if not _dim_mismatch_warned:
+                    logger.warning(
+                        "Skipping stored embedding with stale dimension %s "
+                        "(query dimension %s); the schema vector index likely needs "
+                        "a reindex after an embedding-model change.",
+                        candidate.shape,
+                        query_norm.shape,
+                    )
+                    _dim_mismatch_warned = True
                 continue
             candidate_norm = float(np.linalg.norm(candidate))
             if candidate_norm == 0.0:

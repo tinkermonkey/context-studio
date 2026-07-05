@@ -33,11 +33,16 @@ def _is_memory_url(database_url: str) -> bool:
     """
     Return True if the SQLite URL refers to an in-memory database.
 
-    In-memory databases are identified by the ":memory:" path or a
-    "mode=memory" query parameter (shared-cache URI form).
+    In-memory databases are identified by the ":memory:" path, a
+    "mode=memory" query parameter (shared-cache URI form), or the bare
+    "sqlite://" / "sqlite:///" empty-path form (SQLAlchemy's default
+    in-memory database when no path is given).
     """
     lowered = database_url.lower()
-    return ":memory:" in lowered or "mode=memory" in lowered
+    if ":memory:" in lowered or "mode=memory" in lowered:
+        return True
+    # Bare empty-path forms ("sqlite://", "sqlite:///") are in-memory too.
+    return lowered in ("sqlite://", "sqlite:///")
 
 
 def _create_sqlite_engine(database_url: str) -> Engine:

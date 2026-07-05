@@ -1825,8 +1825,11 @@ class OntologyService:
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_id)
 
+        title_changed = title is not None and title != prop_def.title
+        desc_changed = description is not None and description != prop_def.description
+
         # Check if new title is unique
-        if title is not None and title != prop_def.title:
+        if title_changed:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
             existing_props = self._repository.list_property_definitions(limit=None)
@@ -1836,7 +1839,7 @@ class OntologyService:
                 )
             prop_def.title = title
 
-        if description is not None:
+        if desc_changed:
             prop_def.description = description
 
         if update_is_relevant:
@@ -1844,7 +1847,10 @@ class OntologyService:
 
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
-        self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
+        # Only re-embed when the embedded text actually changed; updating just
+        # is_relevant must not trigger a needless title+description re-embed.
+        if title_changed or desc_changed:
+            self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
 
         failures = self._event_publisher.publish(
             PropertyDefinitionUpdated(

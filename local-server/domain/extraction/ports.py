@@ -63,7 +63,7 @@ class NLPResult:
         language: Detected language code (e.g., 'en', 'es')
     """
 
-    tokens: list[str]
+    tokens: tuple[str, ...]
     entities: list[NLPEntity]
     noun_chunks: list[str]
     language: str
@@ -190,15 +190,57 @@ class OpenExtractionResult:
         ValueError: If sentence_count is negative
     """
 
-    tokens: list[OpenToken]
-    noun_chunks: list[NounChunkSpan]
+    tokens: tuple[OpenToken, ...]
+    noun_chunks: tuple[NounChunkSpan, ...]
     sentence_count: int
     language: str
 
     def __post_init__(self) -> None:
-        """Validate open extraction result invariants."""
+        """Validate open extraction result and cross-collection index invariants.
+
+        Beyond sentence_count, this enforces the referential invariants that the
+        pure candidate builders rely on, converting what would otherwise be
+        latent IndexErrors deep inside those functions into a single, clear
+        boundary error:
+
+        - ``tokens[i].index == i`` for every position i (positional identity).
+        - every ``OpenToken.head_index`` is a valid index into ``tokens``
+          (a sentence root points at itself, which is in range).
+        - every ``NounChunkSpan.root_index`` is a valid index into ``tokens``,
+          and each chunk's ``start_token``/``end_token`` span lies within
+          ``tokens`` (end_token is exclusive, so it may equal ``len(tokens)``).
+        """
         if self.sentence_count < 0:
             raise ValueError(f"sentence_count must be >= 0, got {self.sentence_count}")
+
+        token_count = len(self.tokens)
+        for i, token in enumerate(self.tokens):
+            if token.index != i:
+                raise ValueError(
+                    f"tokens[{i}].index must equal its position, got {token.index}"
+                )
+            if not 0 <= token.head_index < token_count:
+                raise ValueError(
+                    f"tokens[{i}].head_index {token.head_index} out of range "
+                    f"[0, {token_count})"
+                )
+
+        for j, chunk in enumerate(self.noun_chunks):
+            if not 0 <= chunk.start_token < token_count:
+                raise ValueError(
+                    f"noun_chunks[{j}].start_token {chunk.start_token} out of range "
+                    f"[0, {token_count})"
+                )
+            if not 0 < chunk.end_token <= token_count:
+                raise ValueError(
+                    f"noun_chunks[{j}].end_token {chunk.end_token} out of range "
+                    f"(0, {token_count}]"
+                )
+            if not 0 <= chunk.root_index < token_count:
+                raise ValueError(
+                    f"noun_chunks[{j}].root_index {chunk.root_index} out of range "
+                    f"[0, {token_count})"
+                )
 
 
 @dataclass(frozen=True)

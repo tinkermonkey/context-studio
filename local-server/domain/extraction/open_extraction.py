@@ -91,6 +91,17 @@ class OpenExtractionParams:
     standalone_pos: frozenset[str] = frozenset({"NOUN", "PROPN", "ADJ"})
     include_standalone: bool = True
 
+    def __post_init__(self) -> None:
+        """Validate open-extraction tuning knobs (perturbed by the optimizer)."""
+        if self.max_verb_depth < 1:
+            raise ValueError(f"max_verb_depth must be >= 1, got {self.max_verb_depth}")
+        if self.min_chunk_chars < 0:
+            raise ValueError(f"min_chunk_chars must be >= 0, got {self.min_chunk_chars}")
+        if self.tf_idf_threshold < 0.0:
+            raise ValueError(
+                f"tf_idf_threshold must be >= 0.0, got {self.tf_idf_threshold}"
+            )
+
 
 @dataclass(frozen=True)
 class ConceptCandidate:
@@ -120,6 +131,21 @@ class ConceptCandidate:
     end: int
     label_lemmas: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        """Validate concept-candidate offset/index invariants."""
+        if self.start < 0:
+            raise ValueError(f"start must be >= 0, got {self.start}")
+        if self.end < self.start:
+            raise ValueError(
+                f"end must be >= start, got start={self.start}, end={self.end}"
+            )
+        if self.root_index < 0:
+            raise ValueError(f"root_index must be >= 0, got {self.root_index}")
+        if self.sentence_index < 0:
+            raise ValueError(f"sentence_index must be >= 0, got {self.sentence_index}")
+        if not math.isfinite(self.score):
+            raise ValueError(f"score must be finite, got {self.score}")
+
 
 @dataclass(frozen=True)
 class RelationCandidate:
@@ -145,6 +171,23 @@ class RelationCandidate:
     sentence_index: int
     subject_lemmas: tuple[str, ...] = ()
     object_lemmas: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Validate relation-candidate token-index invariants.
+
+        Subject, verb, and object indices must be non-negative. No positional
+        ordering is enforced between them: dependency structure routinely places
+        the subject or object on either side of the verb (e.g. passive voice),
+        so subject_index < verb_index < object_index is not an invariant.
+        """
+        if self.subject_index < 0:
+            raise ValueError(f"subject_index must be >= 0, got {self.subject_index}")
+        if self.verb_index < 0:
+            raise ValueError(f"verb_index must be >= 0, got {self.verb_index}")
+        if self.object_index < 0:
+            raise ValueError(f"object_index must be >= 0, got {self.object_index}")
+        if self.sentence_index < 0:
+            raise ValueError(f"sentence_index must be >= 0, got {self.sentence_index}")
 
 
 # ============================================================================

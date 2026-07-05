@@ -362,6 +362,34 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
         ), f"{scenario} produced no class candidates"
 
     mean_llm = sum(m["class_jaccard"] for _, m in llm_rows) / len(llm_rows)
+
+    # A/B baseline: run the same scenarios in rule mode (no LLM synthesis) so we
+    # can gate the "LLM synthesis improves on the rule baseline" claim on the
+    # actual delta, not a fixed constant that sits below the rule baseline.
+    rule_rows = []
+    for scenario in QUALITY_SCENARIOS:
+        orch = OpenSchemaExtractionOrchestrator(
+            llm_provider=quality_llm_provider_factory(scenario, cassette_dir, "schema_open_llm_"),
+            nlp_processor=nlp,
+            embedding_service=embedding,
+            clusterer=clusterer,
+            config={**get_open_v1_config(), "synthesis_mode": "rule"},
+        )
+        fixture = dict(load_fixture("schema_extraction", scenario))
+        if "text" in fixture and "documents" not in fixture:
+            fixture["documents"] = [fixture.pop("text")]
+        state = SchemaExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=fixture,
+        )
+        result_state = await orch.execute(state)
+        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        rule_rows.append(
+            (scenario, compute_quality_metrics(load_expected_output("schema_extraction", scenario), actual))
+        )
+    mean_rule = sum(m["class_jaccard"] for _, m in rule_rows) / len(rule_rows)
+
     print("\n── open_v1 LLM-synthesis quality (cassette-backed) ──")
     print(f"{'scenario':<28} class_jac  prop_jac  conn_ovl  brier")
     for scenario, m in llm_rows:
@@ -369,7 +397,14 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
             f"{scenario:<28} {m['class_jaccard']:>8.2f}  {m['property_jaccard']:>8.2f}  "
             f"{m['connection_overlap']:>8.2f}  {m['brier']:>6.2f}"
         )
-    print(f"{'MEAN class_jaccard':<28} {mean_llm:>8.3f}  (rule baseline ~0.37, prod floor 0.60)")
+    print(
+        f"{'MEAN class_jaccard':<28} llm={mean_llm:>6.3f}  rule={mean_rule:>6.3f}  "
+        f"delta={mean_llm - mean_rule:>+6.3f}  (prod floor 0.60)"
+    )
 
-    # Sanity floor — the real number is reported above; tighten once observed.
-    assert mean_llm >= 0.30
+    # Gate the A/B claim: LLM synthesis must be at least as good as the rule
+    # baseline on the curated ground truth. (Real numbers printed above.)
+    assert mean_llm >= mean_rule, (
+        f"LLM synthesis mean class_jaccard {mean_llm:.3f} did not beat the rule "
+        f"baseline {mean_rule:.3f}"
+    )

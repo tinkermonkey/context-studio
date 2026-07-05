@@ -27,6 +27,7 @@ from domain.extraction.open_extraction import (
     ConceptCandidate,
     ConceptPriority,
     OpenExtractionParams,
+    RelationCandidate,
     build_concept_candidates,
     build_relation_candidates,
     pascal_label,
@@ -39,7 +40,10 @@ from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
-from domain.pipelines.schema_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.schema_extraction.configurations.open_v1 import (
+    SchemaOpenV1Config,
+    get_open_v1_config,
+)
 from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     CandidateConnection,
@@ -102,7 +106,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         self._clusterer = clusterer
         self._ontology_repo = ontology_repo
         self._reference_source = reference_source
-        self._config = config or get_open_v1_config()
+        self._cfg = SchemaOpenV1Config.from_dict(config or get_open_v1_config())
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """Run the open schema-extraction pipeline and populate state.result."""
@@ -117,23 +121,28 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
 
         try:
             open_result = self._nlp.process_open(source_text)
+            if source_text.strip() and not open_result.tokens:
+                raise PipelineExecutionError(
+                    "NLP produced no tokens for non-empty input; the spaCy model is "
+                    "likely not available"
+                )
             params = OpenExtractionParams(
-                tf_idf_threshold=float(self._config.get("tf_idf_threshold", 0.0)),
-                include_standalone=bool(self._config.get("include_standalone", True)),
+                tf_idf_threshold=self._cfg.tf_idf_threshold,
+                include_standalone=self._cfg.include_standalone,
             )
             candidates = build_concept_candidates(open_result, params)
             representatives = self._cluster_and_select(candidates)
-            top = representatives[: int(self._config.get("top_n", 8))]
+            top = representatives[: self._cfg.top_n]
 
-            classes = await self._synthesize_classes(top, source_text)
+            classes, label_map = await self._synthesize_classes(top, source_text)
             relations = build_relation_candidates(open_result)
-            properties, connections = self._build_relations(relations, classes)
+            properties, connections = self._build_relations(relations, classes, label_map)
 
-            if self._config.get("use_conceptnet") and self._reference_source is not None:
+            if self._cfg.use_conceptnet and self._reference_source is not None:
                 classes, connections = await self._enrich_with_conceptnet(classes, connections)
 
             result = self._finalize(classes, properties, connections)
-        except PipelineInputError:
+        except (PipelineInputError, PipelineExecutionError):
             raise
         except Exception as exc:  # noqa: BLE001 - re-wrapped as a pipeline error
             _logger.error("Open schema extraction failed: %s", exc, exc_info=True)
@@ -154,14 +163,14 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         vectors = self._embedding.embed_batch([c.text for c in candidates])
         assignments = self._clusterer.cluster(
             vectors,
-            distance_threshold=float(self._config.get("cluster_distance_threshold", 0.25)),
-            min_cluster_size=int(self._config.get("min_cluster_size", 1)),
+            distance_threshold=self._cfg.cluster_distance_threshold,
+            min_cluster_size=self._cfg.min_cluster_size,
         )
         return select_cluster_representatives(candidates, assignments)
 
     async def _synthesize_classes(
         self, representatives: list[ConceptCandidate], source_text: str
-    ) -> list[CandidateClass]:
+    ) -> tuple[list[CandidateClass], dict[str, str]]:
         """
         Turn cluster representatives into CandidateClass objects per synthesis_mode:
 
@@ -169,8 +178,19 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         - hybrid: rule-derived labels + LLM-written definitions.
         - llm: the LLM proposes the canonical labels AND definitions (this is the
           lever that can move class_jaccard, since labels are no longer rule-bound).
+
+        Also returns a map from each representative's rule-derived label (what
+        ``_build_relations`` computes from relation lemmas) to the FINAL class
+        label, so relation subjects/objects still resolve to classes in llm mode
+        where the two diverge. In rule/hybrid mode the map is the identity.
         """
-        mode = self._config.get("synthesis_mode", "rule")
+        mode = self._cfg.synthesis_mode
+        if mode in ("llm", "hybrid") and self._llm_provider is None:
+            _logger.warning(
+                "open_v1 synthesis_mode=%r requested but no LLM provider is configured; "
+                "falling back to rule synthesis",
+                mode,
+            )
         if mode == "llm" and self._llm_provider is not None:
             return await self._llm_synthesize_classes(representatives, source_text)
 
@@ -188,8 +208,10 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             definitions = await self._llm_definitions([label for _, label in pairs], source_text)
 
         classes: list[CandidateClass] = []
+        label_map: dict[str, str] = {}
         for rep, label in pairs:
             definition = definitions.get(label) or f"{label}: a domain concept."
+            label_map[synthesize_label(rep)] = label
             classes.append(
                 CandidateClass(
                     label=label,
@@ -198,11 +220,11 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
                     provenance=self._provenance(rep, source_text),
                 )
             )
-        return classes
+        return classes, label_map
 
     async def _llm_synthesize_classes(
         self, representatives: list[ConceptCandidate], source_text: str
-    ) -> list[CandidateClass]:
+    ) -> tuple[list[CandidateClass], dict[str, str]]:
         """LLM proposes a canonical PascalCase label + definition per representative phrase."""
         rep_by_phrase: dict[str, ConceptCandidate] = {}
         phrases: list[str] = []
@@ -212,11 +234,12 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
                 rep_by_phrase[text] = rep
                 phrases.append(text)
         if not phrases:
-            return []
+            return [], {}
 
         mapping = await self._llm_labels_and_definitions(phrases, source_text)
 
         classes: list[CandidateClass] = []
+        label_map: dict[str, str] = {}
         seen_labels: set[str] = set()
         for phrase in phrases:
             rep = rep_by_phrase[phrase]
@@ -225,6 +248,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             if not label or label in seen_labels:
                 continue
             seen_labels.add(label)
+            # Map the rule-derived label (what relation lemmas produce) to the
+            # LLM's final label so connections still resolve to these classes.
+            label_map[synthesize_label(rep)] = label
             definition = entry.get("definition") or f"{label}: a domain concept."
             classes.append(
                 CandidateClass(
@@ -234,18 +260,34 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
                     provenance=self._provenance(rep, source_text),
                 )
             )
-        return classes
+        return classes, label_map
 
     def _build_relations(
-        self, relations, classes: list[CandidateClass]
+        self,
+        relations: list[RelationCandidate],
+        classes: list[CandidateClass],
+        label_map: dict[str, str] | None = None,
     ) -> tuple[list[CandidatePropertyDefinition], list[CandidateConnection]]:
         """
         Build connections between synthesized classes and property definitions
         from their predicates. Only relations whose subject AND object map to a
         synthesized class are kept, to tie connections to the schema.
+
+        A relation's subject/object are resolved through ``label_map`` (rule-derived
+        label -> final class label) before the membership check, so llm-mode runs —
+        whose class labels come from the LLM, not the lemma-derived PascalCase —
+        still retain connections. When no mapping is reconstructable, the raw
+        rule-derived label is matched directly against the final class labels.
         """
+        label_map = label_map or {}
         class_labels = {c.label for c in classes}
-        rel_confidence = float(self._config.get("relation_confidence", 0.5))
+
+        def _resolve(rule_label: str) -> str | None:
+            """Rule-derived label -> final class label, or None if it is not a class."""
+            final = label_map.get(rule_label, rule_label)
+            return final if final in class_labels else None
+
+        rel_confidence = self._cfg.relation_confidence
         connections: list[CandidateConnection] = []
         properties: list[CandidatePropertyDefinition] = []
         seen_conn: set[tuple[str, str, str]] = set()
@@ -255,9 +297,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             # Match on the SAME lemma-derived PascalCase label that produced the
             # class labels (rel.subject/object are raw surface text and would
             # diverge on plurals/determiners, dropping every connection).
-            subject = pascal_label(rel.subject_lemmas) or _pascal(rel.subject)
-            obj = pascal_label(rel.object_lemmas) or _pascal(rel.object)
-            if subject not in class_labels or obj not in class_labels:
+            subject = _resolve(pascal_label(rel.subject_lemmas) or _pascal(rel.subject))
+            obj = _resolve(pascal_label(rel.object_lemmas) or _pascal(rel.object))
+            if subject is None or obj is None:
                 continue
             key = (subject, rel.predicate, obj)
             if key in seen_conn:
@@ -293,9 +335,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         empty on any error), so enrichment only ever adds signal.
         """
         assert self._reference_source is not None
-        limit = int(self._config.get("conceptnet_relation_limit", 50))
-        rel_confidence = float(self._config.get("conceptnet_confidence", 0.7))
-        boost = float(self._config.get("conceptnet_confidence_boost", 0.1))
+        limit = self._cfg.conceptnet_relation_limit
+        rel_confidence = self._cfg.conceptnet_confidence
+        boost = self._cfg.conceptnet_confidence_boost
 
         # Map each class to its ConceptNet concept term ('ConsensusAlgorithm' ->
         # 'consensus_algorithm') and back, so related-concept URIs resolve to classes.
@@ -355,9 +397,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
     def _confidence(self, priority: ConceptPriority) -> float:
         """Map a grammatical-role priority tier to a calibrated confidence."""
         return {
-            ConceptPriority.CRITICAL: float(self._config.get("confidence_critical", 0.8)),
-            ConceptPriority.IMPORTANT: float(self._config.get("confidence_important", 0.6)),
-            ConceptPriority.CONTEXTUAL: float(self._config.get("confidence_contextual", 0.4)),
+            ConceptPriority.CRITICAL: self._cfg.confidence_critical,
+            ConceptPriority.IMPORTANT: self._cfg.confidence_important,
+            ConceptPriority.CONTEXTUAL: self._cfg.confidence_contextual,
         }[priority]
 
     @staticmethod
@@ -390,9 +432,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=self._config.get("model", "google/gemini-3-flash-preview"),
-            temperature=float(self._config.get("temperature", 0.0)),
-            max_tokens=int(self._config.get("max_tokens", 1500)),
+            model=self._cfg.model,
+            temperature=self._cfg.temperature,
+            max_tokens=self._cfg.max_tokens,
         )
         try:
             parsed = json.loads(_extract_json_obj(response.content))
@@ -426,9 +468,9 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=self._config.get("model", "google/gemini-3-flash-preview"),
-            temperature=float(self._config.get("temperature", 0.0)),
-            max_tokens=int(self._config.get("max_tokens", 1500)),
+            model=self._cfg.model,
+            temperature=self._cfg.temperature,
+            max_tokens=self._cfg.max_tokens,
         )
         out: dict[str, dict[str, str]] = {}
         try:

@@ -21,14 +21,18 @@ from dataclasses import replace
 from typing import Any
 
 from domain.extraction.open_extraction import (
+    RelationCandidate,
     build_relation_candidates,
     snake_label,
 )
-from domain.extraction.ports import NLPProcessor
+from domain.extraction.ports import NLPProcessor, OpenExtractionResult
 from domain.ontology.ports import EmbeddingService, SchemaVectorIndex
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.configurations.open_v1 import (
+    IndividualOpenV1Config,
+    get_open_v1_config,
+)
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
@@ -60,7 +64,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         self._nlp = nlp_processor
         self._embedding = embedding_service
         self._schema_index = schema_index
-        self._config = config or get_open_v1_config()
+        self._cfg = IndividualOpenV1Config.from_dict(config or get_open_v1_config())
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """Run the open individual-extraction pipeline and populate state.result."""
@@ -72,10 +76,15 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
         try:
             open_result = self._nlp.process_open(text)
+            if text.strip() and not open_result.tokens:
+                raise PipelineExecutionError(
+                    "NLP produced no tokens for non-empty input; the spaCy model is "
+                    "likely not available"
+                )
             relations = build_relation_candidates(open_result)
             triples = self._build_triples(open_result, relations)
 
-            if self._config.get("ground_to_schema") or self._config.get("require_schema_match"):
+            if self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples)
 
             result = {
@@ -87,7 +96,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                     "triple_count": len(triples),
                 },
             }
-        except PipelineInputError:
+        except (PipelineInputError, PipelineExecutionError):
             raise
         except Exception as exc:  # noqa: BLE001 - re-wrapped as a pipeline error
             _logger.error("Open individual extraction failed: %s", exc, exc_info=True)
@@ -117,10 +126,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
     # Stages
     # ------------------------------------------------------------------
 
-    def _build_triples(self, open_result, relations) -> list[dict[str, Any]]:
+    def _build_triples(
+        self, open_result: OpenExtractionResult, relations: list[RelationCandidate]
+    ) -> list[dict[str, Any]]:
         """Format dependency relations as individual triples, de-duplicated."""
-        confidence = float(self._config.get("relation_confidence", 0.7))
-        predicate_form = self._config.get("predicate_form", "lemma")
+        confidence = self._cfg.relation_confidence
+        predicate_form = self._cfg.predicate_form
         triples: list[dict[str, Any]] = []
         seen: set[tuple[str, str, str]] = set()
 
@@ -158,10 +169,10 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         if self._schema_index is None:
             return triples
 
-        threshold = float(self._config.get("similarity_threshold", 0.45))
-        kinds = self._config.get("kinds_to_search", ["class"])
-        emit_types = bool(self._config.get("ground_to_schema"))
-        require_match = bool(self._config.get("require_schema_match"))
+        threshold = self._cfg.similarity_threshold
+        kinds = list(self._cfg.kinds_to_search)
+        emit_types = self._cfg.ground_to_schema
+        require_match = self._cfg.require_schema_match
 
         # Resolve each distinct individual label to its best schema match.
         individuals = {
@@ -183,8 +194,14 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             ]
 
         if emit_types:
+            # Only assert rdf:type for individuals that still appear in a kept
+            # triple; require_schema_match may have dropped an individual's only
+            # source triples, so it should not receive a type assertion.
+            kept_labels = {t[role]["label"] for t in kept for role in ("subject", "object")}
             type_triples: list[dict[str, Any]] = []
             for label, match in matched.items():
+                if label not in kept_labels:
+                    continue
                 type_triples.append(
                     {
                         "subject": {"label": label, "kind": "individual"},

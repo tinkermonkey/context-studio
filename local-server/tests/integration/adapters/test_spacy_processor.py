@@ -14,7 +14,7 @@ def test_process_returns_empty_result_when_not_ready():
 
     result = processor.process("Hello world.")
     assert isinstance(result, NLPResult)
-    assert result.tokens == []
+    assert result.tokens == ()
     assert result.entities == []
     assert result.language == "unknown"
 
@@ -105,8 +105,8 @@ def test_process_open_returns_empty_result_when_not_ready():
 
     result = processor.process_open("Hello world.")
     assert isinstance(result, OpenExtractionResult)
-    assert result.tokens == []
-    assert result.noun_chunks == []
+    assert result.tokens == ()
+    assert result.noun_chunks == ()
     assert result.sentence_count == 0
     assert result.language == "unknown"
 
