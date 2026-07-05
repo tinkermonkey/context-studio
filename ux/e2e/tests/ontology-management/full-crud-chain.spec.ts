@@ -58,10 +58,10 @@ test.describe("Ontology Management Full CRUD Chain", () => {
       page.getByTestId("selectable-table").getByText("broader", { exact: true }).first(),
     ).toBeVisible({ timeout: 5000 });
 
-    // Relationships page renders the seeded relationship.
+    // Relationships page renders the seeded relationship (source = Parent Class).
     await page.goto("/app/schema/relationships");
     await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("selectable-table")).toBeVisible();
+    await expect(page.getByRole("row", { name: /Parent Class/ })).toBeVisible();
 
     // Delete the leaf child class via the row-actions → cascade-delete flow.
     await page.goto("/app/schema/classes");

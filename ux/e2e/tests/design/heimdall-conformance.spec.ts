@@ -82,7 +82,9 @@ test.describe("Audit screenshots", () => {
     for (const { route, name } of pages) {
       await page.goto(route);
       await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(500);
+      // Wait for the page's own content to render (not a fixed delay) so the
+      // screenshot captures a settled page.
+      await expect(page.getByRole("heading").first()).toBeVisible();
       await captureAuditScreenshot(page, name);
     }
   });

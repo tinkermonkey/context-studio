@@ -20,17 +20,18 @@ async function makeClass(page: import("@playwright/test").Page, prefix: string) 
 
 test.describe("Individuals CRUD — current UI", () => {
   test("create an individual by selecting a class", async ({ page }) => {
-    await makeClass(page, "E2E Ind");
+    const cls = await makeClass(page, "E2E Ind");
 
     await page.goto("/app/data/individuals");
     await page.waitForLoadState("networkidle");
 
     await page.getByTestId("individual-add-button").click();
     await page.getByTestId("create-drawer-title-input").fill("E2E New Individual");
-    await page
-      .getByTestId("create-drawer-classes-list")
-      .getByRole("checkbox", { name: "E2E Ind Class" })
-      .check();
+    // Target the class checkbox by its stable testid and wait for the async
+    // class list to render it before checking.
+    const classCheckbox = page.getByTestId(`create-drawer-class-${cls.id}`);
+    await expect(classCheckbox).toBeVisible({ timeout: 15000 });
+    await classCheckbox.check();
     await page.getByTestId("create-drawer-create-btn").click();
 
     await expect(page.getByTestId("selectable-table").getByText("E2E New Individual")).toBeVisible({
