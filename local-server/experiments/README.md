@@ -19,7 +19,8 @@ experiments/
 ## `reports/`
 
 Every evaluation of the individual-extraction quality corpus (currently
-emitted by `tests/integration/pipelines/test_quality_individual_extraction_open.py::test_open_v1_soft_metrics_and_error_report`)
+emitted by `tests/integration/pipelines/test_quality_individual_extraction_open.py::test_open_v1_soft_metrics_and_error_report`,
+and per-variant by `scripts/quality_tournament.py` — see below)
 writes a `<run_id>.json` / `<run_id>.md` pair here:
 
 - **`<run_id>.json`** — machine-readable: per-scenario strict + soft P/R/F1,
@@ -34,6 +35,21 @@ writes a `<run_id>.json` / `<run_id>.md` pair here:
 
 Report files are generated artifacts (gitignored — see `.gitignore`); only
 this README and the `reports/` directory itself are tracked.
+
+## Loop B: `scripts/quality_tournament.py`
+
+`python scripts/quality_tournament.py --pipeline individual` runs the variant
+tournament (§4.2): every registered variant (see the module docstring and
+`build_registry()` in that script for which variants are registered today and
+why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
+
+- a per-variant error report pair in `reports/tournament_<variant>_<run_id>.{json,md}`
+  (same shape as above — produced by the same `_harness/error_report.py` code);
+- a scoreboard digest in `reports/tournament_<run_id>.md`, ranking variants by
+  mean dev soft-F1 with strict-F1 and the §3.1 diagnostics alongside;
+- a scoreboard telemetry row per variant in
+  `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
+  (gitignored, same JSONL schema `quality_loop.py` uses).
 
 ## `ledger.jsonl`
 
