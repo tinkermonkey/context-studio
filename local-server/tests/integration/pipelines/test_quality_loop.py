@@ -100,6 +100,65 @@ async def test_coordinate_ascent_holds_gate_when_no_improvement(tmp_path):
     assert config["k"] == 1  # stayed on baseline
 
 
+class _DeterministicRng:
+    """
+    Stand-in for random.Random with the two calls coordinate_ascent needs
+    (`shuffle`, `choice`), pinned to fixed, reproducible choices instead of a
+    magic real seed — makes the restart/jitter path exercised below exact and
+    stable across Python versions.
+    """
+
+    def shuffle(self, values):
+        pass  # keep declared knob order
+
+    def choice(self, values):
+        return values[-1]  # always jitter to the last (max) value per knob
+
+
+@pytest.mark.asyncio
+async def test_coordinate_ascent_restart_ratchet_respects_floor_gate(tmp_path):
+    """
+    karpathy_loop_design.md §4.1: a jittered restart start must never become
+    the global best — nor contaminate best_metrics/best_config — if it
+    violates the floor gate, even when its primary metric looks better in
+    isolation. Regression test for the restart-ratchet floor-check gap.
+    """
+
+    def score(cfg):
+        if cfg["a"] == 2:
+            # Tempting on the primary metric, but fails the floor gate.
+            return {"primary": 0.99, "floor": 0.1}
+        return {"primary": 0.6 if cfg["b"] == 2 else 0.5, "floor": 0.5}
+
+    async def fake_evaluate(config):
+        return score(config)
+
+    emitter = MetricsEmitter(tmp_path)
+    config, base_m, best_m, base_p, best_p, evals = await coordinate_ascent(
+        fake_evaluate,
+        base_config={"a": 1, "b": 1},
+        space={"a": [1, 2], "b": [1, 2]},
+        primary="primary",
+        emitter=emitter,
+        pipeline_tag="quality_loop_restart_floor",
+        passes=1,
+        floor_key="floor",
+        restarts=2,
+        rng=_DeterministicRng(),
+    )
+
+    assert base_p == 0.5
+    # The floor-violating jittered start (a=2, primary=0.99) must never win —
+    # the accepted best only ever comes from the b=2 knob, which respects the
+    # floor gate.
+    assert best_p == 0.6
+    assert config == {"a": 1, "b": 2}
+    # best_metrics must always describe best_config, never the mismatched
+    # floor-violating jittered dict.
+    assert best_m["primary"] == best_p
+    assert best_m["floor"] + 1e-9 >= base_m["floor"]
+
+
 def test_read_scoreboard_returns_latest_per_config_ref(tmp_path):
     metrics_file = tmp_path / "scoreboard.jsonl"
     rows = [
