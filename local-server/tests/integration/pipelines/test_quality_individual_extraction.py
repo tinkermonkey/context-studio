@@ -54,27 +54,23 @@ from tests.fixtures.pipeline_fixtures import load_distractors, load_expected_out
 from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
+from tests.integration.pipelines._harness.dataset_split import (
+    INDIVIDUAL_EXTRACTION_SCENARIOS,
+)
 from tests.integration.pipelines._harness.metrics import (
     brier_score,
+    normalize_label,
     precision_recall_f1,
 )
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
 
 _logger = logging.getLogger(__name__)
 
-# Quality fixture scenarios for individual extraction
-QUALITY_SCENARIOS = [
-    "async_patterns",
-    "clean_code",
-    "design_patterns",
-    "distributed_systems",
-    "domain_driven_design",
-    "microservices_architecture",
-    "object_oriented_design",
-    "reactive_programming",
-    "service_oriented",
-    "testing_strategies",
-]
+# Quality fixture scenarios for individual extraction — the fixed dev/holdout
+# split (see _harness/dataset_split.py) is the single source of truth for
+# this list; keeping it here too (rather than importing at every call site)
+# preserves the existing public import surface used by scripts/quality_loop.py.
+QUALITY_SCENARIOS = list(INDIVIDUAL_EXTRACTION_SCENARIOS)
 
 # Metric floors for individual extraction quality
 METRIC_FLOORS = {
@@ -89,10 +85,17 @@ def extract_triple_key(triple: dict) -> tuple:
     """
     Extract a comparable key from a triple dict.
 
-    Returns (subject_label, predicate_label, object_label) tuple.
+    Returns (subject_label, predicate_label, object_label) tuple. The
+    predicate slot is lemma/stem-normalized (see `metrics.normalize_label`)
+    for both GT and extracted triples, so surface-form variants like
+    'ensures'/'ensure' are treated as the same fact — a measurement
+    correction applied identically wherever comparable keys are built, for
+    both the strict and soft metrics. Subject/object labels are left as-is;
+    their normalization is handled by the soft-match tiers in metrics.py,
+    not by the comparable key itself.
     """
     subject_label = triple.get("subject", {}).get("label", "")
-    predicate_label = triple.get("predicate", {}).get("label", "")
+    predicate_label = normalize_label(triple.get("predicate", {}).get("label", ""))
     object_label = triple.get("object", {}).get("label", "")
     return (subject_label, predicate_label, object_label)
 

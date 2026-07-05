@@ -32,3 +32,8 @@ logs/
 
 # Closed-loop optimizer telemetry (generated; run-specific timestamps/run-ids)
 tests/integration/fixtures/pipelines/_metrics/quality_loop_*.jsonl
+
+# Karpathy loop error reports (generated per evaluation run; see experiments/README.md)
+experiments/reports/*.json
+experiments/reports/*.md
+!experiments/reports/.gitkeep

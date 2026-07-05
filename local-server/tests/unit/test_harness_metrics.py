@@ -8,14 +8,20 @@ import pytest
 
 from tests.integration.pipelines._harness.metrics import (
     brier_score,
+    candidate_recall,
     cosine_similarity,
     delta_set_overlap,
     jaccard_similarity,
+    label_accuracy,
+    label_match_tier,
     mean_reciprocal_rank,
+    normalize_label,
     precision_recall_f1,
+    predicate_recall,
     ranking_metrics,
     ranking_precision_at_k,
     reciprocal_rank,
+    soft_precision_recall_f1,
 )
 
 
@@ -408,3 +414,159 @@ class TestRankingMetrics:
         assert metrics.top1_precision == 1.0
         assert metrics.top3_precision == pytest.approx(0.6667, abs=0.001)
         assert metrics.mrr == pytest.approx(0.6667, abs=0.001)
+
+
+class TestNormalizeLabel:
+    """Tests for lemma/stem-normalization of triple-slot labels (§3.1, §3.3)."""
+
+    def test_third_person_verb_matches_base_form(self):
+        """'ensures'/'ensure' normalize to the same value (the motivating example)."""
+        assert normalize_label("ensures") == normalize_label("ensure")
+
+    def test_another_third_person_verb(self):
+        assert normalize_label("improves") == normalize_label("improve")
+
+    def test_multi_word_snake_case_label(self):
+        """Each underscore-separated token is stemmed independently."""
+        assert normalize_label("runs_in") == normalize_label("run_in")
+
+    def test_empty_label_returns_empty(self):
+        assert normalize_label("") == ""
+
+    def test_distinct_words_stay_distinct(self):
+        assert normalize_label("causes") != normalize_label("prevents")
+
+
+class TestLabelMatchTier:
+    """Tests for the four-tier label match classification."""
+
+    def test_exact_match_is_tier_one(self):
+        assert label_match_tier("consensus_algorithm", "consensus_algorithm") == 1.0
+
+    def test_normalized_match_is_tier_point_nine(self):
+        assert label_match_tier("ensures", "ensure") == 0.9
+
+    def test_fallback_embedding_proxy_is_tier_point_seven(self):
+        """Bag-of-stems cosine >= 0.85 without a normalized match falls to tier 0.7."""
+        tier = label_match_tier("quick_brown_fox", "quick_brown_fox_jumps")
+        assert tier == 0.7
+
+    def test_no_match_is_tier_zero(self):
+        assert label_match_tier("foo", "bar") == 0.0
+
+    def test_embed_fn_is_used_when_supplied(self):
+        """An injected embed_fn overrides the stdlib fallback proxy."""
+        vectors = {"a": [1.0, 0.0], "b": [1.0, 0.0]}
+        tier = label_match_tier("a", "b", embed_fn=lambda label: vectors[label])
+        assert tier == 0.7
+
+
+class TestSoftPrecisionRecallF1:
+    """Tests for tiered soft triple matching (§3.1)."""
+
+    def test_perfect_match(self):
+        result = soft_precision_recall_f1(
+            expected=[("a", "causes", "b")], actual=[("a", "causes", "b")]
+        )
+        assert result.precision == 1.0
+        assert result.recall == 1.0
+        assert result.f1 == 1.0
+
+    def test_normalized_predicate_variant_scores_point_nine(self):
+        result = soft_precision_recall_f1(
+            expected=[("a", "ensures", "b")], actual=[("a", "ensure", "b")]
+        )
+        assert result.precision == 0.9
+        assert result.recall == 0.9
+        assert result.f1 == 0.9
+
+    def test_embedding_tier_scores_point_seven(self):
+        result = soft_precision_recall_f1(
+            expected=[("quick_brown_fox", "causes", "target")],
+            actual=[("quick_brown_fox_jumps", "causes", "target")],
+        )
+        assert result.precision == 0.7
+        assert result.recall == 0.7
+        assert result.f1 == 0.7
+
+    def test_no_match_scores_zero(self):
+        result = soft_precision_recall_f1(expected=[("a", "p", "b")], actual=[("x", "q", "y")])
+        assert result.precision == 0.0
+        assert result.recall == 0.0
+        assert result.f1 == 0.0
+
+    def test_empty_expected_empty_actual(self):
+        result = soft_precision_recall_f1(expected=[], actual=[])
+        assert result.precision == 1.0
+        assert result.recall == 1.0
+        assert result.f1 == 1.0
+
+    def test_never_scores_below_strict_f1(self):
+        """Every strict match is also a tier-1.0 soft match."""
+        expected = [("a", "p", "b"), ("c", "q", "d")]
+        actual = [("a", "p", "b")]
+        strict = precision_recall_f1(expected, actual)
+        soft = soft_precision_recall_f1(expected, actual)
+        assert soft.f1 >= strict.f1
+
+    def test_one_to_one_matching_no_double_counting(self):
+        """A single actual triple cannot satisfy two expected triples."""
+        result = soft_precision_recall_f1(
+            expected=[("a", "p", "b"), ("a", "p", "b")], actual=[("a", "p", "b")]
+        )
+        # Only one of the two identical expected triples can be matched.
+        assert result.recall == 0.5
+
+
+class TestCandidateRecall:
+    """Tests for candidate_recall (§3.1: coverage diagnostic)."""
+
+    def test_all_labels_present(self):
+        assert candidate_recall(expected=[("a", "p", "b")], actual=[("a", "q", "b")]) == 1.0
+
+    def test_no_actual_triples(self):
+        assert candidate_recall(expected=[("a", "p", "b")], actual=[]) == 0.0
+
+    def test_empty_expected_is_vacuous(self):
+        assert candidate_recall(expected=[], actual=[("a", "q", "b")]) == 1.0
+
+    def test_partial_coverage(self):
+        result = candidate_recall(
+            expected=[("a", "p", "b"), ("c", "p", "d")], actual=[("a", "q", "x")]
+        )
+        # GT labels {a, b, c, d}; only "a" appears among actual's {a, x}.
+        assert result == 0.25
+
+
+class TestPredicateRecall:
+    """Tests for predicate_recall (§3.1: relation-derivation diagnostic)."""
+
+    def test_relation_derived_regardless_of_predicate(self):
+        assert predicate_recall(expected=[("a", "p", "b")], actual=[("a", "q", "b")]) == 1.0
+
+    def test_relation_not_derived(self):
+        assert predicate_recall(expected=[("a", "p", "b")], actual=[("a", "q", "c")]) == 0.0
+
+    def test_empty_expected_is_vacuous(self):
+        assert predicate_recall(expected=[], actual=[("a", "q", "b")]) == 1.0
+
+    def test_empty_actual_with_nonempty_expected(self):
+        assert predicate_recall(expected=[("a", "p", "b")], actual=[]) == 0.0
+
+
+class TestLabelAccuracy:
+    """Tests for label_accuracy (§3.1: normalization diagnostic)."""
+
+    def test_exact_labels_on_derived_pair(self):
+        result = label_accuracy(expected=[("a", "p", "b")], actual=[("a", "q", "b")])
+        assert result == {"strict": 1.0, "soft": 1.0, "derived_count": 1}
+
+    def test_normalized_only_match_is_soft_but_not_strict(self):
+        result = label_accuracy(expected=[("player", "p", "runs")], actual=[("player", "q", "run")])
+        assert result["strict"] == 0.0
+        assert result["soft"] == 1.0
+        assert result["derived_count"] == 1
+
+    def test_no_derived_pairs_is_vacuously_accurate(self):
+        result = label_accuracy(expected=[("a", "p", "b")], actual=[])
+        assert result == {"strict": 1.0, "soft": 1.0, "derived_count": 0}
