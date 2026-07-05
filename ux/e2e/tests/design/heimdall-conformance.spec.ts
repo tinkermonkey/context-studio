@@ -40,30 +40,10 @@ test("S-3: dark canvas is active by default", async ({ page }) => {
   expect(hasDarkCanvas).toBe(true);
 });
 
-// ─── Behavioral: pipeline tab labels (P-1) ───────────────────────────────────
-// Status-based tabs vs state-based tabs — must check text content, not pixels.
-
-test("P-1: pipeline run status filter uses status labels (Running / Completed / Failed)", async ({
-  page,
-}) => {
-  // The status filter only renders on the runs page once at least one run
-  // exists (the empty state omits the filter bar), and runs cannot be created
-  // because the run wizard is unreachable — tracked in
-  // https://github.com/tinkermonkey/context-studio/issues/1108. Re-enable with
-  // the deferred pipeline E2E suite once #1108 is fixed.
-  test.skip(true, "Blocked by #1108 — status filter needs a run to exist");
-
-  await setupWorkspace(page);
-  await page.goto("/app/pipelines/runs");
-  await page.waitForLoadState("networkidle");
-
-  await page.getByTestId("filter-status").click();
-  await expect(page.getByText("Running", { exact: true })).toBeVisible();
-  await expect(page.getByText("Completed", { exact: true })).toBeVisible();
-  await expect(page.getByText("Failed", { exact: true })).toBeVisible();
-  await expect(page.getByText("Enabled", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Disabled", { exact: true })).toHaveCount(0);
-});
+// Note: the P-1 pipeline-status-filter conformance check was removed with the
+// old-UX pipeline E2E specs — it targeted the pre-rewrite pipelines UI and is
+// coupled to the run flow (#1108). It will be reintroduced when the pipeline
+// E2E suite is rebuilt against the current UI.
 
 // ─── Behavioral: settings eyebrow casing (ST-4) ──────────────────────────────
 // The eyebrow must be lowercase — a visual reviewer cannot reliably distinguish

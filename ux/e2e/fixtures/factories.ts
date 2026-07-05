@@ -102,35 +102,6 @@ export interface Dataset {
   version: number;
 }
 
-// Type definitions for pipelines
-export interface Pipeline {
-  id: string;
-  title: string;
-  provider: string;
-  model: string;
-  system_prompt: string;
-  user_prompt: string;
-  config?: Record<string, unknown>;
-  version: number;
-  enabled: boolean;
-  created_at: string;
-  last_updated: string;
-}
-
-export interface Execution {
-  id: string;
-  pipeline_config_id: string;
-  output_text: string;
-  provider: string;
-  model: string;
-  tokens_in: number;
-  tokens_out: number;
-  duration_ms: number;
-  status: "success" | "error" | "timeout";
-  error_message?: string | null;
-  timestamp: string;
-}
-
 /**
  * Create a test taxonomy
  */
@@ -328,68 +299,6 @@ export async function createDataset(
   return response;
 }
 
-/**
- * Create a test pipeline configuration
- */
-export async function createPipeline(
-  page: Page,
-  overrides?: {
-    title?: string;
-    provider?: string;
-    model?: string;
-    system_prompt?: string;
-    user_prompt?: string;
-    config?: Record<string, unknown>;
-    pipeline?: string;
-  },
-): Promise<Pipeline> {
-  const timestamp = getRunTimestamp();
-  const pipeline = overrides?.pipeline || `test-pipeline-slug-${timestamp}`;
-  const title = overrides?.title || `test-pipeline-${timestamp}`;
-  const provider = overrides?.provider || "openai";
-  const model = overrides?.model || "gpt-4";
-  const system_prompt = overrides?.system_prompt || "You are a helpful assistant.";
-  const user_prompt = overrides?.user_prompt || "Process the following: {input}";
-  const config = overrides?.config || {};
-
-  const response = await apiRequest<Pipeline>(page, "/api/pipelines", {
-    method: "POST",
-    body: {
-      pipeline,
-      title,
-      provider,
-      model,
-      system_prompt,
-      user_prompt,
-      config,
-    },
-  });
-
-  return response;
-}
-
-/**
- * Execute a pipeline and get the execution result
- */
-export async function executePipeline(page: Page, pipelineId: string): Promise<Execution> {
-  const response = await apiRequest<Execution>(page, `/api/pipelines/${pipelineId}/execute`, {
-    method: "POST",
-    body: {
-      input_text: "Test input for pipeline execution",
-    },
-  });
-
-  return response;
-}
-
-/**
- * Get pipeline executions
- */
-export async function getPipelineExecutions(page: Page, pipelineId: string): Promise<Execution[]> {
-  const response = await apiRequest<Execution[]>(page, `/api/pipelines/${pipelineId}/executions`);
-  return response;
-}
-
 interface PaginatedResponse<T> {
   items: T[];
 }
@@ -432,22 +341,6 @@ export async function clearTestData(page: Page): Promise<void> {
           // Ignore - may already be deleted
         }
       }
-    }
-
-    // Delete all pipelines
-    try {
-      const pipelinesResponse = await apiRequest<Pipeline[]>(page, "/api/pipelines");
-      if (Array.isArray(pipelinesResponse)) {
-        for (const pipeline of pipelinesResponse) {
-          try {
-            await apiRequest(page, `/api/pipelines/${pipeline.id}`, { method: "DELETE" });
-          } catch {
-            // Ignore deletion errors
-          }
-        }
-      }
-    } catch {
-      // Ignore if pipelines endpoint doesn't exist
     }
 
     // Delete all properties (can be used by relationships)
