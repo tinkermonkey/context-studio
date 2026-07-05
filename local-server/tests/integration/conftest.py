@@ -40,9 +40,12 @@ def _blocking_socket(family=socket_module.AF_INET, *args, **kwargs):
 def block_network(request):
     """Block outgoing network calls by default.
 
-    Tests can opt-out with @pytest.mark.external_network marker.
+    Tests can opt-out with @pytest.mark.external_network marker. Per the
+    marker registration in pytest.ini, @pytest.mark.real_llm also implies
+    external_network — a real_llm test is pointless if it can't reach the
+    network.
     """
-    if "external_network" in request.keywords:
+    if "external_network" in request.keywords or "real_llm" in request.keywords:
         yield
         return
 

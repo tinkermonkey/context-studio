@@ -35,10 +35,16 @@ class AnthropicProvider:
     """
 
     AVAILABLE_MODELS = [
+        "claude-opus-4-7",
         "claude-opus-4-6",
         "claude-sonnet-4-6",
         "claude-haiku-4-5-20251001",
     ]
+
+    # Models that reject an explicit `temperature` (the API returns a 400
+    # "temperature is deprecated for this model" error) — these models reason
+    # at a fixed internal temperature and do not accept sampling overrides.
+    MODELS_WITHOUT_TEMPERATURE = {"claude-opus-4-7"}
 
     def __init__(self, api_key: str) -> None:
         """
@@ -72,7 +78,9 @@ class AnthropicProvider:
             system_prompt: System context for the model
             user_prompt: User message to respond to
             model: Model identifier (e.g., 'claude-opus-4-6')
-            temperature: Sampling temperature (0.0–2.0)
+            temperature: Sampling temperature (0.0–2.0). Omitted from the request for
+                models in MODELS_WITHOUT_TEMPERATURE, which reason at a fixed internal
+                temperature and reject an explicit value.
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
@@ -99,10 +107,12 @@ class AnthropicProvider:
                 kwargs = {
                     "model": model,
                     "max_tokens": max_tokens,
-                    "temperature": temperature,
                     "system": system_prompt,
                     "messages": [{"role": "user", "content": user_prompt}],
                 }
+
+                if model not in self.MODELS_WITHOUT_TEMPERATURE:
+                    kwargs["temperature"] = temperature
 
                 if seed is not None:
                     kwargs["seed"] = seed

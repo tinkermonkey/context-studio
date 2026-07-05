@@ -567,10 +567,11 @@ class TestQualityIndividualExtraction:
     async def test_live_quality_scenario(
         self,
         scenario: str,
-        extraction_service,
         registered_extraction,
         metrics_emitter,
         cassette_dir,
+        session_factory,
+        ontology_repo,
     ):
         """
         Live test for individual extraction quality with real LLM provider.
@@ -616,9 +617,26 @@ class TestQualityIndividualExtraction:
         # Wrap real provider in recording provider to capture LLM interactions
         recording_provider = RecordingLLMProvider(real_llm_provider, cassette_path)
 
+        # Build a fresh ExtractionService wired to the recording provider — the
+        # orchestrator's `llm_provider` constructor arg is not consulted for
+        # extraction (only ExtractionService.extract_triples() is), so the
+        # service itself must be given the live-backed provider or the call
+        # silently runs against a fake and this test can never exercise the
+        # real LLM path it is meant to validate.
+        live_extraction_service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=FakeEmbeddingService(),
+            llm=recording_provider,
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=SQLiteExtractionRepository(session_factory),
+            extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
+        )
+
         orchestrator = IndividualExtractionOrchestrator(
             llm_provider=recording_provider,
-            extraction_service=extraction_service,
+            extraction_service=live_extraction_service,
         )
 
         # Load fixture
