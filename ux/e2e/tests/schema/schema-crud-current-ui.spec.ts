@@ -1,5 +1,20 @@
 import { test, expect } from "../../fixtures/app-test";
-import { createTaxonomy, createConceptScheme, createClass } from "../../fixtures/test-helpers";
+import {
+  createTaxonomy,
+  createConceptScheme,
+  createClass,
+  createPropertyDefinition,
+} from "../../fixtures/test-helpers";
+
+/** Select an option in a Heimdall <Select> identified by its testid. */
+async function selectOption(
+  page: import("@playwright/test").Page,
+  selectTestId: string,
+  optionName: string | RegExp,
+) {
+  await page.getByTestId(selectTestId).locator(".select__trigger").click();
+  await page.getByRole("option", { name: optionName }).click();
+}
 
 /**
  * Schema CRUD against the current UI (CreateDrawer + EntitySurface + InlineInspector).
@@ -127,5 +142,54 @@ test.describe("Schema CRUD — current UI", () => {
     await expect(
       page.getByTestId("selectable-table").getByText("E2E Parent Class").first(),
     ).toBeVisible();
+  });
+
+  test("scheme: create via the drawer with a taxonomy selection", async ({ page }) => {
+    await createTaxonomy(page, { title: "E2E Scheme Parent Tax" });
+    await page.goto("/app/schema/schemes");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("scheme-add-button").click();
+    await page.getByTestId("create-drawer-title-input").fill("E2E New Scheme");
+    await selectOption(page, "create-drawer-taxonomy-select", "E2E Scheme Parent Tax");
+    await page.getByTestId("create-drawer-create-btn").click();
+
+    await expect(page.getByTestId("selectable-table").getByText("E2E New Scheme")).toBeVisible({
+      timeout: 5000,
+    });
+  });
+
+  test("class: create via the drawer with a scheme selection", async ({ page }) => {
+    const taxonomy = await createTaxonomy(page, { title: "E2E Class Parent Tax" });
+    await createConceptScheme(page, taxonomy.id, { title: "E2E Class Parent Scheme" });
+    await page.goto("/app/schema/classes");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("class-add-button").click();
+    await page.getByTestId("create-drawer-title-input").fill("E2E New Class");
+    await selectOption(page, "create-drawer-scheme-select", "E2E Class Parent Scheme");
+    await page.getByTestId("create-drawer-create-btn").click();
+
+    await expect(page.getByTestId("selectable-table").getByText("E2E New Class")).toBeVisible({
+      timeout: 5000,
+    });
+  });
+
+  test("property: inline-edit the description persists", async ({ page }) => {
+    await createPropertyDefinition(page, { identifier: "e2e_editable", title: "E2E Editable Prop" });
+    await page.goto("/app/schema/properties");
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("selectable-table").getByText("E2E Editable Prop").click();
+    await page.getByTestId("inline-inspector-edit-button").click();
+
+    const desc = page.getByTestId("property-drawer-description-input");
+    await desc.fill("Edited property description inline");
+    await desc.blur();
+    await page.waitForLoadState("networkidle");
+
+    await expect(
+      page.getByTestId("selectable-table").getByText("Edited property description inline"),
+    ).toBeVisible({ timeout: 5000 });
   });
 });
