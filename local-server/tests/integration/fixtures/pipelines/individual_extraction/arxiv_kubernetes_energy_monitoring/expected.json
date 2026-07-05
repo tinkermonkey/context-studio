@@ -1,0 +1,131 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "nextflow",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "executes_on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "kubernetes",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "scientific_workflows",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "executed_by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "nextflow",
+          "kind": "individual"
+        },
+        "confidence": 0.86
+      },
+      {
+        "subject": {
+          "label": "nf_peak",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "attributes_energy_to",
+          "kind": "property"
+        },
+        "object": {
+          "label": "nextflow_tasks",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "nf_peak",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "samples",
+          "kind": "property"
+        },
+        "object": {
+          "label": "rapl_counters",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "nf_peak",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "identifies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "workflow_pods",
+          "kind": "individual"
+        },
+        "confidence": 0.84
+      },
+      {
+        "subject": {
+          "label": "nf_peak",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "outperforms",
+          "kind": "property"
+        },
+        "object": {
+          "label": "kepler",
+          "kind": "individual"
+        },
+        "confidence": 0.83
+      },
+      {
+        "subject": {
+          "label": "intel_rapl",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "reports",
+          "kind": "property"
+        },
+        "object": {
+          "label": "node_level_energy",
+          "kind": "individual"
+        },
+        "confidence": 0.82
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "intel_rapl",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "reports",
+          "kind": "property"
+        },
+        "object": {
+          "label": "process_level_energy",
+          "kind": "individual"
+        },
+        "note": "Intel RAPL counters do NOT report process-level energy \u2014 they report only node-level energy, which is exactly the gap Nf-PEAK fills."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

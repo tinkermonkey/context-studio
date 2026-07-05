@@ -1,0 +1,6 @@
+{
+  "text": "John Doe is a computer scientist at MIT who researches distributed systems. His work on consensus algorithms has been published in major conferences. John Doe collaborated with researchers at Berkeley to develop new replication techniques.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

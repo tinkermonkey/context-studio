@@ -1,0 +1,146 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "spot_instances",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "used_by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "cloud_service_platforms",
+          "kind": "individual"
+        },
+        "confidence": 0.86
+      },
+      {
+        "subject": {
+          "label": "spot_instances",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "introduces",
+          "kind": "property"
+        },
+        "object": {
+          "label": "pricing_uncertainty",
+          "kind": "individual"
+        },
+        "confidence": 0.84
+      },
+      {
+        "subject": {
+          "label": "ec2_spot_service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "provided_by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "ec2_spot_service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "simplifies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "fleet_provisioning",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "ec2_spot_service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "restricts",
+          "kind": "property"
+        },
+        "object": {
+          "label": "single_region_provisioning",
+          "kind": "individual"
+        },
+        "confidence": 0.83
+      },
+      {
+        "subject": {
+          "label": "proposed_approach",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "combines",
+          "kind": "property"
+        },
+        "object": {
+          "label": "predictive_models",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "predictive_models",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "estimates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "fleet_configurations",
+          "kind": "individual"
+        },
+        "confidence": 0.84
+      },
+      {
+        "subject": {
+          "label": "proposed_approach",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "preserves",
+          "kind": "property"
+        },
+        "object": {
+          "label": "operational_behavior",
+          "kind": "individual"
+        },
+        "confidence": 0.82
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "ec2_spot_service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "estimates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "fleet_costs",
+          "kind": "individual"
+        },
+        "note": "The EC2 Spot Service does NOT estimate fleet costs before deployment \u2014 the paper says this is a limitation the proposed approach addresses."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

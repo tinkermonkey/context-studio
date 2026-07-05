@@ -1,0 +1,6 @@
+{
+  "text": "Amazon Web Services (AWS) is a cloud computing platform developed by Amazon. AWS provides various services including EC2 and S3. Amazon Web Services competes with Microsoft Azure and Google Cloud Platform.",
+  "ontology_id": "test-ontology-123",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

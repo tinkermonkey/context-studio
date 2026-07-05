@@ -1,0 +1,19 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "john_doe",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "contradicts",
+        "kind": "property"
+      },
+      "object": {
+        "label": "expected_meaning",
+        "kind": "individual"
+      },
+      "confidence": 0.15
+    }
+  ]
+}

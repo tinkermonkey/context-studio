@@ -1,0 +1,116 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "openai",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "developed",
+          "kind": "property"
+        },
+        "object": {
+          "label": "gpt4",
+          "kind": "individual"
+        },
+        "confidence": 0.93
+      },
+      {
+        "subject": {
+          "label": "gpt4",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "used_for",
+          "kind": "property"
+        },
+        "object": {
+          "label": "natural_language_processing",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "openai",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "located_in",
+          "kind": "property"
+        },
+        "object": {
+          "label": "san_francisco",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "elon_musk",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "founded",
+          "kind": "property"
+        },
+        "object": {
+          "label": "openai",
+          "kind": "individual"
+        },
+        "confidence": 0.89
+      },
+      {
+        "subject": {
+          "label": "sam_altman",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "founded",
+          "kind": "property"
+        },
+        "object": {
+          "label": "openai",
+          "kind": "individual"
+        },
+        "confidence": 0.89
+      },
+      {
+        "subject": {
+          "label": "gpt4",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "advances",
+          "kind": "property"
+        },
+        "object": {
+          "label": "artificial_intelligence_research",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "gpt4",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "founded",
+          "kind": "property"
+        },
+        "object": {
+          "label": "openai",
+          "kind": "individual"
+        },
+        "note": "GPT-4 is a product OpenAI developed, not one of its founders \u2014 Elon Musk and Sam Altman founded the company."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

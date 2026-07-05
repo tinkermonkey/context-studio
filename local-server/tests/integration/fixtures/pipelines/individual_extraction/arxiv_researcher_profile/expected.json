@@ -1,0 +1,101 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "affiliated_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "mit",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "researches",
+          "kind": "property"
+        },
+        "object": {
+          "label": "distributed_systems",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "publishes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "consensus_algorithm_research",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "collaborates_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "berkeley_researchers",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "develops",
+          "kind": "property"
+        },
+        "object": {
+          "label": "replication_techniques",
+          "kind": "individual"
+        },
+        "confidence": 0.82
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "develops_alone",
+          "kind": "property"
+        },
+        "object": {
+          "label": "replication_techniques",
+          "kind": "individual"
+        },
+        "note": "John Doe did NOT develop the replication techniques alone \u2014 the text says he collaborated with researchers at Berkeley to develop them."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

@@ -1,0 +1,101 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "developed_by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "amazon",
+          "kind": "individual"
+        },
+        "confidence": 0.93
+      },
+      {
+        "subject": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "provides",
+          "kind": "property"
+        },
+        "object": {
+          "label": "ec2",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "provides",
+          "kind": "property"
+        },
+        "object": {
+          "label": "s3",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "competes_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "microsoft_azure",
+          "kind": "individual"
+        },
+        "confidence": 0.91
+      },
+      {
+        "subject": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "competes_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "google_cloud_platform",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "microsoft_azure",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "developed_by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "amazon",
+          "kind": "individual"
+        },
+        "note": "Microsoft Azure is NOT developed by Amazon \u2014 it is a competing platform developed by Microsoft."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

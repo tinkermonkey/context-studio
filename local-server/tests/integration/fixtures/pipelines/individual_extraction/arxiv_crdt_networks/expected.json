@@ -1,0 +1,101 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "crdt",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "used_in",
+          "kind": "property"
+        },
+        "object": {
+          "label": "opportunistic_networks",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "mobile_devices",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "participate_in",
+          "kind": "property"
+        },
+        "object": {
+          "label": "opportunistic_networks",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "replicas",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "synchronizes_via",
+          "kind": "property"
+        },
+        "object": {
+          "label": "anti_entropy_algorithm",
+          "kind": "individual"
+        },
+        "confidence": 0.86
+      },
+      {
+        "subject": {
+          "label": "mobile_relays",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "improves_convergence_of",
+          "kind": "property"
+        },
+        "object": {
+          "label": "replicas",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "convergence",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends_on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "radio_contacts",
+          "kind": "individual"
+        },
+        "confidence": 0.83
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "replicas",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "converges_independently_of",
+          "kind": "property"
+        },
+        "object": {
+          "label": "radio_contacts",
+          "kind": "individual"
+        },
+        "note": "CRDT replicas do NOT converge independently of contact patterns \u2014 the paper says convergence depends on the occurrence of radio contacts between mobile devices."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}
