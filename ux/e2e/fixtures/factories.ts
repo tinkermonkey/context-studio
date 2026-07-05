@@ -257,6 +257,7 @@ export async function createRelationship(
   sourceClassId: string,
   targetClassId: string,
   propertyDefinitionId: string,
+  relationshipType: string,
 ): Promise<Relationship> {
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
@@ -264,6 +265,7 @@ export async function createRelationship(
       source_id: sourceClassId,
       target_id: targetClassId,
       property_definition_id: propertyDefinitionId,
+      relationship_type: relationshipType,
     },
   });
 

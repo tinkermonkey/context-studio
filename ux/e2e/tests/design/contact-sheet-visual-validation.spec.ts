@@ -1,115 +1,70 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../../fixtures/app-test";
 
-test.describe("Contact Sheet Visual Validation", () => {
-  const sections = [
-    "contact-sheet-buttons",
-    "contact-sheet-chips",
-    "contact-sheet-stat-tiles",
-    "contact-sheet-tabs",
-    "contact-sheet-form-inputs",
-    "contact-sheet-panel",
-    "contact-sheet-table",
-    "contact-sheet-hierarchy-tree",
-    "contact-sheet-pipeline-card",
-    "contact-sheet-toasts",
-    "contact-sheet-modal",
-    "contact-sheet-drawer",
-    "contact-sheet-schema-components",
-    "contact-sheet-intent-states",
-  ];
+/**
+ * Contact-sheet behavioral checks: every reference section renders, and the
+ * canvas-mode toggle flips the `dark-canvas` body class in both directions.
+ *
+ * Pixel-level visual regression (screenshots) is intentionally NOT asserted
+ * here — it is fragile without a pinned rendering environment and is covered by
+ * the dedicated `/frontend-visual-qa` flow. These tests guard structure and
+ * behavior, which are deterministic.
+ */
+const SECTIONS = [
+  "contact-sheet-buttons",
+  "contact-sheet-chips",
+  "contact-sheet-stat-tiles",
+  "contact-sheet-tabs",
+  "contact-sheet-form-inputs",
+  "contact-sheet-panel",
+  "contact-sheet-table",
+  "contact-sheet-hierarchy-tree",
+  "contact-sheet-pipeline-card",
+  "contact-sheet-toasts",
+  "contact-sheet-modal",
+  "contact-sheet-drawer",
+  "contact-sheet-schema-components",
+  "contact-sheet-intent-states",
+];
 
+test.describe("Contact Sheet", () => {
   test.beforeEach(async ({ page }) => {
-    // Set a workspace path in localStorage before any page scripts run
-    await page.addInitScript(() => {
-      localStorage.setItem("context-studio:workspace-path", "/tmp/test-workspace");
-    });
-  });
-
-  test("should render all sections in light mode with correct styling", async ({ page }) => {
     await page.goto("/app/contact-sheet");
     await page.waitForLoadState("networkidle");
-
     await expect(page.getByRole("heading", { name: /contact sheet/i })).toBeVisible();
+  });
 
-    for (const section of sections) {
-      const sectionElement = page.getByTestId(section);
-      await expect(sectionElement).toBeVisible({
-        timeout: 5000,
-      });
-    }
-
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-    });
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveScreenshot("contact-sheet-full-light.png", {
-      fullPage: true,
-    });
-
-    for (const section of sections) {
-      const sectionElement = page.getByTestId(section);
-      await expect(sectionElement).toHaveScreenshot(`${section}-light.png`);
+  test("renders all reference sections", async ({ page }) => {
+    for (const section of SECTIONS) {
+      await expect(page.getByTestId(section)).toBeVisible({ timeout: 5000 });
     }
   });
 
-  test("should toggle to dark canvas mode and render all sections correctly", async ({ page }) => {
-    await page.goto("/app/contact-sheet");
-    await page.waitForLoadState("networkidle");
+  test("the canvas toggle flips dark mode in both directions", async ({ page }) => {
+    const body = page.locator("body");
+    const toggle = page.getByTestId("contact-sheet-canvas-toggle");
+    await expect(toggle).toBeVisible();
 
-    await expect(page.getByRole("heading", { name: /contact sheet/i })).toBeVisible();
+    const startedDark = await body.evaluate((el) => el.classList.contains("dark-canvas"));
 
-    const toggleButton = page.getByTestId("contact-sheet-canvas-toggle");
-    await expect(toggleButton).toBeVisible();
-    await toggleButton.click();
-
-    await expect(page.locator("body")).toHaveClass(/dark-canvas/);
-
-    for (const section of sections) {
-      const sectionElement = page.getByTestId(section);
-      await expect(sectionElement).toBeVisible({
-        timeout: 5000,
-      });
+    // First toggle flips the mode.
+    await toggle.click();
+    if (startedDark) {
+      await expect(body).not.toHaveClass(/dark-canvas/);
+    } else {
+      await expect(body).toHaveClass(/dark-canvas/);
     }
 
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-    });
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveScreenshot("contact-sheet-full-dark.png", {
-      fullPage: true,
-    });
-
-    for (const section of sections) {
-      const sectionElement = page.getByTestId(section);
-      await expect(sectionElement).toHaveScreenshot(`${section}-dark.png`);
-    }
-  });
-
-  test("should toggle back to light canvas mode and restore original styling", async ({ page }) => {
-    await page.goto("/app/contact-sheet");
-    await page.waitForLoadState("networkidle");
-
-    const toggleButton = page.getByTestId("contact-sheet-canvas-toggle");
-    await expect(toggleButton).toBeVisible();
-    await toggleButton.click();
-    await expect(page.locator("body")).toHaveClass(/dark-canvas/);
-
-    await toggleButton.click();
-    await expect(page.locator("body")).not.toHaveClass(/dark-canvas/);
-
-    for (const section of sections) {
-      const sectionElement = page.getByTestId(section);
-      await expect(sectionElement).toBeVisible({
-        timeout: 5000,
-      });
+    // Sections still render after the toggle.
+    for (const section of SECTIONS) {
+      await expect(page.getByTestId(section)).toBeVisible({ timeout: 5000 });
     }
 
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-    });
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveScreenshot("contact-sheet-full-light-restored.png", {
-      fullPage: true,
-    });
+    // Second toggle restores the original mode.
+    await toggle.click();
+    if (startedDark) {
+      await expect(body).toHaveClass(/dark-canvas/);
+    } else {
+      await expect(body).not.toHaveClass(/dark-canvas/);
+    }
   });
 });
