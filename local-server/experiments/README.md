@@ -52,6 +52,19 @@ why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
   (gitignored, same JSONL schema `quality_loop.py` uses).
 
+Each run also scores every variant's tuned config against the Wave 1 DR
+bootstrap scenarios (`dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`,
+`karpathy_loop_dr_ontology_design.md` §5) as a **separate, always-reported
+diagnostic pass**: a `bootstrap` row per variant in the same scoreboard
+telemetry file (`fixture_id="bootstrap"`), and its own section in the
+`tournament_<run_id>.md` digest. This pass is a sanity check — real,
+independently-produced ground truth graded against the imported DR spec, too
+thin (4 scenarios covering 4 of 12 layers) to holdout-split or optimize
+against — and is never mixed into `dev`/`holdout` aggregation, the error
+report's `failure_stage_counts` (Loop C target selection), or the §6 accept
+gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` takes only `dev`
+and `holdout` as arguments and structurally cannot read bootstrap metrics.
+
 ## Loop C: `.claude/workflows/karpathy-loop.js`
 
 `documentation/karpathy_loop_design.md` §4.3/§4.4 — the agent-in-the-loop
@@ -59,7 +72,10 @@ refinement cycle. Each invocation of the Workflow runs exactly **one**
 iteration:
 
 1. **Evaluate** — runs Loop B (`quality_tournament.py`) and reads back the
-   incumbent's scoreboard + error report.
+   incumbent's scoreboard + error report, including the incumbent's Wave 1
+   bootstrap diagnostics (reported as `bootstrap` for visibility and the
+   ledger — see the Loop B section above — never as an input to any decision
+   below).
 2. **Select** — reads `ledger.jsonl` for hypotheses already rejected, then
    ranks the incumbent's failure classes (`failure_stage_counts` in the error
    report) by GT-triple count and maps the top ones to hypotheses from the

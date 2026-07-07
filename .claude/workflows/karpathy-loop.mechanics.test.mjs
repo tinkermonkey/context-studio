@@ -167,6 +167,56 @@ test("acceptGate does not block on a holdout collapse while GT review is pending
   assert.ok(result.advisories.some((a) => a.includes("pending human review")));
 });
 
+// -- acceptGate bootstrap immunity (karpathy_loop_dr_ontology_design.md §5
+// Must-Fix 2 / ADR-7: Wave 1 DR bootstrap scenarios are diagnostic-only and
+// must never, alone, be sufficient grounds for an accept/reject decision) ---
+
+test("acceptGate's signature has no bootstrap parameter -- structurally cannot gate on it", () => {
+  assert.equal(acceptGate.length, 6); // candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending
+});
+
+test("acceptGate's decision is identical whether the candidate carries glowing, terrible, or no bootstrap diagnostics", () => {
+  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
+  const incumbentHoldout = { strict_f1: 0.28 };
+  const baseCandidate = { dev: { soft_f1: 0.6, strict_f1: 0.31 }, holdout: { strict_f1: 0.28 } };
+
+  const noBootstrap = acceptGate(baseCandidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+  const glowingBootstrap = acceptGate(
+    { ...baseCandidate, bootstrap: { strict_f1: 1, soft_f1: 1 } },
+    incumbentDev,
+    incumbentHoldout,
+    EPSILON,
+    HOLDOUT_SLACK,
+  );
+  const terribleBootstrap = acceptGate(
+    { ...baseCandidate, bootstrap: { strict_f1: 0, soft_f1: 0 } },
+    incumbentDev,
+    incumbentHoldout,
+    EPSILON,
+    HOLDOUT_SLACK,
+  );
+
+  assert.equal(noBootstrap.passes, true);
+  assert.equal(glowingBootstrap.passes, noBootstrap.passes);
+  assert.equal(terribleBootstrap.passes, noBootstrap.passes);
+  // Compare by content (JSON.stringify), not assert.deepEqual -- these arrays
+  // cross the vm sandbox realm boundary and never share a prototype.
+  assert.equal(JSON.stringify(glowingBootstrap.reasons), JSON.stringify(noBootstrap.reasons));
+  assert.equal(JSON.stringify(terribleBootstrap.reasons), JSON.stringify(noBootstrap.reasons));
+});
+
+test("acceptGate rejects on a genuine dev regression even when bootstrap diagnostics are perfect -- bootstrap alone cannot rescue a bad candidate", () => {
+  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
+  const incumbentHoldout = { strict_f1: 0.28 };
+  const candidate = {
+    dev: { soft_f1: EPSILON, strict_f1: 0.3 }, // fails to beat incumbent by > epsilon
+    holdout: { strict_f1: 0.28 },
+    bootstrap: { strict_f1: 1, soft_f1: 1 },
+  };
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+  assert.equal(result.passes, false);
+});
+
 // -- selectTargets (§4.3 step 2) -----------------------------------------
 
 test("selectTargets ranks failure classes by GT-triple count (highest first)", () => {

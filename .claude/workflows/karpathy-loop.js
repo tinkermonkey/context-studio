@@ -110,6 +110,18 @@ const EVALUATION_SCHEMA = {
         soft_f1: { type: 'number' },
       },
     },
+    // Wave 1 DR bootstrap-scenario diagnostics (karpathy_loop_dr_ontology_design.md
+    // §5 / dataset_split.py's DR_BOOTSTRAP_SCENARIOS). Reported every iteration for
+    // visibility and logged to the ledger (see decidePrompt), but this object is
+    // NEVER read by meetsFloors or acceptGate below -- neither function even accepts
+    // it as a parameter, so it structurally cannot gate a stop/accept/reject decision.
+    bootstrap: {
+      type: 'object',
+      properties: {
+        strict_f1: { type: 'number' },
+        soft_f1: { type: 'number' },
+      },
+    },
     failureStageCounts: { type: 'object' },
     errorReportPath: { type: 'string' },
     errorReportMarkdownPath: { type: 'string' },
@@ -153,6 +165,12 @@ const EXPERIMENT_RESULT_SCHEMA = {
     holdout: {
       type: 'object',
       required: ['strict_f1', 'soft_f1'],
+      properties: { strict_f1: { type: 'number' }, soft_f1: { type: 'number' } },
+    },
+    // Diagnostic-only, same as EVALUATION_SCHEMA.bootstrap above -- reported for the
+    // ledger, never an input to verification or the accept gate.
+    bootstrap: {
+      type: 'object',
       properties: { strict_f1: { type: 'number' }, soft_f1: { type: 'number' } },
     },
     summary: { type: 'string' },
@@ -210,8 +228,13 @@ function evaluatePrompt() {
     '   (candidate_missing / relation_not_derived / label_mismatch / predicate_mismatch counts).',
     '5. Read the scoreboard telemetry',
     '   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`',
-    '   (last two rows for the incumbent variant: fixture_id="dev" and fixture_id="holdout") for the full',
-    '   dev/holdout metrics objects (strict precision/recall/F1, soft F1, candidate_recall, predicate_recall).',
+    '   (last three rows for the incumbent variant: fixture_id="dev", fixture_id="holdout", and',
+    '   fixture_id="bootstrap") for the full dev/holdout metrics objects (strict precision/recall/F1,',
+    '   soft F1, candidate_recall, predicate_recall) and the bootstrap diagnostic metrics.',
+    '6. Return the bootstrap row as `bootstrap` -- report it for visibility and the ledger',
+    '   (karpathy_loop_dr_ontology_design.md §5: a distinct, always-visible diagnostic group), but it is',
+    '   informational only: never merge it into `dev`/`holdout` and never let it change which failure',
+    '   stage looks worst in `failureStageCounts`.',
     '',
     'Return structured output only — no prose.',
   ].join('\n')
@@ -252,8 +275,10 @@ function experimentPrompt(hypothesis, evaluation) {
     '4. Run the tests relevant to your change (at minimum the individual-extraction quality/unit tests you',
     '   touched, plus `python scripts/check_domain_imports.py`); set `testsPassed` and `testsSummary`.',
     '5. Run `python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1` to get a',
-    '   Loop-A-tuned dev/holdout evaluation of your changed pipeline. Compare the new failure-stage counts',
-    '   for your target stage against the incumbent report from step 3 above and summarize the delta.',
+    '   Loop-A-tuned dev/holdout evaluation of your changed pipeline, plus its bootstrap diagnostics',
+    '   (report these as `bootstrap` for the ledger only -- they must never factor into your own read of',
+    '   whether this candidate is working). Compare the new failure-stage counts for your target stage',
+    '   against the incumbent report from step 3 above and summarize the delta.',
     '6. Capture, from inside the worktree: `git diff main...HEAD --stat` (diffStat),',
     '   `git diff main...HEAD --name-only` (changedFiles), `git rev-parse --show-toplevel` (worktreePath),',
     '   `git branch --show-current` (branchName), `git merge-base HEAD main` (baseCommit).',
@@ -311,6 +336,13 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     base_commit: candidate.baseCommit,
     dev: candidate.dev,
     holdout: candidate.holdout,
+    // Diagnostic-only Wave 1 DR bootstrap metrics (karpathy_loop_dr_ontology_design.md
+    // §5), logged here purely so the ledger's history of an experiment is complete --
+    // ledger.py's `validate_entry` does not require this field, and nothing that reads
+    // the ledger (e.g. `rejected_hypotheses`) consults it. `decision` above was already
+    // computed from `dev`/`holdout` alone (see `acceptGate`, which never takes a
+    // bootstrap argument), so this can never itself have been grounds for `decision`.
+    bootstrap: candidate.bootstrap || null,
     decision,
     reason,
     cost_usd: 0,
@@ -433,6 +465,12 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
 // `holdoutReviewPending` is true a holdout collapse is surfaced as a
 // non-blocking advisory instead of a rejection reason. Pass `false` once
 // every box in NEEDS_HUMAN_REVIEW.md is checked off by a human.
+//
+// Deliberately takes only `dev`/`holdout` inputs (karpathy_loop_dr_ontology_design.md
+// §5 Must-Fix 2 / ADR-7): Wave 1 DR bootstrap-scenario diagnostics are reported
+// (see EVALUATION_SCHEMA.bootstrap / EXPERIMENT_RESULT_SCHEMA.bootstrap / the ledger
+// entry in decidePrompt) but never passed in here, so they cannot -- structurally,
+// not just by convention -- be sufficient (or even relevant) grounds for accept/reject.
 function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending) {
   const reasons = []
   const advisories = []

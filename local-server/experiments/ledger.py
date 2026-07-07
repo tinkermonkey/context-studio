@@ -11,6 +11,14 @@ line per experiment (accepted and rejected), in the exact shape specified by
      "holdout": {"strict_f1": 0.28, "soft_f1": 0.47},
      "decision": "accepted", "reason": "", "cost_usd": 0.11, "agent": "worktree-2"}
 
+Entries may also carry an optional `bootstrap` field — the Wave 1 DR
+bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
+`dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`), logged for visibility only.
+It is not in `REQUIRED_FIELDS` and nothing that reads the ledger
+(`rejected_hypotheses`, the §6 accept gate) ever consults it — see
+`acceptGate` in `.claude/workflows/karpathy-loop.js`, which takes only `dev`
+and `holdout` as arguments.
+
 The ledger is the loop's negative-result memory (design doc §6 guardrails):
 `rejected_hypotheses()` is consulted by target selection (§4.3 step 2) so a
 hypothesis that already failed is not retried without a materially changed

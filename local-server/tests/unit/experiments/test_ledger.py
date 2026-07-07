@@ -83,6 +83,12 @@ class TestValidateEntry:
     def test_rejected_decision_is_valid(self):
         validate_entry(_entry(decision="rejected"))
 
+    def test_entry_with_optional_bootstrap_diagnostics_is_valid(self):
+        # bootstrap (karpathy_loop_dr_ontology_design.md §5) is logged for
+        # visibility only -- not in REQUIRED_FIELDS, so its presence or
+        # content never affects validation.
+        validate_entry(_entry(bootstrap={"strict_f1": 0.0, "soft_f1": 0.0}))
+
 
 class TestAppendAndReadEntries:
     def test_read_entries_missing_file_returns_empty_list(self, tmp_path):
