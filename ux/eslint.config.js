@@ -45,4 +45,10 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
     },
   },
+  {
+    files: ["e2e/**/*.{js,jsx,ts,tsx}"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
 ];
