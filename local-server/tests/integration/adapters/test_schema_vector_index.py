@@ -291,3 +291,92 @@ def test_index_entity_missing_id_does_not_raise(index_with_factory):
     idx, _ = index_with_factory
     # Should log a warning and return without raising.
     idx.index_entity("99999999-9999-9999-9999-999999999999", "Ghost", "nobody")
+
+
+# ---------------------------------------------------------------------------
+# taxonomy_id scoping — two ontologies coexisting in the same database
+# ---------------------------------------------------------------------------
+
+TAXONOMY_A = "aaaaaaaa-0000-0000-0000-000000000001"
+TAXONOMY_B = "bbbbbbbb-0000-0000-0000-000000000002"
+CLASS_A2 = "55555555-5555-5555-5555-555555555555"
+PROP_P2 = "66666666-6666-6666-6666-666666666666"
+
+
+@pytest.fixture
+def two_taxonomy_index():
+    """
+    Two independent ontologies (taxonomy A, taxonomy B) sharing one database —
+    the scenario the DR spec import must support alongside the placeholder
+    ontology. Both taxonomies use the same "Microservice"/"connects to" text so
+    a search would otherwise match entities from either taxonomy identically.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+        Base.metadata.create_all(engine)
+        factory = sessionmaker(bind=engine)
+
+        with factory() as session:
+            session.add_all(
+                [
+                    OntologyEntity(
+                        id=CLASS_A,
+                        node_type="class",
+                        title="Microservice",
+                        description="An independently deployable service",
+                        taxonomy_id=TAXONOMY_A,
+                    ),
+                    OntologyEntity(
+                        id=PROP_P,
+                        node_type="property_definition",
+                        title="connects to",
+                        description="links one service to another",
+                        identifier="connects_to_a",
+                        domain_class_id=CLASS_A,
+                    ),
+                    OntologyEntity(
+                        id=CLASS_A2,
+                        node_type="class",
+                        title="Microservice",
+                        description="An independently deployable service",
+                        taxonomy_id=TAXONOMY_B,
+                    ),
+                    OntologyEntity(
+                        id=PROP_P2,
+                        node_type="property_definition",
+                        title="connects to",
+                        description="links one service to another",
+                        identifier="connects_to_b",
+                        domain_class_id=CLASS_A2,
+                    ),
+                ]
+            )
+            session.commit()
+
+        idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
+        idx.reindex_all()
+        yield idx
+
+
+def test_taxonomy_id_scopes_class_matches(two_taxonomy_index):
+    matches = two_taxonomy_index.search(
+        [1.0, 0.0, 0.0], kinds=["class"], taxonomy_id=TAXONOMY_A
+    )
+    ids = {m.entity_id for m in matches}
+    assert ids == {CLASS_A}
+
+
+def test_taxonomy_id_scopes_property_definition_matches_via_domain_class(two_taxonomy_index):
+    # Property definitions carry no taxonomy_id of their own — scoping must
+    # follow the domain_class_id join to the owning taxonomy's class.
+    matches = two_taxonomy_index.search(
+        [0.0, 0.0, 1.0], kinds=["property_definition"], taxonomy_id=TAXONOMY_B
+    )
+    ids = {m.entity_id for m in matches}
+    assert ids == {PROP_P2}
+
+
+def test_no_taxonomy_id_returns_matches_from_both_ontologies(two_taxonomy_index):
+    matches = two_taxonomy_index.search([1.0, 0.0, 0.0], kinds=["class"])
+    ids = {m.entity_id for m in matches}
+    assert ids == {CLASS_A, CLASS_A2}
