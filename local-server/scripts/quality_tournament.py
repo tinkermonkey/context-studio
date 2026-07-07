@@ -210,9 +210,11 @@ def _make_dev_evaluator(variant: Variant, embed_fn) -> Callable[[dict], Awaitabl
         strict_scores: list[float] = []
         soft_scores: list[float] = []
         for scenario in INDIVIDUAL_EXTRACTION_DEV_SCENARIOS:
-            expected_raw = load_expected_output("individual_extraction", scenario).get(
-                "result", {}
-            ).get("triples", [])
+            expected_raw = (
+                load_expected_output("individual_extraction", scenario)
+                .get("result", {})
+                .get("triples", [])
+            )
             actual_raw = await variant.run_scenario(config, scenario)
             expected_keys = [extract_triple_key(t) for t in expected_raw]
             actual_keys = [extract_triple_key(t) for t in actual_raw]
@@ -367,7 +369,9 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
     lines.append("## Winning knobs per variant")
     lines.append("")
     for result in results:
-        lines.append(f"- **{result['variant']}**: {result['tuned_knobs'] or '(baseline already optimal)'}")
+        lines.append(
+            f"- **{result['variant']}**: {result['tuned_knobs'] or '(baseline already optimal)'}"
+        )
     lines.append("")
 
     lines.append("## Per-variant error reports")
