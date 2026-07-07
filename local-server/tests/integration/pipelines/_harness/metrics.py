@@ -468,7 +468,9 @@ def soft_precision_recall_f1(
     Returns:
         PrecisionRecallF1 with precision, recall, and f1 in [0, 1].
     """
-    total_credit = _max_weight_match_credit(expected, actual, embed_fn) if expected and actual else 0.0
+    total_credit = (
+        _max_weight_match_credit(expected, actual, embed_fn) if expected and actual else 0.0
+    )
 
     if len(actual) == 0:
         precision = 1.0 if len(expected) == 0 else 0.0
@@ -516,7 +518,9 @@ def candidate_recall(
     matched = sum(
         1
         for gt_label in gt_labels
-        if any(label_match_tier(gt_label, candidate, embed_fn) > 0 for candidate in candidate_labels)
+        if any(
+            label_match_tier(gt_label, candidate, embed_fn) > 0 for candidate in candidate_labels
+        )
     )
     return round(matched / len(gt_labels), 4)
 
@@ -542,7 +546,8 @@ def predicate_recall(
         1
         for subj, _pred, obj in expected
         if any(
-            label_match_tier(subj, a_subj, embed_fn) > 0 and label_match_tier(obj, a_obj, embed_fn) > 0
+            label_match_tier(subj, a_subj, embed_fn) > 0
+            and label_match_tier(obj, a_obj, embed_fn) > 0
             for a_subj, _a_pred, a_obj in actual
         )
     )
@@ -573,7 +578,8 @@ def label_accuracy(
         candidates = [
             (a_subj, a_obj)
             for a_subj, _a_pred, a_obj in actual
-            if label_match_tier(subj, a_subj, embed_fn) > 0 and label_match_tier(obj, a_obj, embed_fn) > 0
+            if label_match_tier(subj, a_subj, embed_fn) > 0
+            and label_match_tier(obj, a_obj, embed_fn) > 0
         ]
         if not candidates:
             continue
