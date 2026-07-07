@@ -14,12 +14,23 @@ Safe to re-run: entities are keyed on the preserved DR schema id, so importing
 against the same or an updated spec version updates existing entities in
 place instead of creating duplicates.
 
+A successful import against a spec version not already recorded in
+`experiments/ledger.jsonl` appends a `baseline_reset` checkpoint entry there
+(see `experiments/ledger.py`). Per
+`documentation/karpathy_loop_dr_ontology_design.md` §9, swapping the ontology
+resets the Karpathy loop's incumbent baselines: this checkpoint is the
+mechanism that scopes ledger reads (e.g. `rejected_hypotheses`) to entries
+recorded since the import, so pre-import experiment results never judge
+post-import ones. A spec-version upgrade is therefore always a deliberate,
+baseline-resetting re-import — never an in-place, silent update.
+
 Usage (from local-server/, venv active):
     python scripts/import_dr_ontology.py [--spec-dir PATH]
 """
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -32,7 +43,65 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
 from domain.ontology.services import OntologyService
-from scripts.dr_ontology_loader import import_dr_ontology
+from experiments.ledger import append_baseline_reset, latest_baseline_reset
+from scripts.dr_ontology_loader import ImportSummary, import_dr_ontology
+
+DR_ONTOLOGY_CONTEXT = "dr_spec"
+
+
+def _current_git_commit() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=Path(__file__).resolve().parent,
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
+def record_baseline_reset_if_new(
+    summary: ImportSummary, spec_dir: Path, ledger_path: Path | str | None = None
+) -> bool:
+    """
+    Append a `baseline_reset` ledger entry for `summary.spec_version`, unless
+    one is already recorded for it (re-running the import against an
+    unchanged spec version is idempotent sync, not a new baseline event).
+
+    Args:
+        ledger_path: Defaults to `experiments/ledger.jsonl`. Override for testing.
+
+    Returns:
+        True if a new checkpoint was appended, False if one already existed.
+    """
+    existing = latest_baseline_reset(ontology_context=DR_ONTOLOGY_CONTEXT, ledger_path=ledger_path)
+    if existing is not None and existing.get("spec_version") == summary.spec_version:
+        return False
+
+    reason = (
+        f"DR ontology import from {spec_dir}: spec_version={summary.spec_version}, "
+        f"taxonomies +{summary.taxonomies_created}/~{summary.taxonomies_updated}, "
+        f"concept_schemes +{summary.concept_schemes_created}/~{summary.concept_schemes_updated}, "
+        f"classes +{summary.classes_created}/~{summary.classes_updated}, "
+        f"property_definitions +{summary.property_definitions_created}/~"
+        f"{summary.property_definitions_updated}. Replaces the throwaway 3-class placeholder "
+        "ontology (documentation/karpathy_loop_dr_ontology_design.md); per its §9 "
+        "metric-gaming-defense rule this is a deliberate baseline reset, not an in-place update — "
+        "ledger entries recorded before this checkpoint are not comparable to experiments run "
+        "after it."
+    )
+    append_baseline_reset(
+        reason=reason,
+        ontology_context=DR_ONTOLOGY_CONTEXT,
+        spec_version=summary.spec_version,
+        base_commit=_current_git_commit(),
+        ledger_path=ledger_path,
+    )
+    return True
+
 
 # local-server/scripts/../.. == the context-studio repo root; parents[3] is
 # that repo root's parent, where the DR spec is checked out as a sibling repo
@@ -103,6 +172,17 @@ def main() -> int:
     vector_index = SqliteSchemaVectorIndex(session_factory, embedding_service)
     reindexed = vector_index.reindex_all()
     print(f"Reindexed {reindexed} schema entities.")
+
+    if record_baseline_reset_if_new(summary, spec_dir):
+        print(
+            f"Recorded baseline-reset checkpoint for spec_version={summary.spec_version} in "
+            "experiments/ledger.jsonl"
+        )
+    else:
+        print(
+            f"Baseline-reset checkpoint for spec_version={summary.spec_version} already "
+            "recorded — skipped."
+        )
 
     return 0
 

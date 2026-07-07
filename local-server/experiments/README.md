@@ -116,3 +116,30 @@ The ledger is append-only by construction (`append_entry` only ever opens the
 file in `"a"` mode) — rewriting or truncating it is one of the accept gate's
 integrity violations (§6 item 4), enforced by the Loop C verifier agent via a
 path check on `git diff`.
+
+### Baseline resets
+
+A `decision: "baseline_reset"` entry marks a measurement-layer or
+ontology/corpus swap — e.g. the DR ontology import replacing the placeholder
+3-class ontology
+(`documentation/karpathy_loop_dr_ontology_design.md` §9, #1109 Phase 3).
+`scripts/import_dr_ontology.py` appends one automatically on a successful
+import, recording the imported `spec_version`; re-running the import against
+an unchanged `spec_version` does not append a duplicate
+(`record_baseline_reset_if_new`).
+
+`rejected_hypotheses()` (and any future ledger read that feeds a loop
+decision) is scoped through `entries_since_last_baseline_reset()`, which
+excludes every entry recorded before the most recent checkpoint. This is the
+mechanism — not a documented convention — behind the rule that pre-reset
+dev/holdout scores never judge post-reset experiments: a hypothesis rejected
+against a since-retired baseline is eligible for retry immediately after the
+reset, with no manual ledger cleanup required.
+
+```bash
+# from local-server/, venv active — recording a reset manually (the DR
+# import script does this for you on a spec-version change)
+python experiments/ledger.py baseline-reset \
+    --ontology-context dr_spec --spec-version 0.8.4 --base-commit "$(git rev-parse HEAD)" \
+    'Replaced the placeholder ontology with the imported DR spec.'
+```

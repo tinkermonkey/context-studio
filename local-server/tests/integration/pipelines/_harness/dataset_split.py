@@ -7,6 +7,12 @@ All 18 scenarios currently run against the placeholder ontology; a scenario
 graded against the imported DR spec (e.g. a future `dr_bootstrap_*` scenario)
 is added to `SCENARIO_ONTOLOGY` alongside its dev/holdout assignment.
 
+`SCENARIO_DISPOSITION` records the explicit, one-time decision made for each
+of these 18 scenarios when the DR ontology import happened (#1109 Phase 3):
+re-labeled against the DR ontology, retired, or kept as a separate,
+non-DR-ontology context. See `ScenarioDisposition` and
+`tests/integration/fixtures/pipelines/individual_extraction/LEGACY_CORPUS_DISPOSITION.md`.
+
 The scenarios under `tests/integration/fixtures/pipelines/individual_extraction/`
 would otherwise be both the tuning set and the eval set, which lets the closed
 loop overfit. This module fixes a dev/holdout split by name: loops optimize on
@@ -118,3 +124,46 @@ def ontology_context_for(scenario: str) -> OntologyContext:
     if scenario not in SCENARIO_ONTOLOGY:
         raise ValueError(f"Scenario '{scenario}' has no assigned ontology context")
     return SCENARIO_ONTOLOGY[scenario]
+
+
+class ScenarioDisposition(Enum):
+    """
+    The explicit, recorded decision made for a legacy corpus scenario at
+    DR-ontology-import time (documentation/karpathy_loop_dr_ontology_design.md
+    §9; #1109 Phase 3 / discussion #1111). Every scenario in the fixed split
+    must have exactly one — none may be left silently carrying stale
+    individual/property/entity-based ground truth after the placeholder
+    ontology is retired.
+    """
+
+    RELABELED = "relabeled"  # ground truth rewritten against the DR ontology
+    RETIRED = "retired"  # dropped from the active corpus
+    SEPARATE_CONTEXT = "separate_context"  # kept, permanently scoped to its own (non-DR) ontology
+
+
+# Disposition recorded for every scenario when the DR ontology import landed.
+# All 18 pre-import scenarios keep their existing individual/property/entity
+# ground truth and continue running against the placeholder ontology
+# (OntologyContext.PLACEHOLDER) as a distinct, permanently-scoped evaluation
+# context — none are retired (the corpus remains a working measurement of
+# the extraction pipeline on its original domain) or relabeled (relabeling
+# against the DR ontology's 186 classes is Wave 2-4 authoring work, not a
+# mechanical Phase 3 change). Full rationale:
+# tests/integration/fixtures/pipelines/individual_extraction/LEGACY_CORPUS_DISPOSITION.md
+SCENARIO_DISPOSITION: dict[str, ScenarioDisposition] = {
+    scenario: ScenarioDisposition.SEPARATE_CONTEXT for scenario in INDIVIDUAL_EXTRACTION_SCENARIOS
+}
+
+
+def disposition_for(scenario: str) -> ScenarioDisposition:
+    """
+    Return the recorded legacy-corpus disposition for `scenario`.
+
+    Raises:
+        ValueError: If the scenario has no recorded disposition — every
+            scenario in the fixed split must have one (see
+            `SCENARIO_DISPOSITION`'s module-level comment).
+    """
+    if scenario not in SCENARIO_DISPOSITION:
+        raise ValueError(f"Scenario '{scenario}' has no recorded legacy-corpus disposition")
+    return SCENARIO_DISPOSITION[scenario]
