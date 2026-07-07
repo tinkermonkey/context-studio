@@ -211,7 +211,7 @@ async def test_open_v1_soft_metrics_and_error_report(open_orchestrator, embed_fn
                 predicate_recall=predicate_recall(expected_keys, actual_keys, embed_fn),
                 label_accuracy=label_accuracy(expected_keys, actual_keys, embed_fn),
                 missed_triples=build_missed_triples(
-                    fixture_input.get("text", ""), expected_keys, actual_keys
+                    fixture_input.get("text", ""), expected_keys, actual_keys, embed_fn
                 ),
             )
         )

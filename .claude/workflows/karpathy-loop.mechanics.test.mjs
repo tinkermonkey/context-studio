@@ -94,6 +94,10 @@ test("meetsFloors does not trigger when a single floor is missed", () => {
   const holdout = { strict_precision: 0.59, strict_recall: 0.5, strict_f1: 0.5 };
   assert.equal(meetsFloors(holdout, DEFAULT_HOLDOUT_FLOORS), false);
 });
+test("meetsFloors never triggers while holdout GT review is pending, even at perfect floors", () => {
+  const holdout = { strict_precision: 1, strict_recall: 1, strict_f1: 1 };
+  assert.equal(meetsFloors(holdout, DEFAULT_HOLDOUT_FLOORS, true), false);
+});
 
 // -- acceptGate (§6 accept gate) -----------------------------------------
 // Boundary cases are constructed so the subtraction the gate itself performs
@@ -150,6 +154,18 @@ test("acceptGate tolerates a holdout drop exactly at the slack boundary", () => 
   const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
   assert.equal(result.passes, true);
 });
+test("acceptGate does not block on a holdout collapse while GT review is pending -- surfaces it as an advisory instead", () => {
+  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
+  const incumbentHoldout = { strict_f1: 0.28 };
+  const candidate = {
+    dev: { soft_f1: 0.6, strict_f1: 0.31 },
+    holdout: { strict_f1: incumbentHoldout.strict_f1 - HOLDOUT_SLACK - 0.1 },
+  };
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, true);
+  assert.equal(result.passes, true);
+  assert.equal(result.reasons.length, 0);
+  assert.ok(result.advisories.some((a) => a.includes("pending human review")));
+});
 
 // -- selectTargets (§4.3 step 2) -----------------------------------------
 
@@ -172,6 +188,13 @@ test("selectTargets returns nothing once every seeded hypothesis is rejected", (
   const allIds = SEED_BACKLOG.map((h) => h.id);
   const targets = selectTargets(failureStageCounts, allIds, 3);
   assert.equal(targets.length, 0);
+});
+test("selectTargets never selects a hypothesis marked blocked, even when its stage is top-ranked", () => {
+  const blocked = SEED_BACKLOG.find((h) => h.blocked);
+  assert.ok(blocked, "fixture assumption: at least one seeded hypothesis is marked blocked");
+  const failureStageCounts = { [blocked.stages[0]]: 1000 };
+  const targets = selectTargets(failureStageCounts, [], SEED_BACKLOG.length);
+  assert.ok(!targets.some((t) => t.id === blocked.id), `expected blocked hypothesis ${blocked.id} to never be selected`);
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

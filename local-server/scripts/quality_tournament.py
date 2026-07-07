@@ -17,8 +17,9 @@ this script:
      diagnostics (candidate_recall, predicate_recall, label_accuracy).
 
 Once every variant has been tuned and scored, the variants are ranked by mean
-dev soft-F1 (the hill-climbing signal; holdout is advisory only — see §3.3/§6)
-into a scoreboard: a telemetry JSONL row per variant (same
+dev soft-F1 (the hill-climbing signal; holdout is advisory only — see §3.3/§6
+and NEEDS_HUMAN_REVIEW.md, since 2 of the 5 holdout scenarios have unreviewed,
+agent-drafted ground truth) into a scoreboard: a telemetry JSONL row per variant (same
 `_metrics/<pipeline_type>.jsonl` schema `quality_loop.py` uses, with the new
 diagnostic keys) plus a markdown digest under `experiments/reports/`.
 
@@ -256,7 +257,7 @@ async def _build_scenario_reports(
                 predicate_recall=predicate_recall(expected_keys, actual_keys, embed_fn),
                 label_accuracy=label_accuracy(expected_keys, actual_keys, embed_fn),
                 missed_triples=build_missed_triples(
-                    fixture_input.get("text", ""), expected_keys, actual_keys
+                    fixture_input.get("text", ""), expected_keys, actual_keys, embed_fn
                 ),
             )
         )
@@ -343,7 +344,9 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
     lines.append(
         "Ranked by mean dev soft-F1 (the Loop A/B hill-climbing signal, §3.1). "
         "Strict-F1 is the production floor metric. Holdout is advisory only — "
-        "per §3.3/§6 it never selects the winner at this corpus size (3 scenarios)."
+        "per §3.3/§6 it never selects the winner, because 2 of the 5 holdout "
+        "scenarios (arxiv_llm_research_lab, arxiv_researcher_profile) have "
+        "unreviewed, agent-drafted ground truth (see NEEDS_HUMAN_REVIEW.md)."
     )
     lines.append("")
     lines.append(

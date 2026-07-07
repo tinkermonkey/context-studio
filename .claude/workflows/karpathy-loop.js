@@ -14,6 +14,11 @@ export const meta = {
 // documentation/karpathy_loop_design.md §6 accept gate constants.
 const EPSILON = 0.005
 const HOLDOUT_SLACK = 0.02
+// tests/integration/fixtures/pipelines/individual_extraction/NEEDS_HUMAN_REVIEW.md:
+// 2 of today's 5 holdout scenarios have unreviewed, agent-drafted GT. Flip
+// this to false only once every box in that file is checked off by a human
+// — do not flip it just because more scenarios/time have passed.
+const HOLDOUT_GT_REVIEW_PENDING = true
 // §1 exit criterion (strict floors on holdout).
 const DEFAULT_HOLDOUT_FLOORS = { precision: 0.6, recall: 0.5, f1: 0.5 }
 // Brier is intentionally not part of this floor check: the tournament runner
@@ -62,6 +67,13 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing'],
     summary:
       'RAG-proper prompting for the default (LLM) pipeline: vector-match noun chunks against the ontology first, inject top-k matched classes + property definitions into the prompt, verify LLM-returned IDs against the ontology instead of trusting them (design doc §7 item 1).',
+    // scripts/quality_tournament.py's build_registry() deliberately does not
+    // register the `default` pipeline yet (no cassettes recorded for it) --
+    // an experimenter assigned this hypothesis today would implement a
+    // change Loop B cannot score at all, guaranteeing an accept-gate
+    // rejection regardless of merit. Unblock once `default` is registered
+    // there (see that function's docstring for the exact steps).
+    blocked: true,
   },
   {
     id: 'per_source_confidence_bands',
@@ -361,7 +373,10 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
-function meetsFloors(holdout, floors) {
+function meetsFloors(holdout, floors, holdoutReviewPending) {
+  // documentation/karpathy_loop_design.md §6 + NEEDS_HUMAN_REVIEW.md: never
+  // declare POC success off holdout GT a human hasn't reviewed yet.
+  if (holdoutReviewPending) return false
   return (
     holdout.strict_precision >= floors.precision
     && holdout.strict_recall >= floors.recall
@@ -371,7 +386,8 @@ function meetsFloors(holdout, floors) {
 
 // documentation/karpathy_loop_design.md §4.3 step 2: rank failure classes
 // by GT-triple count, map the top ones to backlog hypotheses, skip anything
-// the ledger already rejected.
+// the ledger already rejected or that's marked `blocked` (Loop B cannot
+// evaluate it yet — see the hypothesis's own comment in SEED_BACKLOG).
 function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
   const rankedStages = Object.entries(failureStageCounts || {})
     .sort((a, b) => b[1] - a[1])
@@ -384,6 +400,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
     if (chosen.length >= count) break
     for (const hyp of SEED_BACKLOG) {
       if (chosen.length >= count) break
+      if (hyp.blocked) continue
       if (chosenIds.has(hyp.id) || rejectedHypothesisIds.includes(hyp.id)) continue
       if (!hyp.stages.includes(stage)) continue
       chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: stage })
@@ -395,6 +412,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
   // ones like confidence bands) if the ranked stages didn't fill the fleet.
   for (const hyp of SEED_BACKLOG) {
     if (chosen.length >= count) break
+    if (hyp.blocked) continue
     if (chosenIds.has(hyp.id) || rejectedHypothesisIds.includes(hyp.id)) continue
     chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: hyp.stages[0] || 'general' })
     chosenIds.add(hyp.id)
@@ -403,11 +421,21 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
   return chosen
 }
 
-// documentation/karpathy_loop_design.md §6 accept gate. Holdout is treated
-// as authoritative (not merely advisory) here because the §3.3 corpus
-// growth this gate was waiting on has landed (18 scenarios / 5 holdout).
-function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack) {
+// documentation/karpathy_loop_design.md §6 accept gate.
+//
+// Holdout collapse is NOT yet treated as authoritative: 2 of today's 5
+// holdout scenarios (arxiv_llm_research_lab, arxiv_researcher_profile) have
+// agent-drafted ground truth that tests/integration/fixtures/pipelines/
+// individual_extraction/NEEDS_HUMAN_REVIEW.md explicitly flags as unreviewed
+// and "must not be treated as an authoritative accept/reject signal." Gating
+// merges (or declaring POC success — see `meetsFloors`) on that GT is
+// exactly the metric-gaming risk §6 warns against, so while
+// `holdoutReviewPending` is true a holdout collapse is surfaced as a
+// non-blocking advisory instead of a rejection reason. Pass `false` once
+// every box in NEEDS_HUMAN_REVIEW.md is checked off by a human.
+function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending) {
   const reasons = []
+  const advisories = []
 
   const devSoftImproves = candidate.dev.soft_f1 - incumbentDev.soft_f1 > epsilon
   if (!devSoftImproves) {
@@ -419,12 +447,18 @@ function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutS
     reasons.push(`dev strict-F1 ${candidate.dev.strict_f1} regresses below incumbent ${incumbentDev.strict_f1}`)
   }
 
-  const noHoldoutCollapse = candidate.holdout.strict_f1 >= incumbentHoldout.strict_f1 - holdoutSlack
-  if (!noHoldoutCollapse) {
-    reasons.push(`holdout strict-F1 ${candidate.holdout.strict_f1} collapses more than ${holdoutSlack} below incumbent ${incumbentHoldout.strict_f1}`)
+  const holdoutCollapsed = candidate.holdout.strict_f1 < incumbentHoldout.strict_f1 - holdoutSlack
+  const noHoldoutCollapse = holdoutReviewPending ? true : !holdoutCollapsed
+  if (holdoutCollapsed) {
+    const message = `holdout strict-F1 ${candidate.holdout.strict_f1} collapses more than ${holdoutSlack} below incumbent ${incumbentHoldout.strict_f1}`
+    if (holdoutReviewPending) {
+      advisories.push(`${message} (advisory only -- holdout GT pending human review per NEEDS_HUMAN_REVIEW.md; not blocking acceptance)`)
+    } else {
+      reasons.push(message)
+    }
   }
 
-  return { passes: devSoftImproves && noFloorRegression && noHoldoutCollapse, reasons }
+  return { passes: devSoftImproves && noFloorRegression && noHoldoutCollapse, reasons, advisories }
 }
 
 const iteration = (args && args.iteration) || 1
@@ -463,7 +497,10 @@ if (!evaluation) {
 }
 
 // §4.3 step 6, other half: stop on success before spending anything else.
-if (meetsFloors(evaluation.holdout, holdoutFloors)) {
+if (HOLDOUT_GT_REVIEW_PENDING && meetsFloors(evaluation.holdout, holdoutFloors, false)) {
+  log('Holdout strict floors appear met, but GT for 2/5 holdout scenarios is still pending human review (NEEDS_HUMAN_REVIEW.md) -- not declaring success yet. Continuing the loop.')
+}
+if (meetsFloors(evaluation.holdout, holdoutFloors, HOLDOUT_GT_REVIEW_PENDING)) {
   return {
     status: 'stopped',
     reason: 'holdout strict floors met (§1 exit criterion)',
@@ -534,7 +571,10 @@ for (const p of verified) {
 
 let gateResult = null
 if (best) {
-  gateResult = acceptGate(best.candidate, evaluation.dev, evaluation.holdout, EPSILON, HOLDOUT_SLACK)
+  gateResult = acceptGate(best.candidate, evaluation.dev, evaluation.holdout, EPSILON, HOLDOUT_SLACK, HOLDOUT_GT_REVIEW_PENDING)
+  if (gateResult.advisories.length) {
+    log(`Accept-gate advisories (non-blocking): ${gateResult.advisories.join('; ')}`)
+  }
 }
 const accepted = Boolean(best && gateResult && gateResult.passes)
 

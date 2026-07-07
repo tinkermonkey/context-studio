@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from tests.integration.pipelines._harness.metrics import Triple, normalize_label
+from tests.integration.pipelines._harness.metrics import EmbedFn, Triple, label_match_tier
 
 CANDIDATE_MISSING = "candidate_missing"
 RELATION_NOT_DERIVED = "relation_not_derived"
@@ -65,28 +65,39 @@ class ScenarioReport:
 
 
 def classify_stage(
-    expected: Triple, actual_triples: list[Triple]
+    expected: Triple, actual_triples: list[Triple], embed_fn: Optional[EmbedFn] = None
 ) -> tuple[str, Optional[Triple]]:
     """
     Classify why a single missed GT triple was missed.
+
+    Uses the same tiered label-match rule as `candidate_recall`/
+    `predicate_recall` (`label_match_tier`, which includes the >= 0.85
+    embedding-cosine tier, not just lemma/stem equality) so a label those
+    aggregate diagnostics count as "present" is never classified
+    `candidate_missing`/`relation_not_derived` here — keeping the per-triple
+    stage counts (which drive Loop C's target selection) in agreement with
+    the coverage metrics they're supposed to explain.
 
     Returns (stage, nearest_actual) where `nearest_actual` is the actual
     triple that best illustrates the classification (None for
     `candidate_missing`, where nothing in the output is close).
     """
     exp_subj, exp_pred, exp_obj = expected
-    norm_subj = normalize_label(exp_subj)
-    norm_obj = normalize_label(exp_obj)
 
-    candidate_pool = {normalize_label(s) for s, _p, _o in actual_triples} | {
-        normalize_label(o) for _s, _p, o in actual_triples
-    }
+    def present(label: str) -> bool:
+        return any(
+            label_match_tier(label, candidate, embed_fn) > 0
+            for triple in actual_triples
+            for candidate in (triple[0], triple[2])
+        )
 
-    if norm_subj not in candidate_pool or norm_obj not in candidate_pool:
+    if not present(exp_subj) or not present(exp_obj):
         return CANDIDATE_MISSING, None
 
     paired = [
-        t for t in actual_triples if normalize_label(t[0]) == norm_subj and normalize_label(t[2]) == norm_obj
+        t
+        for t in actual_triples
+        if label_match_tier(t[0], exp_subj, embed_fn) > 0 and label_match_tier(t[2], exp_obj, embed_fn) > 0
     ]
     if not paired:
         return RELATION_NOT_DERIVED, None
@@ -125,6 +136,7 @@ def build_missed_triples(
     source_text: str,
     expected_triples: list[Triple],
     actual_triples: list[Triple],
+    embed_fn: Optional[EmbedFn] = None,
 ) -> list[MissedTriple]:
     """Build the missed-triple report entries for one scenario (strict misses only)."""
     actual_set = set(actual_triples)
@@ -132,7 +144,7 @@ def build_missed_triples(
     for expected in expected_triples:
         if expected in actual_set:
             continue
-        stage, nearest = classify_stage(expected, actual_triples)
+        stage, nearest = classify_stage(expected, actual_triples, embed_fn)
         missed.append(
             MissedTriple(
                 expected=expected,

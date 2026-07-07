@@ -49,6 +49,27 @@ class TestClassifyStage:
         assert stage == CANDIDATE_MISSING
         assert nearest is None
 
+    def test_embedding_tier_match_is_not_candidate_missing(self):
+        """
+        A subject present only via the fallback bag-of-stems embedding proxy
+        (>= 0.85 cosine, tier 0.7 — not lemma/stem-equal) must not be
+        classified candidate_missing: candidate_recall already counts it as
+        present, and the two diagnostics must agree on what "present" means.
+        """
+        stage, nearest = classify_stage(
+            ("quick_brown_fox", "p", "b"), [("quick_brown_fox_jumps", "q", "b")]
+        )
+        assert stage == LABEL_MISMATCH
+        assert nearest == ("quick_brown_fox_jumps", "q", "b")
+
+    def test_custom_embed_fn_is_threaded_through(self):
+        """An injected embed_fn (not just the stdlib fallback) affects classification."""
+        vectors = {"a": [1.0, 0.0], "b": [1.0, 0.0], "x": [0.0, 1.0]}
+        stage, _ = classify_stage(
+            ("a", "p", "x"), [("b", "q", "x")], embed_fn=lambda label: vectors[label]
+        )
+        assert stage == LABEL_MISMATCH
+
 
 class TestFindSourceSentence:
     """Tests for the sentence-lookup heuristic."""
