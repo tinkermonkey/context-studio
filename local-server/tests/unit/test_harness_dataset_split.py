@@ -6,6 +6,7 @@ No I/O, no database, no infrastructure imports.
 import pytest
 
 from tests.integration.pipelines._harness.dataset_split import (
+    DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
     SCENARIO_DISPOSITION,
@@ -43,12 +44,31 @@ class TestOntologyContextFor:
         with pytest.raises(ValueError, match="no assigned ontology context"):
             ontology_context_for("not_a_real_scenario")
 
-    def test_scenario_ontology_keys_match_the_fixed_split(self):
-        assert set(SCENARIO_ONTOLOGY.keys()) == set(INDIVIDUAL_EXTRACTION_SCENARIOS)
+    def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
+        assert set(SCENARIO_ONTOLOGY.keys()) == set(INDIVIDUAL_EXTRACTION_SCENARIOS) | set(
+            DR_BOOTSTRAP_SCENARIOS
+        )
 
-    def test_all_18_scenarios_currently_placeholder(self):
-        assert len(SCENARIO_ONTOLOGY) == 18
-        assert all(v == OntologyContext.PLACEHOLDER for v in SCENARIO_ONTOLOGY.values())
+    def test_all_18_legacy_scenarios_currently_placeholder(self):
+        legacy_ontology = {
+            scenario: SCENARIO_ONTOLOGY[scenario] for scenario in INDIVIDUAL_EXTRACTION_SCENARIOS
+        }
+        assert len(legacy_ontology) == 18
+        assert all(v == OntologyContext.PLACEHOLDER for v in legacy_ontology.values())
+
+
+class TestDrBootstrapScenarios:
+    def test_bootstrap_scenarios_are_graded_against_dr_spec_not_placeholder(self):
+        for scenario in DR_BOOTSTRAP_SCENARIOS:
+            assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
+
+    def test_bootstrap_scenarios_are_excluded_from_the_dev_holdout_split(self):
+        # Wave 1 scenarios are a distinct diagnostic group, not folded into
+        # the fixed dev/holdout split (design doc §5).
+        for scenario in DR_BOOTSTRAP_SCENARIOS:
+            assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
+            with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
+                split_for(scenario)
 
 
 class TestDispositionFor:

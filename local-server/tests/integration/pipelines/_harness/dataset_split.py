@@ -3,9 +3,10 @@
 Also assigns each scenario an `OntologyContext` (`PLACEHOLDER` or `DR_SPEC`) —
 which ontology it is graded against — per the per-scenario ontology context
 gap identified against `documentation/karpathy_loop_dr_ontology_design.md`.
-All 18 scenarios currently run against the placeholder ontology; a scenario
-graded against the imported DR spec (e.g. a future `dr_bootstrap_*` scenario)
-is added to `SCENARIO_ONTOLOGY` alongside its dev/holdout assignment.
+All 18 legacy scenarios run against the placeholder ontology. The
+`dr_bootstrap_*` scenarios (Wave 1, §5) are graded against the imported DR
+spec and are added to `SCENARIO_ONTOLOGY` via `DR_BOOTSTRAP_SCENARIOS`, but
+deliberately outside the dev/holdout split -- see that constant's docstring.
 
 `SCENARIO_DISPOSITION` records the explicit, one-time decision made for each
 of these 18 scenarios when the DR ontology import happened (#1109 Phase 3):
@@ -111,6 +112,25 @@ class OntologyContext(Enum):
 SCENARIO_ONTOLOGY: dict[str, OntologyContext] = {
     scenario: OntologyContext.PLACEHOLDER for scenario in INDIVIDUAL_EXTRACTION_SCENARIOS
 }
+
+# Wave 1 bootstrap scenarios (documentation/karpathy_loop_dr_ontology_design.md
+# §5): one per qualifying prose source file discovered in
+# documentation_robotics_viewer's dogfooded model by
+# scripts/generate_dr_bootstrap_corpus.py. Graded against the Wave 0 DR spec
+# import, never the placeholder. These are a distinct, always-reported
+# diagnostic group -- deliberately NOT added to
+# INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split (too thin, several
+# with single-digit or zero GT triples, to holdout-split meaningfully; see
+# design doc §5). Only scenarios that currently exist on disk are listed
+# here; a discovered-but-currently-missing source file (upstream drift) has
+# no fixture directory and is therefore not registered until it reappears
+# and the corpus is regenerated.
+DR_BOOTSTRAP_SCENARIOS: list[str] = [
+    "dr_bootstrap_claude",
+    "dr_bootstrap_readme",
+]
+
+SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in DR_BOOTSTRAP_SCENARIOS})
 
 
 def ontology_context_for(scenario: str) -> OntologyContext:
