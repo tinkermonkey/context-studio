@@ -992,6 +992,32 @@ class TestDeleteClass:
         with pytest.raises(OntologyError, match="has.*individual"):
             service.delete_class(class_id=cls.id)
 
+    def test_delete_class_referenced_as_property_domain_raises(self, service):
+        """Delete class referenced as a property definition's domain raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        service.create_property_definition(
+            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+        )
+
+        with pytest.raises(OntologyError, match="referenced as domain/range"):
+            service.delete_class(class_id=dog.id)
+
+    def test_delete_class_referenced_as_property_range_raises(self, service):
+        """Delete class referenced as a property definition's range raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        service.create_property_definition(
+            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+        )
+
+        with pytest.raises(OntologyError, match="referenced as domain/range"):
+            service.delete_class(class_id=mammal.id)
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""

@@ -54,7 +54,7 @@ from .exceptions import (
     OntologyError,
 )
 from .ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
-from .value_objects import DataPropertyValue, Status
+from .value_objects import DataPropertyValue, ExternalReference, Status
 
 _logger = logging.getLogger(__name__)
 
@@ -1065,15 +1065,17 @@ class OntologyService:
         """
         Delete a class.
 
-        Validates that the class has no subclasses or individuals before deletion.
-        Cleans up any orphaned relationships where the class is source or target.
+        Validates that the class has no subclasses, individuals, or property
+        definitions referencing it as domain/range before deletion. Cleans up
+        any orphaned relationships where the class is source or target.
 
         Args:
             class_id: The ID of the class to delete
 
         Raises:
             EntityNotFoundError: If the class does not exist
-            OntologyError: If the class has subclasses or individuals
+            OntologyError: If the class has subclasses, individuals, or is
+                referenced as a domain/range by a property definition
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -1091,6 +1093,22 @@ class OntologyService:
         if individuals:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it has {len(individuals)}" " individual(s)"
+            )
+
+        # Check for property definitions referencing this class as domain/range.
+        # SQLite foreign keys are not enforced in this application (see
+        # connection.py), so the declared ondelete="SET NULL" never fires —
+        # deleting without this check would leave dangling domain_class_id/
+        # range_class_id references instead.
+        referencing_props = [
+            prop
+            for prop in self._repository.list_property_definitions(limit=None)
+            if prop.domain_class_id == class_id or prop.range_class_id == class_id
+        ]
+        if referencing_props:
+            raise OntologyError(
+                f"Cannot delete class {class_id}: it is referenced as domain/range by "
+                f"{len(referencing_props)} property definition(s)"
             )
 
         # Find and delete all relationships where this class is source or target
@@ -1610,6 +1628,9 @@ class OntologyService:
         identifier: str,
         title: str,
         description: str | None = None,
+        domain_class_id: str | None = None,
+        range_class_id: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
@@ -1617,17 +1638,25 @@ class OntologyService:
         Validates that:
         - The identifier is unique across all property definitions
         - The title is unique across all property definitions
+        - domain_class_id/range_class_id, if provided, reference existing classes
 
         Args:
             identifier: Machine-readable identifier for the property
             title: Display name for the property
             description: Optional longer description
+            domain_class_id: Optional ID of the Class this property's source must
+                belong to (rdfs:domain)
+            range_class_id: Optional ID of the Class this property's target must
+                belong to (rdfs:range)
+            external_references: Optional list of references to external knowledge bases
 
         Returns:
             The created PropertyDefinition
 
         Raises:
             DuplicateEntityError: If a property with this identifier or title already exists
+            EntityNotFoundError: If domain_class_id or range_class_id does not reference
+                an existing Class
             ValueError: If identifier or title is empty
         """
         if not identifier or not identifier.strip():
@@ -1644,6 +1673,11 @@ class OntologyService:
         if any(p.title == title for p in existing_props):
             raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
 
+        if domain_class_id is not None and self._repository.get_class(domain_class_id) is None:
+            raise EntityNotFoundError("Class", domain_class_id)
+        if range_class_id is not None and self._repository.get_class(range_class_id) is None:
+            raise EntityNotFoundError("Class", range_class_id)
+
         property_id = str(uuid4())
         now = datetime.now(timezone.utc)
         prop_def = PropertyDefinition(
@@ -1651,6 +1685,9 @@ class OntologyService:
             identifier=identifier,
             title=title,
             description=description,
+            domain_class_id=domain_class_id,
+            range_class_id=range_class_id,
+            external_references=external_references or [],
             created_at=now,
             last_modified=now,
         )
@@ -1698,6 +1735,9 @@ class OntologyService:
         identifier: str,
         title: str | None = None,
         description: str | None = None,
+        domain_class_id: str | None = None,
+        range_class_id: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> PropertyDefinition:
         """
         Get an existing property definition by identifier, or create it if not found.
@@ -1710,6 +1750,12 @@ class OntologyService:
             identifier: Machine-readable identifier to lookup/create
             title: Display name for the property (required if creating new)
             description: Optional longer description (for creation only)
+            domain_class_id: Optional ID of the Class this property's source must
+                belong to (for creation only)
+            range_class_id: Optional ID of the Class this property's target must
+                belong to (for creation only)
+            external_references: Optional list of references to external knowledge
+                bases (for creation only)
 
         Returns:
             The PropertyDefinition (either existing or newly created)
@@ -1740,6 +1786,9 @@ class OntologyService:
             identifier=identifier,
             title=title,
             description=description,
+            domain_class_id=domain_class_id,
+            range_class_id=range_class_id,
+            external_references=external_references,
         )
 
     def list_property_definitions(
@@ -1796,6 +1845,9 @@ class OntologyService:
         description: str | None = None,
         is_relevant: bool | None = None,
         update_is_relevant: bool = False,
+        domain_class_id: str | None = None,
+        range_class_id: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> PropertyDefinition:
         """
         Update a property definition's title, description, and/or relevance flag.
@@ -1812,12 +1864,17 @@ class OntologyService:
             update_is_relevant: Set to True to apply the ``is_relevant`` value;
                 defaults to False so callers that do not intend to change
                 relevance are unaffected
+            domain_class_id: New domain Class ID (optional)
+            range_class_id: New range Class ID (optional)
+            external_references: New list of external references, replacing the
+                existing list wholesale (optional)
 
         Returns:
             The updated PropertyDefinition
 
         Raises:
-            EntityNotFoundError: If the property does not exist
+            EntityNotFoundError: If the property does not exist, or if
+                domain_class_id/range_class_id does not reference an existing Class
             DuplicateEntityError: If the new title already exists
             ValueError: If the new title is empty
         """
@@ -1844,6 +1901,19 @@ class OntologyService:
 
         if update_is_relevant:
             prop_def.is_relevant = is_relevant
+
+        if domain_class_id is not None:
+            if self._repository.get_class(domain_class_id) is None:
+                raise EntityNotFoundError("Class", domain_class_id)
+            prop_def.domain_class_id = domain_class_id
+
+        if range_class_id is not None:
+            if self._repository.get_class(range_class_id) is None:
+                raise EntityNotFoundError("Class", range_class_id)
+            prop_def.range_class_id = range_class_id
+
+        if external_references is not None:
+            prop_def.external_references = external_references
 
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)

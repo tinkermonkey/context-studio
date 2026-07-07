@@ -144,6 +144,20 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         nullable=True,
         doc="Primary structural property definition (for class)",
     )
+    domain_class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Source/domain Class for this relationship type (for property_definition, rdfs:domain)",
+    )
+    range_class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Target/range Class for this relationship type (for property_definition, rdfs:range)",
+    )
 
     # Nested value objects (stored as JSON)
     external_references = Column(
@@ -396,6 +410,20 @@ class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     ontology_mapping = Column(JSON, nullable=True, doc="JSON mapping to external ontologies")
+    domain_class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Source/domain Class for this relationship type (rdfs:domain)",
+    )
+    range_class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        doc="Target/range Class for this relationship type (rdfs:range)",
+    )
     is_relevant = Column(
         Integer,
         nullable=True,
