@@ -59,7 +59,8 @@ def _pascal(phrase: str) -> str:
 
 
 def _concept_term(label: str) -> str:
-    """PascalCase class label -> ConceptNet concept term ('ConsensusAlgorithm' -> 'consensus_algorithm')."""
+    """PascalCase class label -> ConceptNet concept term ('ConsensusAlgorithm' ->
+    'consensus_algorithm')."""
     words = re.findall(r"[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|[0-9]+", label)
     return "_".join(w.lower() for w in words) if words else label.lower()
 
@@ -356,6 +357,8 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             boosted.append(cls)
             for rel in relations:
                 obj_term = _concept_term_from_uri(rel.object_uri)
+                if obj_term is None:
+                    continue
                 obj_label = label_by_term.get(obj_term)
                 if obj_label is None or obj_label == cls.label:
                     continue

@@ -126,7 +126,11 @@ def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     seen: list[str] = []
     for entry in read_entries(ledger_path):
         hypothesis = entry.get("hypothesis")
-        if entry.get("decision") == "rejected" and hypothesis is not None and hypothesis not in seen:
+        if (
+            entry.get("decision") == "rejected"
+            and hypothesis is not None
+            and hypothesis not in seen
+        ):
             seen.append(hypothesis)
     return seen
 
@@ -137,7 +141,8 @@ def _main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument(
         "--ledger-path",
         default=None,
-        help="Override the ledger file path (defaults to experiments/ledger.jsonl next to this script).",
+        help="Override the ledger file path (defaults to experiments/ledger.jsonl next to"
+        " this script).",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
