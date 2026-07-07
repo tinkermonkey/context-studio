@@ -48,10 +48,23 @@ class TestValidateEntry:
     def test_valid_entry_passes(self):
         validate_entry(_entry())
 
-    @pytest.mark.parametrize("missing_field", [
-        "experiment_id", "iteration", "hypothesis", "variant", "diff_stat",
-        "base_commit", "dev", "holdout", "decision", "reason", "cost_usd", "agent",
-    ])
+    @pytest.mark.parametrize(
+        "missing_field",
+        [
+            "experiment_id",
+            "iteration",
+            "hypothesis",
+            "variant",
+            "diff_stat",
+            "base_commit",
+            "dev",
+            "holdout",
+            "decision",
+            "reason",
+            "cost_usd",
+            "agent",
+        ],
+    )
     def test_missing_required_field_raises(self, missing_field):
         entry = _entry()
         del entry[missing_field]
@@ -123,17 +136,35 @@ class TestRejectedHypotheses:
 
     def test_only_rejected_entries_are_returned(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
-        append_entry(_entry(experiment_id="1-a", hypothesis="a", decision="rejected"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="1-b", hypothesis="b", decision="accepted"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="1-c", hypothesis="c", decision="rejected"), ledger_path=ledger_path)
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-c", hypothesis="c", decision="rejected"),
+            ledger_path=ledger_path,
+        )
 
         assert rejected_hypotheses(ledger_path) == ["a", "c"]
 
     def test_duplicate_rejected_hypothesis_appears_once_in_first_seen_order(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
-        append_entry(_entry(experiment_id="1-a", hypothesis="a", decision="rejected"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="2-a", hypothesis="a", decision="rejected"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="1-b", hypothesis="b", decision="rejected"), ledger_path=ledger_path)
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="2-a", hypothesis="a", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="rejected"),
+            ledger_path=ledger_path,
+        )
 
         assert rejected_hypotheses(ledger_path) == ["a", "b"]
 
@@ -144,8 +175,14 @@ class TestRejectedHypotheses:
         # Target selection deciding whether to retry it is a judgment call
         # made by the loop's driver, not this module.
         ledger_path = tmp_path / "ledger.jsonl"
-        append_entry(_entry(experiment_id="1-a", hypothesis="a", decision="rejected"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="2-a", hypothesis="a", decision="accepted"), ledger_path=ledger_path)
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="2-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
 
         assert rejected_hypotheses(ledger_path) == ["a"]
 
@@ -183,8 +220,14 @@ class TestCli:
 
     def test_rejected_hypotheses_command_prints_one_per_line(self, tmp_path, capsys):
         ledger_path = tmp_path / "ledger.jsonl"
-        append_entry(_entry(experiment_id="1-a", hypothesis="a", decision="rejected"), ledger_path=ledger_path)
-        append_entry(_entry(experiment_id="1-b", hypothesis="b", decision="accepted"), ledger_path=ledger_path)
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="accepted"),
+            ledger_path=ledger_path,
+        )
 
         exit_code = ledger_cli(["--ledger-path", str(ledger_path), "rejected-hypotheses"])
 

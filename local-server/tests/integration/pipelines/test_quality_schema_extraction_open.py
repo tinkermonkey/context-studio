@@ -23,7 +23,9 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+)
 
 from pathlib import Path
 from uuid import uuid4
@@ -352,7 +354,9 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
         if isinstance(provider, RecordingLLMProvider):
             provider.flush()
         actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
-        metrics = compute_quality_metrics(load_expected_output("schema_extraction", scenario), actual)
+        metrics = compute_quality_metrics(
+            load_expected_output("schema_extraction", scenario), actual
+        )
         llm_rows.append((scenario, metrics))
         assert any(
             c.get("kind") == "class" for c in (result_state.result or {}).get("candidates", [])
@@ -383,7 +387,12 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
         result_state = await orch.execute(state)
         actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
         rule_rows.append(
-            (scenario, compute_quality_metrics(load_expected_output("schema_extraction", scenario), actual))
+            (
+                scenario,
+                compute_quality_metrics(
+                    load_expected_output("schema_extraction", scenario), actual
+                ),
+            )
         )
     mean_rule = sum(m["class_jaccard"] for _, m in rule_rows) / len(rule_rows)
 
