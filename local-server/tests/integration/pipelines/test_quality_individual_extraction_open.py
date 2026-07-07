@@ -36,13 +36,13 @@ from uuid import uuid4
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from domain.ontology.ports import SchemaMatch
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
-from domain.ontology.ports import SchemaMatch
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.dataset_split import split_for
 from tests.integration.pipelines._harness.error_report import (

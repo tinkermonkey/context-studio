@@ -25,19 +25,18 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
+from pathlib import Path
 from uuid import uuid4
 
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from domain.extraction.open_extraction import RelationCandidate
+from domain.extraction.ports import ReferenceRelation
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.schema_extraction.configurations.open_v1 import get_open_v1_config
 from domain.pipelines.schema_extraction.open_orchestrator import (
     OpenSchemaExtractionOrchestrator,
-)
-from domain.extraction.open_extraction import RelationCandidate
-from domain.extraction.ports import ReferenceRelation
-from domain.pipelines.schema_extraction.open_orchestrator import (
     _concept_term,
     _concept_term_from_uri,
 )
@@ -45,8 +44,6 @@ from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     SchemaExtractionState,
 )
-from pathlib import Path
-
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 from tests.integration.pipelines.test_quality_schema_extraction import (
