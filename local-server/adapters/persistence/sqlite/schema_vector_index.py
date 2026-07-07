@@ -16,6 +16,8 @@ format (struct little-endian) is already byte-compatible with sqlite-vec's
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from sqlalchemy.orm import sessionmaker
 
@@ -90,17 +92,17 @@ class SqliteSchemaVectorIndex:
             )
             if not rows:
                 return 0
-            titles = [row.title or "" for row in rows]
-            descriptions = [row.description or "" for row in rows]
+            titles = [cast(str, row.title) or "" for row in rows]
+            descriptions = [cast("str | None", row.description) or "" for row in rows]
             title_vecs = self._embedding.embed_batch(titles)
             def_vecs = self._embedding.embed_batch(descriptions)
             for row, title_vec, def_vec, title, description in zip(
                 rows, title_vecs, def_vecs, titles, descriptions
             ):
-                row.title_embedding = _serialize_embedding(
+                row.title_embedding = _serialize_embedding(  # type: ignore[assignment]
                     title_vec if title.strip() else None
                 )
-                row.definition_embedding = _serialize_embedding(
+                row.definition_embedding = _serialize_embedding(  # type: ignore[assignment]
                     def_vec if description.strip() else None
                 )
             session.commit()
