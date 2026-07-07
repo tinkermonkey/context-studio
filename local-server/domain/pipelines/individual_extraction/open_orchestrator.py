@@ -87,14 +87,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples)
 
-            result = {
-                "triples": triples,
-                "warnings": [],
-                "metadata": {
-                    "implementation": "open_v1",
-                    "relation_count": len(relations),
-                    "triple_count": len(triples),
-                },
+            warnings: list[str] = []
+            metadata: dict[str, Any] = {
+                "implementation": "open_v1",
+                "relation_count": len(relations),
+                "triple_count": len(triples),
             }
         except (PipelineInputError, PipelineExecutionError):
             raise
@@ -115,10 +112,10 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             )
         return replace(
             state,
-            extracted_triples=result["triples"],
-            warnings=result["warnings"],
-            metadata=result["metadata"],
-            result=result,
+            extracted_triples=triples,
+            warnings=warnings,
+            metadata=metadata,
+            result={"triples": triples, "warnings": warnings, "metadata": metadata},
             current_status=PipelineRunStatus.COMPLETED,
         )
 
@@ -175,9 +172,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         require_match = self._cfg.require_schema_match
 
         # Resolve each distinct individual label to its best schema match.
-        individuals = {
-            t[role]["label"] for t in triples for role in ("subject", "object")
-        }
+        individuals = {t[role]["label"] for t in triples for role in ("subject", "object")}
         matched: dict[str, Any] = {}
         for label in individuals:
             query = self._embedding.embed(label.replace("_", " "))
