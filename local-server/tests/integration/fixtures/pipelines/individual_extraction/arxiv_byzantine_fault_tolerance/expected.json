@@ -1,0 +1,86 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "publishes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "byzantine_fault_tolerance_research",
+          "kind": "individual"
+        },
+        "confidence": 0.89
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "collaborates_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "stanford_university",
+          "kind": "individual"
+        },
+        "confidence": 0.9
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "contributes_to",
+          "kind": "property"
+        },
+        "object": {
+          "label": "consensus_protocol_design",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      },
+      {
+        "subject": {
+          "label": "consensus_protocol_design",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "influences",
+          "kind": "property"
+        },
+        "object": {
+          "label": "industry_standards",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "works_independently_on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "byzantine_fault_tolerance_research",
+          "kind": "individual"
+        },
+        "note": "The research was NOT conducted independently \u2014 the text says it was a collaboration with Stanford University."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

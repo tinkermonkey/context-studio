@@ -1,12 +1,23 @@
 """Pure metric computation module for pipeline quality evaluation.
 
-This module contains no infrastructure imports — only Python stdlib (math, collections).
+This module contains no infrastructure imports — only Python stdlib (math, re).
 All metrics are deterministic functions of input lists/sets.
 """
 
 import math
+import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable, Optional
+
+# A comparable triple key, as produced by extract_triple_key(): (subject, predicate, object).
+Triple = tuple[str, str, str]
+
+# A label similarity function: label -> embedding vector. When supplied to the
+# soft-matching functions below, cosine_similarity(embed_fn(a), embed_fn(b)) is used
+# in place of the pure-stdlib bag-of-stems fallback. Keeps this module infrastructure-free
+# while still letting callers (e.g. the quality test suites) wire in a real embedding
+# adapter for higher-fidelity subject/object matching.
+EmbedFn = Callable[[str], list[float]]
 
 
 @dataclass
@@ -256,3 +267,329 @@ def ranking_metrics(expected: list[str], ranked_list: list[str]) -> RankingMetri
     mrr = mean_reciprocal_rank(expected, ranked_list)
 
     return RankingMetrics(top1_precision=top1, top3_precision=top3, mrr=mrr)
+
+
+# ---------------------------------------------------------------------------
+# Soft triple matching (Karpathy loop §3.1) — tiered credit + coverage diagnostics.
+#
+# The strict `precision_recall_f1` above requires an exact (subject, predicate,
+# object) string match and is kept as the acceptance floor. The functions below
+# add a soft, tiered signal (partial credit for lemma/stem-normalized or
+# embedding-close matches) plus three diagnostics that decompose a triple miss
+# into "was the entity ever extracted", "was it ever related to anything", and
+# "did the extracted label match the GT label" — see the module docstring in
+# tests/integration/pipelines/_harness/error_report.py for the full failure-
+# stage waterfall built on top of these primitives.
+# ---------------------------------------------------------------------------
+
+# Embedding-cosine threshold for treating two labels as the "same entity" when
+# they don't share a lemma/stem-normalized form (soft-match tier 3, §3.1).
+_EMBEDDING_MATCH_THRESHOLD = 0.85
+
+_TIER_EXACT = 1.0
+_TIER_NORMALIZED = 0.9
+_TIER_EMBEDDING = 0.7
+_TIER_NONE = 0.0
+
+_SUFFIX_PATTERN = re.compile(r"[_\s/.\-]+")
+
+
+def _stem_word(word: str) -> str:
+    """
+    Minimal, dependency-free suffix-stripping stemmer for verb/noun surface forms.
+
+    Not a full lemmatizer (no POS awareness, no irregular-form dictionary) — it
+    exists so this module can stay infrastructure-free while still collapsing
+    the surface-form noise that dominates GT-authoring mismatches, e.g.
+    'ensures'/'ensure', 'improves'/'improve', 'runs'/'run'.
+    """
+    if len(word) <= 3:
+        return word
+    if word.endswith("ies"):
+        return word[:-3] + "y"
+    if word.endswith(("sses", "shes", "ches", "xes", "zes")):
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    if word.endswith("ing") and len(word) > 5:
+        return word[:-3]
+    if word.endswith("ed") and len(word) > 4:
+        return word[:-2]
+    return word
+
+
+def _label_tokens(label: str) -> list[str]:
+    """Split a label into lowercased, stemmed content tokens (see `_stem_word`)."""
+    words = _SUFFIX_PATTERN.split(label.lower())
+    return [_stem_word(w) for w in words if w]
+
+
+def normalize_label(label: str) -> str:
+    """
+    Lemma/stem-normalize a triple-slot label for measurement comparison.
+
+    Used both to GT-normalize predicate labels at load time (so 'ensures' and
+    'ensure' are counted as the same fact — a measurement correction, applied
+    identically wherever comparable triple keys are built, strict or soft) and
+    internally by the soft-match tiers below to compare subject/object labels
+    after collapsing surface-form noise. See `_stem_word` for the normalization
+    rule; this is a heuristic, not a full lemmatizer.
+
+    Returns "" unchanged for an empty label.
+    """
+    if not label:
+        return label
+    return "_".join(_label_tokens(label))
+
+
+def _label_similarity(a: str, b: str, embed_fn: Optional[EmbedFn] = None) -> float:
+    """
+    Cosine similarity between two labels.
+
+    Uses `embed_fn` (label -> vector) if supplied. Otherwise falls back to a
+    pure-stdlib proxy: cosine similarity over stemmed bag-of-words count
+    vectors. The fallback keeps this module usable with zero infrastructure
+    dependencies (e.g. in fast unit tests); callers that already have an
+    embedding adapter wired up (as the individual-extraction quality suite
+    does) should pass it for higher-fidelity subject/object matching.
+    """
+    if embed_fn is not None:
+        return cosine_similarity(embed_fn(a), embed_fn(b))
+
+    tokens_a = _label_tokens(a)
+    tokens_b = _label_tokens(b)
+    if not tokens_a or not tokens_b:
+        return 0.0
+    vocab = sorted(set(tokens_a) | set(tokens_b))
+    vec_a = [float(tokens_a.count(w)) for w in vocab]
+    vec_b = [float(tokens_b.count(w)) for w in vocab]
+    return cosine_similarity(vec_a, vec_b)
+
+
+def label_match_tier(a: str, b: str, embed_fn: Optional[EmbedFn] = None) -> float:
+    """
+    Classify how closely two triple-slot labels match, as one of four tiers.
+
+    Returns 1.0 for an exact string match, 0.9 when they agree only after
+    lemma/stem normalization, 0.7 when they are not lexically close but their
+    embedding cosine similarity is >= 0.85, and 0.0 otherwise.
+    """
+    if a == b:
+        return _TIER_EXACT
+    if normalize_label(a) == normalize_label(b):
+        return _TIER_NORMALIZED
+    if _label_similarity(a, b, embed_fn) >= _EMBEDDING_MATCH_THRESHOLD:
+        return _TIER_EMBEDDING
+    return _TIER_NONE
+
+
+def _triple_credit(expected: Triple, actual: Triple, embed_fn: Optional[EmbedFn] = None) -> float:
+    """
+    Tiered credit for how well one actual triple matches one expected triple (§3.1).
+
+    1.0 - exact (subject, predicate, object) string match.
+    0.9 - all three slots match after lemma/stem normalization.
+    0.7 - subject & object match by embedding cosine >= 0.85 and the predicate
+          matches by lemma/stem.
+    0.0 - otherwise.
+    """
+    if expected == actual:
+        return _TIER_EXACT
+
+    exp_subj, exp_pred, exp_obj = expected
+    act_subj, act_pred, act_obj = actual
+
+    if (
+        normalize_label(exp_subj) == normalize_label(act_subj)
+        and normalize_label(exp_pred) == normalize_label(act_pred)
+        and normalize_label(exp_obj) == normalize_label(act_obj)
+    ):
+        return _TIER_NORMALIZED
+
+    if normalize_label(exp_pred) == normalize_label(act_pred):
+        subj_sim = _label_similarity(exp_subj, act_subj, embed_fn)
+        obj_sim = _label_similarity(exp_obj, act_obj, embed_fn)
+        if subj_sim >= _EMBEDDING_MATCH_THRESHOLD and obj_sim >= _EMBEDDING_MATCH_THRESHOLD:
+            return _TIER_EMBEDDING
+
+    return _TIER_NONE
+
+
+def _max_weight_match_credit(
+    expected: list[Triple], actual: list[Triple], embed_fn: Optional[EmbedFn] = None
+) -> float:
+    """
+    Greedy max-weight one-to-one matching between expected and actual triples.
+
+    Scores every (expected, actual) pair via `_triple_credit`, then greedily
+    assigns the highest-credit pairs first, skipping any triple already
+    matched, so a single actual triple cannot be double-counted against
+    multiple expected triples (and vice versa). Deterministic given the
+    deterministic tie-break on index order.
+    """
+    pairs: list[tuple[float, int, int]] = []
+    for i, exp in enumerate(expected):
+        for j, act in enumerate(actual):
+            credit = _triple_credit(exp, act, embed_fn)
+            if credit > 0:
+                pairs.append((credit, i, j))
+    pairs.sort(key=lambda p: (-p[0], p[1], p[2]))
+
+    matched_expected: set[int] = set()
+    matched_actual: set[int] = set()
+    total_credit = 0.0
+    for credit, i, j in pairs:
+        if i in matched_expected or j in matched_actual:
+            continue
+        matched_expected.add(i)
+        matched_actual.add(j)
+        total_credit += credit
+    return total_credit
+
+
+def soft_precision_recall_f1(
+    expected: list[Triple], actual: list[Triple], embed_fn: Optional[EmbedFn] = None
+) -> PrecisionRecallF1:
+    """
+    Soft precision/recall/F1 over triples using tiered partial credit (§3.1).
+
+    Mirrors `precision_recall_f1`'s edge-case handling, but replaces exact-set
+    intersection size with the total credit from a greedy max-weight matching
+    (see `_max_weight_match_credit`). This is the hill-climbing signal for the
+    Karpathy loop — it moves on lemma variants and chunk-boundary differences
+    that the strict metric always scores as a total miss.
+
+    Args:
+        expected: GT triples as (subject, predicate, object) string tuples.
+        actual: Extracted triples in the same shape.
+        embed_fn: Optional label -> embedding vector function for subject/object
+            similarity (tier 3). Falls back to a stdlib bag-of-stems proxy.
+
+    Returns:
+        PrecisionRecallF1 with precision, recall, and f1 in [0, 1].
+    """
+    total_credit = _max_weight_match_credit(expected, actual, embed_fn) if expected and actual else 0.0
+
+    if len(actual) == 0:
+        precision = 1.0 if len(expected) == 0 else 0.0
+    else:
+        precision = total_credit / len(actual)
+
+    if len(expected) == 0:
+        recall = 1.0 if len(actual) == 0 else 0.0
+    else:
+        recall = total_credit / len(expected)
+
+    f1 = 0.0 if precision + recall == 0 else 2 * (precision * recall) / (precision + recall)
+
+    return PrecisionRecallF1(
+        precision=round(precision, 4), recall=round(recall, 4), f1=round(f1, 4)
+    )
+
+
+def candidate_recall(
+    expected: list[Triple], actual: list[Triple], embed_fn: Optional[EmbedFn] = None
+) -> float:
+    """
+    Fraction of GT subject/object labels present among any extracted candidate (§3.1).
+
+    Pools every subject and object label mentioned across the GT triples and
+    checks each one against the pool of subject/object labels appearing
+    anywhere in the actual triples (any match tier > 0 counts) — irrespective
+    of whether they were ever paired into a relation. Isolates coverage
+    failures from relation-derivation and labeling failures.
+
+    Note: the pipeline does not currently expose a candidate list distinct
+    from its final triples, so "candidate" here means "appeared as a
+    subject/object of some extracted triple". If/when a true pre-matching
+    candidate list becomes available, wire it in here without changing the
+    scoring below.
+    """
+    gt_labels = {label for subj, _pred, obj in expected for label in (subj, obj)}
+    if not gt_labels:
+        return 1.0
+
+    candidate_labels = [label for subj, _pred, obj in actual for label in (subj, obj)]
+    if not candidate_labels:
+        return 0.0
+
+    matched = sum(
+        1
+        for gt_label in gt_labels
+        if any(label_match_tier(gt_label, candidate, embed_fn) > 0 for candidate in candidate_labels)
+    )
+    return round(matched / len(gt_labels), 4)
+
+
+def predicate_recall(
+    expected: list[Triple], actual: list[Triple], embed_fn: Optional[EmbedFn] = None
+) -> float:
+    """
+    Fraction of GT (subject, object) pairs for which some relation was derived (§3.1).
+
+    For each GT triple, checks whether any actual triple pairs matching
+    subject and object labels (any match tier > 0, in the same direction),
+    regardless of predicate. Isolates relation-derivation failures from
+    predicate-labeling failures — a pair can count here even if every
+    candidate predicate for it is wrong.
+    """
+    if not expected:
+        return 1.0
+    if not actual:
+        return 0.0
+
+    matched = sum(
+        1
+        for subj, _pred, obj in expected
+        if any(
+            label_match_tier(subj, a_subj, embed_fn) > 0 and label_match_tier(obj, a_obj, embed_fn) > 0
+            for a_subj, _a_pred, a_obj in actual
+        )
+    )
+    return round(matched / len(expected), 4)
+
+
+def label_accuracy(
+    expected: list[Triple], actual: list[Triple], embed_fn: Optional[EmbedFn] = None
+) -> dict[str, float]:
+    """
+    Of the GT pairs for which some relation was derived, how many labels matched (§3.1).
+
+    Restricts to the same "derived pair" population as `predicate_recall`
+    (some actual triple connects matching subject/object labels, regardless of
+    predicate), then reports what fraction of those pairs have exactly the GT
+    subject/object labels ("strict") versus only a lemma/stem-normalized or
+    embedding-close match ("soft", tier >= 0.9). A wide strict/soft gap
+    isolates a label-normalization problem rather than an extraction problem.
+
+    Returns:
+        Dict with "strict", "soft" (both in [0, 1]) and "derived_count" (the
+        denominator). When no pair was derived, strict/soft both default to
+        1.0 (vacuously accurate — there is nothing to be wrong about) and
+        derived_count is 0.
+    """
+    derived_tiers: list[float] = []
+    for subj, _pred, obj in expected:
+        candidates = [
+            (a_subj, a_obj)
+            for a_subj, _a_pred, a_obj in actual
+            if label_match_tier(subj, a_subj, embed_fn) > 0 and label_match_tier(obj, a_obj, embed_fn) > 0
+        ]
+        if not candidates:
+            continue
+        best_tier = max(
+            min(label_match_tier(subj, a_subj, embed_fn), label_match_tier(obj, a_obj, embed_fn))
+            for a_subj, a_obj in candidates
+        )
+        derived_tiers.append(best_tier)
+
+    if not derived_tiers:
+        return {"strict": 1.0, "soft": 1.0, "derived_count": 0}
+
+    strict = sum(1 for tier in derived_tiers if tier >= _TIER_EXACT) / len(derived_tiers)
+    soft = sum(1 for tier in derived_tiers if tier >= _TIER_NORMALIZED) / len(derived_tiers)
+    return {
+        "strict": round(strict, 4),
+        "soft": round(soft, 4),
+        "derived_count": len(derived_tiers),
+    }

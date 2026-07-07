@@ -1,0 +1,101 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "collaborates_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "mit_researchers",
+          "kind": "individual"
+        },
+        "confidence": 0.88
+      },
+      {
+        "subject": {
+          "label": "mit_researchers",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "studies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "byzantine_fault_tolerance",
+          "kind": "individual"
+        },
+        "confidence": 0.86
+      },
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "collaborates_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "confidence": 0.85
+      },
+      {
+        "subject": {
+          "label": "mit_researchers",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "collaborates_with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "aws",
+          "kind": "individual"
+        },
+        "confidence": 0.84
+      },
+      {
+        "subject": {
+          "label": "consensus_protocol",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "improves",
+          "kind": "property"
+        },
+        "object": {
+          "label": "distributed_system_reliability",
+          "kind": "individual"
+        },
+        "confidence": 0.87
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "john_doe",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "works_alone_on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "consensus_protocol",
+          "kind": "individual"
+        },
+        "note": "The study was NOT conducted by John Doe alone \u2014 it was a joint effort with MIT researchers and AWS."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

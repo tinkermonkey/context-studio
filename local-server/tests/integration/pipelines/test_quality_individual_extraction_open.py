@@ -12,6 +12,12 @@ hand-labeled triples (snake_case individuals + canonical predicate forms +
 fused object phrases) needs llm disambiguation (cassettes) and closed-loop
 tuning. This test pins the baseline and proves the open pipeline assembles the
 correct contract; the floor itself is driven by Phase 6.
+
+Also emits the Karpathy-loop measurement-layer artifacts (§3 of
+documentation/karpathy_loop_design.md): strict + soft P/R/F1 and coverage
+diagnostics per scenario, split by the fixed dev/holdout assignment, plus a
+machine-readable error report (JSON + markdown digest) under
+`local-server/experiments/reports/`.
 """
 
 import os
@@ -24,6 +30,8 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
+from functools import lru_cache
+from pathlib import Path
 from uuid import uuid4
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -36,13 +44,30 @@ from domain.pipelines.individual_extraction.open_orchestrator import (
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
 from domain.ontology.ports import SchemaMatch
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from tests.integration.pipelines._harness.dataset_split import split_for
+from tests.integration.pipelines._harness.error_report import (
+    ScenarioReport,
+    build_missed_triples,
+    generate_run_id,
+    write_report,
+)
+from tests.integration.pipelines._harness.metrics import (
+    candidate_recall,
+    label_accuracy,
+    predicate_recall,
+    soft_precision_recall_f1,
+)
 from tests.integration.pipelines.test_quality_individual_extraction import (
     QUALITY_SCENARIOS,
     compute_quality_metrics,
+    extract_triple_key,
 )
 
 # Honest rule-mode baseline (well below the production floors).
 RULE_MODE_MEAN_RECALL_FLOOR = 0.05
+
+# local-server/experiments/reports/ — see local-server/experiments/README.md
+_EXPERIMENTS_REPORTS_DIR = Path(__file__).resolve().parents[3] / "experiments" / "reports"
 
 
 @pytest.fixture(scope="module")
@@ -62,6 +87,26 @@ def open_orchestrator():
         schema_index=None,
         config=get_open_v1_config(),  # rule mode, no grounding
     )
+
+
+@pytest.fixture(scope="module")
+def embed_fn(open_orchestrator):
+    """
+    Cached label -> embedding vector function for the soft-metric tiers.
+
+    Wraps the same SentenceTransformerEmbedding used for schema grounding.
+    Memoized per label string: the diagnostics compare many (subject, object)
+    pairs across a scenario's triples, and most labels repeat across those
+    comparisons, so caching avoids re-encoding the same short string dozens
+    of times per scenario.
+    """
+    embedding = SentenceTransformerEmbedding()
+
+    @lru_cache(maxsize=None)
+    def _cached(label: str) -> tuple:
+        return tuple(embedding.embed(label))
+
+    return lambda label: list(_cached(label))
 
 
 async def _run(orchestrator, scenario):
@@ -122,6 +167,96 @@ async def test_open_v1_rule_mode_baseline(open_orchestrator):
         f"open_v1 rule-mode mean recall {mean_recall:.3f} fell below baseline "
         f"{RULE_MODE_MEAN_RECALL_FLOOR}"
     )
+
+
+@pytest.mark.nlp
+@pytest.mark.asyncio
+async def test_open_v1_soft_metrics_and_error_report(open_orchestrator, embed_fn):
+    """
+    Measure open_v1 rule-mode with the full Karpathy-loop measurement layer (§3).
+
+    For every scenario in the fixed dev/holdout split: strict + soft P/R/F1
+    side by side, plus candidate_recall/predicate_recall/label_accuracy
+    diagnostics. Every GT triple the strict metric misses is classified into a
+    failure stage. Writes the JSON error report + markdown digest to
+    local-server/experiments/reports/<run_id>.{json,md} — the primary input to
+    Loop C experimenter agents (§4.3).
+    """
+    scenario_reports: list[ScenarioReport] = []
+
+    for scenario in QUALITY_SCENARIOS:
+        result = await _run(open_orchestrator, scenario)
+        fixture_input = load_fixture("individual_extraction", scenario)
+        expected_output = load_expected_output("individual_extraction", scenario)
+        expected_triples_raw = expected_output.get("result", {}).get("triples", [])
+        actual_triples_raw = result.get("triples", [])
+
+        expected_keys = [extract_triple_key(t) for t in expected_triples_raw]
+        actual_keys = [extract_triple_key(t) for t in actual_triples_raw]
+
+        strict = compute_quality_metrics(expected_triples_raw, actual_triples_raw)
+        soft = soft_precision_recall_f1(expected_keys, actual_keys, embed_fn)
+
+        scenario_reports.append(
+            ScenarioReport(
+                scenario=scenario,
+                split=split_for(scenario),
+                strict={
+                    "precision": strict["precision"],
+                    "recall": strict["recall"],
+                    "f1": strict["f1"],
+                },
+                soft={"precision": soft.precision, "recall": soft.recall, "f1": soft.f1},
+                candidate_recall=candidate_recall(expected_keys, actual_keys, embed_fn),
+                predicate_recall=predicate_recall(expected_keys, actual_keys, embed_fn),
+                label_accuracy=label_accuracy(expected_keys, actual_keys, embed_fn),
+                missed_triples=build_missed_triples(
+                    fixture_input.get("text", ""), expected_keys, actual_keys, embed_fn
+                ),
+            )
+        )
+
+    dev_reports = [r for r in scenario_reports if r.split == "dev"]
+    holdout_reports = [r for r in scenario_reports if r.split == "holdout"]
+
+    def _mean(values: list[float]) -> float:
+        return sum(values) / len(values) if values else 0.0
+
+    print("\n── open_v1 rule-mode: strict vs soft, diagnostics (§3.1) ──")
+    print(
+        f"{'scenario':<28} {'split':<8} strict-F1  soft-F1  cand_rec  pred_rec  "
+        "label_acc(strict/soft)"
+    )
+    for r in scenario_reports:
+        print(
+            f"{r.scenario:<28} {r.split:<8} {r.strict['f1']:>8.3f}  {r.soft['f1']:>6.3f}  "
+            f"{r.candidate_recall:>8.3f}  {r.predicate_recall:>8.3f}  "
+            f"{r.label_accuracy['strict']:.3f}/{r.label_accuracy['soft']:.3f}"
+        )
+    print(
+        f"{'DEV MEAN':<28} {'':<8} "
+        f"{_mean([r.strict['f1'] for r in dev_reports]):>8.3f}  "
+        f"{_mean([r.soft['f1'] for r in dev_reports]):>6.3f}"
+    )
+    print(
+        f"{'HOLDOUT MEAN':<28} {'':<8} "
+        f"{_mean([r.strict['f1'] for r in holdout_reports]):>8.3f}  "
+        f"{_mean([r.soft['f1'] for r in holdout_reports]):>6.3f}"
+    )
+
+    run_id = generate_run_id()
+    json_path, markdown_path = write_report(run_id, scenario_reports, _EXPERIMENTS_REPORTS_DIR)
+    print(f"\nerror report: {json_path}")
+    print(f"digest:       {markdown_path}")
+
+    assert json_path.exists()
+    assert markdown_path.exists()
+    # Soft-F1 is a hill-climbing signal, not a floor — but it must never score
+    # below strict-F1, since every strict match is also a soft match (tier 1.0).
+    for r in scenario_reports:
+        assert r.soft["f1"] >= r.strict["f1"] - 1e-9, (
+            f"{r.scenario}: soft F1 {r.soft['f1']} fell below strict F1 {r.strict['f1']}"
+        )
 
 
 # ---------------------------------------------------------------------------
