@@ -10,6 +10,9 @@ deliberately outside the dev/holdout split -- see that constant's docstring.
 The `sme_waypoint_*` scenarios (Wave 2, §6) are also graded against the
 imported DR spec, but -- unlike Wave 1 -- *are* folded into the dev/holdout
 split, per the Phase 6 acceptance criteria; see `WAVE2_SME_SCENARIOS` below.
+The `sme_waypoint_tech_*` scenarios (Wave 3, §7) follow the same pattern --
+graded against the DR spec and folded into the dev/holdout split -- per the
+Phase 7 acceptance criteria; see `WAVE3_SME_SCENARIOS` below.
 
 `SCENARIO_DISPOSITION` records the explicit, one-time decision made for each
 of the 18 legacy scenarios when the DR ontology import happened (#1109 Phase
@@ -54,7 +57,13 @@ Legacy total: 13 dev / 5 holdout (18 total), close to the original 70/30 ratio.
 A third domain was added in Wave 2 (#1109 Phase 6): 4 SME-authored
 `sme_waypoint_*` scenarios (`WAVE2_SME_SCENARIOS`), stratified into dev/
 holdout the same way -- first 3 alphabetically -> dev, last 1 -> holdout.
-Grand total: 16 dev / 6 holdout (22 total).
+
+A fourth domain was added in Wave 3 (#1109 Phase 7): 4 SME-authored,
+lower-layer/technical `sme_waypoint_tech_*` scenarios
+(`WAVE3_SME_SCENARIOS`), stratified into dev/holdout the same way -- first 3
+alphabetically -> dev, last 1 -> holdout.
+
+Grand total: 19 dev / 7 holdout (26 total).
 """
 
 from enum import Enum
@@ -111,15 +120,35 @@ WAVE2_SME_HOLDOUT_SCENARIOS: list[str] = [
 
 WAVE2_SME_SCENARIOS: list[str] = WAVE2_SME_DEV_SCENARIOS + WAVE2_SME_HOLDOUT_SCENARIOS
 
-# Full corpus: legacy domains (placeholder ontology) + Wave 2 SME domain (DR
-# spec ontology). Both dev and holdout are still each populated from every
-# domain currently in the corpus.
+# Wave 3 SME-authored domain (documentation/karpathy_loop_dr_ontology_design.md
+# §7, #1109 Phase 7): lower-layer/technical (technology/data-store/data-model/
+# api/apm) engineering-note prose, authored and adjudicated directly against
+# the Wave 0 DR spec import by the domain SME -- no LLM-drafted intermediate
+# ground truth, same discipline as Wave 2. These ARE folded into the fixed
+# dev/holdout split per the standard split rules (see module docstring).
+WAVE3_SME_DEV_SCENARIOS: list[str] = [
+    "sme_waypoint_tech_api_rate_limiting",
+    "sme_waypoint_tech_database_selection",
+    "sme_waypoint_tech_observability_alerting",
+]
+
+WAVE3_SME_HOLDOUT_SCENARIOS: list[str] = [
+    "sme_waypoint_tech_schema_contracts",
+]
+
+WAVE3_SME_SCENARIOS: list[str] = WAVE3_SME_DEV_SCENARIOS + WAVE3_SME_HOLDOUT_SCENARIOS
+
+# Full corpus: legacy domains (placeholder ontology) + Wave 2/3 SME domains
+# (DR spec ontology). Both dev and holdout are still each populated from
+# every domain currently in the corpus.
 INDIVIDUAL_EXTRACTION_DEV_SCENARIOS: list[str] = (
-    LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS + WAVE2_SME_DEV_SCENARIOS
+    LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS + WAVE2_SME_DEV_SCENARIOS + WAVE3_SME_DEV_SCENARIOS
 )
 
 INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS: list[str] = (
-    LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS + WAVE2_SME_HOLDOUT_SCENARIOS
+    LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS
+    + WAVE2_SME_HOLDOUT_SCENARIOS
+    + WAVE3_SME_HOLDOUT_SCENARIOS
 )
 
 # Canonical ordering: dev scenarios first, then holdout. Equivalent to the
@@ -184,6 +213,12 @@ SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in DR_B
 # ARE part of INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split (see
 # WAVE2_SME_SCENARIOS's docstring above).
 SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE2_SME_SCENARIOS})
+
+# Wave 3 SME-authored scenarios (§7, #1109 Phase 7): graded against the Wave 0
+# DR spec import, never the placeholder. Unlike DR_BOOTSTRAP_SCENARIOS, these
+# ARE part of INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split (see
+# WAVE3_SME_SCENARIOS's docstring above).
+SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE3_SME_SCENARIOS})
 
 
 def ontology_context_for(scenario: str) -> OntologyContext:

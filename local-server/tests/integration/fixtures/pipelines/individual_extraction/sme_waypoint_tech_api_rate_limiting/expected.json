@@ -1,0 +1,341 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "api.operation",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Burst Rate Limit",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "api.ratelimit",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Edge Gateway Software",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.systemsoftware",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assignment Calls Must Fail Fast Rather Than Queue",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.constraint",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher API Key Scheme",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "api.securityscheme",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assignment Fan-Out Service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.technologyservice",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Trace Configuration",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.traceconfiguration",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Latency Histogram",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.metricinstrument",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Telemetry Pipeline Service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.technologyservice",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Observability Backend Exporter",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.exporterconfig",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Burst Rate Limit",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "governs",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Burst Rate Limit",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "uses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Edge Gateway Software",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Burst Rate Limit",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "satisfies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assignment Calls Must Fail Fast Rather Than Queue",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "uses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Dispatcher API Key Scheme",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "uses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assignment Fan-Out Service",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "references",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assign Job Trace Configuration",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Trace Configuration",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assign Job Latency Histogram",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Latency Histogram",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assign Job Operation",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Trace Configuration",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends-on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Telemetry Pipeline Service",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Latency Histogram",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "flows-to",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Observability Backend Exporter",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Observability Backend Exporter",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends-on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Telemetry Pipeline Service",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "Dispatcher Burst Rate Limit",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "governs",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Assignment Fan-Out Service",
+          "kind": "individual"
+        },
+        "note": "The text says the rate limit governs the Assign Job Operation only -- the fan-out service is something the operation uses, never something the rate limit itself governs."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

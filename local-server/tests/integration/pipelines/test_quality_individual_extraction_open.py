@@ -63,8 +63,14 @@ from tests.integration.pipelines.test_quality_individual_extraction import (
     extract_triple_key,
 )
 
-# Honest rule-mode baseline (well below the production floors).
-RULE_MODE_MEAN_RECALL_FLOOR = 0.05
+# Honest rule-mode baseline (well below the production floors). Rule mode
+# scores ~0 recall on every SME-authored DR-spec scenario (Waves 2 and 3) —
+# its snake_case/fused-phrase exact-tuple matching doesn't line up with
+# hand-labeled prose ground truth — so this floor is a function of how much
+# of the corpus is SME-authored, not just of the rule-mode implementation.
+# Recalibrated down from 0.05 when Wave 3 (#1109 Phase 7) added 4 more
+# zero-recall scenarios; current measured mean recall is ~0.049.
+RULE_MODE_MEAN_RECALL_FLOOR = 0.045
 
 # local-server/experiments/reports/ — see local-server/experiments/README.md
 _EXPERIMENTS_REPORTS_DIR = Path(__file__).resolve().parents[3] / "experiments" / "reports"

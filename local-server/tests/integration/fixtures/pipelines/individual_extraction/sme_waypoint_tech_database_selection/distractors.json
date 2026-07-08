@@ -1,0 +1,49 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Recent Job Events by Technician",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "uses",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Technician-and-Timestamp Compound Index",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "Job Event Store",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "uses",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Cold Storage Archival Service",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "DocumentDB Engine",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "is_a",
+        "kind": "property"
+      },
+      "object": {
+        "label": "technology.node",
+        "kind": "individual"
+      },
+      "confidence": 0.15
+    }
+  ]
+}

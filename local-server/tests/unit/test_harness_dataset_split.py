@@ -14,6 +14,8 @@ from tests.integration.pipelines._harness.dataset_split import (
     SCENARIO_ONTOLOGY,
     WAVE2_SME_HOLDOUT_SCENARIOS,
     WAVE2_SME_SCENARIOS,
+    WAVE3_SME_HOLDOUT_SCENARIOS,
+    WAVE3_SME_SCENARIOS,
     OntologyContext,
     ScenarioDisposition,
     disposition_for,
@@ -85,6 +87,30 @@ class TestWave2SmeScenarios:
         assert set(WAVE2_SME_SCENARIOS).isdisjoint(DR_BOOTSTRAP_SCENARIOS)
 
 
+class TestWave3SmeScenarios:
+    def test_wave3_scenarios_are_graded_against_dr_spec_not_placeholder(self):
+        for scenario in WAVE3_SME_SCENARIOS:
+            assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
+
+    def test_wave3_scenarios_are_included_in_the_dev_holdout_split(self):
+        # Same as Wave 2: Wave 3 scenarios ARE folded into the fixed
+        # dev/holdout split (design doc §7, #1109 Phase 7 acceptance
+        # criteria).
+        for scenario in WAVE3_SME_SCENARIOS:
+            assert scenario in INDIVIDUAL_EXTRACTION_SCENARIOS
+            split_for(scenario)  # raises if not assigned
+
+    def test_wave3_holdout_scenarios_land_in_holdout(self):
+        for scenario in WAVE3_SME_HOLDOUT_SCENARIOS:
+            assert split_for(scenario) == "holdout"
+
+    def test_wave3_scenarios_disjoint_from_bootstrap_scenarios(self):
+        assert set(WAVE3_SME_SCENARIOS).isdisjoint(DR_BOOTSTRAP_SCENARIOS)
+
+    def test_wave3_scenarios_disjoint_from_wave2_scenarios(self):
+        assert set(WAVE3_SME_SCENARIOS).isdisjoint(WAVE2_SME_SCENARIOS)
+
+
 class TestDrBootstrapScenarios:
     def test_bootstrap_scenarios_are_graded_against_dr_spec_not_placeholder(self):
         for scenario in DR_BOOTSTRAP_SCENARIOS:
@@ -123,6 +149,13 @@ class TestDispositionFor:
         # scenarios carrying a re-labeling/retirement/separate-context
         # decision, so disposition_for must raise for them too.
         for scenario in WAVE2_SME_SCENARIOS:
+            with pytest.raises(ValueError, match="no recorded legacy-corpus disposition"):
+                disposition_for(scenario)
+
+    def test_wave3_scenario_has_no_legacy_disposition(self):
+        # Same rationale as Wave 2 -- Wave 3 scenarios are new, DR-native
+        # ground truth, not legacy scenarios subject to a disposition.
+        for scenario in WAVE3_SME_SCENARIOS:
             with pytest.raises(ValueError, match="no recorded legacy-corpus disposition"):
                 disposition_for(scenario)
 

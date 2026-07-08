@@ -1,0 +1,355 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.database",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Field Ops Compute Cluster",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.node",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "DocumentDB Engine",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.systemsoftware",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.collection",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician ID Field",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Event Timestamp Field",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Recent Job Events by Technician",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.accesspattern",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician-and-Timestamp Compound Index",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.index",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Ninety-Day Job Event Retention Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.retentionpolicy",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Cold Storage Archival Service",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.technologyservice",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Activity Queries Must Return Within Two Hundred Milliseconds at Peak Dispatch Load",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.requirement",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends-on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Field Ops Compute Cluster",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends-on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "DocumentDB Engine",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "composes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "composes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Technician ID Field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "composes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Event Timestamp Field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Recent Job Events by Technician",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "accesses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician-and-Timestamp Compound Index",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "optimizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Recent Job Events by Technician",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician-and-Timestamp Compound Index",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Technician ID Field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician-and-Timestamp Compound Index",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Event Timestamp Field",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Ninety-Day Job Event Retention Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "governs",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Events Collection",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Ninety-Day Job Event Retention Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "uses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Cold Storage Archival Service",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "satisfies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Technician Activity Queries Must Return Within Two Hundred Milliseconds at Peak Dispatch Load",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      }
+    ],
+    "excluded": []
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}
