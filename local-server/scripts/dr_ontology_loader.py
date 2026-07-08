@@ -139,7 +139,7 @@ def _stripped_relationship_identifier(record: RelationshipSchemaRecord) -> str:
     """
     Layer-qualified type names already encode their layer for compound names
     (e.g. 'applicationcollaboration'), so the leading '{layer}.' segment of
-    each side is redundant and can be dropped (ADR-8, step 1).
+    each side is redundant and can be dropped.
     """
     source_type = record.source_spec_node_id.split(".", 1)[1]
     destination_type = record.destination_spec_node_id.split(".", 1)[1]
@@ -148,7 +148,7 @@ def _stripped_relationship_identifier(record: RelationshipSchemaRecord) -> str:
 
 
 def _hashed_relationship_identifier(record: RelationshipSchemaRecord) -> str:
-    """Deterministic fallback: 59-char truncation + 4-hex-char SHA-256 suffix (ADR-8, step 2)."""
+    """Deterministic fallback: 59-char truncation + 4-hex-char SHA-256 suffix."""
     stripped = _stripped_relationship_identifier(record)
     digest = hashlib.sha256(record.full_identifier.encode("utf-8")).hexdigest()[:4]
     return f"{stripped[:_TRUNCATED_LENGTH]}_{digest}"

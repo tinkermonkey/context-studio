@@ -210,7 +210,7 @@ class TestCompressRelationshipIdentifiers:
         result = compressed[record.full_identifier]
 
         assert len(result) <= 64
-        # 4-hex-char suffix after an underscore, per ADR-8 step 2.
+        # 4-hex-char suffix after an underscore.
         suffix = result.rsplit("_", 1)[1]
         assert len(suffix) == 4
         assert all(c in "0123456789abcdef" for c in suffix)
