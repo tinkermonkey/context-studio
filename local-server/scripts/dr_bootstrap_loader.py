@@ -54,12 +54,23 @@ def _model_dir(viewer_dir: Path) -> Path:
     return viewer_dir / MODEL_SUBDIR
 
 
+def _require_model_dir(viewer_dir: Path) -> Path:
+    model_dir = _model_dir(viewer_dir)
+    if not model_dir.is_dir():
+        raise FileNotFoundError(
+            f"Viewer model directory not found: {model_dir} — check --viewer-dir points at a "
+            "documentation_robotics_viewer checkout with a documentation-robotics/model/ "
+            "directory"
+        )
+    return model_dir
+
+
 def iter_elements(viewer_dir: Path) -> list[dict[str, Any]]:
     """
     Load every element from every layer YAML file under the viewer's model
     directory (excluding `manifest.yaml` and `relationships.yaml`).
     """
-    model_dir = _model_dir(viewer_dir)
+    model_dir = _require_model_dir(viewer_dir)
     elements: list[dict[str, Any]] = []
     for yaml_path in sorted(model_dir.rglob("*.yaml")):
         if yaml_path.name in _EXCLUDED_MODEL_FILES:
@@ -71,8 +82,15 @@ def iter_elements(viewer_dir: Path) -> list[dict[str, Any]]:
 
 
 def load_relationships(viewer_dir: Path) -> list[dict[str, Any]]:
-    """Load the flat relationship list from `relationships.yaml`."""
-    relationships_path = _model_dir(viewer_dir) / "relationships.yaml"
+    """
+    Load the flat relationship list from `relationships.yaml`.
+
+    A missing `documentation-robotics/model/` directory means `viewer_dir` is
+    misconfigured and raises. A missing `relationships.yaml` file within an
+    otherwise-present model directory is treated as a legitimate model with
+    no relationships and returns an empty list.
+    """
+    relationships_path = _require_model_dir(viewer_dir) / "relationships.yaml"
     if not relationships_path.is_file():
         return []
     return yaml.safe_load(relationships_path.read_text()) or []

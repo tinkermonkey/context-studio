@@ -12,6 +12,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pytest
 
 from scripts.dr_ontology_loader import (
     NodeSchemaRecord,
@@ -131,6 +132,10 @@ class TestIterNodeSchemas:
 
         assert len(records) == 1
 
+    def test_missing_nodes_dir_raises_instead_of_yielding_nothing(self, tmp_path):
+        with pytest.raises(FileNotFoundError, match="schemas/nodes"):
+            list(iter_node_schemas(tmp_path))
+
 
 class TestIterRelationshipSchemas:
     def test_yields_one_record_per_relationship_schema(self, tmp_path):
@@ -156,6 +161,10 @@ class TestIterRelationshipSchemas:
             record.full_identifier
             == "motivation.stakeholder.associated-with.motivation.requirement"
         )
+
+    def test_missing_relationships_dir_raises_instead_of_yielding_nothing(self, tmp_path):
+        with pytest.raises(FileNotFoundError, match="schemas/relationships"):
+            list(iter_relationship_schemas(tmp_path))
 
 
 class TestCompressRelationshipIdentifiers:

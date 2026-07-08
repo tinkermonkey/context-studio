@@ -91,6 +91,11 @@ def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
 def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
     """Yield one record per node schema in schemas/nodes/ (base schemas excluded)."""
     nodes_dir = spec_dir / "schemas" / "nodes"
+    if not nodes_dir.is_dir():
+        raise FileNotFoundError(
+            f"DR node schema directory not found: {nodes_dir} — check --spec-dir points at a "
+            "documentation_robotics spec checkout with a schemas/nodes/ directory"
+        )
     for path in sorted(nodes_dir.glob("*/*.node.schema.json")):
         data = json.loads(path.read_text())
         props = data["properties"]
@@ -105,6 +110,12 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
 def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaRecord]:
     """Yield one record per relationship schema in schemas/relationships/ (base excluded)."""
     relationships_dir = spec_dir / "schemas" / "relationships"
+    if not relationships_dir.is_dir():
+        raise FileNotFoundError(
+            f"DR relationship schema directory not found: {relationships_dir} — check "
+            "--spec-dir points at a documentation_robotics spec checkout with a "
+            "schemas/relationships/ directory"
+        )
     for path in sorted(relationships_dir.glob("*/*.relationship.schema.json")):
         data = json.loads(path.read_text())
         props = data["properties"]

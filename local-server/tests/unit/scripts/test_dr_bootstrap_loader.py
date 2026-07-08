@@ -13,6 +13,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pytest
 import yaml
 
 from scripts.dr_bootstrap_loader import (
@@ -114,6 +115,16 @@ class TestIterElementsAndLoadRelationships:
     def test_load_relationships_missing_file_returns_empty(self, tmp_path):
         (tmp_path / "documentation-robotics" / "model").mkdir(parents=True)
         assert load_relationships(tmp_path) == []
+
+    def test_iter_elements_missing_model_dir_raises_instead_of_returning_nothing(self, tmp_path):
+        with pytest.raises(FileNotFoundError, match="documentation-robotics"):
+            iter_elements(tmp_path)
+
+    def test_load_relationships_missing_model_dir_raises_instead_of_returning_empty(
+        self, tmp_path
+    ):
+        with pytest.raises(FileNotFoundError, match="documentation-robotics"):
+            load_relationships(tmp_path)
 
 
 class TestBuildScenarios:
