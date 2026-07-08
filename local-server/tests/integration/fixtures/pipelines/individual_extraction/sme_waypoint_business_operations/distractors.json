@@ -1,0 +1,34 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Field Technician",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "performs",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Work Order Fulfillment",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "Regional Operations Manager",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "serves",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Dispatcher",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

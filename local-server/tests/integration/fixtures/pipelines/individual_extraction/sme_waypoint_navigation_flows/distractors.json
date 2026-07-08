@@ -1,0 +1,34 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Authenticated Technician Guard",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "protects",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Complete Job Route",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "Technician Route",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "maps-to",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Job Detail",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}
