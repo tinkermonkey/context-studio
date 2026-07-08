@@ -1054,6 +1054,30 @@ class SQLiteOntologyRepository:
 
             return q.count()
 
+    def count_property_definitions_referencing_class(self, class_id: str) -> int:
+        """
+        Count property definitions that reference a class as domain or range.
+
+        Args:
+            class_id: The ID of the class to check for references
+
+        Returns:
+            Count of property definitions with domain_class_id or range_class_id
+            equal to class_id
+        """
+        with self.session_factory() as session:
+            return (
+                session.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
+                    or_(
+                        OntologyEntity.domain_class_id == class_id,
+                        OntologyEntity.range_class_id == class_id,
+                    ),
+                )
+                .count()
+            )
+
     def get_by_identifier(self, identifier: str) -> Optional[Taxonomy | ConceptScheme | Class]:
         """
         Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique slug.

@@ -343,6 +343,13 @@ class FakeOntologyRepository:
             results = [p for p in results if query_lower in p.title.lower()]
         return len(results)
 
+    def count_property_definitions_referencing_class(self, class_id: str) -> int:
+        return sum(
+            1
+            for p in self._property_definitions.values()
+            if p.domain_class_id == class_id or p.range_class_id == class_id
+        )
+
     # Individual operations
 
     def get_individual(self, individual_id: str) -> Individual | None:

@@ -460,6 +460,19 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_property_definitions_referencing_class(self, class_id: str) -> int:
+        """
+        Count property definitions that reference a class as domain or range.
+
+        Args:
+            class_id: The ID of the class to check for references
+
+        Returns:
+            Count of property definitions with domain_class_id or range_class_id
+            equal to class_id
+        """
+        ...
+
     # Individual operations (deferred — all raise NotImplementedError for now)
     def get_individual(self, individual_id: str) -> Individual | None:
         """

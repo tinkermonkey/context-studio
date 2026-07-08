@@ -1100,15 +1100,13 @@ class OntologyService:
         # connection.py), so the declared ondelete="SET NULL" never fires —
         # deleting without this check would leave dangling domain_class_id/
         # range_class_id references instead.
-        referencing_props = [
-            prop
-            for prop in self._repository.list_property_definitions(limit=None)
-            if prop.domain_class_id == class_id or prop.range_class_id == class_id
-        ]
-        if referencing_props:
+        referencing_count = self._repository.count_property_definitions_referencing_class(
+            class_id
+        )
+        if referencing_count:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it is referenced as domain/range by "
-                f"{len(referencing_props)} property definition(s)"
+                f"{referencing_count} property definition(s)"
             )
 
         # Find and delete all relationships where this class is source or target
