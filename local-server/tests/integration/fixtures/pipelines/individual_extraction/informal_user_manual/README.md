@@ -39,7 +39,7 @@ phrasing never mentions).
 
 ## Findings
 
-Of the five wave-4 scenarios' genres, this one -- a step-by-step guide --
+Of the four wave-4 scenarios' genres, this one -- a step-by-step guide --
 came closest to the SME-authored register: instructions naturally name the
 screens and buttons a user taps, in order, so `is_a` and `aggregates`/
 `navigates-to` triples were extractable almost as cleanly as Wave 2's UX
