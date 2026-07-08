@@ -471,7 +471,9 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
         )
     lines.append("")
 
-    lines.append("## Wave 4 informal-prose diagnostics (always reported, never gates accept/reject)")
+    lines.append(
+        "## Wave 4 informal-prose diagnostics (always reported, never gates accept/reject)"
+    )
     lines.append("")
     lines.append(
         f"Generalization check only over {len(WAVE4_INFORMAL_SCENARIOS)} scenario(s) -- "

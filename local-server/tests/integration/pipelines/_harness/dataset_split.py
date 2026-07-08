@@ -254,7 +254,9 @@ WAVE4_INFORMAL_SCENARIOS: list[str] = [
     "informal_support_article",
 ]
 
-SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE4_INFORMAL_SCENARIOS})
+SCENARIO_ONTOLOGY.update(
+    {scenario: OntologyContext.DR_SPEC for scenario in WAVE4_INFORMAL_SCENARIOS}
+)
 
 
 def ontology_context_for(scenario: str) -> OntologyContext:
