@@ -1,0 +1,22 @@
+{
+  "triples": [
+    {
+      "subject": { "label": "90-Day Retention Policy", "kind": "individual" },
+      "predicate": { "label": "governs", "kind": "property" },
+      "object": { "label": "Job Event Store", "kind": "individual" },
+      "confidence": 0.2
+    },
+    {
+      "subject": { "label": "cold storage", "kind": "individual" },
+      "predicate": { "label": "is_a", "kind": "property" },
+      "object": { "label": "data-store.database", "kind": "individual" },
+      "confidence": 0.15
+    },
+    {
+      "subject": { "label": "regional operations manager", "kind": "individual" },
+      "predicate": { "label": "is_a", "kind": "property" },
+      "object": { "label": "business.businessactor", "kind": "individual" },
+      "confidence": 0.15
+    }
+  ]
+}

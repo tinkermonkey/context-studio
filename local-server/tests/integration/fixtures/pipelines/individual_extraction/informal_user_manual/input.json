@@ -1,0 +1,6 @@
+{
+  "text": "Welcome to Waypoint! This guide will get you moving in under five minutes.\n\nOpen the Waypoint app on your phone and sign in with your company email and password. You'll land on Today's Jobs, your daily list of every stop assigned to you, always sorted so the next job is at the top. Today's Jobs has a View Job button next to each entry -- tap View Job and it takes you straight to Job Detail, where you'll find the customer's address, the gate code, and everything that's happened on that account before.\n\nWhen you're standing in front of the customer at the end of a visit, Job Detail has a green Complete Job button. Get the signature, hit the button, and you're done -- no need to call dispatch to confirm anything.\n\nLost signal out in the field? Don't panic. Today's Jobs requires a Sync Status Banner across the top of the screen, so you'll always know if your changes haven't uploaded yet. Everything you do offline is saved on your phone and syncs automatically the moment you're back in range.\n\nOne more thing: Job Detail was built specifically for Field Technicians. Dispatchers and managers have their own tools -- this screen exists for the person standing at the customer's door.",
+  "ontology_id": "dr_spec",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

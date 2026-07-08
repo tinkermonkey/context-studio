@@ -1,0 +1,16 @@
+{
+  "triples": [
+    {
+      "subject": { "label": "Job Event Store", "kind": "individual" },
+      "predicate": { "label": "satisfies", "kind": "property" },
+      "object": { "label": "Customer Trust", "kind": "individual" },
+      "confidence": 0.2
+    },
+    {
+      "subject": { "label": "missed appointments cut in half", "kind": "individual" },
+      "predicate": { "label": "is_a", "kind": "property" },
+      "object": { "label": "motivation.outcome", "kind": "individual" },
+      "confidence": 0.15
+    }
+  ]
+}

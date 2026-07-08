@@ -1,0 +1,22 @@
+{
+  "triples": [
+    {
+      "subject": { "label": "Complete Job", "kind": "individual" },
+      "predicate": { "label": "navigates-to", "kind": "property" },
+      "object": { "label": "Job Detail", "kind": "individual" },
+      "confidence": 0.2
+    },
+    {
+      "subject": { "label": "Sync Status Banner", "kind": "individual" },
+      "predicate": { "label": "governs", "kind": "property" },
+      "object": { "label": "Today's Jobs", "kind": "individual" },
+      "confidence": 0.2
+    },
+    {
+      "subject": { "label": "Waypoint App", "kind": "individual" },
+      "predicate": { "label": "aggregates", "kind": "property" },
+      "object": { "label": "Today's Jobs", "kind": "individual" },
+      "confidence": 0.15
+    }
+  ]
+}

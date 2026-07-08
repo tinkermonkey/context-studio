@@ -16,6 +16,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     WAVE2_SME_SCENARIOS,
     WAVE3_SME_HOLDOUT_SCENARIOS,
     WAVE3_SME_SCENARIOS,
+    WAVE4_INFORMAL_SCENARIOS,
     OntologyContext,
     ScenarioDisposition,
     disposition_for,
@@ -53,8 +54,10 @@ class TestOntologyContextFor:
             ontology_context_for("not_a_real_scenario")
 
     def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
-        assert set(SCENARIO_ONTOLOGY.keys()) == set(INDIVIDUAL_EXTRACTION_SCENARIOS) | set(
-            DR_BOOTSTRAP_SCENARIOS
+        assert set(SCENARIO_ONTOLOGY.keys()) == (
+            set(INDIVIDUAL_EXTRACTION_SCENARIOS)
+            | set(DR_BOOTSTRAP_SCENARIOS)
+            | set(WAVE4_INFORMAL_SCENARIOS)
         )
 
     def test_all_18_legacy_scenarios_currently_placeholder(self):
@@ -125,6 +128,29 @@ class TestDrBootstrapScenarios:
                 split_for(scenario)
 
 
+class TestWave4InformalScenarios:
+    def test_wave4_scenarios_are_graded_against_dr_spec_not_placeholder(self):
+        for scenario in WAVE4_INFORMAL_SCENARIOS:
+            assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
+
+    def test_wave4_scenarios_are_excluded_from_the_dev_holdout_split(self):
+        # Wave 4 scenarios are a distinct diagnostic group, like Wave 1's
+        # bootstrap scenarios, not folded into the fixed dev/holdout split
+        # (design doc §8, #1109 Phase 8 acceptance criteria: Wave 4 must
+        # never gate a Wave 0-3 accept/reject decision).
+        for scenario in WAVE4_INFORMAL_SCENARIOS:
+            assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
+            with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
+                split_for(scenario)
+
+    def test_wave4_scenarios_disjoint_from_bootstrap_scenarios(self):
+        assert set(WAVE4_INFORMAL_SCENARIOS).isdisjoint(DR_BOOTSTRAP_SCENARIOS)
+
+    def test_wave4_scenarios_disjoint_from_wave2_and_wave3_scenarios(self):
+        assert set(WAVE4_INFORMAL_SCENARIOS).isdisjoint(WAVE2_SME_SCENARIOS)
+        assert set(WAVE4_INFORMAL_SCENARIOS).isdisjoint(WAVE3_SME_SCENARIOS)
+
+
 class TestDispositionFor:
     def test_every_legacy_scenario_has_a_recorded_disposition(self):
         for scenario in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS:
@@ -156,6 +182,13 @@ class TestDispositionFor:
         # Same rationale as Wave 2 -- Wave 3 scenarios are new, DR-native
         # ground truth, not legacy scenarios subject to a disposition.
         for scenario in WAVE3_SME_SCENARIOS:
+            with pytest.raises(ValueError, match="no recorded legacy-corpus disposition"):
+                disposition_for(scenario)
+
+    def test_wave4_scenario_has_no_legacy_disposition(self):
+        # Same rationale as Wave 2/3 -- Wave 4 scenarios are new, DR-native
+        # ground truth, not legacy scenarios subject to a disposition.
+        for scenario in WAVE4_INFORMAL_SCENARIOS:
             with pytest.raises(ValueError, match="no recorded legacy-corpus disposition"):
                 disposition_for(scenario)
 

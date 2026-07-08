@@ -68,6 +68,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
+    WAVE4_INFORMAL_SCENARIOS,
     split_for,
 )
 from tests.integration.pipelines._harness.error_report import (
@@ -294,6 +295,29 @@ async def _build_bootstrap_reports(
     ]
 
 
+async def _build_wave4_reports(
+    variant: Variant, config: dict[str, Any], embed_fn
+) -> list[ScenarioReport]:
+    """
+    Evaluate `variant` under `config` on the Wave 4 informal/incidental-prose scenarios.
+
+    Another distinct, always-reported diagnostic group
+    (karpathy_loop_dr_ontology_design.md §8, #1109 Phase 8): graded against
+    the imported DR spec, deliberately excluded from
+    `INDIVIDUAL_EXTRACTION_SCENARIOS` (see `dataset_split.py`), so
+    `split_for()` would raise for these scenarios -- the "wave4" split is
+    recorded directly instead, the same mechanism `_build_bootstrap_reports`
+    uses for Wave 1. Kept out of `_build_scenario_reports`'s report entirely
+    so this diagnostic pass can never contaminate Loop C's target selection
+    or the accept gate -- the Phase 8 acceptance criteria require Wave 4
+    results never gate a Wave 0-3 accept/reject decision.
+    """
+    return [
+        await _evaluate_scenario(variant, config, scenario, "wave4", embed_fn)
+        for scenario in WAVE4_INFORMAL_SCENARIOS
+    ]
+
+
 def _aggregate(reports: list[ScenarioReport], split: str) -> dict[str, float]:
     """Mean strict/soft F1 + Phase 1 diagnostics (§3.1) over one split's scenario reports."""
     subset = [r for r in reports if r.split == split]
@@ -360,6 +384,15 @@ async def _run_variant(
         print(f"   {r.scenario:<28} strict-F1={r.strict['f1']:.3f}  soft-F1={r.soft['f1']:.3f}")
     bootstrap_metrics = _aggregate(bootstrap_reports, "bootstrap")
 
+    print(
+        f"== wave4 diagnostics: '{variant.name}' (Wave 4, informal prose -- "
+        "always reported, never gates accept/reject) =="
+    )
+    wave4_reports = await _build_wave4_reports(variant, best_config, embed_fn)
+    for r in wave4_reports:
+        print(f"   {r.scenario:<28} strict-F1={r.strict['f1']:.3f}  soft-F1={r.soft['f1']:.3f}")
+    wave4_metrics = _aggregate(wave4_reports, "wave4")
+
     tuned_knobs = {
         knob: best_config[knob]
         for knob in variant.knob_space
@@ -373,6 +406,7 @@ async def _run_variant(
         "dev": _aggregate(scenario_reports, "dev"),
         "holdout": _aggregate(scenario_reports, "holdout"),
         "bootstrap": bootstrap_metrics,
+        "wave4": wave4_metrics,
         "error_report_json": str(json_path),
         "error_report_md": str(markdown_path),
     }
@@ -435,6 +469,24 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
         lines.append(
             f"| {result['variant']} | {bootstrap['strict_f1']:.3f} | {bootstrap['soft_f1']:.3f} |"
         )
+    lines.append("")
+
+    lines.append("## Wave 4 informal-prose diagnostics (always reported, never gates accept/reject)")
+    lines.append("")
+    lines.append(
+        f"Generalization check only over {len(WAVE4_INFORMAL_SCENARIOS)} scenario(s) -- "
+        "user-manual, sales-literature, marketing-copy, and support-article prose that "
+        "mentions DR entities only incidentally (karpathy_loop_dr_ontology_design.md §8) -- "
+        "too thin, and deliberately out of scope, to holdout-split or optimize against. "
+        "Excluded from dev/holdout aggregation, from Loop C's target selection, and from the "
+        "§6 accept gate; logged here and to the ledger purely for visibility."
+    )
+    lines.append("")
+    lines.append("| variant | wave4 strict-F1 | wave4 soft-F1 |")
+    lines.append("|---|---|---|")
+    for result in results:
+        wave4 = result["wave4"]
+        lines.append(f"| {result['variant']} | {wave4['strict_f1']:.3f} | {wave4['soft_f1']:.3f} |")
     lines.append("")
 
     return "\n".join(lines)
@@ -501,6 +553,20 @@ async def _amain(args) -> int:
             config_ref=result["variant"],
             config_version=1,
             metrics=result["bootstrap"],
+            mode="offline",
+            source="quality_tournament",
+        )
+        # Diagnostic-only (karpathy_loop_dr_ontology_design.md §8, #1109
+        # Phase 8): same mechanism as "bootstrap" above -- logged under its
+        # own fixture_id so nothing downstream ever reads a "wave4" row as an
+        # input to meets_floor/improved_locally.
+        scoreboard_emitter.emit(
+            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
+            fixture_id="wave4",
+            model=result["variant"],
+            config_ref=result["variant"],
+            config_version=1,
+            metrics=result["wave4"],
             mode="offline",
             source="quality_tournament",
         )

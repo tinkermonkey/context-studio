@@ -13,6 +13,9 @@ split, per the Phase 6 acceptance criteria; see `WAVE2_SME_SCENARIOS` below.
 The `sme_waypoint_tech_*` scenarios (Wave 3, §7) follow the same pattern --
 graded against the DR spec and folded into the dev/holdout split -- per the
 Phase 7 acceptance criteria; see `WAVE3_SME_SCENARIOS` below.
+The `informal_*` scenarios (Wave 4, §8) are graded against the DR spec but,
+like Wave 1, are deliberately kept outside the dev/holdout split -- per the
+Phase 8 acceptance criteria; see `WAVE4_INFORMAL_SCENARIOS` below.
 
 `SCENARIO_DISPOSITION` records the explicit, one-time decision made for each
 of the 18 legacy scenarios when the DR ontology import happened (#1109 Phase
@@ -64,6 +67,17 @@ lower-layer/technical `sme_waypoint_tech_*` scenarios
 alphabetically -> dev, last 1 -> holdout.
 
 Grand total: 19 dev / 7 holdout (26 total).
+
+Wave 4 (#1109 Phase 8, design doc §8) added 4 `informal_*` scenarios --
+user-manual, sales-literature, marketing-copy, and support-article prose
+that mentions the same kinds of DR entities only incidentally, never
+written with an ontology in mind. Like Wave 1's bootstrap scenarios (and
+unlike Waves 2/3), these are deliberately **excluded** from
+`INDIVIDUAL_EXTRACTION_SCENARIOS` / the dev-holdout split -- the acceptance
+criteria for Phase 8 explicitly forbid using Wave 4 results to gate any
+Wave 0-3 accept/reject decision, and this is the same "distinct,
+always-reported diagnostic group" mechanism already used for
+`DR_BOOTSTRAP_SCENARIOS`. See `WAVE4_INFORMAL_SCENARIOS` below.
 """
 
 from enum import Enum
@@ -219,6 +233,28 @@ SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE
 # ARE part of INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split (see
 # WAVE3_SME_SCENARIOS's docstring above).
 SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE3_SME_SCENARIOS})
+
+# Wave 4 informal/incidental-prose scenarios (documentation/
+# karpathy_loop_dr_ontology_design.md §8, #1109 Phase 8): user-manual,
+# sales-literature, marketing-copy, and support-article prose about the same
+# fictional "Waypoint" product used by Waves 2/3, written without an ontology
+# or architecture model in mind. Graded against the Wave 0 DR spec import,
+# never the placeholder. Like DR_BOOTSTRAP_SCENARIOS -- and unlike Waves 2/3
+# -- these are a distinct, always-reported diagnostic group, deliberately
+# NOT added to INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split: the
+# Phase 8 acceptance criteria require that Wave 4 results never gate a Wave
+# 0-3 accept/reject decision, and several of these scenarios have
+# single-digit (down to 2) ground-truth triples by design -- see each
+# scenario's README.md "Findings" section -- which is too thin to
+# holdout-split or optimize against, the same rationale as Wave 1 (§5).
+WAVE4_INFORMAL_SCENARIOS: list[str] = [
+    "informal_user_manual",
+    "informal_sales_literature",
+    "informal_marketing_copy",
+    "informal_support_article",
+]
+
+SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE4_INFORMAL_SCENARIOS})
 
 
 def ontology_context_for(scenario: str) -> OntologyContext:

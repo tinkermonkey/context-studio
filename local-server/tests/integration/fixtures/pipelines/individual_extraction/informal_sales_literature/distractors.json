@@ -1,0 +1,22 @@
+{
+  "triples": [
+    {
+      "subject": { "label": "Service Level Agreement", "kind": "individual" },
+      "predicate": { "label": "governs", "kind": "property" },
+      "object": { "label": "Work Order Management", "kind": "individual" },
+      "confidence": 0.2
+    },
+    {
+      "subject": { "label": "bank-level encryption", "kind": "individual" },
+      "predicate": { "label": "is_a", "kind": "property" },
+      "object": { "label": "security.securitypolicy", "kind": "individual" },
+      "confidence": 0.15
+    },
+    {
+      "subject": { "label": "Waypoint Operations Dashboard", "kind": "individual" },
+      "predicate": { "label": "monitors", "kind": "property" },
+      "object": { "label": "Scheduling & Dispatch", "kind": "individual" },
+      "confidence": 0.15
+    }
+  ]
+}
