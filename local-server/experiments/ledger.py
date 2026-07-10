@@ -72,11 +72,14 @@ free-form text should always prefer `--stdin` with a quoted heredoc
 import argparse
 import json
 import sys
-import warnings
 from pathlib import Path
 from typing import Any, Optional, Union
 
+from utils.logger import get_logger
+
 LEDGER_PATH = Path(__file__).parent / "ledger.jsonl"
+
+logger = get_logger(__name__)
 
 REQUIRED_FIELDS = (
     "experiment_id",
@@ -108,7 +111,7 @@ def validate_entry(entry: dict[str, Any]) -> None:
 
     Raises:
         LedgerEntryError: If a required field is missing, or `decision` is
-            not one of "accepted"/"rejected".
+            not one of "accepted"/"rejected"/"baseline_reset".
     """
     missing = [field for field in REQUIRED_FIELDS if field not in entry]
     if missing:
@@ -155,9 +158,8 @@ def read_entries(ledger_path: Optional[Union[Path, str]] = None) -> list[dict[st
             try:
                 entries.append(json.loads(line))
             except json.JSONDecodeError as exc:
-                warnings.warn(
-                    f"skipping corrupted ledger line {line_number} in {path}: {exc}",
-                    stacklevel=2,
+                logger.warning(
+                    "skipping corrupted ledger line %d in %s: %s", line_number, path, exc
                 )
     return entries
 

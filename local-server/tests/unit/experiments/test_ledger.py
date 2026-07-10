@@ -7,6 +7,7 @@ ledger file for every test so nothing touches the real, tracked
 """
 
 import json
+import logging
 import os
 import sys
 
@@ -129,24 +130,26 @@ class TestAppendAndReadEntries:
         append_entry(_entry(), ledger_path=ledger_path)
         assert ledger_path.exists()
 
-    def test_corrupted_line_is_skipped_with_warning(self, tmp_path):
+    def test_corrupted_line_is_skipped_with_warning(self, tmp_path, caplog):
         ledger_path = tmp_path / "ledger.jsonl"
         append_entry(_entry(experiment_id="1-a"), ledger_path=ledger_path)
         with open(ledger_path, "a") as f:
             f.write('{"experiment_id": "1-b", "decision": "rejected"\n')  # truncated/corrupted line
         append_entry(_entry(experiment_id="1-c"), ledger_path=ledger_path)
 
-        with pytest.warns(UserWarning, match="corrupted ledger line"):
+        with caplog.at_level(logging.WARNING):
             entries = read_entries(ledger_path)
 
+        assert "corrupted ledger line" in caplog.text
         assert [e["experiment_id"] for e in entries] == ["1-a", "1-c"]
 
-    def test_all_corrupted_lines_returns_empty_list(self, tmp_path):
+    def test_all_corrupted_lines_returns_empty_list(self, tmp_path, caplog):
         ledger_path = tmp_path / "ledger.jsonl"
         ledger_path.write_text('{"not": "closed"\n{"also": "broken"\n')
 
-        with pytest.warns(UserWarning):
+        with caplog.at_level(logging.WARNING):
             assert read_entries(ledger_path) == []
+        assert "corrupted ledger line" in caplog.text
 
     def test_append_rejects_invalid_entry_without_writing(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
