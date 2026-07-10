@@ -82,10 +82,22 @@ class ImportSummary:
     property_definitions_updated: int = 0
 
 
+def _load_json(path: Path) -> Any:
+    """Read and parse a JSON file, raising ValueError with the file path on malformed JSON."""
+    try:
+        return json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed JSON in {path}: {exc}") from exc
+
+
 def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
     """Read spec_version and per-layer metadata from spec/dist/manifest.json."""
-    manifest = json.loads((spec_dir / "dist" / "manifest.json").read_text())
-    return manifest["specVersion"], manifest["layers"]
+    manifest_path = spec_dir / "dist" / "manifest.json"
+    manifest = _load_json(manifest_path)
+    try:
+        return manifest["specVersion"], manifest["layers"]
+    except KeyError as exc:
+        raise ValueError(f"Manifest {manifest_path} is missing required key {exc}") from exc
 
 
 def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
@@ -97,14 +109,17 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
             "documentation_robotics spec checkout with a schemas/nodes/ directory"
         )
     for path in sorted(nodes_dir.glob("*/*.node.schema.json")):
-        data = json.loads(path.read_text())
-        props = data["properties"]
-        yield NodeSchemaRecord(
-            spec_node_id=props["spec_node_id"]["const"],
-            layer_id=props["layer_id"]["const"],
-            title=data["title"],
-            description=data.get("description"),
-        )
+        data = _load_json(path)
+        try:
+            props = data["properties"]
+            yield NodeSchemaRecord(
+                spec_node_id=props["spec_node_id"]["const"],
+                layer_id=props["layer_id"]["const"],
+                title=data["title"],
+                description=data.get("description"),
+            )
+        except KeyError as exc:
+            raise ValueError(f"Node schema {path} is missing required key {exc}") from exc
 
 
 def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaRecord]:
@@ -117,17 +132,20 @@ def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaReco
             "schemas/relationships/ directory"
         )
     for path in sorted(relationships_dir.glob("*/*.relationship.schema.json")):
-        data = json.loads(path.read_text())
-        props = data["properties"]
-        yield RelationshipSchemaRecord(
-            source_spec_node_id=props["source_spec_node_id"]["const"],
-            source_layer=props["source_layer"]["const"],
-            destination_spec_node_id=props["destination_spec_node_id"]["const"],
-            destination_layer=props["destination_layer"]["const"],
-            predicate=props["predicate"]["const"],
-            title=data["title"],
-            description=data.get("description"),
-        )
+        data = _load_json(path)
+        try:
+            props = data["properties"]
+            yield RelationshipSchemaRecord(
+                source_spec_node_id=props["source_spec_node_id"]["const"],
+                source_layer=props["source_layer"]["const"],
+                destination_spec_node_id=props["destination_spec_node_id"]["const"],
+                destination_layer=props["destination_layer"]["const"],
+                predicate=props["predicate"]["const"],
+                title=data["title"],
+                description=data.get("description"),
+            )
+        except KeyError as exc:
+            raise ValueError(f"Relationship schema {path} is missing required key {exc}") from exc
 
 
 def slugify_spec_node_id(spec_node_id: str) -> str:

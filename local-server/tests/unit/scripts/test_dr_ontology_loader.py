@@ -106,6 +106,23 @@ class TestReadManifest:
         assert spec_version == "0.9.0"
         assert [layer["id"] for layer in layers] == ["motivation", "business"]
 
+    def test_missing_key_raises_value_error_with_file_path(self, tmp_path):
+        dist_dir = tmp_path / "dist"
+        dist_dir.mkdir(parents=True)
+        (dist_dir / "manifest.json").write_text(json.dumps({"specVersion": "0.9.0"}))
+
+        with pytest.raises(ValueError, match="manifest.json") as exc_info:
+            read_manifest(tmp_path)
+        assert "layers" in str(exc_info.value)
+
+    def test_malformed_json_raises_value_error_with_file_path(self, tmp_path):
+        dist_dir = tmp_path / "dist"
+        dist_dir.mkdir(parents=True)
+        (dist_dir / "manifest.json").write_text("{not valid json")
+
+        with pytest.raises(ValueError, match="manifest.json"):
+            read_manifest(tmp_path)
+
 
 class TestIterNodeSchemas:
     def test_yields_one_record_per_node_schema(self, tmp_path):
@@ -136,6 +153,33 @@ class TestIterNodeSchemas:
         with pytest.raises(FileNotFoundError, match="schemas/nodes"):
             list(iter_node_schemas(tmp_path))
 
+    def test_missing_key_raises_value_error_with_file_path(self, tmp_path):
+        layer_dir = tmp_path / "schemas" / "nodes" / "motivation"
+        layer_dir.mkdir(parents=True)
+        bad_path = layer_dir / "goal.node.schema.json"
+        bad_path.write_text(
+            json.dumps(
+                {
+                    "title": "Goal",
+                    "description": "desc",
+                    "properties": {"layer_id": {"const": "motivation"}},
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="goal.node.schema.json") as exc_info:
+            list(iter_node_schemas(tmp_path))
+        assert "spec_node_id" in str(exc_info.value)
+
+    def test_malformed_json_raises_value_error_with_file_path(self, tmp_path):
+        layer_dir = tmp_path / "schemas" / "nodes" / "motivation"
+        layer_dir.mkdir(parents=True)
+        bad_path = layer_dir / "goal.node.schema.json"
+        bad_path.write_text("{not valid json")
+
+        with pytest.raises(ValueError, match="goal.node.schema.json"):
+            list(iter_node_schemas(tmp_path))
+
 
 class TestIterRelationshipSchemas:
     def test_yields_one_record_per_relationship_schema(self, tmp_path):
@@ -164,6 +208,42 @@ class TestIterRelationshipSchemas:
 
     def test_missing_relationships_dir_raises_instead_of_yielding_nothing(self, tmp_path):
         with pytest.raises(FileNotFoundError, match="schemas/relationships"):
+            list(iter_relationship_schemas(tmp_path))
+
+    def test_missing_key_raises_value_error_with_file_path(self, tmp_path):
+        rel_dir = tmp_path / "schemas" / "relationships" / "motivation"
+        rel_dir.mkdir(parents=True)
+        bad_path = rel_dir / "stakeholder.associated-with.requirement.relationship.schema.json"
+        bad_path.write_text(
+            json.dumps(
+                {
+                    "title": "Stakeholder associated-with Requirement",
+                    "description": "desc",
+                    "properties": {
+                        "source_spec_node_id": {"const": "motivation.stakeholder"},
+                        "source_layer": {"const": "motivation"},
+                        "destination_spec_node_id": {"const": "motivation.requirement"},
+                        "destination_layer": {"const": "motivation"},
+                    },
+                }
+            )
+        )
+
+        with pytest.raises(
+            ValueError, match="stakeholder.associated-with.requirement.relationship.schema.json"
+        ) as exc_info:
+            list(iter_relationship_schemas(tmp_path))
+        assert "predicate" in str(exc_info.value)
+
+    def test_malformed_json_raises_value_error_with_file_path(self, tmp_path):
+        rel_dir = tmp_path / "schemas" / "relationships" / "motivation"
+        rel_dir.mkdir(parents=True)
+        bad_path = rel_dir / "stakeholder.associated-with.requirement.relationship.schema.json"
+        bad_path.write_text("{not valid json")
+
+        with pytest.raises(
+            ValueError, match="stakeholder.associated-with.requirement.relationship.schema.json"
+        ):
             list(iter_relationship_schemas(tmp_path))
 
 
