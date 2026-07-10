@@ -65,6 +65,14 @@ def _require_model_dir(viewer_dir: Path) -> Path:
     return model_dir
 
 
+def _load_yaml(path: Path) -> Any:
+    """Read and parse a YAML file, raising ValueError with the file path on malformed YAML."""
+    try:
+        return yaml.safe_load(path.read_text())
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Malformed YAML in {path}: {exc}") from exc
+
+
 def iter_elements(viewer_dir: Path) -> list[dict[str, Any]]:
     """
     Load every element from every layer YAML file under the viewer's model
@@ -75,7 +83,7 @@ def iter_elements(viewer_dir: Path) -> list[dict[str, Any]]:
     for yaml_path in sorted(model_dir.rglob("*.yaml")):
         if yaml_path.name in _EXCLUDED_MODEL_FILES:
             continue
-        data = yaml.safe_load(yaml_path.read_text()) or {}
+        data = _load_yaml(yaml_path) or {}
         for element in data.values():
             elements.append(element)
     return elements
@@ -93,7 +101,7 @@ def load_relationships(viewer_dir: Path) -> list[dict[str, Any]]:
     relationships_path = _require_model_dir(viewer_dir) / "relationships.yaml"
     if not relationships_path.is_file():
         return []
-    return yaml.safe_load(relationships_path.read_text()) or []
+    return _load_yaml(relationships_path) or []
 
 
 def _location_files(element: dict[str, Any]) -> list[str]:
@@ -148,7 +156,12 @@ def build_scenarios(
             if element.get("source_reference", {}).get("provenance") == "extracted"
             and source_file in _location_files(element)
         ]
-        individual_paths = {element["path"] for element in file_individuals}
+        try:
+            individual_paths = {element["path"] for element in file_individuals}
+        except KeyError as exc:
+            raise ValueError(
+                f"Element for source file {source_file!r} is missing required key {exc}"
+            ) from exc
         file_relationships = [
             relationship
             for relationship in relationships
@@ -167,25 +180,51 @@ def build_scenarios(
 
 
 def _individual_triple(element: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "subject": {"label": element["name"], "kind": "individual"},
-        "predicate": {"label": "is_a", "kind": "property"},
-        "object": {"label": element["spec_node_id"], "kind": "individual"},
-        "confidence": 1.0,
-    }
+    element_id = element.get("path", element.get("id", "<unknown>"))
+    try:
+        return {
+            "subject": {"label": element["name"], "kind": "individual"},
+            "predicate": {"label": "is_a", "kind": "property"},
+            "object": {"label": element["spec_node_id"], "kind": "individual"},
+            "confidence": 1.0,
+        }
+    except KeyError as exc:
+        raise ValueError(f"Element {element_id!r} is missing required key {exc}") from exc
 
 
 def _relationship_triple(
     relationship: dict[str, Any], individuals_by_path: dict[str, dict[str, Any]]
 ) -> dict[str, Any]:
-    source = individuals_by_path[relationship["source"]]
-    target = individuals_by_path[relationship["target"]]
-    return {
-        "subject": {"label": source["name"], "kind": "individual"},
-        "predicate": {"label": relationship["predicate"], "kind": "property"},
-        "object": {"label": target["name"], "kind": "individual"},
-        "confidence": 1.0,
-    }
+    try:
+        source_path = relationship["source"]
+        target_path = relationship["target"]
+    except KeyError as exc:
+        raise ValueError(
+            f"Relationship {relationship} is missing required key {exc}"
+        ) from exc
+    try:
+        source = individuals_by_path[source_path]
+    except KeyError as exc:
+        raise ValueError(
+            f"Relationship source {source_path!r} does not match any qualifying individual"
+        ) from exc
+    try:
+        target = individuals_by_path[target_path]
+    except KeyError as exc:
+        raise ValueError(
+            f"Relationship target {target_path!r} does not match any qualifying individual"
+        ) from exc
+    try:
+        return {
+            "subject": {"label": source["name"], "kind": "individual"},
+            "predicate": {"label": relationship["predicate"], "kind": "property"},
+            "object": {"label": target["name"], "kind": "individual"},
+            "confidence": 1.0,
+        }
+    except KeyError as exc:
+        raise ValueError(
+            f"Relationship {source_path!r} -> {target_path!r} is missing required key {exc}"
+        ) from exc
 
 
 def scenario_triples(scenario: BootstrapScenario) -> list[dict[str, Any]]:
@@ -196,10 +235,18 @@ def scenario_triples(scenario: BootstrapScenario) -> list[dict[str, Any]]:
     the endpoint element names, predicate = the relationship's own
     predicate).
     """
-    individuals_by_path = {element["path"]: element for element in scenario.individuals}
-    triples = [_individual_triple(element) for element in scenario.individuals]
-    triples.extend(
-        _relationship_triple(relationship, individuals_by_path)
-        for relationship in scenario.relationships
-    )
+    try:
+        individuals_by_path = {element["path"]: element for element in scenario.individuals}
+    except KeyError as exc:
+        raise ValueError(
+            f"Element in scenario {scenario.source_file!r} is missing required key {exc}"
+        ) from exc
+    try:
+        triples = [_individual_triple(element) for element in scenario.individuals]
+        triples.extend(
+            _relationship_triple(relationship, individuals_by_path)
+            for relationship in scenario.relationships
+        )
+    except ValueError as exc:
+        raise ValueError(f"In scenario {scenario.source_file!r}: {exc}") from exc
     return triples

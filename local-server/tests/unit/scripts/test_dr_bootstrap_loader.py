@@ -126,6 +126,23 @@ class TestIterElementsAndLoadRelationships:
         with pytest.raises(FileNotFoundError, match="documentation-robotics"):
             load_relationships(tmp_path)
 
+    def test_iter_elements_malformed_yaml_raises_with_file_context(self, tmp_path):
+        _write_manifest(tmp_path)
+        layer_dir = tmp_path / "documentation-robotics" / "model" / "01_motivation"
+        layer_dir.mkdir(parents=True, exist_ok=True)
+        bad_file = layer_dir / "goal.yaml"
+        bad_file.write_text("key: [unterminated")
+        with pytest.raises(ValueError, match=str(bad_file)):
+            iter_elements(tmp_path)
+
+    def test_load_relationships_malformed_yaml_raises_with_file_context(self, tmp_path):
+        model_dir = tmp_path / "documentation-robotics" / "model"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        bad_file = model_dir / "relationships.yaml"
+        bad_file.write_text("key: [unterminated")
+        with pytest.raises(ValueError, match=str(bad_file)):
+            load_relationships(tmp_path)
+
 
 class TestBuildScenarios:
     def _setup_basic_model(self, viewer_dir):
@@ -325,6 +342,20 @@ class TestBuildScenarios:
         scenarios = build_scenarios(tmp_path, prose_extensions=[".md"])
         assert scenarios[0].relationships == []
 
+    def test_element_missing_path_raises_with_source_file_context(self, tmp_path):
+        _write_manifest(tmp_path)
+        layer_dir = tmp_path / "documentation-robotics" / "model" / "01_motivation"
+        layer_dir.mkdir(parents=True, exist_ok=True)
+        broken_element = {
+            "name": "Goal A",
+            "spec_node_id": "motivation.goal",
+            "source_reference": {"provenance": "extracted", "locations": [{"file": "README.md"}]},
+        }
+        (layer_dir / "goal.yaml").write_text(yaml.safe_dump({"broken-key": broken_element}))
+        _write_relationships(tmp_path, [])
+        with pytest.raises(ValueError, match="README.md"):
+            build_scenarios(tmp_path, prose_extensions=[".md"])
+
     def test_missing_source_file_on_disk_still_produces_a_scenario(self, tmp_path):
         # build_scenarios is pure data-model logic; it does not touch the
         # filesystem for the prose files themselves -- that's the generator
@@ -389,3 +420,33 @@ class TestScenarioTriples:
             source_file="tests/README.md", individuals=[], relationships=[]
         )
         assert scenario_triples(scenario) == []
+
+    def test_individual_missing_name_raises_with_scenario_and_element_context(self, tmp_path):
+        scenario = BootstrapScenario(
+            source_file="README.md",
+            individuals=[
+                {"path": "motivation.goal.a", "spec_node_id": "motivation.goal"},
+            ],
+            relationships=[],
+        )
+        with pytest.raises(ValueError, match="README.md"):
+            scenario_triples(scenario)
+
+    def test_relationship_referencing_unknown_individual_raises_with_context(self, tmp_path):
+        individual_a = _element(
+            "motivation.goal.a", "Goal A", "motivation.goal", "extracted", ["README.md"]
+        )
+        scenario = BootstrapScenario(
+            source_file="README.md",
+            individuals=[individual_a],
+            relationships=[
+                {
+                    "source": "motivation.goal.a",
+                    "target": "motivation.goal.missing",
+                    "predicate": "associated-with",
+                    "properties": {"source_provenance": "extracted"},
+                }
+            ],
+        )
+        with pytest.raises(ValueError, match="motivation.goal.missing"):
+            scenario_triples(scenario)
