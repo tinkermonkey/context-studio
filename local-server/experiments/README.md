@@ -59,7 +59,9 @@ diagnostic pass**: a `bootstrap` row per variant in the same scoreboard
 telemetry file (`fixture_id="bootstrap"`), and its own section in the
 `tournament_<run_id>.md` digest. This pass is a sanity check — real,
 independently-produced ground truth graded against the imported DR spec, too
-thin (4 scenarios covering 4 of 12 layers) to holdout-split or optimize
+thin (2 scenarios currently on disk, of a 4-scenario target — see
+`karpathy_loop_dr_ontology_design.md` §5 — covering at most 4 of 12 layers)
+to holdout-split or optimize
 against — and is never mixed into `dev`/`holdout` aggregation, the error
 report's `failure_stage_counts` (Loop C target selection), or the §6 accept
 gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` takes only `dev`
