@@ -387,6 +387,8 @@ def _upsert_property_definitions(
                 description=record.description,
                 domain_class_id=domain_class_id,
                 range_class_id=range_class_id,
+                update_domain_class_id=True,
+                update_range_class_id=True,
             )
             summary.property_definitions_updated += 1
             _sync_external_reference(repo.save_property_definition, prop, record.full_identifier)

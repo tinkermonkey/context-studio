@@ -1647,10 +1647,57 @@ class TestUpdatePropertyDefinition:
             property_id=prop.id,
             domain_class_id=domain_cls.id,
             range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
         )
 
         assert updated.domain_class_id == domain_cls.id
         assert updated.range_class_id == range_cls.id
+
+    def test_domain_and_range_class_id_not_provided_preserves_existing_value(self, service):
+        """When update_domain_class_id/update_range_class_id are False, the fields are unchanged."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+        service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        updated = service.update_property_definition(property_id=prop.id, title="Chews Loudly")
+        assert updated.domain_class_id == domain_cls.id
+        assert updated.range_class_id == range_cls.id
+
+    def test_domain_and_range_class_id_set_to_none_clears_them(self, service):
+        """Explicitly passing None with update_domain_class_id/update_range_class_id=True clears them."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+        service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        updated = service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=None,
+            range_class_id=None,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        assert updated.domain_class_id is None
+        assert updated.range_class_id is None
 
     def test_update_external_references_success(self, service):
         """Update external_references replaces the existing list."""
@@ -1670,14 +1717,18 @@ class TestUpdatePropertyDefinition:
         prop = service.create_property_definition(identifier="chews", title="Chews")
 
         with pytest.raises(EntityNotFoundError, match="Class"):
-            service.update_property_definition(property_id=prop.id, domain_class_id="nonexistent")
+            service.update_property_definition(
+                property_id=prop.id, domain_class_id="nonexistent", update_domain_class_id=True
+            )
 
     def test_update_nonexistent_range_class_raises(self, service):
         """Updating range_class_id to a nonexistent class raises EntityNotFoundError."""
         prop = service.create_property_definition(identifier="chews", title="Chews")
 
         with pytest.raises(EntityNotFoundError, match="Class"):
-            service.update_property_definition(property_id=prop.id, range_class_id="nonexistent")
+            service.update_property_definition(
+                property_id=prop.id, range_class_id="nonexistent", update_range_class_id=True
+            )
 
 
 class TestUpdateConceptScheme:

@@ -1845,6 +1845,8 @@ class OntologyService:
         update_is_relevant: bool = False,
         domain_class_id: str | None = None,
         range_class_id: str | None = None,
+        update_domain_class_id: bool = False,
+        update_range_class_id: bool = False,
         external_references: list[ExternalReference] | None = None,
     ) -> PropertyDefinition:
         """
@@ -1862,8 +1864,18 @@ class OntologyService:
             update_is_relevant: Set to True to apply the ``is_relevant`` value;
                 defaults to False so callers that do not intend to change
                 relevance are unaffected
-            domain_class_id: New domain Class ID (optional)
-            range_class_id: New range Class ID (optional)
+            domain_class_id: New domain Class ID, or ``None`` to clear it; only
+                applied when ``update_domain_class_id=True`` — passing
+                ``domain_class_id=None`` alone has no effect
+            range_class_id: New range Class ID, or ``None`` to clear it; only
+                applied when ``update_range_class_id=True`` — passing
+                ``range_class_id=None`` alone has no effect
+            update_domain_class_id: Set to True to apply the ``domain_class_id``
+                value (including clearing it to ``None``); defaults to False so
+                callers that do not intend to change it are unaffected
+            update_range_class_id: Set to True to apply the ``range_class_id``
+                value (including clearing it to ``None``); defaults to False so
+                callers that do not intend to change it are unaffected
             external_references: New list of external references, replacing the
                 existing list wholesale (optional)
 
@@ -1900,13 +1912,13 @@ class OntologyService:
         if update_is_relevant:
             prop_def.is_relevant = is_relevant
 
-        if domain_class_id is not None:
-            if self._repository.get_class(domain_class_id) is None:
+        if update_domain_class_id:
+            if domain_class_id is not None and self._repository.get_class(domain_class_id) is None:
                 raise EntityNotFoundError("Class", domain_class_id)
             prop_def.domain_class_id = domain_class_id
 
-        if range_class_id is not None:
-            if self._repository.get_class(range_class_id) is None:
+        if update_range_class_id:
+            if range_class_id is not None and self._repository.get_class(range_class_id) is None:
                 raise EntityNotFoundError("Class", range_class_id)
             prop_def.range_class_id = range_class_id
 
