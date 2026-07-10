@@ -503,7 +503,12 @@ async def _amain(args) -> int:
     try:
         embedding.embed_batch(["probe"])
     except Exception as exc:
-        print(f"ERROR: embedding model not available (offline cache miss): {exc}")
+        print(f"ERROR: embedding model probe failed ({type(exc).__name__}): {exc}")
+        print(
+            "This may be an offline cache miss (HF_HUB_OFFLINE=1 is set), but could "
+            "also be a CUDA/GPU error, an out-of-memory failure, a missing dependency, "
+            "or a dtype mismatch -- see the exception above for the actual cause."
+        )
         return 1
     embed_fn = _make_embed_fn(embedding)
 
