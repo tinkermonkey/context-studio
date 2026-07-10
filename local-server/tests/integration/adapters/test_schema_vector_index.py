@@ -301,6 +301,8 @@ TAXONOMY_A = "aaaaaaaa-0000-0000-0000-000000000001"
 TAXONOMY_B = "bbbbbbbb-0000-0000-0000-000000000002"
 CLASS_A2 = "55555555-5555-5555-5555-555555555555"
 PROP_P2 = "66666666-6666-6666-6666-666666666666"
+REL_R_A = "77777777-7777-7777-7777-777777777777"
+REL_R_B = "88888888-8888-8888-8888-888888888888"
 
 
 @pytest.fixture
@@ -351,6 +353,22 @@ def two_taxonomy_index():
                     ),
                 ]
             )
+            session.add_all(
+                [
+                    RelationshipORM(
+                        id=REL_R_A,
+                        source_id=CLASS_A,
+                        target_id=PROP_P,
+                        property_definition_id=PROP_P,
+                    ),
+                    RelationshipORM(
+                        id=REL_R_B,
+                        source_id=CLASS_A2,
+                        target_id=PROP_P2,
+                        property_definition_id=PROP_P2,
+                    ),
+                ]
+            )
             session.commit()
 
         idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
@@ -380,3 +398,24 @@ def test_no_taxonomy_id_returns_matches_from_both_ontologies(two_taxonomy_index)
     matches = two_taxonomy_index.search([1.0, 0.0, 0.0], kinds=["class"])
     ids = {m.entity_id for m in matches}
     assert ids == {CLASS_A, CLASS_A2}
+
+
+def test_taxonomy_id_scopes_relationship_matches_via_property_definition(
+    two_taxonomy_index,
+):
+    # The relationship query joins RelationshipORM -> OntologyEntity (its
+    # property definition) rather than OntologyEntity directly, so scoping
+    # must be exercised through that join structure too.
+    matches = two_taxonomy_index.search(
+        [0.0, 0.0, 1.0], kinds=["relationship"], taxonomy_id=TAXONOMY_A
+    )
+    ids = {m.entity_id for m in matches}
+    assert ids == {REL_R_A}
+
+
+def test_no_taxonomy_id_returns_relationship_matches_from_both_ontologies(
+    two_taxonomy_index,
+):
+    matches = two_taxonomy_index.search([0.0, 0.0, 1.0], kinds=["relationship"])
+    ids = {m.entity_id for m in matches}
+    assert ids == {REL_R_A, REL_R_B}
