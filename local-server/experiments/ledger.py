@@ -72,6 +72,7 @@ free-form text should always prefer `--stdin` with a quoted heredoc
 import argparse
 import json
 import sys
+import warnings
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -134,16 +135,30 @@ def append_entry(entry: dict[str, Any], ledger_path: Optional[Union[Path, str]] 
 
 
 def read_entries(ledger_path: Optional[Union[Path, str]] = None) -> list[dict[str, Any]]:
-    """Read every entry in the ledger, in file order. Returns [] if the ledger doesn't exist yet."""
+    """
+    Read every entry in the ledger, in file order. Returns [] if the ledger doesn't exist yet.
+
+    The ledger is an append-only audit log, so a single corrupted line
+    (partial write, disk full, concurrent access) must not prevent reading
+    every other valid entry. A line that fails to parse as JSON is skipped
+    with a warning rather than raised.
+    """
     path = Path(ledger_path) if ledger_path is not None else LEDGER_PATH
     if not path.exists():
         return []
     entries = []
     with open(path) as f:
-        for line in f:
+        for line_number, line in enumerate(f, start=1):
             line = line.strip()
-            if line:
+            if not line:
+                continue
+            try:
                 entries.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                warnings.warn(
+                    f"skipping corrupted ledger line {line_number} in {path}: {exc}",
+                    stacklevel=2,
+                )
     return entries
 
 
