@@ -1674,7 +1674,7 @@ class TestUpdatePropertyDefinition:
         assert updated.range_class_id == range_cls.id
 
     def test_domain_and_range_class_id_set_to_none_clears_them(self, service):
-        """Explicitly passing None with update_domain_class_id/update_range_class_id=True clears them."""
+        """Explicitly passing None with update_domain/range_class_id=True clears them."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
@@ -1706,9 +1706,7 @@ class TestUpdatePropertyDefinition:
         prop = service.create_property_definition(identifier="chews", title="Chews")
         refs = [ExternalReference(source="wikidata", identifier="P31")]
 
-        updated = service.update_property_definition(
-            property_id=prop.id, external_references=refs
-        )
+        updated = service.update_property_definition(property_id=prop.id, external_references=refs)
 
         assert updated.external_references == refs
 
