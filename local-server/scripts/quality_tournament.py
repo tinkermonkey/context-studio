@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable
 from uuid import uuid4
 
+from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from domain.pipelines.entities import PipelineType
@@ -510,6 +511,13 @@ async def _amain(args) -> int:
             "or a dtype mismatch -- see the exception above for the actual cause."
         )
         return 1
+    # Memoize .embed(label) across the whole sweep: every variant's Loop A
+    # coordinate ascent re-runs the same open_v1 pipeline with only the config
+    # knobs changed, so the candidate labels grounding embeds are identical
+    # across evals. Wrapping the single shared embedding service means the
+    # SentenceTransformer forward pass for each distinct label runs once, not
+    # once per eval. embed_batch (reindex_all) passes through unchanged.
+    embedding = CachingEmbeddingService(embedding)
     embed_fn = _make_embed_fn(embedding)
 
     registry = build_registry(nlp, embedding)
