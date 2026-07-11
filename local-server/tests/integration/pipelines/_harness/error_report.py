@@ -97,7 +97,8 @@ def classify_stage(
     paired = [
         t
         for t in actual_triples
-        if label_match_tier(t[0], exp_subj, embed_fn) > 0 and label_match_tier(t[2], exp_obj, embed_fn) > 0
+        if label_match_tier(t[0], exp_subj, embed_fn) > 0
+        and label_match_tier(t[2], exp_obj, embed_fn) > 0
     ]
     if not paired:
         return RELATION_NOT_DERIVED, None
@@ -198,9 +199,9 @@ def _render_markdown_digest(run_id: str, reports: list[ScenarioReport]) -> str:
 
     lines.append("## Examples")
     lines.append("")
-    examples = [
-        (report.scenario, missed) for report in worst for missed in report.missed_triples
-    ][:5]
+    examples = [(report.scenario, missed) for report in worst for missed in report.missed_triples][
+        :5
+    ]
     if not examples:
         lines.append("(no missed triples to show)")
     for scenario, missed in examples:
@@ -208,7 +209,7 @@ def _render_markdown_digest(run_id: str, reports: list[ScenarioReport]) -> str:
         lines.append(f"  - expected: `{missed.expected}`")
         lines.append(f"  - nearest actual: `{missed.nearest_actual}`")
         if missed.source_sentence:
-            lines.append(f"  - source: \"{missed.source_sentence}\"")
+            lines.append(f'  - source: "{missed.source_sentence}"')
     lines.append("")
 
     return "\n".join(lines)

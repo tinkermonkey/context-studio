@@ -1,0 +1,34 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Job Priority Property",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "maps-to",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Job API Schema",
+        "kind": "individual"
+      },
+      "confidence": 0.15
+    },
+    {
+      "subject": {
+        "label": "Job Core Object Schema",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "maps-to",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Jobs Collection",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

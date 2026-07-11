@@ -460,6 +460,19 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_property_definitions_referencing_class(self, class_id: str) -> int:
+        """
+        Count property definitions that reference a class as domain or range.
+
+        Args:
+            class_id: The ID of the class to check for references
+
+        Returns:
+            Count of property definitions with domain_class_id or range_class_id
+            equal to class_id
+        """
+        ...
+
     # Individual operations (deferred — all raise NotImplementedError for now)
     def get_individual(self, individual_id: str) -> Individual | None:
         """
@@ -654,6 +667,7 @@ class SchemaVectorIndex(Protocol):
         kinds: Sequence[SchemaKind],
         top_k: int = 20,
         threshold: float = 0.0,
+        taxonomy_id: str | None = None,
     ) -> list[SchemaMatch]:
         """
         Find schema entities whose title or definition is similar to the query.
@@ -666,6 +680,12 @@ class SchemaVectorIndex(Protocol):
             kinds: Which schema kinds to include in the search.
             top_k: Maximum number of matches to return, highest score first.
             threshold: Minimum similarity score (0.0-1.0) for inclusion.
+            taxonomy_id: When given, restrict results to schema entities that
+                belong to this taxonomy — a class directly, or a property
+                definition/relationship via its domain class. Lets multiple
+                ontologies (e.g. the placeholder and an imported DR spec)
+                coexist in the same database without cross-contaminating
+                grounding results.
 
         Returns:
             SchemaMatch objects sorted by descending score (length <= top_k).

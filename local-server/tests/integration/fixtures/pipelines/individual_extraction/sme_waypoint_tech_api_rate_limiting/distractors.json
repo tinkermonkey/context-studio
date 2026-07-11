@@ -1,0 +1,34 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Assign Job Latency Histogram",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "depends-on",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Telemetry Pipeline Service",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "Assign Job Operation",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "references",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Assign Job Latency Histogram",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

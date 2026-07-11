@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -196,7 +197,7 @@ class RelationCandidate:
 
 
 def find_connected_verb(
-    tokens: list[OpenToken],
+    tokens: Sequence[OpenToken],
     start_index: int,
     max_depth: int = 5,
 ) -> str | None:
@@ -239,7 +240,7 @@ def find_connected_verb(
 # ============================================================================
 
 
-def _build_term_frequencies(tokens: list[OpenToken]) -> tuple[Counter[str], int]:
+def _build_term_frequencies(tokens: Sequence[OpenToken]) -> tuple[Counter[str], int]:
     """
     Build the single-document term pool from content tokens.
 
@@ -275,7 +276,7 @@ def _tfidf_score(text: str, term_freq: Counter[str], doc_length: int) -> float:
 # ============================================================================
 
 
-def _covered_token_indices(noun_chunks: list[NounChunkSpan]) -> set[int]:
+def _covered_token_indices(noun_chunks: Sequence[NounChunkSpan]) -> set[int]:
     """Token indices that fall inside some noun chunk."""
     covered: set[int] = set()
     for chunk in noun_chunks:
@@ -283,13 +284,13 @@ def _covered_token_indices(noun_chunks: list[NounChunkSpan]) -> set[int]:
     return covered
 
 
-def _all_stopwords(tokens: list[OpenToken], chunk: NounChunkSpan) -> bool:
+def _all_stopwords(tokens: Sequence[OpenToken], chunk: NounChunkSpan) -> bool:
     """True if every token in a chunk is a stopword."""
     chunk_tokens = tokens[chunk.start_token : chunk.end_token]
     return bool(chunk_tokens) and all(tok.is_stop for tok in chunk_tokens)
 
 
-def _chunk_label_lemmas(tokens: list[OpenToken], chunk: NounChunkSpan) -> tuple[str, ...]:
+def _chunk_label_lemmas(tokens: Sequence[OpenToken], chunk: NounChunkSpan) -> tuple[str, ...]:
     """
     Content-word lemmas of a noun chunk, in order, for label synthesis.
 

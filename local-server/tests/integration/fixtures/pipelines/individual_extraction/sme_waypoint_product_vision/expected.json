@@ -1,0 +1,310 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "Field Technicians",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.stakeholder",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.goal",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Offline-Capable Mobile Technician App",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.requirement",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Rising Customer Expectations for On-Time Arrival Windows",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.driver",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technicians Must Be Able to Complete Work Orders Without a Reliable Cellular Connection",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.constraint",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Internal Review Found Nearly a Third of Missed Appointments Trace to Double-Booked Technicians",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.assessment",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Missed-Appointment Rate Cut in Half",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.outcome",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "A Technician Should Never Need to Call Dispatch to Confirm a Job",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.principle",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Customer Trust",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.value",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "On-Time Means Arriving Within the Committed Appointment Window, Not Just the Same Day",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.meaning",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Field Technicians",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "associated-with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Offline-Capable Mobile Technician App",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Rising Customer Expectations for On-Time Arrival Windows",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "influence",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technicians Must Be Able to Complete Work Orders Without a Reliable Cellular Connection",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrains",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Offline-Capable Mobile Technician App",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Internal Review Found Nearly a Third of Missed Appointments Trace to Double-Booked Technicians",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "influence",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Offline-Capable Mobile Technician App",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Missed-Appointment Rate Cut in Half",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "realizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "A Technician Should Never Need to Call Dispatch to Confirm a Job",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "realizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Customer Trust",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "associated-with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "On-Time Means Arriving Within the Committed Appointment Window, Not Just the Same Day",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "associated-with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Reduce Missed Service Appointments",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "On-Time Means Arriving Within the Committed Appointment Window, Not Just the Same Day",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "associated-with",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Field Technicians",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      }
+    ],
+    "excluded": []
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

@@ -11,6 +11,7 @@ Provides common infrastructure for testing the pipeline framework:
 
 import tempfile
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
@@ -21,11 +22,16 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.batch_repo import BatchRepository
+from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.web.pipelines_routes import router
 from config import get_settings
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
 from domain.pipelines.registry import (
@@ -33,11 +39,128 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
 )
 from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
+from scripts.dr_ontology_loader import import_dr_ontology
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
     RecordingLLMProvider,
 )
+from tests.integration.pipelines._harness.dataset_split import OntologyContext
+
+# Candidate locations for the sibling `documentation_robotics/spec` checkout
+# (an external, versioned dependency — see
+# documentation/karpathy_loop_dr_ontology_design.md §4). Not every environment
+# has it; the DR_SPEC ontology_factory branch skips when neither is found.
+_DR_SPEC_DIR_CANDIDATES = [
+    Path(__file__).resolve().parents[5] / "documentation_robotics" / "spec",
+    Path("/reference/documentation_robotics/spec"),
+]
+
+
+def _find_dr_spec_dir() -> Path | None:
+    return next((p for p in _DR_SPEC_DIR_CANDIDATES if p.is_dir()), None)
+
+
+def _build_placeholder_ontology():
+    """The throwaway 3-class (individual/property/entity) ontology, in-memory."""
+    engine = create_local_db_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session_factory = create_session_factory(engine)
+    repo = SQLiteOntologyRepository(session_factory)
+
+    tax = Taxonomy(
+        id=str(uuid4()),
+        identifier="placeholder",
+        title="Placeholder Ontology",
+        description="Throwaway 3-class ontology for individual-extraction quality tests",
+    )
+    repo.save_taxonomy(tax)
+    scheme = ConceptScheme(
+        id=str(uuid4()),
+        identifier="placeholder_scheme",
+        taxonomy_id=tax.id,
+        title="Placeholder Scheme",
+        description="Placeholder concept scheme",
+    )
+    repo.save_concept_scheme(scheme)
+    for class_name in ("individual", "property", "entity"):
+        repo.save_class(
+            Class(
+                id=str(uuid4()),
+                identifier=class_name,
+                concept_scheme_id=scheme.id,
+                taxonomy_id=tax.id,
+                title=class_name.title(),
+                description=f"A {class_name}",
+            )
+        )
+
+    index = SqliteSchemaVectorIndex(session_factory, FakeEmbeddingService())
+    index.reindex_all()
+    return repo, index
+
+
+def _build_dr_spec_ontology():
+    """
+    The imported DR spec ontology (~1,750 rows), in-memory.
+
+    Reuses the Phase 1 DR-spec transform (scripts.dr_ontology_loader) rather
+    than duplicating any translation logic. Skips if the sibling DR spec
+    checkout isn't available in this environment.
+    """
+    spec_dir = _find_dr_spec_dir()
+    if spec_dir is None:
+        pytest.skip(
+            "documentation_robotics/spec checkout not found (checked "
+            f"{[str(p) for p in _DR_SPEC_DIR_CANDIDATES]}); skipping DR_SPEC ontology tests"
+        )
+
+    engine = create_local_db_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session_factory = create_session_factory(engine)
+    repo = SQLiteOntologyRepository(session_factory)
+    embedding_service = FakeEmbeddingService()
+    # schema_index=None here for the same reason as import_dr_ontology.py's
+    # CLI entrypoint: suppress per-entity embedding sync during import, then
+    # reindex once in a single batch below.
+    ontology_service = OntologyService(
+        repository=repo,
+        embedding_service=embedding_service,
+        event_publisher=InProcessEventPublisher(),
+        schema_index=None,
+    )
+    import_dr_ontology(ontology_service, repo, spec_dir)
+
+    index = SqliteSchemaVectorIndex(session_factory, embedding_service)
+    index.reindex_all()
+    return repo, index
+
+
+_ONTOLOGY_BUILDERS = {
+    OntologyContext.PLACEHOLDER: _build_placeholder_ontology,
+    OntologyContext.DR_SPEC: _build_dr_spec_ontology,
+}
+
+
+@pytest.fixture(scope="session")
+def ontology_factory():
+    """
+    Session-scoped factory returning a cached (repo, schema_index) pair for a
+    given OntologyContext.
+
+    Each context is built at most once per test session — scenario tests that
+    request the same context repeatedly (e.g. all 18 PLACEHOLDER scenarios)
+    reuse the same in-memory ontology instead of rebuilding it per test.
+    """
+    cache: dict[OntologyContext, tuple] = {}
+
+    def _get(context: OntologyContext):
+        if context not in cache:
+            cache[context] = _ONTOLOGY_BUILDERS[context]()
+        return cache[context]
+
+    return _get
 
 
 @pytest.fixture

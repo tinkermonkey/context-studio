@@ -992,6 +992,32 @@ class TestDeleteClass:
         with pytest.raises(OntologyError, match="has.*individual"):
             service.delete_class(class_id=cls.id)
 
+    def test_delete_class_referenced_as_property_domain_raises(self, service):
+        """Delete class referenced as a property definition's domain raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        service.create_property_definition(
+            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+        )
+
+        with pytest.raises(OntologyError, match="referenced as domain/range"):
+            service.delete_class(class_id=dog.id)
+
+    def test_delete_class_referenced_as_property_range_raises(self, service):
+        """Delete class referenced as a property definition's range raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        service.create_property_definition(
+            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+        )
+
+        with pytest.raises(OntologyError, match="referenced as domain/range"):
+            service.delete_class(class_id=mammal.id)
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""
@@ -1469,6 +1495,54 @@ class TestCreatePropertyDefinition:
         with pytest.raises(ValueError, match="Title cannot be empty"):
             service.create_property_definition(identifier="is_a", title="")
 
+    def test_create_property_definition_with_domain_and_range_success(self, service):
+        """Create a property definition with valid domain_class_id and range_class_id."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+
+        prop = service.create_property_definition(
+            identifier="chews",
+            title="Chews",
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+        )
+
+        assert prop.domain_class_id == domain_cls.id
+        assert prop.range_class_id == range_cls.id
+
+    def test_create_property_definition_with_external_references_success(self, service):
+        """Create a property definition with external references."""
+        from domain.ontology.value_objects import ExternalReference
+
+        refs = [ExternalReference(source="wikidata", identifier="P31")]
+        prop = service.create_property_definition(
+            identifier="instance_of",
+            title="Instance Of",
+            external_references=refs,
+        )
+
+        assert prop.external_references == refs
+
+    def test_create_property_definition_nonexistent_domain_class_raises(self, service):
+        """Nonexistent domain_class_id raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.create_property_definition(
+                identifier="chews",
+                title="Chews",
+                domain_class_id="nonexistent",
+            )
+
+    def test_create_property_definition_nonexistent_range_class_raises(self, service):
+        """Nonexistent range_class_id raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.create_property_definition(
+                identifier="chews",
+                title="Chews",
+                range_class_id="nonexistent",
+            )
+
 
 class TestUpdatePropertyDefinition:
     """Tests for update_property_definition."""
@@ -1560,6 +1634,99 @@ class TestUpdatePropertyDefinition:
         """Update of a nonexistent property raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="PropertyDefinition"):
             service.update_property_definition(property_id="nonexistent", title="New Title")
+
+    def test_update_domain_and_range_class_success(self, service):
+        """Update domain_class_id and range_class_id to valid classes."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+
+        updated = service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        assert updated.domain_class_id == domain_cls.id
+        assert updated.range_class_id == range_cls.id
+
+    def test_domain_and_range_class_id_not_provided_preserves_existing_value(self, service):
+        """When update_domain_class_id/update_range_class_id are False, the fields are unchanged."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+        service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        updated = service.update_property_definition(property_id=prop.id, title="Chews Loudly")
+        assert updated.domain_class_id == domain_cls.id
+        assert updated.range_class_id == range_cls.id
+
+    def test_domain_and_range_class_id_set_to_none_clears_them(self, service):
+        """Explicitly passing None with update_domain/range_class_id=True clears them."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        domain_cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        range_cls = service.create_class(concept_scheme_id=scheme.id, title="Bone")
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+        service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=domain_cls.id,
+            range_class_id=range_cls.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        updated = service.update_property_definition(
+            property_id=prop.id,
+            domain_class_id=None,
+            range_class_id=None,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+
+        assert updated.domain_class_id is None
+        assert updated.range_class_id is None
+
+    def test_update_external_references_success(self, service):
+        """Update external_references replaces the existing list."""
+        from domain.ontology.value_objects import ExternalReference
+
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+        refs = [ExternalReference(source="wikidata", identifier="P31")]
+
+        updated = service.update_property_definition(property_id=prop.id, external_references=refs)
+
+        assert updated.external_references == refs
+
+    def test_update_nonexistent_domain_class_raises(self, service):
+        """Updating domain_class_id to a nonexistent class raises EntityNotFoundError."""
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.update_property_definition(
+                property_id=prop.id, domain_class_id="nonexistent", update_domain_class_id=True
+            )
+
+    def test_update_nonexistent_range_class_raises(self, service):
+        """Updating range_class_id to a nonexistent class raises EntityNotFoundError."""
+        prop = service.create_property_definition(identifier="chews", title="Chews")
+
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.update_property_definition(
+                property_id=prop.id, range_class_id="nonexistent", update_range_class_id=True
+            )
 
 
 class TestUpdateConceptScheme:

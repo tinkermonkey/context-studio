@@ -666,7 +666,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                   ref: (el: any) => {
                     if (el) el.indeterminate = someSelected;
                   },
-                  onChange: (e: any) => {
+                  onChange: () => {
                     if (allSelected || someSelected) {
                       onSelectRows?.([]);
                     } else {

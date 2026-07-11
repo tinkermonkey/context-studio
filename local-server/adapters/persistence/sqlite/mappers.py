@@ -321,6 +321,11 @@ def map_orm_to_domain(
             ontology_mapping=deserialize_ontology_mapping(
                 cast(dict[str, str] | None, orm_entity.ontology_mapping)
             ),
+            domain_class_id=cast(str | None, orm_entity.domain_class_id),
+            range_class_id=cast(str | None, orm_entity.range_class_id),
+            external_references=deserialize_external_references(
+                cast(list[dict[str, Any]], orm_entity.external_references) or []
+            ),
             is_relevant=cast(bool | None, orm_entity.is_relevant),
             lexical_senses=deserialize_lexical_senses(
                 cast(list[dict[str, str]], orm_entity.lexical_senses) or []
@@ -407,6 +412,9 @@ def map_domain_to_orm(
             node_type=NodeType.PROPERTY_DEFINITION,
             identifier=entity.identifier,
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
+            domain_class_id=entity.domain_class_id,
+            range_class_id=entity.range_class_id,
+            external_references=serialize_external_references(entity.external_references),
             is_relevant=entity.is_relevant,
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             source_run_id=entity.source_run_id,
@@ -465,6 +473,9 @@ def map_property_definition_orm_to_domain(
     Note: The primary source of truth is the OntologyEntity with node_type='property_definition'.
     This is a convenience mapper for the specialized property_definitions table.
 
+    external_references is not stored on the property_definitions table (only on
+    ontology_entities), so it is always empty on the returned entity.
+
     Args:
         orm_prop: SQLAlchemy PropertyDefinition ORM model
 
@@ -479,6 +490,8 @@ def map_property_definition_orm_to_domain(
         ontology_mapping=deserialize_ontology_mapping(
             cast(dict[str, str] | None, orm_prop.ontology_mapping)
         ),
+        domain_class_id=cast(str | None, orm_prop.domain_class_id),
+        range_class_id=cast(str | None, orm_prop.range_class_id),
         is_relevant=cast(bool | None, orm_prop.is_relevant),
         created_at=cast(datetime | None, orm_prop.created_at),
         last_modified=cast(datetime | None, orm_prop.last_modified),
@@ -492,6 +505,9 @@ def map_property_definition_domain_to_orm(
     """
     Convert a domain PropertyDefinition entity to an ORM model for the property_definitions table.
 
+    Note: external_references has no column on the property_definitions table (only on
+    ontology_entities), so it is not written by this mapper.
+
     Args:
         prop: Domain PropertyDefinition entity
 
@@ -504,6 +520,8 @@ def map_property_definition_domain_to_orm(
         title=prop.title,
         description=prop.description,
         ontology_mapping=serialize_ontology_mapping(prop.ontology_mapping),
+        domain_class_id=prop.domain_class_id,
+        range_class_id=prop.range_class_id,
         is_relevant=prop.is_relevant,
         created_at=prop.created_at,
         last_modified=prop.last_modified,

@@ -16,8 +16,11 @@ format (struct little-endian) is already byte-compatible with sqlite-vec's
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import or_
+from sqlalchemy.orm import aliased, sessionmaker
 
 from adapters.persistence.sqlite.mappers import (
     _deserialize_embedding,
@@ -90,17 +93,17 @@ class SqliteSchemaVectorIndex:
             )
             if not rows:
                 return 0
-            titles = [row.title or "" for row in rows]
-            descriptions = [row.description or "" for row in rows]
+            titles = [cast(str, row.title) or "" for row in rows]
+            descriptions = [cast("str | None", row.description) or "" for row in rows]
             title_vecs = self._embedding.embed_batch(titles)
             def_vecs = self._embedding.embed_batch(descriptions)
             for row, title_vec, def_vec, title, description in zip(
                 rows, title_vecs, def_vecs, titles, descriptions
             ):
-                row.title_embedding = _serialize_embedding(
+                row.title_embedding = _serialize_embedding(  # type: ignore[assignment]
                     title_vec if title.strip() else None
                 )
-                row.definition_embedding = _serialize_embedding(
+                row.definition_embedding = _serialize_embedding(  # type: ignore[assignment]
                     def_vec if description.strip() else None
                 )
             session.commit()
@@ -114,6 +117,7 @@ class SqliteSchemaVectorIndex:
         kinds,
         top_k: int = 20,
         threshold: float = 0.0,
+        taxonomy_id: str | None = None,
     ) -> list[SchemaMatch]:
         """Find schema entities whose title or definition is similar to the query."""
         query = np.asarray(query_embedding, dtype=np.float32)
@@ -127,21 +131,18 @@ class SqliteSchemaVectorIndex:
         with self._session_factory() as session:
             entity_kinds = [k for k in kinds if k in _ENTITY_KINDS]
             if entity_kinds:
-                rows = (
-                    session.query(
-                        OntologyEntity.id,
-                        OntologyEntity.node_type,
-                        OntologyEntity.title,
-                        OntologyEntity.title_embedding,
-                        OntologyEntity.definition_embedding,
-                    )
-                    .filter(
-                        OntologyEntity.node_type.in_(entity_kinds),
-                        OntologyEntity.is_indexed.is_(True),
-                    )
-                    .all()
+                entity_query = session.query(
+                    OntologyEntity.id,
+                    OntologyEntity.node_type,
+                    OntologyEntity.title,
+                    OntologyEntity.title_embedding,
+                    OntologyEntity.definition_embedding,
+                ).filter(
+                    OntologyEntity.node_type.in_(entity_kinds),
+                    OntologyEntity.is_indexed.is_(True),
                 )
-                for entity_id, node_type, title, title_blob, def_blob in rows:
+                entity_query = self._scope_to_taxonomy(entity_query, taxonomy_id)
+                for entity_id, node_type, title, title_blob, def_blob in entity_query.all():
                     match = self._build_match(
                         query, str(entity_id), node_type, title, title_blob, def_blob, threshold
                     )
@@ -151,7 +152,7 @@ class SqliteSchemaVectorIndex:
             if "relationship" in kinds:
                 # A relationship has no text of its own; match it via the
                 # embeddings of the property definition that types it.
-                rows = (
+                relationship_query = (
                     session.query(
                         RelationshipORM.id,
                         OntologyEntity.title,
@@ -163,9 +164,9 @@ class SqliteSchemaVectorIndex:
                         RelationshipORM.property_definition_id == OntologyEntity.id,
                     )
                     .filter(OntologyEntity.is_indexed.is_(True))
-                    .all()
                 )
-                for rel_id, title, title_blob, def_blob in rows:
+                relationship_query = self._scope_to_taxonomy(relationship_query, taxonomy_id)
+                for rel_id, title, title_blob, def_blob in relationship_query.all():
                     match = self._build_match(
                         query, str(rel_id), "relationship", title, title_blob, def_blob, threshold
                     )
@@ -174,6 +175,28 @@ class SqliteSchemaVectorIndex:
 
         matches.sort(key=lambda m: m.score, reverse=True)
         return matches[:top_k]
+
+    @staticmethod
+    def _scope_to_taxonomy(query, taxonomy_id: str | None):
+        """
+        Restrict `query` (already selecting from/joined on OntologyEntity) to
+        rows belonging to `taxonomy_id`, or return it unchanged if None.
+
+        A class carries its own `taxonomy_id`. A property definition does not
+        (see domain.ontology.entities.PropertyDefinition) — it is scoped via
+        the taxonomy of its domain class instead, joined in here.
+        """
+        if taxonomy_id is None:
+            return query
+        domain_class = aliased(OntologyEntity)
+        return query.outerjoin(
+            domain_class, OntologyEntity.domain_class_id == domain_class.id
+        ).filter(
+            or_(
+                OntologyEntity.taxonomy_id == taxonomy_id,
+                domain_class.taxonomy_id == taxonomy_id,
+            )
+        )
 
     def _build_match(
         self,

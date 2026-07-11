@@ -1,0 +1,34 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Complete Job Button",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "navigates-to",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Job Detail",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    },
+    {
+      "subject": {
+        "label": "Today's Jobs",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "serves",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Field Technician",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

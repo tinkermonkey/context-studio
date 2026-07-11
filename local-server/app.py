@@ -21,6 +21,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from adapters.clustering.sklearn_clusterer import SklearnClusterer
+
 # Import admin adapters and services
 from adapters.config.json_store import JSONFileConfigStore
 from adapters.demo import CanonDemoDatasetLoader
@@ -47,7 +49,6 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
-from adapters.clustering.sklearn_clusterer import SklearnClusterer
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.reference.cache import CachedReferenceSource

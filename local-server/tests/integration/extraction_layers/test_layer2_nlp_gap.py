@@ -33,7 +33,7 @@ class _NotReadyNLPProcessor:
 
     def process(self, text: str) -> NLPResult:
         self.process_calls += 1
-        return NLPResult(tokens=[], entities=[], noun_chunks=[], language="en")
+        return NLPResult(tokens=(), entities=[], noun_chunks=[], language="en")
 
     def extract_entities(self, text: str) -> list[NLPEntity]:
         self.extract_calls += 1
@@ -51,7 +51,7 @@ class _PaperNLPProcessor:
 
     def process(self, text: str) -> NLPResult:
         return NLPResult(
-            tokens=text.split(),
+            tokens=tuple(text.split()),
             entities=self._entities,
             noun_chunks=[],
             language="en",

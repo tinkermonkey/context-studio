@@ -82,7 +82,7 @@ _METRICS_DIR = (
 )
 
 # Search spaces (the closed-loop optimization knobs).
-_SCHEMA_SPACE = {
+_SCHEMA_SPACE: dict[str, list] = {
     "tf_idf_threshold": [0.0, 0.05, 0.1],
     "cluster_distance_threshold": [0.15, 0.2, 0.25, 0.3, 0.35],
     "top_n": [6, 8, 10, 12],
@@ -103,7 +103,7 @@ _SCHEMA_SPACE = {
 # 2*3*4*2*2*3 = 288 combinations — well under the ~10^3 threshold where
 # successive-halving would be worth the added complexity over plain
 # coordinate ascent (see coordinate_ascent's restart docstring).
-_INDIVIDUAL_SPACE = {
+_INDIVIDUAL_SPACE: dict[str, list] = {
     "predicate_form": ["surface", "lemma"],
     "relation_confidence": [0.3, 0.5, 0.7],
     "similarity_threshold": [0.35, 0.45, 0.55, 0.65],

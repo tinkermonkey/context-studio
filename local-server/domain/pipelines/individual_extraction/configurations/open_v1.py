@@ -9,8 +9,9 @@ threshold, and confidence calibration.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
+from domain.ontology.ports import SchemaKind
 from domain.pipelines.exceptions import PipelineInputError
 
 _PREDICATE_FORMS = {"lemma", "surface"}
@@ -33,7 +34,7 @@ class IndividualOpenV1Config:
     ground_to_schema: bool
     require_schema_match: bool
     similarity_threshold: float
-    kinds_to_search: tuple[str, ...]
+    kinds_to_search: tuple[SchemaKind, ...]
 
     @classmethod
     def from_dict(cls, config: dict[str, Any]) -> "IndividualOpenV1Config":
@@ -43,12 +44,13 @@ class IndividualOpenV1Config:
             raise PipelineInputError(
                 f"predicate_form must be one of {sorted(_PREDICATE_FORMS)}, got {predicate_form!r}"
             )
-        kinds_to_search = tuple(str(k) for k in config.get("kinds_to_search", ["class"]))
-        invalid = [k for k in kinds_to_search if k not in _SEARCH_KINDS]
+        raw_kinds = tuple(str(k) for k in config.get("kinds_to_search", ["class"]))
+        invalid = [k for k in raw_kinds if k not in _SEARCH_KINDS]
         if invalid:
             raise PipelineInputError(
                 f"kinds_to_search must be a subset of {sorted(_SEARCH_KINDS)}, got {invalid}"
             )
+        kinds_to_search = cast(tuple[SchemaKind, ...], raw_kinds)
         relation_confidence = float(config.get("relation_confidence", 0.7))
         if not 0.0 <= relation_confidence <= 1.0:
             raise PipelineInputError(

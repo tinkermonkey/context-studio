@@ -1054,6 +1054,30 @@ class SQLiteOntologyRepository:
 
             return q.count()
 
+    def count_property_definitions_referencing_class(self, class_id: str) -> int:
+        """
+        Count property definitions that reference a class as domain or range.
+
+        Args:
+            class_id: The ID of the class to check for references
+
+        Returns:
+            Count of property definitions with domain_class_id or range_class_id
+            equal to class_id
+        """
+        with self.session_factory() as session:
+            return (
+                session.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
+                    or_(
+                        OntologyEntity.domain_class_id == class_id,
+                        OntologyEntity.range_class_id == class_id,
+                    ),
+                )
+                .count()
+            )
+
     def get_by_identifier(self, identifier: str) -> Optional[Taxonomy | ConceptScheme | Class]:
         """
         Retrieve a Taxonomy, ConceptScheme, or Class by its globally-unique slug.
@@ -1177,6 +1201,8 @@ class SQLiteOntologyRepository:
                     title=prop.title,
                     description=prop.description,
                     ontology_mapping=orm_entity.ontology_mapping,
+                    domain_class_id=prop.domain_class_id,
+                    range_class_id=prop.range_class_id,
                     is_relevant=prop.is_relevant,
                     created_at=datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
@@ -1191,6 +1217,11 @@ class SQLiteOntologyRepository:
                 orm_entity.identifier = prop.identifier  # type: ignore[assignment]
                 orm_entity.ontology_mapping = (
                     mapped_orm.ontology_mapping
+                )  # type: ignore[assignment]
+                orm_entity.domain_class_id = prop.domain_class_id  # type: ignore[assignment]
+                orm_entity.range_class_id = prop.range_class_id  # type: ignore[assignment]
+                orm_entity.external_references = (
+                    mapped_orm.external_references
                 )  # type: ignore[assignment]
                 orm_entity.is_relevant = prop.is_relevant  # type: ignore[assignment]
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
@@ -1210,6 +1241,12 @@ class SQLiteOntologyRepository:
                     prop_def_orm_maybe.identifier = prop.identifier  # type: ignore[assignment]
                     prop_def_orm_maybe.ontology_mapping = (  # type: ignore[assignment]
                         mapped_orm.ontology_mapping
+                    )
+                    prop_def_orm_maybe.domain_class_id = (
+                        prop.domain_class_id  # type: ignore[assignment]
+                    )
+                    prop_def_orm_maybe.range_class_id = (
+                        prop.range_class_id  # type: ignore[assignment]
                     )
                     prop_def_orm_maybe.is_relevant = prop.is_relevant  # type: ignore[assignment]
                     prop_def_orm_maybe.last_modified = datetime.now(

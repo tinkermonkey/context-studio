@@ -1,0 +1,266 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "subject": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "data-store.database",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store Resource",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.resource",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Field Ops Compute Cluster",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.node",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "DocumentDB Engine",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "technology.systemsoftware",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.metricinstrument",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Must Be Visible Before It Causes Request Failures",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "motivation.requirement",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Alert",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.alert",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Database Health Dashboard",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.dashboard",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store Resource",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Field Ops Compute Cluster",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Event Store Resource",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "DocumentDB Engine",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "depends-on",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Event Store Resource",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "satisfies",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Connection Pool Saturation Must Be Visible Before It Causes Request Failures",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Alert",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Database Health Dashboard",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Connection Pool Saturation Alert",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Database Health Dashboard",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Connection Pool Saturation Gauge",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      }
+    ],
+    "excluded": [
+      {
+        "subject": {
+          "label": "Connection Pool Saturation Alert",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "monitors",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Event Store",
+          "kind": "individual"
+        },
+        "note": "The text says the alert monitors the Connection Pool Saturation Gauge, not the Job Event Store directly -- the alert only ever observes the database indirectly, through the gauge."
+      }
+    ]
+  },
+  "created_individual_ids": [],
+  "created_relationship_ids": []
+}

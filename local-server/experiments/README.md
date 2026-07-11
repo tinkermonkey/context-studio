@@ -52,6 +52,21 @@ why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
   (gitignored, same JSONL schema `quality_loop.py` uses).
 
+Each run also scores every variant's tuned config against the Wave 1 DR
+bootstrap scenarios (`dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`,
+`karpathy_loop_dr_ontology_design.md` §5) as a **separate, always-reported
+diagnostic pass**: a `bootstrap` row per variant in the same scoreboard
+telemetry file (`fixture_id="bootstrap"`), and its own section in the
+`tournament_<run_id>.md` digest. This pass is a sanity check — real,
+independently-produced ground truth graded against the imported DR spec, too
+thin (2 scenarios currently on disk, of a 4-scenario target — see
+`karpathy_loop_dr_ontology_design.md` §5 — covering at most 4 of 12 layers)
+to holdout-split or optimize
+against — and is never mixed into `dev`/`holdout` aggregation, the error
+report's `failure_stage_counts` (Loop C target selection), or the §6 accept
+gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` takes only `dev`
+and `holdout` as arguments and structurally cannot read bootstrap metrics.
+
 ## Loop C: `.claude/workflows/karpathy-loop.js`
 
 `documentation/karpathy_loop_design.md` §4.3/§4.4 — the agent-in-the-loop
@@ -59,7 +74,10 @@ refinement cycle. Each invocation of the Workflow runs exactly **one**
 iteration:
 
 1. **Evaluate** — runs Loop B (`quality_tournament.py`) and reads back the
-   incumbent's scoreboard + error report.
+   incumbent's scoreboard + error report, including the incumbent's Wave 1
+   bootstrap diagnostics (reported as `bootstrap` for visibility and the
+   ledger — see the Loop B section above — never as an input to any decision
+   below).
 2. **Select** — reads `ledger.jsonl` for hypotheses already rejected, then
    ranks the incumbent's failure classes (`failure_stage_counts` in the error
    report) by GT-triple count and maps the top ones to hypotheses from the
@@ -116,3 +134,30 @@ The ledger is append-only by construction (`append_entry` only ever opens the
 file in `"a"` mode) — rewriting or truncating it is one of the accept gate's
 integrity violations (§6 item 4), enforced by the Loop C verifier agent via a
 path check on `git diff`.
+
+### Baseline resets
+
+A `decision: "baseline_reset"` entry marks a measurement-layer or
+ontology/corpus swap — e.g. the DR ontology import replacing the placeholder
+3-class ontology
+(`documentation/karpathy_loop_dr_ontology_design.md` §9, #1109 Phase 3).
+`scripts/import_dr_ontology.py` appends one automatically on a successful
+import, recording the imported `spec_version`; re-running the import against
+an unchanged `spec_version` does not append a duplicate
+(`record_baseline_reset_if_new`).
+
+`rejected_hypotheses()` (and any future ledger read that feeds a loop
+decision) is scoped through `entries_since_last_baseline_reset()`, which
+excludes every entry recorded before the most recent checkpoint. This is the
+mechanism — not a documented convention — behind the rule that pre-reset
+dev/holdout scores never judge post-reset experiments: a hypothesis rejected
+against a since-retired baseline is eligible for retry immediately after the
+reset, with no manual ledger cleanup required.
+
+```bash
+# from local-server/, venv active — recording a reset manually (the DR
+# import script does this for you on a spec-version change)
+python experiments/ledger.py baseline-reset \
+    --ontology-context dr_spec --spec-version 0.8.4 --base-commit "$(git rev-parse HEAD)" \
+    'Replaced the placeholder ontology with the imported DR spec.'
+```

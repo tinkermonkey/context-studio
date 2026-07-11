@@ -1,0 +1,49 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Field Technicians",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "associated-with",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Reduce Missed Service Appointments",
+        "kind": "individual"
+      },
+      "confidence": 0.25
+    },
+    {
+      "subject": {
+        "label": "Field Technicians",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "is_a",
+        "kind": "property"
+      },
+      "object": {
+        "label": "motivation.driver",
+        "kind": "individual"
+      },
+      "confidence": 0.15
+    },
+    {
+      "subject": {
+        "label": "Reduce Missed Service Appointments",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "realizes",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Missed-Appointment Rate Cut in Half",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

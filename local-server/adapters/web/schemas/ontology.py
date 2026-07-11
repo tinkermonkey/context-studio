@@ -72,7 +72,7 @@ class TaxonomyCreateRequest(BaseModel):
     title: str = Field(..., description="Display name for the taxonomy", min_length=1)
     identifier: Optional[str] = Field(
         None,
-        description="Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted",
+        description="Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title",
     )
     description: Optional[str] = Field(None, description="Optional longer description")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
@@ -144,7 +144,7 @@ class ConceptSchemeCreateRequest(BaseModel):
     title: str = Field(..., description="Display name for the concept scheme", min_length=1)
     identifier: Optional[str] = Field(
         None,
-        description="Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted",
+        description="Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated",
     )
     description: Optional[str] = Field(None, description="Optional longer description")
 
@@ -225,7 +225,7 @@ class ClassCreateRequest(BaseModel):
     title: str = Field(..., description="Display name for the class", min_length=1)
     identifier: Optional[str] = Field(
         None,
-        description="Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted",
+        description="Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title",
     )
     description: Optional[str] = Field(None, description="Optional longer description")
     parent_class_id: Optional[str] = Field(

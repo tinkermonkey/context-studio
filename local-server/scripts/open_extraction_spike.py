@@ -287,7 +287,7 @@ def main() -> int:
         run_clustering(scenarios, nlp, args.tfidf, cluster_thresholds)
         return 0
 
-    agg = {t: [] for t in thresholds}
+    agg: dict[float, list[float]] = {t: [] for t in thresholds}
     for scenario in scenarios:
         inp = json.loads((FIXTURES / scenario / "input.json").read_text())
         expected = json.loads((FIXTURES / scenario / "expected.json").read_text())

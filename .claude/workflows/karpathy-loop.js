@@ -110,6 +110,30 @@ const EVALUATION_SCHEMA = {
         soft_f1: { type: 'number' },
       },
     },
+    // Wave 1 DR bootstrap-scenario diagnostics (karpathy_loop_dr_ontology_design.md
+    // §5 / dataset_split.py's DR_BOOTSTRAP_SCENARIOS). Reported every iteration for
+    // visibility and logged to the ledger (see decidePrompt), but this object is
+    // NEVER read by meetsFloors or acceptGate below -- neither function even accepts
+    // it as a parameter, so it structurally cannot gate a stop/accept/reject decision.
+    bootstrap: {
+      type: 'object',
+      properties: {
+        strict_f1: { type: 'number' },
+        soft_f1: { type: 'number' },
+      },
+    },
+    // Wave 4 informal-prose diagnostics (karpathy_loop_dr_ontology_design.md §8,
+    // #1109 Phase 8 / dataset_split.py's WAVE4_INFORMAL_SCENARIOS). Same
+    // always-reported, never-gates-a-decision treatment as `bootstrap` above --
+    // quality_tournament.py's `_run_variant` computes it the same way and
+    // `meetsFloors`/`acceptGate` below never accept it as a parameter.
+    wave4: {
+      type: 'object',
+      properties: {
+        strict_f1: { type: 'number' },
+        soft_f1: { type: 'number' },
+      },
+    },
     failureStageCounts: { type: 'object' },
     errorReportPath: { type: 'string' },
     errorReportMarkdownPath: { type: 'string' },
@@ -153,6 +177,18 @@ const EXPERIMENT_RESULT_SCHEMA = {
     holdout: {
       type: 'object',
       required: ['strict_f1', 'soft_f1'],
+      properties: { strict_f1: { type: 'number' }, soft_f1: { type: 'number' } },
+    },
+    // Diagnostic-only, same as EVALUATION_SCHEMA.bootstrap above -- reported for the
+    // ledger, never an input to verification or the accept gate.
+    bootstrap: {
+      type: 'object',
+      properties: { strict_f1: { type: 'number' }, soft_f1: { type: 'number' } },
+    },
+    // Diagnostic-only, same as EVALUATION_SCHEMA.wave4 above -- reported for the
+    // ledger, never an input to verification or the accept gate.
+    wave4: {
+      type: 'object',
       properties: { strict_f1: { type: 'number' }, soft_f1: { type: 'number' } },
     },
     summary: { type: 'string' },
@@ -210,8 +246,15 @@ function evaluatePrompt() {
     '   (candidate_missing / relation_not_derived / label_mismatch / predicate_mismatch counts).',
     '5. Read the scoreboard telemetry',
     '   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`',
-    '   (last two rows for the incumbent variant: fixture_id="dev" and fixture_id="holdout") for the full',
-    '   dev/holdout metrics objects (strict precision/recall/F1, soft F1, candidate_recall, predicate_recall).',
+    '   (last four rows for the incumbent variant: fixture_id="dev", fixture_id="holdout",',
+    '   fixture_id="bootstrap", and fixture_id="wave4") for the full dev/holdout metrics objects (strict',
+    '   precision/recall/F1, soft F1, candidate_recall, predicate_recall) and the bootstrap/wave4',
+    '   diagnostic metrics.',
+    '6. Return the bootstrap row as `bootstrap` and the wave4 row as `wave4` -- report both for',
+    '   visibility and the ledger (karpathy_loop_dr_ontology_design.md §5 and §8: two distinct,',
+    '   always-visible diagnostic groups), but both are informational only: never merge either into',
+    '   `dev`/`holdout` and never let either change which failure stage looks worst in',
+    '   `failureStageCounts`.',
     '',
     'Return structured output only — no prose.',
   ].join('\n')
@@ -252,8 +295,11 @@ function experimentPrompt(hypothesis, evaluation) {
     '4. Run the tests relevant to your change (at minimum the individual-extraction quality/unit tests you',
     '   touched, plus `python scripts/check_domain_imports.py`); set `testsPassed` and `testsSummary`.',
     '5. Run `python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1` to get a',
-    '   Loop-A-tuned dev/holdout evaluation of your changed pipeline. Compare the new failure-stage counts',
-    '   for your target stage against the incumbent report from step 3 above and summarize the delta.',
+    '   Loop-A-tuned dev/holdout evaluation of your changed pipeline, plus its bootstrap and wave4',
+    '   diagnostics (report these as `bootstrap` and `wave4` for the ledger only -- they must never',
+    '   factor into your own read of whether this candidate is working). Compare the new failure-stage',
+    '   counts for your target stage against the incumbent report from step 3 above and summarize the',
+    '   delta.',
     '6. Capture, from inside the worktree: `git diff main...HEAD --stat` (diffStat),',
     '   `git diff main...HEAD --name-only` (changedFiles), `git rev-parse --show-toplevel` (worktreePath),',
     '   `git branch --show-current` (branchName), `git merge-base HEAD main` (baseCommit).',
@@ -311,6 +357,18 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     base_commit: candidate.baseCommit,
     dev: candidate.dev,
     holdout: candidate.holdout,
+    // Diagnostic-only Wave 1 DR bootstrap metrics (karpathy_loop_dr_ontology_design.md
+    // §5), logged here purely so the ledger's history of an experiment is complete --
+    // ledger.py's `validate_entry` does not require this field, and nothing that reads
+    // the ledger (e.g. `rejected_hypotheses`) consults it. `decision` above was already
+    // computed from `dev`/`holdout` alone (see `acceptGate`, which never takes a
+    // bootstrap argument), so this can never itself have been grounds for `decision`.
+    bootstrap: candidate.bootstrap || null,
+    // Diagnostic-only Wave 4 informal-prose metrics (karpathy_loop_dr_ontology_design.md
+    // §8, #1109 Phase 8) -- same treatment as `bootstrap` above: logged for a complete
+    // ledger history, never consulted by any ledger reader, and never itself grounds
+    // for `decision` since `acceptGate` never takes a wave4 argument either.
+    wave4: candidate.wave4 || null,
     decision,
     reason,
     cost_usd: 0,
@@ -433,6 +491,13 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
 // `holdoutReviewPending` is true a holdout collapse is surfaced as a
 // non-blocking advisory instead of a rejection reason. Pass `false` once
 // every box in NEEDS_HUMAN_REVIEW.md is checked off by a human.
+//
+// Deliberately takes only `dev`/`holdout` inputs (karpathy_loop_dr_ontology_design.md
+// §5 Must-Fix 2 / ADR-7, §8): Wave 1 DR bootstrap-scenario and Wave 4 informal-prose
+// diagnostics are reported (see EVALUATION_SCHEMA.bootstrap/wave4,
+// EXPERIMENT_RESULT_SCHEMA.bootstrap/wave4, and the ledger entry in decidePrompt) but
+// never passed in here, so they cannot -- structurally, not just by convention -- be
+// sufficient (or even relevant) grounds for accept/reject.
 function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending) {
   const reasons = []
   const advisories = []

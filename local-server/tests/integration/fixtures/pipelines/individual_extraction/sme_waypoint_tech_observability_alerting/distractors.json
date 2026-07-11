@@ -1,0 +1,19 @@
+{
+  "triples": [
+    {
+      "subject": {
+        "label": "Database Health Dashboard",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "monitors",
+        "kind": "property"
+      },
+      "object": {
+        "label": "Job Event Store Resource",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

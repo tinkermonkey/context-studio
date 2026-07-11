@@ -598,6 +598,45 @@ class TestPropertyDefinitionCRUD:
         deleted = repo.delete_property_definition(sample_property_definition.id)
         assert deleted is True
 
+    def test_count_property_definitions_referencing_class(self, repo, sample_class):
+        """Test counting property definitions that reference a class as domain or range."""
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_class.concept_scheme_id,
+            taxonomy_id=sample_class.taxonomy_id,
+            title="Class 2",
+        )
+        repo.save_class(class2)
+
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-domain",
+                identifier="prop_domain",
+                title="Prop Domain",
+                domain_class_id=sample_class.id,
+            )
+        )
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-range",
+                identifier="prop_range",
+                title="Prop Range",
+                range_class_id=sample_class.id,
+            )
+        )
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-unrelated",
+                identifier="prop_unrelated",
+                title="Prop Unrelated",
+                domain_class_id=class2.id,
+            )
+        )
+
+        assert repo.count_property_definitions_referencing_class(sample_class.id) == 2
+        assert repo.count_property_definitions_referencing_class(class2.id) == 1
+        assert repo.count_property_definitions_referencing_class("nonexistent") == 0
+
 
 class TestRelationshipCRUD:
     """Tests for Relationship CRUD operations."""
