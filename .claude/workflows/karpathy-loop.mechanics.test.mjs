@@ -31,7 +31,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_PATH = path.join(__dirname, "karpathy-loop.js");
 // Everything above this line is pure declarations; this line and below is
 // the top-level orchestration that requires the Workflow runtime.
-const ORCHESTRATION_MARKER = "const iteration = (args && args.iteration) || 1";
+const ORCHESTRATION_MARKER = "let loopArgs = args";
 
 function loadPureDeclarations() {
   const fullSource = fs.readFileSync(SOURCE_PATH, "utf8");

@@ -82,7 +82,7 @@ def get_open_v1_config() -> dict:
         # matches more than "lemma"; both exposed as a tuning knob.
         "predicate_form": "surface",  # lemma | surface
         # --- schema grounding (SchemaVectorIndex) ---
-        "ground_to_schema": False,  # emit rdf:type triples for matched schema classes
+        "ground_to_schema": False,  # emit is_a triples for matched schema classes
         "require_schema_match": False,  # keep only individuals matching a schema node
         "similarity_threshold": 0.45,
         "kinds_to_search": ["class"],

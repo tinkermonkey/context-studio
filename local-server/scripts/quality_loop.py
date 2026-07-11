@@ -43,6 +43,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
+from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from domain.pipelines.entities import PipelineType
@@ -60,6 +61,7 @@ from domain.pipelines.schema_extraction.open_orchestrator import (
     OpenSchemaExtractionOrchestrator,
 )
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionState
+from scripts.eval_ontology import build_eval_ontology
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.dataset_split import (
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
@@ -94,11 +96,11 @@ _SCHEMA_SPACE: dict[str, list] = {
 # domain/pipelines/individual_extraction/configurations/open_v1.py) — nothing
 # below is a placeholder for an unbuilt feature (karpathy_loop_design.md §4.1).
 # ground_to_schema / require_schema_match / similarity_threshold / kinds_to_search
-# only change orchestrator output when a SchemaVectorIndex is wired in; the
-# fixture-based quality harness runs with schema_index=None (no ontology data
-# in the fixtures to index), so sweeping them is currently a documented no-op
-# rather than a fabricated knob — the moment a real index is wired into this
-# harness, the sweep starts exercising it for free.
+# drive the grounding stage against the imported ontology, which the harness now
+# wires in via scripts/eval_ontology.build_eval_ontology (the in-memory DR spec +
+# placeholder ontology). Grounding is scoped per scenario by the fixture's
+# ontology_id, so these knobs move soft-F1 on the DR-grounded scenarios and are
+# inert (self-skipped) on scenarios whose ontology_id doesn't resolve.
 #
 # 2*3*4*2*2*3 = 288 combinations — well under the ~10^3 threshold where
 # successive-halving would be worth the added complexity over plain
@@ -162,7 +164,9 @@ def _make_embed_fn(embedding):
     return embed
 
 
-async def evaluate_individual(orchestrator_ports, config, embed_fn) -> dict[str, float]:
+async def evaluate_individual(
+    orchestrator_ports, config, embed_fn, eval_repo=None, eval_index=None
+) -> dict[str, float]:
     """
     Run open individual extraction over the DEV split; return mean dev metrics.
 
@@ -173,14 +177,19 @@ async def evaluate_individual(orchestrator_ports, config, embed_fn) -> dict[str,
     fixed dev scenarios (_harness/dataset_split.py) are evaluated; holdout is
     reserved for Loop B/C's acceptance gate and must never influence knob
     selection, so it is intentionally never computed here.
+
+    `eval_repo`/`eval_index` wire the imported ontology (scripts/eval_ontology.py)
+    into the grounding stage so the schema-grounding knobs actually move the
+    metric; when absent (no DR spec checkout) grounding self-skips per scenario.
     """
     nlp, embedding, _ = orchestrator_ports
     orch = OpenIndividualExtractionOrchestrator(
         llm_provider=None,
         nlp_processor=nlp,
         embedding_service=embedding,
-        schema_index=None,
+        schema_index=eval_index,
         config=config,
+        ontology_repo=eval_repo,
     )
     strict_scores: list[float] = []
     soft_scores: list[float] = []
@@ -371,7 +380,12 @@ async def _amain(args) -> int:
     if not nlp.is_ready():
         print("ERROR: spaCy model not loaded. Run: python -m spacy download en_core_web_sm")
         return 1
-    embedding_service = SentenceTransformerEmbedding()
+    # Memoize .embed(label) across the whole coordinate-ascent sweep: each
+    # candidate config re-runs the same open_v1 pipeline with only the knobs
+    # changed, so grounding embeds the same labels every eval. Wrapping the
+    # single shared embedding service collapses those repeats to one forward
+    # pass per distinct label; embed_batch (reindex_all) passes through.
+    embedding_service = CachingEmbeddingService(SentenceTransformerEmbedding())
     ports = (nlp, embedding_service, SklearnClusterer())
     emitter = MetricsEmitter(_METRICS_DIR)
 
@@ -383,7 +397,10 @@ async def _amain(args) -> int:
         restarts = 1
     else:
         embed_fn = _make_embed_fn(embedding_service)
-        evaluate = lambda cfg: evaluate_individual(ports, cfg, embed_fn)  # noqa: E731
+        eval_repo, eval_index = build_eval_ontology(embedding_service)
+        evaluate = lambda cfg: evaluate_individual(  # noqa: E731
+            ports, cfg, embed_fn, eval_repo, eval_index
+        )
         base = get_individual_open_config()
         space, primary, tag = _INDIVIDUAL_SPACE, "soft_f1", "quality_loop_individual_extraction"
         # Never trade the floor metric away (karpathy_loop_design.md §4.1): the

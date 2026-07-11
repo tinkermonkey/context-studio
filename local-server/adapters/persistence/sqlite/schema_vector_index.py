@@ -42,6 +42,23 @@ _ENTITY_KINDS = ("class", "property_definition")
 _dim_mismatch_warned = False
 
 
+def _first_external_identifier(external_references: list | None) -> str | None:
+    """
+    The identifier of the entity's first external reference, or None.
+
+    ``external_references`` is the raw JSON column value — a list of
+    ``{source, identifier, uri, metadata}`` dicts. DR-imported entities carry
+    exactly one (the spec node id, e.g. "motivation.goal"); selecting the first
+    is unambiguous for them and a harmless best-effort for anything else.
+    """
+    if not external_references:
+        return None
+    first = external_references[0]
+    if isinstance(first, dict):
+        return first.get("identifier")
+    return None
+
+
 class SqliteSchemaVectorIndex:
     """
     Persistence-layer vector index over schema entities (ClusteringPort sibling).
@@ -137,14 +154,29 @@ class SqliteSchemaVectorIndex:
                     OntologyEntity.title,
                     OntologyEntity.title_embedding,
                     OntologyEntity.definition_embedding,
+                    OntologyEntity.external_references,
                 ).filter(
                     OntologyEntity.node_type.in_(entity_kinds),
                     OntologyEntity.is_indexed.is_(True),
                 )
                 entity_query = self._scope_to_taxonomy(entity_query, taxonomy_id)
-                for entity_id, node_type, title, title_blob, def_blob in entity_query.all():
+                for (
+                    entity_id,
+                    node_type,
+                    title,
+                    title_blob,
+                    def_blob,
+                    ext_refs,
+                ) in entity_query.all():
                     match = self._build_match(
-                        query, str(entity_id), node_type, title, title_blob, def_blob, threshold
+                        query,
+                        str(entity_id),
+                        node_type,
+                        title,
+                        title_blob,
+                        def_blob,
+                        threshold,
+                        ext_refs,
                     )
                     if match is not None:
                         matches.append(match)
@@ -158,6 +190,7 @@ class SqliteSchemaVectorIndex:
                         OntologyEntity.title,
                         OntologyEntity.title_embedding,
                         OntologyEntity.definition_embedding,
+                        OntologyEntity.external_references,
                     )
                     .join(
                         OntologyEntity,
@@ -166,9 +199,16 @@ class SqliteSchemaVectorIndex:
                     .filter(OntologyEntity.is_indexed.is_(True))
                 )
                 relationship_query = self._scope_to_taxonomy(relationship_query, taxonomy_id)
-                for rel_id, title, title_blob, def_blob in relationship_query.all():
+                for rel_id, title, title_blob, def_blob, ext_refs in relationship_query.all():
                     match = self._build_match(
-                        query, str(rel_id), "relationship", title, title_blob, def_blob, threshold
+                        query,
+                        str(rel_id),
+                        "relationship",
+                        title,
+                        title_blob,
+                        def_blob,
+                        threshold,
+                        ext_refs,
                     )
                     if match is not None:
                         matches.append(match)
@@ -207,6 +247,7 @@ class SqliteSchemaVectorIndex:
         title_blob: bytes | None,
         def_blob: bytes | None,
         threshold: float,
+        external_references: list | None = None,
     ) -> SchemaMatch | None:
         """Score one candidate's best field; None if below threshold or unembedded."""
         scored = self._best_score(query_norm, title_blob, def_blob)
@@ -221,6 +262,7 @@ class SqliteSchemaVectorIndex:
             label=title or "",
             score=score,
             matched_field=matched_field,
+            external_id=_first_external_identifier(external_references),
         )
 
     @staticmethod

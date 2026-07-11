@@ -26,7 +26,7 @@ from domain.extraction.open_extraction import (
     snake_label,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
-from domain.ontology.ports import EmbeddingService, SchemaVectorIndex
+from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
@@ -59,11 +59,13 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
+        ontology_repo: OntologyRepository | None = None,
     ) -> None:
         super().__init__(llm_provider, run_id, status_writer)
         self._nlp = nlp_processor
         self._embedding = embedding_service
         self._schema_index = schema_index
+        self._ontology_repo = ontology_repo
         self._cfg = IndividualOpenV1Config.from_dict(config or get_open_v1_config())
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -85,7 +87,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             triples = self._build_triples(open_result, relations)
 
             if self._cfg.ground_to_schema or self._cfg.require_schema_match:
-                triples = self._ground_to_schema(triples)
+                triples = self._ground_to_schema(triples, state.input_data.get("ontology_id"))
 
             warnings: list[str] = []
             metadata: dict[str, Any] = {
@@ -155,15 +157,34 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             )
         return triples
 
-    def _ground_to_schema(self, triples: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _ground_to_schema(
+        self, triples: list[dict[str, Any]], ontology_id: str | None
+    ) -> list[dict[str, Any]]:
         """
         Use the SchemaVectorIndex to match individuals to existing schema classes.
 
-        Adds rdf:type triples for individuals whose phrase matches a class above
-        the similarity threshold. When require_schema_match is set, drops triples
-        whose subject AND object both fail to match any schema node.
+        Adds is_a triples for individuals whose phrase matches a class above the
+        similarity threshold, with the matched class's external schema identifier
+        (e.g. "motivation.goal") as the object when it has one. When
+        require_schema_match is set, drops triples whose subject AND object both
+        fail to match any schema node.
+
+        Grounding is scoped to the ontology named by ``ontology_id`` (the
+        scenario's source taxonomy). If there is no index, no repository, or the
+        identifier does not resolve to a known taxonomy, grounding is skipped and
+        the triples are returned unchanged — a single workspace can hold several
+        imported ontologies, and matching across all of them would ground an
+        individual to an unrelated ontology's class.
         """
         if self._schema_index is None:
+            return triples
+
+        taxonomy = (
+            self._ontology_repo.get_by_identifier(ontology_id)
+            if self._ontology_repo is not None and ontology_id
+            else None
+        )
+        if taxonomy is None:
             return triples
 
         threshold = self._cfg.similarity_threshold
@@ -176,7 +197,9 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         matched: dict[str, Any] = {}
         for label in individuals:
             query = self._embedding.embed(label.replace("_", " "))
-            results = self._schema_index.search(query, kinds=kinds, top_k=1, threshold=threshold)
+            results = self._schema_index.search(
+                query, kinds=kinds, top_k=1, threshold=threshold, taxonomy_id=taxonomy.id
+            )
             if results:
                 matched[label] = results[0]
 
@@ -197,11 +220,19 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             for label, match in matched.items():
                 if label not in kept_labels:
                     continue
+                # Object is the matched class's external schema identifier (e.g.
+                # "motivation.goal") when it has one, so the grounding matches the
+                # source ontology's vocabulary; the human-readable title is the
+                # fallback. kind stays "class" (semantically honest; the scored
+                # triple key ignores object kind).
                 type_triples.append(
                     {
                         "subject": {"label": label, "kind": "individual"},
-                        "predicate": {"label": "rdf:type", "kind": "property"},
-                        "object": {"label": match.label, "kind": "class"},
+                        "predicate": {"label": "is_a", "kind": "property"},
+                        "object": {
+                            "label": match.external_id or match.label,
+                            "kind": "class",
+                        },
                         "confidence": round(match.score, 4),
                     }
                 )
