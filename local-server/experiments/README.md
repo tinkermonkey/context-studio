@@ -37,6 +37,34 @@ writes a `<run_id>.json` / `<run_id>.md` pair here:
 Report files are generated artifacts (gitignored — see `.gitignore`); only
 this README and the `reports/` directory itself are tracked.
 
+## Prerequisites to a full run
+
+Before the `default` LLM pipeline (`IndividualExtractionOrchestrator`) can
+compete as a Loop B variant, its cassettes must be recorded once. Loop A/B
+never make live LLM calls (`karpathy_loop_design.md` §4.1/§5) — every variant
+must replay entirely from recorded cassettes — so until the cassette set exists
+under `tests/integration/fixtures/cassettes/individual_extraction/`,
+`build_registry()` in `scripts/quality_tournament.py` deliberately leaves the
+`default` variant unregistered and the tournament has nothing to replay.
+
+- **REQUIRED — record the `default` cassette set** (one-time bootstrap, before
+  registering the `default` variant in Loop B):
+
+  ```bash
+  # from local-server/, venv active. Dry-run first (no calls, prints the plan):
+  python scripts/record_default_cassettes.py --dry-run
+  # Then record for real (spends money — see cost note):
+  python scripts/record_default_cassettes.py --record
+  ```
+
+  Cost note: `--record` makes one live LLM call per corpus scenario against the
+  real provider (the corpus fixtures pin the `default` pipeline to
+  `claude-opus-4-7`); the default behavior with no flag, and `--dry-run`, make
+  zero calls. The `dr_spec` scenarios additionally require the sibling
+  `documentation_robotics/spec` checkout to build their ontology — scenarios
+  whose ontology can't be built are skipped with a message rather than recorded
+  empty.
+
 ## Loop B: `scripts/quality_tournament.py`
 
 `python scripts/quality_tournament.py --pipeline individual` runs the variant
