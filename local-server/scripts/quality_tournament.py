@@ -49,7 +49,19 @@ from uuid import uuid4
 
 from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.events.in_process import InProcessEventPublisher
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
+from domain.extraction.services import ExtractionService
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
@@ -57,7 +69,10 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionOrchestrator,
+    IndividualExtractionState,
+)
 from scripts.eval_ontology import build_eval_ontology
 from scripts.quality_loop import (
     _INDIVIDUAL_SPACE,
@@ -65,7 +80,11 @@ from scripts.quality_loop import (
     _make_embed_fn,
     coordinate_ascent,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
@@ -100,7 +119,52 @@ _EXPERIMENTS_REPORTS_DIR = Path(__file__).parent.parent / "experiments" / "repor
 # quality_tournament_individual_extraction.jsonl).
 _TOURNAMENT_PIPELINE_TAG = "quality_tournament_individual_extraction"
 
+# Cassette location for the `default` LLM pipeline. This is the SAME path
+# convention the quality suite records to (see the `cassette_dir` fixture and
+# the `quality_llm_provider_factory` cassette-mode branch in
+# tests/integration/pipelines/test_quality_individual_extraction.py): one file
+# per scenario named `individual_extraction_<scenario>.json` under
+# tests/integration/fixtures/cassettes/individual_extraction/.
+_DEFAULT_CASSETTE_DIR = (
+    Path(__file__).parent.parent
+    / "tests"
+    / "integration"
+    / "fixtures"
+    / "cassettes"
+    / "individual_extraction"
+)
+_DEFAULT_CASSETTE_PREFIX = "individual_extraction_"
+
+# Every scenario the `default` variant is asked to replay across a full
+# tournament run: the dev/holdout corpus plus the always-reported Wave 1
+# bootstrap and Wave 4 informal diagnostic groups (see `_run_variant`). The
+# guard in `build_registry` only admits `default` once a cassette exists for
+# every one of these, so an admitted variant can never crash mid-tournament on
+# a missing recording.
+_DEFAULT_REPLAY_SCENARIOS = (
+    list(INDIVIDUAL_EXTRACTION_SCENARIOS)
+    + list(DR_BOOTSTRAP_SCENARIOS)
+    + list(WAVE4_INFORMAL_SCENARIOS)
+)
+
 RunScenario = Callable[[dict[str, Any], str], Awaitable[list[dict]]]
+
+
+def _default_cassette_path(scenario: str) -> Path:
+    """Return the recorded-cassette path for one `default`-pipeline scenario."""
+    return _DEFAULT_CASSETTE_DIR / f"{_DEFAULT_CASSETTE_PREFIX}{scenario}.json"
+
+
+def _default_cassettes_present() -> bool:
+    """
+    Report whether the `default` LLM pipeline can be replayed fully offline.
+
+    True only when a recorded cassette exists for every scenario the variant
+    would replay (`_DEFAULT_REPLAY_SCENARIOS`). No cassettes have been recorded
+    yet, so this returns False today and `build_registry` still yields only
+    `open_v1` — the guard is what keeps today's behavior unchanged.
+    """
+    return all(_default_cassette_path(scenario).exists() for scenario in _DEFAULT_REPLAY_SCENARIOS)
 
 
 @dataclass(frozen=True)
@@ -184,6 +248,134 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
     )
 
 
+def _build_default_replay_ontology() -> tuple[SQLiteOntologyRepository, SqliteSchemaVectorIndex]:
+    """
+    Build the in-memory eval ontology the `default` variant grounds against.
+
+    Mirrors the quality suite's `ontology_repo` fixture exactly (taxonomy id
+    `test-ontology-123` with `individual` / `property` / `entity` classes) so a
+    replayed cassette resolves the same taxonomy it was recorded against —
+    `ExtractionService.extract_triples` looks the ontology up by the fixture's
+    `ontology_id`, so a mismatched taxonomy would silently drop grounding.
+
+    Uses `FakeEmbeddingService` (like the quality suite), not the tournament's
+    real SentenceTransformer, so the extraction-time prompts — and therefore
+    the cassette prompt hashes — match what was recorded.
+
+    Returns the ontology repository and a `SqliteSchemaVectorIndex` over it (the
+    `eval_repo` / `eval_index` pair), mirroring how the open pipeline is handed
+    a `SchemaVectorIndex` for grounding.
+    """
+    engine = create_local_db_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session_factory = create_session_factory(engine)
+    repo = SQLiteOntologyRepository(session_factory)
+
+    taxonomy = Taxonomy(
+        id="test-ontology-123",
+        identifier="test_ontology",
+        title="Test Ontology",
+        description="Test ontology for extraction",
+    )
+    repo.save_taxonomy(taxonomy)
+    scheme = ConceptScheme(
+        id=str(uuid4()),
+        identifier="test_scheme",
+        taxonomy_id=taxonomy.id,
+        title="Test Scheme",
+        description="Test scheme",
+    )
+    repo.save_concept_scheme(scheme)
+    for class_name in ("individual", "property", "entity"):
+        repo.save_class(
+            Class(
+                id=str(uuid4()),
+                identifier=class_name,
+                concept_scheme_id=scheme.id,
+                taxonomy_id=taxonomy.id,
+                title=class_name.title(),
+                description=f"A {class_name}",
+            )
+        )
+
+    index = SqliteSchemaVectorIndex(session_factory, FakeEmbeddingService())
+    return repo, index
+
+
+def _make_default_variant(
+    eval_repo: SQLiteOntologyRepository,
+    *,
+    grounding: bool,
+    eval_index: SqliteSchemaVectorIndex | None = None,
+) -> Variant:
+    """
+    Build a `default` LLM-pipeline variant that replays entirely from cassettes.
+
+    `run_scenario` reconstructs the exact wiring the quality suite recorded
+    against — the real `IndividualExtractionOrchestrator` over an
+    `ExtractionService` with `FakeEmbeddingService` / `FakeNLPProcessor` /
+    `FakeReferenceSource`, but with a `CassetteLLMProvider` in place of the live
+    provider — so no live LLM call is ever made (§4.1/§5).
+
+    When `grounding` is True the variant enables `ground_to_schema` /
+    `require_schema_match` and tightens `similarity_threshold` so extracted
+    entities are grounded against `eval_repo`, and its `eval_index` is
+    reindexed so the eval ontology carries embedded class/property vectors —
+    the same grounding wiring the open pipeline receives via a
+    `SchemaVectorIndex`. When False the variant runs plain extraction with
+    grounding effectively off.
+
+    Every `base_config` key also appears in `knob_space` (as a single-value
+    list) so `coordinate_ascent`'s wholesale, restart-time config replacement
+    can never drop a fixed key (see `Variant.knob_space`).
+    """
+    if grounding and eval_index is not None:
+        eval_index.reindex_all()
+
+    name = "default+grounding" if grounding else "default"
+    base_config: dict[str, Any] = {
+        "ground_to_schema": grounding,
+        "require_schema_match": grounding,
+        "similarity_threshold": 0.5 if grounding else 0.85,
+    }
+
+    async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
+        provider = CassetteLLMProvider(_default_cassette_path(scenario))
+        engine = create_local_db_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session_factory = create_session_factory(engine)
+        extraction_service = ExtractionService(
+            ontology_repo=eval_repo,
+            embedding_service=FakeEmbeddingService(),
+            llm=provider,
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=SQLiteExtractionRepository(session_factory),
+            extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
+            similarity_threshold=config.get("similarity_threshold", 0.85),
+        )
+        orch = IndividualExtractionOrchestrator(
+            llm_provider=provider,
+            extraction_service=extraction_service,
+        )
+        fixture = dict(load_fixture("individual_extraction", scenario))
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data=fixture,
+        )
+        result_state = await orch.execute(state)
+        return (result_state.result or {}).get("triples", [])
+
+    return Variant(
+        name=name,
+        base_config=base_config,
+        knob_space={key: [value] for key, value in base_config.items()},
+        run_scenario=run_scenario,
+    )
+
+
 def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str, Variant]:
     """
     Seed today's variant registry (karpathy_loop_design.md §4.2).
@@ -194,22 +386,44 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
     - 'open_v1': the rule-mode spaCy dependency-triple pipeline. Makes no LLM
       calls at all, so it always qualifies.
 
-    'default' (the LLM pipeline, `IndividualExtractionOrchestrator`) is
-    deliberately NOT registered yet. Phase 2 fixed the live-mode output
-    contract bug — it now produces structurally valid, non-zero triples
-    against the real Anthropic API (see
-    `test_quality_individual_extraction.py::test_live_quality_scenario`) —
-    but no cassettes have been recorded for individual_extraction under
-    `tests/integration/fixtures/cassettes/individual_extraction/`, so there is nothing
-    for this offline tournament to replay. Once cassettes exist (record them
-    via `pytest --refresh-cassettes -k test_quality_scenario_with_metrics`
-    against the individual_extraction quality suite, with an LLM provider
-    configured), add a `Variant` here whose `run_scenario` replays through
-    `CassetteLLMProvider` (see `_harness/cassettes.py` and the cassette-mode
-    branch of `test_quality_scenario_with_metrics`) and register it — no
-    change to the tournament loop itself is required.
+    - 'default' / 'default+grounding': the LLM pipeline
+      (`IndividualExtractionOrchestrator`), admitted under a GUARD. The default
+      pipeline can only be replayed offline once cassettes have been recorded
+      for it. When `_default_cassettes_present()` is True — a recorded cassette
+      exists for every scenario the variant replays, under the same path
+      convention the quality suite records to — this registers both a `default`
+      variant and a grounding-enabled `default+grounding` variant (the latter
+      turning on `ground_to_schema` / `require_schema_match` and grounding
+      against the `_build_default_replay_ontology()` repo / index, mirroring
+      the open pipeline's grounding wiring). Both replay strictly through
+      `CassetteLLMProvider`, never a live provider.
+
+    No cassettes have been recorded yet, so the guard is closed and this yields
+    only `open_v1` — exactly as before. The guard clears automatically once
+    cassettes exist: record them via
+    `pytest --refresh-cassettes -k test_quality_scenario_with_metrics` against
+    the individual_extraction quality suite (with an LLM provider configured),
+    and the `default` variants register on the next run with no further change
+    to the tournament loop.
     """
     register_variant(_make_open_v1_variant(nlp, embedding, eval_repo, eval_index))
+
+    if _default_cassettes_present():
+        default_repo, default_index = _build_default_replay_ontology()
+        register_variant(_make_default_variant(default_repo, grounding=False))
+        register_variant(
+            _make_default_variant(default_repo, grounding=True, eval_index=default_index)
+        )
+    else:
+        print(
+            "note: 'default' LLM pipeline not registered — no recorded cassettes "
+            f"found under {_DEFAULT_CASSETTE_DIR} for all "
+            f"{len(_DEFAULT_REPLAY_SCENARIOS)} replay scenarios, so there is "
+            "nothing for this offline tournament to replay. Record them via "
+            "`pytest --refresh-cassettes -k test_quality_scenario_with_metrics` "
+            "and the 'default'/'default+grounding' variants register automatically."
+        )
+
     return registered_variants()
 
 

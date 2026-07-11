@@ -67,12 +67,16 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing'],
     summary:
       'RAG-proper prompting for the default (LLM) pipeline: vector-match noun chunks against the ontology first, inject top-k matched classes + property definitions into the prompt, verify LLM-returned IDs against the ontology instead of trusting them (design doc §7 item 1).',
-    // scripts/quality_tournament.py's build_registry() deliberately does not
-    // register the `default` pipeline yet (no cassettes recorded for it) --
-    // an experimenter assigned this hypothesis today would implement a
-    // change Loop B cannot score at all, guaranteeing an accept-gate
-    // rejection regardless of merit. Unblock once `default` is registered
-    // there (see that function's docstring for the exact steps).
+    // scripts/quality_tournament.py's build_registry() now registers the
+    // `default` pipeline under a guard: it enters the tournament as the
+    // `default`/`default+grounding` variants AUTOMATICALLY once cassettes have
+    // been recorded for it (see that function's docstring for the exact
+    // recording command). Until then Loop B cannot score a change to it, so an
+    // experimenter assigned this hypothesis today would implement a change the
+    // tournament ignores, guaranteeing an accept-gate rejection regardless of
+    // merit. This block therefore clears itself the moment `default` cassettes
+    // exist and the variant registers -- flip `blocked` to false then. No
+    // cassettes yet, so it stays blocked for now.
     blocked: true,
   },
   {
