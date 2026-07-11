@@ -526,14 +526,32 @@ function acceptGate(candidate, incumbentDev, incumbentHoldout, epsilon, holdoutS
   return { passes: devSoftImproves && noFloorRegression && noHoldoutCollapse, reasons, advisories }
 }
 
-const iteration = (args && args.iteration) || 1
-const consecutiveNoAccept = (args && args.consecutiveNoAccept) || 0
-const maxConsecutiveNoAccept = (args && args.maxConsecutiveNoAccept) || DEFAULT_MAX_CONSECUTIVE_NO_ACCEPT
-const hypothesisCount = clamp((args && args.hypothesisCount) || DEFAULT_HYPOTHESIS_COUNT, MIN_HYPOTHESIS_COUNT, MAX_HYPOTHESIS_COUNT)
-const integrationBranch = (args && args.integrationBranch) || DEFAULT_INTEGRATION_BRANCH
-const holdoutFloors = (args && args.holdoutFloors) || DEFAULT_HOLDOUT_FLOORS
-const cumulativeCostUsd = (args && args.cumulativeCostUsd) || 0
-const totalBudgetUsd = args && args.totalBudgetUsd != null ? args.totalBudgetUsd : null
+// `args` may arrive already parsed, or — depending on how this workflow was
+// invoked (a slash-command wrapper, or a stringified /loop hand-off) — as a
+// JSON string. Without this, every read below silently falls back to its
+// default, so state threading (iteration, consecutiveNoAccept, budgets,
+// hypothesisCount) is quietly dropped and the loop restarts from scratch every
+// call. Normalize to an object first.
+let loopArgs = args
+if (typeof loopArgs === 'string') {
+  try {
+    loopArgs = JSON.parse(loopArgs)
+  } catch {
+    loopArgs = {}
+  }
+}
+if (!loopArgs || typeof loopArgs !== 'object') {
+  loopArgs = {}
+}
+
+const iteration = loopArgs.iteration || 1
+const consecutiveNoAccept = loopArgs.consecutiveNoAccept || 0
+const maxConsecutiveNoAccept = loopArgs.maxConsecutiveNoAccept || DEFAULT_MAX_CONSECUTIVE_NO_ACCEPT
+const hypothesisCount = clamp(loopArgs.hypothesisCount || DEFAULT_HYPOTHESIS_COUNT, MIN_HYPOTHESIS_COUNT, MAX_HYPOTHESIS_COUNT)
+const integrationBranch = loopArgs.integrationBranch || DEFAULT_INTEGRATION_BRANCH
+const holdoutFloors = loopArgs.holdoutFloors || DEFAULT_HOLDOUT_FLOORS
+const cumulativeCostUsd = loopArgs.cumulativeCostUsd || 0
+const totalBudgetUsd = loopArgs.totalBudgetUsd != null ? loopArgs.totalBudgetUsd : null
 
 // §4.3 step 6, pre-flight half: don't spend anything on an iteration the
 // caller already knows should not run.

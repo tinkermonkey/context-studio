@@ -40,3 +40,9 @@ tests/integration/fixtures/pipelines/_metrics/quality_tournament_*.jsonl
 experiments/reports/*.json
 experiments/reports/*.md
 !experiments/reports/.gitkeep
+
+# NOTE: experiments/ledger.jsonl is intentionally NOT ignored. Unlike the
+# per-run reports/telemetry above, the ledger is the loop's durable, append-only
+# memory — Loop C reads it to skip already-rejected hypotheses and records the
+# baseline-reset checkpoints, so it must be version-controlled and travel with
+# the loop branch. Do not add an ignore rule for it.

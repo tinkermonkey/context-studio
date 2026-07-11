@@ -618,6 +618,10 @@ class SchemaMatch:
         score: Similarity score in 0.0-1.0 (1.0 = identical)
         matched_field: Whether the title or the definition embedding produced the
             best score
+        external_id: The entity's external schema identifier (e.g. the DR spec
+            node id "motivation.goal"), or None if the entity has no external
+            reference. Lets grounding emit the identifier the source ontology
+            uses rather than only the human-readable title.
 
     Raises:
         ValueError: If score is not 0.0-1.0
@@ -628,6 +632,7 @@ class SchemaMatch:
     label: str
     score: float
     matched_field: MatchedField
+    external_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate schema match invariants."""

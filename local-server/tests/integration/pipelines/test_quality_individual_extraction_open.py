@@ -281,6 +281,21 @@ class _StubEmbedding:
         raise NotImplementedError
 
 
+class _FakeTaxonomy:
+    def __init__(self, taxonomy_id: str):
+        self.id = taxonomy_id
+
+
+class _FakeOntologyRepo:
+    """Resolves the DR spec identifier to a taxonomy; anything else to None."""
+
+    def __init__(self, taxonomy_id: str = "dr-spec-tax-id"):
+        self._taxonomy = _FakeTaxonomy(taxonomy_id)
+
+    def get_by_identifier(self, identifier):
+        return self._taxonomy if identifier == "dr_spec" else None
+
+
 class _StubSchemaIndex:
     """Returns a fixed class match for every query (or nothing when empty=True)."""
 
@@ -290,7 +305,7 @@ class _StubSchemaIndex:
     def index_entity(self, entity_id, title, description):  # pragma: no cover - unused
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0):
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
         if self._empty:
             return []
         return [
@@ -300,6 +315,7 @@ class _StubSchemaIndex:
                 label="ConsensusAlgorithm",
                 score=0.9,
                 matched_field="title",
+                external_id="application.consensus-algorithm",
             )
         ]
 
@@ -313,21 +329,39 @@ def _triple(subj, pred, obj):
     }
 
 
-def test_grounding_emits_rdf_type_triples():
+def test_grounding_emits_is_a_triples():
     orch = OpenIndividualExtractionOrchestrator(
         llm_provider=None,
         nlp_processor=None,
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(),
         config={**get_open_v1_config(), "ground_to_schema": True, "require_schema_match": False},
+        ontology_repo=_FakeOntologyRepo(),
     )
     triples = [_triple("consensus_algorithm", "ensures", "state_agreement")]
-    grounded = orch._ground_to_schema(triples)
-    type_triples = [t for t in grounded if t["predicate"]["label"] == "rdf:type"]
-    assert type_triples, "expected rdf:type triples for matched individuals"
+    grounded = orch._ground_to_schema(triples, "dr_spec")
+    type_triples = [t for t in grounded if t["predicate"]["label"] == "is_a"]
+    assert type_triples, "expected is_a triples for matched individuals"
     assert all(t["object"]["kind"] == "class" for t in type_triples)
+    # Object is the matched class's external schema identifier, not its title.
+    assert all(t["object"]["label"] == "application.consensus-algorithm" for t in type_triples)
     # The original relation triple is retained.
     assert any(t["predicate"]["label"] == "ensures" for t in grounded)
+
+
+def test_grounding_skipped_when_ontology_unresolved():
+    orch = OpenIndividualExtractionOrchestrator(
+        llm_provider=None,
+        nlp_processor=None,
+        embedding_service=_StubEmbedding(),
+        schema_index=_StubSchemaIndex(),
+        config={**get_open_v1_config(), "ground_to_schema": True, "require_schema_match": False},
+        ontology_repo=_FakeOntologyRepo(),
+    )
+    triples = [_triple("consensus_algorithm", "ensures", "state_agreement")]
+    # An unresolved ontology_id (e.g. a placeholder scenario's stale id) must
+    # leave the triples untouched — no grounding across an unrelated ontology.
+    assert orch._ground_to_schema(triples, "test-ontology-123") == triples
 
 
 def test_require_schema_match_filters_unmatched():
@@ -337,9 +371,10 @@ def test_require_schema_match_filters_unmatched():
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(empty=True),  # nothing matches
         config={**get_open_v1_config(), "ground_to_schema": False, "require_schema_match": True},
+        ontology_repo=_FakeOntologyRepo(),
     )
     triples = [_triple("foo", "bars", "baz")]
-    assert orch._ground_to_schema(triples) == []
+    assert orch._ground_to_schema(triples, "dr_spec") == []
 
 
 class _SelectiveEmbedding:
@@ -361,7 +396,7 @@ class _SelectiveSchemaIndex:
     def index_entity(self, *a):
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0):
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
         if query_embedding and query_embedding[0] == 1.0:
             return [
                 SchemaMatch(
@@ -370,6 +405,7 @@ class _SelectiveSchemaIndex:
                     label="ConsensusAlgorithm",
                     score=0.9,
                     matched_field="title",
+                    external_id="application.consensus-algorithm",
                 )
             ]
         return []
@@ -382,12 +418,13 @@ def test_require_schema_match_keeps_matched_drops_unmatched():
         embedding_service=_SelectiveEmbedding(),
         schema_index=_SelectiveSchemaIndex(),
         config={**get_open_v1_config(), "ground_to_schema": False, "require_schema_match": True},
+        ontology_repo=_FakeOntologyRepo(),
     )
     triples = [
         _triple("consensus_algorithm", "ensures", "state_agreement"),  # subject matches → kept
         _triple("foo", "bars", "baz"),  # neither matches → dropped
     ]
-    kept = orch._ground_to_schema(triples)
+    kept = orch._ground_to_schema(triples, "dr_spec")
     subjects = {t["subject"]["label"] for t in kept}
     assert "consensus_algorithm" in subjects
     assert "foo" not in subjects

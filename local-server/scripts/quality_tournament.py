@@ -57,6 +57,7 @@ from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
 from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from scripts.eval_ontology import build_eval_ontology
 from scripts.quality_loop import (
     _INDIVIDUAL_SPACE,
     _METRICS_DIR,
@@ -148,16 +149,22 @@ def registered_variants() -> dict[str, Variant]:
     return dict(_REGISTRY)
 
 
-def _make_open_v1_variant(nlp, embedding) -> Variant:
-    """Build the `open_v1` variant: the rule-mode spaCy dependency-triple pipeline."""
+def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Variant:
+    """Build the `open_v1` variant: the rule-mode spaCy dependency-triple pipeline.
+
+    `eval_repo`/`eval_index` wire the imported ontology (scripts/eval_ontology.py)
+    into the grounding stage so the schema-grounding knobs move the metric;
+    grounding self-skips per scenario when the ontology can't be resolved.
+    """
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
         orch = OpenIndividualExtractionOrchestrator(
             llm_provider=None,
             nlp_processor=nlp,
             embedding_service=embedding,
-            schema_index=None,
+            schema_index=eval_index,
             config=config,
+            ontology_repo=eval_repo,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
         state = IndividualExtractionState(
@@ -176,7 +183,7 @@ def _make_open_v1_variant(nlp, embedding) -> Variant:
     )
 
 
-def build_registry(nlp, embedding) -> dict[str, Variant]:
+def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str, Variant]:
     """
     Seed today's variant registry (karpathy_loop_design.md §4.2).
 
@@ -201,7 +208,7 @@ def build_registry(nlp, embedding) -> dict[str, Variant]:
     branch of `test_quality_scenario_with_metrics`) and register it — no
     change to the tournament loop itself is required.
     """
-    register_variant(_make_open_v1_variant(nlp, embedding))
+    register_variant(_make_open_v1_variant(nlp, embedding, eval_repo, eval_index))
     return registered_variants()
 
 
@@ -512,7 +519,8 @@ async def _amain(args) -> int:
         return 1
     embed_fn = _make_embed_fn(embedding)
 
-    registry = build_registry(nlp, embedding)
+    eval_repo, eval_index = build_eval_ontology(embedding)
+    registry = build_registry(nlp, embedding, eval_repo, eval_index)
     if not registry:
         print("ERROR: no variants registered")
         return 1
