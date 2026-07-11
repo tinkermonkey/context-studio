@@ -1,0 +1,9 @@
+{
+  "2c3fe982186378281c64dad90985e7815ea4092d0d8031f85606f15872565d82": {
+    "content": "```json\n{\n  \"annotation\": \"annotation\",\n  \"api\": \"API\",\n  \"canonical\": \"canonical\",\n  \"changeset_view\": \"changeset_view\",\n  \"code\": \"Code\",\n  \"component\": \"component\",\n  \"data_shape_gotcha\": \"data_shape_gotcha\",\n  \"data_store_ui_state\": \"data_store_ui_state\",\n  \"design_system\": \"design system\",\n  \"dev_server\": \"dev_server\",\n  \"dr_visualize_server\": \"dr_visualize_server\",\n  \"graph\": \"graph\",\n  \"index_key\": \"index_key\",\n  \"layer.node_types\": \"layer.node_types\",\n  \"magic_link\": \"magic-link\",\n  \"model_schema_view\": \"model_schema_view\",\n  \"nodeschemas\": \"nodeschemas\",\n  \"npm_client\": \"npm_client\",\n  \"object.keys(nodeschemas\": \"object.keys(nodeschemas\",\n  \"playwright\": \"Playwright\",\n  \"post\": \"post\",\n  \"predicate\": \"predicate\",\n  \"relationshipschemas\": \"relationshipschemas\",\n  \"route\": \"route\",\n  \"schema_view\": \"schema_view\",\n  \"spec\": \"spec\",\n  \"spec_node_type\": \"spec_node_type\",\n  \"test\": \"test\",\n  \"test_suite\": \"test_suite\",\n  \"token\": \"token\",\n  \"uistore.view\": \"uistore.view\",\n  \"ux\": \"UX\",\n  \"viewer\": \"viewer\",\n  \"visible_focus\": \"visible_focus\",\n  \"vitest\": \"Vitest\"\n}\n```",
+    "tokens_in": 1042,
+    "tokens_out": 411,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "c51759f0054b8dc4228eb2475214dd00b9bd88869737c4d1052ba96fa9d5a700": {
+    "content": "```json\n{\n  \"concrete_requirement\": \"Offline-Capable Mobile Technician App\",\n  \"contractor\": \"contractors\",\n  \"customer\": \"Customers\",\n  \"driver\": \"Rising Customer Expectations for On-Time Arrival Windows\",\n  \"field\": \"field\",\n  \"goal\": \"Reduce Missed Service Appointments\",\n  \"job\": \"job\",\n  \"lose_repeat_business\": \"lose repeat business\",\n  \"means\": \"means\",\n  \"principle\": \"A Technician Should Never Need to Call Dispatch to Confirm a Job\",\n  \"rural_service_route\": \"Rural service routes\",\n  \"specific_interpretation\": \"specific_interpretation\",\n  \"specific_outcome\": \"specific_outcome\",\n  \"success\": \"Success\",\n  \"technician\": \"technicians\",\n  \"what\": \"what\",\n  \"who\": \"who\"\n}\n```",
+    "tokens_in": 676,
+    "tokens_out": 199,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "6abee0e65d78d16f1aba399f277e62ae8f4ac51b86de13f898f6e70ee2fab1a8": {
+    "content": "```json\n{\n  \"access_pattern\": \"access pattern\",\n  \"event\": \"event\",\n  \"event_document\": \"event document\",\n  \"event_shape\": \"event shape\",\n  \"field\": \"field\",\n  \"field_technician_app\": \"field technician's app\",\n  \"hard_requirement\": \"hard_requirement\",\n  \"heterogeneous_semi_structured_payload\": \"heterogeneous, semi-structured payloads\",\n  \"index\": \"index\",\n  \"indexing\": \"indexing\",\n  \"job_event\": \"job event\",\n  \"job_event_store\": \"Job Event Store\",\n  \"job_events_collection\": \"Job Events Collection\",\n  \"relational_schema\": \"relational schema\",\n  \"retention_policy\": \"retention policy\",\n  \"single_job_events_collection\": \"single Job Events Collection\",\n  \"status_change_event\": \"status-change event\",\n  \"technician_device\": \"technician's device\",\n  \"technician_id_field\": \"Technician ID Field\"\n}\n```",
+    "tokens_in": 746,
+    "tokens_out": 251,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

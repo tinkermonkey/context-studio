@@ -116,6 +116,7 @@ _INDIVIDUAL_SPACE: dict[str, list] = {
         ["class", "property_definition"],
         ["class", "property_definition", "relationship"],
     ],
+    "llm_canonicalization": [False, True],
 }
 
 

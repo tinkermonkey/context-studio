@@ -1,0 +1,9 @@
+{
+  "41b55e4d2fce2ec4903ac770d0b90d82758b03ea496176e46a2ba83793e551c4": {
+    "content": "```json\n{\n  \"api_node\": \"API nodes\",\n  \"application_code\": \"application code\",\n  \"assign_job_operation\": \"Assign Job Operation\",\n  \"assign_job_trace_configuration\": \"Assign Job Trace Configuration\",\n  \"assignment\": \"assignment\",\n  \"call\": \"call\",\n  \"dispatcher_api_key_scheme\": \"Dispatcher API Key Scheme\",\n  \"dispatcher_burst_rate_limit\": \"Dispatcher Burst Rate Limit\",\n  \"edge_gateway_software\": \"Edge Gateway Software\",\n  \"endpoint\": \"endpoint\",\n  \"exporter_configuration\": \"exporter_configuration\",\n  \"hard_constraint\": \"hard constraint\",\n  \"monitoring_backend\": \"monitoring_backend\",\n  \"observability_backend_exporter\": \"Observability Backend Exporter\",\n  \"rate_limit\": \"rate limit\",\n  \"request\": \"request\",\n  \"span\": \"span\",\n  \"technician_device\": \"technician's device\",\n  \"telemetry_pipeline_service\": \"Telemetry Pipeline Service\",\n  \"throttling\": \"throttling\",\n  \"trace_configuration\": \"trace configuration\"\n}\n```",
+    "tokens_in": 759,
+    "tokens_out": 265,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

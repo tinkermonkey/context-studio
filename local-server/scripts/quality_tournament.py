@@ -135,6 +135,35 @@ _DEFAULT_CASSETTE_DIR = (
 )
 _DEFAULT_CASSETTE_PREFIX = "individual_extraction_"
 
+# Cassette location for the `open_v1` LLM label-canonicalization call. One file
+# per scenario named `individual_canon_<scenario>.json`, recorded by
+# scripts/record_individual_canonicalization_cassettes.py against the same
+# eval ontology this tournament grounds against. The canonicalization prompt is
+# built only from scenario-fixed inputs (spaCy mentions + their vector-retrieved
+# candidate titles), so one recording per scenario replays across the whole knob
+# sweep. When a scenario has no cassette the provider is None and the
+# canonicalization stage self-skips.
+_CANON_CASSETTE_DIR = (
+    Path(__file__).parent.parent
+    / "tests"
+    / "integration"
+    / "fixtures"
+    / "cassettes"
+    / "individual_canonicalization"
+)
+_CANON_CASSETTE_PREFIX = "individual_canon_"
+
+
+def _canon_cassette_path(scenario: str) -> Path:
+    """Return the recorded-cassette path for one `open_v1` canonicalization scenario."""
+    return _CANON_CASSETTE_DIR / f"{_CANON_CASSETTE_PREFIX}{scenario}.json"
+
+
+def _canon_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
+    """Cassette provider for a scenario's canonicalization call, or None if unrecorded."""
+    path = _canon_cassette_path(scenario)
+    return CassetteLLMProvider(path) if path.exists() else None
+
 # Every scenario the `default` variant is asked to replay across a full
 # tournament run: the dev/holdout corpus plus the always-reported Wave 1
 # bootstrap and Wave 4 informal diagnostic groups (see `_run_variant`). The
@@ -224,7 +253,7 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
         orch = OpenIndividualExtractionOrchestrator(
-            llm_provider=None,
+            llm_provider=_canon_cassette_provider(scenario),
             nlp_processor=nlp,
             embedding_service=embedding,
             schema_index=eval_index,
@@ -240,9 +269,12 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
         result_state = await orch.execute(state)
         return (result_state.result or {}).get("triples", [])
 
+    # Enable LLM label canonicalization in the variant baseline so Loop A tunes
+    # it from ON; `_INDIVIDUAL_SPACE` still offers False so the floor gate can
+    # switch it back off if it fails to help.
     return Variant(
         name="open_v1",
-        base_config=get_open_v1_config(),
+        base_config={**get_open_v1_config(), "llm_canonicalization": True},
         knob_space=dict(_INDIVIDUAL_SPACE),
         run_scenario=run_scenario,
     )

@@ -35,6 +35,10 @@ class IndividualOpenV1Config:
     require_schema_match: bool
     similarity_threshold: float
     kinds_to_search: tuple[SchemaKind, ...]
+    llm_canonicalization: bool
+    model: str
+    temperature: float
+    max_tokens: int
 
     @classmethod
     def from_dict(cls, config: dict[str, Any]) -> "IndividualOpenV1Config":
@@ -68,6 +72,10 @@ class IndividualOpenV1Config:
             require_schema_match=bool(config.get("require_schema_match", False)),
             similarity_threshold=similarity_threshold,
             kinds_to_search=kinds_to_search,
+            llm_canonicalization=bool(config.get("llm_canonicalization", False)),
+            model=str(config.get("model", "google/gemini-3-flash-preview")),
+            temperature=float(config.get("temperature", 0.0)),
+            max_tokens=int(config.get("max_tokens", 1500)),
         )
 
 
@@ -88,6 +96,12 @@ def get_open_v1_config() -> dict:
         "kinds_to_search": ["class"],
         # --- confidence calibration (Brier knob) ---
         "relation_confidence": 0.7,
+        # --- LLM label canonicalization (needs an LLM provider + cassettes) ---
+        # One cheap LLM call per document rewrites each extracted individual's
+        # snake_case label to its canonical ontology title, chosen from the
+        # schema vocabulary. Off by default: self-skips with no LLM provider or
+        # no resolvable ontology, so offline rule-mode runs are unaffected.
+        "llm_canonicalization": False,
         # --- optional LLM disambiguation (llm modes; needs cassettes) ---
         "llm_disambiguation": False,
         "provider": "openrouter",

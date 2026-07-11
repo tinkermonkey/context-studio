@@ -1,0 +1,9 @@
+{
+  "4c731e8c97819bf8de9bcacc6f233a304967b9ef20d6f5bd716a049696089a04": {
+    "content": "```json\n{\n  \"complete_job_route\": \"Complete Job Route\",\n  \"customer_address\": \"customer's address\",\n  \"flow_step\": \"flow steps\",\n  \"guard\": \"guard\",\n  \"guard_condition\": \"guard condition\",\n  \"job_completion_flow_technicians\": \"Job Completion Flow\",\n  \"job_detail_route\": \"Job Detail Route\",\n  \"job_detail_view\": \"Job Detail view\",\n  \"navigation_guard\": \"navigation guard\",\n  \"requirement\": \"requirement\",\n  \"route\": \"route\",\n  \"site\": \"on-site\",\n  \"specific_outcome\": \"specific outcome\",\n  \"technician\": \"technician\",\n  \"technician_route\": \"Technician Route\",\n  \"what\": \"what\",\n  \"work_order_fulfillment_business_process\": \"Work Order Fulfillment\"\n}\n```",
+    "tokens_in": 699,
+    "tokens_out": 207,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "be948f6f6f7b0ad1ed347857a6b4e945389acf789f08c7a4173cb46c3021f9d3": {
+    "content": "```json\n{\n  \"address_sub_schema\": \"Address Sub-Schema\",\n  \"api\": \"API\",\n  \"api_contract\": \"API contract\",\n  \"broad_goal\": \"broader goal\",\n  \"customer\": \"customer\",\n  \"definition\": \"definition\",\n  \"field\": \"field\",\n  \"job_api_schema\": \"Job API Schema\",\n  \"job_core_object_schema\": \"Job Core Object Schema\",\n  \"job_payload_schema\": \"Job Payload Schema\",\n  \"openapi\": \"OpenAPI\",\n  \"property\": \"property\",\n  \"required_optional_field\": \"required and optional fields\",\n  \"single_schema_change\": \"Single Schema Change Must Update API and Database Validation Simultaneously\",\n  \"specific_requirement\": \"specific requirement\",\n  \"status\": \"status\",\n  \"what\": \"what\"\n}\n```",
+    "tokens_in": 701,
+    "tokens_out": 203,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

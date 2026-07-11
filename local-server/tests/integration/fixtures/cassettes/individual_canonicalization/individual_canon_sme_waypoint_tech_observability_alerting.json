@@ -1,0 +1,9 @@
+{
+  "d014f0d5e94c3ff4f419d0b25f5324a3db5dc55e0424504ff0addff2a193bd6f": {
+    "content": "```json\n{\n  \"alert\": \"Connection Pool Saturation Alert\",\n  \"database_health\": \"database's health\",\n  \"database_health_dashboard\": \"Database Health Dashboard\",\n  \"dedicated_alerting\": \"dedicated alerting\",\n  \"field_ops_compute_cluster\": \"Field Ops Compute Cluster\",\n  \"gauge\": \"Connection Pool Saturation Gauge\",\n  \"job_event_store\": \"Job Event Store\",\n  \"job_event_store_resource\": \"Job Event Store Resource\",\n  \"request_failures\": \"Request Failures\",\n  \"resource\": \"resource\",\n  \"resource_record\": \"resource record\",\n  \"scope\": \"scope\",\n  \"specific_requirement\": \"Connection Pool Saturation Must Be Visible Before It Causes Request Failures\"\n}\n```",
+    "tokens_in": 602,
+    "tokens_out": 180,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "214a2473a194783ac3e73421e8e4cba0c10aad68214d589d4675408879d1fb1c": {
+    "content": "```json\n{\n  \"business_day\": \"business day\",\n  \"compliance\": \"compliance\",\n  \"database\": \"database\",\n  \"day_retention_policy\": \"90-Day Retention Policy\",\n  \"device\": \"device\",\n  \"job\": \"job\",\n  \"job_event\": \"job event\",\n  \"record\": \"record\",\n  \"waypoint\": \"Waypoint\"\n}\n```",
+    "tokens_in": 517,
+    "tokens_out": 97,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}
