@@ -1,0 +1,9 @@
+{
+  "ce2358ed4450a484f94c4dd8c87f51fe73fc434a900350ec9b4555abb27f5130": {
+    "content": "```json\n{\n  \"app\": \"Waypoint Technician App\",\n  \"error_config\": \"Offline Sync Error Banner\",\n  \"field_technician_business_role\": \"Field Technician\",\n  \"job\": \"job\",\n  \"job_detail_view\": \"Job Detail\",\n  \"mobile_application_field_technician\": \"Waypoint Technician App\",\n  \"route\": \"route\",\n  \"technician\": \"technician\",\n  \"ux_application\": \"Waypoint Technician App\",\n  \"ux_spec\": \"Technician Daily Workflow\",\n  \"what\": \"what\"\n}\n```",
+    "tokens_in": 585,
+    "tokens_out": 136,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

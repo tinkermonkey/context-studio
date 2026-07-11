@@ -1,0 +1,9 @@
+{
+  "4752f0c7e2406aa21f28a55b8c0372f475aadfd5314a6e6bfeb7f0b9a702066f": {
+    "content": "```json\n{\n  \"business_event\": \"business event\",\n  \"business_hour\": \"business hours\",\n  \"business_interface\": \"business interface\",\n  \"call\": \"call\",\n  \"contract\": \"contract\",\n  \"customer\": \"Customer\",\n  \"customer_service\": \"customer-facing services\",\n  \"customers\": \"customers\",\n  \"day_response_window\": \"same-day response window\",\n  \"dispatcher_role\": \"Dispatcher role\",\n  \"field_technician_role\": \"Field Technician role\",\n  \"goal\": \"goal\",\n  \"process\": \"process\",\n  \"regional_operations_manager\": \"Regional Operations Manager\",\n  \"route_optimization\": \"Route Optimization\",\n  \"service\": \"service\",\n  \"specific_goal\": \"specific_goal\",\n  \"what\": \"what\",\n  \"who\": \"who\",\n  \"work_order_management_service\": \"Work Order Management service\"\n}\n```",
+    "tokens_in": 727,
+    "tokens_out": 222,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

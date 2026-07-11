@@ -1,0 +1,9 @@
+{
+  "8a6d82d16d7901aba70fdd3fb3a894e240ec49a9b635ced8e5e44da94bbba7e9": {
+    "content": "```json\n{\n  \"customer_address\": \"customer's address\",\n  \"field_technicians\": \"Field Technicians\",\n  \"person\": \"person\",\n  \"phone\": \"phone\"\n}\n```",
+    "tokens_in": 444,
+    "tokens_out": 50,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

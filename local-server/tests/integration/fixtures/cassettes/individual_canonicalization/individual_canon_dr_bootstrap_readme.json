@@ -1,0 +1,9 @@
+{
+  "cfe4836da7a7638e6ea5ca824d5e3e6f05709c0bf499103df45c67c9ae167531": {
+    "content": "```json\n{\n  \"api_endpoint\": \"api_endpoint\",\n  \"api_model\": \"api_model\",\n  \"api_spec_command\": \"api_spec_command\",\n  \"api_specification\": \"api_specification\",\n  \"architecture_models\": \"architectural models\",\n  \"cli_server\": \"CLI server\",\n  \"error_message\": \"error_message\",\n  \"example\": \"example\",\n  \"http\": \"http\",\n  \"job\": \"job\",\n  \"late_api_specification\": \"late_api_specification\",\n  \"local_docs_api\": \"local_docs_api\",\n  \"model\": \"model\",\n  \"npm\": \"npm\",\n  \"npm_test\": \"npm_test\",\n  \"npx_playwright\": \"npx_playwright\",\n  \"path\": \"path\",\n  \"playwright\": \"playwright\",\n  \"port\": \"port\",\n  \"project\": \"Project\",\n  \"server\": \"server\",\n  \"server_command\": \"server_command\",\n  \"story\": \"story\",\n  \"storybook_component_catalog\": \"Storybook catalog\",\n  \"test\": \"test\",\n  \"viewer\": \"viewer\",\n  \"what\": \"what\",\n  \"workflows\": \"workflows\"\n}\n```",
+    "tokens_in": 887,
+    "tokens_out": 303,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

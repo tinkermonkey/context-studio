@@ -16,6 +16,7 @@ implementation, so the quality suite runs against it unchanged. Coexists with
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import replace
 from typing import Any
@@ -38,6 +39,21 @@ from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineSt
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 
 _logger = logging.getLogger(__name__)
+
+# Minimum class-match similarity for a mention to be offered to the
+# canonicalization LLM. Held constant (not the tuning knob `similarity_threshold`)
+# so the prompt — and therefore the recorded cassette hash — is stable across the
+# tournament's knob sweep.
+_CANON_GROUNDING_THRESHOLD = 0.45
+
+
+def _extract_json_obj(content: str) -> str:
+    """Extract the first {...} JSON object from an LLM response (tolerates fences/prose)."""
+    start = content.find("{")
+    end = content.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return content
+    return content[start : end + 1]
 
 
 class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
@@ -86,8 +102,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             relations = build_relation_candidates(open_result)
             triples = self._build_triples(open_result, relations)
 
+            ontology_id = state.input_data.get("ontology_id")
+            if self._cfg.llm_canonicalization and self._llm_provider is not None:
+                triples = await self._canonicalize_labels(triples, text, ontology_id)
+
             if self._cfg.ground_to_schema or self._cfg.require_schema_match:
-                triples = self._ground_to_schema(triples, state.input_data.get("ontology_id"))
+                triples = self._ground_to_schema(triples, ontology_id)
 
             warnings: list[str] = []
             metadata: dict[str, Any] = {
@@ -156,6 +176,143 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 }
             )
         return triples
+
+    async def _canonicalize_labels(
+        self, triples: list[dict[str, Any]], text: str, ontology_id: str | None
+    ) -> list[dict[str, Any]]:
+        """
+        Rewrite each individual's snake_case label to its canonical surface form.
+
+        The rule pipeline proposes triples whose subject/object labels are
+        snake_cased spaCy lemmas ("technician_route"), while the ground truth uses
+        the entity's canonical surface name as written in the source
+        ("Technician Route"). This stage issues ONE cheap LLM call per document
+        that maps each extracted mention to that surface form, grounded against
+        the ontology vocabulary: only mentions the schema vector index resolves to
+        a class (with the matched class title supplied as a type hint) are offered
+        for canonicalization, so the LLM restores the names of real domain
+        entities and leaves generic tokens alone.
+
+        Runs before grounding so the canonical names flow into the is_a triples
+        the grounding stage emits (whose subject then matches the ground truth
+        exactly). Self-skips (returns the triples untouched) when there is no
+        schema index, no repository, an unresolvable ontology, or no grounded
+        mention, mirroring how grounding degrades. Any LLM or parse failure is
+        swallowed and leaves the triples unchanged, so a stale cassette can never
+        crash the pipeline.
+        """
+        if self._schema_index is None or self._ontology_repo is None or not ontology_id:
+            return triples
+        taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
+        if taxonomy is None:
+            return triples
+
+        mentions = sorted(
+            {t[role]["label"] for t in triples for role in ("subject", "object")}
+        )
+        type_hints: dict[str, str] = {}
+        for mention in mentions:
+            query = self._embedding.embed(mention.replace("_", " "))
+            results = self._schema_index.search(
+                query,
+                kinds=["class"],
+                top_k=1,
+                threshold=_CANON_GROUNDING_THRESHOLD,
+                taxonomy_id=taxonomy.id,
+            )
+            if results and results[0].label:
+                type_hints[mention] = results[0].label
+
+        if not type_hints:
+            return triples
+
+        mapping = await self._request_canonical_labels(type_hints, text)
+        if not mapping:
+            return triples
+        return self._apply_label_mapping(triples, mapping)
+
+    async def _request_canonical_labels(
+        self, type_hints: dict[str, str], text: str
+    ) -> dict[str, str]:
+        """
+        One LLM call mapping each grounded mention to its canonical surface name.
+
+        The prompt is built only from scenario-fixed inputs (the sorted grounded
+        mentions, their ontology type hints, and the source text), so it is
+        identical across every knob combination the tournament sweeps — one
+        recorded cassette per scenario replays for the whole sweep. A returned
+        label is accepted only when it is the mention itself or a span that
+        actually occurs in the source text, so the LLM cannot inject a
+        hallucinated name. Returns an empty map on any LLM or JSON failure, which
+        the caller treats as "leave the labels unchanged".
+        """
+        lines = [
+            f'- "{mention}" (a {type_hints[mention]})' for mention in sorted(type_hints)
+        ]
+        mention_block = "\n".join(lines)
+        system_prompt = (
+            "You canonicalize extracted entity labels. Each snake_case mention is "
+            "tagged with its ontology type. For each mention, return its canonical "
+            "name exactly as it appears in the source text, using the original "
+            "capitalization and spacing (e.g. \"technician_route\" -> "
+            '"Technician Route"). If the mention is not a distinct named entity in '
+            "the text, keep it unchanged. Never invent a name that is not present "
+            "in the source text. Return ONLY a JSON object mapping each mention to "
+            "its canonical name."
+        )
+        user_prompt = (
+            f"Source text:\n{text[:2000]}\n\n"
+            f"Mentions with ontology types:\n{mention_block}\n\n"
+            'Return JSON: {"<mention>": "<canonical name or original mention>", ...}'
+        )
+        try:
+            response = await self._call_llm(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=self._cfg.model,
+                temperature=self._cfg.temperature,
+                max_tokens=self._cfg.max_tokens,
+            )
+            parsed = json.loads(_extract_json_obj(response.content))
+        except Exception as exc:  # noqa: BLE001 - canonicalization is best-effort
+            _logger.warning("open_v1 label canonicalization skipped: %s", exc)
+            return {}
+        if not isinstance(parsed, dict):
+            return {}
+        lowered_text = text.lower()
+        mapping: dict[str, str] = {}
+        for mention, chosen in parsed.items():
+            key = str(mention)
+            if key not in type_hints:
+                continue
+            value = str(chosen).strip()
+            # Accept the mention unchanged, or a name that actually occurs in the
+            # source text — never a label the model invented out of nothing.
+            if value and (value == key or value.lower() in lowered_text):
+                mapping[key] = value
+        return mapping
+
+    @staticmethod
+    def _apply_label_mapping(
+        triples: list[dict[str, Any]], mapping: dict[str, str]
+    ) -> list[dict[str, Any]]:
+        """Rewrite subject/object labels via ``mapping`` and drop duplicates."""
+        rewritten: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, str]] = set()
+        for triple in triples:
+            subject = dict(triple["subject"])
+            obj = dict(triple["object"])
+            subject["label"] = mapping.get(subject["label"], subject["label"])
+            obj["label"] = mapping.get(obj["label"], obj["label"])
+            key = (subject["label"], triple["predicate"]["label"], obj["label"])
+            if key in seen:
+                continue
+            seen.add(key)
+            new_triple = dict(triple)
+            new_triple["subject"] = subject
+            new_triple["object"] = obj
+            rewritten.append(new_triple)
+        return rewritten
 
     def _ground_to_schema(
         self, triples: list[dict[str, Any]], ontology_id: str | None

@@ -1,0 +1,9 @@
+{
+  "2e6b348d5932b7465ba2f4e3b7a9b4ea601ac1e1f01682b8d4c806a558a53034": {
+    "content": "```json\n{\n  \"action\": \"action\",\n  \"business\": \"business\",\n  \"customer\": \"customer\",\n  \"feature\": \"features\",\n  \"field_service_company\": \"field service company\",\n  \"hood\": \"hood\",\n  \"job\": \"job\",\n  \"job_event_store\": \"Job Event Store\",\n  \"network_round_trip\": \"network round-trip\",\n  \"nothing\": \"Nothing\",\n  \"service\": \"service\",\n  \"technician\": \"technician\",\n  \"value\": \"value\",\n  \"waypoint\": \"Waypoint\",\n  \"what\": \"what\"\n}\n```",
+    "tokens_in": 564,
+    "tokens_out": 150,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}

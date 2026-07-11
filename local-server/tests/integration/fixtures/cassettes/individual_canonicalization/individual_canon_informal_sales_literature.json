@@ -1,0 +1,9 @@
+{
+  "d1d5dbe711f44542ef22441d2288078452548e96cf8c59984d39f7e5a26a821f": {
+    "content": "```json\n{\n  \"business\": \"business\",\n  \"customer\": \"customers\",\n  \"day_response_window\": \"same-day response window\",\n  \"job\": \"job\",\n  \"platform\": \"platform\",\n  \"waypoint\": \"Waypoint\",\n  \"waypoint_operations_dashboard\": \"Waypoint Operations Dashboard\",\n  \"who\": \"contractors\"\n}\n```",
+    "tokens_in": 453,
+    "tokens_out": 89,
+    "model": "google/gemini-3-flash-preview",
+    "finish_reason": "stop"
+  }
+}
