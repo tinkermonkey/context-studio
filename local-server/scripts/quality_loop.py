@@ -43,6 +43,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
+from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from domain.pipelines.entities import PipelineType
@@ -379,7 +380,12 @@ async def _amain(args) -> int:
     if not nlp.is_ready():
         print("ERROR: spaCy model not loaded. Run: python -m spacy download en_core_web_sm")
         return 1
-    embedding_service = SentenceTransformerEmbedding()
+    # Memoize .embed(label) across the whole coordinate-ascent sweep: each
+    # candidate config re-runs the same open_v1 pipeline with only the knobs
+    # changed, so grounding embeds the same labels every eval. Wrapping the
+    # single shared embedding service collapses those repeats to one forward
+    # pass per distinct label; embed_batch (reindex_all) passes through.
+    embedding_service = CachingEmbeddingService(SentenceTransformerEmbedding())
     ports = (nlp, embedding_service, SklearnClusterer())
     emitter = MetricsEmitter(_METRICS_DIR)
 
