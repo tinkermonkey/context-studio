@@ -18,6 +18,7 @@ import pytest
 from experiments.ledger import (
     BASELINE_RESET_DECISION,
     LedgerEntryError,
+    accepted_hypotheses,
     append_baseline_reset,
     append_entry,
     entries_since_last_baseline_reset,
@@ -217,6 +218,62 @@ class TestRejectedHypotheses:
         )
 
         assert rejected_hypotheses(ledger_path) == ["a"]
+
+
+class TestAcceptedHypotheses:
+    def test_empty_ledger_returns_empty_list(self, tmp_path):
+        assert accepted_hypotheses(tmp_path / "ledger.jsonl") == []
+
+    def test_only_accepted_entries_are_returned(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-c", hypothesis="c", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+
+        assert accepted_hypotheses(ledger_path) == ["a", "c"]
+
+    def test_duplicate_accepted_hypothesis_appears_once_in_first_seen_order(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="2-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+
+        assert accepted_hypotheses(ledger_path) == ["a", "b"]
+
+    def test_acceptance_before_reset_is_excluded(self, tmp_path):
+        # An accepted hypothesis merged into an incumbent that a baseline
+        # reset has since retired is retryable again, so it must not linger
+        # in the accepted set past the reset.
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_baseline_reset(
+            reason="ontology swap",
+            ontology_context="dr_spec",
+            ledger_path=ledger_path,
+        )
+
+        assert accepted_hypotheses(ledger_path) == []
 
 
 class TestAppendBaselineReset:
@@ -442,6 +499,30 @@ class TestCli:
         ledger_path = tmp_path / "ledger.jsonl"
 
         exit_code = ledger_cli(["--ledger-path", str(ledger_path), "rejected-hypotheses"])
+
+        assert exit_code == 0
+        assert capsys.readouterr().out == ""
+
+    def test_accepted_hypotheses_command_prints_one_per_line(self, tmp_path, capsys):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(
+            _entry(experiment_id="1-a", hypothesis="a", decision="accepted"),
+            ledger_path=ledger_path,
+        )
+        append_entry(
+            _entry(experiment_id="1-b", hypothesis="b", decision="rejected"),
+            ledger_path=ledger_path,
+        )
+
+        exit_code = ledger_cli(["--ledger-path", str(ledger_path), "accepted-hypotheses"])
+
+        assert exit_code == 0
+        assert capsys.readouterr().out.splitlines() == ["a"]
+
+    def test_accepted_hypotheses_command_empty_ledger_prints_nothing(self, tmp_path, capsys):
+        ledger_path = tmp_path / "ledger.jsonl"
+
+        exit_code = ledger_cli(["--ledger-path", str(ledger_path), "accepted-hypotheses"])
 
         assert exit_code == 0
         assert capsys.readouterr().out == ""

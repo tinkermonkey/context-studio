@@ -43,6 +43,7 @@ automatically on a spec-version change.
 Usage as a library (from Python):
 
     from experiments.ledger import (
+        accepted_hypotheses,
         append_baseline_reset,
         append_entry,
         entries_since_last_baseline_reset,
@@ -59,6 +60,7 @@ has shell access but no in-process import of this package — see
     <json entry>
     EOF
     python experiments/ledger.py rejected-hypotheses
+    python experiments/ledger.py accepted-hypotheses
     python experiments/ledger.py baseline-reset --ontology-context dr_spec --spec-version 0.8.4 \
         --base-commit "$(git rev-parse HEAD)" 'Replaced the placeholder ontology with the DR spec.'
 
@@ -283,6 +285,31 @@ def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     return seen
 
 
+def accepted_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[str]:
+    """
+    Return the distinct `hypothesis` strings of every accepted experiment
+    recorded since the last baseline reset, in first-seen order.
+
+    Target selection (§4.3 step 2) excludes these: an accepted hypothesis is
+    already merged into the incumbent, so re-drafting it produces a candidate
+    the accept gate can only reject (it cannot beat an incumbent that already
+    contains it) — a wasted iteration. Acceptances recorded before a baseline
+    reset are scoped out (see `entries_since_last_baseline_reset`), so an
+    ontology/corpus swap makes a previously-merged hypothesis retryable again,
+    since the incumbent it was merged into no longer exists.
+    """
+    seen: list[str] = []
+    for entry in entries_since_last_baseline_reset(ledger_path):
+        hypothesis = entry.get("hypothesis")
+        if (
+            entry.get("decision") == "accepted"
+            and hypothesis is not None
+            and hypothesis not in seen
+        ):
+            seen.append(hypothesis)
+    return seen
+
+
 def _main(argv: Optional[list[str]] = None) -> int:
     """CLI entry point — see module docstring for usage."""
     parser = argparse.ArgumentParser(description="Read/write the Karpathy-loop experiment ledger.")
@@ -310,6 +337,8 @@ def _main(argv: Optional[list[str]] = None) -> int:
     )
 
     subparsers.add_parser("rejected-hypotheses", help="Print rejected hypotheses, one per line")
+
+    subparsers.add_parser("accepted-hypotheses", help="Print accepted hypotheses, one per line")
 
     baseline_reset_parser = subparsers.add_parser(
         "baseline-reset", help="Append a baseline-reset checkpoint entry"
@@ -365,6 +394,11 @@ def _main(argv: Optional[list[str]] = None) -> int:
 
     if args.command == "rejected-hypotheses":
         for hypothesis in rejected_hypotheses(ledger_path=args.ledger_path):
+            print(hypothesis)
+        return 0
+
+    if args.command == "accepted-hypotheses":
+        for hypothesis in accepted_hypotheses(ledger_path=args.ledger_path):
             print(hypothesis)
         return 0
 

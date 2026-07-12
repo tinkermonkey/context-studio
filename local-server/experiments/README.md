@@ -148,15 +148,21 @@ the design doc's build plan — out of scope for the infrastructure itself.
 Loop C's append-only record of every experiment (accepted and rejected), per
 `documentation/karpathy_loop_design.md` §8. `experiments/ledger.py` provides
 the read/write helpers (`append_entry`, `read_entries`,
-`rejected_hypotheses`) plus a small CLI so a Loop C sub-agent — which has
-shell access but no in-process import path into this package — can record a
-decision without hand-writing JSON:
+`rejected_hypotheses`, `accepted_hypotheses`) plus a small CLI so a Loop C
+sub-agent — which has shell access but no in-process import path into this
+package — can record a decision without hand-writing JSON:
 
 ```bash
 # from local-server/, venv active
 python experiments/ledger.py append '{"experiment_id": "12-copular", ...}'
 python experiments/ledger.py rejected-hypotheses
+python experiments/ledger.py accepted-hypotheses
 ```
+
+Target selection (§4.3 step 2) excludes both sets: a rejected hypothesis
+already failed, and an accepted one is already merged into the incumbent, so
+re-drafting either wastes an iteration (an accepted hypothesis re-run against
+the incumbent it was merged into can only lose the accept gate).
 
 The ledger is append-only by construction (`append_entry` only ever opens the
 file in `"a"` mode) — rewriting or truncating it is one of the accept gate's
@@ -174,13 +180,15 @@ import, recording the imported `spec_version`; re-running the import against
 an unchanged `spec_version` does not append a duplicate
 (`record_baseline_reset_if_new`).
 
-`rejected_hypotheses()` (and any future ledger read that feeds a loop
-decision) is scoped through `entries_since_last_baseline_reset()`, which
-excludes every entry recorded before the most recent checkpoint. This is the
-mechanism — not a documented convention — behind the rule that pre-reset
-dev/holdout scores never judge post-reset experiments: a hypothesis rejected
-against a since-retired baseline is eligible for retry immediately after the
-reset, with no manual ledger cleanup required.
+`rejected_hypotheses()` and `accepted_hypotheses()` (and any future ledger
+read that feeds a loop decision) are scoped through
+`entries_since_last_baseline_reset()`, which excludes every entry recorded
+before the most recent checkpoint. This is the mechanism — not a documented
+convention — behind the rule that pre-reset dev/holdout scores never judge
+post-reset experiments: a hypothesis rejected against a since-retired baseline
+is eligible for retry immediately after the reset, with no manual ledger
+cleanup required, and an accepted hypothesis whose merged incumbent the reset
+retired is likewise selectable again.
 
 ```bash
 # from local-server/, venv active — recording a reset manually (the DR

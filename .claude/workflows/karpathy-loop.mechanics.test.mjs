@@ -221,29 +221,44 @@ test("acceptGate rejects on a genuine dev regression even when bootstrap diagnos
 
 test("selectTargets ranks failure classes by GT-triple count (highest first)", () => {
   const failureStageCounts = { label_mismatch: 3, candidate_missing: 40 };
-  const [target] = selectTargets(failureStageCounts, [], 1);
+  const [target] = selectTargets(failureStageCounts, [], [], 1);
   assert.equal(target.targetStage, "candidate_missing");
 });
 test("selectTargets excludes hypotheses the ledger already rejected", () => {
   const failureStageCounts = { candidate_missing: 40 };
   const rejected = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
   assert.ok(rejected.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
-  const targets = selectTargets(failureStageCounts, rejected, 3);
+  const targets = selectTargets(failureStageCounts, rejected, [], 3);
   for (const target of targets) {
     assert.ok(!rejected.includes(target.id), `expected ${target.id} to be excluded as already rejected`);
+  }
+});
+test("selectTargets excludes hypotheses the ledger already accepted (merged into the incumbent)", () => {
+  const failureStageCounts = { candidate_missing: 40 };
+  const accepted = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
+  assert.ok(accepted.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
+  const targets = selectTargets(failureStageCounts, [], accepted, 3);
+  for (const target of targets) {
+    assert.ok(!accepted.includes(target.id), `expected ${target.id} to be excluded as already accepted/merged`);
   }
 });
 test("selectTargets returns nothing once every seeded hypothesis is rejected", () => {
   const failureStageCounts = { candidate_missing: 40 };
   const allIds = SEED_BACKLOG.map((h) => h.id);
-  const targets = selectTargets(failureStageCounts, allIds, 3);
+  const targets = selectTargets(failureStageCounts, allIds, [], 3);
+  assert.equal(targets.length, 0);
+});
+test("selectTargets returns nothing once every seeded hypothesis is accepted", () => {
+  const failureStageCounts = { candidate_missing: 40 };
+  const allIds = SEED_BACKLOG.map((h) => h.id);
+  const targets = selectTargets(failureStageCounts, [], allIds, 3);
   assert.equal(targets.length, 0);
 });
 test("selectTargets never selects a hypothesis marked blocked, even when its stage is top-ranked", () => {
   const blocked = SEED_BACKLOG.find((h) => h.blocked);
   assert.ok(blocked, "fixture assumption: at least one seeded hypothesis is marked blocked");
   const failureStageCounts = { [blocked.stages[0]]: 1000 };
-  const targets = selectTargets(failureStageCounts, [], SEED_BACKLOG.length);
+  const targets = selectTargets(failureStageCounts, [], [], SEED_BACKLOG.length);
   assert.ok(!targets.some((t) => t.id === blocked.id), `expected blocked hypothesis ${blocked.id} to never be selected`);
 });
 

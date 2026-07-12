@@ -147,8 +147,11 @@ const EVALUATION_SCHEMA = {
 
 const LEDGER_SCHEMA = {
   type: 'object',
-  required: ['rejectedHypotheses'],
-  properties: { rejectedHypotheses: { type: 'array', items: { type: 'string' } } },
+  required: ['rejectedHypotheses', 'acceptedHypotheses'],
+  properties: {
+    rejectedHypotheses: { type: 'array', items: { type: 'string' } },
+    acceptedHypotheses: { type: 'array', items: { type: 'string' } },
+  },
 }
 
 const EXPERIMENT_RESULT_SCHEMA = {
@@ -230,8 +233,12 @@ const DECIDE_SCHEMA = {
 }
 
 const LEDGER_READ_PROMPT = [
-  'From `local-server/`, run `python experiments/ledger.py rejected-hypotheses` and return every printed line',
-  '(one hypothesis id per line; empty output means no rejections yet) as `rejectedHypotheses`.',
+  'From `local-server/`, read the loop ledger\'s hypothesis history:',
+  '1. `python experiments/ledger.py rejected-hypotheses` — return every printed line (one hypothesis id',
+  '   per line; empty output means no rejections yet) as `rejectedHypotheses`.',
+  '2. `python experiments/ledger.py accepted-hypotheses` — return every printed line as',
+  '   `acceptedHypotheses` (empty output means no acceptances yet). These are already merged into the',
+  '   incumbent, so selection skips them: re-drafting a merged hypothesis can only lose the accept gate.',
   'Return structured output only — no prose.',
 ].join('\n')
 
@@ -458,9 +465,12 @@ function meetsFloors(holdout, floors, holdoutReviewPending) {
 
 // documentation/karpathy_loop_design.md §4.3 step 2: rank failure classes
 // by GT-triple count, map the top ones to backlog hypotheses, skip anything
-// the ledger already rejected or that's marked `blocked` (Loop B cannot
-// evaluate it yet — see the hypothesis's own comment in SEED_BACKLOG).
-function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
+// the ledger already rejected, anything already accepted (it is merged into
+// the incumbent — re-drafting it can only lose the accept gate, wasting the
+// iteration), or anything marked `blocked` (Loop B cannot evaluate it yet —
+// see the hypothesis's own comment in SEED_BACKLOG).
+function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypothesisIds, count) {
+  const excludedIds = new Set([...rejectedHypothesisIds, ...acceptedHypothesisIds])
   const rankedStages = Object.entries(failureStageCounts || {})
     .sort((a, b) => b[1] - a[1])
     .map(([stage]) => stage)
@@ -473,7 +483,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
     for (const hyp of SEED_BACKLOG) {
       if (chosen.length >= count) break
       if (hyp.blocked) continue
-      if (chosenIds.has(hyp.id) || rejectedHypothesisIds.includes(hyp.id)) continue
+      if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
       if (!hyp.stages.includes(stage)) continue
       chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: stage })
       chosenIds.add(hyp.id)
@@ -485,7 +495,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, count) {
   for (const hyp of SEED_BACKLOG) {
     if (chosen.length >= count) break
     if (hyp.blocked) continue
-    if (chosenIds.has(hyp.id) || rejectedHypothesisIds.includes(hyp.id)) continue
+    if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
     chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: hyp.stages[0] || 'general' })
     chosenIds.add(hyp.id)
   }
@@ -610,13 +620,14 @@ if (meetsFloors(evaluation.holdout, holdoutFloors, HOLDOUT_GT_REVIEW_PENDING)) {
 phase('Select')
 const ledgerInfo = await agent(LEDGER_READ_PROMPT, { schema: LEDGER_SCHEMA, phase: 'Select', label: 'select:ledger', effort: 'low' })
 const rejectedHypotheses = (ledgerInfo && ledgerInfo.rejectedHypotheses) || []
-const targets = selectTargets(evaluation.failureStageCounts, rejectedHypotheses, hypothesisCount)
+const acceptedHypotheses = (ledgerInfo && ledgerInfo.acceptedHypotheses) || []
+const targets = selectTargets(evaluation.failureStageCounts, rejectedHypotheses, acceptedHypotheses, hypothesisCount)
 log(`Selected ${targets.length} target hypothesis(es): ${targets.map((t) => t.id).join(', ') || '(none — all seeded hypotheses already rejected)'}`)
 
 if (targets.length === 0) {
   return {
     status: 'no_accept',
-    reason: 'no untried hypotheses remain in the seeded backlog for the current top failure classes',
+    reason: 'no untried hypotheses remain in the seeded backlog for the current top failure classes (all already rejected or accepted/merged)',
     iteration,
     consecutiveNoAccept: consecutiveNoAccept + 1,
     evaluation,
