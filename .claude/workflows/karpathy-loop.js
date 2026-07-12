@@ -63,6 +63,37 @@ const SEED_BACKLOG = [
       'LLM label canonicalization for individuals: the rule pipeline proposes triples, one cheap LLM call canonicalizes labels/predicates against the ontology vocabulary (design doc §7 item 5).',
   },
   {
+    // Added after the iteration-1 diagnosis: gap_fill_stage and
+    // copular_appositive_handling each surfaced the dominant candidate_missing
+    // bucket (228 -> ~172) but their newly-surfaced candidates DANGLED —
+    // relation_not_derived jumped 31 -> 81 — so aggregate dev soft-F1 regressed
+    // and the §6 gate rejected both. This is ONE coverage-completion concern
+    // (surface + derive in the same pass), not a bundle of two: the point is
+    // that a surfaced individual must arrive WITH its relation, so it targets
+    // candidate_missing and relation_not_derived together by construction. If a
+    // genuine end-to-end coverage gain still can't clear the accept gate, that
+    // is the signal to reconsider the gate itself rather than the pipeline.
+    id: 'coverage_completion_stage',
+    stages: ['candidate_missing', 'relation_not_derived'],
+    summary:
+      'Coverage-completion stage in open_v1: emit noun chunks unconsumed by SVO triples as candidate individuals AND derive their relations in the same pass (wider dependency capture — ccomp/xcomp/conjunct fan-out — run over the newly-surfaced heads), so surfaced candidates do not dangle as relation_not_derived the way iteration 1\'s gap_fill/copular attempts did. Reuse build_concept_candidates for surfacing and ground via the vector index.',
+  },
+  {
+    // Untried lever flagged in the iteration 2/3 ledger notes as "the next
+    // barrier" after the accepted llm_label_canonicalization: once both
+    // entities of a relation match exactly, a remaining predicate-form gap
+    // (surface "navigate" vs GT "navigate_to") re-buckets the triple into
+    // predicate_mismatch / relation_not_derived. This is the predicate analogue
+    // of the accepted label canonicalization, but rule-based (no LLM): map
+    // predicate surface/lemma forms onto the ontology's object-property
+    // vocabulary. predicate_mismatch is a small bucket (~8), so selection will
+    // usually pick this only as filler behind the coverage work.
+    id: 'predicate_form_normalization',
+    stages: ['predicate_mismatch', 'relation_not_derived'],
+    summary:
+      'Predicate-form normalization in open_v1: map each proposed triple\'s predicate surface/lemma form onto the ontology\'s defined object-property vocabulary (e.g. "navigate" -> "navigate_to") via the property-definition labels, before grounding — the rule-based predicate analogue of the accepted label canonicalization.',
+  },
+  {
     id: 'rag_proper_prompting_default',
     stages: ['candidate_missing'],
     summary:
@@ -84,6 +115,20 @@ const SEED_BACKLOG = [
     stages: [],
     summary:
       'Per-source confidence bands (legacy-style calibrated ranges per extraction source) to make Brier meaningful and enable apply-time thresholding (design doc §7 item 6).',
+  },
+  {
+    id: 'two_pass_individual_then_relationship',
+    stages: ['predicate_mismatch', 'relation_not_derived', 'candidate_missing'],
+    summary:
+      'Two-pass extraction for the default (LLM) pipeline (design doc §7): pass 1 identifies + grounds individuals (LLM/vector-search individual lookup); pass 2 derives relationships by offering the LLM only the finite predicate set the ontology permits between the identified individuals\' grounded classes, so it chooses from a closed set instead of inventing free-form predicates. Directly attacks the predicate-drift the arxiv GT exhibits (develops/develops_alone/researches).',
+    // Same guard as rag_proper_prompting_default: this modifies the `default`
+    // (LLM) pipeline, which Loop B cannot score until `default` cassettes are
+    // recorded and the `default`/`default+grounding` variants register (see
+    // scripts/quality_tournament.py build_registry()). Until then an
+    // experimenter assigned this would change a pipeline the tournament
+    // ignores -> guaranteed accept-gate rejection. Flip `blocked` to false
+    // once default cassettes exist and the variant registers.
+    blocked: true,
   },
 ]
 
