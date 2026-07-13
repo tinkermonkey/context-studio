@@ -2327,6 +2327,15 @@ selectors:
   - selector: property-drawer-title-field
     component: src/components/ontology/PropertyDrawer.tsx
     description: EditableField for the property title in the property inspector drawer (edit mode)
+  - selector: property-drawer-canonical-predicate-field
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: EditableField for the property canonical predicate (bare relation verb, e.g. navigates-to) in the property inspector drawer (edit mode)
+  - selector: property-drawer-canonical-predicate-field-view
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: Click-to-edit view element of the canonical predicate EditableField in the property inspector drawer
+  - selector: property-drawer-canonical-predicate-field-input
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: Text input of the canonical predicate EditableField in the property inspector drawer (edit mode)
   - selector: property-drawer-relevance-control
     component: src/components/ontology/PropertyDrawer.tsx
     description: SegmentedControl for setting property relevance (Not Evaluated / Relevant / Irrelevant) in the property inspector drawer (edit mode)

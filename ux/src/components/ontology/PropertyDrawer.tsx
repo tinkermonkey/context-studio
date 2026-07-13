@@ -152,6 +152,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 rows={[
                   { key: "Identifier", value: property.identifier },
                   { key: "Title", value: property.title },
+                  { key: "Canonical Predicate", value: property.canonical_predicate || "—" },
                   { key: "Description", value: property.description || "—" },
                   {
                     key: "Created",
@@ -200,6 +201,20 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                   }}
                   validate={(v) => (!v.trim() ? "Title is required" : undefined)}
                   data-testid="property-drawer-title-field"
+                />
+
+                <EditableField
+                  label="Canonical predicate"
+                  value={property.canonical_predicate ?? ""}
+                  onSave={async (v) => {
+                    await updateMutation.mutateAsync({
+                      id: property.id,
+                      data: { canonical_predicate: v.trim() || null },
+                    });
+                  }}
+                  placeholder="e.g. navigates-to"
+                  mono
+                  data-testid="property-drawer-canonical-predicate-field"
                 />
 
                 <div

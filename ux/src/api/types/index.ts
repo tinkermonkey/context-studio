@@ -3997,7 +3997,7 @@ export interface components {
       title: string;
       /**
        * Identifier
-       * @description Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted
+       * @description Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title
        */
       identifier?: string | null;
       /**
@@ -4173,7 +4173,7 @@ export interface components {
       title: string;
       /**
        * Identifier
-       * @description Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted
+       * @description Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated
        */
       identifier?: string | null;
       /**
@@ -6126,6 +6126,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Canonical Predicate
+       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to') — the form extraction clamps predicates to
+       */
+      canonical_predicate?: string | null;
     };
     /**
      * PropertyDefinitionResponse
@@ -6152,6 +6157,11 @@ export interface components {
        * @description Optional description
        */
       description?: string | null;
+      /**
+       * Canonical Predicate
+       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set
+       */
+      canonical_predicate?: string | null;
       /**
        * Is Relevant
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
@@ -6201,6 +6211,11 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+      /**
+       * Canonical Predicate
+       * @description New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body.
+       */
+      canonical_predicate?: string | null;
       /**
        * Is Relevant
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
@@ -6991,7 +7006,7 @@ export interface components {
       title: string;
       /**
        * Identifier
-       * @description Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted
+       * @description Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title
        */
       identifier?: string | null;
       /**
