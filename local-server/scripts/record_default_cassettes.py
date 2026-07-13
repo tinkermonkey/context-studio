@@ -16,17 +16,23 @@ standard cassette path so a future `default` variant can replay it with
 `CassetteLLMProvider`.
 
 This is one-time bootstrap setup, not a loop experiment. It reuses the existing
-recording machinery verbatim -- the cassette path convention
-(`tests/integration/fixtures/cassettes/individual_extraction/
-individual_extraction_<scenario>.json`) and the
+recording machinery verbatim -- the `RecordingLLMProvider` and the
 `sha256(system|user|model|temperature|seed)` key scheme in
-`tests/integration/pipelines/_harness/cassettes.py`. It invents neither.
+`tests/integration/pipelines/_harness/cassettes.py` -- but writes to a
+DEDICATED directory (`cassettes/individual_extraction_default/`), separate from
+the quality suite's own `cassettes/individual_extraction/` set, because this
+recorder overrides the model to the phase-1 default (OpenRouter Gemini Flash)
+while the quality suite records against each fixture's pinned model, and
+`RecordingLLMProvider.flush()` overwrites rather than merges.
 
 SAFETY: the default behavior (no flag, or `--dry-run`) makes ZERO live LLM
 calls. It only prints which scenarios and cassette paths would be recorded, the
-model id, and the total call count. Live recording -- which spends real money
-against the Anthropic API (the corpus fixtures pin `model=claude-opus-4-7`) --
-requires the explicit `--record` flag.
+model id, and the total call count. Live recording -- which spends real money --
+requires the explicit `--record` flag. The corpus fixtures pin
+`model=claude-opus-4-7`, but recording overrides it to the phase-1 default model
+(`quality_tournament.DEFAULT_PIPELINE_MODEL`, currently OpenRouter Gemini Flash);
+the tournament's `default`-variant replay applies the SAME override so the
+cassette keys (which include the model) match.
 
 Usage (from local-server/, venv active):
     python scripts/record_default_cassettes.py            # dry run (default, no calls)
@@ -59,18 +65,20 @@ from tests.integration.pipelines._harness.dataset_split import (
 # Standard cassette location, matching the `cassette_dir` fixture and the live/
 # recording branch of test_quality_individual_extraction.py. Do not change --
 # CassetteLLMProvider replay reads from exactly this path.
+# A dedicated directory, SEPARATE from the quality suite's own
+# `cassettes/individual_extraction/` set. The two must not share files: the
+# quality suite records against each fixture's pinned model (claude-opus-4-7),
+# while this recorder overrides the model to the phase-1 default
+# (OpenRouter Gemini Flash), and RecordingLLMProvider.flush() overwrites rather
+# than merges — so a shared path would clobber the quality suite's cassettes.
 _CASSETTE_DIR = (
     Path(__file__).parent.parent
     / "tests"
     / "integration"
     / "fixtures"
     / "cassettes"
-    / "individual_extraction"
+    / "individual_extraction_default"
 )
-
-# Identifier of the throwaway 3-class ontology built by conftest's
-# `_build_placeholder_ontology` (see tests/integration/pipelines/conftest.py).
-_PLACEHOLDER_TAXONOMY_IDENTIFIER = "placeholder"
 
 
 def union_scenarios() -> list[str]:
@@ -111,29 +119,30 @@ def print_plan(scenarios: list[str]) -> None:
     """
     Print the dry-run plan: no LLM calls, no ontology builds, no network.
 
-    Lists each scenario, its ontology context, its pinned model, and the
-    cassette path that WOULD be written, then the model set and total live-call
-    count (one `complete()` call per scenario).
+    Lists each scenario, its ontology context, the model that WOULD be used
+    (the phase-1 override, not the fixture-pinned model), and the cassette path
+    that WOULD be written, then the total live-call count.
     """
+    from scripts.quality_tournament import DEFAULT_PIPELINE_MODEL
+
     print("DRY RUN -- no LLM calls will be made. Pass --record to record for real.\n")
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
-    models: set[str] = set()
     for scenario in scenarios:
         context = ontology_context_for(scenario)
-        model = _fixture_model(scenario)
-        models.add(model)
         print(
-            f"  {scenario:<38} [{context.value:<11}] model={model}\n"
+            f"  {scenario:<38} [{context.value:<11}] model={DEFAULT_PIPELINE_MODEL}\n"
             f"      -> {cassette_path_for(scenario)}"
         )
 
-    model_summary = ", ".join(sorted(models)) if models else "(none)"
     print(
         f"\nWould record {len(scenarios)} scenario(s) "
         f"= {len(scenarios)} live LLM call(s) (one per scenario)."
     )
-    print(f"Model(s): {model_summary}")
+    print(
+        f"Model: {DEFAULT_PIPELINE_MODEL} (phase-1 override of the fixture-pinned "
+        "claude-opus-4-7; routes to OpenRouter)."
+    )
 
 
 def record_all(scenarios: list[str]) -> int:
@@ -168,11 +177,14 @@ def record_all(scenarios: list[str]) -> int:
         IndividualExtractionOrchestrator,
         IndividualExtractionState,
     )
-    from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER
+    from scripts.default_pipeline_ontology import (
+        DefaultPipelineOntologyResolver,
+        dr_spec_available,
+    )
+    from scripts.quality_tournament import DEFAULT_PIPELINE_MODEL
     from tests.fakes.fake_embedding_service import FakeEmbeddingService
     from tests.fakes.fake_nlp_processor import FakeNLPProcessor
     from tests.fakes.fake_reference_source import FakeReferenceSource
-    from tests.integration.pipelines import conftest
     from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 
     settings = get_settings()
@@ -198,32 +210,16 @@ def record_all(scenarios: list[str]) -> int:
         print(f"ERROR: LLM provider initialization failed: {exc}")
         return 1
 
-    # Build each required ontology context at most once, reusing conftest's
-    # canonical builders (the placeholder 3-class ontology and the imported DR
-    # spec) rather than duplicating any setup. `_ontology_cache` maps a context
-    # to (repo, resolved_taxonomy).
-    identifier_for = {
-        OntologyContext.PLACEHOLDER: _PLACEHOLDER_TAXONOMY_IDENTIFIER,
-        OntologyContext.DR_SPEC: DR_TAXONOMY_IDENTIFIER,
-    }
-    builder_for = {
-        OntologyContext.PLACEHOLDER: conftest._build_placeholder_ontology,
-        OntologyContext.DR_SPEC: conftest._build_dr_spec_ontology,
-    }
-    ontology_cache: dict = {}
-    dr_spec_available = conftest._find_dr_spec_dir() is not None
+    # Build each required ontology context at most once via the SHARED resolver
+    # the tournament replay also uses (scripts/default_pipeline_ontology), so the
+    # ontology titles the recorder bakes into the cassette prompts are exactly
+    # what the replay resolves — the two paths cannot drift.
+    resolver = DefaultPipelineOntologyResolver()
+    _dr_available = dr_spec_available()
 
-    def get_ontology(context: OntologyContext):
-        if context not in ontology_cache:
-            repo, _index = builder_for[context]()
-            taxonomy = repo.get_by_identifier(identifier_for[context])
-            ontology_cache[context] = (repo, taxonomy)
-        return ontology_cache[context]
-
-    models = {_fixture_model(s) for s in scenarios}
     print(
         f"RECORDING {len(scenarios)} scenario(s) "
-        f"= {len(scenarios)} live LLM call(s). Model(s): {', '.join(sorted(models))}"
+        f"= {len(scenarios)} live LLM call(s). Model: {DEFAULT_PIPELINE_MODEL}"
     )
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
@@ -233,7 +229,7 @@ def record_all(scenarios: list[str]) -> int:
     skipped = 0
     for scenario in scenarios:
         context = ontology_context_for(scenario)
-        if context is OntologyContext.DR_SPEC and not dr_spec_available:
+        if context is OntologyContext.DR_SPEC and not _dr_available:
             print(
                 f"  SKIP {scenario}: DR spec checkout not found -- cannot build the "
                 "dr_spec ontology this scenario is graded against."
@@ -241,7 +237,7 @@ def record_all(scenarios: list[str]) -> int:
             skipped += 1
             continue
 
-        ontology_repo, taxonomy = get_ontology(context)
+        ontology_repo, taxonomy, _index = resolver.get(context)
 
         # Fresh in-memory persistence for the extraction run bookkeeping; the
         # cassette only captures the LLM prompt->response, not this DB.
@@ -273,6 +269,10 @@ def record_all(scenarios: list[str]) -> int:
         # perturb the cassette key.
         fixture_input = dict(load_fixture("individual_extraction", scenario))
         fixture_input["ontology_id"] = taxonomy.id
+        # Override the fixture-pinned model (claude-opus-4-7) to the phase-1
+        # default model. The cassette key includes the model, so this MUST match
+        # the same override in quality_tournament._make_default_variant's replay.
+        fixture_input["model"] = DEFAULT_PIPELINE_MODEL
 
         state = IndividualExtractionState(
             run_id=str(uuid4()),
