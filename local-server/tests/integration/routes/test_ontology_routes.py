@@ -625,6 +625,45 @@ class TestPropertyDefinitionCRUD:
         assert body["title"] == "Updated Property Title"
         assert body["description"] == "Updated description"
 
+    def test_canonical_predicate_round_trips_through_create_get_update(self, client):
+        """canonical_predicate is accepted on create, returned on get, and editable."""
+        create_response = client.post(
+            "/api/properties",
+            json={
+                "identifier": "canon_prop",
+                "title": "Canon Test Property",
+                "canonical_predicate": "navigates-to",
+            },
+        )
+        assert create_response.status_code == status.HTTP_201_CREATED
+        property_id = create_response.json()["id"]
+        assert create_response.json()["canonical_predicate"] == "navigates-to"
+
+        # Present on GET.
+        get_response = client.get(f"/api/properties/{property_id}")
+        assert get_response.json()["canonical_predicate"] == "navigates-to"
+
+        # Editable via PUT.
+        update_response = client.put(
+            f"/api/properties/{property_id}",
+            json={"canonical_predicate": "flows-to"},
+        )
+        assert update_response.status_code == status.HTTP_200_OK
+        assert update_response.json()["canonical_predicate"] == "flows-to"
+
+        # Omitting the field on a subsequent update leaves it unchanged (the
+        # model_fields_set flag pattern), while an explicit null clears it.
+        untouched = client.put(
+            f"/api/properties/{property_id}",
+            json={"title": "Canon Test Property v2"},
+        )
+        assert untouched.json()["canonical_predicate"] == "flows-to"
+        cleared = client.put(
+            f"/api/properties/{property_id}",
+            json={"canonical_predicate": None},
+        )
+        assert cleared.json()["canonical_predicate"] is None
+
     def test_delete_property_definition_returns_204(self, client):
         """DELETE /api/properties/{id} returns 204."""
         create_response = client.post(

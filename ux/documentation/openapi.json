@@ -6727,7 +6727,7 @@
               }
             ],
             "title": "Identifier",
-            "description": "Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title if omitted"
+            "description": "Optional slug-style identifier (e.g. 'cls_gene'); auto-generated from title"
           },
           "description": {
             "anyOf": [
@@ -7051,7 +7051,7 @@
               }
             ],
             "title": "Identifier",
-            "description": "Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated from title if omitted"
+            "description": "Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated"
           },
           "description": {
             "anyOf": [
@@ -10126,6 +10126,18 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "canonical_predicate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Predicate",
+            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to') \u2014 the form extraction clamps predicates to"
           }
         },
         "type": "object",
@@ -10164,6 +10176,18 @@
             ],
             "title": "Description",
             "description": "Optional description"
+          },
+          "canonical_predicate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Predicate",
+            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set"
           },
           "is_relevant": {
             "anyOf": [
@@ -10263,6 +10287,18 @@
             ],
             "title": "Description",
             "description": "New description"
+          },
+          "canonical_predicate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Predicate",
+            "description": "New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body."
           },
           "is_relevant": {
             "anyOf": [
@@ -11490,7 +11526,7 @@
               }
             ],
             "title": "Identifier",
-            "description": "Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title if omitted"
+            "description": "Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title"
           },
           "description": {
             "anyOf": [

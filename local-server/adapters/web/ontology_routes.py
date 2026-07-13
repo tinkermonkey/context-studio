@@ -876,6 +876,7 @@ async def create_property_definition(
             identifier=request.identifier,
             title=request.title,
             description=request.description,
+            canonical_predicate=request.canonical_predicate,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -993,6 +994,8 @@ async def update_property_definition(
             property_id=property_id,
             title=request.title,
             description=request.description,
+            canonical_predicate=request.canonical_predicate,
+            update_canonical_predicate="canonical_predicate" in request.model_fields_set,
             is_relevant=request.is_relevant,
             update_is_relevant="is_relevant" in request.model_fields_set,
         )

@@ -355,6 +355,13 @@ class PropertyDefinitionCreateRequest(BaseModel):
     identifier: str = Field(..., description="Machine-readable identifier", min_length=1)
     title: str = Field(..., description="Display name for the property", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+    canonical_predicate: Optional[str] = Field(
+        None,
+        description=(
+            "Bare canonical relation verb this property represents (e.g. "
+            "'navigates-to') — the form extraction clamps predicates to"
+        ),
+    )
 
 
 class PropertyDefinitionUpdateRequest(BaseModel):
@@ -362,6 +369,13 @@ class PropertyDefinitionUpdateRequest(BaseModel):
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
     description: Optional[str] = Field(None, description="New description")
+    canonical_predicate: Optional[str] = Field(
+        None,
+        description=(
+            "New bare canonical relation verb, or null to clear it. Only applied "
+            "when the field is present in the request body."
+        ),
+    )
     is_relevant: Optional[bool] = Field(
         None,
         description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
@@ -377,6 +391,13 @@ class PropertyDefinitionResponse(BaseModel):
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
+    canonical_predicate: Optional[str] = Field(
+        None,
+        description=(
+            "Bare canonical relation verb this property represents (e.g. "
+            "'navigates-to'), or null if not set"
+        ),
+    )
     is_relevant: Optional[bool] = Field(
         None,
         description=("Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"),
