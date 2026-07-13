@@ -1626,6 +1626,7 @@ class OntologyService:
         identifier: str,
         title: str,
         description: str | None = None,
+        canonical_predicate: str | None = None,
         domain_class_id: str | None = None,
         range_class_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
@@ -1642,6 +1643,9 @@ class OntologyService:
             identifier: Machine-readable identifier for the property
             title: Display name for the property
             description: Optional longer description
+            canonical_predicate: Optional bare canonical relation verb (e.g.
+                "navigates-to") the property represents — the form predicate
+                grounding clamps to
             domain_class_id: Optional ID of the Class this property's source must
                 belong to (rdfs:domain)
             range_class_id: Optional ID of the Class this property's target must
@@ -1683,6 +1687,7 @@ class OntologyService:
             identifier=identifier,
             title=title,
             description=description,
+            canonical_predicate=canonical_predicate,
             domain_class_id=domain_class_id,
             range_class_id=range_class_id,
             external_references=external_references or [],
@@ -1841,6 +1846,8 @@ class OntologyService:
         property_id: str,
         title: str | None = None,
         description: str | None = None,
+        canonical_predicate: str | None = None,
+        update_canonical_predicate: bool = False,
         is_relevant: bool | None = None,
         update_is_relevant: bool = False,
         domain_class_id: str | None = None,
@@ -1858,6 +1865,13 @@ class OntologyService:
             property_id: The property definition ID
             title: New title (optional)
             description: New description (optional)
+            canonical_predicate: New bare canonical relation verb, or ``None`` to
+                clear it; only applied when ``update_canonical_predicate=True`` —
+                passing ``canonical_predicate=None`` alone has no effect
+            update_canonical_predicate: Set to True to apply the
+                ``canonical_predicate`` value (including clearing it to ``None``);
+                defaults to False so callers that do not intend to change it are
+                unaffected
             is_relevant: New relevance flag (optional); only applied when
                 ``update_is_relevant=True`` — passing ``is_relevant=False``
                 alone has no effect
@@ -1908,6 +1922,9 @@ class OntologyService:
 
         if desc_changed:
             prop_def.description = description
+
+        if update_canonical_predicate:
+            prop_def.canonical_predicate = canonical_predicate
 
         if update_is_relevant:
             prop_def.is_relevant = is_relevant

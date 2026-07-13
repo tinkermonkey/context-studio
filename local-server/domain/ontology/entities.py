@@ -356,6 +356,12 @@ class PropertyDefinition:
         identifier: Machine-readable identifier for the property
         title: Display name for the property
         description: Optional longer description
+        canonical_predicate: The bare canonical relation verb this property
+            represents (e.g. "navigates-to") — the form extraction clamps
+            predicates to, distinct from the display title and the machine
+            identifier. Set by whatever authors the property (the DR importer
+            from its spec predicate; the app from user input). None when not
+            supplied.
         ontology_mapping: Optional mapping to an external ontology standard
         domain_class_id: Optional ID of the Class this property's source/subject
             must belong to (rdfs:domain)
@@ -376,6 +382,7 @@ class PropertyDefinition:
     identifier: str
     title: str
     description: str | None = None
+    canonical_predicate: str | None = None
     ontology_mapping: OntologyMapping | None = None
     domain_class_id: str | None = None
     range_class_id: str | None = None

@@ -158,6 +158,15 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="Target/range Class for this relationship type (for property_definition, rdfs:range)",
     )
+    canonical_predicate = Column(
+        String(255),
+        nullable=True,
+        doc=(
+            "Bare canonical relation verb, e.g. 'navigates-to' (for "
+            "property_definition; the form predicate grounding clamps to). NULL "
+            "for other node types and property definitions with none supplied."
+        ),
+    )
 
     # Nested value objects (stored as JSON)
     external_references = Column(

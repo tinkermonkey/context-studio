@@ -419,3 +419,47 @@ def test_no_taxonomy_id_returns_relationship_matches_from_both_ontologies(
     matches = two_taxonomy_index.search([0.0, 0.0, 1.0], kinds=["relationship"])
     ids = {m.entity_id for m in matches}
     assert ids == {REL_R_A, REL_R_B}
+
+
+# ---- bare predicate exposure (SchemaMatch.predicate) ----------------------
+
+
+def test_class_and_property_without_canonical_predicate_expose_none(index):
+    # A class match never carries a bare predicate.
+    class_match = index.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+    assert class_match.predicate is None
+    # The fixture property definition has no canonical_predicate column set, so
+    # its match must expose None — grounding self-skips rather than guessing.
+    prop_match = index.search([0.0, 0.0, 1.0], kinds=["property_definition"])[0]
+    assert prop_match.kind == "property_definition"
+    assert prop_match.predicate is None
+
+
+def test_property_definition_match_exposes_canonical_predicate():
+    # The bare predicate comes from the first-class canonical_predicate column,
+    # independent of the title shape.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+        Base.metadata.create_all(engine)
+        factory = sessionmaker(bind=engine)
+        with factory() as session:
+            session.add(
+                OntologyEntity(
+                    id=PROP_P,
+                    node_type="property_definition",
+                    title="app.service connects-to app.database",
+                    description="links one service to another",
+                    identifier="app_service_connects_to_app_database",
+                    canonical_predicate="connects-to",
+                )
+            )
+            session.commit()
+
+        class _TitleEmbedding(FakeEmbedding):
+            def embed(self, text: str):
+                return [1.0, 0.0, 0.0]
+
+        idx = SqliteSchemaVectorIndex(factory, _TitleEmbedding())
+        idx.reindex_all()
+        match = idx.search([1.0, 0.0, 0.0], kinds=["property_definition"])[0]
+        assert match.predicate == "connects-to"

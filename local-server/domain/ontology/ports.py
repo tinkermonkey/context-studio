@@ -622,6 +622,15 @@ class SchemaMatch:
             node id "motivation.goal"), or None if the entity has no external
             reference. Lets grounding emit the identifier the source ontology
             uses rather than only the human-readable title.
+        predicate: For a property_definition/relationship match, the bare
+            relation verb (e.g. "navigates-to") — the canonical predicate token
+            the ground truth uses, distinct from `external_id` (a dotted
+            source.predicate.destination identifier) and `label` (a
+            "source predicate destination" title). None for class matches and
+            when the backing entity does not expose a bare predicate. Lets
+            predicate grounding rewrite an extracted verb to the vocabulary's
+            canonical predicate rather than to a compound identifier that would
+            never match the GT.
 
     Raises:
         ValueError: If score is not 0.0-1.0
@@ -633,6 +642,7 @@ class SchemaMatch:
     score: float
     matched_field: MatchedField
     external_id: str | None = None
+    predicate: str | None = None
 
     def __post_init__(self) -> None:
         """Validate schema match invariants."""

@@ -370,6 +370,7 @@ def _upsert_property_definitions(
                 identifier=identifier,
                 title=title,
                 description=record.description,
+                canonical_predicate=record.predicate,
                 domain_class_id=domain_class_id,
                 range_class_id=range_class_id,
                 external_references=[
@@ -385,6 +386,8 @@ def _upsert_property_definitions(
                 existing.id,
                 title=title,
                 description=record.description,
+                canonical_predicate=record.predicate,
+                update_canonical_predicate=True,
                 domain_class_id=domain_class_id,
                 range_class_id=range_class_id,
                 update_domain_class_id=True,
