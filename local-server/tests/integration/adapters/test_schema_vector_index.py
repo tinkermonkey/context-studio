@@ -463,3 +463,93 @@ def test_property_definition_match_exposes_canonical_predicate():
         idx.reindex_all()
         match = idx.search([1.0, 0.0, 0.0], kinds=["property_definition"])[0]
         assert match.predicate == "connects-to"
+
+
+# ---- matching mode: definition-driven matching ----------------------------
+
+
+def _seed_matching_mode_factory(tmpdir):
+    """
+    Seed one class whose title and definition point in orthogonal directions:
+      title      -> [1, 0, 0]  (embeds "Microservice")
+      definition -> [0, 1, 0]  (embeds "Database")
+    A query along [1, 0, 0] scores 1.0 on the title and 0.0 on the definition,
+    so "max" and "definition_preferred" disagree deterministically.
+    """
+    engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine)
+    with factory() as session:
+        session.add(
+            OntologyEntity(
+                id=CLASS_A,
+                node_type="class",
+                title="Microservice",  # -> [1, 0, 0]
+                description="Database",  # -> [0, 1, 0]
+            )
+        )
+        session.commit()
+    return factory
+
+
+def test_default_mode_is_max_title_wins():
+    # Default (no matching_mode arg) must remain "max": the stronger title
+    # scores 1.0 and wins over the orthogonal definition.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        factory = _seed_matching_mode_factory(tmpdir)
+        idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
+        idx.reindex_all()
+
+        match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert match.entity_id == CLASS_A
+        assert match.matched_field == "title"
+        assert match.score > 0.99
+
+
+def test_definition_preferred_lets_definition_drive_the_score():
+    # Same data and query where "max" would pick the title (score 1.0), but
+    # "definition_preferred" reports the definition's score (0.0) and field.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        factory = _seed_matching_mode_factory(tmpdir)
+        idx = SqliteSchemaVectorIndex(
+            factory, FakeEmbedding(), matching_mode="definition_preferred"
+        )
+        idx.reindex_all()
+
+        match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert match.entity_id == CLASS_A
+        assert match.matched_field == "definition"
+        assert match.score == 0.0
+
+        # A query aligned with the definition scores on the definition.
+        def_match = idx.search([0.0, 1.0, 0.0], kinds=["class"])[0]
+        assert def_match.matched_field == "definition"
+        assert def_match.score > 0.99
+
+
+def test_definition_preferred_falls_back_to_title_when_no_definition():
+    # A class with only a title embedding (empty description) must still match
+    # in definition_preferred mode — via the title, honestly reported.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+        Base.metadata.create_all(engine)
+        factory = sessionmaker(bind=engine)
+        with factory() as session:
+            session.add(
+                OntologyEntity(
+                    id=CLASS_A,
+                    node_type="class",
+                    title="Microservice",  # -> [1, 0, 0]
+                    description="",  # no definition vector
+                )
+            )
+            session.commit()
+        idx = SqliteSchemaVectorIndex(
+            factory, FakeEmbedding(), matching_mode="definition_preferred"
+        )
+        idx.reindex_all()
+
+        match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert match.entity_id == CLASS_A
+        assert match.matched_field == "title"
+        assert match.score > 0.99

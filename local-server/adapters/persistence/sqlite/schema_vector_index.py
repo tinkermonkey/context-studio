@@ -16,7 +16,7 @@ format (struct little-endian) is already byte-compatible with sqlite-vec's
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 from sqlalchemy import or_
@@ -35,6 +35,16 @@ logger = get_logger(__name__)
 
 # SchemaKind values that map directly to ontology_entities.node_type rows.
 _ENTITY_KINDS = ("class", "property_definition")
+
+# How a candidate's title-similarity and definition-similarity combine into its
+# single reported score. This is an adapter-level knob only — the domain port is
+# indifferent to it.
+#   "max"                 — the higher of title/definition similarity wins
+#                           (default; preserves prior behavior).
+#   "definition_preferred" — the curated definition drives the match: when a
+#                           usable definition embedding exists, its similarity is
+#                           the score; otherwise fall back to the title.
+MatchingMode = Literal["max", "definition_preferred"]
 
 # One-time guard so a fully-stale index (every stored vector a different
 # dimension after an embedding-model swap) surfaces a WARNING instead of
@@ -68,11 +78,21 @@ class SqliteSchemaVectorIndex:
             ontology repository so vectors and structured data are one store.
         embedding_service: Port used to embed entity text and keep the index in
             sync; the same model produces query embeddings at search time.
+        matching_mode: How title- and definition-similarity combine into a
+            candidate's score. Defaults to "max" (unchanged prior behavior).
+            Pass "definition_preferred" to let the curated definition drive
+            matches (see ``MatchingMode``).
     """
 
-    def __init__(self, session_factory: sessionmaker, embedding_service: EmbeddingService) -> None:
+    def __init__(
+        self,
+        session_factory: sessionmaker,
+        embedding_service: EmbeddingService,
+        matching_mode: MatchingMode = "max",
+    ) -> None:
         self._session_factory = session_factory
         self._embedding = embedding_service
+        self._matching_mode = matching_mode
 
     # ---- maintenance -------------------------------------------------------
 
@@ -263,7 +283,7 @@ class SqliteSchemaVectorIndex:
         canonical_predicate: str | None = None,
     ) -> SchemaMatch | None:
         """Score one candidate's best field; None if below threshold or unembedded."""
-        scored = self._best_score(query_norm, title_blob, def_blob)
+        scored = self._best_score(query_norm, title_blob, def_blob, self._matching_mode)
         if scored is None:
             return None
         score, matched_field = scored
@@ -281,42 +301,73 @@ class SqliteSchemaVectorIndex:
 
     @staticmethod
     def _best_score(
-        query_norm: np.ndarray, title_blob: bytes | None, def_blob: bytes | None
+        query_norm: np.ndarray,
+        title_blob: bytes | None,
+        def_blob: bytes | None,
+        matching_mode: MatchingMode = "max",
     ) -> tuple[float, MatchedField] | None:
         """
         Cosine similarity of the query against the title and definition vectors,
-        returning the higher score and which field won. Cosine is clamped to
+        returning one score and the field that produced it. Cosine is clamped to
         [0, 1] (the SchemaMatch invariant; negative cosine means unrelated).
+
+        Field selection depends on ``matching_mode``:
+          - "max": the higher of the two usable scores wins (default).
+          - "definition_preferred": the definition score is used whenever a
+            usable definition embedding exists; only if it does not does the
+            title score stand in. This lets the curated definition — not the
+            title — drive the match, while keeping ``matched_field`` honest
+            about which vector actually produced the returned score.
 
         This is the single point a sqlite-vec / SQL-native backend would replace.
         """
+        title_score = SqliteSchemaVectorIndex._field_score(query_norm, title_blob)
+        def_score = SqliteSchemaVectorIndex._field_score(query_norm, def_blob)
+
+        if matching_mode == "definition_preferred":
+            if def_score is not None:
+                return (def_score, "definition")
+            if title_score is not None:
+                return (title_score, "title")
+            return None
+
+        # "max" (default): the higher-scoring field wins.
         best: tuple[float, MatchedField] | None = None
-        for field, blob in (("title", title_blob), ("definition", def_blob)):
-            vec = _deserialize_embedding(blob)
-            if not vec:
+        for field, score in (("title", title_score), ("definition", def_score)):
+            if score is None:
                 continue
-            candidate = np.asarray(vec, dtype=np.float32)
-            # Skip stale-dimension vectors (e.g. after an embedding-model swap or
-            # a truncated blob) rather than letting numpy raise mid-search. Warn
-            # once so a fully-stale index (which would silently return no matches)
-            # is diagnosable.
-            if candidate.shape != query_norm.shape:
-                global _dim_mismatch_warned
-                if not _dim_mismatch_warned:
-                    logger.warning(
-                        "Skipping stored embedding with stale dimension %s "
-                        "(query dimension %s); the schema vector index likely needs "
-                        "a reindex after an embedding-model change.",
-                        candidate.shape,
-                        query_norm.shape,
-                    )
-                    _dim_mismatch_warned = True
-                continue
-            candidate_norm = float(np.linalg.norm(candidate))
-            if candidate_norm == 0.0:
-                continue
-            score = float(np.dot(query_norm, candidate / candidate_norm))
-            score = max(0.0, min(1.0, score))
             if best is None or score > best[0]:
                 best = (score, field)  # type: ignore[assignment]
         return best
+
+    @staticmethod
+    def _field_score(query_norm: np.ndarray, blob: bytes | None) -> float | None:
+        """
+        Clamped cosine similarity of the query against one stored vector, or None
+        when the vector is absent, zero-norm, or of a stale dimension.
+        """
+        vec = _deserialize_embedding(blob)
+        if not vec:
+            return None
+        candidate = np.asarray(vec, dtype=np.float32)
+        # Skip stale-dimension vectors (e.g. after an embedding-model swap or
+        # a truncated blob) rather than letting numpy raise mid-search. Warn
+        # once so a fully-stale index (which would silently return no matches)
+        # is diagnosable.
+        if candidate.shape != query_norm.shape:
+            global _dim_mismatch_warned
+            if not _dim_mismatch_warned:
+                logger.warning(
+                    "Skipping stored embedding with stale dimension %s "
+                    "(query dimension %s); the schema vector index likely needs "
+                    "a reindex after an embedding-model change.",
+                    candidate.shape,
+                    query_norm.shape,
+                )
+                _dim_mismatch_warned = True
+            return None
+        candidate_norm = float(np.linalg.norm(candidate))
+        if candidate_norm == 0.0:
+            return None
+        score = float(np.dot(query_norm, candidate / candidate_norm))
+        return max(0.0, min(1.0, score))

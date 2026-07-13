@@ -687,8 +687,12 @@ class SchemaVectorIndex(Protocol):
         """
         Find schema entities whose title or definition is similar to the query.
 
-        For each candidate, the higher of its title-similarity and
-        definition-similarity is taken; matched_field records which one won.
+        Each candidate reports a single score with matched_field recording which
+        vector produced it. How the title and definition scores combine is an
+        adapter-level configuration (e.g. taking the higher of the two, or
+        letting the curated definition drive the score); the port stays
+        indifferent to that choice and only guarantees matched_field is honest
+        about the field behind the returned score.
 
         Args:
             query_embedding: The query vector (e.g. an extracted-phrase embedding).
