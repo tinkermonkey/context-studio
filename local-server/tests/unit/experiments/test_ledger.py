@@ -138,7 +138,11 @@ class TestAppendAndReadEntries:
             f.write('{"experiment_id": "1-b", "decision": "rejected"\n')  # truncated/corrupted line
         append_entry(_entry(experiment_id="1-c"), ledger_path=ledger_path)
 
-        with caplog.at_level(logging.WARNING):
+        # Scope the level to the ledger logger, not just root: get_logger()
+        # raises that logger's own level to its file handler's once a handler is
+        # attached (which other tests trigger in a full-suite run), which would
+        # otherwise drop the WARNING before it reaches caplog.
+        with caplog.at_level(logging.WARNING, logger="experiments.ledger"):
             entries = read_entries(ledger_path)
 
         assert "corrupted ledger line" in caplog.text
@@ -148,7 +152,7 @@ class TestAppendAndReadEntries:
         ledger_path = tmp_path / "ledger.jsonl"
         ledger_path.write_text('{"not": "closed"\n{"also": "broken"\n')
 
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.WARNING, logger="experiments.ledger"):
             assert read_entries(ledger_path) == []
         assert "corrupted ledger line" in caplog.text
 
