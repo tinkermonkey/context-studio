@@ -77,6 +77,12 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing', 'relation_not_derived'],
     summary:
       'Coverage-completion stage in open_v1: emit noun chunks unconsumed by SVO triples as candidate individuals AND derive their relations in the same pass (wider dependency capture — ccomp/xcomp/conjunct fan-out — run over the newly-surfaced heads), so surfaced candidates do not dangle as relation_not_derived the way iteration 1\'s gap_fill/copular attempts did. Reuse build_concept_candidates for surfacing and ground via the vector index.',
+    // Implemented directly on feature/predicate-definition-grounding as the
+    // `coverage_completion` knob + `_complete_coverage` stage (surface unconsumed
+    // chunks, ground them, derive relations in one pass; emitted only WITH a
+    // relation, never dangling). Now swept in _INDIVIDUAL_SPACE, so Loop A tunes
+    // it. Skipped by selectTargets like the other `done` entries.
+    done: true,
   },
   {
     // Untried lever flagged in the iteration 2/3 ledger notes as "the next
