@@ -180,6 +180,8 @@ Loop C starts from ranked hypotheses rather than a cold start (full rationale in
 
 - **Per-source confidence bands** (legacy-style calibrated ranges per extraction source) to make Brier meaningful and enable apply-time thresholding.
 
+- **Layer-scoped grounding for **`open_v1`**:** a `grounding_layers` config knob that restricts SchemaVectorIndex class matching to a configured subset of DR ontology layers (e.g. `["motivation","business","technology"]`) relevant to the source domain, so extracted entities are not pulled to spurious off-domain classes. Surfaced by the arxiv-relabel grounding probe: unrestricted grounding sent cloud-infra entities to `api.example` / `testing.testcoveragemodel` / `motivation.stakeholder`; restricting to motivation/business/technology recovered the correct `technology.node` / `technology.technologycollaboration` / `motivation.constraint` matches (e.g. "mobile device" → `technology.device` at 0.78). Complements the definition-driven-matching and two-pass ideas.
+
 ## 8. Artifacts and layout
 
 ```

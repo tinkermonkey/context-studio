@@ -148,6 +148,17 @@ const SEED_BACKLOG = [
       'Per-source confidence bands (legacy-style calibrated ranges per extraction source) to make Brier meaningful and enable apply-time thresholding (design doc §7 item 6).',
   },
   {
+    // NOT blocked: a rule-pipeline config change scorable today. Surfaced by the
+    // arxiv-relabel grounding probe — unrestricted class grounding pulls
+    // entities to spurious off-domain DR layers (api.example,
+    // testing.testcoveragemodel); scoping to the source-relevant layers
+    // recovers the correct technology/motivation/business matches.
+    id: 'grounding_layers_scope',
+    stages: ['label_mismatch', 'candidate_missing'],
+    summary:
+      'Layer-scoped grounding in open_v1: a grounding_layers config knob that restricts SchemaVectorIndex class matching to a configured subset of DR ontology layers (e.g. motivation/business/technology) relevant to the source domain, so extracted entities are not pulled to spurious off-domain classes (api/testing/ux). Filter class matches by the layer prefix of the matched class external id (design doc §7).',
+  },
+  {
     id: 'two_pass_individual_then_relationship',
     stages: ['predicate_mismatch', 'relation_not_derived', 'candidate_missing'],
     summary:
