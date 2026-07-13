@@ -94,6 +94,22 @@ const SEED_BACKLOG = [
       'Predicate-form normalization in open_v1: map each proposed triple\'s predicate surface/lemma form onto the ontology\'s defined object-property vocabulary (e.g. "navigate" -> "navigate_to") via the property-definition labels, before grounding — the rule-based predicate analogue of the accepted label canonicalization.',
   },
   {
+    // NOT blocked: the SchemaVectorIndex already embeds and matches
+    // property_definition/relationship kinds via their curated definitions
+    // (adapters/persistence/sqlite/schema_vector_index.py:184-214), and
+    // _SEARCH_KINDS already permits them (configurations/open_v1.py:18) --
+    // open_v1 just defaults kinds_to_search to ["class"] (open_v1.py:96), so
+    // extracted predicates never match against their ontology definitions.
+    // An experimenter can enable predicate/relationship grounding and score it
+    // in the tournament today; no default-pipeline cassettes required. This is
+    // the rule-pipeline realization of the definition-driven-matching value
+    // prop and the unblocked complement to two_pass_individual_then_relationship.
+    id: 'predicate_definition_grounding',
+    stages: ['predicate_mismatch', 'relation_not_derived'],
+    summary:
+      'Enable predicate grounding in open_v1: add property_definition/relationship to kinds_to_search so extracted predicates are matched against the ontology\'s curated predicate definitions via the SchemaVectorIndex (which already embeds title+definition per property definition), clamping free-form predicates onto the defined object-property vocabulary instead of trusting the surface verb.',
+  },
+  {
     id: 'rag_proper_prompting_default',
     stages: ['candidate_missing'],
     summary:
