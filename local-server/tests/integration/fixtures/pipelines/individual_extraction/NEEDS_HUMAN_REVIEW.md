@@ -30,17 +30,30 @@ confirm:
 5. `distractors.json` remains a plausible-but-wrong triple, not an
    accidentally-true one.
 
-## Scenarios pending review
+## Scenarios reviewed — dispositions
 
-- [ ] `arxiv_researcher_profile/` (promoted from `fixture_paper_1.json`)
-- [ ] `arxiv_byzantine_fault_tolerance/` (promoted from `fixture_paper_2.json`)
-- [ ] `arxiv_cloud_platform_landscape/` (promoted from `fixture_paper_3.json`)
-- [ ] `arxiv_llm_research_lab/` (promoted from `fixture_paper_4.json`)
-- [ ] `arxiv_consensus_protocol_collaboration/` (promoted from `fixture_paper_5.json`)
-- [ ] `arxiv_cloud_provisioning/` (promoted from `fixture_cloud_provisioning_paper.json`)
-- [ ] `arxiv_crdt_networks/` (promoted from `fixture_crdt_networks_paper.json`)
-- [ ] `arxiv_kubernetes_energy_monitoring/` (promoted from `fixture_kubernetes_energy_monitoring.json`)
+All 8 were human-reviewed. The common finding: every one uses free-form,
+un-clamped predicates (`affiliated_with`, `develops`, `provides`,
+`synchronizes_via`, …) against the placeholder ontology — the exact predicate
+drift the DR-grounded pipeline exists to prevent — so their GT is anti-signal
+for the scored corpus. Dispositions recorded in
+`_harness/dataset_split.py` (`RETIRED_ARXIV_SCENARIOS` /
+`RELABEL_PENDING_ARXIV_SCENARIOS`) and `LEGACY_CORPUS_DISPOSITION.md`.
 
-Each scenario's own `README.md` also carries this notice and points back
-here. **Do not remove this file** until every box above is checked off by a
-human who has actually skimmed the corresponding `expected.json`.
+**RETIRED** (removed from the scored split — contrived/synthetic toy factoids):
+- [x] `arxiv_researcher_profile/` — RETIRED (synthetic "John Doe"; was holdout)
+- [x] `arxiv_llm_research_lab/` — RETIRED (OpenAI/GPT‑4 trivia + shaky GT: "Elon Musk founded OpenAI"; was holdout)
+- [x] `arxiv_byzantine_fault_tolerance/` — RETIRED (synthetic "John Doe")
+- [x] `arxiv_consensus_protocol_collaboration/` — RETIRED (synthetic "John Doe")
+- [x] `arxiv_cloud_platform_landscape/` — RETIRED (AWS/Azure trivia, not a paper)
+
+**RELABEL** (real abstracts; GT to be re-authored against the DR ontology, then
+folded back into the scored split as DR-native benchmarks):
+- [x] `arxiv_cloud_provisioning/` — RELABEL pending
+- [x] `arxiv_crdt_networks/` — RELABEL pending
+- [x] `arxiv_kubernetes_energy_monitoring/` — RELABEL pending
+
+Review is complete; no unreviewed agent-drafted GT remains in the scored split
+(so `HOLDOUT_GT_REVIEW_PENDING` is now `false`). This file is retained as the
+record of that review. The three RELABEL scenarios' new DR-grounded GT will
+itself need a human review pass when authored.

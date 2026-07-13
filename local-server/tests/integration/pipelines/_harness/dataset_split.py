@@ -91,13 +91,6 @@ LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS: list[str] = [
     "domain_driven_design",
     "microservices_architecture",
     "object_oriented_design",
-    # Arxiv domain
-    "arxiv_byzantine_fault_tolerance",
-    "arxiv_cloud_platform_landscape",
-    "arxiv_cloud_provisioning",
-    "arxiv_consensus_protocol_collaboration",
-    "arxiv_crdt_networks",
-    "arxiv_kubernetes_energy_monitoring",
 ]
 
 LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS: list[str] = [
@@ -105,15 +98,40 @@ LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS: list[str] = [
     "reactive_programming",
     "service_oriented",
     "testing_strategies",
-    # Arxiv domain
-    "arxiv_llm_research_lab",
-    "arxiv_researcher_profile",
 ]
 
-# Canonical ordering: dev scenarios first, then holdout. The full 18-scenario
-# legacy corpus used by the quality test suites before Wave 2 landed.
+# The 8 arxiv-domain scenarios were human-reviewed per NEEDS_HUMAN_REVIEW.md and
+# removed from the SCORED dev/holdout split: their auto-drafted GT used
+# free-form, un-clamped predicates against the placeholder ontology — the exact
+# predicate drift the DR-grounded pipeline exists to prevent, so scoring against
+# it is anti-signal. Five are RETIRED outright; three substantive real abstracts
+# are slated for RELABEL against the DR ontology (GT re-authoring pending — each
+# flips to RELABELED / DR_SPEC and rejoins the scored split as it lands). Both
+# groups stay in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS so their disposition and
+# ontology context remain recorded. See LEGACY_CORPUS_DISPOSITION.md.
+RETIRED_ARXIV_SCENARIOS: list[str] = [
+    "arxiv_researcher_profile",
+    "arxiv_llm_research_lab",
+    "arxiv_byzantine_fault_tolerance",
+    "arxiv_consensus_protocol_collaboration",
+    "arxiv_cloud_platform_landscape",
+]
+RELABEL_PENDING_ARXIV_SCENARIOS: list[str] = [
+    "arxiv_cloud_provisioning",
+    "arxiv_crdt_networks",
+    "arxiv_kubernetes_energy_monitoring",
+]
+
+# Canonical ordering: scored dev scenarios first, then scored holdout, then the
+# un-scored (retired / relabel-pending) arxiv scenarios. The full 18-scenario
+# legacy corpus that predates the DR ontology import — kept whole so every
+# original scenario carries an explicit disposition and ontology context, even
+# though only the 10 software-architecture scenarios remain in the scored split.
 LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS: list[str] = (
-    LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS + LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS
+    LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS
+    + LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS
+    + RETIRED_ARXIV_SCENARIOS
+    + RELABEL_PENDING_ARXIV_SCENARIOS
 )
 
 # Wave 2 SME-authored domain (documentation/karpathy_loop_dr_ontology_design.md
@@ -289,18 +307,25 @@ class ScenarioDisposition(Enum):
     SEPARATE_CONTEXT = "separate_context"  # kept, permanently scoped to its own (non-DR) ontology
 
 
-# Disposition recorded for every legacy scenario when the DR ontology import
-# landed. All 18 pre-import scenarios keep their existing
-# individual/property/entity ground truth and continue running against the
-# placeholder ontology (OntologyContext.PLACEHOLDER) as a distinct,
-# permanently-scoped evaluation context — none are retired (the corpus
-# remains a working measurement of the extraction pipeline on its original
-# domain) or relabeled (relabeling against the DR ontology's 186 classes is
-# Wave 2-4 authoring work, not a mechanical Phase 3 change). Full rationale:
+# Disposition recorded for every legacy scenario. The 10 software-architecture
+# scenarios keep their individual/property/entity ground truth and run against
+# the placeholder ontology as a distinct, permanently-scoped evaluation context
+# (SEPARATE_CONTEXT). The 8 arxiv scenarios were human-reviewed
+# (NEEDS_HUMAN_REVIEW.md) and removed from the scored split: five are RETIRED,
+# and three (RELABEL_PENDING_ARXIV_SCENARIOS) remain SEPARATE_CONTEXT until each
+# is re-authored against the DR ontology, at which point it flips to RELABELED
+# and SCENARIO_ONTOLOGY moves it to DR_SPEC. Full rationale:
 # tests/integration/fixtures/pipelines/individual_extraction/LEGACY_CORPUS_DISPOSITION.md
 SCENARIO_DISPOSITION: dict[str, ScenarioDisposition] = {
-    scenario: ScenarioDisposition.SEPARATE_CONTEXT
-    for scenario in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS
+    **{
+        scenario: ScenarioDisposition.SEPARATE_CONTEXT
+        for scenario in (
+            LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS
+            + LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS
+            + RELABEL_PENDING_ARXIV_SCENARIOS
+        )
+    },
+    **{scenario: ScenarioDisposition.RETIRED for scenario in RETIRED_ARXIV_SCENARIOS},
 }
 
 

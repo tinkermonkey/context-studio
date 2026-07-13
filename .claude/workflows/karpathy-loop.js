@@ -15,10 +15,12 @@ export const meta = {
 const EPSILON = 0.005
 const HOLDOUT_SLACK = 0.02
 // tests/integration/fixtures/pipelines/individual_extraction/NEEDS_HUMAN_REVIEW.md:
-// 2 of today's 5 holdout scenarios have unreviewed, agent-drafted GT. Flip
-// this to false only once every box in that file is checked off by a human
-// — do not flip it just because more scenarios/time have passed.
-const HOLDOUT_GT_REVIEW_PENDING = true
+// the 8 auto-drafted arxiv scenarios were human-reviewed and dispositioned
+// (5 retired, 3 slated for DR relabel — see LEGACY_CORPUS_DISPOSITION.md). Both
+// unreviewed holdout scenarios (arxiv_researcher_profile, arxiv_llm_research_lab)
+// were RETIRED out of the holdout, so no unreviewed agent-drafted GT remains in
+// the scored split. The exit criterion is no longer review-blocked.
+const HOLDOUT_GT_REVIEW_PENDING = false
 // §1 exit criterion (strict floors on holdout).
 const DEFAULT_HOLDOUT_FLOORS = { precision: 0.6, recall: 0.5, f1: 0.5 }
 // Brier is intentionally not part of this floor check: the tournament runner

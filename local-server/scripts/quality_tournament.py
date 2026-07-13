@@ -652,9 +652,9 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
     lines.append(
         "Ranked by mean dev soft-F1 (the Loop A/B hill-climbing signal, §3.1). "
         "Strict-F1 is the production floor metric. Holdout is advisory only — "
-        "per §3.3/§6 it never selects the winner, because 2 of the 5 holdout "
-        "scenarios (arxiv_llm_research_lab, arxiv_researcher_profile) have "
-        "unreviewed, agent-drafted ground truth (see NEEDS_HUMAN_REVIEW.md)."
+        "per §3.3/§6 it never selects the winner (a guard against holdout "
+        "overfitting). The formerly-unreviewed arxiv holdout scenarios have "
+        "since been retired from the scored split (see LEGACY_CORPUS_DISPOSITION.md)."
     )
     lines.append("")
     lines.append(

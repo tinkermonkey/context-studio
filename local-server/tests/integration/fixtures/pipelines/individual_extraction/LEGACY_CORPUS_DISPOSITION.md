@@ -20,7 +20,39 @@ machine-readable record of the same decision (a test —
 every scenario in the fixed split has an entry, so none can be added later
 without a disposition being recorded too).
 
-## Decision: all 18 scenarios → `SEPARATE_CONTEXT`
+## Amendment — arxiv scenario review (retire / relabel)
+
+The Phase-3 decision below applied `SEPARATE_CONTEXT` to all 18 scenarios
+uniformly. It has since been **superseded for the 8 arxiv-domain scenarios**,
+which were human-reviewed (`NEEDS_HUMAN_REVIEW.md`) after their auto-drafted GT
+was found to use free-form, un-clamped predicates against the placeholder
+ontology — anti-signal for a corpus whose whole purpose is predicate clamping.
+The 10 hand-written software-architecture scenarios are unchanged
+(`SEPARATE_CONTEXT`, placeholder, still scored). The arxiv scenarios:
+
+- **RETIRED (5)** — removed from the scored dev/holdout split
+  (`RETIRED_ARXIV_SCENARIOS` in `_harness/dataset_split.py`): synthetic "John
+  Doe" profiles and generic tech trivia, not real abstracts —
+  `arxiv_researcher_profile`, `arxiv_llm_research_lab`,
+  `arxiv_byzantine_fault_tolerance`, `arxiv_consensus_protocol_collaboration`,
+  `arxiv_cloud_platform_landscape`.
+- **RELABEL pending (3)** — removed from the placeholder-scored split for now
+  (`RELABEL_PENDING_ARXIV_SCENARIOS`); their GT will be re-authored against the
+  DR ontology (via the DR extraction agents, then human-reviewed) and folded
+  back in as DR-native (`RELABELED` / `DR_SPEC`) benchmarks —
+  `arxiv_cloud_provisioning`, `arxiv_crdt_networks`,
+  `arxiv_kubernetes_energy_monitoring`.
+
+Retiring the two holdout arxiv scenarios cleared the last unreviewed
+agent-drafted GT from the scored split, so the loop's
+`HOLDOUT_GT_REVIEW_PENDING` guard is now `false`.
+
+---
+
+## Decision: all 18 scenarios → `SEPARATE_CONTEXT` (original Phase-3 decision)
+
+*Superseded for the 8 arxiv scenarios by the amendment above; the "Not retired"
+point no longer holds for them.*
 
 None of the three possible dispositions available (re-label against the DR
 ontology, retire, or document as a separate context) applied uniformly

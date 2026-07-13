@@ -10,6 +10,8 @@ from tests.integration.pipelines._harness.dataset_split import (
     INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
     LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS,
+    RELABEL_PENDING_ARXIV_SCENARIOS,
+    RETIRED_ARXIV_SCENARIOS,
     SCENARIO_DISPOSITION,
     SCENARIO_ONTOLOGY,
     WAVE2_SME_HOLDOUT_SCENARIOS,
@@ -54,8 +56,13 @@ class TestOntologyContextFor:
             ontology_context_for("not_a_real_scenario")
 
     def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
+        # SCENARIO_ONTOLOGY also covers the un-scored (retired / relabel-pending)
+        # arxiv scenarios, which carry a placeholder context for the record but
+        # are not in the scored INDIVIDUAL_EXTRACTION_SCENARIOS.
         assert set(SCENARIO_ONTOLOGY.keys()) == (
             set(INDIVIDUAL_EXTRACTION_SCENARIOS)
+            | set(RETIRED_ARXIV_SCENARIOS)
+            | set(RELABEL_PENDING_ARXIV_SCENARIOS)
             | set(DR_BOOTSTRAP_SCENARIOS)
             | set(WAVE4_INFORMAL_SCENARIOS)
         )
@@ -159,12 +166,20 @@ class TestDispositionFor:
     def test_scenario_disposition_keys_match_the_legacy_split(self):
         assert set(SCENARIO_DISPOSITION.keys()) == set(LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS)
 
-    def test_all_18_legacy_scenarios_kept_as_separate_context(self):
-        # Phase 3 decision: none of the 18 pre-import scenarios are retired
-        # or relabeled against the DR ontology -- see
-        # LEGACY_CORPUS_DISPOSITION.md for the rationale.
+    def test_legacy_dispositions_reflect_the_arxiv_review(self):
+        # After the NEEDS_HUMAN_REVIEW.md disposition pass: all 18 legacy
+        # scenarios are still recorded, the 5 reviewed arxiv scenarios are
+        # RETIRED, and everything else (10 software-arch + 3 relabel-pending
+        # arxiv) stays SEPARATE_CONTEXT until relabeled. See
+        # LEGACY_CORPUS_DISPOSITION.md.
         assert len(SCENARIO_DISPOSITION) == 18
-        assert all(v == ScenarioDisposition.SEPARATE_CONTEXT for v in SCENARIO_DISPOSITION.values())
+        retired = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RETIRED}
+        assert retired == set(RETIRED_ARXIV_SCENARIOS)
+        assert all(
+            SCENARIO_DISPOSITION[s] == ScenarioDisposition.SEPARATE_CONTEXT
+            for s in SCENARIO_DISPOSITION
+            if s not in RETIRED_ARXIV_SCENARIOS
+        )
 
     def test_unmapped_scenario_raises(self):
         with pytest.raises(ValueError, match="no recorded legacy-corpus disposition"):
