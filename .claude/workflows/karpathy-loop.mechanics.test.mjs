@@ -261,6 +261,13 @@ test("selectTargets never selects a hypothesis marked blocked, even when its sta
   const targets = selectTargets(failureStageCounts, [], [], SEED_BACKLOG.length);
   assert.ok(!targets.some((t) => t.id === blocked.id), `expected blocked hypothesis ${blocked.id} to never be selected`);
 });
+test("selectTargets never selects a hypothesis marked done (implemented outside the loop)", () => {
+  const done = SEED_BACKLOG.find((h) => h.done);
+  assert.ok(done, "fixture assumption: at least one seeded hypothesis is marked done");
+  const failureStageCounts = { [done.stages[0]]: 1000 };
+  const targets = selectTargets(failureStageCounts, [], [], SEED_BACKLOG.length);
+  assert.ok(!targets.some((t) => t.id === done.id), `expected done hypothesis ${done.id} to never be selected`);
+});
 
 console.log(`\n${passCount} passed, ${failCount} failed`);
 if (failCount > 0) {

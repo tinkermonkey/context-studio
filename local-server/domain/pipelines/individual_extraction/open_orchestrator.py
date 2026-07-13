@@ -106,6 +106,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if self._cfg.llm_canonicalization and self._llm_provider is not None:
                 triples = await self._canonicalize_labels(triples, text, ontology_id)
 
+            # Runs before _ground_to_schema so it only sees relation triples (no
+            # is_a type triples exist yet), and after canonicalization since that
+            # stage only rewrites subject/object labels, never predicates.
+            if self._cfg.ground_predicates:
+                triples = self._ground_predicates(triples, ontology_id)
+
             if self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples, ontology_id)
 
@@ -311,6 +317,78 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             new_triple = dict(triple)
             new_triple["subject"] = subject
             new_triple["object"] = obj
+            rewritten.append(new_triple)
+        return rewritten
+
+    def _ground_predicates(
+        self, triples: list[dict[str, Any]], ontology_id: str | None
+    ) -> list[dict[str, Any]]:
+        """
+        Clamp each triple's predicate onto the ontology's object-property vocabulary.
+
+        The rule pipeline proposes free-form predicate verbs (surface/lemma spaCy
+        tokens like "navigate" or "develops"). This stage matches each distinct
+        predicate against the schema's property definitions via the
+        SchemaVectorIndex — which scores the extracted verb against each property
+        definition's curated title AND definition embeddings — and rewrites the
+        predicate to the matched property's bare canonical verb (e.g. "navigate"
+        -> "navigates-to"), the form the ground truth uses. This is the
+        definition-driven predicate clamping that keeps free-form extraction from
+        drifting off the defined vocabulary.
+
+        A match is applied only when it carries a bare `predicate` token (property
+        definitions whose title does not follow the canonical
+        "source predicate destination" shape expose none, so nothing is rewritten
+        to a wrong value). Predicates that match nothing above the threshold are
+        left unchanged. Runs on relation triples only (before is_a emission).
+
+        Self-skips (returns the triples untouched) when there is no schema index,
+        no repository, or the ontology id does not resolve to a known taxonomy —
+        mirroring how _ground_to_schema degrades. Scoped to the scenario's
+        taxonomy so predicates cannot ground against an unrelated ontology.
+        """
+        if self._schema_index is None:
+            return triples
+        taxonomy = (
+            self._ontology_repo.get_by_identifier(ontology_id)
+            if self._ontology_repo is not None and ontology_id
+            else None
+        )
+        if taxonomy is None:
+            return triples
+
+        threshold = self._cfg.predicate_similarity_threshold
+        predicates = {t["predicate"]["label"] for t in triples}
+        mapping: dict[str, str] = {}
+        for predicate in predicates:
+            query = self._embedding.embed(predicate.replace("_", " "))
+            results = self._schema_index.search(
+                query,
+                kinds=["property_definition"],
+                top_k=1,
+                threshold=threshold,
+                taxonomy_id=taxonomy.id,
+            )
+            if results and results[0].predicate:
+                mapping[predicate] = results[0].predicate
+
+        if not mapping:
+            return triples
+
+        # Rewriting can collapse two distinct predicates onto the same canonical
+        # verb, so de-duplicate on the rewritten (subject, predicate, object) key
+        # exactly as _build_triples / _apply_label_mapping do.
+        rewritten: list[dict[str, Any]] = []
+        seen: set[tuple[str, str, str]] = set()
+        for triple in triples:
+            predicate = dict(triple["predicate"])
+            predicate["label"] = mapping.get(predicate["label"], predicate["label"])
+            key = (triple["subject"]["label"], predicate["label"], triple["object"]["label"])
+            if key in seen:
+                continue
+            seen.add(key)
+            new_triple = dict(triple)
+            new_triple["predicate"] = predicate
             rewritten.append(new_triple)
         return rewritten
 

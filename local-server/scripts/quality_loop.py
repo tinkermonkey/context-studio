@@ -102,9 +102,15 @@ _SCHEMA_SPACE: dict[str, list] = {
 # ontology_id, so these knobs move soft-F1 on the DR-grounded scenarios and are
 # inert (self-skipped) on scenarios whose ontology_id doesn't resolve.
 #
-# 2*3*4*2*2*3 = 288 combinations — well under the ~10^3 threshold where
-# successive-halving would be worth the added complexity over plain
-# coordinate ascent (see coordinate_ascent's restart docstring).
+# 2*3*4*2*2*3*2*2*2 = 2304 nominal combinations. Coordinate ascent with random
+# restarts (see coordinate_ascent's restart docstring) sweeps one knob at a time
+# rather than enumerating the grid, so the count drives restart diversity, not
+# runtime; successive-halving is still not worth the added complexity here.
+# predicate_similarity_threshold is swept high-only ([0.55, 0.65]): an empirical
+# probe of bare-verb -> property-definition retrieval showed confident matches
+# (navigate-to 0.69, aggregates 0.60) clear 0.55, while ambiguous verbs mis-map
+# below it (protects->realizes 0.42, guards->specializes 0.49), so a low
+# threshold would rewrite predicates to WRONG canonical forms.
 _INDIVIDUAL_SPACE: dict[str, list] = {
     "predicate_form": ["surface", "lemma"],
     "relation_confidence": [0.3, 0.5, 0.7],
@@ -117,6 +123,8 @@ _INDIVIDUAL_SPACE: dict[str, list] = {
         ["class", "property_definition", "relationship"],
     ],
     "llm_canonicalization": [False, True],
+    "ground_predicates": [False, True],
+    "predicate_similarity_threshold": [0.55, 0.65],
 }
 
 

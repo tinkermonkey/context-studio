@@ -108,6 +108,12 @@ const SEED_BACKLOG = [
     stages: ['predicate_mismatch', 'relation_not_derived'],
     summary:
       'Enable predicate grounding in open_v1: add property_definition/relationship to kinds_to_search so extracted predicates are matched against the ontology\'s curated predicate definitions via the SchemaVectorIndex (which already embeds title+definition per property definition), clamping free-form predicates onto the defined object-property vocabulary instead of trusting the surface verb.',
+    // Implemented directly on feature/predicate-definition-grounding (a dedicated
+    // `ground_predicates` stage + a first-class `canonical_predicate` field), not
+    // through a loop experiment, so it is no longer a live hypothesis. `done`
+    // entries are skipped by selectTargets exactly like `blocked` ones; kept in
+    // the backlog as a record rather than deleted.
+    done: true,
   },
   {
     id: 'rag_proper_prompting_default',
@@ -528,8 +534,9 @@ function meetsFloors(holdout, floors, holdoutReviewPending) {
 // by GT-triple count, map the top ones to backlog hypotheses, skip anything
 // the ledger already rejected, anything already accepted (it is merged into
 // the incumbent — re-drafting it can only lose the accept gate, wasting the
-// iteration), or anything marked `blocked` (Loop B cannot evaluate it yet —
-// see the hypothesis's own comment in SEED_BACKLOG).
+// iteration), anything marked `blocked` (Loop B cannot evaluate it yet), or
+// anything marked `done` (already implemented outside the loop) — see the
+// hypothesis's own comment in SEED_BACKLOG.
 function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypothesisIds, count) {
   const excludedIds = new Set([...rejectedHypothesisIds, ...acceptedHypothesisIds])
   const rankedStages = Object.entries(failureStageCounts || {})
@@ -543,7 +550,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypoth
     if (chosen.length >= count) break
     for (const hyp of SEED_BACKLOG) {
       if (chosen.length >= count) break
-      if (hyp.blocked) continue
+      if (hyp.blocked || hyp.done) continue
       if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
       if (!hyp.stages.includes(stage)) continue
       chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: stage })
@@ -555,7 +562,7 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypoth
   // ones like confidence bands) if the ranked stages didn't fill the fleet.
   for (const hyp of SEED_BACKLOG) {
     if (chosen.length >= count) break
-    if (hyp.blocked) continue
+    if (hyp.blocked || hyp.done) continue
     if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
     chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: hyp.stages[0] || 'general' })
     chosenIds.add(hyp.id)

@@ -428,3 +428,115 @@ def test_require_schema_match_keeps_matched_drops_unmatched():
     subjects = {t["subject"]["label"] for t in kept}
     assert "consensus_algorithm" in subjects
     assert "foo" not in subjects
+
+
+# ---------------------------------------------------------------------------
+# Predicate grounding (property_definition kind) — stubbed, model-free
+# ---------------------------------------------------------------------------
+
+
+class _StubPredicateIndex:
+    """
+    Grounds specific predicate phrases to bare canonical verbs.
+
+    Keyed on the phrase the orchestrator queries with (label with underscores
+    replaced by spaces). A None value simulates a property-definition match that
+    exposes no bare predicate (e.g. a non-canonical title), which must NOT rewrite.
+    """
+
+    def __init__(self, mapping: dict[str, str | None]):
+        self._mapping = mapping
+        self.seen_kinds: list = []
+
+    def index_entity(self, *a):  # pragma: no cover - unused
+        pass
+
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+        self.seen_kinds.append(list(kinds))
+        phrase = getattr(query_embedding, "phrase", None)
+        if phrase is None or phrase not in self._mapping:
+            return []
+        return [
+            SchemaMatch(
+                entity_id="p1",
+                kind="property_definition",
+                label=f"src {self._mapping[phrase] or 'x'} dst",
+                score=0.9,
+                matched_field="title",
+                external_id="a.b.c",
+                predicate=self._mapping[phrase],
+            )
+        ]
+
+
+class _PhraseEmbedding:
+    """Returns a list carrying the queried phrase so the stub index can key on it."""
+
+    def embed(self, text: str):
+        vec = [1.0, 0.0, 0.0]
+
+        class _V(list):
+            phrase = text
+
+        return _V(vec)
+
+    def embed_batch(self, texts):
+        return [self.embed(t) for t in texts]
+
+    def similarity(self, a, b):  # pragma: no cover - unused
+        raise NotImplementedError
+
+
+def _predicate_orch(index):
+    return OpenIndividualExtractionOrchestrator(
+        llm_provider=None,
+        nlp_processor=None,
+        embedding_service=_PhraseEmbedding(),
+        schema_index=index,
+        config={**get_open_v1_config(), "ground_predicates": True},
+        ontology_repo=_FakeOntologyRepo(),
+    )
+
+
+def test_predicate_grounding_rewrites_matched_predicate():
+    orch = _predicate_orch(_StubPredicateIndex({"navigate to": "navigates-to"}))
+    triples = [_triple("technician_route", "navigate_to", "job_detail_route")]
+    grounded = orch._ground_predicates(triples, "dr_spec")
+    assert grounded[0]["predicate"]["label"] == "navigates-to"
+    # Only property_definition is searched — never individual kinds.
+    assert orch._schema_index.seen_kinds == [["property_definition"]]
+
+
+def test_predicate_grounding_leaves_unmatched_predicate_unchanged():
+    orch = _predicate_orch(_StubPredicateIndex({"navigate to": "navigates-to"}))
+    triples = [_triple("a", "sprint", "b")]  # no mapping for "sprint"
+    assert orch._ground_predicates(triples, "dr_spec") == triples
+
+
+def test_predicate_grounding_ignores_match_without_bare_predicate():
+    # A property-definition match whose title is non-canonical exposes predicate=None.
+    orch = _predicate_orch(_StubPredicateIndex({"navigate to": None}))
+    triples = [_triple("a", "navigate_to", "b")]
+    assert orch._ground_predicates(triples, "dr_spec") == triples
+
+
+def test_predicate_grounding_dedups_collapsed_predicates():
+    # Two distinct surface predicates collapse onto one canonical verb between the
+    # same subject/object → the rewritten duplicate must be dropped.
+    orch = _predicate_orch(
+        _StubPredicateIndex({"navigate to": "navigates-to", "go to": "navigates-to"})
+    )
+    triples = [
+        _triple("a", "navigate_to", "b"),
+        _triple("a", "go_to", "b"),
+    ]
+    grounded = orch._ground_predicates(triples, "dr_spec")
+    assert len(grounded) == 1
+    assert grounded[0]["predicate"]["label"] == "navigates-to"
+
+
+def test_predicate_grounding_skipped_when_ontology_unresolved():
+    orch = _predicate_orch(_StubPredicateIndex({"navigate to": "navigates-to"}))
+    triples = [_triple("technician_route", "navigate_to", "job_detail_route")]
+    # Unresolved taxonomy → no rewriting.
+    assert orch._ground_predicates(triples, "test-ontology-123") == triples

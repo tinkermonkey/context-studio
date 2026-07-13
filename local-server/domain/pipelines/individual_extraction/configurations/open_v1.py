@@ -36,6 +36,8 @@ class IndividualOpenV1Config:
     similarity_threshold: float
     kinds_to_search: tuple[SchemaKind, ...]
     llm_canonicalization: bool
+    ground_predicates: bool
+    predicate_similarity_threshold: float
     model: str
     temperature: float
     max_tokens: int
@@ -65,6 +67,18 @@ class IndividualOpenV1Config:
             raise PipelineInputError(
                 f"similarity_threshold must be within [0, 1], got {similarity_threshold}"
             )
+        # Held separately from similarity_threshold: a bare predicate verb queried
+        # against a property definition's "source predicate destination" title sits
+        # in a different similarity regime than a noun phrase against a class title,
+        # so predicate grounding needs its own calibration (Loop A tunes it apart).
+        predicate_similarity_threshold = float(
+            config.get("predicate_similarity_threshold", 0.45)
+        )
+        if not 0.0 <= predicate_similarity_threshold <= 1.0:
+            raise PipelineInputError(
+                "predicate_similarity_threshold must be within [0, 1], got "
+                f"{predicate_similarity_threshold}"
+            )
         return cls(
             relation_confidence=relation_confidence,
             predicate_form=predicate_form,
@@ -73,6 +87,8 @@ class IndividualOpenV1Config:
             similarity_threshold=similarity_threshold,
             kinds_to_search=kinds_to_search,
             llm_canonicalization=bool(config.get("llm_canonicalization", False)),
+            ground_predicates=bool(config.get("ground_predicates", False)),
+            predicate_similarity_threshold=predicate_similarity_threshold,
             model=str(config.get("model", "google/gemini-3-flash-preview")),
             temperature=float(config.get("temperature", 0.0)),
             max_tokens=int(config.get("max_tokens", 1500)),
@@ -94,6 +110,13 @@ def get_open_v1_config() -> dict:
         "require_schema_match": False,  # keep only individuals matching a schema node
         "similarity_threshold": 0.45,
         "kinds_to_search": ["class"],
+        # --- predicate grounding (SchemaVectorIndex, property_definition kind) ---
+        # Clamp each extracted triple's free-form predicate onto the ontology's
+        # defined object-property vocabulary by matching it against property
+        # definitions' curated title+definition embeddings. Off by default;
+        # self-skips with no index / no repo / unresolvable ontology.
+        "ground_predicates": False,
+        "predicate_similarity_threshold": 0.45,
         # --- confidence calibration (Brier knob) ---
         "relation_confidence": 0.7,
         # --- LLM label canonicalization (needs an LLM provider + cassettes) ---
