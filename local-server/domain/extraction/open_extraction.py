@@ -497,6 +497,211 @@ def build_relation_candidates(result: OpenExtractionResult) -> list[RelationCand
 
 
 # ============================================================================
+# Coverage completion: surface unconsumed noun chunks + derive their relations
+# ============================================================================
+
+# Clausal complement dependency labels whose inner verb carries relations the
+# core SVO builder skips (control constructions, reported clauses).
+_CLAUSAL_COMP_DEPS = frozenset({"ccomp", "xcomp"})
+# Passive-agent prepositions: spaCy tags the "by" of a passive agent "agent";
+# some models fall back to a plain "prep", so accept both.
+_AGENT_DEPS = frozenset({"agent", "prep"})
+
+
+def unconsumed_noun_chunk_heads(
+    result: OpenExtractionResult, relations: Sequence[RelationCandidate]
+) -> list[tuple[int, str]]:
+    """
+    Noun chunks left unconsumed by the SVO relation triples.
+
+    A chunk is "consumed" when any of its tokens is the subject or object root
+    of some relation candidate — i.e. the SVO builder already surfaced it. The
+    remaining chunks hold the entities the core pipeline never emits (the
+    dominant `candidate_missing` failure class). Returns each unconsumed chunk's
+    root token index paired with its surface text, so the caller can ground the
+    phrase against the schema and derive its relations from the same root.
+
+    Args:
+        result: Open NLP extraction output.
+        relations: The SVO relation candidates already built for this document.
+
+    Returns:
+        List of (root_index, chunk_text) for each unconsumed noun chunk, in
+        document order.
+    """
+    consumed: set[int] = set()
+    for rel in relations:
+        consumed.add(rel.subject_index)
+        consumed.add(rel.object_index)
+
+    heads: list[tuple[int, str]] = []
+    for chunk in result.noun_chunks:
+        if any(i in consumed for i in range(chunk.start_token, chunk.end_token)):
+            continue
+        text = chunk.text.strip()
+        if not text:
+            continue
+        heads.append((chunk.root_index, text))
+    return heads
+
+
+def build_wider_relation_candidates(
+    result: OpenExtractionResult,
+    base_relations: Sequence[RelationCandidate],
+    restrict_to_heads: frozenset[int] | None = None,
+) -> list[RelationCandidate]:
+    """
+    Derive relations the core SVO builder misses via wider dependency capture.
+
+    ``build_relation_candidates`` only pairs a verb's direct nsubj/nsubjpass
+    with its direct objects and simple prepositional objects. This surfaces the
+    dependency structures it steps over — the ones that leave a genuine entity
+    dangling without a derived relation:
+
+    - **Conjunct fan-out**: for each base relation, fans its predicate out over
+      the conjuncts of the subject and of the object ("navigates to A and B"
+      yields ``navigate(A)`` *and* ``navigate(B)``).
+    - **Passive agent**: pairs a passive verb's agent (``by`` -> pobj) with its
+      passive subject as a proper subject--verb--object relation ("the route is
+      navigated by the technician" yields ``technician navigate route``).
+    - **Clausal / adjectival complements** (ccomp/xcomp/acomp): pairs a control
+      or reporting verb's subject with the objects of its complement clause, and
+      an adjectival complement's prepositional objects with the matrix subject.
+
+    When ``restrict_to_heads`` is given, only relations whose subject or object
+    root token is in that set are returned — the caller passes the roots of the
+    newly-surfaced, schema-grounded noun chunks, so wider capture is scoped to
+    completing *their* coverage rather than re-deriving the whole document.
+
+    Args:
+        result: Open NLP extraction output.
+        base_relations: The SVO relation candidates (source of conjunct fan-out).
+        restrict_to_heads: Optional set of root token indices to keep relations for.
+
+    Returns:
+        De-duplicated RelationCandidate list (unique on subject/verb/object
+        token indices), excluding any self-referential (subject == object) pair.
+    """
+    tokens = result.tokens
+
+    def make(subj_idx: int, verb_idx: int, obj_idx: int, predicate_index: int | None = None):
+        pred_idx = verb_idx if predicate_index is None else predicate_index
+        return RelationCandidate(
+            subject=_phrase_for_token(result, subj_idx),
+            predicate=tokens[pred_idx].lemma.lower(),
+            object=_phrase_for_token(result, obj_idx),
+            subject_index=subj_idx,
+            verb_index=verb_idx,
+            object_index=obj_idx,
+            sentence_index=tokens[verb_idx].sentence_index,
+            subject_lemmas=_token_label_lemmas(result, subj_idx),
+            object_lemmas=_token_label_lemmas(result, obj_idx),
+        )
+
+    out: list[RelationCandidate] = []
+
+    # 1. Conjunct fan-out over the already-built SVO relations.
+    for rel in base_relations:
+        for tok in tokens:
+            if tok.dep != "conj":
+                continue
+            if tok.head_index == rel.object_index:
+                out.append(make(rel.subject_index, rel.verb_index, tok.index))
+            if tok.head_index == rel.subject_index:
+                out.append(make(tok.index, rel.verb_index, rel.object_index))
+
+    # 2. Passive agent + 3. clausal/adjectival complements, per governing verb.
+    for verb in tokens:
+        if verb.pos != "VERB":
+            continue
+
+        subjpass = [
+            t for t in tokens if t.head_index == verb.index and t.dep == "nsubjpass"
+        ]
+        if subjpass:
+            agents: list[int] = []
+            for prep in tokens:
+                if prep.head_index == verb.index and prep.dep in _AGENT_DEPS:
+                    agents.extend(
+                        t.index
+                        for t in tokens
+                        if t.head_index == prep.index and t.dep == "pobj"
+                    )
+            for agent_index in agents:
+                for subj in subjpass:
+                    out.append(make(agent_index, verb.index, subj.index))
+
+        subjects = [
+            t for t in tokens if t.head_index == verb.index and t.dep in _CRITICAL_DEPS
+        ]
+
+        # Clausal complements: the inner verb's own subject, else the matrix
+        # subject (control), paired with the inner verb's objects.
+        for comp in tokens:
+            if (
+                comp.head_index != verb.index
+                or comp.dep not in _CLAUSAL_COMP_DEPS
+                or comp.pos != "VERB"
+            ):
+                continue
+            inner_subjects = [
+                t for t in tokens if t.head_index == comp.index and t.dep in _CRITICAL_DEPS
+            ] or subjects
+            inner_objects = [
+                t.index
+                for t in tokens
+                if t.head_index == comp.index and t.dep in {"dobj", "attr", "dative"}
+            ]
+            for prep in tokens:
+                if prep.head_index == comp.index and prep.dep == "prep":
+                    inner_objects.extend(
+                        t.index
+                        for t in tokens
+                        if t.head_index == prep.index and t.dep == "pobj"
+                    )
+            for subj in inner_subjects:
+                for obj_index in inner_objects:
+                    out.append(make(subj.index, comp.index, obj_index))
+
+        # Adjectival complements: matrix subject -> adjective's prep objects.
+        for acomp in tokens:
+            if acomp.head_index != verb.index or acomp.dep != "acomp":
+                continue
+            acomp_objects: list[int] = []
+            for prep in tokens:
+                if prep.head_index == acomp.index and prep.dep == "prep":
+                    acomp_objects.extend(
+                        t.index
+                        for t in tokens
+                        if t.head_index == prep.index and t.dep == "pobj"
+                    )
+            for subj in subjects:
+                for obj_index in acomp_objects:
+                    out.append(make(subj.index, verb.index, obj_index, predicate_index=acomp.index))
+
+    # Keep only relations that surface one of the requested heads.
+    if restrict_to_heads is not None:
+        out = [
+            r
+            for r in out
+            if r.subject_index in restrict_to_heads or r.object_index in restrict_to_heads
+        ]
+
+    # De-duplicate on token indices; drop self-referential pairs.
+    seen: set[tuple[int, int, int]] = set()
+    deduped: list[RelationCandidate] = []
+    for r in out:
+        if r.subject_index == r.object_index:
+            continue
+        key = (r.subject_index, r.verb_index, r.object_index)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(r)
+    return deduped
+
+
+# ============================================================================
 # Cluster representative selection (pairs ClusteringPort output with candidates)
 # ============================================================================
 

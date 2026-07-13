@@ -102,7 +102,7 @@ _SCHEMA_SPACE: dict[str, list] = {
 # ontology_id, so these knobs move soft-F1 on the DR-grounded scenarios and are
 # inert (self-skipped) on scenarios whose ontology_id doesn't resolve.
 #
-# 2*3*4*2*2*3*2*2*2 = 2304 nominal combinations. Coordinate ascent with random
+# 2*3*4*2*2*3*2*2*2*2 = 4608 nominal combinations. Coordinate ascent with random
 # restarts (see coordinate_ascent's restart docstring) sweeps one knob at a time
 # rather than enumerating the grid, so the count drives restart diversity, not
 # runtime; successive-halving is still not worth the added complexity here.
@@ -124,6 +124,7 @@ _INDIVIDUAL_SPACE: dict[str, list] = {
     ],
     "llm_canonicalization": [False, True],
     "ground_predicates": [False, True],
+    "coverage_completion": [False, True],
     "predicate_similarity_threshold": [0.55, 0.65],
 }
 

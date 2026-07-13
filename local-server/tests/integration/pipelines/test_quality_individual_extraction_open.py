@@ -540,3 +540,176 @@ def test_predicate_grounding_skipped_when_ontology_unresolved():
     triples = [_triple("technician_route", "navigate_to", "job_detail_route")]
     # Unresolved taxonomy → no rewriting.
     assert orch._ground_predicates(triples, "test-ontology-123") == triples
+
+
+# ---------------------------------------------------------------------------
+# Coverage completion (unconsumed noun chunks + wider capture) — stubbed
+# ---------------------------------------------------------------------------
+
+from domain.extraction.open_extraction import build_relation_candidates
+from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
+
+
+def _ctok(index, text, pos, dep, head_index, *, lemma=None, is_stop=False, is_alpha=True):
+    return OpenToken(
+        index=index,
+        text=text,
+        lemma=(lemma or text).lower(),
+        pos=pos,
+        tag="X",
+        dep=dep,
+        head_index=head_index,
+        start=index,
+        end=index + len(text),
+        sentence_index=0,
+        is_stop=is_stop,
+        is_alpha=is_alpha,
+    )
+
+
+def _cchunk(text, start_token, end_token, root_index):
+    return NounChunkSpan(
+        text=text,
+        start_token=start_token,
+        end_token=end_token,
+        root_index=root_index,
+        start=0,
+        end=len(text),
+        sentence_index=0,
+    )
+
+
+def _coverage_doc():
+    """'The technician navigates routes and jobs.' — 'jobs' left unconsumed."""
+    tokens = [
+        _ctok(0, "The", "DET", "det", 1, lemma="the", is_stop=True),
+        _ctok(1, "technician", "NOUN", "nsubj", 2, lemma="technician"),
+        _ctok(2, "navigates", "VERB", "ROOT", 2, lemma="navigate"),
+        _ctok(3, "routes", "NOUN", "dobj", 2, lemma="route"),
+        _ctok(4, "and", "CCONJ", "cc", 3, lemma="and", is_stop=True),
+        _ctok(5, "jobs", "NOUN", "conj", 3, lemma="job"),
+        _ctok(6, ".", "PUNCT", "punct", 2, lemma=".", is_alpha=False),
+    ]
+    chunks = [
+        _cchunk("The technician", 0, 2, 1),
+        _cchunk("routes", 3, 4, 3),
+        _cchunk("jobs", 5, 6, 5),
+    ]
+    return OpenExtractionResult(
+        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
+    )
+
+
+def _coverage_orch(schema_index, ontology_repo=None):
+    return OpenIndividualExtractionOrchestrator(
+        llm_provider=None,
+        nlp_processor=None,
+        embedding_service=_StubEmbedding(),
+        schema_index=schema_index,
+        config={**get_open_v1_config(), "coverage_completion": True},
+        ontology_repo=ontology_repo if ontology_repo is not None else _FakeOntologyRepo(),
+    )
+
+
+def _object_labels(triples):
+    return {t["object"]["label"] for t in triples}
+
+
+def test_coverage_completion_surfaces_candidate_with_relation():
+    doc = _coverage_doc()
+    relations = build_relation_candidates(doc)
+    base = _coverage_orch(_StubSchemaIndex())._build_triples(doc, relations)
+    # Baseline never surfaces 'job'.
+    assert "job" not in _object_labels(base)
+
+    orch = _coverage_orch(_StubSchemaIndex())
+    merged = orch._complete_coverage(base, doc, relations, "dr_spec")
+
+    # 'job' is now surfaced AND paired under a real predicate — not dangling.
+    surfaced = [t for t in merged if t["object"]["label"] == "job"]
+    assert surfaced, "coverage completion must surface the unconsumed 'jobs' chunk"
+    assert surfaced[0]["predicate"]["label"] == "navigates"
+    assert surfaced[0]["subject"]["label"] == "technician"
+
+
+def test_coverage_completion_dedups_existing_triple():
+    doc = _coverage_doc()
+    relations = build_relation_candidates(doc)
+    orch = _coverage_orch(_StubSchemaIndex())
+    # The surfaced triple is already present → it must not be duplicated.
+    base = orch._build_triples(doc, relations) + [
+        _triple("technician", "navigates", "job")
+    ]
+    merged = orch._complete_coverage(base, doc, relations, "dr_spec")
+    job_triples = [
+        t
+        for t in merged
+        if t["object"]["label"] == "job" and t["predicate"]["label"] == "navigates"
+    ]
+    assert len(job_triples) == 1
+
+
+def test_coverage_completion_skipped_without_index():
+    doc = _coverage_doc()
+    relations = build_relation_candidates(doc)
+    orch = _coverage_orch(schema_index=None)
+    base = orch._build_triples(doc, relations)
+    assert orch._complete_coverage(base, doc, relations, "dr_spec") == base
+
+
+def test_coverage_completion_skipped_when_ontology_unresolved():
+    doc = _coverage_doc()
+    relations = build_relation_candidates(doc)
+    orch = _coverage_orch(_StubSchemaIndex())
+    base = orch._build_triples(doc, relations)
+    # Unresolved taxonomy → nothing surfaced.
+    assert orch._complete_coverage(base, doc, relations, "test-ontology-123") == base
+
+
+def test_coverage_completion_skipped_when_no_grounding():
+    doc = _coverage_doc()
+    relations = build_relation_candidates(doc)
+    # Empty index → unconsumed chunks never ground → no bare candidate emitted.
+    orch = _coverage_orch(_StubSchemaIndex(empty=True))
+    base = orch._build_triples(doc, relations)
+    assert orch._complete_coverage(base, doc, relations, "dr_spec") == base
+
+
+class _StubNLP:
+    """Returns a fixed OpenExtractionResult from process_open for any text."""
+
+    def __init__(self, result):
+        self._result = result
+
+    def process_open(self, text):
+        return self._result
+
+    def is_ready(self):
+        return True
+
+
+async def _run_coverage(enabled: bool):
+    doc = _coverage_doc()
+    orch = OpenIndividualExtractionOrchestrator(
+        llm_provider=None,
+        nlp_processor=_StubNLP(doc),
+        embedding_service=_StubEmbedding(),
+        schema_index=_StubSchemaIndex(),
+        config={**get_open_v1_config(), "coverage_completion": enabled},
+        ontology_repo=_FakeOntologyRepo(),
+    )
+    state = IndividualExtractionState(
+        run_id=str(uuid4()),
+        pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+        input_data={"text": "The technician navigates routes and jobs.", "ontology_id": "dr_spec"},
+    )
+    result_state = await orch.execute(state)
+    return (result_state.result or {}).get("triples", [])
+
+
+@pytest.mark.asyncio
+async def test_coverage_completion_knob_gates_execute():
+    off = await _run_coverage(enabled=False)
+    on = await _run_coverage(enabled=True)
+    assert "job" not in _object_labels(off)
+    assert "job" in _object_labels(on)

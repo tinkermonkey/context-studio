@@ -37,6 +37,7 @@ class IndividualOpenV1Config:
     kinds_to_search: tuple[SchemaKind, ...]
     llm_canonicalization: bool
     ground_predicates: bool
+    coverage_completion: bool
     predicate_similarity_threshold: float
     model: str
     temperature: float
@@ -88,6 +89,7 @@ class IndividualOpenV1Config:
             kinds_to_search=kinds_to_search,
             llm_canonicalization=bool(config.get("llm_canonicalization", False)),
             ground_predicates=bool(config.get("ground_predicates", False)),
+            coverage_completion=bool(config.get("coverage_completion", False)),
             predicate_similarity_threshold=predicate_similarity_threshold,
             model=str(config.get("model", "google/gemini-3-flash-preview")),
             temperature=float(config.get("temperature", 0.0)),
@@ -117,6 +119,18 @@ def get_open_v1_config() -> dict:
         # self-skips with no index / no repo / unresolvable ontology.
         "ground_predicates": False,
         "predicate_similarity_threshold": 0.45,
+        # --- coverage completion (unconsumed noun chunks + wider dependency capture) ---
+        # The dominant miss class is candidate_missing: entities the SVO triples
+        # never surface. This stage emits noun chunks left unconsumed by the SVO
+        # dependency triples as candidate individuals — but only after grounding
+        # each against the schema class vocabulary (so generic chunks are dropped)
+        # AND deriving their relations in the same pass via wider dependency
+        # capture (ccomp/xcomp/acomp, passive agent, conjunct fan-out). A surfaced
+        # candidate is emitted only WITH a derived relation, never as a bare
+        # dangling individual — surfacing without deriving relations regresses the
+        # metric (relation_not_derived jumps). Off by default; self-skips with no
+        # index / no repo / unresolvable ontology.
+        "coverage_completion": False,
         # --- confidence calibration (Brier knob) ---
         "relation_confidence": 0.7,
         # --- LLM label canonicalization (needs an LLM provider + cassettes) ---

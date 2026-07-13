@@ -18,9 +18,11 @@ from domain.extraction.open_extraction import (
     OpenExtractionParams,
     build_concept_candidates,
     build_relation_candidates,
+    build_wider_relation_candidates,
     find_connected_verb,
     priority_for_dep,
     select_cluster_representatives,
+    unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import (
     ClusterAssignment,
@@ -321,3 +323,127 @@ def test_select_cluster_representatives_length_mismatch_raises():
 
     with pytest.raises(ValueError):
         select_cluster_representatives([_cand("a")], [])
+
+
+# ---------------------------------------------------------------------------
+# Coverage completion: unconsumed noun chunks + wider dependency capture
+# ---------------------------------------------------------------------------
+
+
+def _conjunct_doc():
+    """'The technician navigates routes and jobs.' — object conjunct fan-out."""
+    tokens = [
+        _tok(0, "The", "DET", "det", 1, lemma="the", is_stop=True),
+        _tok(1, "technician", "NOUN", "nsubj", 2, lemma="technician"),
+        _tok(2, "navigates", "VERB", "ROOT", 2, lemma="navigate"),
+        _tok(3, "routes", "NOUN", "dobj", 2, lemma="route"),
+        _tok(4, "and", "CCONJ", "cc", 3, lemma="and", is_stop=True),
+        _tok(5, "jobs", "NOUN", "conj", 3, lemma="job"),
+        _tok(6, ".", "PUNCT", "punct", 2, lemma=".", is_alpha=False),
+    ]
+    chunks = [
+        _chunk("The technician", 0, 2, 1),
+        _chunk("routes", 3, 4, 3),
+        _chunk("jobs", 5, 6, 5),
+    ]
+    return OpenExtractionResult(
+        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
+    )
+
+
+def _passive_agent_doc():
+    """'The route is navigated by the technician.' — passive agent."""
+    tokens = [
+        _tok(0, "The", "DET", "det", 1, lemma="the", is_stop=True),
+        _tok(1, "route", "NOUN", "nsubjpass", 3, lemma="route"),
+        _tok(2, "is", "AUX", "auxpass", 3, lemma="be", is_stop=True),
+        _tok(3, "navigated", "VERB", "ROOT", 3, lemma="navigate"),
+        _tok(4, "by", "ADP", "agent", 3, lemma="by", is_stop=True),
+        _tok(5, "the", "DET", "det", 6, lemma="the", is_stop=True),
+        _tok(6, "technician", "NOUN", "pobj", 4, lemma="technician"),
+        _tok(7, ".", "PUNCT", "punct", 3, lemma=".", is_alpha=False),
+    ]
+    chunks = [_chunk("The route", 0, 2, 1), _chunk("the technician", 5, 7, 6)]
+    return OpenExtractionResult(
+        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
+    )
+
+
+def _xcomp_doc():
+    """'Users want to navigate routes.' — xcomp control complement."""
+    tokens = [
+        _tok(0, "Users", "NOUN", "nsubj", 1, lemma="user"),
+        _tok(1, "want", "VERB", "ROOT", 1, lemma="want"),
+        _tok(2, "to", "PART", "aux", 3, lemma="to", is_stop=True),
+        _tok(3, "navigate", "VERB", "xcomp", 1, lemma="navigate"),
+        _tok(4, "routes", "NOUN", "dobj", 3, lemma="route"),
+        _tok(5, ".", "PUNCT", "punct", 1, lemma=".", is_alpha=False),
+    ]
+    chunks = [_chunk("Users", 0, 1, 0), _chunk("routes", 4, 5, 4)]
+    return OpenExtractionResult(
+        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
+    )
+
+
+def test_unconsumed_noun_chunk_heads_reports_only_unconsumed():
+    doc = _conjunct_doc()
+    relations = build_relation_candidates(doc)
+    heads = unconsumed_noun_chunk_heads(doc, relations)
+    # 'The technician' (subject) and 'routes' (object) are consumed by the SVO
+    # relation; only 'jobs' remains uncovered.
+    assert heads == [(5, "jobs")]
+
+
+def test_wider_capture_fans_out_object_conjunct():
+    doc = _conjunct_doc()
+    relations = build_relation_candidates(doc)
+    wider = build_wider_relation_candidates(doc, relations)
+    pairs = {(r.subject_index, r.object_index) for r in wider}
+    # technician --navigate--> jobs (the conjunct), pairing the new entity with
+    # the existing subject.
+    assert (1, 5) in pairs
+    fanned = next(r for r in wider if r.object_index == 5)
+    assert fanned.predicate == "navigate"
+    assert fanned.object == "jobs"
+    assert fanned.subject == "The technician"
+
+
+def test_wider_capture_passive_agent():
+    doc = _passive_agent_doc()
+    relations = build_relation_candidates(doc)
+    # The passive with no direct object yields no SVO relation at all.
+    assert relations == []
+    wider = build_wider_relation_candidates(doc, relations)
+    # technician (agent) --navigate--> route (passive subject).
+    assert len(wider) == 1
+    rel = wider[0]
+    assert rel.subject_index == 6 and rel.object_index == 1
+    assert rel.predicate == "navigate"
+
+
+def test_wider_capture_xcomp_control_complement():
+    doc = _xcomp_doc()
+    relations = build_relation_candidates(doc)
+    wider = build_wider_relation_candidates(doc, relations)
+    # The matrix subject 'Users' controls 'navigate', pairing with its object.
+    pairs = {(r.subject, r.predicate, r.object) for r in wider}
+    assert ("Users", "navigate", "routes") in pairs
+
+
+def test_wider_capture_restrict_to_heads_filters():
+    doc = _conjunct_doc()
+    relations = build_relation_candidates(doc)
+    # Restricting to a head not touched by any wider relation yields nothing.
+    assert build_wider_relation_candidates(doc, relations, restrict_to_heads=frozenset()) == []
+    # Restricting to the 'jobs' root keeps the fan-out relation.
+    kept = build_wider_relation_candidates(doc, relations, restrict_to_heads=frozenset({5}))
+    assert [(r.subject_index, r.object_index) for r in kept] == [(1, 5)]
+
+
+def test_wider_capture_dedups_and_drops_self_referential():
+    doc = _conjunct_doc()
+    relations = build_relation_candidates(doc)
+    wider = build_wider_relation_candidates(doc, relations)
+    keys = [(r.subject_index, r.verb_index, r.object_index) for r in wider]
+    assert len(keys) == len(set(keys))
+    assert all(r.subject_index != r.object_index for r in wider)

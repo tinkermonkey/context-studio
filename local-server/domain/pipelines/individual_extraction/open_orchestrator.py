@@ -24,7 +24,9 @@ from typing import Any
 from domain.extraction.open_extraction import (
     RelationCandidate,
     build_relation_candidates,
+    build_wider_relation_candidates,
     snake_label,
+    unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
 from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
@@ -106,6 +108,16 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if self._cfg.llm_canonicalization and self._llm_provider is not None:
                 triples = await self._canonicalize_labels(triples, text, ontology_id)
 
+            # Runs AFTER canonicalization (so the entities it surfaces don't
+            # perturb the canonicalization prompt) and BEFORE predicate/schema
+            # grounding (so the surfaced triples still flow through those
+            # stages). Needs the spaCy structure + SVO relations to find
+            # unconsumed chunks and derive their relations.
+            if self._cfg.coverage_completion:
+                triples = self._complete_coverage(
+                    triples, open_result, relations, ontology_id
+                )
+
             # Runs before _ground_to_schema so it only sees relation triples (no
             # is_a type triples exist yet), and after canonicalization since that
             # stage only rewrites subject/object labels, never predicates.
@@ -182,6 +194,93 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 }
             )
         return triples
+
+    def _complete_coverage(
+        self,
+        triples: list[dict[str, Any]],
+        open_result: OpenExtractionResult,
+        relations: list[RelationCandidate],
+        ontology_id: str | None,
+    ) -> list[dict[str, Any]]:
+        """
+        Surface unconsumed noun chunks AND derive their relations in one pass.
+
+        The dominant miss class is ``candidate_missing``: entities the SVO
+        triples never surface. This stage completes their coverage without
+        letting them dangle — the failure mode that regressed a prior attempt,
+        where surfaced candidates lacked relations and ``relation_not_derived``
+        jumped. It:
+
+        1. Finds noun chunks unconsumed by the SVO relations.
+        2. Grounds each unconsumed chunk against the schema's class vocabulary
+           via the SchemaVectorIndex, keeping only those that match above the
+           similarity threshold — so generic chunks are dropped and only real
+           domain entities are surfaced.
+        3. Runs wider dependency capture (ccomp/xcomp/acomp, passive agent,
+           conjunct fan-out) scoped to those grounded chunk roots, so each
+           surfaced candidate arrives WITH a derived subject--verb--object
+           relation instead of as a bare individual.
+
+        New triples are merged into the existing set, de-duplicated on
+        (subject, predicate, object) exactly as ``_build_triples`` does. Runs
+        after label canonicalization (so the entities it surfaces don't perturb
+        that stage's cached prompt) and before predicate/schema grounding (so
+        the surfaced triples still flow through those stages).
+
+        Self-skips (returns the triples untouched) when there is no schema
+        index, no repository, or the ontology id does not resolve to a known
+        taxonomy — mirroring how the grounding stages degrade — and when no
+        unconsumed chunk grounds or no relation is derived for a surfaced head.
+        """
+        if self._schema_index is None:
+            return triples
+        taxonomy = (
+            self._ontology_repo.get_by_identifier(ontology_id)
+            if self._ontology_repo is not None and ontology_id
+            else None
+        )
+        if taxonomy is None:
+            return triples
+
+        heads = unconsumed_noun_chunk_heads(open_result, relations)
+        if not heads:
+            return triples
+
+        threshold = self._cfg.similarity_threshold
+        grounded_heads: set[int] = set()
+        for root_index, phrase in heads:
+            query = self._embedding.embed(phrase.replace("_", " "))
+            results = self._schema_index.search(
+                query, kinds=["class"], top_k=1, threshold=threshold, taxonomy_id=taxonomy.id
+            )
+            if results:
+                grounded_heads.add(root_index)
+        if not grounded_heads:
+            return triples
+
+        wider = build_wider_relation_candidates(
+            open_result, relations, restrict_to_heads=frozenset(grounded_heads)
+        )
+        if not wider:
+            return triples
+
+        new_triples = self._build_triples(open_result, wider)
+        merged = list(triples)
+        seen = {
+            (t["subject"]["label"], t["predicate"]["label"], t["object"]["label"])
+            for t in triples
+        }
+        for triple in new_triples:
+            key = (
+                triple["subject"]["label"],
+                triple["predicate"]["label"],
+                triple["object"]["label"],
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(triple)
+        return merged
 
     async def _canonicalize_labels(
         self, triples: list[dict[str, Any]], text: str, ontology_id: str | None
