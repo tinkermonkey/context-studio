@@ -133,10 +133,11 @@ const SEED_BACKLOG = [
     // recording command). Until then Loop B cannot score a change to it, so an
     // experimenter assigned this hypothesis today would implement a change the
     // tournament ignores, guaranteeing an accept-gate rejection regardless of
-    // merit. This block therefore clears itself the moment `default` cassettes
-    // exist and the variant registers -- flip `blocked` to false then. No
-    // cassettes yet, so it stays blocked for now.
-    blocked: true,
+    // merit. UNBLOCKED: the 32 `default` cassettes are recorded (phase-1 model
+    // google/gemini-3-flash-preview via OpenRouter) and both `default` and
+    // `default+grounding` register and replay cleanly, so Loop B can now score a
+    // change to the default pipeline.
+    blocked: false,
   },
   {
     id: 'per_source_confidence_bands',
@@ -149,14 +150,11 @@ const SEED_BACKLOG = [
     stages: ['predicate_mismatch', 'relation_not_derived', 'candidate_missing'],
     summary:
       'Two-pass extraction for the default (LLM) pipeline (design doc §7): pass 1 identifies + grounds individuals (LLM/vector-search individual lookup); pass 2 derives relationships by offering the LLM only the finite predicate set the ontology permits between the identified individuals\' grounded classes, so it chooses from a closed set instead of inventing free-form predicates. Directly attacks the predicate-drift the arxiv GT exhibits (develops/develops_alone/researches).',
-    // Same guard as rag_proper_prompting_default: this modifies the `default`
-    // (LLM) pipeline, which Loop B cannot score until `default` cassettes are
-    // recorded and the `default`/`default+grounding` variants register (see
-    // scripts/quality_tournament.py build_registry()). Until then an
-    // experimenter assigned this would change a pipeline the tournament
-    // ignores -> guaranteed accept-gate rejection. Flip `blocked` to false
-    // once default cassettes exist and the variant registers.
-    blocked: true,
+    // Same guard as rag_proper_prompting_default. UNBLOCKED: the `default`
+    // cassettes are recorded and the `default`/`default+grounding` variants
+    // register and replay, so Loop B can now score changes to the default
+    // (LLM) pipeline.
+    blocked: false,
   },
 ]
 

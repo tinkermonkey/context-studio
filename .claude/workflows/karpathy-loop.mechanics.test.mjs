@@ -254,19 +254,28 @@ test("selectTargets returns nothing once every seeded hypothesis is accepted", (
   const targets = selectTargets(failureStageCounts, [], allIds, 3);
   assert.equal(targets.length, 0);
 });
+// These inject a synthetic entry rather than depend on the live backlog
+// containing a blocked/done hypothesis (the set flips as hypotheses land), so
+// they exercise the filter itself regardless of current backlog state.
 test("selectTargets never selects a hypothesis marked blocked, even when its stage is top-ranked", () => {
-  const blocked = SEED_BACKLOG.find((h) => h.blocked);
-  assert.ok(blocked, "fixture assumption: at least one seeded hypothesis is marked blocked");
-  const failureStageCounts = { [blocked.stages[0]]: 1000 };
-  const targets = selectTargets(failureStageCounts, [], [], SEED_BACKLOG.length);
-  assert.ok(!targets.some((t) => t.id === blocked.id), `expected blocked hypothesis ${blocked.id} to never be selected`);
+  const synthetic = { id: "__synthetic_blocked__", stages: ["candidate_missing"], summary: "x", blocked: true };
+  SEED_BACKLOG.push(synthetic);
+  try {
+    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length);
+    assert.ok(!targets.some((t) => t.id === synthetic.id), "expected blocked hypothesis to never be selected");
+  } finally {
+    SEED_BACKLOG.pop();
+  }
 });
 test("selectTargets never selects a hypothesis marked done (implemented outside the loop)", () => {
-  const done = SEED_BACKLOG.find((h) => h.done);
-  assert.ok(done, "fixture assumption: at least one seeded hypothesis is marked done");
-  const failureStageCounts = { [done.stages[0]]: 1000 };
-  const targets = selectTargets(failureStageCounts, [], [], SEED_BACKLOG.length);
-  assert.ok(!targets.some((t) => t.id === done.id), `expected done hypothesis ${done.id} to never be selected`);
+  const synthetic = { id: "__synthetic_done__", stages: ["candidate_missing"], summary: "x", done: true };
+  SEED_BACKLOG.push(synthetic);
+  try {
+    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length);
+    assert.ok(!targets.some((t) => t.id === synthetic.id), "expected done hypothesis to never be selected");
+  } finally {
+    SEED_BACKLOG.pop();
+  }
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);
