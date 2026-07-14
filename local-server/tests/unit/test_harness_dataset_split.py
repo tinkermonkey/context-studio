@@ -10,7 +10,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
     LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS,
-    RELABEL_PENDING_ARXIV_SCENARIOS,
+    RELABELED_ARXIV_DEV_SCENARIOS,
     RETIRED_ARXIV_SCENARIOS,
     SCENARIO_DISPOSITION,
     SCENARIO_ONTOLOGY,
@@ -40,9 +40,16 @@ class TestSplitFor:
 
 
 class TestOntologyContextFor:
-    def test_every_legacy_scenario_is_mapped_to_placeholder(self):
+    def test_legacy_scenario_ontology_contexts(self):
+        # Software-arch + retired arxiv keep the placeholder context; the 3
+        # DR-relabeled arxiv scenarios are graded against the DR spec.
         for scenario in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS:
-            assert ontology_context_for(scenario) == OntologyContext.PLACEHOLDER
+            expected = (
+                OntologyContext.DR_SPEC
+                if scenario in RELABELED_ARXIV_DEV_SCENARIOS
+                else OntologyContext.PLACEHOLDER
+            )
+            assert ontology_context_for(scenario) == expected
 
     def test_dev_and_holdout_legacy_scenarios_all_mapped(self):
         for scenario in INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS:
@@ -56,24 +63,30 @@ class TestOntologyContextFor:
             ontology_context_for("not_a_real_scenario")
 
     def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
-        # SCENARIO_ONTOLOGY also covers the un-scored (retired / relabel-pending)
-        # arxiv scenarios, which carry a placeholder context for the record but
-        # are not in the scored INDIVIDUAL_EXTRACTION_SCENARIOS.
+        # SCENARIO_ONTOLOGY also covers the retired arxiv scenarios, which keep a
+        # placeholder context for the record but are not in the scored split. The
+        # relabeled arxiv scenarios ARE in INDIVIDUAL_EXTRACTION_SCENARIOS.
         assert set(SCENARIO_ONTOLOGY.keys()) == (
             set(INDIVIDUAL_EXTRACTION_SCENARIOS)
             | set(RETIRED_ARXIV_SCENARIOS)
-            | set(RELABEL_PENDING_ARXIV_SCENARIOS)
             | set(DR_BOOTSTRAP_SCENARIOS)
             | set(WAVE4_INFORMAL_SCENARIOS)
         )
 
-    def test_all_18_legacy_scenarios_currently_placeholder(self):
+    def test_all_18_legacy_scenarios_recorded_with_context(self):
         legacy_ontology = {
             scenario: SCENARIO_ONTOLOGY[scenario]
             for scenario in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS
         }
         assert len(legacy_ontology) == 18
-        assert all(v == OntologyContext.PLACEHOLDER for v in legacy_ontology.values())
+        # 15 placeholder (10 software-arch + 5 retired arxiv), 3 DR_SPEC (relabeled).
+        dr = {s for s, v in legacy_ontology.items() if v == OntologyContext.DR_SPEC}
+        assert dr == set(RELABELED_ARXIV_DEV_SCENARIOS)
+        assert all(
+            legacy_ontology[s] == OntologyContext.PLACEHOLDER
+            for s in legacy_ontology
+            if s not in RELABELED_ARXIV_DEV_SCENARIOS
+        )
 
 
 class TestWave2SmeScenarios:
@@ -168,17 +181,19 @@ class TestDispositionFor:
 
     def test_legacy_dispositions_reflect_the_arxiv_review(self):
         # After the NEEDS_HUMAN_REVIEW.md disposition pass: all 18 legacy
-        # scenarios are still recorded, the 5 reviewed arxiv scenarios are
-        # RETIRED, and everything else (10 software-arch + 3 relabel-pending
-        # arxiv) stays SEPARATE_CONTEXT until relabeled. See
+        # scenarios are recorded — the 5 reviewed arxiv scenarios are RETIRED, the
+        # 3 relabeled arxiv scenarios are RELABELED (DR-native GT), and the 10
+        # software-arch scenarios stay SEPARATE_CONTEXT. See
         # LEGACY_CORPUS_DISPOSITION.md.
         assert len(SCENARIO_DISPOSITION) == 18
         retired = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RETIRED}
+        relabeled = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RELABELED}
         assert retired == set(RETIRED_ARXIV_SCENARIOS)
+        assert relabeled == set(RELABELED_ARXIV_DEV_SCENARIOS)
         assert all(
             SCENARIO_DISPOSITION[s] == ScenarioDisposition.SEPARATE_CONTEXT
             for s in SCENARIO_DISPOSITION
-            if s not in RETIRED_ARXIV_SCENARIOS
+            if s not in RETIRED_ARXIV_SCENARIOS and s not in RELABELED_ARXIV_DEV_SCENARIOS
         )
 
     def test_unmapped_scenario_raises(self):

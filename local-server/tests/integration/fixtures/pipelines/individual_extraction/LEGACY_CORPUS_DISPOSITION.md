@@ -36,12 +36,17 @@ The 10 hand-written software-architecture scenarios are unchanged
   `arxiv_researcher_profile`, `arxiv_llm_research_lab`,
   `arxiv_byzantine_fault_tolerance`, `arxiv_consensus_protocol_collaboration`,
   `arxiv_cloud_platform_landscape`.
-- **RELABEL pending (3)** — removed from the placeholder-scored split for now
-  (`RELABEL_PENDING_ARXIV_SCENARIOS`); their GT will be re-authored against the
-  DR ontology (via the DR extraction agents, then human-reviewed) and folded
-  back in as DR-native (`RELABELED` / `DR_SPEC`) benchmarks —
-  `arxiv_cloud_provisioning`, `arxiv_crdt_networks`,
-  `arxiv_kubernetes_energy_monitoring`.
+- **RELABELED (3)** — GT re-authored against the DR ontology and folded back
+  into the scored dev split as DR-native benchmarks
+  (`RELABELED_ARXIV_DEV_SCENARIOS`, `DISPOSITION = RELABELED`,
+  `SCENARIO_ONTOLOGY = DR_SPEC`): `arxiv_cloud_provisioning`,
+  `arxiv_crdt_networks`, `arxiv_kubernetes_energy_monitoring`. Every triple in
+  each is spec-valid — individuals ground to real DR/ArchiMate classes and each
+  relationship uses a DR predicate the spec defines between those classes (e.g.
+  `node --realizes--> technologyservice`, `applicationcomponent --accesses-->
+  dataobject`, `communicationnetwork --serves--> device`). Modeling decisions
+  are recorded in each scenario's `README.md`. Their default-pipeline cassettes
+  were re-recorded against the DR ontology.
 
 Retiring the two holdout arxiv scenarios cleared the last unreviewed
 agent-drafted GT from the scored split, so the loop's

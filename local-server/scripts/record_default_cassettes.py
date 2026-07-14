@@ -310,9 +310,24 @@ def main() -> int:
         "no flag is given). If both --record and --dry-run are passed, the dry "
         "run wins.",
     )
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        default=None,
+        metavar="SCENARIO",
+        help="Record only these scenario(s) instead of the full replay set. Use "
+        "to (re-)record a subset, e.g. after a scenario's ontology context "
+        "changes, without overwriting the other cassettes.",
+    )
     args = parser.parse_args()
 
     scenarios = union_scenarios()
+    if args.only:
+        unknown = [s for s in args.only if s not in scenarios]
+        if unknown:
+            print(f"ERROR: unknown/unscored scenario(s): {unknown}")
+            return 1
+        scenarios = [s for s in scenarios if s in set(args.only)]
 
     if args.dry_run or not args.record:
         print_plan(scenarios)

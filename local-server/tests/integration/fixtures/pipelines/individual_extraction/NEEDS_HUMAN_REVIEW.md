@@ -47,13 +47,14 @@ for the scored corpus. Dispositions recorded in
 - [x] `arxiv_consensus_protocol_collaboration/` — RETIRED (synthetic "John Doe")
 - [x] `arxiv_cloud_platform_landscape/` — RETIRED (AWS/Azure trivia, not a paper)
 
-**RELABEL** (real abstracts; GT to be re-authored against the DR ontology, then
-folded back into the scored split as DR-native benchmarks):
-- [x] `arxiv_cloud_provisioning/` — RELABEL pending
-- [x] `arxiv_crdt_networks/` — RELABEL pending
-- [x] `arxiv_kubernetes_energy_monitoring/` — RELABEL pending
+**RELABELED** (real abstracts; GT re-authored against the DR ontology and folded
+back into the scored dev split as DR-native `DR_SPEC` benchmarks):
+- [x] `arxiv_cloud_provisioning/` — RELABELED (DR-native GT, spec-valid)
+- [x] `arxiv_crdt_networks/` — RELABELED (DR-native GT, spec-valid)
+- [x] `arxiv_kubernetes_energy_monitoring/` — RELABELED (DR-native GT, spec-valid)
 
 Review is complete; no unreviewed agent-drafted GT remains in the scored split
 (so `HOLDOUT_GT_REVIEW_PENDING` is now `false`). This file is retained as the
-record of that review. The three RELABEL scenarios' new DR-grounded GT will
-itself need a human review pass when authored.
+record of that review. The three RELABELED scenarios' new DR-grounded GT was
+authored with the DR class + predicate definitions in view and should still be
+re-skimmed by a human before being treated as a hard accept/reject signal.
