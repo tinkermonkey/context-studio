@@ -2,143 +2,25 @@
   "status": "completed",
   "result": {
     "triples": [
-      {
-        "subject": {
-          "label": "spot_instances",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "used_by",
-          "kind": "property"
-        },
-        "object": {
-          "label": "cloud_service_platforms",
-          "kind": "individual"
-        },
-        "confidence": 0.86
-      },
-      {
-        "subject": {
-          "label": "spot_instances",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "introduces",
-          "kind": "property"
-        },
-        "object": {
-          "label": "pricing_uncertainty",
-          "kind": "individual"
-        },
-        "confidence": 0.84
-      },
-      {
-        "subject": {
-          "label": "ec2_spot_service",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "provided_by",
-          "kind": "property"
-        },
-        "object": {
-          "label": "aws",
-          "kind": "individual"
-        },
-        "confidence": 0.9
-      },
-      {
-        "subject": {
-          "label": "ec2_spot_service",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "simplifies",
-          "kind": "property"
-        },
-        "object": {
-          "label": "fleet_provisioning",
-          "kind": "individual"
-        },
-        "confidence": 0.87
-      },
-      {
-        "subject": {
-          "label": "ec2_spot_service",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "restricts",
-          "kind": "property"
-        },
-        "object": {
-          "label": "single_region_provisioning",
-          "kind": "individual"
-        },
-        "confidence": 0.83
-      },
-      {
-        "subject": {
-          "label": "proposed_approach",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "combines",
-          "kind": "property"
-        },
-        "object": {
-          "label": "predictive_models",
-          "kind": "individual"
-        },
-        "confidence": 0.85
-      },
-      {
-        "subject": {
-          "label": "predictive_models",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "estimates",
-          "kind": "property"
-        },
-        "object": {
-          "label": "fleet_configurations",
-          "kind": "individual"
-        },
-        "confidence": 0.84
-      },
-      {
-        "subject": {
-          "label": "proposed_approach",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "preserves",
-          "kind": "property"
-        },
-        "object": {
-          "label": "operational_behavior",
-          "kind": "individual"
-        },
-        "confidence": 0.82
-      }
+      {"subject": {"label": "Cloud Service Platform", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologyservice", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Elastic Infrastructure", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologycollaboration", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Spot Instances", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.node", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Computing Resource", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologyservice", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "EC2 Spot Service", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologyservice", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Fleet Provisioning", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologyprocess", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "AI Provisioning Service", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.technologyservice", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Predictive Models", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.applicationcomponent", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Fleet Configuration", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.dataobject", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Multi-Region Requirement", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "motivation.requirement", "kind": "individual"}, "confidence": 1.0},
+
+      {"subject": {"label": "Elastic Infrastructure", "kind": "individual"}, "predicate": {"label": "realizes", "kind": "property"}, "object": {"label": "Cloud Service Platform", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Spot Instances", "kind": "individual"}, "predicate": {"label": "realizes", "kind": "property"}, "object": {"label": "Computing Resource", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Fleet Provisioning", "kind": "individual"}, "predicate": {"label": "realizes", "kind": "property"}, "object": {"label": "EC2 Spot Service", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "AI Provisioning Service", "kind": "individual"}, "predicate": {"label": "satisfies", "kind": "property"}, "object": {"label": "Multi-Region Requirement", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Predictive Models", "kind": "individual"}, "predicate": {"label": "accesses", "kind": "property"}, "object": {"label": "Fleet Configuration", "kind": "individual"}, "confidence": 1.0}
     ],
     "excluded": [
-      {
-        "subject": {
-          "label": "ec2_spot_service",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "estimates",
-          "kind": "property"
-        },
-        "object": {
-          "label": "fleet_costs",
-          "kind": "individual"
-        },
-        "note": "The EC2 Spot Service does NOT estimate fleet costs before deployment \u2014 the paper says this is a limitation the proposed approach addresses."
-      }
+      {"subject": {"label": "EC2 Spot Service", "kind": "individual"}, "predicate": {"label": "satisfies", "kind": "property"}, "object": {"label": "Multi-Region Requirement", "kind": "individual"}, "note": "The EC2 Spot Service restricts provisioning to a single region; it does NOT satisfy the multi-region requirement -- that is exactly the gap the proposed AI provisioning service addresses. `satisfies` is a valid technologyservice->requirement edge, but this specific instance is contradicted by the text."}
     ]
   },
   "created_individual_ids": [],
