@@ -139,7 +139,13 @@ const SEED_BACKLOG = [
     // google/gemini-3-flash-preview via OpenRouter) and both `default` and
     // `default+grounding` register and replay cleanly, so Loop B can now score a
     // change to the default pipeline.
+    // DONE: landed on main (commit 869cc3f7) as prompt-level class-catalog
+    // grounding in `_build_triple_extraction_prompt` plus canonicalize-only
+    // class-ref verification in `_canonicalize_triples_against_ontology`. Lifted
+    // `default` to dev soft-F1 0.412 / holdout 0.458 (from 0.132/0.102) — it is
+    // now the tournament leader and the loop's incumbent.
     blocked: false,
+    done: true,
   },
   {
     id: 'per_source_confidence_bands',
@@ -337,10 +343,14 @@ function evaluatePrompt() {
     + ' so the previous `--passes 2 --restarts 3` overran the agent time budget without finishing; a'
     + ' single tuned pass is enough to read the incumbent scoreboard, and the experimenters re-tune per'
     + ' candidate anyway.)',
-    '3. Find the newest `experiments/reports/tournament_<run_id>.md` scoreboard digest and the newest',
-    '   `experiments/reports/tournament_open_v1_<run_id>.json` error report. (\'open_v1\' is the current',
-    '   incumbent per `scripts/quality_tournament.py`\'s `build_registry()` docstring; if a different',
-    '   variant has since become the registered incumbent, use its report instead and say so in `summary`.)',
+    '3. Find the newest `experiments/reports/tournament_<run_id>.md` scoreboard digest. The INCUMBENT is',
+    '   the rank-1 variant (highest dev soft-F1) in that scoreboard — NOT a hard-coded pipeline. It is',
+    '   currently `default`, the RAG-grounded LLM pipeline on main (dev soft-F1 ~0.41), which supersedes',
+    '   the former `open_v1` incumbent (~0.13); the accept gate must compare candidates against the real',
+    '   best, so always take the top row. Set `incumbentVariant` to that variant and read ITS error report',
+    '   `experiments/reports/tournament_<incumbentVariant>_<run_id>.json` (if `default` and',
+    '   `default+grounding` tie for rank 1, prefer `default`). Report the runner-up variant and its dev',
+    '   soft-F1 in `summary` so a regression in the leader stays visible.',
     '4. Read the error report JSON: pull `dev_mean`, `holdout_mean`, and `failure_stage_counts`',
     '   (candidate_missing / relation_not_derived / label_mismatch / predicate_mismatch counts).',
     '5. Read the scoreboard telemetry',
@@ -407,8 +417,9 @@ function experimentPrompt(hypothesis, evaluation) {
     '   diagnostics (report these as `bootstrap` and `wave4` for the ledger only -- they must never',
     '   factor into your own read of whether this candidate is working). Compare the new failure-stage',
     '   counts for your target stage against the incumbent error report provided above and summarize the',
-    '   delta. Sanity-check that your grounded baseline matches the incumbent (dev candidate_recall ~0.43,',
-    '   not ~0.35) — if it looks ungrounded, step 1 did not take.',
+    '   delta. Sanity-check that your baseline\'s dev candidate_recall matches the incumbent scoreboard',
+    '   reported above (the RAG-grounded `default` leader sits ~0.72; the rule `open_v1` baseline ~0.43) —',
+    '   a large shortfall means step 1\'s sync to main did not take and you are evaluating an ungrounded base.',
     '8. Capture, from inside the worktree (after committing): `git diff main...HEAD --stat` (diffStat),',
     '   `git diff main...HEAD --name-only` (changedFiles), `git rev-parse --show-toplevel` (worktreePath),',
     '   `git branch --show-current` (branchName), `git merge-base HEAD main` (baseCommit).',

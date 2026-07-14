@@ -399,15 +399,19 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
       recorder used, so prompt titles — and thus cassette keys — match) and
       replay strictly through `CassetteLLMProvider`, never a live provider. The
       two variants differ only by `similarity_threshold` (soft-match dedup); the
-      grounding knobs are inert on the ExtractionService path.
+      `default+grounding` knobs are inert on the ExtractionService path, so the
+      two tie in practice — the RAG grounding that lifts the LLM pipeline lives
+      in the prompt (`ExtractionService._build_triple_extraction_prompt`), not
+      in these knobs.
 
-    No cassettes have been recorded yet, so the guard is closed and this yields
-    only `open_v1` — exactly as before. The guard clears automatically once
-    cassettes exist: record them via
-    `pytest --refresh-cassettes -k test_quality_scenario_with_metrics` against
-    the individual_extraction quality suite (with an LLM provider configured),
-    and the `default` variants register on the next run with no further change
-    to the tournament loop.
+    Cassettes are now recorded under `_DEFAULT_CASSETTE_DIR`, so the guard is
+    open and `default`/`default+grounding` register whenever the DR spec
+    checkout is present. Since RAG-grounding the default prompt, `default` is the
+    tournament leader (dev soft-F1 ~0.41 vs `open_v1` ~0.13) — the Karpathy
+    loop's incumbent is the rank-1 scoreboard variant, so `default` is the
+    accept-gate baseline, not `open_v1`. To re-record after a default-prompt
+    change, use `scripts/record_default_cassettes.py` (phase-1 model via
+    OpenRouter).
     """
     register_variant(_make_open_v1_variant(nlp, embedding, eval_repo, eval_index))
 
