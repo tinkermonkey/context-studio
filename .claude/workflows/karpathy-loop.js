@@ -332,7 +332,11 @@ function evaluatePrompt() {
     '',
     'Steps:',
     '1. `cd local-server && source .venv/bin/activate`',
-    '2. `python scripts/quality_tournament.py --pipeline individual --passes 2 --restarts 3`',
+    '2. `python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1`',
+    '   (~2.5 min. The default/default+grounding LLM variants now register and the scored corpus grew,'
+    + ' so the previous `--passes 2 --restarts 3` overran the agent time budget without finishing; a'
+    + ' single tuned pass is enough to read the incumbent scoreboard, and the experimenters re-tune per'
+    + ' candidate anyway.)',
     '3. Find the newest `experiments/reports/tournament_<run_id>.md` scoreboard digest and the newest',
     '   `experiments/reports/tournament_open_v1_<run_id>.json` error report. (\'open_v1\' is the current',
     '   incumbent per `scripts/quality_tournament.py`\'s `build_registry()` docstring; if a different',
