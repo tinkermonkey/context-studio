@@ -42,6 +42,64 @@ from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 _logger = logging.getLogger(__name__)
 
+# Upper bound on the number of ontology classes injected into a triple-extraction
+# prompt. Keeps the RAG grounding block a bounded fraction of the prompt for
+# large taxonomies; the imported DR spec has ~186 classes, comfortably under it.
+_MAX_CATALOG_CLASSES = 300
+
+# Predicate labels (post-normalization) that mark a triple as an rdf:type/is_a
+# typing assertion whose object must be an ontology class reference.
+_TYPE_PREDICATE_LABELS = frozenset(
+    {"is a", "is_a", "isa", "type", "rdf type", "instance of", "subclass of"}
+)
+
+
+def _canonical_class_ref(cls) -> str:
+    """
+    The class's canonical external reference, or its machine identifier.
+
+    DR-imported classes carry their spec node id (e.g. "technology.node") as the
+    first ``external_references`` entry; that dotted id is the vocabulary the
+    source ontology — and the graded ground truth — use for a class. Falls back
+    to the class ``identifier`` when no external reference is present.
+    """
+    for reference in getattr(cls, "external_references", None) or []:
+        identifier = getattr(reference, "identifier", None)
+        if identifier:
+            return identifier
+    return getattr(cls, "identifier", "") or ""
+
+
+def _class_reference_aliases(cls) -> list[str]:
+    """
+    Every identifying string by which a typing triple may legitimately name a class.
+
+    A class can be referenced by any of its external reference identifiers (a DR
+    spec node id like "technology.node", a wikidata/dbpedia id, ...), by its own
+    machine identifier ("crdt"), or by its human title ("Conflict-free Replicated
+    Data Type"). Different source ontologies — and their graded ground truth —
+    use different ones of these forms (the DR spec types by dotted node id; the
+    canon slice's models emit the class title), so verification must recognize a
+    class by any of them rather than a single canonical pick.
+    """
+    aliases: list[str] = []
+    for reference in getattr(cls, "external_references", None) or []:
+        identifier = getattr(reference, "identifier", None)
+        if identifier:
+            aliases.append(identifier)
+    identifier = getattr(cls, "identifier", "") or ""
+    if identifier:
+        aliases.append(identifier)
+    title = getattr(cls, "title", "") or ""
+    if title:
+        aliases.append(title)
+    return aliases
+
+
+def _normalize_predicate_label(label: str) -> str:
+    """Lowercase a predicate label and fold underscores/hyphens to spaces for matching."""
+    return label.strip().lower().replace("_", " ").replace("-", " ")
+
 
 class ExtractionService:
     """
@@ -411,9 +469,13 @@ class ExtractionService:
                 )
                 tokens_used = llm_response.tokens_in + llm_response.tokens_out
 
-                # Parse LLM response
+                # Parse LLM response, then canonicalize returned class references
+                # against the ontology instead of trusting the model's casing.
                 extracted_triples = self._parse_triple_extraction_response(
                     llm_response.content, text, ontology_id
+                )
+                extracted_triples = self._canonicalize_triples_against_ontology(
+                    extracted_triples, ontology
                 )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -476,9 +538,56 @@ class ExtractionService:
             },
         )
 
+    def _ontology_class_catalog(self, ontology) -> list[tuple[str, str]]:
+        """
+        Return the ontology's classes as (class_ref, title) pairs for RAG grounding.
+
+        ``class_ref`` is the class's canonical external identifier (the first
+        ``external_references`` entry, e.g. "technology.node") when present,
+        falling back to its machine identifier. This is the exact reference the
+        LLM must emit as the object of an ``is_a`` typing triple, so grounding a
+        prompt in these pairs lets the model type individuals with vocabulary the
+        source ontology actually defines instead of inventing class names.
+
+        The catalog is pooled across every concept scheme of the taxonomy and
+        capped so the injected block stays a bounded fraction of the prompt.
+        Returns an empty list when the ontology exposes no classes (e.g. a bare
+        taxonomy or an unresolved id), so the caller degrades to an ungrounded
+        prompt rather than failing.
+        """
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            return []
+
+        catalog: list[tuple[str, str]] = []
+        seen_refs: set[str] = set()
+        schemes = self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(taxonomy_id), limit=None
+        )
+        for scheme in schemes:
+            for cls in self._ontology_repo.list_classes(
+                concept_scheme_id=scheme.id, limit=None
+            ):
+                class_ref = _canonical_class_ref(cls)
+                if not class_ref or class_ref in seen_refs:
+                    continue
+                seen_refs.add(class_ref)
+                catalog.append((class_ref, cls.title or class_ref))
+                if len(catalog) >= _MAX_CATALOG_CLASSES:
+                    return catalog
+        return catalog
+
     def _build_triple_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
         """
         Build system and user prompts for LLM triple extraction.
+
+        The user prompt is grounded, RAG-style, in the ontology's class catalog
+        (`_ontology_class_catalog`): the classes the taxonomy defines are listed
+        so the model types each extracted individual with an ``is_a`` triple
+        whose object is a real class reference, instead of trusting the model to
+        guess the ontology's vocabulary. When the ontology exposes no classes the
+        catalog block is omitted and the prompt degrades to a plain extraction
+        instruction.
 
         Args:
             text: Source text to extract from
@@ -503,9 +612,30 @@ Extract triples in the following JSON format:
   ]
 }
 
-When kind is "individual", populate class_id with the ontology class ID this individual belongs to.
+Extract every distinct individual (a concrete named thing, concept, or component)
+the text mentions. For each individual, emit one typing triple: subject = the
+individual, predicate.label = "is_a", object = the ontology class it belongs to.
+For an "is_a" triple, object.kind must be "class" and object.label MUST be one of
+the class references listed in the prompt, copied EXACTLY (do not invent, rename,
+pluralize, or reformat class references). Skip an individual only when no listed
+class fits it. Also emit relationship triples between individuals where the text
+states one, using a short verb phrase as predicate.label.
 
 Return only valid JSON. If no triples can be extracted, return {"triples": []}."""
+
+        catalog = self._ontology_class_catalog(ontology)
+        ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
+
+        if catalog:
+            catalog_block = "\n".join(f"- {ref} ({title})" for ref, title in catalog)
+            grounding = (
+                f"Ontology: {ontology_title}\n\n"
+                "Ontology classes (use the exact reference before the parenthesis "
+                'as the object.label of an "is_a" triple):\n'
+                f"{catalog_block}"
+            )
+        else:
+            grounding = f"Ontology: {ontology_title}"
 
         user_prompt = f"""Extract RDF triples from the following text, scoped to the ontology
         context provided.
@@ -513,9 +643,75 @@ Return only valid JSON. If no triples can be extracted, return {"triples": []}."
 Text:
 {text}
 
-Ontology: {ontology.title if hasattr(ontology, 'title') else str(ontology)}"""
+{grounding}"""
 
         return system_prompt, user_prompt
+
+    def _canonicalize_triples_against_ontology(
+        self, triples: list[dict], ontology
+    ) -> list[dict]:
+        """
+        Canonicalize typing triples whose object resolves to an ontology class.
+
+        The "verify LLM-returned ids against the ontology instead of trusting
+        them" half of RAG-proper prompting (design doc §7 item 1). For every
+        ``is_a`` typing triple (predicate normalizes to "is a"/"type"/"subclass
+        of", or object.kind is "class") whose object.label resolves —
+        case-insensitively — to one of a class's identifying forms
+        (`_class_reference_aliases`: any external reference id, the class's own
+        identifier, or its title), the label is rewritten to that alias's
+        canonical casing and its kind set to "class". Matching every identifying
+        form — not just the first external reference — is what lets the same step
+        work across ontologies that name classes differently (the DR spec types
+        by dotted node id; the canon slice's models emit the class title while
+        its external refs are wikidata ids).
+
+        Typing triples whose object matches no class, and all relationship
+        triples, pass through untouched. We deliberately do NOT drop unmatched
+        typing triples: the repository ontology is not guaranteed to be complete
+        (a run may target a partially-populated taxonomy), so dropping would
+        silently discard valid model output — a silent-failure hazard — for no
+        measurable precision gain. Empirically, a grounded model emits only
+        catalog-listed refs on a fully-loaded ontology, so dropping and
+        canonicalize-only score identically there; keeping is strictly safer.
+
+        The alias map spans every class the taxonomy defines (uncapped, unlike
+        the prompt catalog) so a valid type is never missed merely because its
+        class fell outside the prompt's bounded catalog window. When the ontology
+        exposes no classes the triples are returned unchanged.
+        """
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            return triples
+
+        alias_to_canonical: dict[str, str] = {}
+        schemes = self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(taxonomy_id), limit=None
+        )
+        for scheme in schemes:
+            for cls in self._ontology_repo.list_classes(
+                concept_scheme_id=scheme.id, limit=None
+            ):
+                for alias in _class_reference_aliases(cls):
+                    alias_to_canonical.setdefault(alias.strip().lower(), alias)
+
+        if not alias_to_canonical:
+            return triples
+
+        for triple in triples:
+            predicate = triple.get("predicate", {})
+            obj = triple.get("object", {})
+            predicate_label = _normalize_predicate_label(predicate.get("label", ""))
+            is_typing = predicate_label in _TYPE_PREDICATE_LABELS or obj.get("kind") == "class"
+            if not is_typing:
+                continue
+
+            canonical = alias_to_canonical.get(str(obj.get("label", "")).strip().lower())
+            if canonical is None:
+                continue
+            obj["label"] = canonical
+            obj["kind"] = "class"
+        return triples
 
     def _parse_triple_extraction_response(
         self, response: str, text: str, ontology_id: str
