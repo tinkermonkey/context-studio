@@ -1,25 +1,26 @@
-# Arxiv CRDT Networks Fixture
+# Arxiv CRDT Networks Fixture (DR-relabeled)
 
-**Source:** Arxiv-style research-paper abstract about relay-based synchronization of CRDTs in opportunistic networks, originally bundled as an unused NLP-pipeline test fixture (specific paper/authors not attributed in the source fixture).
-**Promoted from:** `fixture_crdt_networks_paper.json` (arxiv-domain fixture unused by any test,
-promoted into a full quality-corpus scenario per
-`documentation/karpathy_loop_design.md` §3.3)
+**Source:** Arxiv-style research-paper abstract about relay-based synchronization of CRDTs in opportunistic networks (specific paper/authors not attributed in the source fixture).
+**Promoted from:** `fixture_crdt_networks_paper.json`
 **License:** Educational use, fair use for testing
-**Curator:** Claude (LLM-drafted ground truth, auto-promoted — see
-`../NEEDS_HUMAN_REVIEW.md`; NOT yet human-reviewed)
+**Curator:** Human-reviewed relabel against the DR ontology (see `../LEGACY_CORPUS_DISPOSITION.md`).
 
 ## Overview
-Fixture tests extraction of individuals/relationships from an arxiv-style
-technical abstract — a distinct domain from the software-architecture-concept
-scenarios that make up the rest of this corpus.
+Relabeled from free-form GT to a **DR-native ground truth** (`ontology_id:
+dr_spec`). Every triple is spec-valid: `is_a` groundings to real DR/ArchiMate
+classes + relationships using DR predicates the spec defines between those
+classes.
 
-## Annotation Notes
-- Ground-truth `expected.json` triples were drafted by an automated agent
-  directly from `text`, following the same subject/predicate/object
-  conventions as the hand-labeled scenarios in this directory.
-- Includes one `excluded` negation/near-miss triple with a rationale, and one
-  templated low-confidence distractor triple, matching the convention used by
-  the other scenarios in this corpus.
-- **This fixture has not been human-reviewed.** Do not treat its
-  `expected.json` as authoritative ground truth for accept/reject decisions
-  until a human has skimmed it (see `../NEEDS_HUMAN_REVIEW.md`).
+## Modeling notes
+- `Opportunistic Network`→`technology.communicationnetwork`,
+  `Mobile Device`→`technology.device`, `CRDT`/`Replica`→`application.dataobject`,
+  `Anti-Entropy Algorithm`→`application.applicationfunction`.
+- Relationships (all spec-valid): `communicationnetwork --serves--> device`,
+  `applicationfunction --accesses--> dataobject` (the algorithm synchronizes the
+  replicas), `dataobject --realizes--> dataobject` (a replica realizes the CRDT
+  type).
+- Relations with no DR edge for their class pair were intentionally omitted
+  (e.g. mobile-relay → convergence, CRDT → opportunistic-network).
+- `excluded`: a wrong-direction `serves` (device → network) — DR only defines
+  `serves` network→device.
+- Re-skim before treating as a hard accept/reject signal.

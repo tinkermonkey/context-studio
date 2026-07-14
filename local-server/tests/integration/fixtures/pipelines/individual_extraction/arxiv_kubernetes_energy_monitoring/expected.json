@@ -2,128 +2,21 @@
   "status": "completed",
   "result": {
     "triples": [
-      {
-        "subject": {
-          "label": "nextflow",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "executes_on",
-          "kind": "property"
-        },
-        "object": {
-          "label": "kubernetes",
-          "kind": "individual"
-        },
-        "confidence": 0.9
-      },
-      {
-        "subject": {
-          "label": "scientific_workflows",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "executed_by",
-          "kind": "property"
-        },
-        "object": {
-          "label": "nextflow",
-          "kind": "individual"
-        },
-        "confidence": 0.86
-      },
-      {
-        "subject": {
-          "label": "nf_peak",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "attributes_energy_to",
-          "kind": "property"
-        },
-        "object": {
-          "label": "nextflow_tasks",
-          "kind": "individual"
-        },
-        "confidence": 0.88
-      },
-      {
-        "subject": {
-          "label": "nf_peak",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "samples",
-          "kind": "property"
-        },
-        "object": {
-          "label": "rapl_counters",
-          "kind": "individual"
-        },
-        "confidence": 0.85
-      },
-      {
-        "subject": {
-          "label": "nf_peak",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "identifies",
-          "kind": "property"
-        },
-        "object": {
-          "label": "workflow_pods",
-          "kind": "individual"
-        },
-        "confidence": 0.84
-      },
-      {
-        "subject": {
-          "label": "nf_peak",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "outperforms",
-          "kind": "property"
-        },
-        "object": {
-          "label": "kepler",
-          "kind": "individual"
-        },
-        "confidence": 0.83
-      },
-      {
-        "subject": {
-          "label": "intel_rapl",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "reports",
-          "kind": "property"
-        },
-        "object": {
-          "label": "node_level_energy",
-          "kind": "individual"
-        },
-        "confidence": 0.82
-      }
+      {"subject": {"label": "Nextflow", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.applicationcomponent", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Kubernetes", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.systemsoftware", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Nf-PEAK", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.applicationcomponent", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "RAPL Counter", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.systemsoftware", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Node-Level Energy", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.dataobject", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Scientific Workflow", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.applicationprocess", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Workflow Pod", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "technology.node", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Kepler", "kind": "individual"}, "predicate": {"label": "is_a", "kind": "property"}, "object": {"label": "application.applicationcomponent", "kind": "individual"}, "confidence": 1.0},
+
+      {"subject": {"label": "Kubernetes", "kind": "individual"}, "predicate": {"label": "serves", "kind": "property"}, "object": {"label": "Nextflow", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "RAPL Counter", "kind": "individual"}, "predicate": {"label": "serves", "kind": "property"}, "object": {"label": "Nf-PEAK", "kind": "individual"}, "confidence": 1.0},
+      {"subject": {"label": "Nf-PEAK", "kind": "individual"}, "predicate": {"label": "accesses", "kind": "property"}, "object": {"label": "Node-Level Energy", "kind": "individual"}, "confidence": 1.0}
     ],
     "excluded": [
-      {
-        "subject": {
-          "label": "intel_rapl",
-          "kind": "individual"
-        },
-        "predicate": {
-          "label": "reports",
-          "kind": "property"
-        },
-        "object": {
-          "label": "process_level_energy",
-          "kind": "individual"
-        },
-        "note": "Intel RAPL counters do NOT report process-level energy \u2014 they report only node-level energy, which is exactly the gap Nf-PEAK fills."
-      }
+      {"subject": {"label": "RAPL Counter", "kind": "individual"}, "predicate": {"label": "serves", "kind": "property"}, "object": {"label": "Scientific Workflow", "kind": "individual"}, "note": "Intel RAPL counters report only node-level energy; they do not directly serve/measure the workflow-process level -- attributing energy to workflow tasks is exactly the gap Nf-PEAK fills. Plausible but text-contradicted."}
     ]
   },
   "created_individual_ids": [],
