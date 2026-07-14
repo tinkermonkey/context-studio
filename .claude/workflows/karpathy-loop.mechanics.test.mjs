@@ -47,14 +47,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS } =
+const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf } =
   loadPureDeclarations();
 
 let passCount = 0;
@@ -221,14 +221,14 @@ test("acceptGate rejects on a genuine dev regression even when bootstrap diagnos
 
 test("selectTargets ranks failure classes by GT-triple count (highest first)", () => {
   const failureStageCounts = { label_mismatch: 3, candidate_missing: 40 };
-  const [target] = selectTargets(failureStageCounts, [], [], 1);
+  const [target] = selectTargets(failureStageCounts, [], [], 1, "open_v1");
   assert.equal(target.targetStage, "candidate_missing");
 });
 test("selectTargets excludes hypotheses the ledger already rejected", () => {
   const failureStageCounts = { candidate_missing: 40 };
   const rejected = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
   assert.ok(rejected.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
-  const targets = selectTargets(failureStageCounts, rejected, [], 3);
+  const targets = selectTargets(failureStageCounts, rejected, [], 3, "open_v1");
   for (const target of targets) {
     assert.ok(!rejected.includes(target.id), `expected ${target.id} to be excluded as already rejected`);
   }
@@ -237,7 +237,7 @@ test("selectTargets excludes hypotheses the ledger already accepted (merged into
   const failureStageCounts = { candidate_missing: 40 };
   const accepted = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
   assert.ok(accepted.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
-  const targets = selectTargets(failureStageCounts, [], accepted, 3);
+  const targets = selectTargets(failureStageCounts, [], accepted, 3, "open_v1");
   for (const target of targets) {
     assert.ok(!accepted.includes(target.id), `expected ${target.id} to be excluded as already accepted/merged`);
   }
@@ -245,13 +245,13 @@ test("selectTargets excludes hypotheses the ledger already accepted (merged into
 test("selectTargets returns nothing once every seeded hypothesis is rejected", () => {
   const failureStageCounts = { candidate_missing: 40 };
   const allIds = SEED_BACKLOG.map((h) => h.id);
-  const targets = selectTargets(failureStageCounts, allIds, [], 3);
+  const targets = selectTargets(failureStageCounts, allIds, [], 3, "open_v1");
   assert.equal(targets.length, 0);
 });
 test("selectTargets returns nothing once every seeded hypothesis is accepted", () => {
   const failureStageCounts = { candidate_missing: 40 };
   const allIds = SEED_BACKLOG.map((h) => h.id);
-  const targets = selectTargets(failureStageCounts, [], allIds, 3);
+  const targets = selectTargets(failureStageCounts, [], allIds, 3, "open_v1");
   assert.equal(targets.length, 0);
 });
 // These inject a synthetic entry rather than depend on the live backlog
@@ -261,7 +261,7 @@ test("selectTargets never selects a hypothesis marked blocked, even when its sta
   const synthetic = { id: "__synthetic_blocked__", stages: ["candidate_missing"], summary: "x", blocked: true };
   SEED_BACKLOG.push(synthetic);
   try {
-    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length);
+    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length, "open_v1");
     assert.ok(!targets.some((t) => t.id === synthetic.id), "expected blocked hypothesis to never be selected");
   } finally {
     SEED_BACKLOG.pop();
@@ -271,10 +271,55 @@ test("selectTargets never selects a hypothesis marked done (implemented outside 
   const synthetic = { id: "__synthetic_done__", stages: ["candidate_missing"], summary: "x", done: true };
   SEED_BACKLOG.push(synthetic);
   try {
-    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length);
+    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length, "open_v1");
     assert.ok(!targets.some((t) => t.id === synthetic.id), "expected done hypothesis to never be selected");
   } finally {
     SEED_BACKLOG.pop();
+  }
+});
+
+// -- pipeline scoping (§4.3 step 2): a hypothesis only helps if it targets the
+// incumbent pipeline; an off-pipeline hypothesis is scored as its own variant
+// and can never clear the accept gate against a different-pipeline incumbent.
+test("incumbentPipelineOf maps default* variants to the default pipeline, else open_v1", () => {
+  assert.equal(incumbentPipelineOf("default"), "default");
+  assert.equal(incumbentPipelineOf("default+grounding"), "default");
+  assert.equal(incumbentPipelineOf("default+two_pass_individual_then_relationship"), "default");
+  assert.equal(incumbentPipelineOf("open_v1"), "open_v1");
+  assert.equal(incumbentPipelineOf(undefined), "open_v1");
+});
+test("selectTargets under a default incumbent never selects an open_v1 hypothesis", () => {
+  // candidate_missing is dominated by open_v1 hypotheses in the backlog; under a
+  // default incumbent none of them are eligible (regression guard for the bug
+  // that wasted a whole iteration on open_v1 no-ops).
+  const targets = selectTargets({ candidate_missing: 1000, relation_not_derived: 5 }, [], [], 4, "default");
+  for (const t of targets) {
+    assert.notEqual(hypothesisPipeline(t.id), "open_v1", `expected no open_v1 hypothesis, got ${t.id}`);
+  }
+});
+test("selectTargets under a default incumbent selects the default-pipeline two_pass hypothesis", () => {
+  // two_pass targets predicate_mismatch/relation_not_derived/candidate_missing and
+  // is the live default-pipeline stacking experiment on the rag incumbent.
+  const targets = selectTargets(
+    { candidate_missing: 85, relation_not_derived: 34, predicate_mismatch: 2 },
+    [],
+    [],
+    3,
+    "default",
+  );
+  assert.ok(
+    targets.some((t) => t.id === "two_pass_individual_then_relationship"),
+    `expected two_pass to be selected under the default incumbent, got ${targets.map((t) => t.id).join(", ")}`,
+  );
+});
+test("pipeline-agnostic hypotheses are eligible under either incumbent", () => {
+  assert.equal(hypothesisPipeline("per_source_confidence_bands"), "both");
+  for (const incumbent of ["open_v1", "default"]) {
+    const targets = selectTargets({}, [], [], SEED_BACKLOG.length, incumbent);
+    assert.ok(
+      targets.some((t) => t.id === "per_source_confidence_bands"),
+      `expected per_source_confidence_bands eligible under ${incumbent}`,
+    );
   }
 });
 

@@ -569,11 +569,43 @@ function meetsFloors(holdout, floors, holdoutReviewPending) {
 // iteration), anything marked `blocked` (Loop B cannot evaluate it yet), or
 // anything marked `done` (already implemented outside the loop) — see the
 // hypothesis's own comment in SEED_BACKLOG.
-function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypothesisIds, count) {
+// The two individual-extraction pipelines a hypothesis can target. A hypothesis
+// only helps if it modifies the INCUMBENT pipeline: an open_v1 (rule) change is
+// scored as its own variant and can never clear the accept gate while the
+// RAG-grounded `default` (LLM) pipeline is the incumbent (0.41 vs 0.13), and
+// vice-versa. Most of SEED_BACKLOG is open_v1-era (spaCy dependency parsing,
+// rule-config knobs); only these target the default pipeline or are pipeline-
+// agnostic. Untagged ids default to 'open_v1'. `both` is eligible under either
+// incumbent (e.g. per-source confidence bands calibrate whatever pipeline ran).
+const DEFAULT_PIPELINE_HYPOTHESES = new Set([
+  'rag_proper_prompting_default',
+  'two_pass_individual_then_relationship',
+])
+const PIPELINE_AGNOSTIC_HYPOTHESES = new Set(['per_source_confidence_bands'])
+
+function hypothesisPipeline(id) {
+  if (DEFAULT_PIPELINE_HYPOTHESES.has(id)) return 'default'
+  if (PIPELINE_AGNOSTIC_HYPOTHESES.has(id)) return 'both'
+  return 'open_v1'
+}
+
+function incumbentPipelineOf(incumbentVariant) {
+  return String(incumbentVariant || '').startsWith('default') ? 'default' : 'open_v1'
+}
+
+function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypothesisIds, count, incumbentPipeline) {
   const excludedIds = new Set([...rejectedHypothesisIds, ...acceptedHypothesisIds])
   const rankedStages = Object.entries(failureStageCounts || {})
     .sort((a, b) => b[1] - a[1])
     .map(([stage]) => stage)
+
+  // A hypothesis is eligible only if it targets the incumbent pipeline (or is
+  // pipeline-agnostic) — selecting an off-pipeline hypothesis wastes the whole
+  // iteration on a variant that structurally cannot beat the incumbent.
+  const onPipeline = (hyp) => {
+    const p = hypothesisPipeline(hyp.id)
+    return p === 'both' || p === incumbentPipeline
+  }
 
   const chosen = []
   const chosenIds = new Set()
@@ -584,18 +616,21 @@ function selectTargets(failureStageCounts, rejectedHypothesisIds, acceptedHypoth
       if (chosen.length >= count) break
       if (hyp.blocked || hyp.done) continue
       if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
+      if (!onPipeline(hyp)) continue
       if (!hyp.stages.includes(stage)) continue
       chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: stage })
       chosenIds.add(hyp.id)
     }
   }
 
-  // Backfill with any remaining untried hypothesis (including stage-less
-  // ones like confidence bands) if the ranked stages didn't fill the fleet.
+  // Backfill with any remaining untried on-pipeline hypothesis (including
+  // stage-less ones like confidence bands) if the ranked stages didn't fill
+  // the fleet.
   for (const hyp of SEED_BACKLOG) {
     if (chosen.length >= count) break
     if (hyp.blocked || hyp.done) continue
     if (chosenIds.has(hyp.id) || excludedIds.has(hyp.id)) continue
+    if (!onPipeline(hyp)) continue
     chosen.push({ id: hyp.id, summary: hyp.summary, targetStage: hyp.stages[0] || 'general' })
     chosenIds.add(hyp.id)
   }
@@ -721,13 +756,14 @@ phase('Select')
 const ledgerInfo = await agent(LEDGER_READ_PROMPT, { schema: LEDGER_SCHEMA, phase: 'Select', label: 'select:ledger', effort: 'low' })
 const rejectedHypotheses = (ledgerInfo && ledgerInfo.rejectedHypotheses) || []
 const acceptedHypotheses = (ledgerInfo && ledgerInfo.acceptedHypotheses) || []
-const targets = selectTargets(evaluation.failureStageCounts, rejectedHypotheses, acceptedHypotheses, hypothesisCount)
-log(`Selected ${targets.length} target hypothesis(es): ${targets.map((t) => t.id).join(', ') || '(none — all seeded hypotheses already rejected)'}`)
+const incumbentPipeline = incumbentPipelineOf(evaluation.incumbentVariant)
+const targets = selectTargets(evaluation.failureStageCounts, rejectedHypotheses, acceptedHypotheses, hypothesisCount, incumbentPipeline)
+log(`Incumbent ${evaluation.incumbentVariant} (${incumbentPipeline} pipeline); selected ${targets.length} target hypothesis(es): ${targets.map((t) => t.id).join(', ') || '(none — no untried on-pipeline hypotheses)'}`)
 
 if (targets.length === 0) {
   return {
     status: 'no_accept',
-    reason: 'no untried hypotheses remain in the seeded backlog for the current top failure classes (all already rejected or accepted/merged)',
+    reason: `no untried ${incumbentPipeline}-pipeline hypotheses remain in the seeded backlog for the current top failure classes (all already rejected/accepted, or off-pipeline for the ${evaluation.incumbentVariant} incumbent) — add new incumbent-pipeline hypotheses to SEED_BACKLOG`,
     iteration,
     consecutiveNoAccept: consecutiveNoAccept + 1,
     evaluation,
