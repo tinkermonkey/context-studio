@@ -401,8 +401,8 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
       two variants differ only by `similarity_threshold` (soft-match dedup); the
       `default+grounding` knobs are inert on the ExtractionService path, so the
       two tie in practice — the RAG grounding that lifts the LLM pipeline lives
-      in the prompt (`ExtractionService._build_triple_extraction_prompt`), not
-      in these knobs.
+      in the prompt (`ExtractionService._build_individual_extraction_prompt`),
+      not in these knobs.
 
     Cassettes are now recorded under `_DEFAULT_CASSETTE_DIR`, so the guard is
     open and `default`/`default+grounding` register whenever the DR spec

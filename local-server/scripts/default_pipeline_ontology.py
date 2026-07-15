@@ -4,8 +4,9 @@ record + replay paths.
 
 The default-pipeline cassette key hashes the extraction prompt, and the ONLY
 ontology-derived value in that prompt is ``ontology.title`` (see
-``domain/extraction/services.py::_build_triple_extraction_prompt`` — the user
-prompt's last line is ``Ontology: {ontology.title}``). So the recorder
+``domain/extraction/services.py::_build_individual_extraction_prompt`` and
+``_build_relationship_extraction_prompt`` — each two-pass prompt names
+``Ontology: {ontology.title}``). So the recorder
 (``scripts/record_default_cassettes.py``) and the tournament replay
 (``scripts/quality_tournament._make_default_variant``) MUST resolve each
 scenario to an ontology with the SAME title, or replay misses with

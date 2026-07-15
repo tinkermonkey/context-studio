@@ -47,6 +47,12 @@ _logger = logging.getLogger(__name__)
 # large taxonomies; the imported DR spec has ~186 classes, comfortably under it.
 _MAX_CATALOG_CLASSES = 300
 
+# Upper bound on the number of ontology-permitted predicates injected into the
+# relationship pass's prompt. The finite predicate vocabulary the second pass
+# clamps to stays a bounded fraction of the prompt for large taxonomies; the
+# imported DR spec defines ~66 distinct canonical predicates, comfortably under it.
+_MAX_VOCABULARY_PREDICATES = 200
+
 # Predicate labels (post-normalization) that mark a triple as an rdf:type/is_a
 # typing assertion whose object must be an ontology class reference.
 _TYPE_PREDICATE_LABELS = frozenset(
@@ -457,25 +463,14 @@ class ExtractionService:
                 if not ontology:
                     raise ValueError(f"Ontology {ontology_id} not found")
 
-                # Call LLM to extract triples
-                system_prompt, user_prompt = self._build_triple_extraction_prompt(text, ontology)
-                llm_response = self._llm.complete(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    model=model,
-                    temperature=temperature,
-                    max_tokens=8000,
-                    response_format="json",
-                )
-                tokens_used = llm_response.tokens_in + llm_response.tokens_out
-
-                # Parse LLM response, then canonicalize returned class references
-                # against the ontology instead of trusting the model's casing.
-                extracted_triples = self._parse_triple_extraction_response(
-                    llm_response.content, text, ontology_id
-                )
-                extracted_triples = self._canonicalize_triples_against_ontology(
-                    extracted_triples, ontology
+                # Two-pass extraction (karpathy_loop_design.md §7): pass 1 grounds
+                # individuals to ontology classes, pass 2 derives relationships from
+                # the closed set of predicates the ontology permits between those
+                # classes. Splitting the work lets each call focus on one job and
+                # clamps predicates to the ontology vocabulary instead of inventing
+                # free-form verbs.
+                extracted_triples, tokens_used = self._extract_triples_two_pass(
+                    text, ontology, ontology_id, model, temperature
                 )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -577,9 +572,141 @@ class ExtractionService:
                     return catalog
         return catalog
 
-    def _build_triple_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
+    def _extract_triples_two_pass(
+        self, text: str, ontology, ontology_id: str, model: str, temperature: float
+    ) -> tuple[list[dict], int]:
         """
-        Build system and user prompts for LLM triple extraction.
+        Run the two-pass individual-then-relationship extraction (design doc §7).
+
+        Pass 1 identifies and grounds individuals: the LLM lists every distinct
+        individual the text mentions and types each one with an ``is_a`` triple
+        against the ontology's class catalog, and the returned class references
+        are canonicalized against the ontology (`_canonicalize_triples_against_ontology`).
+
+        Pass 2 derives relationships between the now-known, grounded individuals.
+        The prompt offers the LLM only the finite set of predicates the ontology
+        actually defines (`_ontology_predicate_vocabulary`) and asks it to choose
+        from that closed set — attacking the predicate-drift that free-form verb
+        extraction produces. When the ontology defines no predicate vocabulary
+        (e.g. a bare taxonomy), the pass falls back to free-form verb phrases so
+        relationships are still derived. Pass 2 is skipped entirely when fewer
+        than two individuals were identified (no pair to relate).
+
+        Returns:
+            Tuple of (combined typing + relationship triples, total tokens used).
+        """
+        individual_system, individual_user = self._build_individual_extraction_prompt(
+            text, ontology
+        )
+        individual_response = self._llm.complete(
+            system_prompt=individual_system,
+            user_prompt=individual_user,
+            model=model,
+            temperature=temperature,
+            max_tokens=8000,
+            response_format="json",
+        )
+        tokens_used = individual_response.tokens_in + individual_response.tokens_out
+
+        individual_triples = self._parse_triple_extraction_response(
+            individual_response.content, text, ontology_id
+        )
+        individual_triples = self._canonicalize_triples_against_ontology(
+            individual_triples, ontology
+        )
+
+        individuals = self._identified_individuals(individual_triples)
+        relationship_triples: list[dict] = []
+        if len(individuals) >= 2:
+            relationship_system, relationship_user = self._build_relationship_extraction_prompt(
+                text, ontology, individuals
+            )
+            relationship_response = self._llm.complete(
+                system_prompt=relationship_system,
+                user_prompt=relationship_user,
+                model=model,
+                temperature=temperature,
+                max_tokens=8000,
+                response_format="json",
+            )
+            tokens_used += relationship_response.tokens_in + relationship_response.tokens_out
+            relationship_triples = self._parse_triple_extraction_response(
+                relationship_response.content, text, ontology_id
+            )
+            # Pass 2 is asked for relationships only; drop any typing triple it
+            # re-emits so the individual pass stays the single source of typing.
+            relationship_triples = [
+                triple
+                for triple in relationship_triples
+                if not self._is_typing_triple(triple)
+            ]
+
+        return individual_triples + relationship_triples, tokens_used
+
+    def _is_typing_triple(self, triple: dict) -> bool:
+        """Return True when a triple is an ``is_a``/rdf:type assertion (object is a class)."""
+        predicate_label = _normalize_predicate_label(triple.get("predicate", {}).get("label", ""))
+        object_kind = triple.get("object", {}).get("kind", "")
+        return predicate_label in _TYPE_PREDICATE_LABELS or object_kind == "class"
+
+    def _identified_individuals(self, triples: list[dict]) -> list[tuple[str, str]]:
+        """
+        Collect the distinct individuals identified in pass 1 with their grounded class.
+
+        Reads the pass-1 typing triples: each individual is the subject of an
+        ``is_a`` triple, grounded to the class named in the triple's object. The
+        result is the (individual_label, class_label) input the relationship pass
+        needs to enumerate which ontology predicates may hold between the pair.
+        A blank class label is kept when the individual was extracted without a
+        resolved type so it can still participate in a relationship.
+        """
+        individuals: dict[str, str] = {}
+        for triple in triples:
+            label = str(triple.get("subject", {}).get("label", "")).strip()
+            if not label:
+                continue
+            class_label = ""
+            if self._is_typing_triple(triple):
+                class_label = str(triple.get("object", {}).get("label", "")).strip()
+            # Prefer a grounded class label if one is available across duplicates.
+            if label not in individuals or (not individuals[label] and class_label):
+                individuals[label] = class_label
+        return list(individuals.items())
+
+    def _ontology_predicate_vocabulary(self, ontology) -> list[str]:
+        """
+        Return the finite set of predicates the ontology defines, for pass-2 clamping.
+
+        Pools the canonical predicate of every property definition the ontology
+        declares (falling back to the property's title when no canonical form is
+        set), de-duplicated case-insensitively and capped at
+        `_MAX_VOCABULARY_PREDICATES`. This is the closed vocabulary the
+        relationship pass offers the LLM so it chooses an existing predicate
+        instead of inventing a free-form verb. Returns an empty list when the
+        ontology declares no properties (e.g. a bare taxonomy), so the caller
+        degrades to free-form relationship extraction rather than emitting nothing.
+        """
+        if not getattr(ontology, "id", None):
+            return []
+
+        vocabulary: list[str] = []
+        seen: set[str] = set()
+        for prop in self._ontology_repo.list_property_definitions(limit=None):
+            predicate = (prop.canonical_predicate or prop.title or "").strip()
+            if not predicate:
+                continue
+            key = predicate.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            vocabulary.append(predicate)
+            if len(vocabulary) >= _MAX_VOCABULARY_PREDICATES:
+                break
+        return vocabulary
+
+    def _build_individual_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
+        """
+        Build the pass-1 prompt: identify and ground individuals only (design doc §7).
 
         The user prompt is grounded, RAG-style, in the ontology's class catalog
         (`_ontology_class_catalog`): the classes the taxonomy defines are listed
@@ -587,7 +714,8 @@ class ExtractionService:
         whose object is a real class reference, instead of trusting the model to
         guess the ontology's vocabulary. When the ontology exposes no classes the
         catalog block is omitted and the prompt degrades to a plain extraction
-        instruction.
+        instruction. Relationships between individuals are deliberately NOT
+        requested here — they are the job of the second pass.
 
         Args:
             text: Source text to extract from
@@ -597,15 +725,15 @@ class ExtractionService:
             Tuple of (system_prompt, user_prompt)
         """
         system_prompt = """You are an expert knowledge graph extraction assistant.
-Your task is to extract RDF triples from text, scoped to an ontology context.
+Your task is to identify the individuals a text mentions, scoped to an ontology context.
 
 Extract triples in the following JSON format:
 {
   "triples": [
     {
-      "subject": {"kind": "individual|class", "id": "...", "label": "...", "class_id": "..."},
-      "predicate": {"property_definition_id": "...", "label": "..."},
-      "object": {"kind": "individual|class|literal", "id": "...", "label": "...", "value": "..."},
+      "subject": {"kind": "individual", "id": "...", "label": "...", "class_id": "..."},
+      "predicate": {"property_definition_id": "...", "label": "is_a"},
+      "object": {"kind": "class", "id": "...", "label": "..."},
       "confidence": 0.95,
       "provenance": {"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}
     }
@@ -613,15 +741,17 @@ Extract triples in the following JSON format:
 }
 
 Extract every distinct individual (a concrete named thing, concept, or component)
-the text mentions. For each individual, emit one typing triple: subject = the
-individual, predicate.label = "is_a", object = the ontology class it belongs to.
+the text mentions. For each individual, emit exactly one typing triple: subject =
+the individual, predicate.label = "is_a", object = the ontology class it belongs to.
 For an "is_a" triple, object.kind must be "class" and object.label MUST be one of
 the class references listed in the prompt, copied EXACTLY (do not invent, rename,
-pluralize, or reformat class references). Skip an individual only when no listed
-class fits it. Also emit relationship triples between individuals where the text
-states one, using a short verb phrase as predicate.label.
+pluralize, or reformat class references). Every distinct individual the text
+mentions MUST appear: when no listed class fits well, still emit the individual,
+choosing the CLOSEST listed class rather than omitting it — never drop an
+individual for lack of a perfect type. Do NOT emit relationship triples between
+individuals in this step.
 
-Return only valid JSON. If no triples can be extracted, return {"triples": []}."""
+Return only valid JSON. If no individuals can be extracted, return {"triples": []}."""
 
         catalog = self._ontology_class_catalog(ontology)
         ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
@@ -637,13 +767,100 @@ Return only valid JSON. If no triples can be extracted, return {"triples": []}."
         else:
             grounding = f"Ontology: {ontology_title}"
 
-        user_prompt = f"""Extract RDF triples from the following text, scoped to the ontology
+        user_prompt = f"""Identify the individuals in the following text, scoped to the ontology
         context provided.
 
 Text:
 {text}
 
 {grounding}"""
+
+        return system_prompt, user_prompt
+
+    def _build_relationship_extraction_prompt(
+        self, text: str, ontology, individuals: list[tuple[str, str]]
+    ) -> tuple[str, str]:
+        """
+        Build the pass-2 prompt: derive relationships over the identified individuals.
+
+        Given the individuals pass 1 grounded (label + class), the prompt asks the
+        LLM to state the relationships the text asserts between them. It offers the
+        finite predicate vocabulary the ontology defines
+        (`_ontology_predicate_vocabulary`) and instructs the model to choose the
+        predicate ONLY from that closed set — directly attacking predicate drift.
+        When the ontology declares no predicates the closed-set instruction is
+        replaced with a free-form short-verb-phrase instruction so relationships
+        are still derived.
+
+        Args:
+            text: Source text to extract from
+            ontology: The target ontology
+            individuals: (label, class_label) pairs identified in pass 1
+
+        Returns:
+            Tuple of (system_prompt, user_prompt)
+        """
+        vocabulary = self._ontology_predicate_vocabulary(ontology)
+
+        if vocabulary:
+            predicate_instruction = (
+                "predicate.label MUST be copied EXACTLY from the allowed predicates "
+                "listed in the prompt. If no allowed predicate fits a pair, omit "
+                "that relationship rather than inventing a predicate."
+            )
+        else:
+            predicate_instruction = (
+                "predicate.label should be a short verb phrase describing the relationship."
+            )
+
+        system_prompt = f"""You are an expert knowledge graph extraction assistant.
+Your task is to state the relationships a text asserts between a fixed set of
+already-identified individuals.
+
+Extract relationship triples in the following JSON format:
+{{
+  "triples": [
+    {{
+      "subject": {{"kind": "individual", "id": "...", "label": "..."}},
+      "predicate": {{"property_definition_id": "...", "label": "..."}},
+      "object": {{"kind": "individual", "id": "...", "label": "..."}},
+      "confidence": 0.95,
+      "provenance": {{"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}}
+    }}
+  ]
+}}
+
+Only use the individuals listed in the prompt as subject and object, copying their
+labels EXACTLY. Emit a relationship only when the text states one between two of the
+listed individuals. Do NOT emit typing ("is_a") triples in this step. {predicate_instruction}
+
+Return only valid JSON. If no relationships can be extracted, return {{"triples": []}}."""
+
+        ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
+        individuals_block = "\n".join(
+            f"- {label}" + (f" (a {class_label})" if class_label else "")
+            for label, class_label in individuals
+        )
+
+        if vocabulary:
+            predicate_block = "\n".join(f"- {predicate}" for predicate in vocabulary)
+            allowed = (
+                "\n\nAllowed predicates (use the exact form as predicate.label):\n"
+                f"{predicate_block}"
+            )
+        else:
+            allowed = ""
+
+        user_prompt = f"""State the relationships the following text asserts between the
+        identified individuals, scoped to the ontology context provided.
+
+Text:
+{text}
+
+Ontology: {ontology_title}
+
+Identified individuals:
+{individuals_block}{allowed}"""
 
         return system_prompt, user_prompt
 
