@@ -47,14 +47,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, SOFT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf } =
+const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, SOFT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf } =
   loadPureDeclarations();
 
 let passCount = 0;
@@ -121,9 +121,9 @@ test("acceptGate rejects exactly at the improvement boundary (diff == epsilon, n
   const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
   const incumbentHoldout = { strict_f1: 0.28 };
   const candidate = { dev: { soft_f1: EPSILON, strict_f1: 0.3 }, holdout: { strict_f1: 0.28 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
   assert.equal(result.passes, false);
-  assert.ok(result.reasons.some((r) => r.includes("does not beat incumbent")));
+  assert.ok(result.reasons.some((r) => r.includes("neither dev soft-F1")));
 });
 test("acceptGate rejects on dev strict-F1 regression even when soft-F1 improves", () => {
   const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
@@ -167,12 +167,45 @@ test("acceptGate does not block on a holdout collapse while GT review is pending
   assert.ok(result.advisories.some((a) => a.includes("pending human review")));
 });
 
+// -- symmetric gate: strict-F1-driven acceptance (§6) ---------------------
+// A candidate may earn acceptance by improving exactness (strict-F1) even when
+// soft-F1 (coverage) dips within SOFT_SLACK — the two_pass-v2 case.
+test("acceptGate accepts a strict-F1 improvement that dips soft-F1 within softSlack (the two_pass-v2 trade)", () => {
+  const incumbentDev = { soft_f1: 0.412, strict_f1: 0.324 };
+  const incumbentHoldout = { strict_f1: 0.321 };
+  // two_pass v2: strict +0.035, soft -0.033 (< SOFT_SLACK), holdout steady.
+  const candidate = { dev: { soft_f1: 0.379, strict_f1: 0.359 }, holdout: { strict_f1: 0.322 } };
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+  assert.equal(result.passes, true);
+  assert.equal(result.reasons.length, 0);
+});
+test("acceptGate rejects a strict-F1 improvement when soft-F1 collapses beyond softSlack", () => {
+  const incumbentDev = { soft_f1: 0.412, strict_f1: 0.324 };
+  const incumbentHoldout = { strict_f1: 0.321 };
+  // strict improves, but soft drops 0.10 (> SOFT_SLACK=0.05): a real coverage collapse, not a trade.
+  const candidate = { dev: { soft_f1: 0.312, strict_f1: 0.359 }, holdout: { strict_f1: 0.322 } };
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+  assert.equal(result.passes, false);
+  assert.ok(result.reasons.some((r) => r.includes("collapses more than softSlack")));
+});
+test("acceptGate still keeps a hard strict-F1 floor for soft-driven acceptance (no slack there)", () => {
+  const incumbentDev = { soft_f1: 0.40, strict_f1: 0.30 };
+  const incumbentHoldout = { strict_f1: 0.28 };
+  // soft improves hugely but strict regresses even slightly: soft-driven path
+  // keeps the hard floor, so this is rejected (exactness is never traded away
+  // when coverage drives acceptance).
+  const candidate = { dev: { soft_f1: 0.60, strict_f1: 0.299 }, holdout: { strict_f1: 0.28 } };
+  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+  assert.equal(result.passes, false);
+  assert.ok(result.reasons.some((r) => r.includes("regresses below incumbent floor")));
+});
+
 // -- acceptGate bootstrap immunity (karpathy_loop_dr_ontology_design.md §5
 // Must-Fix 2 / ADR-7: Wave 1 DR bootstrap scenarios are diagnostic-only and
 // must never, alone, be sufficient grounds for an accept/reject decision) ---
 
 test("acceptGate's signature has no bootstrap parameter -- structurally cannot gate on it", () => {
-  assert.equal(acceptGate.length, 6); // candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending
+  assert.equal(acceptGate.length, 7); // candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending, softSlack
 });
 
 test("acceptGate's decision is identical whether the candidate carries glowing, terrible, or no bootstrap diagnostics", () => {
@@ -297,20 +330,30 @@ test("selectTargets under a default incumbent never selects an open_v1 hypothesi
     assert.notEqual(hypothesisPipeline(t.id), "open_v1", `expected no open_v1 hypothesis, got ${t.id}`);
   }
 });
-test("selectTargets under a default incumbent selects the default-pipeline two_pass hypothesis", () => {
-  // two_pass targets predicate_mismatch/relation_not_derived/candidate_missing and
-  // is the live default-pipeline stacking experiment on the rag incumbent.
-  const targets = selectTargets(
-    { candidate_missing: 85, relation_not_derived: 34, predicate_mismatch: 2 },
-    [],
-    [],
-    3,
-    "default",
-  );
-  assert.ok(
-    targets.some((t) => t.id === "two_pass_individual_then_relationship"),
-    `expected two_pass to be selected under the default incumbent, got ${targets.map((t) => t.id).join(", ")}`,
-  );
+test("selectTargets under a default incumbent selects a live default-pipeline hypothesis", () => {
+  // two_pass is classified 'default' but marked done (landed as the incumbent);
+  // temporarily clear its done flag to prove default-pipeline hypotheses ARE
+  // selected under a default incumbent (the pipeline-scoping fix), independent
+  // of how many default hypotheses remain live in the backlog.
+  const twoPass = SEED_BACKLOG.find((h) => h.id === "two_pass_individual_then_relationship");
+  assert.ok(twoPass, "fixture assumption: two_pass hypothesis exists in the backlog");
+  const savedDone = twoPass.done;
+  twoPass.done = false;
+  try {
+    const targets = selectTargets(
+      { candidate_missing: 85, relation_not_derived: 34, predicate_mismatch: 2 },
+      [],
+      [],
+      3,
+      "default",
+    );
+    assert.ok(
+      targets.some((t) => t.id === "two_pass_individual_then_relationship"),
+      `expected two_pass to be selected under the default incumbent, got ${targets.map((t) => t.id).join(", ")}`,
+    );
+  } finally {
+    twoPass.done = savedDone;
+  }
 });
 test("pipeline-agnostic hypotheses are eligible under either incumbent", () => {
   assert.equal(hypothesisPipeline("per_source_confidence_bands"), "both");

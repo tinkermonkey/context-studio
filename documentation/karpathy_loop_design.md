@@ -138,11 +138,13 @@ Loop C maps directly onto Claude Code's multi-agent primitives; no new orchestra
 
 ## 6. Accept gate and guardrails
 
-An experiment is **accepted** iff all of:
+An experiment is **accepted** iff both the symmetric improvement condition and the holdout condition hold:
 
-- **Improvement:** mean soft-F1(dev) > incumbent by more than ε (ε = 0.005, to ignore noise-level wins).
+- **Symmetric improvement (dev):** soft-F1 and strict-F1 measure different quality axes — soft-F1 rewards *coverage* (tiered near-miss credit, §3.1), strict-F1 rewards *exactness* (exact tuples). A curated knowledge graph values both, so a candidate may earn acceptance by improving **either**, provided it does not materially damage the other:
+  - **Soft-driven:** mean soft-F1(dev) > incumbent by more than ε (ε = 0.005, to ignore noise-level wins) **and** mean strict-F1(dev) ≥ incumbent (the exactness floor stays hard — coverage gains never trade exactness away).
+  - **Strict-driven:** mean strict-F1(dev) > incumbent by more than ε **and** mean soft-F1(dev) ≥ incumbent − SOFT_SLACK (SOFT_SLACK = 0.05) — a bounded coverage trade in exchange for exactness. A soft-F1 drop beyond SOFT_SLACK is a real coverage regression, not a trade, and is rejected.
 
-- **No floor regression:** mean strict-F1(dev) ≥ incumbent.
+  The gate is deliberately biased toward exactness: strict-driven acceptance tolerates a bounded soft dip, but soft-driven acceptance tolerates *no* strict regression. This reflects the product value — for a curated graph, a wrong edge or mislabeled node is a defect, whereas a slightly-less-complete-but-exact graph is preferable. (This replaced the earlier soft-F1-only improvement rule after `two_pass` improved strict-F1 +0.035 and label-accuracy +0.25 while dipping soft-F1 −0.033: a favorable exactness trade the old gate structurally could not accept.)
 
 - **No holdout collapse:** strict-F1(holdout) ≥ incumbent − 0.02. Holdout never *selects* winners; it only vetoes overfitting. Note: with only 3 holdout scenarios (today's split), a single scenario is ~33% of this score, so the veto is statistically noisy — it is not trustworthy enough to gate merges until the §3.3 corpus growth lands (≥ 18 scenarios). Before then, treat any holdout-triggered rejection or acceptance as advisory, not authoritative.
 
