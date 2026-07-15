@@ -760,3 +760,72 @@ class TestExceptionHandling:
         assert result.layers_executed[3].success is True
         assert result.layers_executed[3].entities_found == 0
         assert len(result.layers_executed) == 4
+
+
+class TestCanonicalizeIndividualLabels:
+    """Tests for schema-grounded individual-label canonicalization (label_mismatch)."""
+
+    def _typing(self, subject_label, class_ref):
+        return {
+            "subject": {"label": subject_label, "kind": "individual"},
+            "predicate": {"label": "is_a", "kind": "property"},
+            "object": {"label": class_ref, "kind": "class"},
+        }
+
+    def _relation(self, subject_label, predicate, object_label):
+        return {
+            "subject": {"label": subject_label, "kind": "individual"},
+            "predicate": {"label": predicate, "kind": "property"},
+            "object": {"label": object_label, "kind": "individual"},
+        }
+
+    def test_typed_subject_snapped_to_title_case(self, service):
+        triples = [self._typing("Spot instances", "technology.node")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == "Spot Instances"
+
+    def test_minor_words_stay_lowercase_when_already_correct(self, service):
+        # Ground truth title-cases with lowercase minor words; a correctly-cased
+        # long label must pass through unchanged (no over-capitalization).
+        gt = "Rising Customer Expectations for On-Time Arrival Windows"
+        triples = [self._typing(gt, "motivation.driver")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == gt
+
+    def test_leading_minor_word_is_capitalized(self, service):
+        gt = "A Technician Should Never Need to Call Dispatch to Confirm a Job"
+        triples = [self._typing(gt, "motivation.principle")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == gt
+
+    def test_acronyms_and_embedded_caps_preserved(self, service):
+        triples = [
+            self._typing("CRDT", "application.dataobject"),
+            self._typing("EC2 Spot Service", "technology.technologyservice"),
+        ]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == "CRDT"
+        assert result[1]["subject"]["label"] == "EC2 Spot Service"
+
+    def test_canonical_form_propagates_to_relationship_object(self, service):
+        triples = [
+            self._typing("View Job button", "ux.actioncomponent"),
+            self._relation("Today's Jobs", "aggregate", "View Job button"),
+        ]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == "View Job Button"
+        assert result[1]["object"]["label"] == "View Job Button"
+
+    def test_untyped_individuals_left_untouched(self, service):
+        # No typing triple -> nothing is in the known-individual vocabulary.
+        triples = [self._relation("service", "expose", "contract")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == "service"
+        assert result[0]["object"]["label"] == "contract"
+
+    def test_class_object_not_rewritten(self, service):
+        # A class object matching a typed subject's label must not be title-cased.
+        triples = [self._typing("node", "technology.node")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == "Node"
+        assert result[0]["object"]["label"] == "technology.node"
