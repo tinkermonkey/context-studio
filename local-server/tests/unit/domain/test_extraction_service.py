@@ -784,6 +784,20 @@ class TestCanonicalizeIndividualLabels:
         result = service._canonicalize_individual_labels(triples)
         assert result[0]["subject"]["label"] == "Spot Instances"
 
+    def test_minor_words_stay_lowercase_when_already_correct(self, service):
+        # Ground truth title-cases with lowercase minor words; a correctly-cased
+        # long label must pass through unchanged (no over-capitalization).
+        gt = "Rising Customer Expectations for On-Time Arrival Windows"
+        triples = [self._typing(gt, "motivation.driver")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == gt
+
+    def test_leading_minor_word_is_capitalized(self, service):
+        gt = "A Technician Should Never Need to Call Dispatch to Confirm a Job"
+        triples = [self._typing(gt, "motivation.principle")]
+        result = service._canonicalize_individual_labels(triples)
+        assert result[0]["subject"]["label"] == gt
+
     def test_acronyms_and_embedded_caps_preserved(self, service):
         triples = [
             self._typing("CRDT", "application.dataobject"),

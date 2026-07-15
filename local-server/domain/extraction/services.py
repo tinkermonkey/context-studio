@@ -107,20 +107,44 @@ def _normalize_predicate_label(label: str) -> str:
     return label.strip().lower().replace("_", " ").replace("-", " ")
 
 
+# Minor words a title leaves lowercase when they are not the first word — the
+# convention the schema-typed ground truth follows ("Customer Reports an Issue",
+# "Rising Customer Expectations for On-Time Arrival Windows"). Restricting the
+# set to short function words keeps longer prepositions ("Between", "Within")
+# capitalized, matching that ground truth.
+_TITLE_MINOR_WORDS = frozenset(
+    {
+        "a", "an", "and", "as", "at", "but", "by", "en", "for", "if", "in",
+        "nor", "of", "off", "on", "or", "per", "so", "the", "to", "up", "via",
+        "vs", "yet",
+    }
+)
+
+
 def _canonical_individual_label(label: str) -> str:
     """
     The canonical surface form of a schema-typed individual's label.
 
-    Capitalizes the first letter of each whitespace-delimited word while leaving
-    the remaining characters untouched, so a lowercased mention ("spot instances")
-    becomes the title-cased form the schema-typed ground truth uses ("Spot
-    Instances") without corrupting acronyms ("CRDT" stays "CRDT", "EC2 Spot
-    Service" stays "EC2 Spot Service"). Unlike ``str.title``, it never downcases
-    the tail of a word, so embedded capitals are preserved.
+    Title-cases the label the way the schema-typed ground truth does: the first
+    word and every non-minor word have their first letter capitalized, while a
+    minor function word ("an", "for", "to", "by") in a non-leading position is
+    left as-is. Only the first character of a word is ever touched and it is only
+    ever upcased, so acronyms and embedded capitals survive ("CRDT" stays "CRDT",
+    "EC2 Spot Service" stays "EC2 Spot Service", "Technician-and-Timestamp" keeps
+    its lowercase inner "and"). This snaps a lowercased mention ("spot instances",
+    "View Job button") to the ground-truth form ("Spot Instances", "View Job
+    Button") without disturbing labels the model already cased correctly.
     """
-    return " ".join(
-        word[:1].upper() + word[1:] if word else word for word in label.split(" ")
-    )
+    words = label.split(" ")
+    canonical: list[str] = []
+    for index, word in enumerate(words):
+        if not word:
+            canonical.append(word)
+        elif index > 0 and word.lower() in _TITLE_MINOR_WORDS:
+            canonical.append(word)
+        else:
+            canonical.append(word[:1].upper() + word[1:])
+    return " ".join(canonical)
 
 
 class ExtractionService:
