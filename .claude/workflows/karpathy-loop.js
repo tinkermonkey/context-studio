@@ -190,6 +190,28 @@ const SEED_BACKLOG = [
     blocked: false,
     done: true,
   },
+  {
+    // Grounded in the two_pass-v2 incumbent's failure profile (dev): its
+    // dominant remaining bucket is candidate_missing (96) — the LLM pass-1
+    // misses individuals the GT expects. This is the LLM-pipeline analogue of
+    // the accepted open_v1 coverage_completion, applied to the default pipeline.
+    id: 'default_coverage_completion',
+    stages: ['candidate_missing'],
+    summary:
+      'Coverage completion for the default (LLM) pipeline: after pass-1 individual grounding, run spaCy over the source, surface every noun-chunk head not already captured as an individual, ground it via the SchemaVectorIndex, and emit it as a typed candidate — recovering the individuals the LLM pass misses. Targets candidate_missing (the incumbent\'s dominant failure), without touching pass-2\'s closed-predicate relationship derivation.',
+    blocked: false,
+  },
+  {
+    // Second-largest two_pass-v2 failure bucket (dev): label_mismatch (21) —
+    // extracted individual labels do not match the GT surface forms. The
+    // individual-label analogue of the class-ref canonicalization the pipeline
+    // already applies to is_a typing triples.
+    id: 'default_label_canonicalization',
+    stages: ['label_mismatch'],
+    summary:
+      'Label canonicalization for default-pipeline individuals: after extraction, canonicalize each individual\'s surface label against the ontology\'s known individual/label vocabulary (and reference sources) via the SchemaVectorIndex, so extracted labels match the ground-truth forms. Targets label_mismatch (the incumbent\'s #2 failure) — the individual-label analogue of the class-reference canonicalization already applied to typing triples.',
+    blocked: false,
+  },
 ]
 
 const EVALUATION_SCHEMA = {
@@ -595,6 +617,8 @@ function meetsFloors(holdout, floors, holdoutReviewPending) {
 const DEFAULT_PIPELINE_HYPOTHESES = new Set([
   'rag_proper_prompting_default',
   'two_pass_individual_then_relationship',
+  'default_coverage_completion',
+  'default_label_canonicalization',
 ])
 const PIPELINE_AGNOSTIC_HYPOTHESES = new Set(['per_source_confidence_bands'])
 
