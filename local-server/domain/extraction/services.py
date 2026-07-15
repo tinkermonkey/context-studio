@@ -107,6 +107,22 @@ def _normalize_predicate_label(label: str) -> str:
     return label.strip().lower().replace("_", " ").replace("-", " ")
 
 
+def _canonical_individual_label(label: str) -> str:
+    """
+    The canonical surface form of a schema-typed individual's label.
+
+    Capitalizes the first letter of each whitespace-delimited word while leaving
+    the remaining characters untouched, so a lowercased mention ("spot instances")
+    becomes the title-cased form the schema-typed ground truth uses ("Spot
+    Instances") without corrupting acronyms ("CRDT" stays "CRDT", "EC2 Spot
+    Service" stays "EC2 Spot Service"). Unlike ``str.title``, it never downcases
+    the tail of a word, so embedded capitals are preserved.
+    """
+    return " ".join(
+        word[:1].upper() + word[1:] if word else word for word in label.split(" ")
+    )
+
+
 class ExtractionService:
     """
     Service implementing knowledge extraction orchestration.
@@ -592,6 +608,10 @@ class ExtractionService:
         relationships are still derived. Pass 2 is skipped entirely when fewer
         than two individuals were identified (no pair to relate).
 
+        Before returning, the surface labels of schema-grounded individuals are
+        canonicalized (`_canonicalize_individual_labels`) so a typed mention in a
+        case variant matches the typed ground truth's form.
+
         Returns:
             Tuple of (combined typing + relationship triples, total tokens used).
         """
@@ -641,7 +661,59 @@ class ExtractionService:
                 if not self._is_typing_triple(triple)
             ]
 
-        return individual_triples + relationship_triples, tokens_used
+        combined = self._canonicalize_individual_labels(
+            individual_triples + relationship_triples
+        )
+        return combined, tokens_used
+
+    def _canonicalize_individual_labels(self, triples: list[dict]) -> list[dict]:
+        """
+        Canonicalize the surface labels of schema-grounded individuals (design doc §7).
+
+        The individual-label analogue of ``_canonicalize_triples_against_ontology``:
+        that step rewrites a typing triple's OBJECT to its canonical ontology-class
+        form; this step rewrites the SUBJECT individual's surface label to a
+        canonical surface form. Only individuals the pipeline grounded to an
+        ontology class — the subject of an ``is_a`` typing triple — are
+        canonicalized (the "known individual vocabulary" gate). Free-form
+        relationship-only individuals from untyped corpora, whose ground truth
+        keeps lowercase/snake_case surface forms, are never in that vocabulary and
+        so pass through untouched.
+
+        Attacks the ``label_mismatch`` stage: a schema-typed individual the model
+        surfaces in a case variant ("Spot instances", "View Job button") is snapped
+        to the title-cased form the typed ground truth uses ("Spot Instances", "View
+        Job Button"). The canonical form is then propagated to every triple that
+        references the same individual as subject or object — but never to a class
+        object (already canonicalized) — so relationship triples stay consistent
+        with their typing. Matching is case-insensitive on the original surface
+        label, so a mention typed once is normalized everywhere it appears.
+        """
+        canonical_by_label: dict[str, str] = {}
+        for triple in triples:
+            if not self._is_typing_triple(triple):
+                continue
+            label = str(triple.get("subject", {}).get("label", "")).strip()
+            if not label:
+                continue
+            canonical_by_label.setdefault(
+                label.lower(), _canonical_individual_label(label)
+            )
+
+        if not canonical_by_label:
+            return triples
+
+        for triple in triples:
+            for role in ("subject", "object"):
+                node = triple.get(role, {})
+                if node.get("kind") == "class":
+                    continue
+                canonical = canonical_by_label.get(
+                    str(node.get("label", "")).strip().lower()
+                )
+                if canonical is not None:
+                    node["label"] = canonical
+        return triples
 
     def _is_typing_triple(self, triple: dict) -> bool:
         """Return True when a triple is an ``is_a``/rdf:type assertion (object is a class)."""
