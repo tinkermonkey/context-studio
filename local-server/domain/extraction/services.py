@@ -888,6 +888,16 @@ Text:
         replaced with a free-form short-verb-phrase instruction so relationships
         are still derived.
 
+        The object of a relationship may be a listed individual OR a new concept,
+        quality, or outcome the text names as the relationship's target. Pass 1's
+        class-catalog grounding biases it toward concrete typeable entities and
+        drops the abstract qualities/outcomes many relationships point at
+        (readability, loose coupling, duplication), so restricting the object to
+        the pass-1 list left those relationships unformed. Only the OBJECT side is
+        opened this way — the subject stays a pass-1 individual and the predicate
+        still clamps to the closed vocabulary — so this captures the missing
+        relationship objects without loosening subject grounding or predicate drift.
+
         Args:
             text: Source text to extract from
             ontology: The target ontology
@@ -926,9 +936,15 @@ Extract relationship triples in the following JSON format:
   ]
 }}
 
-Only use the individuals listed in the prompt as subject and object, copying their
-labels EXACTLY. Emit a relationship only when the text states one between two of the
-listed individuals. Do NOT emit typing ("is_a") triples in this step. {predicate_instruction}
+Use one of the individuals listed in the prompt as the SUBJECT of each relationship,
+copying its label EXACTLY. The OBJECT may be one of the listed individuals OR a new
+concept, quality, or outcome the text names as what the subject relates to (for example
+an abstract quality such as "readability", "loose coupling", or "duplication") — many
+relationships point at such concepts even though they are not concrete typeable
+entities. When the object is a new concept, set object.kind to "individual" and give it
+a concise label taken from the text; never introduce a new SUBJECT this way. Emit a
+relationship only when the text states one. Do NOT emit typing ("is_a") triples in this
+step. {predicate_instruction}
 
 Return only valid JSON. If no relationships can be extracted, return {{"triples": []}}."""
 
@@ -947,8 +963,10 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
         else:
             allowed = ""
 
-        user_prompt = f"""State the relationships the following text asserts between the
-        identified individuals, scoped to the ontology context provided.
+        user_prompt = f"""State the relationships the following text asserts, scoped to the
+        ontology context provided. Each relationship's subject is one of the identified
+        individuals; its object is either another identified individual or a new concept
+        the text names as the relationship's target.
 
 Text:
 {text}
