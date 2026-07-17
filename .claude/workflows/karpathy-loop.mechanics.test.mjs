@@ -357,10 +357,11 @@ test("selectTargets under a default incumbent selects a live default-pipeline hy
 });
 test("the live default-pipeline backlog hypothesis is classified default and selected under a default incumbent", () => {
   // rag, two_pass, and default_label_canonicalization landed (done);
-  // default_coverage_completion is blocked (superseded). The live default
-  // hypothesis is default_coverage_with_relations, targeting the incumbent's
-  // dominant failure stages (candidate_missing, relation_not_derived).
-  const id = "default_coverage_with_relations";
+  // default_coverage_completion + default_coverage_with_relations are blocked
+  // (mechanical surfacing proven dead). The live default hypothesis is
+  // default_relationship_object_recall, targeting the incumbent's dominant
+  // failure stages (candidate_missing, relation_not_derived).
+  const id = "default_relationship_object_recall";
   assert.equal(hypothesisPipeline(id), "default", `${id} should classify as a default-pipeline hypothesis`);
   assert.ok(
     SEED_BACKLOG.some((h) => h.id === id && !h.done && !h.blocked),
@@ -369,8 +370,9 @@ test("the live default-pipeline backlog hypothesis is classified default and sel
   const targets = selectTargets({ candidate_missing: 96, relation_not_derived: 7 }, [], [], 3, "default");
   const ids = targets.map((t) => t.id);
   assert.ok(ids.includes(id), `expected ${id} selected under the default incumbent, got ${ids.join(", ")}`);
-  // the superseded/landed ones must NOT be selected
+  // the blocked/landed ones must NOT be selected
   assert.ok(!ids.includes("default_coverage_completion"), "blocked default_coverage_completion must not be selected");
+  assert.ok(!ids.includes("default_coverage_with_relations"), "blocked default_coverage_with_relations must not be selected");
   assert.ok(!ids.includes("default_label_canonicalization"), "done default_label_canonicalization must not be selected");
 });
 test("pipeline-agnostic hypotheses are eligible under either incumbent", () => {

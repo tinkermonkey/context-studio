@@ -231,6 +231,25 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing', 'relation_not_derived'],
     summary:
       'Coverage completion WITH relations for the default (LLM) pipeline: surface every spaCy noun-chunk head pass-1 missed and ground it via the SchemaVectorIndex, AND include those surfaced heads in pass-2\'s individual pool so relationships are derived for them from the ontology\'s closed predicate vocabulary in the same run — so recovered candidates arrive WITH a relation instead of dangling as relation_not_derived (the failure mode that sank default_coverage_completion in iteration 4). Re-record the default cassettes for the widened pass-2 individual set.',
+    // BLOCKED: rejected in iteration 5 (dev strict 0.367->0.191). Mechanical
+    // spaCy noun-chunk surfacing is a proven dead end — the root-cause trace
+    // showed the missed entities are not un-grounded noun chunks but the
+    // abstract-concept OBJECTS of relationships (see default_relationship_object_recall).
+    blocked: true,
+  },
+  {
+    // ROOT-CAUSE-DRIVEN (iteration 5 trace): across the 96 candidate_missing
+    // triples, pass-1 extracts the relationship SUBJECT 75% of the time but the
+    // OBJECT only 12% — the missed 84 objects are abstract concepts/qualities
+    // (readability, loose_coupling, duplication, reusable_solutions) that the
+    // ontology-class grounding biases pass-1 away from, so the relationship can
+    // never form and even correctly-extracted subjects score 0 F1. This is a
+    // relationship-OBJECT recall problem, NOT a candidate-surfacing one (which
+    // failed twice). Fixing it is the single largest remaining lever.
+    id: 'default_relationship_object_recall',
+    stages: ['candidate_missing', 'relation_not_derived'],
+    summary:
+      'Relationship-object recall for the default (LLM) pipeline. Pass-1 extracts relationship subjects (75%) but almost never the abstract-concept objects (12%) GT relationships point at — the class-catalog grounding biases it toward concrete typeable entities, dropping the qualities/outcomes (readability, loose_coupling, duplication) so those relationships never form. Capture the object side: e.g. let pass-2 introduce NEW concept-objects as relationship targets while still choosing predicates from the ontology\'s closed vocabulary, and/or extend pass-1 to emit abstract concepts/qualities that participate in relationships even without a clean class fit. Targets the 84/96 unextracted relationship objects. Re-record the default cassettes.',
     blocked: false,
   },
 ]
@@ -641,6 +660,7 @@ const DEFAULT_PIPELINE_HYPOTHESES = new Set([
   'default_coverage_completion',
   'default_label_canonicalization',
   'default_coverage_with_relations',
+  'default_relationship_object_recall',
 ])
 const PIPELINE_AGNOSTIC_HYPOTHESES = new Set(['per_source_confidence_bands'])
 
