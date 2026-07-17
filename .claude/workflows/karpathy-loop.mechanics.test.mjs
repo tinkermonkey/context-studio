@@ -355,21 +355,23 @@ test("selectTargets under a default incumbent selects a live default-pipeline hy
     twoPass.done = savedDone;
   }
 });
-test("the live default-pipeline backlog hypotheses are classified default and selected under a default incumbent", () => {
-  // After rag + two_pass landed (done), these are the seeded default-pipeline
-  // hypotheses the loop should draw on next; they target the two_pass-v2
-  // incumbent's actual top failure stages (candidate_missing, label_mismatch).
-  for (const id of ["default_coverage_completion", "default_label_canonicalization"]) {
-    assert.equal(hypothesisPipeline(id), "default", `${id} should classify as a default-pipeline hypothesis`);
-    assert.ok(
-      SEED_BACKLOG.some((h) => h.id === id && !h.done && !h.blocked),
-      `${id} should be a live (not done/blocked) backlog entry`,
-    );
-  }
-  const targets = selectTargets({ candidate_missing: 96, label_mismatch: 21 }, [], [], 3, "default");
+test("the live default-pipeline backlog hypothesis is classified default and selected under a default incumbent", () => {
+  // rag, two_pass, and default_label_canonicalization landed (done);
+  // default_coverage_completion is blocked (superseded). The live default
+  // hypothesis is default_coverage_with_relations, targeting the incumbent's
+  // dominant failure stages (candidate_missing, relation_not_derived).
+  const id = "default_coverage_with_relations";
+  assert.equal(hypothesisPipeline(id), "default", `${id} should classify as a default-pipeline hypothesis`);
+  assert.ok(
+    SEED_BACKLOG.some((h) => h.id === id && !h.done && !h.blocked),
+    `${id} should be a live (not done/blocked) backlog entry`,
+  );
+  const targets = selectTargets({ candidate_missing: 96, relation_not_derived: 7 }, [], [], 3, "default");
   const ids = targets.map((t) => t.id);
-  assert.ok(ids.includes("default_coverage_completion"), `expected default_coverage_completion, got ${ids.join(", ")}`);
-  assert.ok(ids.includes("default_label_canonicalization"), `expected default_label_canonicalization, got ${ids.join(", ")}`);
+  assert.ok(ids.includes(id), `expected ${id} selected under the default incumbent, got ${ids.join(", ")}`);
+  // the superseded/landed ones must NOT be selected
+  assert.ok(!ids.includes("default_coverage_completion"), "blocked default_coverage_completion must not be selected");
+  assert.ok(!ids.includes("default_label_canonicalization"), "done default_label_canonicalization must not be selected");
 });
 test("pipeline-agnostic hypotheses are eligible under either incumbent", () => {
   assert.equal(hypothesisPipeline("per_source_confidence_bands"), "both");

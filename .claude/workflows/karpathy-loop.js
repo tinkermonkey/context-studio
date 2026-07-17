@@ -199,7 +199,11 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing'],
     summary:
       'Coverage completion for the default (LLM) pipeline: after pass-1 individual grounding, run spaCy over the source, surface every noun-chunk head not already captured as an individual, ground it via the SchemaVectorIndex, and emit it as a typed candidate — recovering the individuals the LLM pass misses. Targets candidate_missing (the incumbent\'s dominant failure), without touching pass-2\'s closed-predicate relationship derivation.',
-    blocked: false,
+    // BLOCKED: superseded by default_coverage_with_relations. Iteration 4
+    // implemented and rejected this exact approach — surfacing heads WITHOUT
+    // deriving their relations left them dangling (relation_not_derived 7->16),
+    // regressing dev to 0.200/0.217. The follow-up folds relation derivation in.
+    blocked: true,
   },
   {
     // Second-largest two_pass-v2 failure bucket (dev): label_mismatch (21) —
@@ -210,6 +214,23 @@ const SEED_BACKLOG = [
     stages: ['label_mismatch'],
     summary:
       'Label canonicalization for default-pipeline individuals: after extraction, canonicalize each individual\'s surface label against the ontology\'s known individual/label vocabulary (and reference sources) via the SchemaVectorIndex, so extracted labels match the ground-truth forms. Targets label_mismatch (the incumbent\'s #2 failure) — the individual-label analogue of the class-reference canonicalization already applied to typing triples.',
+    // DONE: accepted in iteration 4 and landed on main (commit 20fe4e76). Lifted
+    // the default incumbent dev strict-F1 0.359->0.367 (soft-F1 flat) — accepted
+    // via the symmetric gate's strict-driven path.
+    blocked: false,
+    done: true,
+  },
+  {
+    // The default_coverage_completion follow-up: iteration 4 proved that
+    // surfacing missed individuals recovers candidate_recall (candidate_missing
+    // 96->86) but they DANGLE without a relation (relation_not_derived 7->16),
+    // netting flat/negative dev. Fold relation derivation in so recovered
+    // coverage converts to a net gain — the default-pipeline analogue of the
+    // accepted open_v1 coverage_completion_stage (surface + derive in one pass).
+    id: 'default_coverage_with_relations',
+    stages: ['candidate_missing', 'relation_not_derived'],
+    summary:
+      'Coverage completion WITH relations for the default (LLM) pipeline: surface every spaCy noun-chunk head pass-1 missed and ground it via the SchemaVectorIndex, AND include those surfaced heads in pass-2\'s individual pool so relationships are derived for them from the ontology\'s closed predicate vocabulary in the same run — so recovered candidates arrive WITH a relation instead of dangling as relation_not_derived (the failure mode that sank default_coverage_completion in iteration 4). Re-record the default cassettes for the widened pass-2 individual set.',
     blocked: false,
   },
 ]
@@ -619,6 +640,7 @@ const DEFAULT_PIPELINE_HYPOTHESES = new Set([
   'two_pass_individual_then_relationship',
   'default_coverage_completion',
   'default_label_canonicalization',
+  'default_coverage_with_relations',
 ])
 const PIPELINE_AGNOSTIC_HYPOTHESES = new Set(['per_source_confidence_bands'])
 
