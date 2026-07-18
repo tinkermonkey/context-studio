@@ -711,3 +711,93 @@ class SchemaVectorIndex(Protocol):
             Empty if nothing meets the threshold.
         """
         ...
+
+
+@dataclass(frozen=True)
+class IndividualMatch:
+    """
+    An existing graph individual matched by vector similarity to a query.
+
+    Used by the recognition step (extracted mention -> existing individual): the
+    goal is a specific-to-specific match (an extracted "K8s" mention resolving to
+    an existing "Kubernetes" node), so — unlike SchemaMatch — an individual match
+    carries the node's class membership (recognition gates on it) and a plain
+    title (no external_id/predicate, which are schema-only concepts).
+
+    Attributes:
+        individual_id: ID of the matched individual.
+        class_ids: Classes the matched individual instantiates (rdf:type),
+            for class-compatibility gating.
+        title: The individual's canonical title (the label recognition adopts
+            when it resolves a mention to this node).
+        score: Cosine similarity in 0.0-1.0 (1.0 = identical).
+    """
+
+    individual_id: str
+    class_ids: list[str]
+    title: str
+    score: float
+
+
+class IndividualVectorIndex(Protocol):
+    """
+    Port for semantic vector search over existing graph individuals (instances).
+
+    The recognition counterpart to SchemaVectorIndex: it maintains the title
+    embedding of each individual (kept in sync on write, driven by the
+    IndividualCreated/Updated/Deleted events) and searches them by a query
+    embedding, scoped to a set of candidate classes. Unlike schema search — which
+    matches a specific instance to a *generic* class and is deliberately generous
+    — recognition matches a specific mention to a *specific* existing individual
+    and is deliberately conservative (a high threshold + the caller's ambiguity
+    margin guard against false merges). The backing adapter lives in
+    adapters/persistence/sqlite/.
+    """
+
+    def index_individual(self, individual_id: str, title: str, description: str | None) -> None:
+        """
+        (Re)compute and persist the title embedding for one individual, keeping
+        the recognition index in sync with its text.
+
+        Args:
+            individual_id: ID of the individual to index.
+            title: Current title text (embedded as the individual's vector).
+            description: Optional description; adapters may fold it into the
+                embedded text, but an individual is primarily identified by title.
+        """
+        ...
+
+    def remove_individual(self, individual_id: str) -> None:
+        """Drop an individual from the recognition index (on delete)."""
+        ...
+
+    def reindex_all_individuals(self) -> int:
+        """
+        Backfill: (re)embed and index every individual currently in the graph.
+
+        Returns the number of individuals indexed.
+        """
+        ...
+
+    def search(
+        self,
+        query_embedding: list[float],
+        class_ids: Sequence[str],
+        top_k: int = 5,
+        threshold: float = 0.0,
+    ) -> list[IndividualMatch]:
+        """
+        Find existing individuals similar to the query, scoped to candidate classes.
+
+        Args:
+            query_embedding: The query vector (e.g. an extracted mention embedding).
+            class_ids: Restrict candidates to individuals instantiating at least
+                one of these classes — recognition only resolves within the
+                grounded class of the extracted mention. Empty means unscoped.
+            top_k: Maximum matches to return, highest score first.
+            threshold: Minimum similarity (0.0-1.0) for inclusion.
+
+        Returns:
+            IndividualMatch objects sorted by descending score (length <= top_k).
+        """
+        ...
