@@ -172,19 +172,29 @@ WAVE3_SME_HOLDOUT_SCENARIOS: list[str] = [
 
 WAVE3_SME_SCENARIOS: list[str] = WAVE3_SME_DEV_SCENARIOS + WAVE3_SME_HOLDOUT_SCENARIOS
 
-# Full corpus: legacy domains (placeholder ontology) + Wave 2/3 SME domains
-# (DR spec ontology). Both dev and holdout are still each populated from
-# every domain currently in the corpus.
+# Scored corpus: DR-grounded scenarios ONLY (Wave 2/3 SME + DR-relabeled arxiv).
+#
+# The software-architecture-concept legacy scenarios
+# (LEGACY_INDIVIDUAL_EXTRACTION_DEV/HOLDOUT_SCENARIOS) are ELIMINATED from the
+# scored split. They run against the throwaway 3-class placeholder ontology
+# (individual/property/entity) with no domain classes to identify against, so
+# they test free-form concept extraction — not the grounded individual
+# identification this pipeline exists to do. Scored on them the pipeline is ~0
+# strict-F1; scored on the grounded scenarios it is ~0.66. Their inclusion
+# halved the headline score and was the sole source of the surface-convention
+# (case/plural/snake_case) noise, since their GT uses a different label
+# convention than the DR corpus. They remain in
+# LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS with a SEPARATE_CONTEXT disposition so
+# the record survives, but they never gate a decision. (See
+# documentation/individual_extraction_refinement_learnings.md.)
 INDIVIDUAL_EXTRACTION_DEV_SCENARIOS: list[str] = (
-    LEGACY_INDIVIDUAL_EXTRACTION_DEV_SCENARIOS
-    + WAVE2_SME_DEV_SCENARIOS
+    WAVE2_SME_DEV_SCENARIOS
     + WAVE3_SME_DEV_SCENARIOS
     + RELABELED_ARXIV_DEV_SCENARIOS
 )
 
 INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS: list[str] = (
-    LEGACY_INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS
-    + WAVE2_SME_HOLDOUT_SCENARIOS
+    WAVE2_SME_HOLDOUT_SCENARIOS
     + WAVE3_SME_HOLDOUT_SCENARIOS
 )
 

@@ -29,14 +29,29 @@ from tests.integration.pipelines._harness.dataset_split import (
 
 class TestSplitFor:
     def test_dev_scenario_returns_dev(self):
-        assert split_for("async_patterns") == "dev"
+        assert split_for("sme_waypoint_product_vision") == "dev"
 
     def test_holdout_scenario_returns_holdout(self):
-        assert split_for("reactive_programming") == "holdout"
+        assert split_for("sme_waypoint_technician_ux") == "holdout"
 
     def test_unassigned_scenario_raises(self):
         with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
             split_for("basic")
+
+    def test_placeholder_legacy_scenarios_are_eliminated_from_the_scored_split(self):
+        # The software-arch legacy scenarios run against the throwaway placeholder
+        # ontology (free-form concept extraction, not grounded identification) and
+        # are eliminated from the scored corpus — the split is DR-grounded only.
+        for scenario in ("async_patterns", "clean_code", "design_patterns", "reactive_programming"):
+            assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
+            with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
+                split_for(scenario)
+
+    def test_every_scored_scenario_is_dr_grounded(self):
+        # The whole point of the elimination: nothing in the scored split is
+        # graded against the placeholder ontology anymore.
+        for scenario in INDIVIDUAL_EXTRACTION_SCENARIOS:
+            assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
 
 
 class TestOntologyContextFor:
@@ -63,12 +78,13 @@ class TestOntologyContextFor:
             ontology_context_for("not_a_real_scenario")
 
     def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
-        # SCENARIO_ONTOLOGY also covers the retired arxiv scenarios, which keep a
-        # placeholder context for the record but are not in the scored split. The
-        # relabeled arxiv scenarios ARE in INDIVIDUAL_EXTRACTION_SCENARIOS.
+        # SCENARIO_ONTOLOGY records every legacy scenario for the disposition
+        # record, including the placeholder software-arch scenarios and the
+        # retired arxiv scenarios that are NOT in the scored split. Only the
+        # relabeled arxiv scenarios (of the legacy set) are scored.
         assert set(SCENARIO_ONTOLOGY.keys()) == (
             set(INDIVIDUAL_EXTRACTION_SCENARIOS)
-            | set(RETIRED_ARXIV_SCENARIOS)
+            | set(LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS)
             | set(DR_BOOTSTRAP_SCENARIOS)
             | set(WAVE4_INFORMAL_SCENARIOS)
         )

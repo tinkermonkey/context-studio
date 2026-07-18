@@ -406,12 +406,12 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
 
     Cassettes are now recorded under `_DEFAULT_CASSETTE_DIR`, so the guard is
     open and `default`/`default+grounding` register whenever the DR spec
-    checkout is present. Since RAG-grounding the default prompt, `default` is the
-    tournament leader (dev soft-F1 ~0.41 vs `open_v1` ~0.13) — the Karpathy
-    loop's incumbent is the rank-1 scoreboard variant, so `default` is the
-    accept-gate baseline, not `open_v1`. To re-record after a default-prompt
-    change, use `scripts/record_default_cassettes.py` (phase-1 model via
-    OpenRouter).
+    checkout is present. The two-pass RAG-grounded `default` is the tournament
+    leader by a wide margin on the grounded-only scored split (dev strict-F1
+    ~0.66 / soft-F1 ~0.68 vs `open_v1` ~0.06/0.11) — the Karpathy loop's
+    incumbent is the rank-1 scoreboard variant, so `default` is the accept-gate
+    baseline, not `open_v1`. To re-record after a default-prompt change, use
+    `scripts/record_default_cassettes.py` (phase-1 model via OpenRouter).
     """
     register_variant(_make_open_v1_variant(nlp, embedding, eval_repo, eval_index))
 

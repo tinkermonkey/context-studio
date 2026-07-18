@@ -7,19 +7,27 @@ learned.
 
 ## 1. Outcome — the `default` pipeline
 
-Measured on the DR individual-extraction dev split (offline cassette replay,
-`scripts/quality_tournament.py`):
+**Scored grounded-only** (DR-spec scenarios; the throwaway-placeholder scenarios
+were removed from the split — see §5). Offline cassette replay,
+`scripts/quality_tournament.py`:
 
-| stage | dev strict-F1 | dev soft-F1 | holdout soft-F1 |
-|---|---|---|---|
-| `open_v1` (rule / spaCy) | 0.086 | 0.132 | 0.102 |
-| + RAG-grounded single-pass prompt | 0.324 | 0.412 | 0.458 |
-| + two-pass (closed-predicate relationships) | 0.359 | 0.379 | — |
-| + individual label canonicalization | 0.367 | 0.380 | 0.416 |
-| **+ relationship-object recall (current baseline)** | **0.371** | **0.412** | **0.457** |
+| variant | dev strict-F1 | dev soft-F1 | candidate_recall | label-acc (strict) | holdout strict-F1 |
+|---|---|---|---|---|---|
+| `open_v1` (rule / spaCy) | 0.059 | 0.111 | 0.50 | 0.449 | 0.036 |
+| **`default` (grounded two-pass, current baseline)** | **0.659** | **0.681** | **0.858** | **0.877** | **0.939** |
 
-~4.3× strict-F1 over the rule baseline, with far cleaner predicates
-(`relation_not_derived` 45→6, `predicate_mismatch`→0) and better labels.
+**~11× strict-F1 over the rule baseline on the intended (grounded) task**, with
+clean predicates (`relation_not_derived`→5, `predicate_mismatch`→0) and strong
+label accuracy (0.877 strict). Holdout is high but thin (only 2 grounded holdout
+scenarios today — advisory, not authoritative).
+
+> **Note on the numbers:** an earlier version of this doc reported a "0.37 strict /
+> ceiling" for the pipeline. That was a **mixed-corpus artifact**: ~44% of the old
+> scored split was ungrounded placeholder scenarios that score ~0 and halved the
+> average. On the grounded scenarios the pipeline was always ~0.66 — the "ceiling"
+> was a measurement problem, now fixed (§5). The build progression (RAG grounding
+> → two-pass → label canonicalization → relationship-object recall) each landed a
+> real gain; those intermediate numbers were measured on the old mixed corpus.
 
 ## 2. Final pipeline architecture (what won)
 
@@ -78,37 +86,47 @@ lost** revealed the real cause (pass-1 kept relationship *subjects* 75% of the
 time but *objects* only 12%), and the very next hypothesis — targeting that exact
 gap — won on every axis. Diagnose before spending.
 
-## 5. Failure taxonomy — and why we stopped
+## 5. The benchmark was polluted — the biggest finding
 
-- **`relation_not_derived` — solved** by the closed-predicate pass-2 (45→6).
-- **`candidate_missing` — mostly addressed, hard tail remains.** ~82% of missed
-  entities are literally present in the source; the relationship-object fix
-  recovered the easy ones. The remainder is a genuinely harder tail (abstract
-  inference, ontology class-typing artifacts).
-- **`label_mismatch` — NOT a real quality gap.** After the above, the dominant
-  remaining strict-F1 loss is **surface-convention mismatch**: the pipeline
-  produces natural labels (`Event Loop`, `Testing`, `Classes`) while the ground
-  truth uses snake_case-singular-lowercase (`event_loop`, `testing`, `class`),
-  plus predicate phrasing (`should_follow` vs `follow`). The **soft** scorer
-  already credits these (which is why soft-F1 ≫ strict-F1); **strict-F1 is
-  therefore contaminated by GT surface convention**, not measuring real quality.
+The apparent "diminishing returns / casing noise" turned out to be a **benchmark
+composition problem**, not a pipeline problem. The old scored split was ~44%
+**ungrounded placeholder scenarios**: software-architecture-concept prose
+(`clean_code`, `design_patterns`, `object_oriented_design`, …) graded against a
+**throwaway 3-class ontology** (`individual`/`property`/`entity`) with no domain
+classes to identify against. Those scenarios test *free-form concept extraction*,
+not the grounded individual identification this pipeline exists to do.
 
-**Conclusion:** further strict-F1 gains against this corpus/GT would largely be
-surface-form matching (case/plural/phrasing), not extraction quality. The
-extraction refinement has hit its **useful ceiling for this measurement setup**.
-`soft-F1` (~0.41 dev / ~0.46 holdout) is the truer quality signal.
+Split by ontology context, the current pipeline scored:
+
+| scenarios | dev strict-F1 | dev soft-F1 | strict label-acc |
+|---|---|---|---|
+| DR-grounded | **0.66** | 0.68 | 0.88 |
+| placeholder / throwaway | **0.00** | 0.07 | — |
+
+The placeholder scenarios scored ~0 and dragged the average to 0.37, **and** were
+the sole source of the surface-convention noise (their snake_case GT vs the
+pipeline's natural labels; the DR GT uses Title Case, which the pipeline matches).
+**Fix:** the placeholder scenarios were removed from the scored split
+(`dataset_split.py`) — the benchmark is now **DR-grounded only**. The headline
+score is the true one (§1): dev strict-F1 0.659, and `label_mismatch` collapsed
+from 32→5 once the ungrounded scenarios were gone.
+
+**Grounded-only failure taxonomy** (small, real): `candidate_missing` 26,
+`label_mismatch` 5, `relation_not_derived` 5 — all modest and genuinely
+grounded-extraction issues.
 
 ## 6. If the effort resumes — where the real value is
 
-Not in more extraction micro-optimization. Candidates, roughly in priority:
+The measurement fix (removing placeholder scenarios) is **done**. Remaining, in
+priority:
 
-1. **Fix the measurement, not the pipeline.** Either make the strict scorer
-   morphology-tolerant (case/number/snake-case normalization before exact match)
-   so strict-F1 reflects real matches, or regenerate GT with a single, consistent
-   label convention. Until then, evaluate on soft-F1.
-2. **Grow and human-review the corpus/GT.** The holdout is thin (few scenarios)
-   and some GT is agent-drafted; a larger, reviewed corpus would make both the
-   holdout veto and strict-F1 trustworthy (see `NEEDS_HUMAN_REVIEW.md`).
-3. **Only then**, if a real quality gap remains, attack the `candidate_missing`
-   hard tail (abstract-concept inference) — a genuine model/prompt problem, not a
-   mechanical one.
+1. **Grow and human-review the grounded corpus.** The grounded holdout is now
+   only 2 scenarios — high (0.939) but statistically thin; it can't authoritatively
+   veto. A larger, SME-reviewed DR-grounded corpus (more Wave-2/3-style scenarios)
+   would make both the holdout veto and strict-F1 trustworthy.
+2. **The grounded `candidate_missing` tail (26).** With the benchmark clean this
+   is now a genuine model/prompt problem (abstract-concept inference on grounded
+   text), not a mechanical or measurement artifact.
+3. **Retire the orphaned placeholder fixtures/cassettes** (10 scenario dirs +
+   their `individual_extraction_default` cassettes) at some point — they are no
+   longer scored but still on disk.
