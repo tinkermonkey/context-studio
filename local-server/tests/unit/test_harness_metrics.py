@@ -570,3 +570,52 @@ class TestLabelAccuracy:
     def test_no_derived_pairs_is_vacuously_accurate(self):
         result = label_accuracy(expected=[("a", "p", "b")], actual=[])
         assert result == {"strict": 1.0, "soft": 1.0, "derived_count": 0}
+
+
+class TestRecognitionMetrics:
+    """Pairwise coreference metrics for cross-document recognition (#1142)."""
+
+    def _m(self, entity, node, title="X", canonical="X"):
+        return {"entity_key": entity, "canonical_title": canonical, "node_id": node, "title": title}
+
+    def test_perfect_clustering(self):
+        from tests.integration.pipelines._harness.metrics import recognition_metrics
+
+        r = recognition_metrics([self._m("K", "k")] * 3 + [self._m("N", "n")] * 2)
+        assert r.dedup_precision == 1.0 and r.dedup_recall == 1.0 and r.dedup_f1 == 1.0
+        assert r.node_count_ratio == 1.0
+
+    def test_false_merge_tanks_precision_not_recall(self):
+        from tests.integration.pipelines._harness.metrics import recognition_metrics
+
+        # N's mentions wrongly land on K's node
+        r = recognition_metrics([self._m("K", "k")] * 3 + [self._m("N", "k")] * 2)
+        assert r.dedup_precision < 1.0
+        assert r.dedup_recall == 1.0
+        assert r.node_count_ratio < 1.0  # over-merged
+
+    def test_missed_merge_tanks_recall_not_precision(self):
+        from tests.integration.pipelines._harness.metrics import recognition_metrics
+
+        # K's mentions split across two nodes
+        r = recognition_metrics([self._m("K", "k1")] * 2 + [self._m("K", "k2")])
+        assert r.dedup_precision == 1.0
+        assert r.dedup_recall < 1.0
+        assert r.node_count_ratio > 1.0  # duplicates
+
+    def test_canonical_label_accuracy(self):
+        from tests.integration.pipelines._harness.metrics import recognition_metrics
+
+        # correctly resolved, but node titled with a variant, not the canonical
+        r = recognition_metrics(
+            [self._m("K", "k", title="Kubernetes", canonical="Kubernetes"),
+             self._m("K", "k", title="K8s", canonical="Kubernetes")]
+        )
+        assert r.dedup_precision == 1.0
+        assert r.canonical_label_accuracy == 0.5
+
+    def test_empty_is_perfect(self):
+        from tests.integration.pipelines._harness.metrics import recognition_metrics
+
+        r = recognition_metrics([])
+        assert r.dedup_f1 == 1.0 and r.gt_entity_count == 0

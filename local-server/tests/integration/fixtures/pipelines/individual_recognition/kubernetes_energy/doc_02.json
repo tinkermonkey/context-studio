@@ -1,0 +1,6 @@
+{
+  "text": "K8s clusters host many heterogeneous workloads. The Nextflow engine dispatches pipeline tasks across nodes, and Nf-PEAK measures the energy each task consumes. RAPL counters report node-level energy that Nf-PEAK apportions per task.",
+  "ontology_id": "dr_spec",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

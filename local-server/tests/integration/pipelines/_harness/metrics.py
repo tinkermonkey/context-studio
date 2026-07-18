@@ -599,3 +599,87 @@ def label_accuracy(
         "soft": round(soft, 4),
         "derived_count": len(derived_tiers),
     }
+
+
+@dataclass
+class RecognitionMetrics:
+    """
+    Cross-document entity-recognition (dedup) metrics (issue #1142).
+
+    Computed over a flat list of mentions, each carrying its ground-truth entity
+    identity and the node the pipeline actually resolved/created it to. Precision
+    is the safety metric (1 - false-merge rate); selection is precision-first.
+    """
+
+    dedup_precision: float          # of predicted same-node pairs, fraction truly same entity
+    dedup_recall: float             # of GT same-entity pairs, fraction co-clustered
+    dedup_f1: float                 # pairwise coreference F1
+    resolution_accuracy: float      # per-mention: landed in its majority-GT cluster
+    canonical_label_accuracy: float # of correctly-resolved mentions, node title == GT canonical
+    node_count_ratio: float         # predicted distinct nodes / GT distinct entities (1.0 ideal)
+    gt_entity_count: int
+    predicted_node_count: int
+
+
+def recognition_metrics(mentions: list[dict]) -> RecognitionMetrics:
+    """
+    Score cross-document recognition from a flat mention list.
+
+    Each mention is a dict with:
+      - ``entity_key``: ground-truth entity identity (which mentions are the same),
+      - ``canonical_title``: ground-truth canonical title of that entity,
+      - ``node_id``: the graph node the pipeline resolved/created this mention to,
+      - ``title``: the final title of that node.
+    """
+    from collections import Counter, defaultdict
+    from itertools import combinations
+
+    n = len(mentions)
+    if n == 0:
+        return RecognitionMetrics(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0, 0)
+
+    gt = [m["entity_key"] for m in mentions]
+    pred = [m["node_id"] for m in mentions]
+
+    same_pred = same_gt = same_both = 0
+    for i, j in combinations(range(n), 2):
+        g = gt[i] == gt[j]
+        p = pred[i] == pred[j]
+        same_pred += p
+        same_gt += g
+        same_both += p and g
+    precision = same_both / same_pred if same_pred else 1.0
+    recall = same_both / same_gt if same_gt else 1.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+
+    cluster_gt: dict[str, list[str]] = defaultdict(list)
+    for m in mentions:
+        cluster_gt[m["node_id"]].append(m["entity_key"])
+    majority = {nid: Counter(keys).most_common(1)[0][0] for nid, keys in cluster_gt.items()}
+    correct = [m for m in mentions if majority[m["node_id"]] == m["entity_key"]]
+    resolution_accuracy = len(correct) / n
+
+    if correct:
+        label_ok = sum(
+            1
+            for m in correct
+            if normalize_label(m["title"]) == normalize_label(m["canonical_title"])
+        )
+        canonical_label_accuracy = label_ok / len(correct)
+    else:
+        canonical_label_accuracy = 0.0
+
+    gt_entity_count = len(set(gt))
+    predicted_node_count = len(set(pred))
+    node_count_ratio = predicted_node_count / gt_entity_count if gt_entity_count else 1.0
+
+    return RecognitionMetrics(
+        dedup_precision=round(precision, 4),
+        dedup_recall=round(recall, 4),
+        dedup_f1=round(f1, 4),
+        resolution_accuracy=round(resolution_accuracy, 4),
+        canonical_label_accuracy=round(canonical_label_accuracy, 4),
+        node_count_ratio=round(node_count_ratio, 4),
+        gt_entity_count=gt_entity_count,
+        predicted_node_count=predicted_node_count,
+    )

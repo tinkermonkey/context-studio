@@ -1,0 +1,6 @@
+{
+  "text": "Kubernetes is a container orchestration system that schedules scientific workflows. Nextflow is a workflow engine executed on Kubernetes clusters. Nf-PEAK is a containerized tool that attributes CPU and DRAM energy to individual Nextflow tasks.",
+  "ontology_id": "dr_spec",
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}
