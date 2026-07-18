@@ -250,7 +250,17 @@ const SEED_BACKLOG = [
     stages: ['candidate_missing', 'relation_not_derived'],
     summary:
       'Relationship-object recall for the default (LLM) pipeline. Pass-1 extracts relationship subjects (75%) but almost never the abstract-concept objects (12%) GT relationships point at — the class-catalog grounding biases it toward concrete typeable entities, dropping the qualities/outcomes (readability, loose_coupling, duplication) so those relationships never form. Capture the object side: e.g. let pass-2 introduce NEW concept-objects as relationship targets while still choosing predicates from the ontology\'s closed vocabulary, and/or extend pass-1 to emit abstract concepts/qualities that participate in relationships even without a clean class fit. Targets the 84/96 unextracted relationship objects. Re-record the default cassettes.',
+    // DONE: accepted in iteration 6 and landed on main (commit 8d145367). Lifted
+    // the default incumbent to dev strict 0.371 / soft 0.412 (candidate_recall
+    // 0.689->0.769, predicate_recall 0.439->0.566, holdout soft 0.416->0.492).
+    // CONSOLIDATION POINT: after this, the dominant remaining strict-F1 loss is
+    // surface-convention mismatch (case/plural/predicate phrasing vs snake_case
+    // GT) which the soft scorer already forgives — strict-F1 is contaminated by
+    // GT convention, not real quality. Extraction refinement has hit its useful
+    // ceiling for this corpus/GT; see documentation/individual_extraction_
+    // refinement_learnings.md before seeding more default hypotheses.
     blocked: false,
+    done: true,
   },
 ]
 
