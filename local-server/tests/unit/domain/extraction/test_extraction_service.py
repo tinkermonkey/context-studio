@@ -696,3 +696,155 @@ class _ConfirmingLLM:
             content=_json.dumps({"class": self._choice}), model=model,
             tokens_in=5, tokens_out=5, duration_ms=1.0, finish_reason="stop",
         )
+
+
+class TestRecognition:
+    """
+    Recognition logic (#1142): resolve extracted mentions to existing individuals.
+    Precision-first — the tests lock exact-label, conservative vector acceptance,
+    class scoping, the ambiguity/acronym guards (false-merge control), reference
+    rewriting, and the index=None no-op. All infra-free (fake index + repo).
+    """
+
+    CLASS_SW = "cls-systemsoftware"
+    CLASS_DB = "cls-datastore"
+    _VEC = {
+        "Kubernetes": [1.0, 0.0, 0.0],
+        "K8s": [0.98, 0.02, 0.0],           # ~1.0 cos to Kubernetes
+        "Nextflow": [0.0, 1.0, 0.0],        # orthogonal
+        "Container Orchestrator": [0.6, 0.8, 0.0],  # ~0.6 cos -> below threshold
+        "borderline": [0.93, 0.3676, 0.0],  # ~0.93 cos: passes long bar, fails acronym bar
+        "Docker Swarm": [0.97, 0.243, 0.0],  # ~0.97 cos -> close to Kubernetes (ambiguity)
+    }
+
+    def _service(self, index):
+        from domain.extraction.services import ExtractionService
+
+        return ExtractionService(
+            ontology_repo=_RecogRepo(),
+            embedding_service=_RecogEmbedding(self._VEC),
+            llm=Mock(),
+            nlp=Mock(),
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+            individual_index=index,
+        )
+
+    def _index_with_kubernetes(self):
+        from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
+
+        idx = FakeIndividualVectorIndex(self._VEC)
+        idx.add("kube-id", "Kubernetes", [self.CLASS_SW])
+        return idx
+
+    def _typing_triple(self, mention, class_ref="technology.systemsoftware"):
+        return {
+            "subject": {"kind": "individual", "id": None, "label": mention},
+            "predicate": {"label": "is_a"},
+            "object": {"kind": "class", "label": class_ref},
+        }
+
+    def test_no_op_without_an_index(self):
+        service = self._service(index=None)
+        triples = [self._typing_triple("K8s")]
+        out = service._recognize_individuals(triples, _Ontology())
+        assert out[0]["subject"]["label"] == "K8s"
+        assert out[0]["subject"]["id"] is None
+
+    def test_exact_label_resolves_and_adopts_canonical_title(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [self._typing_triple("kubernetes")]  # case variant
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["label"] == "Kubernetes"
+        assert triples[0]["subject"]["id"] == "kube-id"
+
+    def test_vector_match_resolves_a_variant(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [self._typing_triple("K8s")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["label"] == "Kubernetes"
+        assert triples[0]["subject"]["id"] == "kube-id"
+
+    def test_below_threshold_stays_a_new_node(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [self._typing_triple("Container Orchestrator")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["label"] == "Container Orchestrator"
+        assert triples[0]["subject"]["id"] is None
+
+    def test_ambiguity_margin_refuses_to_guess(self):
+        # Two existing individuals both very close to the query -> refuse (false-merge guard).
+        idx = self._index_with_kubernetes()
+        idx.add("swarm-id", "Docker Swarm", [self.CLASS_SW])
+        service = self._service(idx)
+        triples = [self._typing_triple("K8s")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["id"] is None  # ambiguous -> new node
+
+    def test_acronym_guard_applies_a_stricter_bar_to_short_mentions(self):
+        # "borderline" ~0.93: a long mention would resolve, but rename it to a
+        # short surface so the acronym bar (0.95) rejects it.
+        service = self._service(self._index_with_kubernetes())
+        t = self._typing_triple("xyz")  # len 3 < recog_min_len
+        # map the short surface to the borderline vector
+        service._embedding_service = _RecogEmbedding({**self._VEC, "xyz": self._VEC["borderline"]})
+        service._recognize_individuals([t], _Ontology())
+        assert t["subject"]["id"] is None
+
+    def test_class_scoping_prevents_cross_class_resolution(self):
+        service = self._service(self._index_with_kubernetes())
+        # same mention but typed to the Data Store class -> Kubernetes (SW class) excluded
+        triples = [self._typing_triple("K8s", class_ref="application.dataobject")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["id"] is None
+
+    def test_resolution_rewrites_relationship_object_references_too(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [
+            self._typing_triple("K8s"),
+            {
+                "subject": {"kind": "individual", "id": None, "label": "Nextflow"},
+                "predicate": {"label": "runs on"},
+                "object": {"kind": "individual", "id": None, "label": "K8s"},
+            },
+        ]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[1]["object"]["label"] == "Kubernetes"
+        assert triples[1]["object"]["id"] == "kube-id"
+
+
+class _RecogEmbedding:
+    def __init__(self, vectors):
+        self._vectors = vectors
+
+    def embed(self, text):
+        return self._vectors.get(text, [0.0, 0.0, 0.0])
+
+    def embed_batch(self, texts):
+        return [self.embed(t) for t in texts]
+
+
+class _RecogRepo:
+    """Minimal ontology repo exposing the two classes recognition scopes against."""
+
+    def list_concept_schemes(self, taxonomy_id, limit=None):
+        return [type("S", (), {"id": "scheme-1"})()]
+
+    def list_classes(self, concept_scheme_id, limit=None):
+        from domain.ontology.entities import Class
+        from domain.ontology.value_objects import ExternalReference
+
+        return [
+            Class(
+                id=TestRecognition.CLASS_SW, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                title="System Software",
+                external_references=[ExternalReference(source="dr", identifier="technology.systemsoftware", uri=None, metadata={})],
+            ),
+            Class(
+                id=TestRecognition.CLASS_DB, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                title="Data Object",
+                external_references=[ExternalReference(source="dr", identifier="application.dataobject", uri=None, metadata={})],
+            ),
+        ]

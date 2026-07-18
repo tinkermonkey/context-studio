@@ -18,7 +18,12 @@ from types import MappingProxyType
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
-from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
+from domain.ontology.ports import (
+    EmbeddingService,
+    IndividualVectorIndex,
+    OntologyRepository,
+    SchemaVectorIndex,
+)
 from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
@@ -185,6 +190,11 @@ class ExtractionService:
         similarity_threshold: float = 0.85,
         schema_index: SchemaVectorIndex | None = None,
         extraction_mode: str = "llm_two_pass",
+        individual_index: IndividualVectorIndex | None = None,
+        recog_threshold: float = 0.90,
+        recog_margin: float = 0.05,
+        recog_min_len: int = 4,
+        recog_acronym_threshold: float = 0.95,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -226,6 +236,15 @@ class ExtractionService:
         self._similarity_threshold = similarity_threshold
         self._schema_index = schema_index
         self._extraction_mode = extraction_mode
+        # Recognition (issue #1142). When individual_index is None, recognition is
+        # a no-op and behavior is unchanged. The thresholds are precision-first —
+        # a false merge corrupts the graph, a missed merge is a recoverable
+        # duplicate — so acceptance is conservative and biased toward "new node".
+        self._individual_index = individual_index
+        self._recog_threshold = recog_threshold
+        self._recog_margin = recog_margin
+        self._recog_min_len = recog_min_len
+        self._recog_acronym_threshold = recog_acronym_threshold
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -928,26 +947,98 @@ class ExtractionService:
 
     def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
         """
-        Recognition step — resolve extracted individuals to existing graph nodes.
+        Recognition step — resolve extracted individuals to existing graph nodes (#1142).
 
-        PLACEHOLDER (GitHub issue #1137). Individuals are instances of ontology
-        terms (PostgreSQL and SQLite are both instances of a "SQL datastore"
-        class). Extraction identifies individuals from text; *recognition* answers
-        "does this individual already exist?" and resolves each mention to an
-        existing graph individual when one is found — so the same real-world
-        entity is not re-created as duplicate nodes across documents, and its
-        canonical label comes from the resolved node rather than a heuristic.
+        Individuals are instances of ontology terms. Extraction identifies them
+        from text; *recognition* answers "does this individual already exist?" and
+        resolves each typed mention to an existing graph individual when one is
+        found — so the same real-world entity is not re-created as duplicate nodes
+        across documents, and its canonical label comes from the resolved node.
 
-        Kept as a distinct pipeline step from extraction (not folded into it) for
-        control: the resolution strategy can be tuned and observed independently.
+        For each distinct typed mention (subject of an ``is_a`` triple; its
+        grounded class taken from the triple's object), resolve against the
+        existing individuals of that class via `_resolve_mention` (exact-label,
+        then a conservative vector match). A resolution rewrites every triple that
+        references the mention as a subject/object individual — never a class — to
+        the resolved node's canonical title, and stamps ``id`` so apply reuses the
+        node instead of creating a duplicate. Resolution is precision-first: it
+        maps a mention to at most one existing node, never fuses two existing
+        nodes, and biases toward "new node" on any doubt.
 
-        Currently a no-op pass-through. The recognition POC (#1137) will resolve
-        individuals against existing ontology individuals via the
-        SchemaVectorIndex and, once it lands, supersede
-        `_canonicalize_individual_labels` — the interim Title-Case heuristic that
-        only exists to snap free-form labels to a ground-truth surface convention.
+        No-op when no individual index is wired (the caller passes
+        ``individual_index=None`` for the plain single-document path). Supersedes
+        `_canonicalize_individual_labels` for resolved mentions (those keep the
+        authoritative graph title); unresolved mentions still fall through to the
+        Title-Case heuristic.
         """
+        if self._individual_index is None:
+            return triples
+
+        by_alias, _ = self._class_index(ontology)
+
+        # Distinct typed mentions in first-appearance order -> grounded class id.
+        mention_class: dict[str, tuple[str, str | None]] = {}
+        for triple in triples:
+            if not self._is_typing_triple(triple):
+                continue
+            mention = str(triple.get("subject", {}).get("label", "")).strip()
+            if not mention or mention.lower() in mention_class:
+                continue
+            cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
+            mention_class[mention.lower()] = (mention, str(cls.id) if cls is not None else None)
+
+        resolution: dict[str, tuple[str, str]] = {}
+        for key, (mention, class_id) in mention_class.items():
+            resolved = self._resolve_mention(mention, class_id)
+            if resolved is not None:
+                resolution[key] = resolved
+        if not resolution:
+            return triples
+
+        for triple in triples:
+            for role in ("subject", "object"):
+                node = triple.get(role, {})
+                if node.get("kind") == "class":
+                    continue
+                resolved = resolution.get(str(node.get("label", "")).strip().lower())
+                if resolved is not None:
+                    node["id"], node["label"] = resolved[0], resolved[1]
         return triples
+
+    def _resolve_mention(self, mention: str, class_id: str | None) -> tuple[str, str] | None:
+        """
+        Resolve one extracted mention to an existing individual, or None (new node).
+
+        Exact-label match (case-insensitive title within the grounded class) always
+        wins. Otherwise a vector match is accepted only when it clears the
+        recognition threshold, beats the runner-up by the ambiguity margin, and —
+        for short/acronym mentions — clears a stricter bar. Returns
+        ``(individual_id, canonical_title)`` on resolution.
+        """
+        class_ids = [class_id] if class_id else []
+        embedding = self._embedding_service.embed(mention)
+        candidates = self._individual_index.search(
+            embedding, class_ids=class_ids, top_k=5, threshold=0.0
+        )
+        if not candidates:
+            return None
+
+        mention_lower = mention.strip().lower()
+        for candidate in candidates:
+            if candidate.title.strip().lower() == mention_lower:
+                return candidate.individual_id, candidate.title
+
+        top = candidates[0]
+        min_score = (
+            self._recog_acronym_threshold
+            if len(mention.strip()) < self._recog_min_len
+            else self._recog_threshold
+        )
+        if top.score < min_score:
+            return None
+        if len(candidates) > 1 and (top.score - candidates[1].score) < self._recog_margin:
+            return None
+        return top.individual_id, top.title
 
     def _canonicalize_individual_labels(self, triples: list[dict]) -> list[dict]:
         """
@@ -976,7 +1067,12 @@ class ExtractionService:
         for triple in triples:
             if not self._is_typing_triple(triple):
                 continue
-            label = str(triple.get("subject", {}).get("label", "")).strip()
+            subject = triple.get("subject", {})
+            # A recognition-resolved subject (id stamped) carries the authoritative
+            # graph title; the interim heuristic must not overwrite it.
+            if subject.get("id"):
+                continue
+            label = str(subject.get("label", "")).strip()
             if not label:
                 continue
             canonical_by_label.setdefault(
@@ -989,7 +1085,7 @@ class ExtractionService:
         for triple in triples:
             for role in ("subject", "object"):
                 node = triple.get(role, {})
-                if node.get("kind") == "class":
+                if node.get("kind") == "class" or node.get("id"):
                     continue
                 canonical = canonical_by_label.get(
                     str(node.get("label", "")).strip().lower()
