@@ -298,6 +298,19 @@ SCENARIO_ONTOLOGY.update(
     {scenario: OntologyContext.DR_SPEC for scenario in WAVE4_INFORMAL_SCENARIOS}
 )
 
+# Recognition episodes (issue #1142): multi-document episodes for measuring
+# cross-document entity recognition (dedup), fixtures under
+# tests/integration/fixtures/pipelines/individual_recognition/<episode>/ (ordered
+# doc_NN.json + expected_entities.json coreference gold). A distinct,
+# always-reported diagnostic group graded by its own recognition metrics
+# (dedup precision/recall/F1) — NOT part of INDIVIDUAL_EXTRACTION_SCENARIOS or
+# the strict/soft-F1 dev/holdout split, and never gates an extraction accept
+# decision. Recognition acceptance is precision-floored on these episodes.
+RECOGNITION_EPISODES: list[str] = [
+    "surface_variants",
+    "kubernetes_energy",
+]
+
 
 def ontology_context_for(scenario: str) -> OntologyContext:
     """

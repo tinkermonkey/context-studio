@@ -1,0 +1,10 @@
+[
+  {"entity_key": "kubernetes", "canonical_title": "Kubernetes", "class_ref": "technology.systemsoftware",
+   "mentions": [{"doc": "doc_01", "surface": "Kubernetes"}, {"doc": "doc_02", "surface": "kubernetes"}]},
+  {"entity_key": "nfpeak", "canonical_title": "Nf-PEAK", "class_ref": "application.applicationcomponent",
+   "mentions": [{"doc": "doc_01", "surface": "Nf-PEAK"}, {"doc": "doc_02", "surface": "Nf-PEAK"}]},
+  {"entity_key": "rapl", "canonical_title": "RAPL Counter", "class_ref": "technology.systemsoftware",
+   "mentions": [{"doc": "doc_01", "surface": "RAPL Counter"}, {"doc": "doc_02", "surface": "RAPL counters"}]},
+  {"entity_key": "dataobject", "canonical_title": "Data Object", "class_ref": "application.dataobject",
+   "mentions": [{"doc": "doc_01", "surface": "Data Object"}, {"doc": "doc_02", "surface": "data objects"}]}
+]

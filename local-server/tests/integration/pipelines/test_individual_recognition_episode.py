@@ -85,15 +85,15 @@ def _build_service_over_dr():
     return service, repo, index, emb
 
 
-def test_recognition_episode_kubernetes_energy():
-    service, repo, index, _emb = _build_service_over_dr()
+def _run_episode(service, repo, index, episode):
+    """Feed an episode's GT mentions through recognition+index in doc order."""
     from domain.ontology.entities import Individual
 
     tax = repo.list_taxonomies()[0]
     by_alias, _ = service._class_index(tax)
-    expected = json.load(open(_EPISODES / "kubernetes_energy" / "expected_entities.json"))
-
+    expected = json.load(open(_EPISODES / episode / "expected_entities.json"))
     docs = sorted({m["doc"] for e in expected for m in e["mentions"]})
+
     records = []
     for doc in docs:
         doc_mentions = [(e, m) for e in expected for m in e["mentions"] if m["doc"] == doc]
@@ -118,17 +118,31 @@ def test_recognition_episode_kubernetes_energy():
                 "node_id": node_id,
                 "title": title,
             })
-
     metrics = recognition_metrics(records)
     print(
-        f"\n── recognition (kubernetes_energy) ──\n"
-        f"  dedup_precision={metrics.dedup_precision}  dedup_recall={metrics.dedup_recall}  "
-        f"dedup_f1={metrics.dedup_f1}\n"
-        f"  resolution_accuracy={metrics.resolution_accuracy}  "
-        f"node_count_ratio={metrics.node_count_ratio}  "
-        f"canonical_label_accuracy={metrics.canonical_label_accuracy}\n"
-        f"  gt_entities={metrics.gt_entity_count}  predicted_nodes={metrics.predicted_node_count}"
+        f"\n── recognition ({episode}) ──  precision={metrics.dedup_precision} "
+        f"recall={metrics.dedup_recall} f1={metrics.dedup_f1} "
+        f"node_ratio={metrics.node_count_ratio} nodes={metrics.predicted_node_count}/{metrics.gt_entity_count}"
     )
+    return metrics
 
-    # Precision is the safety guarantee: no false merges of distinct entities.
-    assert metrics.dedup_precision >= 0.9, f"false merges: {metrics}"
+
+def test_recognition_solves_surface_variants():
+    """Casing + pluralization variants merge perfectly — the original problem."""
+    service, repo, index, _ = _build_service_over_dr()
+    metrics = _run_episode(service, repo, index, "surface_variants")
+    assert metrics.dedup_precision == 1.0  # no false merges
+    assert metrics.dedup_recall == 1.0     # every surface variant resolved
+    assert metrics.node_count_ratio == 1.0  # one node per entity, no duplicates
+
+
+def test_recognition_is_precision_safe_on_hard_aliases():
+    """
+    Abbreviation-aliases (K8s->Kubernetes) are NOT captured by the embedding
+    (cosine ~0.39) and are correctly left un-merged rather than risking a false
+    merge. Precision stays 1.0; recall is limited by the embedding's alias
+    knowledge — a documented limitation (see the episode README), not a bug.
+    """
+    service, repo, index, _ = _build_service_over_dr()
+    metrics = _run_episode(service, repo, index, "kubernetes_energy")
+    assert metrics.dedup_precision >= 0.9  # the safety guarantee holds

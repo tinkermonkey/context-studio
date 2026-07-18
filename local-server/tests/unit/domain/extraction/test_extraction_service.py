@@ -800,6 +800,18 @@ class TestRecognition:
         service._recognize_individuals(triples, _Ontology())
         assert triples[0]["subject"]["id"] is None
 
+    def test_empty_graph_is_a_no_op(self):
+        # The scored tournament situation: an index is wired but the graph has no
+        # prior individuals, so recognition resolves nothing and rewrites nothing
+        # -> output identical to recognition off (non-regression guarantee).
+        from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
+
+        service = self._service(FakeIndividualVectorIndex(self._VEC))  # empty index
+        triples = [self._typing_triple("K8s")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["label"] == "K8s"
+        assert triples[0]["subject"]["id"] is None
+
     def test_resolution_rewrites_relationship_object_references_too(self):
         service = self._service(self._index_with_kubernetes())
         triples = [
