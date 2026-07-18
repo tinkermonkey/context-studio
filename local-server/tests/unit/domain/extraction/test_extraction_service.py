@@ -580,3 +580,119 @@ class TestExtractionServiceErrorHandling:
         assert isinstance(result, ExtractionResult)
         # Some layers may have failed, but the result is still valid
         assert result.total_duration_ms >= 0
+
+
+class TestNlpGroundedTyping:
+    """
+    The retained NLP-grounded typing component (issue #1141): spaCy noun chunks
+    -> vector retrieval -> LLM confirmation. Not the baseline pipeline (retrieval
+    underperforms LLM typing on generic-class ontologies), but kept as a
+    component, so its core invariants are locked.
+    """
+
+    def _service(self, *, schema_index, llm=None):
+        from domain.extraction.services import ExtractionService
+
+        return ExtractionService(
+            ontology_repo=_RepoWithClass(),
+            embedding_service=FakeEmbeddingService(),
+            llm=llm or _ConfirmingLLM("technology.systemsoftware"),
+            nlp=_OneChunkNLP("Kubernetes"),
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+            schema_index=schema_index,
+            extraction_mode="nlp_grounded",
+        )
+
+    def test_degrades_to_no_typing_without_a_schema_index(self):
+        service = self._service(schema_index=None)
+        triples, tokens = service._type_individuals_nlp_grounded(
+            "Kubernetes runs pods.", object(), "onto", "m", 0.0
+        )
+        assert triples == [] and tokens == 0
+
+    def test_confirmed_match_becomes_an_is_a_triple_typed_to_the_matched_class(self):
+        service = self._service(schema_index=_OneMatchIndex())
+        triples, _ = service._type_individuals_nlp_grounded(
+            "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
+        )
+        assert len(triples) == 1
+        t = triples[0]
+        assert t["subject"]["label"] == "Kubernetes"
+        assert t["predicate"]["label"] == "is_a"
+        assert t["object"]["kind"] == "class"
+        assert t["object"]["label"] == "technology.systemsoftware"
+
+    def test_llm_declining_all_candidates_yields_no_triple(self):
+        service = self._service(schema_index=_OneMatchIndex(), llm=_ConfirmingLLM("none"))
+        triples, _ = service._type_individuals_nlp_grounded(
+            "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
+        )
+        assert triples == []
+
+
+class _Ontology:
+    id = "onto-1"
+    title = "Test Ontology"
+
+
+class _OneChunkNLP:
+    """process_open with a single NOUN-headed noun chunk."""
+
+    def __init__(self, chunk_text):
+        self._chunk_text = chunk_text
+
+    def process_open(self, text):
+        from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
+
+        tok = OpenToken(
+            index=0, text=self._chunk_text, lemma=self._chunk_text.lower(), pos="PROPN",
+            tag="NNP", dep="nsubj", head_index=0, start=0, end=len(self._chunk_text),
+            sentence_index=0, is_stop=False, is_alpha=True,
+        )
+        chunk = NounChunkSpan(
+            text=self._chunk_text, start_token=0, end_token=1, root_index=0,
+            start=0, end=len(self._chunk_text), sentence_index=0,
+        )
+        return OpenExtractionResult(
+            tokens=(tok,), noun_chunks=(chunk,), sentence_count=1, language="en",
+        )
+
+
+class _OneMatchIndex:
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+        from domain.ontology.ports import SchemaMatch
+
+        return [
+            SchemaMatch(
+                entity_id="cls-1", kind="class", label="System Software", score=0.5,
+                matched_field="definition", external_id="technology.systemsoftware",
+            )
+        ]
+
+
+class _RepoWithClass:
+    def get_class(self, class_id):
+        from domain.ontology.entities import Class
+
+        return Class(
+            id=class_id, concept_scheme_id="cs", taxonomy_id="onto-1",
+            title="System Software", identifier="systemsoftware",
+            description="Software that provides a runtime environment.",
+        )
+
+
+class _ConfirmingLLM:
+    def __init__(self, choice):
+        self._choice = choice
+
+    def complete(self, system_prompt, user_prompt, model, **kwargs):
+        from domain.pipelines.ports import LLMResponse
+        import json as _json
+
+        return LLMResponse(
+            content=_json.dumps({"class": self._choice}), model=model,
+            tokens_in=5, tokens_out=5, duration_ms=1.0, finish_reason="stop",
+        )

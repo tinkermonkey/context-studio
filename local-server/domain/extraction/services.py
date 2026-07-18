@@ -18,7 +18,7 @@ from types import MappingProxyType
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
-from domain.ontology.ports import EmbeddingService, OntologyRepository
+from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
 from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
@@ -52,6 +52,15 @@ _MAX_CATALOG_CLASSES = 300
 # clamps to stays a bounded fraction of the prompt for large taxonomies; the
 # imported DR spec defines ~66 distinct canonical predicates, comfortably under it.
 _MAX_VOCABULARY_PREDICATES = 200
+
+# NLP-grounded typing (issue #1141): how many candidate classes the vector index
+# retrieves per extracted noun chunk for the LLM to confirm, and the minimum
+# similarity a candidate must clear to be offered at all. Top-K is deliberately
+# generous (the LLM does the final disambiguation); the threshold only prunes
+# obvious non-matches so a bare/generic noun chunk with no real class fit yields
+# no candidates and is dropped rather than sent to the LLM.
+_NLP_TYPING_TOP_K = 8
+_NLP_TYPING_THRESHOLD = 0.2
 
 # Predicate labels (post-normalization) that mark a triple as an rdf:type/is_a
 # typing assertion whose object must be an ontology class reference.
@@ -174,6 +183,8 @@ class ExtractionService:
         extraction_repo: ExtractionRepository,
         extraction_run_repo: ExtractionRunRepository,
         similarity_threshold: float = 0.85,
+        schema_index: SchemaVectorIndex | None = None,
+        extraction_mode: str = "llm_two_pass",
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -190,6 +201,15 @@ class ExtractionService:
             similarity_threshold: Threshold for entity label similarity matching (0.0–1.0).
                 Defaults to 0.85. Entities with normalized label similarity >= this value
                 are considered duplicates.
+            schema_index: Optional vector index over ontology class/predicate
+                titles + definitions. Required by the ``nlp_grounded`` extraction
+                mode (used to retrieve candidate classes for extracted noun
+                chunks); unused by ``llm_two_pass``.
+            extraction_mode: Which triple-extraction pipeline ``extract_triples``
+                runs — ``"llm_two_pass"`` (the LLM identifies+types then relates)
+                or ``"nlp_grounded"`` (spaCy extracts noun chunks, the vector
+                index retrieves candidate classes, and the LLM only confirms the
+                best fit — see issue #1141). Defaults to ``"llm_two_pass"``.
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
@@ -204,6 +224,8 @@ class ExtractionService:
         self._extraction_repo = extraction_repo
         self._extraction_run_repo = extraction_run_repo
         self._similarity_threshold = similarity_threshold
+        self._schema_index = schema_index
+        self._extraction_mode = extraction_mode
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -506,12 +528,17 @@ class ExtractionService:
                 # Two-pass extraction (karpathy_loop_design.md §7): pass 1 grounds
                 # individuals to ontology classes, pass 2 derives relationships from
                 # the closed set of predicates the ontology permits between those
-                # classes. Splitting the work lets each call focus on one job and
-                # clamps predicates to the ontology vocabulary instead of inventing
-                # free-form verbs.
-                extracted_triples, tokens_used = self._extract_triples_two_pass(
-                    text, ontology, ontology_id, model, temperature
-                )
+                # classes. The nlp_grounded mode (issue #1141) replaces pass 1's
+                # LLM typing with spaCy noun-chunk extraction + vector retrieval +
+                # LLM confirmation, then reuses the same relationship derivation.
+                if self._extraction_mode == "nlp_grounded":
+                    extracted_triples, tokens_used = self._extract_triples_nlp_grounded(
+                        text, ontology, ontology_id, model, temperature
+                    )
+                else:
+                    extracted_triples, tokens_used = self._extract_triples_two_pass(
+                        text, ontology, ontology_id, model, temperature
+                    )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
 
@@ -660,40 +687,244 @@ class ExtractionService:
         )
 
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples: list[dict] = []
-        if len(individuals) >= 2:
-            relationship_system, relationship_user = self._build_relationship_extraction_prompt(
-                text, ontology, individuals
-            )
-            relationship_response = self._llm.complete(
-                system_prompt=relationship_system,
-                user_prompt=relationship_user,
-                model=model,
-                temperature=temperature,
-                max_tokens=8000,
-                response_format="json",
-            )
-            tokens_used += relationship_response.tokens_in + relationship_response.tokens_out
-            relationship_triples = self._parse_triple_extraction_response(
-                relationship_response.content, text, ontology_id
-            )
-            # Pass 2 is asked for relationships only; drop any typing triple it
-            # re-emits so the individual pass stays the single source of typing.
-            relationship_triples = [
-                triple
-                for triple in relationship_triples
-                if not self._is_typing_triple(triple)
-            ]
-
-        combined = individual_triples + relationship_triples
-        # Recognition step (distinct from extraction, by design). Extraction
-        # identifies individuals from text; recognition resolves each to an
-        # already-existing graph individual when one exists. Currently a no-op
-        # placeholder — see the interim label-canonicalization heuristic below,
-        # which real recognition will supersede.
-        combined = self._recognize_individuals(combined, ontology)
-        combined = self._canonicalize_individual_labels(combined)
+        relationship_triples, rel_tokens = self._derive_relationships(
+            text, ontology, individuals, ontology_id, model, temperature
+        )
+        tokens_used += rel_tokens
+        combined = self._post_process_triples(
+            individual_triples + relationship_triples, ontology
+        )
         return combined, tokens_used
+
+    def _derive_relationships(
+        self, text, ontology, individuals, ontology_id, model, temperature
+    ) -> tuple[list[dict], int]:
+        """
+        Derive relationships over already-identified individuals (shared pass 2).
+
+        Used by both extraction modes: the LLM is offered the identified
+        individuals and, per subject class, only the predicates the ontology
+        permits from that class (`_build_relationship_extraction_prompt`, which
+        clamps to domain/range). Any typing triple the model re-emits is dropped
+        so the identification pass stays the single source of typing. Skipped when
+        fewer than two individuals were identified. Returns (relationship triples,
+        tokens used).
+        """
+        if len(individuals) < 2:
+            return [], 0
+        relationship_system, relationship_user = self._build_relationship_extraction_prompt(
+            text, ontology, individuals
+        )
+        relationship_response = self._llm.complete(
+            system_prompt=relationship_system,
+            user_prompt=relationship_user,
+            model=model,
+            temperature=temperature,
+            max_tokens=8000,
+            response_format="json",
+        )
+        tokens = relationship_response.tokens_in + relationship_response.tokens_out
+        relationship_triples = self._parse_triple_extraction_response(
+            relationship_response.content, text, ontology_id
+        )
+        relationship_triples = [
+            triple for triple in relationship_triples if not self._is_typing_triple(triple)
+        ]
+        return relationship_triples, tokens
+
+    def _post_process_triples(self, triples: list[dict], ontology) -> list[dict]:
+        """Recognition step + interim label canonicalization, shared by both modes."""
+        triples = self._recognize_individuals(triples, ontology)
+        triples = self._canonicalize_individual_labels(triples)
+        return triples
+
+    def _extract_triples_nlp_grounded(
+        self, text: str, ontology, ontology_id: str, model: str, temperature: float
+    ) -> tuple[list[dict], int]:
+        """
+        NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
+
+        Phase 1 (typing) replaces the LLM identification pass: spaCy extracts
+        noun chunks, the vector index retrieves candidate classes for each, and
+        the LLM only *confirms* the best-fitting class (or none) in the chunk's
+        sentence context (`_type_individuals_nlp_grounded`). The label comes from
+        the text and the type from the matched ontology node, so nothing is
+        LLM-generated. The relationship pass (`_derive_relationships`) is reused
+        unchanged for now.
+
+        NOT the baseline (`extract_triples` defaults to ``llm_two_pass``).
+        Retained as a pipeline component. A de-risking smoke (issue #1141) found
+        retrieval-for-typing regresses on this ontology: the DR classes' generic
+        ArchiMate definitions do not embed near specific instance names (e.g.
+        "Nextflow" -> application.applicationcomponent ranks ~32/186), so the
+        right class is routinely outside any usable top-K and the LLM-confirm step
+        cannot recover it — whereas the LLM's world knowledge types it correctly.
+        Vector retrieval is the right tool for RECOGNITION (matching an extracted
+        individual to an EXISTING specific individual — a specific-to-specific
+        match) rather than typing (specific instance -> generic class). See
+        `_recognize_individuals` (#1137).
+        """
+        individual_triples, tokens_used = self._type_individuals_nlp_grounded(
+            text, ontology, ontology_id, model, temperature
+        )
+        individual_triples = self._canonicalize_triples_against_ontology(
+            individual_triples, ontology
+        )
+        individuals = self._identified_individuals(individual_triples)
+        relationship_triples, rel_tokens = self._derive_relationships(
+            text, ontology, individuals, ontology_id, model, temperature
+        )
+        tokens_used += rel_tokens
+        combined = self._post_process_triples(
+            individual_triples + relationship_triples, ontology
+        )
+        return combined, tokens_used
+
+    def _type_individuals_nlp_grounded(
+        self, text: str, ontology, ontology_id: str, model: str, temperature: float
+    ) -> tuple[list[dict], int]:
+        """
+        Phase-1 typing via spaCy noun chunks + vector retrieval + LLM confirmation (#1141).
+
+        For each noun chunk spaCy finds (headed by a NOUN/PROPN, non-stopword),
+        the chunk plus its sentence is embedded and the vector index retrieves the
+        top-K candidate ontology classes; the LLM then confirms which candidate
+        the chunk instantiates in that sentence, or none. A confirmed chunk
+        becomes an ``is_a`` typing triple whose subject label is the chunk text
+        and whose object is the matched class's external id — the label comes from
+        the text and the type from the ontology, so nothing is LLM-generated.
+        Requires a schema index; without one this mode can't retrieve and yields
+        no typing.
+        """
+        if self._schema_index is None:
+            return [], 0
+
+        result = self._nlp.process_open(text)
+        tokens = list(result.tokens)
+        sentences = self._sentence_texts(text, tokens)
+        taxonomy_id = str(getattr(ontology, "id", "") or "") or None
+
+        triples: list[dict] = []
+        tokens_used = 0
+        seen: set[str] = set()
+        for chunk in result.noun_chunks:
+            root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
+            if root is None or root.pos not in ("NOUN", "PROPN") or root.is_stop:
+                continue
+            label = chunk.text.strip()
+            if not label or label.lower() in seen:
+                continue
+
+            sentence = sentences.get(chunk.sentence_index, "")
+            query = f"{label}. {sentence}".strip() if sentence else label
+            embedding = self._embedding_service.embed(query)
+            matches = self._schema_index.search(
+                embedding,
+                kinds=["class"],
+                top_k=_NLP_TYPING_TOP_K,
+                threshold=_NLP_TYPING_THRESHOLD,
+                taxonomy_id=taxonomy_id,
+            )
+            if not matches:
+                continue
+
+            chosen, call_tokens = self._confirm_class_for_chunk(
+                label, sentence, matches, model, temperature
+            )
+            tokens_used += call_tokens
+            if chosen is None:
+                continue
+            seen.add(label.lower())
+            triples.append(self._make_typing_triple(label, chosen, chunk))
+        return triples, tokens_used
+
+    @staticmethod
+    def _sentence_texts(text: str, tokens: list) -> dict[int, str]:
+        """Reconstruct each sentence's text (by ``sentence_index``) from token char spans."""
+        bounds: dict[int, tuple[int, int]] = {}
+        for tok in tokens:
+            start, end = bounds.get(tok.sentence_index, (tok.start, tok.end))
+            bounds[tok.sentence_index] = (min(start, tok.start), max(end, tok.end))
+        return {idx: text[start:end] for idx, (start, end) in bounds.items()}
+
+    def _confirm_class_for_chunk(
+        self, label: str, sentence: str, matches, model: str, temperature: float
+    ):
+        """
+        Ask the LLM which retrieved candidate class the noun chunk instantiates.
+
+        The LLM's only job is disambiguation-in-context: it picks the best-fitting
+        candidate (by its exact ontology reference) or "none" — it never invents a
+        class. Returns ``(chosen SchemaMatch | None, tokens_used)``.
+        """
+        candidates: list[tuple[str, Any]] = []
+        lines: list[str] = []
+        for match in matches:
+            ref = match.external_id or match.label
+            if not ref:
+                continue
+            cls = self._ontology_repo.get_class(match.entity_id)
+            definition = (getattr(cls, "description", None) or "").strip() if cls else ""
+            title = match.label or ref
+            candidates.append((ref, match))
+            lines.append(f"- {ref} ({title})" + (f": {definition}" if definition else ""))
+        if not candidates:
+            return None, 0
+
+        system_prompt = (
+            "You are a knowledge-graph typing assistant. Given a phrase from a "
+            "text, its sentence, and a list of candidate ontology classes, decide "
+            "which single class the phrase is an INSTANCE of in that sentence. "
+            'Choose the exact reference of the best-fitting candidate, or "none" '
+            "if the phrase is not an instance of any of them. Do not invent "
+            'classes. Respond with only JSON: {"class": "<exact reference or none>"}.'
+        )
+        user_prompt = (
+            f'Phrase: "{label}"\n'
+            f'Sentence: "{sentence}"\n\n'
+            "Candidate classes (reference (title): definition):\n"
+            + "\n".join(lines)
+        )
+        response = self._llm.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=200,
+            response_format="json",
+        )
+        tokens = response.tokens_in + response.tokens_out
+
+        choice = ""
+        payload = re.search(r"\{.*\}", response.content or "", re.S)
+        if payload:
+            try:
+                choice = str(json.loads(payload.group(0)).get("class", "")).strip()
+            except (ValueError, TypeError):
+                choice = ""
+        if not choice or choice.lower() == "none":
+            return None, tokens
+        choice_lower = choice.lower()
+        for ref, match in candidates:
+            if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
+                return match, tokens
+        return None, tokens
+
+    @staticmethod
+    def _make_typing_triple(label: str, match, chunk) -> dict:
+        """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk."""
+        class_ref = match.external_id or match.label
+        return {
+            "subject": {"kind": "individual", "id": None, "label": label, "class_id": match.entity_id},
+            "predicate": {"property_definition_id": None, "label": "is_a"},
+            "object": {"kind": "class", "id": match.entity_id, "label": class_ref},
+            "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 2),
+            "provenance": {
+                "text_offset_start": chunk.start,
+                "text_offset_end": chunk.end,
+                "raw": chunk.text,
+            },
+        }
 
     def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
         """
