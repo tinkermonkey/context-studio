@@ -488,8 +488,9 @@ class TestQualityIndividualExtraction:
 
         apply_service = IndividualExtractionApplyService(ontology_repo)
 
-        # Use a simple fixture for round-trip testing
-        fixture_input = load_fixture("individual_extraction", "async_patterns")
+        # Use a simple (grounded) fixture for round-trip testing — the
+        # FakeLLMProvider returns a canned response, so any input text works.
+        fixture_input = load_fixture("individual_extraction", "arxiv_kubernetes_energy_monitoring")
         run_id = str(uuid4())
 
         # First execution: run -> apply -> snapshot

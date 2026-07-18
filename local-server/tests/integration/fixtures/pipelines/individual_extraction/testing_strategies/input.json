@@ -1,6 +1,0 @@
-{
-  "text": "Testing ensures software correctness and quality. Unit tests verify individual components in isolation. Integration tests verify components work together. End-to-end tests validate full user workflows. Mocks simulate dependencies for unit testing. Stubs provide canned responses. Unit tests do NOT replace integration tests. Test-driven development writes tests before implementation. Code coverage measures how much code is tested. Regression tests prevent reintroduction of fixed bugs. Performance tests verify speed and scalability. Security tests identify vulnerabilities.",
-  "ontology_id": "test-ontology-123",
-  "model": "claude-opus-4-7",
-  "temperature": 0.0
-}
