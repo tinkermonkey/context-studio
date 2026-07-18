@@ -685,10 +685,38 @@ class ExtractionService:
                 if not self._is_typing_triple(triple)
             ]
 
-        combined = self._canonicalize_individual_labels(
-            individual_triples + relationship_triples
-        )
+        combined = individual_triples + relationship_triples
+        # Recognition step (distinct from extraction, by design). Extraction
+        # identifies individuals from text; recognition resolves each to an
+        # already-existing graph individual when one exists. Currently a no-op
+        # placeholder — see the interim label-canonicalization heuristic below,
+        # which real recognition will supersede.
+        combined = self._recognize_individuals(combined, ontology)
+        combined = self._canonicalize_individual_labels(combined)
         return combined, tokens_used
+
+    def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
+        """
+        Recognition step — resolve extracted individuals to existing graph nodes.
+
+        PLACEHOLDER (GitHub issue #1137). Individuals are instances of ontology
+        terms (PostgreSQL and SQLite are both instances of a "SQL datastore"
+        class). Extraction identifies individuals from text; *recognition* answers
+        "does this individual already exist?" and resolves each mention to an
+        existing graph individual when one is found — so the same real-world
+        entity is not re-created as duplicate nodes across documents, and its
+        canonical label comes from the resolved node rather than a heuristic.
+
+        Kept as a distinct pipeline step from extraction (not folded into it) for
+        control: the resolution strategy can be tuned and observed independently.
+
+        Currently a no-op pass-through. The recognition POC (#1137) will resolve
+        individuals against existing ontology individuals via the
+        SchemaVectorIndex and, once it lands, supersede
+        `_canonicalize_individual_labels` — the interim Title-Case heuristic that
+        only exists to snap free-form labels to a ground-truth surface convention.
+        """
+        return triples
 
     def _canonicalize_individual_labels(self, triples: list[dict]) -> list[dict]:
         """
@@ -800,6 +828,100 @@ class ExtractionService:
                 break
         return vocabulary
 
+    def _class_index(self, ontology) -> tuple[dict, dict]:
+        """
+        Index the ontology's classes by identifying alias and by id.
+
+        Returns ``(by_alias, by_id)``: ``by_alias`` maps every identifying form of
+        a class (external refs, machine identifier, title — lowercased) to the
+        class, so a pass-1 individual's grounded class label resolves to the class
+        entity; ``by_id`` maps class id to class, for walking the hierarchy.
+        """
+        by_alias: dict[str, Any] = {}
+        by_id: dict[str, Any] = {}
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            return by_alias, by_id
+        for scheme in self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(taxonomy_id), limit=None
+        ):
+            for cls in self._ontology_repo.list_classes(
+                concept_scheme_id=scheme.id, limit=None
+            ):
+                by_id[str(cls.id)] = cls
+                for alias in _class_reference_aliases(cls):
+                    by_alias.setdefault(alias.strip().lower(), cls)
+        return by_alias, by_id
+
+    def _class_ancestor_ids(self, cls, by_id: dict) -> set[str]:
+        """The class's own id plus every ancestor id (walking ``parent_class_id``)."""
+        ids: set[str] = set()
+        current = cls
+        while current is not None and str(current.id) not in ids:
+            ids.add(str(current.id))
+            parent_id = getattr(current, "parent_class_id", None)
+            current = by_id.get(str(parent_id)) if parent_id else None
+        return ids
+
+    def _predicate_options_by_class(
+        self, ontology, individuals: list[tuple[str, str]]
+    ) -> dict[str, list[tuple[str, str | None]]]:
+        """
+        Per-subject-class predicate options for the identified individuals (design doc §7).
+
+        The ontology is strongly typed: each property definition declares an
+        rdfs:domain (`domain_class_id`) and rdfs:range (`range_class_id`), so a
+        predicate is only valid FROM one class TO another. Rather than offer pass 2
+        the whole flat predicate vocabulary for every pair, this returns, for each
+        class present among the identified individuals, the predicates the ontology
+        permits from that class — honoring class hierarchy (a predicate whose
+        domain is an ancestor of the individual's class applies) — paired with each
+        predicate's target-class title as a range hint.
+
+        Returns an ordered ``{subject_class_title: [(predicate, range_title|None)]}``
+        mapping, or an empty dict when the ontology defines no domain-scoped
+        predicates for the present classes (the caller then falls back to the flat
+        vocabulary or free-form extraction).
+        """
+        by_alias, by_id = self._class_index(ontology)
+        if not by_id:
+            return {}
+
+        # Resolve each identified individual's grounded class label to a class,
+        # and precompute that class's ancestor-inclusive id set.
+        present: dict[str, Any] = {}
+        ancestors_of: dict[str, set[str]] = {}
+        for _label, class_label in individuals:
+            cls = by_alias.get(str(class_label).strip().lower()) if class_label else None
+            if cls is None:
+                continue
+            cid = str(cls.id)
+            present[cid] = cls
+            ancestors_of[cid] = self._class_ancestor_ids(cls, by_id)
+        if not present:
+            return {}
+
+        options: dict[str, list[tuple[str, str | None]]] = {}
+        for prop in self._ontology_repo.list_property_definitions(limit=None):
+            domain_id = getattr(prop, "domain_class_id", None)
+            if not domain_id:
+                continue
+            predicate = (prop.canonical_predicate or prop.title or "").strip()
+            if not predicate:
+                continue
+            range_id = getattr(prop, "range_class_id", None)
+            range_title = None
+            if range_id and str(range_id) in by_id:
+                range_title = by_id[str(range_id)].title
+            for cid, ancestor_ids in ancestors_of.items():
+                if str(domain_id) not in ancestor_ids:
+                    continue
+                title = present[cid].title or cid
+                bucket = options.setdefault(title, [])
+                if (predicate, range_title) not in bucket:
+                    bucket.append((predicate, range_title))
+        return options
+
     def _build_individual_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
         """
         Build the pass-1 prompt: identify and ground individuals only (design doc §7).
@@ -880,13 +1002,17 @@ Text:
         Build the pass-2 prompt: derive relationships over the identified individuals.
 
         Given the individuals pass 1 grounded (label + class), the prompt asks the
-        LLM to state the relationships the text asserts between them. It offers the
-        finite predicate vocabulary the ontology defines
-        (`_ontology_predicate_vocabulary`) and instructs the model to choose the
-        predicate ONLY from that closed set — directly attacking predicate drift.
-        When the ontology declares no predicates the closed-set instruction is
-        replaced with a free-form short-verb-phrase instruction so relationships
-        are still derived.
+        LLM to state the relationships the text asserts between them, with the
+        predicate clamped to what the ontology permits. Preferred clamp: the
+        per-subject-class options scoped by the ontology's rdfs:domain/rdfs:range
+        (`_predicate_options_by_class`) — for each individual's class the model is
+        offered only the predicates the ontology defines FROM that class, each with
+        its target class as a range hint. This uses the ontology's strongly-typed
+        structure instead of a flat list, tightening the closed set per pair and
+        enforcing direction. Fallbacks preserve prior behavior: when no domain/range
+        is defined, the flat `_ontology_predicate_vocabulary` closed set; when the
+        ontology declares no predicates at all, a free-form short-verb-phrase
+        instruction so relationships are still derived.
 
         The object of a relationship may be a listed individual OR a new concept,
         quality, or outcome the text names as the relationship's target. Pass 1's
@@ -906,9 +1032,20 @@ Text:
         Returns:
             Tuple of (system_prompt, user_prompt)
         """
-        vocabulary = self._ontology_predicate_vocabulary(ontology)
+        # Prefer per-class predicate options scoped by the ontology's domain/range
+        # (the strongly-typed closed set the design intends); fall back to the flat
+        # global vocabulary, then to free-form, when the ontology lacks domain/range.
+        options = self._predicate_options_by_class(ontology, individuals)
+        vocabulary = [] if options else self._ontology_predicate_vocabulary(ontology)
 
-        if vocabulary:
+        if options:
+            predicate_instruction = (
+                "predicate.label MUST be one of the predicates listed below for the "
+                "SUBJECT individual's class — the ontology only permits those relations "
+                "from that class. If none of the subject class's predicates fits, omit "
+                "the relationship rather than inventing a predicate."
+            )
+        elif vocabulary:
             predicate_instruction = (
                 "predicate.label MUST be copied EXACTLY from the allowed predicates "
                 "listed in the prompt. If no allowed predicate fits a pair, omit "
@@ -954,7 +1091,29 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
             for label, class_label in individuals
         )
 
-        if vocabulary:
+        if options:
+            lines: list[str] = []
+            budget = _MAX_VOCABULARY_PREDICATES
+            for class_title, preds in options.items():
+                rendered: list[str] = []
+                for predicate, range_title in preds:
+                    if budget <= 0:
+                        break
+                    rendered.append(
+                        f"{predicate} (-> {range_title})" if range_title else predicate
+                    )
+                    budget -= 1
+                if rendered:
+                    lines.append(f"- From a {class_title}: " + ", ".join(rendered))
+                if budget <= 0:
+                    break
+            allowed = (
+                "\n\nAllowed relations by the SUBJECT individual's class (choose "
+                "predicate.label from the list matching the subject's class; the arrow "
+                "shows the predicate's expected target class as a hint):\n"
+                + "\n".join(lines)
+            )
+        elif vocabulary:
             predicate_block = "\n".join(f"- {predicate}" for predicate in vocabulary)
             allowed = (
                 "\n\nAllowed predicates (use the exact form as predicate.label):\n"
