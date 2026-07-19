@@ -10,7 +10,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
     LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS,
-    RELABELED_ARXIV_DEV_SCENARIOS,
+    RELABELED_ARXIV_SCENARIOS,
     RETIRED_ARXIV_SCENARIOS,
     SCENARIO_DISPOSITION,
     SCENARIO_ONTOLOGY,
@@ -53,6 +53,16 @@ class TestSplitFor:
         for scenario in INDIVIDUAL_EXTRACTION_SCENARIOS:
             assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
 
+    def test_relabeled_arxiv_scenarios_are_diagnostic_not_scored(self):
+        # The 3 relabeled arxiv scenarios were moved out of the scored split to a
+        # diagnostic group (external-prose difficulty, not GT error — see
+        # RELABELED_ARXIV_SCENARIOS's comment). They must not gate a decision, so
+        # they are excluded from the scored split and split_for() raises for them.
+        for scenario in RELABELED_ARXIV_SCENARIOS:
+            assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
+            with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
+                split_for(scenario)
+
 
 class TestOntologyContextFor:
     def test_legacy_scenario_ontology_contexts(self):
@@ -61,7 +71,7 @@ class TestOntologyContextFor:
         for scenario in LEGACY_INDIVIDUAL_EXTRACTION_SCENARIOS:
             expected = (
                 OntologyContext.DR_SPEC
-                if scenario in RELABELED_ARXIV_DEV_SCENARIOS
+                if scenario in RELABELED_ARXIV_SCENARIOS
                 else OntologyContext.PLACEHOLDER
             )
             assert ontology_context_for(scenario) == expected
@@ -97,11 +107,11 @@ class TestOntologyContextFor:
         assert len(legacy_ontology) == 18
         # 15 placeholder (10 software-arch + 5 retired arxiv), 3 DR_SPEC (relabeled).
         dr = {s for s, v in legacy_ontology.items() if v == OntologyContext.DR_SPEC}
-        assert dr == set(RELABELED_ARXIV_DEV_SCENARIOS)
+        assert dr == set(RELABELED_ARXIV_SCENARIOS)
         assert all(
             legacy_ontology[s] == OntologyContext.PLACEHOLDER
             for s in legacy_ontology
-            if s not in RELABELED_ARXIV_DEV_SCENARIOS
+            if s not in RELABELED_ARXIV_SCENARIOS
         )
 
 
@@ -205,11 +215,11 @@ class TestDispositionFor:
         retired = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RETIRED}
         relabeled = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RELABELED}
         assert retired == set(RETIRED_ARXIV_SCENARIOS)
-        assert relabeled == set(RELABELED_ARXIV_DEV_SCENARIOS)
+        assert relabeled == set(RELABELED_ARXIV_SCENARIOS)
         assert all(
             SCENARIO_DISPOSITION[s] == ScenarioDisposition.SEPARATE_CONTEXT
             for s in SCENARIO_DISPOSITION
-            if s not in RETIRED_ARXIV_SCENARIOS and s not in RELABELED_ARXIV_DEV_SCENARIOS
+            if s not in RETIRED_ARXIV_SCENARIOS and s not in RELABELED_ARXIV_SCENARIOS
         )
 
     def test_unmapped_scenario_raises(self):

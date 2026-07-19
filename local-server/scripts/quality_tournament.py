@@ -90,6 +90,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
+    RELABELED_ARXIV_SCENARIOS,
     WAVE4_INFORMAL_SCENARIOS,
     ontology_context_for,
     split_for,
@@ -192,6 +193,7 @@ _DEFAULT_REPLAY_SCENARIOS = (
     list(INDIVIDUAL_EXTRACTION_SCENARIOS)
     + list(DR_BOOTSTRAP_SCENARIOS)
     + list(WAVE4_INFORMAL_SCENARIOS)
+    + list(RELABELED_ARXIV_SCENARIOS)
 )
 
 RunScenario = Callable[[dict[str, Any], str], Awaitable[list[dict]]]
@@ -556,6 +558,30 @@ async def _build_wave4_reports(
     ]
 
 
+async def _build_arxiv_reports(
+    variant: Variant, config: dict[str, Any], embed_fn
+) -> list[ScenarioReport]:
+    """
+    Evaluate `variant` under `config` on the DR-relabeled arxiv scenarios.
+
+    A distinct, always-reported diagnostic group (see
+    `RELABELED_ARXIV_SCENARIOS` in `dataset_split.py`): real external paper
+    abstracts whose GT was retrofitted into idealized DR models, measuring a
+    harder task than this pipeline's grounded-identification job. Moved out of
+    `INDIVIDUAL_EXTRACTION_SCENARIOS` after a root-cause trace found the
+    candidate_missing bucket concentrated entirely here (SME-native scenarios
+    sit at ~1.0 candidate recall) while per-triple adjudication confirmed the GT
+    is sound. Recorded under the "arxiv" split -- the same mechanism
+    `_build_bootstrap_reports` / `_build_wave4_reports` use -- so it is reported
+    for visibility but never contaminates Loop C's target selection or the
+    accept gate.
+    """
+    return [
+        await _evaluate_scenario(variant, config, scenario, "arxiv", embed_fn)
+        for scenario in RELABELED_ARXIV_SCENARIOS
+    ]
+
+
 def _aggregate(reports: list[ScenarioReport], split: str) -> dict[str, float]:
     """Mean strict/soft F1 + Phase 1 diagnostics (§3.1) over one split's scenario reports."""
     subset = [r for r in reports if r.split == split]
@@ -631,6 +657,15 @@ async def _run_variant(
         print(f"   {r.scenario:<28} strict-F1={r.strict['f1']:.3f}  soft-F1={r.soft['f1']:.3f}")
     wave4_metrics = _aggregate(wave4_reports, "wave4")
 
+    print(
+        f"== arxiv diagnostics: '{variant.name}' (relabeled external abstracts -- "
+        "always reported, never gates accept/reject) =="
+    )
+    arxiv_reports = await _build_arxiv_reports(variant, best_config, embed_fn)
+    for r in arxiv_reports:
+        print(f"   {r.scenario:<28} strict-F1={r.strict['f1']:.3f}  soft-F1={r.soft['f1']:.3f}")
+    arxiv_metrics = _aggregate(arxiv_reports, "arxiv")
+
     tuned_knobs = {
         knob: best_config[knob]
         for knob in variant.knob_space
@@ -645,6 +680,7 @@ async def _run_variant(
         "holdout": _aggregate(scenario_reports, "holdout"),
         "bootstrap": bootstrap_metrics,
         "wave4": wave4_metrics,
+        "arxiv": arxiv_metrics,
         "error_report_json": str(json_path),
         "error_report_md": str(markdown_path),
     }
@@ -727,6 +763,30 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
     for result in results:
         wave4 = result["wave4"]
         lines.append(f"| {result['variant']} | {wave4['strict_f1']:.3f} | {wave4['soft_f1']:.3f} |")
+    lines.append("")
+
+    lines.append(
+        "## Relabeled-arxiv diagnostics (always reported, never gates accept/reject)"
+    )
+    lines.append("")
+    lines.append(
+        f"Difficulty check only over {len(RELABELED_ARXIV_SCENARIOS)} scenario(s) -- real "
+        "external paper abstracts whose GT was retrofitted into idealized DR models, so they "
+        "measure a harder task (dense external prose -> full DR model) than this pipeline's "
+        "grounded-identification job (see RELABELED_ARXIV_SCENARIOS in dataset_split.py). Moved "
+        "out of the scored split after a root-cause trace found candidate_missing concentrated "
+        "entirely here while SME-native scenarios sit at ~1.0 candidate recall. Excluded from "
+        "dev/holdout aggregation, Loop C's target selection, and the §6 accept gate."
+    )
+    lines.append("")
+    lines.append("| variant | arxiv strict-F1 | arxiv soft-F1 | arxiv candidate_recall |")
+    lines.append("|---|---|---|---|")
+    for result in results:
+        arxiv = result["arxiv"]
+        lines.append(
+            f"| {result['variant']} | {arxiv['strict_f1']:.3f} | {arxiv['soft_f1']:.3f} | "
+            f"{arxiv['candidate_recall']:.3f} |"
+        )
     lines.append("")
 
     return "\n".join(lines)
@@ -820,6 +880,20 @@ async def _amain(args) -> int:
             config_ref=result["variant"],
             config_version=1,
             metrics=result["wave4"],
+            mode="offline",
+            source="quality_tournament",
+        )
+        # Diagnostic-only: the DR-relabeled arxiv scenarios (moved out of the
+        # scored split — see RELABELED_ARXIV_SCENARIOS in dataset_split.py).
+        # Logged under its own fixture_id so nothing downstream reads an "arxiv"
+        # row as an input to meets_floor/improved_locally.
+        scoreboard_emitter.emit(
+            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
+            fixture_id="arxiv",
+            model=result["variant"],
+            config_ref=result["variant"],
+            config_version=1,
+            metrics=result["arxiv"],
             mode="offline",
             source="quality_tournament",
         )
