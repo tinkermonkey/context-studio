@@ -181,6 +181,92 @@ class EventPublisher(Protocol):
 
 ---
 
+### 2.4 SchemaVectorIndex
+
+**Purpose:** Semantic vector search over existing **schema** entities (classes, property definitions, relationships). Maintains the title/definition embeddings of schema entities (kept in sync on write) and searches them by a query embedding. Used by the extraction grounding flow to find which existing schema nodes and relation types an extracted phrase plausibly instantiates.
+
+**Defined in:** `domain/ontology/ports.py`
+
+**Contract:**
+
+```python
+@dataclass(frozen=True)
+class SchemaMatch:
+    entity_id: str
+    kind: SchemaKind                     # "class" | "property_definition" | "relationship"
+    label: str
+    score: float                         # 0.0-1.0
+    matched_field: MatchedField          # "title" | "definition"
+    external_id: str | None = None       # e.g. DR spec node id "motivation.goal"
+    predicate: str | None = None         # bare relation verb for property/relationship matches
+
+
+class SchemaVectorIndex(Protocol):
+    def index_entity(self, entity_id: str, title: str, description: str | None) -> None: ...
+    def search(
+        self,
+        query_embedding: list[float],
+        kinds: Sequence[SchemaKind],
+        top_k: int = 20,
+        threshold: float = 0.0,
+        taxonomy_id: str | None = None,
+    ) -> list[SchemaMatch]: ...
+```
+
+**Adapters:**
+
+| Adapter | Location | Notes |
+|---|---|---|
+| `SqliteSchemaVectorIndex` | `adapters/persistence/sqlite/schema_vector_index.py` | Brute-force numpy cosine over stored title/definition embeddings. `taxonomy_id` scoping lets multiple ontologies coexist without cross-contaminating grounding. |
+| `FakeSchemaVectorIndex` | `tests/fakes/` | Deterministic matches for domain unit tests. |
+
+**Current code this replaces:** New capability — no legacy equivalent.
+
+---
+
+### 2.5 IndividualVectorIndex
+
+**Purpose:** Semantic vector search over existing graph **individuals** (instances) — the recognition counterpart to `SchemaVectorIndex`. Where schema search matches a specific instance to a *generic* class and is deliberately generous, recognition matches a specific extracted mention to a *specific* existing individual and is deliberately conservative (a high threshold plus an ambiguity margin guard against false merges). Backs `ExtractionService._recognize_individuals`, which resolves an extracted mention to an existing node so apply reuses that node rather than creating a duplicate. The index is kept in sync by the `IndividualCreated`/`Updated`/`Deleted` events.
+
+**Defined in:** `domain/ontology/ports.py`
+
+**Contract:**
+
+```python
+@dataclass(frozen=True)
+class IndividualMatch:
+    individual_id: str
+    class_ids: list[str]                 # rdf:type memberships, for class-compatibility gating
+    title: str                           # canonical title recognition adopts on resolve
+    score: float                         # cosine 0.0-1.0
+
+
+class IndividualVectorIndex(Protocol):
+    def index_individual(self, individual_id: str, title: str, description: str | None) -> None: ...
+    def remove_individual(self, individual_id: str) -> None: ...
+    def reindex_all_individuals(self) -> int: ...
+    def search(
+        self,
+        query_embedding: list[float],
+        class_ids: Sequence[str],        # scope candidates to these classes; empty = unscoped
+        top_k: int = 5,
+        threshold: float = 0.0,
+    ) -> list[IndividualMatch]: ...
+```
+
+**Adapters:**
+
+| Adapter | Location | Notes |
+|---|---|---|
+| `SqliteIndividualVectorIndex` | `adapters/persistence/sqlite/individual_vector_index.py` | Class-scoped brute-force cosine over individual title embeddings. |
+| `FakeIndividualVectorIndex` | `tests/fakes/fake_individual_vector_index.py` | Deterministic matches for domain unit tests. |
+
+**Known limitation:** vector recognition resolves surface variants (casing/pluralization) but not abbreviation-aliases (e.g. `K8s`↔`Kubernetes`, embedding cosine ~0.39). Alias resolution is deferred to a future data-model alias registry (issue #1142).
+
+**Current code this replaces:** New capability — no legacy equivalent.
+
+---
+
 ## 3. Graph Analysis Context Ports
 
 ### 3.1 GraphEngine

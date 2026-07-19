@@ -140,7 +140,7 @@ class Individual:
 - `class_id` must reference an existing Class
 - An individual can instantiate only one primary class (additional typing via relationships)
 
-**Implementation note:** This entity does not exist in the current data model. It will be added when the system needs to distinguish between ontology concepts and concrete instances. The database migration for individuals can be deferred past the initial re-architecture.
+**Implementation note:** Individuals are now persisted — `OntologyRepository.save_individual`/`get_individual`/`list_individuals` are implemented (`adapters/persistence/sqlite/ontology_repo.py`) and the `default` individual-extraction pipeline creates them on apply. The recognition step (§3, Knowledge Extraction) and the `IndividualVectorIndex` port both operate over these persisted individuals. (The "(Future)" heading predates this and is retained for section stability.)
 
 ---
 
@@ -390,6 +390,10 @@ class ExtractionLayerResult:
     duration_ms: float
     metadata: Optional[dict] = None
 ```
+
+#### Individual recognition (resolution)
+
+The `default` individual-extraction pipeline includes a **recognition** step that resolves an extracted mention to an *existing* graph individual before apply, so a re-mention reuses the existing node instead of creating a duplicate. `ExtractionService._recognize_individuals` first attempts an exact-label match, then a conservative vector match (via the `IndividualVectorIndex` port — see `port_and_adapter_specs.md` §2.5) scoped to the mention's grounded class, gated by a high threshold, an ambiguity margin, and an acronym guard so it never fuses two distinct existing nodes. On a hit it rewrites the triple's label to the resolved node's canonical title and stamps its id. Recognition resolves surface variants (casing/pluralization) but not abbreviation-aliases (`K8s`↔`Kubernetes`); alias resolution is deferred to a future alias registry (issue #1142).
 
 ---
 

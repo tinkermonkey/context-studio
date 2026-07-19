@@ -1,6 +1,8 @@
 # Karpathy Loop — Automated Refinement of Individual Extraction
 
-**Status:** Proposed **Date:** 2026-07-05 **Scope:** `local-server/` individual-extraction pipelines (`default` LLM, `open_v1`, and hybrids) **Companion analysis:** `local-server/documentation/claudes_thoughts/individual_extraction_design_analysis.md`
+**Status:** Implemented (loop built and run; refinement paused at a clean baseline) **Date:** 2026-07-05 **Scope:** `local-server/` individual-extraction pipelines (`default` LLM, `open_v1`, and hybrids) **Companion analysis:** `local-server/documentation/claudes_thoughts/individual_extraction_design_analysis.md` **Outcome record:** `documentation/individual_extraction_refinement_learnings.md`
+
+> **Update (2026-07):** the loop has been built and run. The `default` pipeline described in §1/§7 as single-pass and scoring 0.0 is now a **grounded two-pass LLM pipeline** (class-catalog grounding → per-class-pair predicate clamp) scoring dev strict-F1 ≈ 0.66 on the grounded corpus, and the scored split is DR-grounded only (§3.3). §7 records which backlog hypotheses landed, were rejected, or remain open. §1 below is retained as the original problem statement.
 
 ## 1. Purpose
 
@@ -44,11 +46,13 @@ Format: JSON per run at `local-server/experiments/reports/<run_id>.json`; a shor
 
 ### 3.3 Dataset split
 
-The 10 hand-labeled scenarios are today both the tuning set and the eval set — the loop would overfit them.
+The scored split is **DR-grounded only** (see `karpathy_loop_dr_ontology_design.md`). The 10 legacy software-architecture-concept "placeholder" scenarios — which ran against a throwaway 3-class ontology and tested free-form concept extraction rather than grounded identification — were removed from scoring (recorded with a `SEPARATE_CONTEXT` disposition, no longer scored). They were the sole source of the surface-convention (casing/pluralization) "failures"; the consolidated learnings doc has the full account.
 
-- **Dev (7) / holdout (3)** split, fixed by name in the harness config. Loops optimize on dev; holdout is scored on every run but never used for selection.
+- **Dev (9) / holdout (2)** split of the DR-grounded scenarios, fixed by name in `dataset_split.py`. Loops optimize on dev; holdout is scored on every run but never used for selection. The grounded holdout is thin (2 scenarios) — advisory, not authoritative — until the corpus grows.
 
-- **Corpus growth:** promote the 8 unused arxiv `fixture_*.json` files into full scenarios (LLM-drafted GT, one human skim), assigned to dev/holdout to keep the split ratio. Target ≥ 18 scenarios across ≥ 2 domains before Loop C runs unattended. While in this directory, also resolve the stray `basic/` fixture dir (missing `distractors.json`/README, not one of the 10 counted scenarios) — either complete it into an 11th scenario or delete it so it isn't mistaken for a real one.
+- **Corpus growth:** grow and human-review the grounded (Wave 2/3 SME-authored) corpus so both the holdout veto and strict-F1 become statistically trustworthy. This supersedes the earlier plan to promote the arxiv `fixture_*.json` files as placeholder-ontology scenarios.
+
+- **Diagnostic groups (not scored):** recognition episodes (`RECOGNITION_EPISODES`, precision-floored dedup metrics), the Wave 1/4 bootstrap and informal groups, and the retired placeholder scenarios are all reported alongside the scored split but never gate an accept/reject decision.
 
 - **GT normalization:** lemma-normalize GT predicate labels at load time (`ensures`/`ensure` are the same fact). This is a measurement correction, not a relaxation — applied identically to strict and soft metrics.
 
@@ -146,7 +150,7 @@ An experiment is **accepted** iff both the symmetric improvement condition and t
 
   The gate is deliberately biased toward exactness: strict-driven acceptance tolerates a bounded soft dip, but soft-driven acceptance tolerates *no* strict regression. This reflects the product value — for a curated graph, a wrong edge or mislabeled node is a defect, whereas a slightly-less-complete-but-exact graph is preferable. (This replaced the earlier soft-F1-only improvement rule after `two_pass` improved strict-F1 +0.035 and label-accuracy +0.25 while dipping soft-F1 −0.033: a favorable exactness trade the old gate structurally could not accept.)
 
-- **No holdout collapse:** strict-F1(holdout) ≥ incumbent − 0.02. Holdout never *selects* winners; it only vetoes overfitting. Note: with only 3 holdout scenarios (today's split), a single scenario is ~33% of this score, so the veto is statistically noisy — it is not trustworthy enough to gate merges until the §3.3 corpus growth lands (≥ 18 scenarios). Before then, treat any holdout-triggered rejection or acceptance as advisory, not authoritative.
+- **No holdout collapse:** strict-F1(holdout) ≥ incumbent − 0.02. Holdout never *selects* winners; it only vetoes overfitting. Note: with only 2 grounded holdout scenarios (today's split), a single scenario is ~50% of this score, so the veto is statistically noisy — it is not trustworthy enough to gate merges until the §3.3 grounded-corpus growth lands. Before then, treat any holdout-triggered rejection or acceptance as advisory, not authoritative.
 
 - **Integrity:** the diff touches no files under the harness (`tests/integration/pipelines/_harness/`), no GT fixtures, no split definition, and no ledger history. Enforced mechanically by a path check on `git diff`, and reviewed by the verifier agent.
 
@@ -164,25 +168,37 @@ Additional guardrails:
 
 ## 7. Seeded hypothesis backlog
 
-Loop C starts from ranked hypotheses rather than a cold start (full rationale in the companion analysis):
+Loop C started from ranked hypotheses rather than a cold start (full rationale in the companion analysis). Status annotations below reflect what has since landed on `main`; the durable outcomes live in `individual_extraction_refinement_learnings.md`.
 
-- **Fix the live LLM path** (`default` pipeline scoring 0.0 — output-contract mismatch). Prerequisite, not an experiment.
+### Done
 
-- **RAG-proper prompting for **`default`**:** vector-match noun chunks against the ontology first; inject top-k matched classes + property definitions into the prompt; verify LLM-returned IDs against the ontology instead of trusting them.
+- **Fix the live LLM path** (`default` pipeline scoring 0.0 — output-contract mismatch). Prerequisite, resolved.
 
-- **Two-pass individual-then-relationship extraction for **`default`** (predicate-set clamping):** split extraction into (1) an individual-identification pass — LLM + vector-search individual lookup surfaces and grounds the individuals — and (2) a relationship pass that, given the now-known set of individuals and their grounded classes, offers the LLM only the *finite* set of predicates the ontology actually permits between those classes, and asks it to choose from that closed set (or emit nothing). The candidate predicate set for a fixed set of individuals is small and enumerable, so this is tractable for one constrained LLM call. Directly targets the predicate-drift failure mode observed in the auto-drafted arxiv GT (`develops` / `develops_alone` / `researches` — accurate but unnormalized, un-clamped predicates), which is precisely what Context Studio's fixed-predicate design exists to prevent. Same `default`-pipeline prerequisite as RAG-proper prompting (needs recorded `default` cassettes to be tournament-scorable).
+- **RAG-proper prompting for **`default`** — DONE.** Landed as **prompt-level class-catalog grounding + canonicalize-only**, *not* the originally-phrased "vector-match noun chunks then verify IDs" mechanic. The ontology class catalog is injected into the pass-1 prompt and the LLM types each individual; returned class refs are canonicalized against the ontology by matching any of a class's identifying forms (external refs, identifier, title) and are never dropped (silent-failure-safe). Vector retrieval turned out to be the right tool for *recognition* (see below), not for typing.
 
-- **Copular/appositive handling in **`open_v1`**:** "X is a Y" → type/attribute triples; appositions → aliases.
+- **Two-pass individual-then-relationship extraction for **`default`** (predicate-set clamping) — DONE (#1136).** Pass 1 identifies/types individuals; pass 2 derives relationships with the predicate **clamped per class-pair** using the ontology's `rdfs:domain`/`rdfs:range` (`domain_class_id`/`range_class_id`) + class hierarchy, offered as per-subject-class options. This crushed the predicate-drift failure mode (`develops`/`develops_alone`/`researches`) that Context Studio's fixed-predicate design exists to prevent.
 
-- **Gap-fill stage in **`open_v1`**:** emit noun chunks unconsumed by SVO triples as candidate individuals, grounded via the vector index (reuses `build_concept_candidates`, currently schema-only — this is the legacy POC's noun-coverage idea finally combined with relationship extraction).
+- **Type new relationship-objects — DONE (#1139).** Pass 2 may introduce a *new* concept/quality/outcome as the relationship OBJECT (subject stays a pass-1 individual, predicate stays clamped). This recovered abstract relationship targets — the true cause of the `candidate_missing` tail, which a root-cause trace pinned to object recall (~12%), not subject recall.
 
-- **Wider dependency capture:** `ccomp`/`xcomp`/`acomp`, passive `agent`, conjunct fan-out (one sentence → N triples).
+- **LLM label canonicalization for individuals — DONE.** Individual surface labels are canonicalized to the ontology vocabulary (interim Title-Case heuristic).
 
-- **LLM label canonicalization for individuals:** rule pipeline proposes triples; one cheap LLM call canonicalizes labels/predicates against the ontology vocabulary (analogous change moved schema extraction 0.37 → 0.47).
+### New capability
+
+- **Semantic entity recognition / dedup — landed (#1137, epic #1142).** A recognition step resolves an extracted mention to an *existing* graph individual so a re-mention reuses the node instead of duplicating it: new `IndividualVectorIndex` port + `IndividualMatch` (`domain/ontology/ports.py`) and `SqliteIndividualVectorIndex` adapter, consumed by `ExtractionService._recognize_individuals` (exact-label then conservative class-scoped vector match; threshold 0.90 + ambiguity margin + acronym guard; never fuses two existing nodes). Measured on the multi-document `individual_recognition` episode corpus (`RECOGNITION_EPISODES`, precision-floored, reported but not scored). Finding: recognition *solves* the casing/pluralization surface-variant problem (precision 1.0 / recall 1.0) but does **not** resolve abbreviation-aliases (`K8s`↔`Kubernetes`, cosine ~0.39) — a documented limitation for a future alias registry.
+
+### Rejected / not viable
+
+- **Mechanical noun-chunk surfacing (gap-fill, copular/appositive, coverage-completion) — REJECTED.** Surfacing spaCy noun-chunks unconsumed by SVO triples as grounded candidates was proven a dead end twice (dev soft-F1 ~halved) — it grounds arbitrary chunks to classes (noise). The real cause of missed coverage was relationship-OBJECT recall, fixed via pass-2 concept-objects above, not candidate surfacing. This retires the `open_v1` gap-fill, copular-handling, and wider-dependency-capture hypotheses, which are off the `default` incumbent pipeline anyway.
+
+- **Layer-scoped grounding (`grounding_layers`) for **`open_v1`** — REJECTED.** An `open_v1`-only knob, off the `default` incumbent pipeline; not worth carrying against the current incumbent.
+
+- **Definition-driven / retrieval-based TYPING — found NOT viable as baseline (#1141, #1138).** Generic ArchiMate class definitions don't embed near specific instance names (e.g. "Nextflow"→`applicationcomponent` ranks 32/186), so vector retrieval is the wrong tool for *typing*. Retained as a component behind an `extraction_mode` flag but not baseline; the right use of vector retrieval is *recognition* (above).
+
+### Still open
 
 - **Per-source confidence bands** (legacy-style calibrated ranges per extraction source) to make Brier meaningful and enable apply-time thresholding.
 
-- **Layer-scoped grounding for **`open_v1`**:** a `grounding_layers` config knob that restricts SchemaVectorIndex class matching to a configured subset of DR ontology layers (e.g. `["motivation","business","technology"]`) relevant to the source domain, so extracted entities are not pulled to spurious off-domain classes. Surfaced by the arxiv-relabel grounding probe: unrestricted grounding sent cloud-infra entities to `api.example` / `testing.testcoveragemodel` / `motivation.stakeholder`; restricting to motivation/business/technology recovered the correct `technology.node` / `technology.technologycollaboration` / `motivation.constraint` matches (e.g. "mobile device" → `technology.device` at 0.78). Complements the definition-driven-matching and two-pass ideas.
+- **Grow and human-review the grounded corpus** so the holdout veto and strict-F1 become statistically trustworthy (§3.3).
 
 ## 8. Artifacts and layout
 

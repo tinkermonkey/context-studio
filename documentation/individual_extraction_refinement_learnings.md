@@ -48,6 +48,19 @@ extraction** — spaCy is NOT on this path (it only drives `open_v1`):
   that recovered abstract relationship targets); subject stays a pass-1
   individual and the predicate stays clamped.
 
+- **Recognition (dedup) — resolve mentions to existing individuals.** Before
+  apply, `ExtractionService._recognize_individuals` resolves an extracted mention
+  to an *existing* graph individual (exact-label, then a conservative class-scoped
+  vector match via the new `IndividualVectorIndex` port — threshold 0.90 +
+  ambiguity margin + acronym guard, never fusing two existing nodes), rewriting
+  the triple's label to the resolved node's canonical title and stamping its id so
+  apply reuses the node. Landed under issues #1137/#1142. Measured on the
+  `individual_recognition` episode corpus (`RECOGNITION_EPISODES`, precision-floored
+  diagnostic group). **Finding:** recognition *solves* the surface-variant
+  (casing/pluralization) problem outright (precision 1.0 / recall 1.0) but does
+  **not** resolve abbreviation-aliases (`K8s`↔`Kubernetes`, cosine ~0.39) — a
+  limitation deferred to a future alias registry in the data model.
+
 Key property: exactness-first. Closing the predicate set crushed relation/
 predicate drift; opening the object side recovered coverage without reopening
 predicate drift.

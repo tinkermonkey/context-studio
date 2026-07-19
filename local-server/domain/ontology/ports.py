@@ -473,7 +473,8 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    # Individual operations (deferred — all raise NotImplementedError for now)
+    # Individual operations (implemented; see SQLiteOntologyRepository and, for
+    # recognition, IndividualVectorIndex).
     def get_individual(self, individual_id: str) -> Individual | None:
         """
         Retrieve an individual by ID.
@@ -483,9 +484,6 @@ class OntologyRepository(Protocol):
 
         Returns:
             The Individual if found, None otherwise
-
-        Note:
-            Currently not implemented — raises NotImplementedError
         """
         ...
 
@@ -505,9 +503,6 @@ class OntologyRepository(Protocol):
 
         Returns:
             List of Individual entities
-
-        Note:
-            Currently not implemented — raises NotImplementedError
         """
         ...
 
@@ -520,9 +515,6 @@ class OntologyRepository(Protocol):
 
         Returns:
             The persisted Individual entity
-
-        Note:
-            Currently not implemented — raises NotImplementedError
         """
         ...
 
@@ -535,9 +527,6 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the individual was deleted, False if it did not exist
-
-        Note:
-            Currently not implemented — raises NotImplementedError
         """
         ...
 
