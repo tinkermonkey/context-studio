@@ -2142,6 +2142,68 @@ class TestGetAndListOperations:
         assert len(all_props) == 3
 
 
+class TestIndividualIndexSync:
+    """The individual vector index is kept in sync on write (#1142)."""
+
+    def _service_with_index(self):
+        from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
+
+        index = FakeIndividualVectorIndex()
+        service = OntologyService(
+            repository=FakeOntologyRepository(),
+            embedding_service=FakeEmbeddingService(),
+            event_publisher=FakeEventPublisher(),
+            individual_index=index,
+        )
+        return service, index
+
+    def _make_class(self, service):
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        return service.create_class(concept_scheme_id=scheme.id, title="Dog")
+
+    def test_create_individual_indexes_it(self):
+        """create_individual registers the individual in the wired index."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+
+        individual = service.create_individual(cls.id, title="Fido")
+
+        assert individual.id in index._individuals
+        assert index._individuals[individual.id][0] == "Fido"
+
+    def test_update_individual_reindexes_new_title(self):
+        """update_individual re-indexes with the updated title."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+        individual = service.create_individual(cls.id, title="Fido")
+
+        service.update_individual(individual.id, title="Rex")
+
+        assert index._individuals[individual.id][0] == "Rex"
+
+    def test_index_sync_failure_does_not_fail_create(self):
+        """A failure in the index must not fail the already-persisted write."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+
+        def _boom(*_args, **_kwargs):
+            raise RuntimeError("index unavailable")
+
+        index.index_individual = _boom  # type: ignore[method-assign]
+
+        # Must not raise; the individual is still created and retrievable.
+        individual = service.create_individual(cls.id, title="Fido")
+        assert service.get_individual(individual.id).title == "Fido"
+
+    def test_no_index_wired_is_noop(self, service):
+        """With no index (default), create/update just work — no error."""
+        cls = self._make_class(service)
+        individual = service.create_individual(cls.id, title="Fido")
+        service.update_individual(individual.id, title="Rex")
+        assert service.get_individual(individual.id).title == "Rex"
+
+
 class TestCreateIndividual:
     """Tests for create_individual."""
 

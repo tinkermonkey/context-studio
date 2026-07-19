@@ -25,7 +25,7 @@ from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.ontology.entities import ConceptScheme, Taxonomy
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
@@ -193,6 +193,47 @@ class TestApplyEndpointHappyPath:
         run_id = _create_and_complete_individual_run(pipeline_repo)
         response = client.post(f"/api/pipelines/runs/{run_id}/apply")
         assert response.status_code == status.HTTP_200_OK
+
+    def test_apply_individual_extraction_populates_recognition_index(
+        self, client, pipeline_repo, ontology_repo
+    ):
+        """The apply route indexes newly created individuals for recognition (#1142)."""
+        from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
+
+        class_id = "cls-service"
+        ontology_repo.save_class(
+            Class(
+                id=class_id,
+                concept_scheme_id=SCHEME_ID,
+                taxonomy_id=TAXONOMY_ID,
+                title="Service",
+            )
+        )
+        index = FakeIndividualVectorIndex()
+        client.app.state.individual_vector_index = index
+
+        run_id = _create_and_complete_individual_run(
+            pipeline_repo,
+            triples=[
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "label": "Payments API",
+                        "class_ids": [class_id],
+                    },
+                    "predicate": {},
+                    "object": {},
+                    "confidence": 0.9,
+                }
+            ],
+        )
+
+        response = client.post(f"/api/pipelines/runs/{run_id}/apply")
+        assert response.status_code == status.HTTP_200_OK
+
+        # The created individual is now searchable in the recognition index.
+        indexed_titles = {title for title, _ in index._individuals.values()}
+        assert "Payments API" in indexed_titles
 
 
 # ---------------------------------------------------------------------------

@@ -53,7 +53,12 @@ from .exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from .ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
+from .ports import (
+    EmbeddingService,
+    IndividualVectorIndex,
+    OntologyRepository,
+    SchemaVectorIndex,
+)
 from .value_objects import DataPropertyValue, ExternalReference, Status
 
 _logger = logging.getLogger(__name__)
@@ -74,6 +79,7 @@ class OntologyService:
         embedding_service: EmbeddingService,
         event_publisher: EventPublisher,
         schema_index: SchemaVectorIndex | None = None,
+        individual_index: IndividualVectorIndex | None = None,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -84,11 +90,15 @@ class OntologyService:
             event_publisher: Port for publishing domain events
             schema_index: Optional vector index kept in sync on write so schema
                 nodes are immediately searchable. No-op when not provided.
+            individual_index: Optional vector index kept in sync on write so
+                individuals are recognizable across documents (#1142). No-op
+                when not provided.
         """
         self._repository = repository
         self._embedding_service = embedding_service
         self._event_publisher = event_publisher
         self._schema_index = schema_index
+        self._individual_index = individual_index
 
     def _sync_vector_index(self, entity_id: str, title: str, description: str | None) -> None:
         """
@@ -110,6 +120,31 @@ class OntologyService:
                 "Vector index sync failed for entity %s; entity saved but not "
                 "searchable until reindex.",
                 entity_id,
+                exc_info=True,
+            )
+
+    def _sync_individual_index(
+        self, individual_id: str, title: str, description: str | None
+    ) -> None:
+        """
+        Keep the individual vector index in sync after an individual write (#1142).
+
+        Best-effort secondary side-effect with the same contract as
+        `_sync_vector_index`: a failure here must NOT fail the already-persisted
+        create/update. The individual is saved but not recognizable across
+        documents until the next reindex. No delete handling is needed — the
+        embedding lives on the entity row, so `delete_individual` drops it with
+        the row.
+        """
+        if self._individual_index is None:
+            return
+        try:
+            self._individual_index.index_individual(individual_id, title, description)
+        except Exception:  # noqa: BLE001 - index sync must not fail the primary write
+            _logger.error(
+                "Individual index sync failed for %s; individual saved but not "
+                "recognizable until reindex.",
+                individual_id,
                 exc_info=True,
             )
 
@@ -2183,6 +2218,7 @@ class OntologyService:
             last_modified=now,
         )
         individual = self._repository.save_individual(individual)
+        self._sync_individual_index(individual_id, title, description)
 
         # Emit IndividualCreated event
         failures = self._event_publisher.publish(
@@ -2314,6 +2350,9 @@ class OntologyService:
         individual.last_modified = datetime.now(timezone.utc)
 
         individual = self._repository.save_individual(individual)
+        self._sync_individual_index(
+            individual_id, individual.title, individual.description
+        )
 
         # Emit IndividualUpdated event
         changed_fields = tuple(

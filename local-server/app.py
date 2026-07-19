@@ -49,6 +49,10 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
+from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.reference.cache import CachedReferenceSource
@@ -280,11 +284,35 @@ async def lifespan(app: FastAPI):
         schema_vector_index = SqliteSchemaVectorIndex(local_session_factory, embedding_service)
         logger.info("SchemaVectorIndex created")
 
+        individual_vector_index = SqliteIndividualVectorIndex(
+            local_session_factory, embedding_service
+        )
+        app.state.individual_vector_index = individual_vector_index
+        logger.info("IndividualVectorIndex created")
+
+        # One-time recognition backfill (#1142): individual embeddings persist on
+        # the entity row, so this fires only when unindexed individuals exist —
+        # pre-feature rows on the first boot after this ships, then never again.
+        # Skipped entirely on a fresh/empty database.
+        with local_session_factory() as session:
+            unindexed_individuals = (
+                session.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.node_type == "individual",
+                    OntologyEntity.is_indexed.is_(False),
+                )
+                .count()
+            )
+        if unindexed_individuals:
+            indexed = individual_vector_index.reindex_all_individuals()
+            logger.info("Individual recognition backfill: indexed %d individuals", indexed)
+
         ontology_service = OntologyService(
             repository=ontology_repo,
             embedding_service=embedding_service,
             event_publisher=event_publisher,
             schema_index=schema_vector_index,
+            individual_index=individual_vector_index,
         )
         logger.info("OntologyService created and wired with adapters")
 
@@ -306,6 +334,7 @@ async def lifespan(app: FastAPI):
             event_publisher=event_publisher,
             extraction_repo=extraction_repo,
             extraction_run_repo=extraction_run_repo,
+            individual_index=individual_vector_index,
         )
         logger.info("ExtractionService created and wired with adapters")
 

@@ -1047,6 +1047,25 @@ async def apply_pipeline_run(
             elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
                 svc = request.app.state.individual_extraction_apply_svc
                 apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                # Recognition sync (#1142): apply writes individuals directly via
+                # the repo (bypassing OntologyService), so index the newly created
+                # ones here. Best-effort — a failure must not fail the apply, and
+                # the startup backfill catches any that slip through. Targeted to
+                # created ids, so cost scales with the apply, not the whole graph.
+                _index = getattr(request.app.state, "individual_vector_index", None)
+                _repo = getattr(request.app.state, "ontology_repo", None)
+                if _index is not None and _repo is not None:
+                    for _iid in apply_result.created_individual_ids:
+                        try:
+                            _ind = _repo.get_individual(_iid)
+                            if _ind is not None:
+                                _index.index_individual(_ind.id, _ind.title, _ind.description)
+                        except Exception:  # noqa: BLE001 - index sync must not fail the apply
+                            _logger.error(
+                                "Individual index sync failed for %s post-apply",
+                                _iid,
+                                exc_info=True,
+                            )
 
             elif ptype == PipelineType.SCHEMA_NODE_GROUNDING:
                 if not node_id:
