@@ -140,6 +140,11 @@ priority:
 2. **The grounded `candidate_missing` tail (26).** With the benchmark clean this
    is now a genuine model/prompt problem (abstract-concept inference on grounded
    text), not a mechanical or measurement artifact.
-3. **Retire the orphaned placeholder fixtures/cassettes** (10 scenario dirs +
-   their `individual_extraction_default` cassettes) at some point — they are no
-   longer scored but still on disk.
+3. ~~**Retire the orphaned placeholder fixtures/cassettes**~~ — **DONE.** The
+   `individual_extraction_default` cassettes and the individual-extraction fixture
+   dirs for the 10 legacy software-arch scenarios were pruned in `3a6fadf7`; the
+   10 leftover non-`_default` `cassettes/individual_extraction/` cassettes that
+   prune missed are now removed too. The shared source text stays under
+   `fixtures/pipelines/schema_extraction/` (still live for the schema-extraction
+   pipeline), and the disposition record survives in `dataset_split.py` +
+   `LEGACY_CORPUS_DISPOSITION.md` (guarded by `test_harness_dataset_split.py`).
