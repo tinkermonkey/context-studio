@@ -6,6 +6,10 @@
 **Companion Document:** `architecture_design.md`
 **Approach:** Greenfield build. The legacy server (`legacy-server/`) is frozen as a functional reference. The new server (`local-server/`) is built clean.
 
+> **Status update (2026-07):** The greenfield build below is substantially complete — the six bounded contexts (Phases 0–4) are implemented on `local-server/`, with API/front-end integration (Phase 5) in progress. The plan here is retained as the build record; two areas have since evolved past their original sketch:
+> - **Knowledge Extraction (§4.2)** — individual extraction is no longer the "four-layer" flow sketched below. It is now a grounded **two-pass LLM pipeline** (`default`: ontology class-catalog grounding → per-class-pair predicate clamp → **semantic entity recognition**/dedup) plus a spaCy rule pipeline (`open_v1`), graded against the imported DR ontology and refined by the Karpathy loop. See `documentation/karpathy_loop_design.md`, `documentation/individual_extraction_refinement_learnings.md`, and `rearchitecture/domain_model_design.md` §3. The older layer-based `ExtractionService` methods are partly superseded and tracked for removal in issue #1140.
+> - **Semantic indexing** — the `SchemaVectorIndex` (schema retrieval) and `IndividualVectorIndex` (recognition) ports were added; see `port_and_adapter_specs.md` §2.4–2.5.
+
 ---
 
 ## Guiding Principles
@@ -270,11 +274,10 @@ Build each remaining bounded context in the same order: domain entities → port
 - `adapters/nlp/spacy_processor.py`
 - `adapters/reference/` (ConceptNet, DBpedia, Wikidata, schema.org)
 - `adapters/persistence/sqlite/reference_repo.py` and a data import script/command to populate `reference.db` with ConceptNet, DBpedia, and schema.org data (prerequisite for Layer 3 reference enrichment below)
-- Routes for text analysis and entity extraction, built in four layers in order:
-  - **Layer 0 — KG context lookup**: semantic search against `OntologyRepository` to retrieve existing graph context before calling an LLM
-  - **Layer 1 — LLM extraction**: depends on `adapters/llm/` (OpenAI/Anthropic providers); extract entities and relationships from text using an LLM with KG context injected
-  - **Layer 2 — NLP gap filling**: depends on `adapters/nlp/spacy_processor.py`; use spaCy NER and entity linking to fill gaps the LLM missed; requires task 0.7 (NLP model setup)
-  - **Layer 3 — Reference enrichment**: depends on `adapters/reference/` and `reference.db` (populated by the import script above); enrich extracted entities with ConceptNet, DBpedia, and schema.org data
+- Routes for text analysis and entity extraction. **The individual-extraction pipeline evolved past the original four-layer sketch** (Layer 0 KG-context lookup → Layer 1 LLM extraction → Layer 2 spaCy gap-filling → Layer 3 reference enrichment). Its landed form:
+  - **`default` (LLM) pipeline** — a grounded **two-pass** flow: pass 1 injects the ontology **class catalog** into the prompt (Layer 0's KG context, done in-prompt) and types each individual, canonicalizing returned class refs against the ontology; pass 2 derives relationships with the predicate **clamped per class-pair** by the ontology's domain/range; followed by **semantic recognition** (dedup against existing individuals via `IndividualVectorIndex`). Depends on `adapters/llm/`.
+  - **`open_v1` (rule) pipeline** — deterministic spaCy dependency-triple extraction via `adapters/nlp/spacy_processor.py`, grounded through the `SchemaVectorIndex`.
+  - The older layer-based `ExtractionService` methods (`extract`/`analyze_text`/`_execute_layer`) are partly superseded and tracked for removal (#1140). Reference enrichment (`adapters/reference/`, `reference.db`) remains available but is not on the individual-extraction path. The pipeline was refined via the Karpathy loop — see `documentation/karpathy_loop_design.md`.
 - Note: the `AdminService` startup health check reports `nlp_pipeline_ready: false` if the spaCy model from task 0.7 is not loaded, matching the `SystemHealth` entity's `nlp_pipeline_ready` field. The e2e test `test_nlp_pipeline_processes_real_text` is marked `@pytest.mark.nlp` and requires the full NLP environment.
 - Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
