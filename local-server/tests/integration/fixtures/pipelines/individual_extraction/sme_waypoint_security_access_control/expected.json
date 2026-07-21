@@ -153,25 +153,321 @@
         "confidence": 1.0
       },
       {
-        "_comment": "TODO(SME): add the relationship (non-is_a) triples the prose implies, using the README's spec-valid predicate palette. Delete this object."
+        "subject": {
+          "label": "Field Technician Actor",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "assigned-to",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Technician Role",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Field Technician Actor",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "accesses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Field Technician Actor",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "requires",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Technician Auth Config",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Role",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Role",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "authorizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "authorizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Read Job Operation",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Read Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "accesses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Read Job Operation",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrained-by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Access Condition",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Access Condition",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrains",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Job Access Condition",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "references",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Least Privilege Policy Rule",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "authorizes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Least Privilege Policy Rule",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "protects",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Least Privilege Policy Rule",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "uses",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Access Condition",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Least Privilege Policy Rule",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "composes",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Waypoint Access Policy",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Waypoint Access Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "aggregates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Least Privilege Policy Rule",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Waypoint Access Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "governs",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Waypoint Access Policy",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrains",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job View Permission",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Auth Config",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "authenticates",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Field Technician Actor",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Auth Config",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "protects",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Job Record",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Technician Auth Config",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "constrained-by",
+          "kind": "property"
+        },
+        "object": {
+          "label": "Waypoint Access Policy",
+          "kind": "individual"
+        },
+        "confidence": 1.0
       }
     ],
     "excluded": [
       {
-        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note'. Delete this object.",
         "subject": {
-          "label": "<Individual>",
+          "label": "Technician Role",
           "kind": "individual"
         },
         "predicate": {
-          "label": "<predicate>",
+          "label": "authorizes",
           "kind": "property"
         },
         "object": {
-          "label": "<Individual>",
+          "label": "Read Job Operation",
           "kind": "individual"
         },
-        "note": "<why the text contradicts this>"
+        "note": "The text has the Technician Role authorize the Job View Permission, and the Job View Permission authorize the Read Job Operation -- a two-hop chain. The role never authorizes the operation directly; collapsing role->permission->operation into a direct role->operation edge is wrong."
       }
     ]
   }

@@ -1,11 +1,11 @@
 # SME Fixture (Wave 5, SCAFFOLD): sme_waypoint_security_access_control
 
-> **STATUS: PROSE DRAFTED + `is_a` TRIPLES PREFILLED — RELATIONSHIP GT NOT YET
-> AUTHORED.** `input.json` holds candidate prose (review/edit); `expected.json`
-> has one `is_a` typing triple per named individual (review them) plus a TODO
-> placeholder where you add the relationship triples + the `excluded`
-> true-negative; `distractors.json` is still a TODO template. This scenario is
-> **not** in the scored split yet (see graduation at the bottom).
+> **STATUS: WORKED REFERENCE — GT COMPLETE.** All three files are fully
+> authored: `input.json` prose, `expected.json` (10 `is_a` + 20 relationship
+> triples, all spec-valid, + 1 `excluded` true-negative), `distractors.json`
+> (1 near-miss). Use this as the pattern for the other five. Still **not** in
+> the scored split — record its `default` cassette, then graduate it (below).
+> Review/adjudicate the GT as your own before graduating.
 
 **Intent:** Waypoint's access-control model: the actors, roles, and permissions governing which secure resources a field technician vs. dispatcher may act on, and the policies that constrain them.
 
