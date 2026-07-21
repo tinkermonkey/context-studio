@@ -182,7 +182,37 @@ WAVE3_SME_HOLDOUT_SCENARIOS: list[str] = [
 
 WAVE3_SME_SCENARIOS: list[str] = WAVE3_SME_DEV_SCENARIOS + WAVE3_SME_HOLDOUT_SCENARIOS
 
-# Scored corpus: SME-native DR-grounded scenarios ONLY (Wave 2/3 SME).
+# Wave 5 SME-authored coverage-growth scenarios (holdout thickening + the
+# uncovered `security` layer). Fixture dirs are SCAFFOLDED on disk with TODO
+# templates (input/expected/distractors + a README carrying the DR class +
+# relationship palette for the target layer); the SME authors the prose + GT.
+#
+# STAGING: every Wave 5 scenario starts in WAVE5_PENDING_SCENARIOS — scaffolded
+# but NOT scored (no GT, no cassette), so it never enters INDIVIDUAL_EXTRACTION_
+# SCENARIOS, SCENARIO_ONTOLOGY, or the tournament replay guard. GRADUATION (per
+# each README): once its GT is authored and its `default` cassette recorded,
+# move the name from WAVE5_PENDING_SCENARIOS into WAVE5_SME_DEV_SCENARIOS or
+# WAVE5_SME_HOLDOUT_SCENARIOS below — that single move folds it into the scored
+# dev/holdout split AND the DR_SPEC ontology map (both derive from these lists),
+# with no other edit. Target split when fully graduated: 4 holdout (technology/
+# application/navigation/apm — giving the holdout veto over layers it currently
+# can't see) + security dev/holdout (the zero-coverage layer).
+WAVE5_PENDING_SCENARIOS: list[str] = [
+    "sme_waypoint_tech_deployment_topology",  # -> holdout (technology)
+    "sme_waypoint_app_service_decomposition",  # -> holdout (application)
+    "sme_waypoint_navigation_dispatch_flow",  # -> holdout (navigation)
+    "sme_waypoint_apm_incident_response",  # -> holdout (apm)
+    "sme_waypoint_security_access_control",  # -> dev (security)
+    "sme_waypoint_security_data_protection",  # -> holdout (security)
+]
+
+# Graduated Wave 5 scenarios (empty until GT + cassette exist — see staging note).
+WAVE5_SME_DEV_SCENARIOS: list[str] = []
+WAVE5_SME_HOLDOUT_SCENARIOS: list[str] = []
+
+WAVE5_SME_SCENARIOS: list[str] = WAVE5_SME_DEV_SCENARIOS + WAVE5_SME_HOLDOUT_SCENARIOS
+
+# Scored corpus: SME-native DR-grounded scenarios ONLY (Wave 2/3/5 SME).
 #
 # Two sets of scenarios are ELIMINATED from the scored split:
 #
@@ -204,12 +234,13 @@ WAVE3_SME_SCENARIOS: list[str] = WAVE3_SME_DEV_SCENARIOS + WAVE3_SME_HOLDOUT_SCE
 #
 # (See documentation/individual_extraction_refinement_learnings.md.)
 INDIVIDUAL_EXTRACTION_DEV_SCENARIOS: list[str] = (
-    WAVE2_SME_DEV_SCENARIOS + WAVE3_SME_DEV_SCENARIOS
+    WAVE2_SME_DEV_SCENARIOS + WAVE3_SME_DEV_SCENARIOS + WAVE5_SME_DEV_SCENARIOS
 )
 
 INDIVIDUAL_EXTRACTION_HOLDOUT_SCENARIOS: list[str] = (
     WAVE2_SME_HOLDOUT_SCENARIOS
     + WAVE3_SME_HOLDOUT_SCENARIOS
+    + WAVE5_SME_HOLDOUT_SCENARIOS
 )
 
 # Canonical ordering: dev scenarios first, then holdout. Equivalent to the
@@ -280,6 +311,12 @@ SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE
 # ARE part of INDIVIDUAL_EXTRACTION_SCENARIOS / the dev-holdout split (see
 # WAVE3_SME_SCENARIOS's docstring above).
 SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE3_SME_SCENARIOS})
+
+# Wave 5 SME-authored coverage-growth scenarios: graded against the DR spec, and
+# folded into the scored dev/holdout split (like Wave 2/3) on graduation. Derived
+# from WAVE5_SME_SCENARIOS, so a scenario graduating out of WAVE5_PENDING_SCENARIOS
+# picks up its DR_SPEC context here automatically (empty until then).
+SCENARIO_ONTOLOGY.update({scenario: OntologyContext.DR_SPEC for scenario in WAVE5_SME_SCENARIOS})
 
 # Relabeled arxiv scenarios: their GT was re-authored against the DR spec, so
 # they are graded against DR_SPEC (not the placeholder they were originally

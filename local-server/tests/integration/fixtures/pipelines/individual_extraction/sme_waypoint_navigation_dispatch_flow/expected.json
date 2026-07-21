@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "result": {
+    "triples": [
+      {
+        "_comment": "TODO(SME): one is_a triple per individual, object = a DR class ref (see README palette); then relationship triples between individuals. Delete this comment object. Shape example below is a template only.",
+        "subject": {
+          "label": "<Individual Name>",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.<class>",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      }
+    ],
+    "excluded": [
+      {
+        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note' explaining why it is false. Delete this comment object.",
+        "subject": {
+          "label": "<Individual>",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "<predicate>",
+          "kind": "property"
+        },
+        "object": {
+          "label": "<Individual>",
+          "kind": "individual"
+        },
+        "note": "<why the text contradicts this>"
+      }
+    ]
+  }
+}

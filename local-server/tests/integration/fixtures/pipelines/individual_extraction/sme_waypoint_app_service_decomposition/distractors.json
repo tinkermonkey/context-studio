@@ -1,0 +1,20 @@
+{
+  "triples": [
+    {
+      "_comment": "TODO(SME): one plausible-but-wrong triple (a near-miss the text does NOT state), confidence ~0.2. Delete this comment object.",
+      "subject": {
+        "label": "<Individual>",
+        "kind": "individual"
+      },
+      "predicate": {
+        "label": "<predicate>",
+        "kind": "property"
+      },
+      "object": {
+        "label": "<Individual>",
+        "kind": "individual"
+      },
+      "confidence": 0.2
+    }
+  ]
+}

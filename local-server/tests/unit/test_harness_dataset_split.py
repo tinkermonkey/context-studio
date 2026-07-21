@@ -19,12 +19,41 @@ from tests.integration.pipelines._harness.dataset_split import (
     WAVE3_SME_HOLDOUT_SCENARIOS,
     WAVE3_SME_SCENARIOS,
     WAVE4_INFORMAL_SCENARIOS,
+    WAVE5_PENDING_SCENARIOS,
+    WAVE5_SME_DEV_SCENARIOS,
+    WAVE5_SME_HOLDOUT_SCENARIOS,
+    WAVE5_SME_SCENARIOS,
     OntologyContext,
     ScenarioDisposition,
     disposition_for,
     ontology_context_for,
     split_for,
 )
+
+
+class TestWave5Staging:
+    """Wave 5 coverage-growth scaffolds are staged out of the scored split until
+    their GT + cassette exist (see WAVE5_PENDING_SCENARIOS in dataset_split.py)."""
+
+    def test_pending_scaffolds_are_not_scored(self):
+        # Scaffolded-but-unauthored scenarios must never enter the scored split
+        # or the ontology map (they have template GT and no cassette).
+        for scenario in WAVE5_PENDING_SCENARIOS:
+            assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
+            assert scenario not in SCENARIO_ONTOLOGY
+            with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
+                split_for(scenario)
+
+    def test_graduated_and_pending_are_disjoint(self):
+        # A scenario is either pending (unscored) or graduated (scored), never both.
+        graduated = set(WAVE5_SME_DEV_SCENARIOS) | set(WAVE5_SME_HOLDOUT_SCENARIOS)
+        assert graduated.isdisjoint(WAVE5_PENDING_SCENARIOS)
+
+    def test_graduated_wave5_scenarios_are_scored_and_dr_grounded(self):
+        # Whatever has graduated is in the scored split and graded against DR spec.
+        for scenario in WAVE5_SME_SCENARIOS:
+            assert scenario in INDIVIDUAL_EXTRACTION_SCENARIOS
+            assert ontology_context_for(scenario) == OntologyContext.DR_SPEC
 
 
 class TestSplitFor:
