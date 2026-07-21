@@ -3,9 +3,8 @@
   "result": {
     "triples": [
       {
-        "_comment": "TODO(SME): one is_a triple per individual, object = a DR class ref (see README palette); then relationship triples between individuals. Delete this comment object. Shape example below is a template only.",
         "subject": {
-          "label": "<Individual Name>",
+          "label": "Dispatch Board Route",
           "kind": "individual"
         },
         "predicate": {
@@ -13,15 +12,168 @@
           "kind": "property"
         },
         "object": {
-          "label": "navigation.<class>",
+          "label": "navigation.route",
           "kind": "individual"
         },
         "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Technician Route",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.route",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Assignment Flow",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.navigationflow",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Select Job Step",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.flowstep",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Confirm Assignment Step",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.flowstep",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assignment Transition",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.navigationtransition",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Selected Job Id",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.contextvariable",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assignment Guard",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.navigationguard",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatcher Is Authorized",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.guardcondition",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Redirect To Login",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.guardaction",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Sign In Route",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "navigation.route",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "_comment": "TODO(SME): add the relationship (non-is_a) triples the prose implies, using the README's spec-valid predicate palette. Delete this object."
       }
     ],
     "excluded": [
       {
-        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note' explaining why it is false. Delete this comment object.",
+        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note'. Delete this object.",
         "subject": {
           "label": "<Individual>",
           "kind": "individual"

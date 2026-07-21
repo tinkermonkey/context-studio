@@ -3,9 +3,8 @@
   "result": {
     "triples": [
       {
-        "_comment": "TODO(SME): one is_a triple per individual, object = a DR class ref (see README palette); then relationship triples between individuals. Delete this comment object. Shape example below is a template only.",
         "subject": {
-          "label": "<Individual Name>",
+          "label": "Dispatch API Resource",
           "kind": "individual"
         },
         "predicate": {
@@ -13,15 +12,123 @@
           "kind": "property"
         },
         "object": {
-          "label": "apm.<class>",
+          "label": "apm.resource",
           "kind": "individual"
         },
         "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Request Latency Histogram",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.metricinstrument",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Assign Job Span",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.span",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "OTLP Exporter",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.exporterconfig",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Dispatch Trace Config",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.traceconfiguration",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Latency Breach Alert",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.alert",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Incident Dashboard",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.dashboard",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "subject": {
+          "label": "Error Log Record",
+          "kind": "individual"
+        },
+        "predicate": {
+          "label": "is_a",
+          "kind": "property"
+        },
+        "object": {
+          "label": "apm.logrecord",
+          "kind": "individual"
+        },
+        "confidence": 1.0
+      },
+      {
+        "_comment": "TODO(SME): add the relationship (non-is_a) triples the prose implies, using the README's spec-valid predicate palette. Delete this object."
       }
     ],
     "excluded": [
       {
-        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note' explaining why it is false. Delete this comment object.",
+        "_comment": "TODO(SME): >=1 true-negative triple the text contradicts (a plausible-but-wrong edge), with a 'note'. Delete this object.",
         "subject": {
           "label": "<Individual>",
           "kind": "individual"

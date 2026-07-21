@@ -1,9 +1,11 @@
 # SME Fixture (Wave 5, SCAFFOLD): sme_waypoint_apm_incident_response
 
-> **STATUS: PROSE DRAFTED (review it) — GT NOT YET AUTHORED.** `input.json`
-> holds candidate agent-drafted prose for you to review/edit; `expected.json`
-> and `distractors.json` are still TODO templates for you to author. This
-> scenario is **not** in the scored split yet (see graduation at the bottom).
+> **STATUS: PROSE DRAFTED + `is_a` TRIPLES PREFILLED — RELATIONSHIP GT NOT YET
+> AUTHORED.** `input.json` holds candidate prose (review/edit); `expected.json`
+> has one `is_a` typing triple per named individual (review them) plus a TODO
+> placeholder where you add the relationship triples + the `excluded`
+> true-negative; `distractors.json` is still a TODO template. This scenario is
+> **not** in the scored split yet (see graduation at the bottom).
 
 **Intent:** Waypoint's incident-response observability: the monitored resources, metric instruments, alerts, traces, and dashboards used during a dispatch-volume incident.
 
