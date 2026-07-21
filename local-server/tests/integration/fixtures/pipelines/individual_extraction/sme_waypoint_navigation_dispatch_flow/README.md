@@ -1,8 +1,9 @@
 # SME Fixture (Wave 5, SCAFFOLD): sme_waypoint_navigation_dispatch_flow
 
-> **STATUS: SCAFFOLD — GT NOT YET AUTHORED.** `input.json`, `expected.json`, and
-> `distractors.json` contain TODO templates. This scenario is **not** in the
-> scored split yet (see the graduation checklist at the bottom).
+> **STATUS: PROSE DRAFTED (review it) — GT NOT YET AUTHORED.** `input.json`
+> holds candidate agent-drafted prose for you to review/edit; `expected.json`
+> and `distractors.json` are still TODO templates for you to author. This
+> scenario is **not** in the scored split yet (see graduation at the bottom).
 
 **Intent:** A dispatcher's navigation flow through Waypoint: the routes, the flow steps between them, and the guard conditions gating each transition.
 

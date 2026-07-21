@@ -1,8 +1,9 @@
 # SME Fixture (Wave 5, SCAFFOLD): sme_waypoint_security_data_protection
 
-> **STATUS: SCAFFOLD — GT NOT YET AUTHORED.** `input.json`, `expected.json`, and
-> `distractors.json` contain TODO templates. This scenario is **not** in the
-> scored split yet (see the graduation checklist at the bottom).
+> **STATUS: PROSE DRAFTED (review it) — GT NOT YET AUTHORED.** `input.json`
+> holds candidate agent-drafted prose for you to review/edit; `expected.json`
+> and `distractors.json` are still TODO templates for you to author. This
+> scenario is **not** in the scored split yet (see graduation at the bottom).
 
 **Intent:** Waypoint's data-protection posture: how customer/job information entities are classified, retained, audited, and protected against threats via countermeasures.
 
