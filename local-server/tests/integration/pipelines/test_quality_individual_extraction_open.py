@@ -68,9 +68,27 @@ from tests.integration.pipelines.test_quality_individual_extraction import (
 # its snake_case/fused-phrase exact-tuple matching doesn't line up with
 # hand-labeled prose ground truth — so this floor is a function of how much
 # of the corpus is SME-authored, not just of the rule-mode implementation.
-# Recalibrated down from 0.05 when Wave 3 (#1109 Phase 7) added 4 more
-# zero-recall scenarios; current measured mean recall is ~0.049.
-RULE_MODE_MEAN_RECALL_FLOOR = 0.045
+#
+# The scored split is now SME-native ONLY (af6edd6b moved the relabeled-arxiv
+# scenarios to a non-gating diagnostic tier; the ungrounded placeholders were
+# dropped earlier), and rule mode scores exactly 0 on every one of them BY
+# CONSTRUCTION. The residual ~0.049 that justified the old 0.045 floor came
+# entirely from the non-SME scenarios that are no longer in QUALITY_SCENARIOS,
+# so the floor measured corpus composition, not the implementation.
+#
+# Exact-tuple recall is therefore pinned at 0.0 and carries no signal. The
+# regression guard that DOES carry signal is
+# RULE_MODE_MIN_TRIPLES_PER_SCENARIO below: open_v1 must still emit a
+# non-empty triple set for every scenario. A genuine open_v1 quality
+# measurement lives in
+# test_open_v1_soft_metrics_and_error_report, which uses the soft/strict
+# harness metrics rather than exact-tuple match.
+RULE_MODE_MEAN_RECALL_FLOOR = 0.0
+
+# Minimum triples rule mode must still produce per scenario. Rule mode
+# currently emits 20-32 per scenario; 5 catches a pipeline that has silently
+# stopped extracting without being brittle to spaCy/model drift.
+RULE_MODE_MIN_TRIPLES_PER_SCENARIO = 5
 
 # local-server/experiments/reports/ — see local-server/experiments/README.md
 _EXPERIMENTS_REPORTS_DIR = Path(__file__).resolve().parents[3] / "experiments" / "reports"
@@ -130,7 +148,12 @@ async def _run(orchestrator, scenario):
 @pytest.mark.asyncio
 async def test_open_v1_produces_valid_triples(open_orchestrator):
     """open_v1 returns the individual-extraction triple contract."""
-    result = await _run(open_orchestrator, "distributed_systems")
+    # Any scored scenario proves the contract — this assertion is about the
+    # shape open_v1 emits, not about a particular corpus entry. Driven off
+    # QUALITY_SCENARIOS so retiring a scenario can never orphan this test
+    # again (it previously hardcoded `distributed_systems`, whose
+    # individual_extraction fixture was pruned in 3a6fadf7).
+    result = await _run(open_orchestrator, QUALITY_SCENARIOS[0])
     assert "triples" in result and "metadata" in result
     assert isinstance(result["triples"], list)
     for triple in result["triples"]:
@@ -172,6 +195,15 @@ async def test_open_v1_rule_mode_baseline(open_orchestrator):
     assert mean_recall >= RULE_MODE_MEAN_RECALL_FLOOR, (
         f"open_v1 rule-mode mean recall {mean_recall:.3f} fell below baseline "
         f"{RULE_MODE_MEAN_RECALL_FLOOR}"
+    )
+
+    # The load-bearing guard: exact-tuple recall is pinned at 0 on the
+    # SME-native split by construction, so it cannot detect a regression.
+    # Assert instead that rule mode still assembles a real triple set.
+    starved = [(s, n) for s, _, n in rows if n < RULE_MODE_MIN_TRIPLES_PER_SCENARIO]
+    assert not starved, (
+        f"open_v1 rule mode produced fewer than "
+        f"{RULE_MODE_MIN_TRIPLES_PER_SCENARIO} triples for: {starved}"
     )
 
 
