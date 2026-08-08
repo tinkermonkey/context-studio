@@ -26,6 +26,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
@@ -42,6 +43,8 @@ from domain.pipelines.schema_node_definition_refinement.apply_service import (
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 TAXONOMY_ID = "tx-apply-test"
@@ -84,7 +87,16 @@ def ontology_repo():
 
 
 @pytest.fixture()
-def client(pipeline_repo, batch_repo, ontology_repo):
+def ontology_service(ontology_repo):
+    return OntologyService(
+        repository=ontology_repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=FakeEventPublisher(),
+    )
+
+
+@pytest.fixture()
+def client(pipeline_repo, batch_repo, ontology_repo, ontology_service):
     app = FastAPI()
     app.include_router(router)
 
@@ -96,7 +108,9 @@ def client(pipeline_repo, batch_repo, ontology_repo):
     app.state.ontology_repo = ontology_repo
 
     app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
-    app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
+    app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
+        ontology_service, ontology_repo
+    )
     app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
     app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
     app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)

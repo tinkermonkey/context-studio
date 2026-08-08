@@ -2,7 +2,9 @@
 Apply service for individual extraction pipeline.
 
 Converts RDF triple output from a completed individual extraction run into DRAFT
-Individual and Relationship entities persisted via the OntologyRepository port.
+Individual entities via OntologyService (so they get validation, events, and
+vector-index sync) and Relationship entities persisted via the OntologyRepository
+port.
 
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (title within the first class_id for individuals; source+target+property
@@ -15,14 +17,15 @@ import logging
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from domain.ontology.entities import Individual, Relationship
-from domain.ontology.value_objects import Status
+from domain.ontology.entities import Relationship
+from domain.ontology.exceptions import DuplicateEntityError
 from domain.pipelines.apply_result import ApplyResult
 
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
+    from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
 
 
@@ -30,11 +33,15 @@ class IndividualExtractionApplyService:
     """
     Materializes individual extraction pipeline output into ontology entities.
 
-    Creates Individual and Relationship entities with Status.DRAFT and source_run_id
-    set to the originating pipeline run ID.
+    Creates Individual entities via OntologyService.create_individual (DRAFT
+    status, indexed for search) and Relationship entities directly via the
+    repository, both tagged with source_run_id from the originating pipeline run.
     """
 
-    def __init__(self, ontology_repo: "OntologyRepository") -> None:
+    def __init__(
+        self, ontology_service: "OntologyService", ontology_repo: "OntologyRepository"
+    ) -> None:
+        self._ontology_service = ontology_service
         self._repo = ontology_repo
 
     def apply(
@@ -97,17 +104,26 @@ class IndividualExtractionApplyService:
                     continue
 
                 try:
-                    new_individual = Individual(
-                        id=str(uuid4()),
+                    new_individual = self._ontology_service.create_individual(
                         class_ids=valid_class_ids,
                         title=subject_label,
-                        status=Status.DRAFT,
                         source_run_id=run.id,
                     )
-                    self._repo.save_individual(new_individual)
                     resolved_id = new_individual.id
                     result.individuals_created += 1
                     result.created_individual_ids.append(resolved_id)
+                except DuplicateEntityError:
+                    # Another triple in this run (or a prior apply) already created this
+                    # individual — resolve to its existing ID rather than failing the triple.
+                    resolved_id = self._find_individual_by_label(subject_label, valid_class_ids)
+                    if resolved_id is None:
+                        _logger.error(
+                            "DuplicateEntityError creating individual '%s' but no matching "
+                            "individual found in classes %s",
+                            subject_label,
+                            valid_class_ids,
+                        )
+                        raise
                 except Exception as e:
                     _logger.error(f"Failed to save individual: {e}")
                     raise
@@ -134,6 +150,15 @@ class IndividualExtractionApplyService:
         result.validate()
         return result
 
+    def _find_individual_by_label(self, subject_label: str, class_ids: list[str]) -> str | None:
+        """Return the ID of an existing individual with this title within any of the classes."""
+        for cid in class_ids:
+            candidates = self._repo.list_individuals(class_id=cid, limit=None)
+            for ind in candidates:
+                if ind.title.lower() == subject_label.lower():
+                    return ind.id
+        return None
+
     def _resolve_individual_id(
         self,
         subject_id: str,
@@ -155,13 +180,7 @@ class IndividualExtractionApplyService:
                 return existing.id
 
         # Try lookup by label within each class
-        for cid in class_ids:
-            candidates = self._repo.list_individuals(class_id=cid, limit=None)
-            for ind in candidates:
-                if ind.title.lower() == subject_label.lower():
-                    return ind.id
-
-        return None
+        return self._find_individual_by_label(subject_label, class_ids)
 
     def _apply_relationship(
         self,

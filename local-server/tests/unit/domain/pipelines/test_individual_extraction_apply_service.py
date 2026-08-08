@@ -15,12 +15,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
+from domain.ontology.entities import Class, ConceptScheme, Individual, PropertyDefinition, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ---------------------------------------------------------------------------
@@ -57,8 +60,17 @@ def repo():
 
 
 @pytest.fixture()
-def svc(repo):
-    return IndividualExtractionApplyService(repo)
+def ontology_service(repo):
+    return OntologyService(
+        repository=repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=FakeEventPublisher(),
+    )
+
+
+@pytest.fixture()
+def svc(ontology_service, repo):
+    return IndividualExtractionApplyService(ontology_service, repo)
 
 
 def _make_run(triples=None, run_id="run-ind-1"):
@@ -145,6 +157,37 @@ class TestIndividualCreation:
         result = svc.apply(run)
         assert result.individuals_created == 0
         assert result.individuals_skipped == 1
+
+
+# ---------------------------------------------------------------------------
+# DuplicateEntityError handling
+# ---------------------------------------------------------------------------
+
+
+class TestDuplicateEntityErrorHandling:
+    def test_duplicate_entity_error_resolves_to_existing_individual(
+        self, svc, repo, ontology_service, monkeypatch
+    ):
+        """If OntologyService.create_individual raises DuplicateEntityError (e.g. the
+        individual was created concurrently between the dedup check and the write),
+        the apply service resolves to the existing individual's ID instead of failing
+        or skipping the triple."""
+        from domain.ontology.exceptions import DuplicateEntityError
+
+        def fake_create_individual(*args, **kwargs):
+            concurrent = Individual(id="ind-concurrent", class_ids=[CLASS_ID], title="Alice")
+            repo.save_individual(concurrent)
+            raise DuplicateEntityError("Individual with title 'Alice' already exists")
+
+        monkeypatch.setattr(ontology_service, "create_individual", fake_create_individual)
+
+        run = _make_run(triples=[_make_triple("Alice")])
+        result = svc.apply(run)
+
+        assert result.individuals_created == 0
+        individuals = repo.list_individuals(class_id=CLASS_ID, limit=None)
+        assert len(individuals) == 1
+        assert individuals[0].id == "ind-concurrent"
 
 
 # ---------------------------------------------------------------------------

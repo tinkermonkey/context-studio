@@ -683,7 +683,9 @@ async def lifespan(app: FastAPI):
 
         # Pipeline apply services — materialize pipeline output into ontology entities
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
-        app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(ontology_repo)
+        app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
+            ontology_service, ontology_repo
+        )
         app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
         app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
             ontology_repo

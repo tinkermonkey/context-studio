@@ -33,6 +33,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from config import get_settings
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
@@ -299,6 +300,16 @@ def extraction_service(ontology_repo, session_factory):
 
 
 @pytest.fixture
+def ontology_service(ontology_repo):
+    """Create OntologyService with fake adapters."""
+    return OntologyService(
+        repository=ontology_repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=InProcessEventPublisher(),
+    )
+
+
+@pytest.fixture
 def registered_extraction(session_factory):
     """Register extraction pipeline with registries."""
     config_registry = PipelineConfigurationRegistry()
@@ -470,6 +481,7 @@ class TestQualityIndividualExtraction:
         extraction_service,
         registered_extraction,
         ontology_repo,
+        ontology_service,
     ):
         """
         Test apply round-trip: run -> apply -> snapshot -> revert -> re-apply -> assert idempotent.
@@ -486,7 +498,7 @@ class TestQualityIndividualExtraction:
             extraction_service=extraction_service,
         )
 
-        apply_service = IndividualExtractionApplyService(ontology_repo)
+        apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
 
         # Use a simple (grounded) fixture for round-trip testing — the
         # FakeLLMProvider returns a canned response, so any input text works.
