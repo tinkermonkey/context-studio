@@ -6,6 +6,15 @@ Individual entities via OntologyService (so they get validation, events, and
 vector-index sync) and Relationship entities persisted via the OntologyRepository
 port.
 
+This is the shared materialization funnel for every individual-extraction
+orchestrator (``default`` and ``open_v1``): both emit the same
+``{triples, warnings, metadata}`` contract, so a recognition stage placed here
+— rather than inside either orchestrator — runs uniformly regardless of which
+one produced the triples. Recognition sits between extraction and
+materialization: for each individual not already resolved locally, it attempts
+to resolve the mention to an existing graph node via IndividualRecognizer
+before minting a new one.
+
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (title within the first class_id for individuals; source+target+property
 for relationships).
@@ -24,6 +33,8 @@ from domain.pipelines.apply_result import ApplyResult
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from domain.extraction.ports import IndividualRecognizer, RecognitionMatch
+    from domain.ontology.entities import Class
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
@@ -36,13 +47,26 @@ class IndividualExtractionApplyService:
     Creates Individual entities via OntologyService.create_individual (DRAFT
     status, indexed for search) and Relationship entities directly via the
     repository, both tagged with source_run_id from the originating pipeline run.
+
+    An optional IndividualRecognizer runs the recognition stage: for each
+    individual not already resolved by the in-pass cache, an explicit ID, or an
+    exact label match, the recognizer is offered the mention before it is
+    treated as new. A match adopts the existing node's ID (and its canonical
+    title stays authoritative — nothing is renamed); no match falls through to
+    minting a new individual exactly as before. Passing no recognizer
+    (the default) is a no-op placeholder seam: apply behaves exactly as it did
+    before recognition existed.
     """
 
     def __init__(
-        self, ontology_service: "OntologyService", ontology_repo: "OntologyRepository"
+        self,
+        ontology_service: "OntologyService",
+        ontology_repo: "OntologyRepository",
+        individual_recognizer: "IndividualRecognizer | None" = None,
     ) -> None:
         self._ontology_service = ontology_service
         self._repo = ontology_repo
+        self._recognizer = individual_recognizer
 
     def apply(
         self,
@@ -61,6 +85,12 @@ class IndividualExtractionApplyService:
         """
         result = ApplyResult()
         triples = run.output_summary.get("triples", [])
+
+        _logger.info(
+            "individual extraction apply run=%s: recognition stage %s",
+            run.id,
+            "active" if self._recognizer is not None else "no-op (no recognizer configured)",
+        )
 
         # Track individuals created in this apply pass: (title_lower, class_id) → entity_id
         individual_key_to_id: dict[tuple[str, str], str] = {}
@@ -90,43 +120,65 @@ class IndividualExtractionApplyService:
             )
 
             if resolved_id is None:
-                # Create new individual
-                if not subject_label or not class_ids:
+                if not subject_label:
                     result.individuals_skipped += 1
                     continue
 
-                # Verify all class_ids exist
-                valid_class_ids = [
-                    cid for cid in class_ids if self._repo.get_class(cid) is not None
+                # Verify all class_ids exist; class_ids may legitimately be empty
+                # (e.g. an untyped open_v1 relation triple) — that only rules out
+                # minting a new individual below, not attempting recognition.
+                valid_classes: list["Class"] = [
+                    cls for cid in class_ids if (cls := self._repo.get_class(cid)) is not None
                 ]
-                if not valid_class_ids:
+                if class_ids and not valid_classes:
                     result.individuals_skipped += 1
                     continue
+                valid_class_ids = [cls.id for cls in valid_classes]
+                taxonomy_id = valid_classes[0].taxonomy_id if valid_classes else None
 
-                try:
-                    new_individual = self._ontology_service.create_individual(
-                        class_ids=valid_class_ids,
-                        title=subject_label,
-                        source_run_id=run.id,
-                    )
-                    resolved_id = new_individual.id
-                    result.individuals_created += 1
-                    result.created_individual_ids.append(resolved_id)
-                except DuplicateEntityError:
-                    # Another triple in this run (or a prior apply) already created this
-                    # individual — resolve to its existing ID rather than failing the triple.
-                    resolved_id = self._find_individual_by_label(subject_label, valid_class_ids)
-                    if resolved_id is None:
-                        _logger.error(
-                            "DuplicateEntityError creating individual '%s' but no matching "
-                            "individual found in classes %s",
-                            subject_label,
-                            valid_class_ids,
+                # Recognition stage: resolve the mention to an existing graph node
+                # before treating it as new. Runs for every orchestrator's output —
+                # this apply() is the single funnel both share.
+                match = self._recognize_individual(
+                    subject_label, valid_class_ids, taxonomy_id, triple
+                )
+
+                if match is not None:
+                    resolved_id = match.individual_id
+                    result.individuals_recognized += 1
+                    result.recognized_individual_ids.append(resolved_id)
+                elif not valid_class_ids:
+                    # No recognizable match and nothing to type it as — nothing to do.
+                    result.individuals_skipped += 1
+                    continue
+                else:
+                    try:
+                        new_individual = self._ontology_service.create_individual(
+                            class_ids=valid_class_ids,
+                            title=subject_label,
+                            source_run_id=run.id,
                         )
+                        resolved_id = new_individual.id
+                        result.individuals_created += 1
+                        result.created_individual_ids.append(resolved_id)
+                    except DuplicateEntityError:
+                        # Another triple in this run (or a prior apply) already created
+                        # this individual — resolve to its existing ID rather than
+                        # failing the triple.
+                        resolved_id = self._find_individual_by_label(
+                            subject_label, valid_class_ids
+                        )
+                        if resolved_id is None:
+                            _logger.error(
+                                "DuplicateEntityError creating individual '%s' but no "
+                                "matching individual found in classes %s",
+                                subject_label,
+                                valid_class_ids,
+                            )
+                            raise
+                    except Exception as e:
+                        _logger.error(f"Failed to save individual: {e}")
                         raise
-                except Exception as e:
-                    _logger.error(f"Failed to save individual: {e}")
-                    raise
 
                 # Cache for dedup within this apply pass
                 for cid in valid_class_ids:
@@ -158,6 +210,65 @@ class IndividualExtractionApplyService:
                 if ind.title.lower() == subject_label.lower():
                     return ind.id
         return None
+
+    def _recognize_individual(
+        self,
+        label: str,
+        class_ids: list[str],
+        taxonomy_id: str | None,
+        triple: dict,
+    ) -> "RecognitionMatch | None":
+        """
+        Recognition stage: resolve an extracted mention to an existing graph node.
+
+        A no-op (returns None immediately) when no recognizer is configured, so
+        apply's output is unchanged from pre-recognition behavior. Otherwise
+        delegates to IndividualRecognizer, scoped to ``class_ids`` (may be empty,
+        which searches unscoped rather than skipping recognition outright — an
+        untyped mention can still resolve to an existing typed individual).
+        A recognizer failure is logged and treated as no-match, biasing the
+        pipeline toward minting a new individual rather than failing the apply.
+        """
+        if self._recognizer is None:
+            return None
+
+        try:
+            match = self._recognizer.recognize(
+                label=label,
+                context=self._triple_context(triple),
+                class_ids=class_ids,
+                taxonomy_id=taxonomy_id,
+            )
+        except Exception as exc:  # noqa: BLE001 - recognition is best-effort
+            _logger.error("Recognition stage failed for '%s': %s", label, exc, exc_info=True)
+            return None
+
+        if match is not None:
+            _logger.info(
+                "recognition stage: '%s' -> matched individual %s ('%s', method=%s, score=%.3f)",
+                label,
+                match.individual_id,
+                match.title,
+                match.method,
+                match.score,
+            )
+        else:
+            _logger.info("recognition stage: '%s' -> no match; will mint a new individual", label)
+        return match
+
+    @staticmethod
+    def _triple_context(triple: dict) -> str:
+        """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
+        provenance = triple.get("provenance") or {}
+        raw = provenance.get("raw")
+        if raw:
+            return str(raw)
+        subject_label = triple.get("subject", {}).get("label", "")
+        predicate_label = triple.get("predicate", {}).get("label", "")
+        object_label = triple.get("object", {}).get("label", "")
+        if predicate_label and object_label:
+            return f"{subject_label} {predicate_label} {object_label}".strip()
+        return str(subject_label)
 
     def _resolve_individual_id(
         self,

@@ -3627,6 +3627,12 @@ export interface components {
        */
       individuals_skipped: number;
       /**
+       * Individuals Recognized
+       * @description Individual candidates resolved to an existing graph node by recognition
+       * @default 0
+       */
+      individuals_recognized: number;
+      /**
        * External References Created
        * @description External references added to classes
        * @default 0
@@ -3663,6 +3669,11 @@ export interface components {
        * @description URIs of created external references
        */
       created_external_reference_ids?: string[];
+      /**
+       * Recognized Individual Ids
+       * @description IDs of individuals resolved to an existing graph node by recognition
+       */
+      recognized_individual_ids?: string[];
     };
     /**
      * AutoResolveConflictsRequest

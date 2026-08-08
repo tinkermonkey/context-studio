@@ -55,6 +55,7 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
 )
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
+from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
@@ -306,6 +307,16 @@ async def lifespan(app: FastAPI):
         if unindexed_individuals:
             indexed = individual_vector_index.reindex_all_individuals()
             logger.info("Individual recognition backfill: indexed %d individuals", indexed)
+
+        # Recognition stage: resolves an extracted individual to an existing
+        # graph node before individual_extraction apply() treats it as new.
+        individual_recognizer = CascadeIndividualRecognizer(
+            individual_index=individual_vector_index,
+            embedding_service=embedding_service,
+            llm=llm_router,
+        )
+        app.state.individual_recognizer = individual_recognizer
+        logger.info("CascadeIndividualRecognizer created")
 
         ontology_service = OntologyService(
             repository=ontology_repo,
@@ -684,7 +695,7 @@ async def lifespan(app: FastAPI):
         # Pipeline apply services — materialize pipeline output into ontology entities
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
         app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
-            ontology_service, ontology_repo
+            ontology_service, ontology_repo, individual_recognizer=individual_recognizer
         )
         app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
         app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(

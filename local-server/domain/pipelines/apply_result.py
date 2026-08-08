@@ -18,6 +18,7 @@ class ApplyResult:
     relationships_skipped: int = 0
     individuals_created: int = 0
     individuals_skipped: int = 0
+    individuals_recognized: int = 0
     external_references_created: int = 0
     external_references_skipped: int = 0
     created_class_ids: list[str] = field(default_factory=list)
@@ -26,6 +27,7 @@ class ApplyResult:
     created_property_definition_ids: list[str] = field(default_factory=list)
     created_external_reference_ids: list[str] = field(default_factory=list)
     created_taxonomy_ids: list[str] = field(default_factory=list)
+    recognized_individual_ids: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.validate()
@@ -42,6 +44,12 @@ class ApplyResult:
             raise ValueError(
                 f"individuals_created ({self.individuals_created}) and "
                 f"created_individual_ids ({len(self.created_individual_ids)} "
+                "items) must be consistent"
+            )
+        if self.individuals_recognized != len(self.recognized_individual_ids):
+            raise ValueError(
+                f"individuals_recognized ({self.individuals_recognized}) and "
+                f"recognized_individual_ids ({len(self.recognized_individual_ids)} "
                 "items) must be consistent"
             )
         if self.relationships_created != len(self.created_relationship_ids):

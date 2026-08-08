@@ -6164,6 +6164,12 @@
             "description": "Individual candidates skipped (already exist)",
             "default": 0
           },
+          "individuals_recognized": {
+            "type": "integer",
+            "title": "Individuals Recognized",
+            "description": "Individual candidates resolved to an existing graph node by recognition",
+            "default": 0
+          },
           "external_references_created": {
             "type": "integer",
             "title": "External References Created",
@@ -6215,6 +6221,14 @@
             "type": "array",
             "title": "Created External Reference Ids",
             "description": "URIs of created external references"
+          },
+          "recognized_individual_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recognized Individual Ids",
+            "description": "IDs of individuals resolved to an existing graph node by recognition"
           }
         },
         "type": "object",

@@ -249,6 +249,10 @@ class ApplyRunResponse(BaseModel):
     individuals_skipped: int = Field(
         default=0, description="Individual candidates skipped (already exist)"
     )
+    individuals_recognized: int = Field(
+        default=0,
+        description="Individual candidates resolved to an existing graph node by recognition",
+    )
     external_references_created: int = Field(
         default=0, description="External references added to classes"
     )
@@ -267,6 +271,10 @@ class ApplyRunResponse(BaseModel):
     )
     created_external_reference_ids: list[str] = Field(
         default_factory=list, description="URIs of created external references"
+    )
+    recognized_individual_ids: list[str] = Field(
+        default_factory=list,
+        description="IDs of individuals resolved to an existing graph node by recognition",
     )
 
 

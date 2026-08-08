@@ -1128,6 +1128,7 @@ async def apply_pipeline_run(
         relationships_skipped=apply_result.relationships_skipped,
         individuals_created=apply_result.individuals_created,
         individuals_skipped=apply_result.individuals_skipped,
+        individuals_recognized=apply_result.individuals_recognized,
         external_references_created=apply_result.external_references_created,
         external_references_skipped=apply_result.external_references_skipped,
         created_class_ids=apply_result.created_class_ids,
@@ -1135,6 +1136,7 @@ async def apply_pipeline_run(
         created_relationship_ids=apply_result.created_relationship_ids,
         created_property_definition_ids=apply_result.created_property_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
+        recognized_individual_ids=apply_result.recognized_individual_ids,
     )
 
 
