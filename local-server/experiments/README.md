@@ -95,6 +95,32 @@ report's `failure_stage_counts` (Loop C target selection), or the §6 accept
 gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` takes only `dev`
 and `holdout` as arguments and structurally cannot read bootstrap metrics.
 
+## Recognition A/B measurement: `scripts/measure_recognition_quality_effect.py`
+
+Issue #1137 Phase 5: quantifies whether the individual-recognition stage
+(`adapters/recognition/individual_recognizer.py`; see also
+`tests/integration/fixtures/pipelines/individual_recognition/README.md` for
+its dedicated cross-document dedup metrics) changes extraction quality on the
+error-report corpus, using the same harness as above (no new metric) run
+twice — recognition off vs on — and diffing the two report pairs.
+
+```bash
+# from local-server/, venv active
+python scripts/measure_recognition_quality_effect.py
+```
+
+Measured result (open_v1 rule-mode, `QUALITY_SCENARIOS`, 8 scenarios):
+`label_mismatch` count and dev/holdout strict-F1/soft-F1 are **unchanged**
+(13/13 label_mismatch; every F1 delta 0.0000). Recognition does relabel two
+GT triples' failure-stage classification in one scenario
+(`relation_not_derived` → `candidate_missing`, a diagnostic-only
+reclassification with no P/R/F1 effect) by canonicalizing a repeated
+in-document mention — but moves no aggregate quality number. Expected: this
+corpus scores each scenario from an empty graph, and open_v1 rule mode emits
+no class grounding, so recognition can only act on mentions repeated within a
+single scenario's own text, not across documents (that cross-document case is
+what the `individual_recognition` episode corpus measures instead).
+
 ## Loop C: `.claude/workflows/karpathy-loop.js`
 
 `documentation/karpathy_loop_design.md` §4.3/§4.4 — the agent-in-the-loop
