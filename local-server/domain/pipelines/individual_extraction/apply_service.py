@@ -183,9 +183,19 @@ class IndividualExtractionApplyService:
                         # Another triple in this run (or a prior apply) already created
                         # this individual — resolve to its existing ID rather than
                         # failing the triple.
-                        resolved_id = self._find_individual_by_label(
-                            subject_label, valid_class_ids
-                        )
+                        try:
+                            resolved_id = self._find_individual_by_label(
+                                subject_label, valid_class_ids
+                            )
+                        except Exception:
+                            _logger.error(
+                                "Failed to look up existing individual '%s' in classes "
+                                "%s after DuplicateEntityError",
+                                subject_label,
+                                valid_class_ids,
+                                exc_info=True,
+                            )
+                            raise
                         if resolved_id is None:
                             _logger.error(
                                 "DuplicateEntityError creating individual '%s' but no "
@@ -194,6 +204,8 @@ class IndividualExtractionApplyService:
                                 valid_class_ids,
                             )
                             raise
+                        result.individuals_recognized += 1
+                        result.recognized_individual_ids.append(resolved_id)
                     except Exception as e:
                         _logger.error(f"Failed to save individual: {e}")
                         raise
@@ -251,6 +263,9 @@ class IndividualExtractionApplyService:
         untyped mention can still resolve to an existing typed individual).
         A recognizer failure is logged and treated as no-match, biasing the
         pipeline toward minting a new individual rather than failing the apply.
+        Programming bugs (TypeError, AttributeError, KeyError, IndexError) are
+        not treated as best-effort failures — they propagate so the underlying
+        defect is surfaced instead of silently minting a duplicate individual.
         """
         if self._recognizer is None:
             return None
@@ -262,6 +277,8 @@ class IndividualExtractionApplyService:
                 class_ids=class_ids,
                 taxonomy_id=taxonomy_id,
             )
+        except (TypeError, AttributeError, KeyError, IndexError):
+            raise
         except Exception as exc:  # noqa: BLE001 - recognition is best-effort
             _logger.error("Recognition stage failed for '%s': %s", label, exc, exc_info=True)
             return None

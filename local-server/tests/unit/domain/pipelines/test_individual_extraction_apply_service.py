@@ -218,6 +218,44 @@ class TestDuplicateEntityErrorHandling:
         individuals = repo.list_individuals(class_id=CLASS_ID, limit=None)
         assert len(individuals) == 1
         assert individuals[0].id == "ind-concurrent"
+        assert result.individuals_recognized == 1
+        assert result.recognized_individual_ids == ["ind-concurrent"]
+
+    def test_lookup_failure_after_duplicate_entity_error_is_logged_and_propagates(
+        self, svc, repo, ontology_service, monkeypatch, caplog
+    ):
+        """If the label lookup performed inside the DuplicateEntityError handler
+        itself raises, the error must propagate (sibling except Exception cannot
+        catch errors raised from within another except block) and must be logged
+        with context before propagating."""
+        from domain.ontology.exceptions import DuplicateEntityError
+
+        def fake_create_individual(*args, **kwargs):
+            raise DuplicateEntityError("Individual with title 'Alice' already exists")
+
+        monkeypatch.setattr(ontology_service, "create_individual", fake_create_individual)
+
+        # The first call to _find_individual_by_label happens inside
+        # _resolve_individual_id, before creation is even attempted, and must
+        # succeed (return None) so the flow reaches create_individual. Only the
+        # second call — made from inside the DuplicateEntityError handler — should
+        # fail, to isolate the handler's own error-propagation behavior.
+        call_count = {"n": 0}
+
+        def flaky_lookup(*args, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                return None
+            raise RuntimeError("db unavailable")
+
+        monkeypatch.setattr(svc, "_find_individual_by_label", flaky_lookup)
+
+        run = _make_run(triples=[_make_triple("Alice")])
+        with caplog.at_level("ERROR"):
+            with pytest.raises(RuntimeError, match="db unavailable"):
+                svc.apply(run)
+
+        assert any("Alice" in record.getMessage() for record in caplog.records)
 
 
 # ---------------------------------------------------------------------------
@@ -451,6 +489,39 @@ class TestRecognitionStageNoMatch:
 
         assert result.individuals_created == 0
         assert result.individuals_skipped == 1
+        assert result.individuals_recognized == 0
+
+
+class TestRecognitionStageFailureHandling:
+    """A recognizer failure is best-effort (treated as no-match) only for
+    genuine operational errors. Programming bugs must surface rather than be
+    swallowed into a silently-minted duplicate individual."""
+
+    @pytest.mark.parametrize("exc_type", [TypeError, AttributeError, KeyError, IndexError])
+    def test_programming_bug_in_recognizer_propagates(
+        self, svc_with_recognizer, repo, recognizer, monkeypatch, exc_type
+    ):
+        def broken_recognize(*args, **kwargs):
+            raise exc_type("boom")
+
+        monkeypatch.setattr(recognizer, "recognize", broken_recognize)
+
+        run = _make_run(triples=[_make_triple("Alice")])
+        with pytest.raises(exc_type, match="boom"):
+            svc_with_recognizer.apply(run)
+
+    def test_operational_error_in_recognizer_is_treated_as_no_match(
+        self, svc_with_recognizer, repo, recognizer, monkeypatch
+    ):
+        def broken_recognize(*args, **kwargs):
+            raise RuntimeError("vector index unavailable")
+
+        monkeypatch.setattr(recognizer, "recognize", broken_recognize)
+
+        run = _make_run(triples=[_make_triple("Alice")])
+        result = svc_with_recognizer.apply(run)
+
+        assert result.individuals_created == 1
         assert result.individuals_recognized == 0
 
 
