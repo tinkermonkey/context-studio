@@ -2204,6 +2204,66 @@ class TestIndividualIndexSync:
         assert service.get_individual(individual.id).title == "Rex"
 
 
+class TestIndividualSchemaVectorIndexSync:
+    """create_individual/update_individual sync the schema vector index too (#1137)."""
+
+    def _service_with_index(self):
+        from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
+
+        index = FakeSchemaVectorIndex()
+        service = OntologyService(
+            repository=FakeOntologyRepository(),
+            embedding_service=FakeEmbeddingService(),
+            event_publisher=FakeEventPublisher(),
+            schema_index=index,
+        )
+        return service, index
+
+    def _make_class(self, service):
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        return service.create_class(concept_scheme_id=scheme.id, title="Dog")
+
+    def test_create_individual_syncs_schema_index(self):
+        """create_individual embeds the individual in the schema vector index."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+
+        individual = service.create_individual(cls.id, title="Fido", description="A friendly dog")
+
+        assert index._entities[individual.id] == ("Fido", "A friendly dog")
+
+    def test_update_individual_resyncs_schema_index(self):
+        """update_individual re-embeds with the updated title/description."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+        individual = service.create_individual(cls.id, title="Fido")
+
+        service.update_individual(individual.id, title="Rex", description="A loyal dog")
+
+        assert index._entities[individual.id] == ("Rex", "A loyal dog")
+
+    def test_schema_index_sync_failure_does_not_fail_create(self):
+        """A failure in the schema index must not fail the already-persisted write."""
+        service, index = self._service_with_index()
+        cls = self._make_class(service)
+
+        def _boom(*_args, **_kwargs):
+            raise RuntimeError("index unavailable")
+
+        index.index_entity = _boom  # type: ignore[method-assign]
+
+        individual = service.create_individual(cls.id, title="Fido")
+        assert service.get_individual(individual.id).title == "Fido"
+
+    def test_no_schema_index_wired_is_noop(self, service):
+        """With no schema index wired (default), create/update just work — no error."""
+        cls = self._make_class(service)
+        individual = service.create_individual(cls.id, title="Fido")
+        service.update_individual(individual.id, title="Rex")
+        assert service.get_individual(individual.id).title == "Rex"
+
+
 class TestCreateIndividual:
     """Tests for create_individual."""
 

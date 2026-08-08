@@ -34,7 +34,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # SchemaKind values that map directly to ontology_entities.node_type rows.
-_ENTITY_KINDS = ("class", "property_definition")
+_ENTITY_KINDS = ("class", "property_definition", "individual")
 
 # How a candidate's title-similarity and definition-similarity combine into its
 # single reported score. This is an adapter-level knob only — the domain port is
@@ -117,7 +117,8 @@ class SqliteSchemaVectorIndex:
 
     def reindex_all(self) -> int:
         """
-        Recompute embeddings for every class and property definition in one pass.
+        Recompute embeddings for every class, property definition, and
+        individual in one pass.
 
         Returns the number of entities (re)indexed. Used by the backfill script
         and to populate the index after the migration adds the columns.

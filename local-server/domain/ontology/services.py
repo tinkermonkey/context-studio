@@ -2219,6 +2219,7 @@ class OntologyService:
         )
         individual = self._repository.save_individual(individual)
         self._sync_individual_index(individual_id, title, description)
+        self._sync_vector_index(individual_id, title, description)
 
         # Emit IndividualCreated event
         failures = self._event_publisher.publish(
@@ -2353,6 +2354,7 @@ class OntologyService:
         self._sync_individual_index(
             individual_id, individual.title, individual.description
         )
+        self._sync_vector_index(individual_id, individual.title, individual.description)
 
         # Emit IndividualUpdated event
         changed_fields = tuple(
