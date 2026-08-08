@@ -122,46 +122,6 @@ def _normalize_predicate_label(label: str) -> str:
     return label.strip().lower().replace("_", " ").replace("-", " ")
 
 
-# Minor words a title leaves lowercase when they are not the first word — the
-# convention the schema-typed ground truth follows ("Customer Reports an Issue",
-# "Rising Customer Expectations for On-Time Arrival Windows"). Restricting the
-# set to short function words keeps longer prepositions ("Between", "Within")
-# capitalized, matching that ground truth.
-_TITLE_MINOR_WORDS = frozenset(
-    {
-        "a", "an", "and", "as", "at", "but", "by", "en", "for", "if", "in",
-        "nor", "of", "off", "on", "or", "per", "so", "the", "to", "up", "via",
-        "vs", "yet",
-    }
-)
-
-
-def _canonical_individual_label(label: str) -> str:
-    """
-    The canonical surface form of a schema-typed individual's label.
-
-    Title-cases the label the way the schema-typed ground truth does: the first
-    word and every non-minor word have their first letter capitalized, while a
-    minor function word ("an", "for", "to", "by") in a non-leading position is
-    left as-is. Only the first character of a word is ever touched and it is only
-    ever upcased, so acronyms and embedded capitals survive ("CRDT" stays "CRDT",
-    "EC2 Spot Service" stays "EC2 Spot Service", "Technician-and-Timestamp" keeps
-    its lowercase inner "and"). This snaps a lowercased mention ("spot instances",
-    "View Job button") to the ground-truth form ("Spot Instances", "View Job
-    Button") without disturbing labels the model already cased correctly.
-    """
-    words = label.split(" ")
-    canonical: list[str] = []
-    for index, word in enumerate(words):
-        if not word:
-            canonical.append(word)
-        elif index > 0 and word.lower() in _TITLE_MINOR_WORDS:
-            canonical.append(word)
-        else:
-            canonical.append(word[:1].upper() + word[1:])
-    return " ".join(canonical)
-
-
 class ExtractionService:
     """
     Service implementing knowledge extraction orchestration.
@@ -679,9 +639,9 @@ class ExtractionService:
         relationships are still derived. Pass 2 is skipped entirely when fewer
         than two individuals were identified (no pair to relate).
 
-        Before returning, the surface labels of schema-grounded individuals are
-        canonicalized (`_canonicalize_individual_labels`) so a typed mention in a
-        case variant matches the typed ground truth's form.
+        Before returning, extracted individuals are resolved against existing
+        graph nodes (`_recognize_individuals`) so a mention that already exists
+        adopts that node's canonical title instead of being re-created.
 
         Returns:
             Tuple of (combined typing + relationship triples, total tokens used).
@@ -753,10 +713,8 @@ class ExtractionService:
         return relationship_triples, tokens
 
     def _post_process_triples(self, triples: list[dict], ontology) -> list[dict]:
-        """Recognition step + interim label canonicalization, shared by both modes."""
-        triples = self._recognize_individuals(triples, ontology)
-        triples = self._canonicalize_individual_labels(triples)
-        return triples
+        """Recognition step, shared by both modes."""
+        return self._recognize_individuals(triples, ontology)
 
     def _extract_triples_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
@@ -972,10 +930,10 @@ class ExtractionService:
         nodes, and biases toward "new node" on any doubt.
 
         No-op when no individual index is wired (the caller passes
-        ``individual_index=None`` for the plain single-document path). Supersedes
-        `_canonicalize_individual_labels` for resolved mentions (those keep the
-        authoritative graph title); unresolved mentions still fall through to the
-        Title-Case heuristic.
+        ``individual_index=None`` for the plain single-document path). Unresolved
+        mentions (no existing node found) keep the surface label extraction
+        produced — recognition is the only source of label normalization for
+        individuals.
         """
         if self._individual_index is None:
             return triples
@@ -1047,60 +1005,6 @@ class ExtractionService:
         if len(candidates) > 1 and (top.score - candidates[1].score) < self._recog_margin:
             return None
         return top.individual_id, top.title
-
-    def _canonicalize_individual_labels(self, triples: list[dict]) -> list[dict]:
-        """
-        Canonicalize the surface labels of schema-grounded individuals (design doc §7).
-
-        The individual-label analogue of ``_canonicalize_triples_against_ontology``:
-        that step rewrites a typing triple's OBJECT to its canonical ontology-class
-        form; this step rewrites the SUBJECT individual's surface label to a
-        canonical surface form. Only individuals the pipeline grounded to an
-        ontology class — the subject of an ``is_a`` typing triple — are
-        canonicalized (the "known individual vocabulary" gate). Free-form
-        relationship-only individuals from untyped corpora, whose ground truth
-        keeps lowercase/snake_case surface forms, are never in that vocabulary and
-        so pass through untouched.
-
-        Attacks the ``label_mismatch`` stage: a schema-typed individual the model
-        surfaces in a case variant ("Spot instances", "View Job button") is snapped
-        to the title-cased form the typed ground truth uses ("Spot Instances", "View
-        Job Button"). The canonical form is then propagated to every triple that
-        references the same individual as subject or object — but never to a class
-        object (already canonicalized) — so relationship triples stay consistent
-        with their typing. Matching is case-insensitive on the original surface
-        label, so a mention typed once is normalized everywhere it appears.
-        """
-        canonical_by_label: dict[str, str] = {}
-        for triple in triples:
-            if not self._is_typing_triple(triple):
-                continue
-            subject = triple.get("subject", {})
-            # A recognition-resolved subject (id stamped) carries the authoritative
-            # graph title; the interim heuristic must not overwrite it.
-            if subject.get("id"):
-                continue
-            label = str(subject.get("label", "")).strip()
-            if not label:
-                continue
-            canonical_by_label.setdefault(
-                label.lower(), _canonical_individual_label(label)
-            )
-
-        if not canonical_by_label:
-            return triples
-
-        for triple in triples:
-            for role in ("subject", "object"):
-                node = triple.get(role, {})
-                if node.get("kind") == "class" or node.get("id"):
-                    continue
-                canonical = canonical_by_label.get(
-                    str(node.get("label", "")).strip().lower()
-                )
-                if canonical is not None:
-                    node["label"] = canonical
-        return triples
 
     def _is_typing_triple(self, triple: dict) -> bool:
         """Return True when a triple is an ``is_a``/rdf:type assertion (object is a class)."""
