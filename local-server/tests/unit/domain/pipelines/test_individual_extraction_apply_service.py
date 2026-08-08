@@ -454,6 +454,99 @@ class TestRecognitionStageNoMatch:
         assert result.individuals_recognized == 0
 
 
+class TestClasslessRecognitionCache:
+    """Classless (open_v1) mentions must be cached after recognition, same as
+    class-scoped mentions, so a repeated mention hits the in-pass cache
+    instead of triggering a redundant recognizer call."""
+
+    def test_repeated_classless_mention_uses_cache_after_first_recognition(
+        self, svc_with_recognizer, repo, recognizer
+    ):
+        existing = Individual(id="ind-kubernetes", class_ids=[CLASS_ID], title="Kubernetes")
+        repo.save_individual(existing)
+        recognizer.add_match(
+            "kubernetes", RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector")
+        )
+
+        run = _make_run(
+            triples=[
+                _make_open_v1_triple("kubernetes"),
+                _make_open_v1_triple("kubernetes"),
+            ]
+        )
+        result = svc_with_recognizer.apply(run)
+
+        # Only the first occurrence triggers the recognizer; the second is a cache hit.
+        assert len(recognizer.calls) == 1
+        assert result.individuals_recognized == 1
+        assert result.recognized_individual_ids == ["ind-kubernetes"]
+
+
+class TestSameRunMergingGuard:
+    """Recognition must resolve only against individuals that existed in the
+    graph before this apply pass — never against a sibling mention minted
+    earlier in the same pass. Uses the real CascadeIndividualRecognizer wired
+    to a vector index shared with OntologyService (mirroring the shared
+    instance wiring in app.py), the same setup that surfaced the bug."""
+
+    def test_recognizer_match_pointing_at_individual_created_this_run_is_ignored(
+        self, repo
+    ):
+        from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
+        from tests.fakes.fake_event_publisher import FakeEventPublisher
+        from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
+
+        class _ConstantEmbeddingService:
+            """Every mention embeds identically, so the second mention is a
+            guaranteed vector match against anything already indexed -
+            isolating the same-run guard from embedding-quality concerns."""
+
+            def embed(self, text):
+                return [1.0, 0.0]
+
+            def embed_batch(self, texts):
+                return [self.embed(t) for t in texts]
+
+            def similarity(self, a, b):
+                return 1.0
+
+        # vectors maps indexed title -> vector; the fake's search() looks up
+        # a candidate's score by its stored title, so "Order Service" (the
+        # first mention, once created) must resolve to the same vector the
+        # constant embedding service returns for any query.
+        shared_index = FakeIndividualVectorIndex(
+            vectors={"Order Service": [1.0, 0.0]}, repo=repo
+        )
+        embedding_service = _ConstantEmbeddingService()
+        ontology_service = OntologyService(
+            repository=repo,
+            embedding_service=embedding_service,
+            event_publisher=FakeEventPublisher(),
+            individual_index=shared_index,
+        )
+        recognizer = CascadeIndividualRecognizer(
+            individual_index=shared_index,
+            embedding_service=embedding_service,
+            threshold=0.5,
+        )
+        svc = IndividualExtractionApplyService(
+            ontology_service, repo, individual_recognizer=recognizer
+        )
+
+        run = _make_run(
+            triples=[
+                _make_triple("Order Service"),
+                _make_triple("Order Service V2"),
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2
+        assert result.individuals_recognized == 0
+        titles = {i.title for i in repo.list_individuals(class_id=CLASS_ID, limit=None)}
+        assert titles == {"Order Service", "Order Service V2"}
+
+
 class TestRecognitionStageBothOrchestrators:
     """Recognition is one shared stage — exercised identically regardless of
     which orchestrator's triple shape it receives."""

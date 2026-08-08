@@ -92,8 +92,16 @@ class IndividualExtractionApplyService:
             "active" if self._recognizer is not None else "no-op (no recognizer configured)",
         )
 
-        # Track individuals created in this apply pass: (title_lower, class_id) → entity_id
+        # Track individuals created in this apply pass: (title_lower, class_id) → entity_id.
+        # Classless (open_v1) individuals use a label-only sentinel key ("" for class_id)
+        # since they have no class_ids to key on.
         individual_key_to_id: dict[tuple[str, str], str] = {}
+
+        # Individuals minted in this apply pass, so recognizer matches pointing back at
+        # them can be rejected — recognition must only resolve against individuals that
+        # already existed in the graph before this run, never against sibling mentions
+        # extracted in the same pass.
+        created_this_run: set[str] = set()
 
         for triple in triples:
             subject = triple.get("subject", {})
@@ -143,6 +151,15 @@ class IndividualExtractionApplyService:
                     subject_label, valid_class_ids, taxonomy_id, triple
                 )
 
+                if match is not None and match.individual_id in created_this_run:
+                    _logger.info(
+                        "recognition stage: '%s' -> match %s was created earlier in "
+                        "this apply pass; ignoring same-run match",
+                        subject_label,
+                        match.individual_id,
+                    )
+                    match = None
+
                 if match is not None:
                     resolved_id = match.individual_id
                     result.individuals_recognized += 1
@@ -161,6 +178,7 @@ class IndividualExtractionApplyService:
                         resolved_id = new_individual.id
                         result.individuals_created += 1
                         result.created_individual_ids.append(resolved_id)
+                        created_this_run.add(resolved_id)
                     except DuplicateEntityError:
                         # Another triple in this run (or a prior apply) already created
                         # this individual — resolve to its existing ID rather than
@@ -180,10 +198,15 @@ class IndividualExtractionApplyService:
                         _logger.error(f"Failed to save individual: {e}")
                         raise
 
-                # Cache for dedup within this apply pass
-                for cid in valid_class_ids:
-                    key = (subject_label.lower(), cid)
-                    individual_key_to_id[key] = resolved_id
+                # Cache for dedup within this apply pass. Classless individuals (no
+                # valid_class_ids, e.g. open_v1 relation triples) have nothing to key
+                # per-class, so fall back to a label-only sentinel key.
+                if valid_class_ids:
+                    for cid in valid_class_ids:
+                        key = (subject_label.lower(), cid)
+                        individual_key_to_id[key] = resolved_id
+                else:
+                    individual_key_to_id[(subject_label.lower(), "")] = resolved_id
 
             # Create relationship if predicate + object are present
             property_definition_id = predicate.get("property_definition_id", "")
@@ -278,9 +301,16 @@ class IndividualExtractionApplyService:
         local_cache: dict[tuple[str, str], str],
     ) -> str | None:
         """Return existing individual ID if found, else None."""
-        # Check local cache first (individuals created earlier in this apply pass)
-        for cid in class_ids:
-            cached = local_cache.get((subject_label.lower(), cid))
+        # Check local cache first (individuals created earlier in this apply pass).
+        # Classless mentions (e.g. open_v1 relation triples with no class_ids) were
+        # cached under a label-only sentinel key, since there's no class to key on.
+        if class_ids:
+            for cid in class_ids:
+                cached = local_cache.get((subject_label.lower(), cid))
+                if cached:
+                    return cached
+        else:
+            cached = local_cache.get((subject_label.lower(), ""))
             if cached:
                 return cached
 

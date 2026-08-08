@@ -16,11 +16,16 @@ from domain.ontology.ports import IndividualMatch
 
 
 class FakeIndividualVectorIndex:
-    def __init__(self, vectors: dict[str, list[float]] | None = None) -> None:
+    def __init__(self, vectors: dict[str, list[float]] | None = None, repo=None) -> None:
         # title -> vector, used to embed both stored titles and queries by title.
         self._vectors = vectors or {}
         # individual_id -> (title, class_ids)
         self._individuals: dict[str, tuple[str, list[str]]] = {}
+        # Optional OntologyRepository: when given, index_individual resolves
+        # class_ids from the live entity (mirroring how the real SQLite-backed
+        # index joins against persisted class associations at search time)
+        # instead of requiring class_ids to be pre-seeded via add().
+        self._repo = repo
 
     # --- test seeding helpers -------------------------------------------------
     def add(self, individual_id: str, title: str, class_ids: list[str]) -> None:
@@ -28,8 +33,12 @@ class FakeIndividualVectorIndex:
 
     # --- IndividualVectorIndex port ------------------------------------------
     def index_individual(self, individual_id: str, title: str, description: str | None) -> None:
-        existing = self._individuals.get(individual_id)
-        class_ids = existing[1] if existing else []
+        if self._repo is not None:
+            existing_entity = self._repo.get_individual(individual_id)
+            class_ids = list(existing_entity.class_ids) if existing_entity else []
+        else:
+            existing = self._individuals.get(individual_id)
+            class_ids = existing[1] if existing else []
         self._individuals[individual_id] = (title, class_ids)
 
     def remove_individual(self, individual_id: str) -> None:
