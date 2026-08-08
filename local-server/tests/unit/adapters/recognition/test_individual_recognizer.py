@@ -1,5 +1,5 @@
 """
-Unit tests for CascadeIndividualRecognizer (issue #1137).
+Unit tests for CascadeIndividualRecognizer.
 
 Infra-free: a fake IndividualVectorIndex + embedding service (deterministic
 text->vector map) and a fake LLM provider exercise the exact/vector/LLM-tiebreak
@@ -81,6 +81,7 @@ class TestExactMatch:
         match = recognizer.recognize("kubernetes", context="", class_ids=[CLASS_SW])
         assert match.individual_id == "kube-id"
         assert match.title == "Kubernetes"
+        assert match.score == 1.0
         assert match.method == "exact"
 
 

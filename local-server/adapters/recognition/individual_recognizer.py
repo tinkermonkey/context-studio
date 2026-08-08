@@ -1,5 +1,5 @@
 """
-Adapter for the IndividualRecognizer port (issue #1137).
+Adapter for the IndividualRecognizer port.
 
 Implements the three-tier match cascade — exact label match, a single clear
 vector-similarity winner, or an LLM tiebreak when candidates fall within a
@@ -109,7 +109,7 @@ class CascadeIndividualRecognizer:
 
         exact = self._exact_match(mention, candidates)
         if exact is not None:
-            return RecognitionMatch(exact.individual_id, exact.title, exact.score, "exact")
+            return RecognitionMatch(exact.individual_id, exact.title, 1.0, "exact")
 
         qualifying = [c for c in candidates if c.score >= effective_threshold]
         if not qualifying:
