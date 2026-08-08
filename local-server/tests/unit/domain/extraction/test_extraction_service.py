@@ -689,8 +689,9 @@ class _ConfirmingLLM:
         self._choice = choice
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
-        from domain.pipelines.ports import LLMResponse
         import json as _json
+
+        from domain.pipelines.ports import LLMResponse
 
         return LLMResponse(
             content=_json.dumps({"class": self._choice}), model=model,

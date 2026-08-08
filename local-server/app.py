@@ -44,15 +44,15 @@ from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionReposito
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
 )
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
 from adapters.persistence.sqlite.interchange_repo import SQLiteInterchangeRepository
+from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
-from adapters.persistence.sqlite.individual_vector_index import (
-    SqliteIndividualVectorIndex,
-)
-from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.reference.cache import CachedReferenceSource
