@@ -120,10 +120,11 @@ class CascadeIndividualRecognizer:
         if len(tied) == 1:
             return RecognitionMatch(top.individual_id, top.title, top.score, "vector")
 
-        if self._llm is None:
+        llm = self._llm
+        if llm is None:
             return RecognitionMatch(top.individual_id, top.title, top.score, "vector")
 
-        chosen = self._llm_tiebreak(mention, context, tied)
+        chosen = self._llm_tiebreak(llm, mention, context, tied)
         if chosen is None:
             return None
         return RecognitionMatch(chosen.individual_id, chosen.title, chosen.score, "llm")
@@ -143,7 +144,7 @@ class CascadeIndividualRecognizer:
         return [c for c in qualifying if (top_score - c.score) < self._tiebreak_band]
 
     def _llm_tiebreak(
-        self, mention: str, context: str, tied: list[IndividualMatch]
+        self, llm: LLMProvider, mention: str, context: str, tied: list[IndividualMatch]
     ) -> IndividualMatch | None:
         """
         Ask the LLM to pick among near-equal candidates, or confirm none match.
@@ -158,7 +159,7 @@ class CascadeIndividualRecognizer:
             f'Context: "{context}"\n\n'
             "Candidate existing individuals:\n" + "\n".join(lines)
         )
-        response = self._llm.complete(
+        response = llm.complete(
             system_prompt=_TIEBREAK_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             model=self._model,
