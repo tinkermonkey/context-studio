@@ -54,7 +54,9 @@ class FakeIndividualVectorIndex:
             if score < threshold:
                 continue
             matches.append(
-                IndividualMatch(individual_id=ind_id, class_ids=list(cids), title=title, score=score)
+                IndividualMatch(
+                    individual_id=ind_id, class_ids=list(cids), title=title, score=score
+                )
             )
         matches.sort(key=lambda m: m.score, reverse=True)
         return matches[:top_k]

@@ -853,11 +853,19 @@ class _RecogRepo:
             Class(
                 id=TestRecognition.CLASS_SW, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
                 title="System Software",
-                external_references=[ExternalReference(source="dr", identifier="technology.systemsoftware", uri=None, metadata={})],
+                external_references=[
+                    ExternalReference(
+                        source="dr", identifier="technology.systemsoftware", uri=None, metadata={}
+                    )
+                ],
             ),
             Class(
                 id=TestRecognition.CLASS_DB, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
                 title="Data Object",
-                external_references=[ExternalReference(source="dr", identifier="application.dataobject", uri=None, metadata={})],
+                external_references=[
+                    ExternalReference(
+                        source="dr", identifier="application.dataobject", uri=None, metadata={}
+                    )
+                ],
             ),
         ]

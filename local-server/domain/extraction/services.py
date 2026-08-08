@@ -15,6 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
+from typing import Any
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
@@ -934,7 +935,12 @@ class ExtractionService:
         """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk."""
         class_ref = match.external_id or match.label
         return {
-            "subject": {"kind": "individual", "id": None, "label": label, "class_id": match.entity_id},
+            "subject": {
+                "kind": "individual",
+                "id": None,
+                "label": label,
+                "class_id": match.entity_id,
+            },
             "predicate": {"property_definition_id": None, "label": "is_a"},
             "object": {"kind": "class", "id": match.entity_id, "label": class_ref},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 2),
@@ -1015,6 +1021,8 @@ class ExtractionService:
         for short/acronym mentions — clears a stricter bar. Returns
         ``(individual_id, canonical_title)`` on resolution.
         """
+        if self._individual_index is None:
+            return None
         class_ids = [class_id] if class_id else []
         embedding = self._embedding_service.embed(mention)
         candidates = self._individual_index.search(

@@ -20,7 +20,10 @@ def upgrade() -> None:
     # no table rebuild). The unrelated batch_runs.run_type type-widening that
     # autogenerate also detected (pre-existing model/DB drift) was intentionally
     # removed so this migration only carries the canonical_predicate change.
-    op.add_column('ontology_entities', sa.Column('canonical_predicate', sa.String(length=255), nullable=True))
+    op.add_column(
+        'ontology_entities',
+        sa.Column('canonical_predicate', sa.String(length=255), nullable=True),
+    )
 
 
 def downgrade() -> None:

@@ -242,7 +242,9 @@ class TestDispositionFor:
         # LEGACY_CORPUS_DISPOSITION.md.
         assert len(SCENARIO_DISPOSITION) == 18
         retired = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RETIRED}
-        relabeled = {s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RELABELED}
+        relabeled = {
+            s for s, d in SCENARIO_DISPOSITION.items() if d == ScenarioDisposition.RELABELED
+        }
         assert retired == set(RETIRED_ARXIV_SCENARIOS)
         assert relabeled == set(RELABELED_ARXIV_SCENARIOS)
         assert all(

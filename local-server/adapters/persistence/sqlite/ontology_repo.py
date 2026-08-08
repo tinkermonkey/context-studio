@@ -1215,8 +1215,8 @@ class SQLiteOntologyRepository:
                 orm_entity.title = prop.title  # type: ignore[assignment]
                 orm_entity.description = prop.description  # type: ignore[assignment]
                 orm_entity.canonical_predicate = (
-                    prop.canonical_predicate
-                )  # type: ignore[assignment]
+                    prop.canonical_predicate  # type: ignore[assignment]
+                )
                 orm_entity.identifier = prop.identifier  # type: ignore[assignment]
                 orm_entity.ontology_mapping = (
                     mapped_orm.ontology_mapping

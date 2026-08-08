@@ -122,7 +122,8 @@ def _run_episode(service, repo, index, episode):
     print(
         f"\n── recognition ({episode}) ──  precision={metrics.dedup_precision} "
         f"recall={metrics.dedup_recall} f1={metrics.dedup_f1} "
-        f"node_ratio={metrics.node_count_ratio} nodes={metrics.predicted_node_count}/{metrics.gt_entity_count}"
+        f"node_ratio={metrics.node_count_ratio} "
+        f"nodes={metrics.predicted_node_count}/{metrics.gt_entity_count}"
     )
     return metrics
 

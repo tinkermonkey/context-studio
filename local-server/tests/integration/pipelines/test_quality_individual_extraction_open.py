@@ -36,6 +36,8 @@ from uuid import uuid4
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from domain.extraction.open_extraction import build_relation_candidates
+from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
 from domain.ontology.ports import SchemaMatch
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
@@ -578,9 +580,6 @@ def test_predicate_grounding_skipped_when_ontology_unresolved():
 # Coverage completion (unconsumed noun chunks + wider capture) — stubbed
 # ---------------------------------------------------------------------------
 
-from domain.extraction.open_extraction import build_relation_candidates
-from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
-
 
 def _ctok(index, text, pos, dep, head_index, *, lemma=None, is_stop=False, is_alpha=True):
     return OpenToken(
@@ -713,6 +712,12 @@ class _StubNLP:
     def __init__(self, result):
         self._result = result
 
+    def process(self, text):
+        raise NotImplementedError
+
+    def extract_entities(self, text):
+        raise NotImplementedError
+
     def process_open(self, text):
         return self._result
 
@@ -728,7 +733,7 @@ async def _run_coverage(enabled: bool):
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(),
         config={**get_open_v1_config(), "coverage_completion": enabled},
-        ontology_repo=_FakeOntologyRepo(),
+        ontology_repo=_FakeOntologyRepo(),  # type: ignore[arg-type]
     )
     state = IndividualExtractionState(
         run_id=str(uuid4()),
