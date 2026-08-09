@@ -978,6 +978,16 @@ async def apply_pipeline_run(
         le=1.0,
         description="Minimum candidate confidence",
     ),
+    recognition_threshold: Optional[float] = Query(
+        None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Minimum similarity for individual_extraction's recognition stage to "
+            "resolve a mention to an existing individual. Defaults to the "
+            "recognizer's configured value when omitted."
+        ),
+    ),
 ) -> ApplyRunResponse:
     """
     Apply a completed pipeline run's output to the ontology.
@@ -999,6 +1009,8 @@ async def apply_pipeline_run(
         taxonomy_id: Required for schema_extraction — parent taxonomy
         node_id: Required for schema_node_grounding — class to apply groundings to
         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
+        recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
+            recognition stage; defaults to the recognizer's configured value
 
     Returns:
         ApplyRunResponse with counts of created and skipped entities
@@ -1046,7 +1058,11 @@ async def apply_pipeline_run(
 
             elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
                 svc = request.app.state.individual_extraction_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run,
+                    confidence_threshold=confidence_threshold,
+                    recognition_threshold=recognition_threshold,
+                )
                 # Recognition sync (#1142): apply writes individuals directly via
                 # the repo (bypassing OntologyService), so index the newly created
                 # ones here. Best-effort — a failure must not fail the apply, and
@@ -1128,6 +1144,7 @@ async def apply_pipeline_run(
         relationships_skipped=apply_result.relationships_skipped,
         individuals_created=apply_result.individuals_created,
         individuals_skipped=apply_result.individuals_skipped,
+        individuals_recognized=apply_result.individuals_recognized,
         external_references_created=apply_result.external_references_created,
         external_references_skipped=apply_result.external_references_skipped,
         created_class_ids=apply_result.created_class_ids,
@@ -1135,6 +1152,7 @@ async def apply_pipeline_run(
         created_relationship_ids=apply_result.created_relationship_ids,
         created_property_definition_ids=apply_result.created_property_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
+        recognized_individual_ids=apply_result.recognized_individual_ids,
     )
 
 

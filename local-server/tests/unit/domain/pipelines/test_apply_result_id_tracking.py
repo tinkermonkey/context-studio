@@ -18,6 +18,7 @@ sys.path.append(
 import pytest
 
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
@@ -34,6 +35,8 @@ from domain.pipelines.schema_node_definition_refinement.apply_service import (
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ============================================================================
@@ -70,14 +73,23 @@ def repo():
     return r
 
 
+@pytest.fixture()
+def ontology_service(repo):
+    return OntologyService(
+        repository=repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=FakeEventPublisher(),
+    )
+
+
 # ============================================================================
 # IndividualExtractionApplyService: ID tracking tests
 # ============================================================================
 
 
-def test_individual_extraction_tracks_created_individual_ids(repo):
+def test_individual_extraction_tracks_created_individual_ids(repo, ontology_service):
     """Individual creation populates created_individual_ids list."""
-    svc = IndividualExtractionApplyService(repo)
+    svc = IndividualExtractionApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.INDIVIDUAL_EXTRACTION
@@ -114,7 +126,7 @@ def test_individual_extraction_tracks_created_individual_ids(repo):
         assert individual is not None
 
 
-def test_individual_extraction_tracks_created_relationship_ids(repo):
+def test_individual_extraction_tracks_created_relationship_ids(repo, ontology_service):
     """Relationship creation populates created_relationship_ids list."""
     prop = PropertyDefinition(
         id="prop-1",
@@ -123,7 +135,7 @@ def test_individual_extraction_tracks_created_relationship_ids(repo):
     )
     repo.save_property_definition(prop)
 
-    svc = IndividualExtractionApplyService(repo)
+    svc = IndividualExtractionApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.INDIVIDUAL_EXTRACTION

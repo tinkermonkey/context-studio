@@ -287,6 +287,84 @@ def test_negative_cosine_clamped_to_zero(index_with_factory):
     assert class_a[0].score == 0.0
 
 
+# ---------------------------------------------------------------------------
+# individual kind — Phase 1 vector-indexing extension (#1137)
+# ---------------------------------------------------------------------------
+
+IND_FIDO = "99999999-1111-1111-1111-111111111111"
+
+
+def test_individual_kind_matches_by_title():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+        Base.metadata.create_all(engine)
+        factory = sessionmaker(bind=engine)
+        with factory() as session:
+            session.add(
+                OntologyEntity(
+                    id=IND_FIDO,
+                    node_type="individual",
+                    title="Fido",
+                    description="A friendly dog",
+                )
+            )
+            session.commit()
+
+        class _TitleEmbedding(FakeEmbedding):
+            def embed(self, text: str) -> list[float]:
+                return [1.0, 0.0, 0.0]
+
+        idx = SqliteSchemaVectorIndex(factory, _TitleEmbedding())
+        idx.reindex_all()
+
+        matches = idx.search([1.0, 0.0, 0.0], kinds=["individual"])
+        assert len(matches) == 1
+        assert matches[0].entity_id == IND_FIDO
+        assert matches[0].kind == "individual"
+        assert matches[0].score > 0.99
+
+
+def test_individual_absent_from_class_only_fixture(index):
+    # The shared `index` fixture seeds only classes/property definitions/a
+    # relationship; requesting "individual" must not error and must return
+    # nothing.
+    assert index.search([1.0, 0.0, 0.0], kinds=["individual"]) == []
+
+
+def test_individual_excluded_when_kind_not_requested():
+    # Existing class-search behavior is unchanged by an individual sharing the
+    # same title/definition text: only the requested kind is returned.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
+        Base.metadata.create_all(engine)
+        factory = sessionmaker(bind=engine)
+        with factory() as session:
+            session.add_all(
+                [
+                    OntologyEntity(
+                        id=CLASS_A,
+                        node_type="class",
+                        title="Microservice",
+                        description="An independently deployable service",
+                    ),
+                    OntologyEntity(
+                        id=IND_FIDO,
+                        node_type="individual",
+                        title="Microservice",
+                        description="An independently deployable service",
+                    ),
+                ]
+            )
+            session.commit()
+
+        idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
+        idx.reindex_all()
+
+        matches = idx.search([1.0, 0.0, 0.0], kinds=["class"])
+        assert len(matches) == 1
+        assert matches[0].entity_id == CLASS_A
+
+
 def test_index_entity_missing_id_does_not_raise(index_with_factory):
     idx, _ = index_with_factory
     # Should log a warning and return without raising.

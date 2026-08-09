@@ -35,6 +35,7 @@ export interface ApplyParams {
   concept_scheme_id?: string;
   taxonomy_id?: string;
   node_id?: string;
+  recognition_threshold?: number;
 }
 
 class PipelineService extends BaseService {

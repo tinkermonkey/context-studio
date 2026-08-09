@@ -40,6 +40,7 @@ from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding.adapter import GroundingAdapter
 from config import get_settings
 from domain.ontology.entities import ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction import (
     IndividualExtractionOrchestrator,
@@ -89,6 +90,7 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingState,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer, NodeType
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
@@ -444,7 +446,12 @@ class TestQualityE2EChain:
         )
 
         # ===== STAGE 4: Apply Individual Extraction =====
-        indiv_ext_apply = IndividualExtractionApplyService(ontology_repo)
+        ontology_service = OntologyService(
+            repository=ontology_repo,
+            embedding_service=embedding_service,
+            event_publisher=FakeEventPublisher(),
+        )
+        indiv_ext_apply = IndividualExtractionApplyService(ontology_service, ontology_repo)
         indiv_ext_apply.apply(indiv_ext_run)
 
         # ===== STAGE 5: Schema Node Grounding =====
@@ -837,7 +844,12 @@ class TestQualityE2EChain:
             input_data=fixture_input.get("individual_extraction_input", {}),
         )
         ie_result = await ie_orchestrator.execute(ie_state)
-        ie_apply_service = IndividualExtractionApplyService(ontology_repo)
+        ie_ontology_service = OntologyService(
+            repository=ontology_repo,
+            embedding_service=embedding_service,
+            event_publisher=FakeEventPublisher(),
+        )
+        ie_apply_service = IndividualExtractionApplyService(ie_ontology_service, ontology_repo)
         ie_run = PipelineRun(
             id=ie_state.run_id,
             batch_run_id="test-batch",

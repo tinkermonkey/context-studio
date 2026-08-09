@@ -16,21 +16,36 @@ from domain.ontology.ports import IndividualMatch
 
 
 class FakeIndividualVectorIndex:
-    def __init__(self, vectors: dict[str, list[float]] | None = None) -> None:
+    def __init__(self, vectors: dict[str, list[float]] | None = None, repo=None) -> None:
         # title -> vector, used to embed both stored titles and queries by title.
         self._vectors = vectors or {}
-        # individual_id -> (title, class_ids)
-        self._individuals: dict[str, tuple[str, list[str]]] = {}
+        # individual_id -> (title, class_ids, description)
+        self._individuals: dict[str, tuple[str, list[str], str | None]] = {}
+        # Optional OntologyRepository: when given, index_individual resolves
+        # class_ids from the live entity (mirroring how the real SQLite-backed
+        # index joins against persisted class associations at search time)
+        # instead of requiring class_ids to be pre-seeded via add().
+        self._repo = repo
 
     # --- test seeding helpers -------------------------------------------------
-    def add(self, individual_id: str, title: str, class_ids: list[str]) -> None:
-        self._individuals[individual_id] = (title, list(class_ids))
+    def add(
+        self,
+        individual_id: str,
+        title: str,
+        class_ids: list[str],
+        description: str | None = None,
+    ) -> None:
+        self._individuals[individual_id] = (title, list(class_ids), description)
 
     # --- IndividualVectorIndex port ------------------------------------------
     def index_individual(self, individual_id: str, title: str, description: str | None) -> None:
-        existing = self._individuals.get(individual_id)
-        class_ids = existing[1] if existing else []
-        self._individuals[individual_id] = (title, class_ids)
+        if self._repo is not None:
+            existing_entity = self._repo.get_individual(individual_id)
+            class_ids = list(existing_entity.class_ids) if existing_entity else []
+        else:
+            existing = self._individuals.get(individual_id)
+            class_ids = existing[1] if existing else []
+        self._individuals[individual_id] = (title, class_ids, description)
 
     def remove_individual(self, individual_id: str) -> None:
         self._individuals.pop(individual_id, None)
@@ -47,14 +62,20 @@ class FakeIndividualVectorIndex:
     ) -> list[IndividualMatch]:
         wanted = set(class_ids)
         matches: list[IndividualMatch] = []
-        for ind_id, (title, cids) in self._individuals.items():
+        for ind_id, (title, cids, description) in self._individuals.items():
             if wanted and not (wanted & set(cids)):
                 continue
             score = self._cosine(query_embedding, self._vectors.get(title, []))
             if score < threshold:
                 continue
             matches.append(
-                IndividualMatch(individual_id=ind_id, class_ids=list(cids), title=title, score=score)
+                IndividualMatch(
+                    individual_id=ind_id,
+                    class_ids=list(cids),
+                    title=title,
+                    score=score,
+                    description=description,
+                )
             )
         matches.sort(key=lambda m: m.score, reverse=True)
         return matches[:top_k]

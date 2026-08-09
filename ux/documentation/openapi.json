@@ -3406,7 +3406,7 @@
           "pipelines"
         ],
         "summary": "Apply Pipeline Run",
-        "description": "Apply a completed pipeline run's output to the ontology.\n\nMaterializes pipeline candidates into DRAFT ontology entities:\n- schema_extraction: creates Class, PropertyDefinition, and Relationship entities\n- individual_extraction: creates Individual and Relationship entities\n- schema_node_grounding: adds ExternalReference entries to an existing Class\n- schema_node_definition_refinement: updates the description of an existing Class\n- schema_node_connection_refinement: adds or removes Relationship entities\n\nAll created entities are stamped with Status.DRAFT and source_run_id set to the run ID\nfor full traceability. The operation is idempotent \u2014 applying the same run twice\nproduces no duplicates.\n\nArgs:\n    run_id: ID of the completed pipeline run to apply\n    concept_scheme_id: Required for schema_extraction \u2014 target concept scheme\n    taxonomy_id: Required for schema_extraction \u2014 parent taxonomy\n    node_id: Required for schema_node_grounding \u2014 class to apply groundings to\n    confidence_threshold: Minimum confidence score (0.0\u20131.0) for candidates to include\n\nReturns:\n    ApplyRunResponse with counts of created and skipped entities\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params",
+        "description": "Apply a completed pipeline run's output to the ontology.\n\nMaterializes pipeline candidates into DRAFT ontology entities:\n- schema_extraction: creates Class, PropertyDefinition, and Relationship entities\n- individual_extraction: creates Individual and Relationship entities\n- schema_node_grounding: adds ExternalReference entries to an existing Class\n- schema_node_definition_refinement: updates the description of an existing Class\n- schema_node_connection_refinement: adds or removes Relationship entities\n\nAll created entities are stamped with Status.DRAFT and source_run_id set to the run ID\nfor full traceability. The operation is idempotent \u2014 applying the same run twice\nproduces no duplicates.\n\nArgs:\n    run_id: ID of the completed pipeline run to apply\n    concept_scheme_id: Required for schema_extraction \u2014 target concept scheme\n    taxonomy_id: Required for schema_extraction \u2014 parent taxonomy\n    node_id: Required for schema_node_grounding \u2014 class to apply groundings to\n    confidence_threshold: Minimum confidence score (0.0\u20131.0) for candidates to include\n    recognition_threshold: Minimum similarity (0.0\u20131.0) for individual_extraction's\n        recognition stage; defaults to the recognizer's configured value\n\nReturns:\n    ApplyRunResponse with counts of created and skipped entities\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params",
         "operationId": "apply_pipeline_run_api_pipelines_runs__run_id__apply_post",
         "parameters": [
           {
@@ -3485,6 +3485,26 @@
               "title": "Confidence Threshold"
             },
             "description": "Minimum candidate confidence"
+          },
+          {
+            "name": "recognition_threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum similarity for individual_extraction's recognition stage to resolve a mention to an existing individual. Defaults to the recognizer's configured value when omitted.",
+              "title": "Recognition Threshold"
+            },
+            "description": "Minimum similarity for individual_extraction's recognition stage to resolve a mention to an existing individual. Defaults to the recognizer's configured value when omitted."
           }
         ],
         "responses": {
@@ -6164,6 +6184,12 @@
             "description": "Individual candidates skipped (already exist)",
             "default": 0
           },
+          "individuals_recognized": {
+            "type": "integer",
+            "title": "Individuals Recognized",
+            "description": "Individual candidates resolved to an existing graph node by recognition",
+            "default": 0
+          },
           "external_references_created": {
             "type": "integer",
             "title": "External References Created",
@@ -6215,6 +6241,14 @@
             "type": "array",
             "title": "Created External Reference Ids",
             "description": "URIs of created external references"
+          },
+          "recognized_individual_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recognized Individual Ids",
+            "description": "IDs of individuals resolved to an existing graph node by recognition"
           }
         },
         "type": "object",

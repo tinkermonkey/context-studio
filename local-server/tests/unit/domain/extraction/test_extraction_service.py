@@ -689,8 +689,9 @@ class _ConfirmingLLM:
         self._choice = choice
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
-        from domain.pipelines.ports import LLMResponse
         import json as _json
+
+        from domain.pipelines.ports import LLMResponse
 
         return LLMResponse(
             content=_json.dumps({"class": self._choice}), model=model,
@@ -852,11 +853,19 @@ class _RecogRepo:
             Class(
                 id=TestRecognition.CLASS_SW, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
                 title="System Software",
-                external_references=[ExternalReference(source="dr", identifier="technology.systemsoftware", uri=None, metadata={})],
+                external_references=[
+                    ExternalReference(
+                        source="dr", identifier="technology.systemsoftware", uri=None, metadata={}
+                    )
+                ],
             ),
             Class(
                 id=TestRecognition.CLASS_DB, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
                 title="Data Object",
-                external_references=[ExternalReference(source="dr", identifier="application.dataobject", uri=None, metadata={})],
+                external_references=[
+                    ExternalReference(
+                        source="dr", identifier="application.dataobject", uri=None, metadata={}
+                    )
+                ],
             ),
         ]

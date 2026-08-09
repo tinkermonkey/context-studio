@@ -2157,6 +2157,7 @@ class OntologyService:
         class_ids: str | list[str],
         title: str,
         description: str | None = None,
+        source_run_id: str | None = None,
     ) -> Individual:
         """
         Create a new individual instance of one or more classes.
@@ -2170,6 +2171,8 @@ class OntologyService:
             class_ids: ID(s) of the class(es) this individual instantiates (string or list)
             title: Display name for the individual
             description: Optional longer description
+            source_run_id: Optional ID of the pipeline run that produced this
+                individual, for provenance tracking
 
         Returns:
             The created Individual
@@ -2216,9 +2219,11 @@ class OntologyService:
             description=description,
             created_at=now,
             last_modified=now,
+            source_run_id=source_run_id,
         )
         individual = self._repository.save_individual(individual)
         self._sync_individual_index(individual_id, title, description)
+        self._sync_vector_index(individual_id, title, description)
 
         # Emit IndividualCreated event
         failures = self._event_publisher.publish(
@@ -2353,6 +2358,7 @@ class OntologyService:
         self._sync_individual_index(
             individual_id, individual.title, individual.description
         )
+        self._sync_vector_index(individual_id, individual.title, individual.description)
 
         # Emit IndividualUpdated event
         changed_fields = tuple(

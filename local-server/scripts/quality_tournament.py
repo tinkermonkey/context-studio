@@ -59,6 +59,7 @@ from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionReposito
 from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
 from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import EmbeddingService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
@@ -797,7 +798,7 @@ async def _amain(args) -> int:
     if not nlp.is_ready():
         print("ERROR: spaCy model not loaded. Run: python -m spacy download en_core_web_sm")
         return 1
-    embedding = SentenceTransformerEmbedding()
+    embedding: EmbeddingService = SentenceTransformerEmbedding()
     try:
         embedding.embed_batch(["probe"])
     except Exception as exc:

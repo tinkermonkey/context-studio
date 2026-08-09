@@ -2,7 +2,18 @@
 Apply service for individual extraction pipeline.
 
 Converts RDF triple output from a completed individual extraction run into DRAFT
-Individual and Relationship entities persisted via the OntologyRepository port.
+Individual entities via OntologyService (so they get validation, events, and
+vector-index sync) and Relationship entities persisted via the OntologyRepository
+port.
+
+This is the shared materialization funnel for every individual-extraction
+orchestrator (``default`` and ``open_v1``): both emit the same
+``{triples, warnings, metadata}`` contract, so a recognition stage placed here
+— rather than inside either orchestrator — runs uniformly regardless of which
+one produced the triples. Recognition sits between extraction and
+materialization: for each individual not already resolved locally, it attempts
+to resolve the mention to an existing graph node via IndividualRecognizer
+before minting a new one.
 
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (title within the first class_id for individuals; source+target+property
@@ -15,14 +26,17 @@ import logging
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from domain.ontology.entities import Individual, Relationship
-from domain.ontology.value_objects import Status
+from domain.ontology.entities import Relationship
+from domain.ontology.exceptions import DuplicateEntityError
 from domain.pipelines.apply_result import ApplyResult
 
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from domain.extraction.ports import IndividualRecognizer, RecognitionMatch
+    from domain.ontology.entities import Class
     from domain.ontology.ports import OntologyRepository
+    from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
 
 
@@ -30,17 +44,35 @@ class IndividualExtractionApplyService:
     """
     Materializes individual extraction pipeline output into ontology entities.
 
-    Creates Individual and Relationship entities with Status.DRAFT and source_run_id
-    set to the originating pipeline run ID.
+    Creates Individual entities via OntologyService.create_individual (DRAFT
+    status, indexed for search) and Relationship entities directly via the
+    repository, both tagged with source_run_id from the originating pipeline run.
+
+    An optional IndividualRecognizer runs the recognition stage: for each
+    individual not already resolved by the in-pass cache, an explicit ID, or an
+    exact label match, the recognizer is offered the mention before it is
+    treated as new. A match adopts the existing node's ID (and its canonical
+    title stays authoritative — nothing is renamed); no match falls through to
+    minting a new individual exactly as before. Passing no recognizer
+    (the default) is a no-op placeholder seam: apply behaves exactly as it did
+    before recognition existed.
     """
 
-    def __init__(self, ontology_repo: "OntologyRepository") -> None:
+    def __init__(
+        self,
+        ontology_service: "OntologyService",
+        ontology_repo: "OntologyRepository",
+        individual_recognizer: "IndividualRecognizer | None" = None,
+    ) -> None:
+        self._ontology_service = ontology_service
         self._repo = ontology_repo
+        self._recognizer = individual_recognizer
 
     def apply(
         self,
         run: "PipelineRun",
         confidence_threshold: float = 0.0,
+        recognition_threshold: float | None = None,
     ) -> ApplyResult:
         """
         Apply individual extraction results to the ontology.
@@ -48,6 +80,9 @@ class IndividualExtractionApplyService:
         Args:
             run: Completed PipelineRun with output_summary containing triples
             confidence_threshold: Minimum confidence to include a triple (0.0–1.0)
+            recognition_threshold: Minimum similarity (0.0-1.0) the recognizer
+                requires to resolve a mention to an existing individual.
+                Defaults to the recognizer's own configured value when omitted.
 
         Returns:
             ApplyResult with counts of created and skipped entities
@@ -55,8 +90,22 @@ class IndividualExtractionApplyService:
         result = ApplyResult()
         triples = run.output_summary.get("triples", [])
 
-        # Track individuals created in this apply pass: (title_lower, class_id) → entity_id
+        _logger.info(
+            "individual extraction apply run=%s: recognition stage %s",
+            run.id,
+            "active" if self._recognizer is not None else "no-op (no recognizer configured)",
+        )
+
+        # Track individuals created in this apply pass: (title_lower, class_id) → entity_id.
+        # Classless (open_v1) individuals use a label-only sentinel key ("" for class_id)
+        # since they have no class_ids to key on.
         individual_key_to_id: dict[tuple[str, str], str] = {}
+
+        # Individuals minted in this apply pass, so recognizer matches pointing back at
+        # them can be rejected — recognition must only resolve against individuals that
+        # already existed in the graph before this run, never against sibling mentions
+        # extracted in the same pass.
+        created_this_run: set[str] = set()
 
         for triple in triples:
             subject = triple.get("subject", {})
@@ -83,39 +132,97 @@ class IndividualExtractionApplyService:
             )
 
             if resolved_id is None:
-                # Create new individual
-                if not subject_label or not class_ids:
+                if not subject_label:
                     result.individuals_skipped += 1
                     continue
 
-                # Verify all class_ids exist
-                valid_class_ids = [
-                    cid for cid in class_ids if self._repo.get_class(cid) is not None
+                # Verify all class_ids exist; class_ids may legitimately be empty
+                # (e.g. an untyped open_v1 relation triple) — that only rules out
+                # minting a new individual below, not attempting recognition.
+                valid_classes: list["Class"] = [
+                    cls for cid in class_ids if (cls := self._repo.get_class(cid)) is not None
                 ]
-                if not valid_class_ids:
+                if class_ids and not valid_classes:
                     result.individuals_skipped += 1
                     continue
+                valid_class_ids = [cls.id for cls in valid_classes]
+                taxonomy_id = valid_classes[0].taxonomy_id if valid_classes else None
 
-                try:
-                    new_individual = Individual(
-                        id=str(uuid4()),
-                        class_ids=valid_class_ids,
-                        title=subject_label,
-                        status=Status.DRAFT,
-                        source_run_id=run.id,
+                # Recognition stage: resolve the mention to an existing graph node
+                # before treating it as new. Runs for every orchestrator's output —
+                # this apply() is the single funnel both share.
+                match = self._recognize_individual(
+                    subject_label, valid_class_ids, taxonomy_id, triple, recognition_threshold
+                )
+
+                if match is not None and match.individual_id in created_this_run:
+                    _logger.info(
+                        "recognition stage: '%s' -> match %s was created earlier in "
+                        "this apply pass; ignoring same-run match",
+                        subject_label,
+                        match.individual_id,
                     )
-                    self._repo.save_individual(new_individual)
-                    resolved_id = new_individual.id
-                    result.individuals_created += 1
-                    result.created_individual_ids.append(resolved_id)
-                except Exception as e:
-                    _logger.error(f"Failed to save individual: {e}")
-                    raise
+                    match = None
 
-                # Cache for dedup within this apply pass
-                for cid in valid_class_ids:
-                    key = (subject_label.lower(), cid)
-                    individual_key_to_id[key] = resolved_id
+                if match is not None:
+                    resolved_id = match.individual_id
+                    result.individuals_recognized += 1
+                    result.recognized_individual_ids.append(resolved_id)
+                elif not valid_class_ids:
+                    # No recognizable match and nothing to type it as — nothing to do.
+                    result.individuals_skipped += 1
+                    continue
+                else:
+                    try:
+                        new_individual = self._ontology_service.create_individual(
+                            class_ids=valid_class_ids,
+                            title=subject_label,
+                            source_run_id=run.id,
+                        )
+                        resolved_id = new_individual.id
+                        result.individuals_created += 1
+                        result.created_individual_ids.append(resolved_id)
+                        created_this_run.add(resolved_id)
+                    except DuplicateEntityError:
+                        # Another triple in this run (or a prior apply) already created
+                        # this individual — resolve to its existing ID rather than
+                        # failing the triple.
+                        try:
+                            resolved_id = self._find_individual_by_label(
+                                subject_label, valid_class_ids
+                            )
+                        except Exception:
+                            _logger.error(
+                                "Failed to look up existing individual '%s' in classes "
+                                "%s after DuplicateEntityError",
+                                subject_label,
+                                valid_class_ids,
+                                exc_info=True,
+                            )
+                            raise
+                        if resolved_id is None:
+                            _logger.error(
+                                "DuplicateEntityError creating individual '%s' but no "
+                                "matching individual found in classes %s",
+                                subject_label,
+                                valid_class_ids,
+                            )
+                            raise
+                        result.individuals_recognized += 1
+                        result.recognized_individual_ids.append(resolved_id)
+                    except Exception as e:
+                        _logger.error(f"Failed to save individual: {e}")
+                        raise
+
+                # Cache for dedup within this apply pass. Classless individuals (no
+                # valid_class_ids, e.g. open_v1 relation triples) have nothing to key
+                # per-class, so fall back to a label-only sentinel key.
+                if valid_class_ids:
+                    for cid in valid_class_ids:
+                        key = (subject_label.lower(), cid)
+                        individual_key_to_id[key] = resolved_id
+                else:
+                    individual_key_to_id[(subject_label.lower(), "")] = resolved_id
 
             # Create relationship if predicate + object are present
             property_definition_id = predicate.get("property_definition_id", "")
@@ -134,6 +241,81 @@ class IndividualExtractionApplyService:
         result.validate()
         return result
 
+    def _find_individual_by_label(self, subject_label: str, class_ids: list[str]) -> str | None:
+        """Return the ID of an existing individual with this title within any of the classes."""
+        for cid in class_ids:
+            candidates = self._repo.list_individuals(class_id=cid, limit=None)
+            for ind in candidates:
+                if ind.title.lower() == subject_label.lower():
+                    return ind.id
+        return None
+
+    def _recognize_individual(
+        self,
+        label: str,
+        class_ids: list[str],
+        taxonomy_id: str | None,
+        triple: dict,
+        threshold: float | None = None,
+    ) -> "RecognitionMatch | None":
+        """
+        Recognition stage: resolve an extracted mention to an existing graph node.
+
+        A no-op (returns None immediately) when no recognizer is configured, so
+        apply's output is unchanged from pre-recognition behavior. Otherwise
+        delegates to IndividualRecognizer, scoped to ``class_ids`` (may be empty,
+        which searches unscoped rather than skipping recognition outright — an
+        untyped mention can still resolve to an existing typed individual).
+        A recognizer failure is logged and treated as no-match, biasing the
+        pipeline toward minting a new individual rather than failing the apply.
+        Programming bugs (TypeError, AttributeError, KeyError, IndexError) are
+        not treated as best-effort failures — they propagate so the underlying
+        defect is surfaced instead of silently minting a duplicate individual.
+        """
+        if self._recognizer is None:
+            return None
+
+        try:
+            match = self._recognizer.recognize(
+                label=label,
+                context=self._triple_context(triple),
+                class_ids=class_ids,
+                taxonomy_id=taxonomy_id,
+                threshold=threshold,
+            )
+        except (TypeError, AttributeError, KeyError, IndexError):
+            raise
+        except Exception as exc:  # noqa: BLE001 - recognition is best-effort
+            _logger.error("Recognition stage failed for '%s': %s", label, exc, exc_info=True)
+            return None
+
+        if match is not None:
+            _logger.info(
+                "recognition stage: '%s' -> matched individual %s ('%s', method=%s, score=%.3f)",
+                label,
+                match.individual_id,
+                match.title,
+                match.method,
+                match.score,
+            )
+        else:
+            _logger.info("recognition stage: '%s' -> no match; will mint a new individual", label)
+        return match
+
+    @staticmethod
+    def _triple_context(triple: dict) -> str:
+        """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
+        provenance = triple.get("provenance") or {}
+        raw = provenance.get("raw")
+        if raw:
+            return str(raw)
+        subject_label = triple.get("subject", {}).get("label", "")
+        predicate_label = triple.get("predicate", {}).get("label", "")
+        object_label = triple.get("object", {}).get("label", "")
+        if predicate_label and object_label:
+            return f"{subject_label} {predicate_label} {object_label}".strip()
+        return str(subject_label)
+
     def _resolve_individual_id(
         self,
         subject_id: str,
@@ -142,9 +324,16 @@ class IndividualExtractionApplyService:
         local_cache: dict[tuple[str, str], str],
     ) -> str | None:
         """Return existing individual ID if found, else None."""
-        # Check local cache first (individuals created earlier in this apply pass)
-        for cid in class_ids:
-            cached = local_cache.get((subject_label.lower(), cid))
+        # Check local cache first (individuals created earlier in this apply pass).
+        # Classless mentions (e.g. open_v1 relation triples with no class_ids) were
+        # cached under a label-only sentinel key, since there's no class to key on.
+        if class_ids:
+            for cid in class_ids:
+                cached = local_cache.get((subject_label.lower(), cid))
+                if cached:
+                    return cached
+        else:
+            cached = local_cache.get((subject_label.lower(), ""))
             if cached:
                 return cached
 
@@ -155,13 +344,7 @@ class IndividualExtractionApplyService:
                 return existing.id
 
         # Try lookup by label within each class
-        for cid in class_ids:
-            candidates = self._repo.list_individuals(class_id=cid, limit=None)
-            for ind in candidates:
-                if ind.title.lower() == subject_label.lower():
-                    return ind.id
-
-        return None
+        return self._find_individual_by_label(subject_label, class_ids)
 
     def _apply_relationship(
         self,

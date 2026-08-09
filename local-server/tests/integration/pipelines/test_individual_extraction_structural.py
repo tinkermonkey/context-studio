@@ -192,14 +192,14 @@ class TestIndividualExtractionStructural:
 
     def test_apply_service_exists(self):
         """IndividualExtractionApplyService must exist and be instantiable."""
-        apply_service = IndividualExtractionApplyService(ontology_repo=None)
+        apply_service = IndividualExtractionApplyService(ontology_service=None, ontology_repo=None)
         assert apply_service is not None
 
     def test_apply_service_is_idempotent(self):
         """ApplyService implementation supports idempotent apply."""
         # The service is documented as idempotent
         # This test just verifies the contract exists
-        apply_service = IndividualExtractionApplyService(ontology_repo=None)
+        apply_service = IndividualExtractionApplyService(ontology_service=None, ontology_repo=None)
         assert apply_service is not None
 
     def test_apply_result_contract_alignment(self):
@@ -245,7 +245,7 @@ class TestIndividualExtractionViaHarness:
             )
 
             # Apply the orchestrator output
-            apply_service = IndividualExtractionApplyService(ontology_repo)
+            apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
             apply_result = apply_service.apply(run)
 
             # Verify IDs are returned and are the correct type
@@ -288,7 +288,7 @@ class TestIndividualExtractionViaHarness:
                 output_summary={"triples": []},
             )
 
-            apply_service = IndividualExtractionApplyService(ontology_repo)
+            apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
             apply_result = apply_service.apply(run)
 
             # Verify count fields match ID list lengths

@@ -24,7 +24,7 @@ from .entities import (
 )
 from .value_objects import SearchCriteria
 
-SchemaKind = Literal["class", "property_definition", "relationship"]
+SchemaKind = Literal["class", "property_definition", "relationship", "individual"]
 MatchedField = Literal["title", "definition"]
 
 
@@ -645,8 +645,8 @@ class SchemaVectorIndex(Protocol):
 
     A first-class persistence capability: it both maintains the title/definition
     embeddings of schema entities (kept in sync on write) and searches them by a
-    query embedding. Classes and property definitions carry their own
-    embeddings; a relationship is matched via its property definition's
+    query embedding. Classes, individuals, and property definitions carry their
+    own embeddings; a relationship is matched via its property definition's
     embeddings. The backing adapter lives in adapters/persistence/sqlite/.
     """
 
@@ -658,7 +658,8 @@ class SchemaVectorIndex(Protocol):
         schema entity, keeping the vector index in sync with its text.
 
         Args:
-            entity_id: ID of the class or property definition to index.
+            entity_id: ID of the class, individual, or property definition to
+                index.
             title: Current title text (embedded as the title vector).
             description: Current description text (embedded as the definition
                 vector); None/empty leaves the definition vector unset.
@@ -720,12 +721,15 @@ class IndividualMatch:
         title: The individual's canonical title (the label recognition adopts
             when it resolves a mention to this node).
         score: Cosine similarity in 0.0-1.0 (1.0 = identical).
+        description: The individual's description, for presenting fuller
+            context to an LLM tiebreak; None if the individual has none.
     """
 
     individual_id: str
     class_ids: list[str]
     title: str
     score: float
+    description: str | None = None
 
 
 class IndividualVectorIndex(Protocol):

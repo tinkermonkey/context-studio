@@ -1714,6 +1714,8 @@ export interface paths {
      *         taxonomy_id: Required for schema_extraction — parent taxonomy
      *         node_id: Required for schema_node_grounding — class to apply groundings to
      *         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
+     *         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
+     *             recognition stage; defaults to the recognizer's configured value
      *
      *     Returns:
      *         ApplyRunResponse with counts of created and skipped entities
@@ -3627,6 +3629,12 @@ export interface components {
        */
       individuals_skipped: number;
       /**
+       * Individuals Recognized
+       * @description Individual candidates resolved to an existing graph node by recognition
+       * @default 0
+       */
+      individuals_recognized: number;
+      /**
        * External References Created
        * @description External references added to classes
        * @default 0
@@ -3663,6 +3671,11 @@ export interface components {
        * @description URIs of created external references
        */
       created_external_reference_ids?: string[];
+      /**
+       * Recognized Individual Ids
+       * @description IDs of individuals resolved to an existing graph node by recognition
+       */
+      recognized_individual_ids?: string[];
     };
     /**
      * AutoResolveConflictsRequest
@@ -9320,6 +9333,8 @@ export interface operations {
         node_id?: string | null;
         /** @description Minimum candidate confidence */
         confidence_threshold?: number;
+        /** @description Minimum similarity for individual_extraction's recognition stage to resolve a mention to an existing individual. Defaults to the recognizer's configured value when omitted. */
+        recognition_threshold?: number | null;
       };
       header?: never;
       path: {

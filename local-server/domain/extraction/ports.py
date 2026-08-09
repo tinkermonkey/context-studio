@@ -8,7 +8,7 @@ plus value objects used in port contracts.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol, Sequence
+from typing import TYPE_CHECKING, Literal, Protocol, Sequence
 
 if TYPE_CHECKING:
     from domain.extraction.entities import ExtractionResult, ExtractionRun
@@ -313,6 +313,38 @@ class ReferenceRelation:
     source: str = ""
 
 
+@dataclass(frozen=True)
+class RecognitionMatch:
+    """
+    An existing graph individual that an extracted mention was resolved to.
+
+    Attributes:
+        individual_id: ID of the matched existing individual.
+        title: The individual's canonical title — the label recognition
+            adopts when it resolves a mention to this node.
+        score: Confidence the match was accepted at, 0.0-1.0. 1.0 for an
+            exact-label match; the vector cosine similarity for a vector or
+            LLM-tiebreak resolution.
+        method: Which cascade tier produced the match — an exact label match,
+            a clear vector-similarity winner (including the no-LLM ambiguous
+            fallback, still a vector-based pick), or an LLM tiebreak among
+            near-equal candidates.
+
+    Raises:
+        ValueError: If score is not 0.0-1.0
+    """
+
+    individual_id: str
+    title: str
+    score: float
+    method: Literal["exact", "vector", "llm"]
+
+    def __post_init__(self) -> None:
+        """Validate recognition match invariants."""
+        if not 0.0 <= self.score <= 1.0:
+            raise ValueError(f"score must be 0.0-1.0, got {self.score}")
+
+
 # ============================================================================
 # Port interfaces (Protocols)
 # ============================================================================
@@ -507,6 +539,55 @@ class ReferenceSource(Protocol):
 
         Returns:
             True if the source can be queried, False otherwise
+        """
+        ...
+
+
+class IndividualRecognizer(Protocol):
+    """
+    Port for resolving an extracted individual mention to an existing graph node.
+
+    Entity resolution ("does this individual already exist?") kept as its own
+    port — separate from ExtractionService's inline recognition logic — so the
+    match cascade can be tuned and observed independently. Implementations run
+    a three-tier cascade over the candidate classes: an exact label match
+    returns immediately, a single clear vector-similarity winner returns
+    immediately, and multiple candidates within a small score band of each
+    other trigger an LLM tiebreak (degrading to the highest-scoring candidate
+    when no LLM is configured).
+    """
+
+    def recognize(
+        self,
+        label: str,
+        context: str,
+        class_ids: Sequence[str],
+        taxonomy_id: str | None = None,
+        threshold: float | None = None,
+    ) -> RecognitionMatch | None:
+        """
+        Resolve an extracted mention to an existing individual, or None.
+
+        Args:
+            label: The extracted mention's surface text (e.g. "K8s").
+            context: Surrounding text (e.g. the mention's sentence) offered to
+                an LLM tiebreak to disambiguate near-equal candidates.
+            class_ids: Candidate classes to scope the search to — matching is
+                restricted to individuals instantiating at least one of these.
+                Cross-class matching is out of scope for this port's first
+                adapter, but the signature does not preclude it later.
+            taxonomy_id: Optional taxonomy to further scope candidates within.
+                Reserved for a future multi-taxonomy index; the first adapter
+                does not filter on it.
+            threshold: Minimum similarity (0.0-1.0) a vector or LLM-tiebreak
+                resolution must clear to be accepted. Defaults to the
+                implementation's own configured value when omitted, kept
+                independent of any class-grounding similarity threshold used
+                elsewhere in extraction.
+
+        Returns:
+            A RecognitionMatch on resolution, or None when no existing
+            individual is confidently identified as the same entity.
         """
         ...
 
