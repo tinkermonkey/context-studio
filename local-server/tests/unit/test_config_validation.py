@@ -11,7 +11,7 @@ Tests cover:
 import pytest
 from pydantic import ValidationError
 
-from config import DuckDBConfig, S3Config, SyncAdapterType, SyncConfig
+from config import DuckDBConfig, RecognitionConfig, S3Config, SyncAdapterType, SyncConfig
 
 
 class TestSyncAdapterTypeEnum:
@@ -217,3 +217,23 @@ class TestSyncConfigIntegration:
         assert config.adapter == SyncAdapterType.NONE
         assert config.duckdb is None
         assert config.s3 is None
+
+
+class TestRecognitionConfigValidation:
+    """Test RecognitionConfig validation."""
+
+    def test_default_individual_match_threshold(self) -> None:
+        """Test that individual_match_threshold defaults to 0.90."""
+        config = RecognitionConfig()
+        assert config.individual_match_threshold == 0.90
+
+    def test_individual_match_threshold_accepts_custom_value(self) -> None:
+        """Test that individual_match_threshold can be configured."""
+        config = RecognitionConfig(individual_match_threshold=0.75)
+        assert config.individual_match_threshold == 0.75
+
+    @pytest.mark.parametrize("invalid_threshold", [-0.1, 1.1])
+    def test_individual_match_threshold_out_of_range_rejected(self, invalid_threshold) -> None:
+        """Test that individual_match_threshold must be within [0, 1]."""
+        with pytest.raises(ValidationError):
+            RecognitionConfig(individual_match_threshold=invalid_threshold)

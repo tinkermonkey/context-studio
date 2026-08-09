@@ -23,6 +23,9 @@
     "cache_db_path": "./reference_api_cache.db",
     "reference_db_path": "./reference.db"
   },
+  "recognition": {
+    "individual_match_threshold": 0.90
+  },
   "telemetry": {
     "enabled": true,
     "service_name": "context-studio-backend",

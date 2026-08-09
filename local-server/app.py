@@ -314,6 +314,7 @@ async def lifespan(app: FastAPI):
             individual_index=individual_vector_index,
             embedding_service=embedding_service,
             llm=llm_router,
+            threshold=settings.recognition.individual_match_threshold,
         )
         app.state.individual_recognizer = individual_recognizer
         logger.info("CascadeIndividualRecognizer created")

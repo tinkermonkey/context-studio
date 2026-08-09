@@ -446,6 +446,20 @@ class TestRecognitionStageMatch:
         rels = repo.list_relationships(source_id="ind-kubernetes", property_id="prop-knows")
         assert len(rels) == 1
 
+    def test_recognition_threshold_defaults_to_none(self, svc_with_recognizer, repo, recognizer):
+        run = _make_run(triples=[_make_triple("K8s")])
+        svc_with_recognizer.apply(run)
+
+        assert recognizer.calls[0]["threshold"] is None
+
+    def test_recognition_threshold_is_forwarded_to_recognizer(
+        self, svc_with_recognizer, repo, recognizer
+    ):
+        run = _make_run(triples=[_make_triple("K8s")])
+        svc_with_recognizer.apply(run, recognition_threshold=0.75)
+
+        assert recognizer.calls[0]["threshold"] == 0.75
+
 
 class TestRecognitionStageNoMatch:
     """No match found -> falls through to minting a new individual, unchanged."""

@@ -249,6 +249,50 @@ class TestApplyEndpointHappyPath:
         indexed_titles = {title for title, *_ in index._individuals.values()}
         assert "Payments API" in indexed_titles
 
+    def test_apply_individual_extraction_forwards_recognition_threshold(
+        self, client, pipeline_repo, ontology_repo, ontology_service
+    ):
+        """The recognition_threshold query param reaches the recognizer (#1149)."""
+        from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
+
+        recognizer = FakeIndividualRecognizer()
+        client.app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
+            ontology_service, ontology_repo, individual_recognizer=recognizer
+        )
+
+        class_id = "cls-service"
+        ontology_repo.save_class(
+            Class(
+                id=class_id,
+                concept_scheme_id=SCHEME_ID,
+                taxonomy_id=TAXONOMY_ID,
+                title="Service",
+            )
+        )
+        run_id = _create_and_complete_individual_run(
+            pipeline_repo,
+            triples=[
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "label": "Payments API",
+                        "class_ids": [class_id],
+                    },
+                    "predicate": {},
+                    "object": {},
+                    "confidence": 0.9,
+                }
+            ],
+        )
+
+        response = client.post(
+            f"/api/pipelines/runs/{run_id}/apply",
+            params={"recognition_threshold": 0.6},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert recognizer.calls[0]["threshold"] == 0.6
+
 
 # ---------------------------------------------------------------------------
 # Idempotency

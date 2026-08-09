@@ -72,6 +72,7 @@ class IndividualExtractionApplyService:
         self,
         run: "PipelineRun",
         confidence_threshold: float = 0.0,
+        recognition_threshold: float | None = None,
     ) -> ApplyResult:
         """
         Apply individual extraction results to the ontology.
@@ -79,6 +80,9 @@ class IndividualExtractionApplyService:
         Args:
             run: Completed PipelineRun with output_summary containing triples
             confidence_threshold: Minimum confidence to include a triple (0.0–1.0)
+            recognition_threshold: Minimum similarity (0.0-1.0) the recognizer
+                requires to resolve a mention to an existing individual.
+                Defaults to the recognizer's own configured value when omitted.
 
         Returns:
             ApplyResult with counts of created and skipped entities
@@ -148,7 +152,7 @@ class IndividualExtractionApplyService:
                 # before treating it as new. Runs for every orchestrator's output —
                 # this apply() is the single funnel both share.
                 match = self._recognize_individual(
-                    subject_label, valid_class_ids, taxonomy_id, triple
+                    subject_label, valid_class_ids, taxonomy_id, triple, recognition_threshold
                 )
 
                 if match is not None and match.individual_id in created_this_run:
@@ -252,6 +256,7 @@ class IndividualExtractionApplyService:
         class_ids: list[str],
         taxonomy_id: str | None,
         triple: dict,
+        threshold: float | None = None,
     ) -> "RecognitionMatch | None":
         """
         Recognition stage: resolve an extracted mention to an existing graph node.
@@ -276,6 +281,7 @@ class IndividualExtractionApplyService:
                 context=self._triple_context(triple),
                 class_ids=class_ids,
                 taxonomy_id=taxonomy_id,
+                threshold=threshold,
             )
         except (TypeError, AttributeError, KeyError, IndexError):
             raise

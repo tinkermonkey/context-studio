@@ -1714,6 +1714,8 @@ export interface paths {
      *         taxonomy_id: Required for schema_extraction — parent taxonomy
      *         node_id: Required for schema_node_grounding — class to apply groundings to
      *         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
+     *         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
+     *             recognition stage; defaults to the recognizer's configured value
      *
      *     Returns:
      *         ApplyRunResponse with counts of created and skipped entities
@@ -9331,6 +9333,8 @@ export interface operations {
         node_id?: string | null;
         /** @description Minimum candidate confidence */
         confidence_threshold?: number;
+        /** @description Minimum similarity for individual_extraction's recognition stage to resolve a mention to an existing individual. Defaults to the recognizer's configured value when omitted. */
+        recognition_threshold?: number | null;
       };
       header?: never;
       path: {

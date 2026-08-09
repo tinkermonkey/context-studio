@@ -139,6 +139,22 @@ class ReferenceConfig(BaseModel):
         return self
 
 
+class RecognitionConfig(BaseModel):
+    """Individual recognition configuration section"""
+
+    individual_match_threshold: float = Field(
+        default=0.90,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Default minimum similarity (0.0-1.0) a candidate must clear to be "
+            "recognized as an existing individual. Kept independent of the "
+            "class-grounding similarity_threshold used elsewhere in extraction; "
+            "overridable per apply call via the recognition_threshold query param."
+        ),
+    )
+
+
 class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
@@ -213,6 +229,7 @@ class Settings(BaseModel):
     nlp: dict = Field(default_factory=dict, description="NLP pipeline configuration")
     embedding: dict = Field(default_factory=dict, description="Embedding model configuration")
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
+    recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
