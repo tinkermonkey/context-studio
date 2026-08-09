@@ -170,7 +170,9 @@ class TestLLMTiebreak:
         idx.add("swarm-id", "Docker Swarm", [CLASS_SW], description="A container orchestrator.")
         idx.add("openshift-id", "OpenShift", [CLASS_SW], description="A Kubernetes distribution.")
         recognizer = _recognizer(idx, llm=llm)
-        recognizer.recognize("Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW])
+        recognizer.recognize(
+            "Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW]
+        )
 
         prompt = llm.last_call_args["user_prompt"]
         assert "A container orchestrator." in prompt

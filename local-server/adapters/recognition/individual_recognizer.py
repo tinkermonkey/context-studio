@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Sequence
+from typing import Literal, Sequence
 
 from domain.extraction.ports import RecognitionMatch
 from domain.ontology.ports import EmbeddingService, IndividualMatch, IndividualVectorIndex
@@ -127,7 +127,7 @@ class CascadeIndividualRecognizer:
         chosen, confirmed = self._llm_tiebreak(llm, mention, context, tied)
         if chosen is None:
             return None
-        method = "llm" if confirmed else "vector"
+        method: Literal["exact", "vector", "llm"] = "llm" if confirmed else "vector"
         return RecognitionMatch(chosen.individual_id, chosen.title, chosen.score, method)
 
     @staticmethod
