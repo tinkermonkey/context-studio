@@ -8,6 +8,8 @@ cascade without a DB, embedding model, or live LLM call.
 
 import json
 
+import pytest
+
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
 from tests.fakes.fake_llm_provider import FakeLLMProvider
@@ -73,6 +75,15 @@ def _recognizer(index, llm=None, **kwargs):
         llm=llm,
         **kwargs,
     )
+
+
+class TestConstructorValidation:
+    def test_non_positive_top_k_raises(self):
+        with pytest.raises(ValueError):
+            _recognizer(_index_with_kubernetes_and_nextflow(), top_k=0)
+
+        with pytest.raises(ValueError):
+            _recognizer(_index_with_kubernetes_and_nextflow(), top_k=-1)
 
 
 class TestExactMatch:
@@ -163,6 +174,15 @@ class TestLLMTiebreak:
         match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
         assert match.individual_id == "swarm-id"
         assert match.method == "vector"
+
+    def test_programming_bug_in_llm_call_propagates_instead_of_falling_back(self):
+        class _BrokenLLMProvider(FakeLLMProvider):
+            def complete(self, *args, **kwargs):
+                raise TypeError("boom")
+
+        recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=_BrokenLLMProvider())
+        with pytest.raises(TypeError):
+            recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
 
     def test_tiebreak_prompt_includes_description_and_class_membership(self):
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "swarm-id"}))

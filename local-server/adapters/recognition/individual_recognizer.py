@@ -72,12 +72,15 @@ class CascadeIndividualRecognizer:
             model: LLM model identifier used for tiebreak calls.
 
         Raises:
-            ValueError: If threshold or tiebreak_band is not 0.0-1.0.
+            ValueError: If threshold or tiebreak_band is not 0.0-1.0, or if
+                top_k is less than 1.
         """
         if not 0.0 <= threshold <= 1.0:
             raise ValueError(f"threshold must be 0.0-1.0, got {threshold}")
         if not 0.0 <= tiebreak_band <= 1.0:
             raise ValueError(f"tiebreak_band must be 0.0-1.0, got {tiebreak_band}")
+        if top_k < 1:
+            raise ValueError(f"top_k must be >= 1, got {top_k}")
         self._individual_index = individual_index
         self._embedding_service = embedding_service
         self._llm = llm
@@ -157,6 +160,9 @@ class CascadeIndividualRecognizer:
         unconfirmed, when the LLM call fails or the response can't be parsed
         or names an id outside the tied set, so any of those degrade to a
         best guess rather than raising or silently mislabeling provenance.
+        Programming bugs (TypeError, AttributeError, KeyError, IndexError) in
+        prompt construction are not treated as LLM failures — they propagate
+        so the underlying defect is surfaced instead of silently degrading.
         """
         lines = [self._describe_candidate(c) for c in tied]
         user_prompt = (
@@ -173,6 +179,8 @@ class CascadeIndividualRecognizer:
                 max_tokens=200,
                 response_format="json",
             )
+        except (TypeError, AttributeError, KeyError, IndexError):
+            raise
         except Exception:
             _logger.warning(
                 "Individual recognition LLM tiebreak call failed; falling back to "
