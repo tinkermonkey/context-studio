@@ -124,10 +124,11 @@ class CascadeIndividualRecognizer:
         if llm is None:
             return RecognitionMatch(top.individual_id, top.title, top.score, "vector")
 
-        chosen = self._llm_tiebreak(llm, mention, context, tied)
+        chosen, confirmed = self._llm_tiebreak(llm, mention, context, tied)
         if chosen is None:
             return None
-        return RecognitionMatch(chosen.individual_id, chosen.title, chosen.score, "llm")
+        method = "llm" if confirmed else "vector"
+        return RecognitionMatch(chosen.individual_id, chosen.title, chosen.score, method)
 
     @staticmethod
     def _exact_match(mention: str, candidates: list[IndividualMatch]) -> IndividualMatch | None:
@@ -145,28 +146,40 @@ class CascadeIndividualRecognizer:
 
     def _llm_tiebreak(
         self, llm: LLMProvider, mention: str, context: str, tied: list[IndividualMatch]
-    ) -> IndividualMatch | None:
+    ) -> tuple[IndividualMatch | None, bool]:
         """
         Ask the LLM to pick among near-equal candidates, or confirm none match.
 
-        Falls back to the top-scoring tied candidate when the response can't
-        be parsed or names an id outside the tied set, so a malformed LLM
-        response degrades to a best guess rather than raising.
+        Returns (match, confirmed). confirmed is True only when the LLM
+        actually named a candidate (or explicitly said none match) — the
+        caller uses it to decide whether the match's provenance is "llm" or
+        a score-based fallback. Falls back to the top-scoring tied candidate,
+        unconfirmed, when the LLM call fails or the response can't be parsed
+        or names an id outside the tied set, so any of those degrade to a
+        best guess rather than raising or silently mislabeling provenance.
         """
-        lines = [f"- {c.individual_id}: {c.title} (similarity {c.score:.2f})" for c in tied]
+        lines = [self._describe_candidate(c) for c in tied]
         user_prompt = (
             f'Mention: "{mention}"\n'
             f'Context: "{context}"\n\n'
             "Candidate existing individuals:\n" + "\n".join(lines)
         )
-        response = llm.complete(
-            system_prompt=_TIEBREAK_SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            model=self._model,
-            temperature=0.0,
-            max_tokens=200,
-            response_format="json",
-        )
+        try:
+            response = llm.complete(
+                system_prompt=_TIEBREAK_SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+                model=self._model,
+                temperature=0.0,
+                max_tokens=200,
+                response_format="json",
+            )
+        except Exception:
+            _logger.warning(
+                "Individual recognition LLM tiebreak call failed; falling back to "
+                "the top-scoring candidate",
+                exc_info=True,
+            )
+            return tied[0], False
 
         choice = ""
         payload = re.search(r"\{.*\}", response.content or "", re.S)
@@ -177,14 +190,25 @@ class CascadeIndividualRecognizer:
                 choice = ""
 
         if choice.lower() == "none":
-            return None
+            return None, True
         for candidate in tied:
             if candidate.individual_id == choice:
-                return candidate
+                return candidate, True
 
         _logger.warning(
             "Individual recognition LLM tiebreak returned an unusable choice %r; "
             "falling back to the top-scoring candidate",
             choice,
         )
-        return tied[0]
+        return tied[0], False
+
+    @staticmethod
+    def _describe_candidate(candidate: IndividualMatch) -> str:
+        """One candidate line for the tiebreak prompt: title, description, classes, score."""
+        description = (candidate.description or "").strip()
+        detail = f" - {description}" if description else ""
+        classes = ", ".join(candidate.class_ids) if candidate.class_ids else "none"
+        return (
+            f"- {candidate.individual_id}: {candidate.title}{detail} "
+            f"(classes: {classes}; similarity {candidate.score:.2f})"
+        )

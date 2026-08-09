@@ -146,7 +146,36 @@ class TestLLMTiebreak:
         recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
         match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
         assert match.individual_id == "swarm-id"
-        assert match.method == "llm"
+        # The LLM didn't confirm this pick — a malformed response must not be
+        # tagged "llm" in the provenance audit trail.
+        assert match.method == "vector"
+
+    def test_llm_choosing_an_id_outside_the_tied_set_falls_back_to_top_candidate(self):
+        llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "not-a-candidate"}))
+        recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
+        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        assert match.individual_id == "swarm-id"
+        assert match.method == "vector"
+
+    def test_llm_call_failure_falls_back_to_top_candidate_instead_of_propagating(self):
+        llm = FakeLLMProvider(should_fail=True)
+        recognizer = _recognizer(_index_with_ambiguous_candidates(), llm=llm)
+        match = recognizer.recognize("Ambiguous Mention", context="", class_ids=[CLASS_SW])
+        assert match.individual_id == "swarm-id"
+        assert match.method == "vector"
+
+    def test_tiebreak_prompt_includes_description_and_class_membership(self):
+        llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "swarm-id"}))
+        idx = FakeIndividualVectorIndex(_VEC)
+        idx.add("swarm-id", "Docker Swarm", [CLASS_SW], description="A container orchestrator.")
+        idx.add("openshift-id", "OpenShift", [CLASS_SW], description="A Kubernetes distribution.")
+        recognizer = _recognizer(idx, llm=llm)
+        recognizer.recognize("Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW])
+
+        prompt = llm.last_call_args["user_prompt"]
+        assert "A container orchestrator." in prompt
+        assert "A Kubernetes distribution." in prompt
+        assert CLASS_SW in prompt
 
 
 class TestNoMatchFound:

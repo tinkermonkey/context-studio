@@ -104,6 +104,7 @@ class SqliteIndividualVectorIndex:
             entity_query = session.query(
                 OntologyEntity.id,
                 OntologyEntity.title,
+                OntologyEntity.description,
                 OntologyEntity.title_embedding,
             ).filter(
                 OntologyEntity.node_type == _INDIVIDUAL,
@@ -117,7 +118,7 @@ class SqliteIndividualVectorIndex:
                     .filter(IndividualClass.class_id.in_(class_ids))
                     .distinct()
                 )
-            for entity_id, title, title_blob in entity_query.all():
+            for entity_id, title, description, title_blob in entity_query.all():
                 score = self._cosine(query, title_blob)
                 if score is None or score < threshold:
                     continue
@@ -127,6 +128,7 @@ class SqliteIndividualVectorIndex:
                         class_ids=self._class_ids_of(session, str(entity_id)),
                         title=title or "",
                         score=score,
+                        description=description,
                     )
                 )
         matches.sort(key=lambda m: m.score, reverse=True)

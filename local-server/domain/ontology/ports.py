@@ -721,12 +721,15 @@ class IndividualMatch:
         title: The individual's canonical title (the label recognition adopts
             when it resolves a mention to this node).
         score: Cosine similarity in 0.0-1.0 (1.0 = identical).
+        description: The individual's description, for presenting fuller
+            context to an LLM tiebreak; None if the individual has none.
     """
 
     individual_id: str
     class_ids: list[str]
     title: str
     score: float
+    description: str | None = None
 
 
 class IndividualVectorIndex(Protocol):

@@ -246,7 +246,7 @@ class TestApplyEndpointHappyPath:
         assert response.status_code == status.HTTP_200_OK
 
         # The created individual is now searchable in the recognition index.
-        indexed_titles = {title for title, _ in index._individuals.values()}
+        indexed_titles = {title for title, *_ in index._individuals.values()}
         assert "Payments API" in indexed_titles
 
 
