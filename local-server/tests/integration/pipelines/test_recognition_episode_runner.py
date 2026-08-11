@@ -42,7 +42,7 @@ from tests.integration.pipelines._harness.episode_runner import (
     NOT_MATERIALIZED,
     run_full_pipeline_episode,
 )
-from tests.integration.pipelines._harness.metrics import recognition_metrics
+from tests.integration.pipelines._harness.metrics import entity_key_clusters, recognition_metrics
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
@@ -182,19 +182,6 @@ async def _record_episode_cassettes(
         await _record_cassette(dr_ontology_dir, fixture, triples, cassette_dir / f"{doc}.json")
 
 
-def _entity_key_clusters(mentions: list[dict]) -> set[frozenset[str]]:
-    """The set of entity_key groupings that landed on the same node_id.
-
-    Node ids are fresh (non-deterministic) UUIDs each run, so comparing them
-    directly across runs is meaningless -- this normalizes by entity_key instead,
-    making the resulting clustering structure directly comparable run-to-run.
-    """
-    clusters: dict[str, set[str]] = {}
-    for mention in mentions:
-        clusters.setdefault(mention["node_id"], set()).add(mention["entity_key"])
-    return {frozenset(entity_keys) for entity_keys in clusters.values()}
-
-
 @pytest.fixture(scope="module")
 def dr_ontology_dir() -> Path:
     spec_dir = _find_dr_spec_dir()
@@ -329,4 +316,4 @@ class TestRunFullPipelineEpisode:
         assert recognition_metrics(first.mentions) == recognition_metrics(second.mentions)
         # Which entity_keys landed on the same node, keyed by entity_key rather than raw
         # node_id (fresh each run) so the two runs' cluster structure is directly comparable.
-        assert _entity_key_clusters(first.mentions) == _entity_key_clusters(second.mentions)
+        assert entity_key_clusters(first.mentions) == entity_key_clusters(second.mentions)

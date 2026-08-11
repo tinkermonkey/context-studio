@@ -24,8 +24,9 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from tests.integration.pipelines._harness.dataset_split import RECOGNITION_EPISODES
 from tests.integration.pipelines._harness.episode_runner import run_full_pipeline_episode
-from tests.integration.pipelines._harness.metrics import recognition_metrics
+from tests.integration.pipelines._harness.metrics import entity_key_clusters, recognition_metrics
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
@@ -139,6 +140,41 @@ class TestCassetteReplayAgainstLevel1:
 
         assert metrics.dedup_precision == 1.0
         assert metrics.node_count_ratio == 1.0
+
+
+class TestStructuralReproducibilityAcrossCorpus:
+    """
+    Issue #1142 Phase 5: two full-pipeline runs over the same committed, real
+    cassette-backed episode produce identical entity-to-cluster structure --
+    for every episode in the corpus, replayed through the actual recorded
+    cassettes. ``test_recognition_episode_runner.py::
+    test_structural_reproducibility_across_runs`` covers the narrower case
+    (one episode, synthetic cassettes recorded on the fly) that validates the
+    runner's own plumbing; this covers the full four-episode corpus against
+    the real committed cassettes, so the guarantee holds end-to-end.
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("episode", RECOGNITION_EPISODES)
+    async def test_two_runs_produce_identical_cluster_structure(
+        self, episode, dr_ontology_dir, real_embedding_service
+    ):
+        cassette_dir = _EPISODES / episode / "cassettes"
+        first = await run_full_pipeline_episode(
+            episode, cassette_dir, dr_ontology_dir, real_embedding_service
+        )
+        second = await run_full_pipeline_episode(
+            episode, cassette_dir, dr_ontology_dir, real_embedding_service
+        )
+
+        first_ids = {m["node_id"] for m in first.mentions}
+        second_ids = {m["node_id"] for m in second.mentions}
+        # Fresh UUIDs each run -- confirms this isn't a no-op comparison.
+        assert first_ids.isdisjoint(second_ids)
+
+        assert recognition_metrics(first.mentions) == recognition_metrics(second.mentions)
+        assert entity_key_clusters(first.mentions) == entity_key_clusters(second.mentions)
+        assert first.extraction_misses == second.extraction_misses
 
 
 class TestCassetteHashGraphStateIndependence:
