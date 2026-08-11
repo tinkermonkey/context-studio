@@ -295,7 +295,13 @@ async def _record_document(
             "temperature": doc_fixture["temperature"],
         },
     )
-    await orchestrator.execute(state)
+    result_state = await orchestrator.execute(state)
+    if result_state.result is None:
+        raise RuntimeError(
+            f"IndividualExtractionOrchestrator returned no result while recording "
+            f"'{cassette_path}' (status={result_state.current_status}); refusing to "
+            "flush a partial cassette"
+        )
     recorder.flush()
     return len(recorder._recordings)
 

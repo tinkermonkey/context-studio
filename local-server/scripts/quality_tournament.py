@@ -33,6 +33,7 @@ Usage (from local-server/, venv active):
 
 import argparse
 import asyncio
+import json
 import os
 import random
 import sys
@@ -86,7 +87,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
-from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider, CassetteStaleError
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
@@ -620,11 +621,17 @@ async def _build_recognition_reports(
     gracefully (returns `{}` or skips an episode) when the DR spec checkout or
     an episode's cassettes are missing, the same guard `build_registry` uses
     for the `default` variants via `dr_spec_available()`. Also skips (with a
-    warning, never raising) an episode that fails at runtime, or one whose
-    `EpisodeRunResult.mentions` is empty after `extraction_misses` are
-    accounted for -- `recognition_metrics([])` reports a perfect 1.0 score for
-    an empty input, so scoring a total extraction failure would misrepresent
-    it as a dedup success.
+    warning, never raising) an episode that fails with a recoverable,
+    episode-scoped error -- a missing/malformed fixture or cassette
+    (`FileNotFoundError`, `json.JSONDecodeError`), a stale cassette
+    (`CassetteStaleError`), or an orchestrator/import failure surfaced as
+    `RuntimeError` -- or one whose `EpisodeRunResult.mentions` is empty after
+    `extraction_misses` are accounted for -- `recognition_metrics([])` reports
+    a perfect 1.0 score for an empty input, so scoring a total extraction
+    failure would misrepresent it as a dedup success. Infrastructure failures
+    (`MemoryError`, `OSError`, `sqlite3.DatabaseError`, etc.) are not caught
+    here and propagate, since silently skipping them would let the tournament
+    exit 0 with an incomplete, unflagged scoreboard.
     """
     from tests.integration.pipelines import conftest
 
@@ -649,7 +656,7 @@ async def _build_recognition_reports(
             result = await run_full_pipeline_episode(
                 episode, cassette_dir, dr_ontology_dir, embedding
             )
-        except Exception as exc:
+        except (FileNotFoundError, json.JSONDecodeError, CassetteStaleError, RuntimeError) as exc:
             print(
                 f"WARNING: recognition episode '{episode}' failed at runtime "
                 f"({type(exc).__name__}: {exc}) -- skipped. Other episodes, variant "
