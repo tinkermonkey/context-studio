@@ -1,14 +1,16 @@
 """
 Integration tests for the full-pipeline recognition-episode runner (issue #1142 Phase 1).
 
-Exercises ``run_full_pipeline_episode`` against the two existing episode fixtures
+Exercises ``run_full_pipeline_episode`` against two of the four episode fixtures
 (``surface_variants``, ``kubernetes_energy``) using synthetic per-document cassettes
-recorded against a scripted LLM double -- Phase 2 (recording real cassettes against a
-live LLM) is separate, later work; these cassettes only need to make the runner's own
-plumbing (state accumulation, the mention->node mapping, structural reproducibility)
-independently testable now. The recorded content mirrors each episode's
-``expected_entities.json`` exactly, so extraction is "perfect" by construction --
-these tests validate the runner, not extraction quality.
+recorded against a scripted LLM double -- these cassettes only need to make the
+runner's own plumbing (state accumulation, the mention->node mapping, structural
+reproducibility) independently testable, distinct from Phase 2 (recording real
+cassettes against a live LLM), which is covered against the full four-episode
+corpus in ``test_recognition_episode_cassette_replay.py``. The recorded content
+mirrors each episode's ``expected_entities.json`` exactly, so extraction is
+"perfect" by construction -- these tests validate the runner, not extraction
+quality.
 """
 
 import json

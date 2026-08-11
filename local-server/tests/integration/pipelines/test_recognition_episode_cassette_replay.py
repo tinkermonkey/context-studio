@@ -24,6 +24,19 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from domain.extraction.services import ExtractionService
+from domain.ontology.entities import Individual
+from domain.ontology.services import OntologyService
+from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontology
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 from tests.integration.pipelines._harness.dataset_split import RECOGNITION_EPISODES
 from tests.integration.pipelines._harness.episode_runner import run_full_pipeline_episode
 from tests.integration.pipelines._harness.metrics import entity_key_clusters, recognition_metrics
@@ -51,7 +64,7 @@ def real_embedding_service():
     try:
         emb = SentenceTransformerEmbedding()
         emb.embed("warmup")
-    except Exception as exc:
+    except OSError as exc:
         pytest.skip(f"SentenceTransformer unavailable offline: {exc}")
     return emb
 
@@ -183,20 +196,6 @@ class TestCassetteHashGraphStateIndependence:
         """ADR-1: a document's pass-1 prompt -- and therefore its cassette hash
         key -- is identical whether built against a pristine graph or one that
         already holds individuals materialized by a prior document's apply()."""
-        from adapters.events.in_process import InProcessEventPublisher
-        from adapters.persistence.sqlite.connection import (
-            create_local_db_engine,
-            create_session_factory,
-        )
-        from adapters.persistence.sqlite.models import Base
-        from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-        from domain.extraction.services import ExtractionService
-        from domain.ontology.entities import Individual
-        from domain.ontology.services import OntologyService
-        from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontology
-        from tests.fakes.fake_embedding_service import FakeEmbeddingService
-        from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
-
         engine = create_local_db_engine("sqlite:///:memory:")
         Base.metadata.create_all(engine)
         session_factory = create_session_factory(engine)

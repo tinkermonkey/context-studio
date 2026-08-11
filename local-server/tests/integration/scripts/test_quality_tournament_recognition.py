@@ -221,7 +221,7 @@ class TestBuildRecognitionReports:
         try:
             embedding = SentenceTransformerEmbedding()
             embedding.embed("warmup")
-        except Exception as exc:
+        except OSError as exc:
             pytest.skip(f"SentenceTransformer unavailable offline: {exc}")
 
         reports = await _build_recognition_reports(embedding)
