@@ -120,8 +120,8 @@ class TestBuildRecognitionReports:
         be skipped so every other episode's results (and the scoreboard digest
         built from them) still come back.
         """
-        import tests.integration.pipelines.conftest as conftest
         import scripts.quality_tournament as quality_tournament
+        import tests.integration.pipelines.conftest as conftest
 
         monkeypatch.setattr(conftest, "_find_dr_spec_dir", lambda: tmp_path)
         cassettes_root = tmp_path / "episodes"
@@ -163,8 +163,8 @@ class TestBuildRecognitionReports:
         `recognition_metrics([])` would report a perfect 1.0 score. That episode
         must be excluded from the reports rather than silently graded perfect.
         """
-        import tests.integration.pipelines.conftest as conftest
         import scripts.quality_tournament as quality_tournament
+        import tests.integration.pipelines.conftest as conftest
 
         monkeypatch.setattr(conftest, "_find_dr_spec_dir", lambda: tmp_path)
         cassettes_root = tmp_path / "episodes"
