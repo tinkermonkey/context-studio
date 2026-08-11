@@ -28,7 +28,6 @@ from pathlib import Path
 from unittest.mock import Mock
 from uuid import uuid4
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
@@ -36,6 +35,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import EmbeddingService
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRun, PipelineType
@@ -168,6 +168,7 @@ async def run_full_pipeline_episode(
     episode: str,
     cassette_dir: Path,
     dr_ontology_dir: Path,
+    embedding_service: EmbeddingService,
 ) -> EpisodeRunResult:
     """
     Run one recognition episode's documents through the full extraction pipeline.
@@ -176,9 +177,9 @@ async def run_full_pipeline_episode(
     order): replays LLM extraction from ``cassette_dir / f"{doc}.json"`` via
     ``IndividualExtractionOrchestrator``, then materializes the triples via
     ``IndividualExtractionApplyService.apply()``. The ontology graph, individual
-    vector index, ontology repository, and embedding service are built once and
-    shared across every document, so document N+1's recognition can resolve
-    against individuals created while applying documents 1..N.
+    vector index, and ontology repository are built once and shared across every
+    document, so document N+1's recognition can resolve against individuals
+    created while applying documents 1..N.
 
     Args:
         episode: Episode name (a directory under
@@ -187,6 +188,11 @@ async def run_full_pipeline_episode(
             named ``{doc_stem}.json`` (e.g. ``doc_01.json``).
         dr_ontology_dir: Path to the Documentation Robotics spec checkout to
             import as the episode's ontology (see ``scripts.dr_ontology_loader``).
+        embedding_service: Embedding service shared across the whole run, wired
+            into the individual vector index and recognizer exactly as callers
+            would in production. Caller-supplied rather than constructed here so
+            tests can inject a fake (avoiding network access to download a real
+            model) while production callers pass a real adapter.
 
     Returns:
         EpisodeRunResult with the mention->node mapping and per-document diagnostics.
@@ -203,11 +209,10 @@ async def run_full_pipeline_episode(
     Base.metadata.create_all(engine)
     session_factory = create_session_factory(engine)
     repo = SQLiteOntologyRepository(session_factory)
-    embedding = SentenceTransformerEmbedding()
-    index = SqliteIndividualVectorIndex(session_factory, embedding)
+    index = SqliteIndividualVectorIndex(session_factory, embedding_service)
     ontology_service = OntologyService(
         repository=repo,
-        embedding_service=embedding,
+        embedding_service=embedding_service,
         event_publisher=InProcessEventPublisher(),
         schema_index=None,
         individual_index=index,
@@ -220,7 +225,7 @@ async def run_full_pipeline_episode(
         )
 
     recognizer = CascadeIndividualRecognizer(
-        individual_index=index, embedding_service=embedding, llm=None
+        individual_index=index, embedding_service=embedding_service, llm=None
     )
     apply_service = IndividualExtractionApplyService(
         ontology_service, repo, individual_recognizer=recognizer
@@ -235,7 +240,7 @@ async def run_full_pipeline_episode(
 
         extraction_service = ExtractionService(
             ontology_repo=repo,
-            embedding_service=embedding,
+            embedding_service=embedding_service,
             llm=llm,
             nlp=Mock(),
             reference_sources=[],

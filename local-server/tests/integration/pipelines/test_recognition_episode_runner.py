@@ -39,6 +39,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 from tests.integration.pipelines._harness.episode_runner import (
     NOT_EXTRACTED,
+    NOT_MATERIALIZED,
     run_full_pipeline_episode,
 )
 from tests.integration.pipelines._harness.metrics import recognition_metrics
@@ -130,11 +131,15 @@ async def _record_cassette(
     recorder.flush()
 
 
+_UNRESOLVABLE_CLASS_REF = "nonexistent.unresolvable_class"
+
+
 async def _record_episode_cassettes(
     dr_ontology_dir: Path,
     episode_dir: Path,
     cassette_dir: Path,
     omit: tuple[str, str] | None = None,
+    bad_class_ref: tuple[str, str] | None = None,
 ) -> None:
     """
     Record a cassette per document for an episode, matching its expected_entities.json.
@@ -142,6 +147,13 @@ async def _record_episode_cassettes(
     ``omit``, when given, is an ``(doc, surface)`` pair to leave out of that
     document's recorded pass-1 response -- simulating a mention the LLM never
     extracted, to exercise the runner's extraction-miss path.
+
+    ``bad_class_ref``, when given, is a ``(doc, surface)`` pair whose recorded
+    triple carries ``_UNRESOLVABLE_CLASS_REF`` instead of its real class_ref --
+    no alias in the DR taxonomy resolves it, so ``_ground_typing_class_ids``
+    leaves ``class_ids`` empty and ``apply()`` skips materializing it. Simulates
+    a mention the LLM extracts but the pipeline cannot resolve/create a node
+    for, to exercise the runner's NOT_MATERIALIZED path.
     """
     expected = json.loads((episode_dir / "expected_entities.json").read_text())
     mentions_by_doc: dict[str, list[dict]] = {}
@@ -156,11 +168,27 @@ async def _record_episode_cassettes(
         doc = doc_path.stem
         fixture = json.loads(doc_path.read_text())
         triples = [
-            _typing_triple(m["surface"], m["class_ref"])
+            _typing_triple(
+                m["surface"],
+                _UNRESOLVABLE_CLASS_REF if bad_class_ref == (doc, m["surface"]) else m["class_ref"],
+            )
             for m in mentions_by_doc.get(doc, [])
             if omit is None or (doc, m["surface"]) != omit
         ]
         await _record_cassette(dr_ontology_dir, fixture, triples, cassette_dir / f"{doc}.json")
+
+
+def _entity_key_clusters(mentions: list[dict]) -> set[frozenset[str]]:
+    """The set of entity_key groupings that landed on the same node_id.
+
+    Node ids are fresh (non-deterministic) UUIDs each run, so comparing them
+    directly across runs is meaningless -- this normalizes by entity_key instead,
+    making the resulting clustering structure directly comparable run-to-run.
+    """
+    clusters: dict[str, set[str]] = {}
+    for mention in mentions:
+        clusters.setdefault(mention["node_id"], set()).add(mention["entity_key"])
+    return {frozenset(entity_keys) for entity_keys in clusters.values()}
 
 
 @pytest.fixture(scope="module")
@@ -182,7 +210,9 @@ class TestRunFullPipelineEpisode:
         cassette_dir = tmp_path / "surface_variants"
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir)
 
-        result = await run_full_pipeline_episode("surface_variants", cassette_dir, dr_ontology_dir)
+        result = await run_full_pipeline_episode(
+            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
 
         assert not result.extraction_misses
         assert len(result.documents) == 2
@@ -210,7 +240,9 @@ class TestRunFullPipelineEpisode:
         cassette_dir = tmp_path / "surface_variants"
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir)
 
-        result = await run_full_pipeline_episode("surface_variants", cassette_dir, dr_ontology_dir)
+        result = await run_full_pipeline_episode(
+            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
         metrics = recognition_metrics(result.mentions)
 
         assert metrics.dedup_precision == 1.0
@@ -226,7 +258,9 @@ class TestRunFullPipelineEpisode:
         omitted = ("doc_02", "kubernetes")
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir, omit=omitted)
 
-        result = await run_full_pipeline_episode("surface_variants", cassette_dir, dr_ontology_dir)
+        result = await run_full_pipeline_episode(
+            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
 
         assert len(result.extraction_misses) == 1
         miss = result.extraction_misses[0]
@@ -237,6 +271,32 @@ class TestRunFullPipelineEpisode:
         assert len(kubernetes_mentions) == 1
         # The other three entities' mentions (2 each) were still extracted and scored normally.
         assert len(result.mentions) == 7
+
+    @pytest.mark.asyncio
+    async def test_not_materialized_when_class_ref_unresolvable(self, dr_ontology_dir, tmp_path):
+        """A mention the scripted LLM extracts but tags with a class_ref no taxonomy alias
+        resolves is skipped by apply() (it requires resolvable class_ids to materialize a
+        typed individual) -- reported as NOT_MATERIALIZED, not NOT_EXTRACTED, since the LLM
+        did produce it."""
+        episode_dir = _EPISODES / "surface_variants"
+        cassette_dir = tmp_path / "surface_variants_bad_class"
+        bad = ("doc_01", "Kubernetes")
+        await _record_episode_cassettes(
+            dr_ontology_dir, episode_dir, cassette_dir, bad_class_ref=bad
+        )
+
+        result = await run_full_pipeline_episode(
+            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
+
+        assert len(result.extraction_misses) == 1
+        miss = result.extraction_misses[0]
+        assert (miss["doc"], miss["surface"]) == bad
+        assert miss["reason"] == NOT_MATERIALIZED
+        # doc_02's "kubernetes" mention carries its own (valid) class_ref, so it's
+        # extracted and materialized normally, independent of doc_01's bad triple.
+        kubernetes_mentions = [m for m in result.mentions if m["entity_key"] == "kubernetes"]
+        assert len(kubernetes_mentions) == 1
 
     @pytest.mark.asyncio
     async def test_structural_reproducibility_across_runs(self, dr_ontology_dir, tmp_path):
@@ -250,8 +310,12 @@ class TestRunFullPipelineEpisode:
         cassette_dir = tmp_path / "kubernetes_energy"
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir)
 
-        first = await run_full_pipeline_episode("kubernetes_energy", cassette_dir, dr_ontology_dir)
-        second = await run_full_pipeline_episode("kubernetes_energy", cassette_dir, dr_ontology_dir)
+        first = await run_full_pipeline_episode(
+            "kubernetes_energy", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
+        second = await run_full_pipeline_episode(
+            "kubernetes_energy", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+        )
 
         first_ids = {m["node_id"] for m in first.mentions}
         second_ids = {m["node_id"] for m in second.mentions}
@@ -259,6 +323,6 @@ class TestRunFullPipelineEpisode:
         assert first_ids.isdisjoint(second_ids)
 
         assert recognition_metrics(first.mentions) == recognition_metrics(second.mentions)
-        assert [(m["entity_key"], m["node_id"] in first_ids) for m in first.mentions] == [
-            (m["entity_key"], m["node_id"] in second_ids) for m in second.mentions
-        ]
+        # Which entity_keys landed on the same node, keyed by entity_key rather than raw
+        # node_id (fresh each run) so the two runs' cluster structure is directly comparable.
+        assert _entity_key_clusters(first.mentions) == _entity_key_clusters(second.mentions)
