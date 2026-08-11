@@ -2,8 +2,9 @@
 Record per-document LLM cassettes for the individual-recognition episodes
 (issue #1142 Phase 2).
 
-Writes one cassette per document for the two existing recognition episodes
-(``surface_variants``, ``kubernetes_energy``) so
+Writes one cassette per document for the recognition episodes
+(``surface_variants``, ``kubernetes_energy``, ``distractor_same_class``,
+``cross_doc_convergence``) so
 ``tests/integration/pipelines/_harness/episode_runner.py`` can replay each
 episode's full extraction pipeline deterministically via
 ``CassetteLLMProvider``, without live LLM access.
@@ -152,6 +153,51 @@ _DOCUMENTS = {
                 # per task."
                 _relationship_triple("Nf-PEAK", "depends-on", "RAPL counters"),
             ],
+        },
+    },
+    "distractor_same_class": {
+        "doc_01": {
+            "pass1": [
+                _typing_triple("Beacon Primary Node", "technology.node"),
+            ],
+            "pass2": [],
+        },
+        "doc_02": {
+            "pass1": [
+                _typing_triple("Beacon Standby Node", "technology.node"),
+            ],
+            "pass2": [],
+        },
+        "doc_03": {
+            "pass1": [
+                _typing_triple("Beacon Primary Node", "technology.node"),
+                _typing_triple("Beacon Standby Node", "technology.node"),
+            ],
+            "pass2": [],
+        },
+    },
+    "cross_doc_convergence": {
+        "doc_01": {
+            "pass1": [
+                _typing_triple("Ingest Worker", "application.applicationcomponent"),
+                _typing_triple("Airflow Scheduler", "technology.systemsoftware"),
+            ],
+            "pass2": [],
+        },
+        "doc_02": {
+            "pass1": [
+                _typing_triple("ingest worker", "application.applicationcomponent"),
+                _typing_triple("Metrics Store", "application.dataobject"),
+            ],
+            "pass2": [],
+        },
+        "doc_03": {
+            "pass1": [
+                _typing_triple("Ingest-Workers", "application.applicationcomponent"),
+                _typing_triple("Airflow Scheduler", "technology.systemsoftware"),
+                _typing_triple("metrics store", "application.dataobject"),
+            ],
+            "pass2": [],
         },
     },
 }

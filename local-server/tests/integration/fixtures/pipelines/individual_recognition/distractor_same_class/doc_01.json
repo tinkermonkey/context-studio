@@ -1,0 +1,1 @@
+{"text": "Beacon Primary Node accepts all incoming heartbeat signals for the cluster. It writes each signal to the local heartbeat log before acknowledging the sender.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}

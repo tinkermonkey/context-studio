@@ -1,0 +1,1 @@
+{"text": "Autoscaling adds capacity to the ingest worker pool during peak load. The Metrics Store exposes a query API that dashboards poll every minute.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}

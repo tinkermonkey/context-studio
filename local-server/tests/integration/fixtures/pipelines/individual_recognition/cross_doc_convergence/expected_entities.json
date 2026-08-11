@@ -1,0 +1,8 @@
+[
+  {"entity_key": "ingest_worker", "canonical_title": "Ingest Worker", "class_ref": "application.applicationcomponent",
+   "mentions": [{"doc": "doc_01", "surface": "Ingest Worker"}, {"doc": "doc_02", "surface": "ingest worker"}, {"doc": "doc_03", "surface": "Ingest-Workers"}]},
+  {"entity_key": "airflow_scheduler", "canonical_title": "Airflow Scheduler", "class_ref": "technology.systemsoftware",
+   "mentions": [{"doc": "doc_01", "surface": "Airflow Scheduler"}, {"doc": "doc_03", "surface": "Airflow Scheduler"}]},
+  {"entity_key": "metrics_store", "canonical_title": "Metrics Store", "class_ref": "application.dataobject",
+   "mentions": [{"doc": "doc_02", "surface": "Metrics Store"}, {"doc": "doc_03", "surface": "metrics store"}]}
+]

@@ -1,0 +1,1 @@
+{"text": "The Ingest Worker pool absorbs bursts of incoming events. Airflow Scheduler triggers the nightly aggregation job once the pool drains.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}
