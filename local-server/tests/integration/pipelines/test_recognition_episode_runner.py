@@ -107,6 +107,10 @@ async def _record_cassette(
     )
     import_dr_ontology(ontology_service, repo, dr_ontology_dir)
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    if taxonomy is None:
+        raise RuntimeError(
+            f"Import of {dr_ontology_dir} did not create the '{DR_TAXONOMY_IDENTIFIER}' taxonomy"
+        )
 
     recorder = RecordingLLMProvider(_ScriptedExtractionLLM(pass1_triples), cassette_path)
     extraction_service = ExtractionService(
