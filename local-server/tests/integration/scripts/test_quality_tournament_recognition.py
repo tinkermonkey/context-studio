@@ -52,6 +52,26 @@ def _fake_reports() -> dict[str, RecognitionMetrics]:
             gt_entity_count=5,
             predicted_node_count=6,
         ),
+        "distractor_same_class": RecognitionMetrics(
+            dedup_precision=1.0,
+            dedup_recall=1.0,
+            dedup_f1=1.0,
+            resolution_accuracy=1.0,
+            canonical_label_accuracy=1.0,
+            node_count_ratio=1.0,
+            gt_entity_count=2,
+            predicted_node_count=2,
+        ),
+        "cross_doc_convergence": RecognitionMetrics(
+            dedup_precision=1.0,
+            dedup_recall=1.0,
+            dedup_f1=1.0,
+            resolution_accuracy=1.0,
+            canonical_label_accuracy=1.0,
+            node_count_ratio=1.0,
+            gt_entity_count=3,
+            predicted_node_count=3,
+        ),
     }
 
 
@@ -118,10 +138,10 @@ class TestAggregateRecognition:
     def test_means_across_episodes(self):
         summary = _aggregate_recognition(_fake_reports())
         assert summary == {
-            "dedup_precision": 0.95,
-            "dedup_recall": 0.9,
-            "dedup_f1": 0.925,
-            "node_count_ratio": 1.1,
+            "dedup_precision": 0.975,
+            "dedup_recall": 0.95,
+            "dedup_f1": 0.9625,
+            "node_count_ratio": 1.05,
         }
 
     def test_empty_reports_yield_zeroed_summary(self):
@@ -171,6 +191,8 @@ class TestRecognitionScoreboardSection:
         assert "## Recognition diagnostics" in digest
         assert "surface_variants" in digest
         assert "kubernetes_energy" in digest
+        assert "distractor_same_class" in digest
+        assert "cross_doc_convergence" in digest
         assert "1.000" in digest  # surface_variants dedup_precision
 
         # Positioned after the extraction/arxiv tables, not mixed into them.

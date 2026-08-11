@@ -1,0 +1,9 @@
+{
+  "68ce0f704c452bca95406e3643e7b6e52923e5d1243c88f89f2dfa0d4216ae5a": {
+    "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Beacon Primary Node\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.node\"}, \"confidence\": 0.95}]}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

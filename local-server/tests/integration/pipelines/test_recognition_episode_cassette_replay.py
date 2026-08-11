@@ -98,6 +98,48 @@ class TestCassetteReplayAgainstLevel1:
 
         assert metrics.dedup_precision >= 0.9  # the FR4.3 safety guarantee
 
+    @pytest.mark.asyncio
+    async def test_distractor_same_class_replay_matches_level1(
+        self, dr_ontology_dir, real_embedding_service
+    ):
+        """Level 2 stays false-merge-free on the same-class distractor episode,
+        consistent with Level 1 (test_recognition_keeps_same_class_distractors_distinct:
+        dedup_precision=1.0, node_count_ratio=1.0). "Beacon Primary Node" and
+        "Beacon Standby Node" share class technology.node and co-occur in
+        doc_03, exercising within-document discrimination."""
+        cassette_dir = _EPISODES / "distractor_same_class" / "cassettes"
+        result = await run_full_pipeline_episode(
+            "distractor_same_class", cassette_dir, dr_ontology_dir, real_embedding_service
+        )
+        assert not result.extraction_misses
+
+        metrics = recognition_metrics(result.mentions)
+        print(f"\n── Level 2 recognition (distractor_same_class) ── {metrics}")
+
+        assert metrics.dedup_precision == 1.0
+        assert metrics.node_count_ratio == 1.0
+
+    @pytest.mark.asyncio
+    async def test_cross_doc_convergence_replay_matches_level1(
+        self, dr_ontology_dir, real_embedding_service
+    ):
+        """Level 2 reproduces Level 1's perfect 3-document convergence
+        (test_recognition_converges_surface_variants_across_three_documents:
+        precision=1.0, node_count_ratio=1.0). "Ingest Worker" / "ingest worker"
+        / "Ingest-Workers" appears in all 3 documents and must resolve to a
+        single node."""
+        cassette_dir = _EPISODES / "cross_doc_convergence" / "cassettes"
+        result = await run_full_pipeline_episode(
+            "cross_doc_convergence", cassette_dir, dr_ontology_dir, real_embedding_service
+        )
+        assert not result.extraction_misses
+
+        metrics = recognition_metrics(result.mentions)
+        print(f"\n── Level 2 recognition (cross_doc_convergence) ── {metrics}")
+
+        assert metrics.dedup_precision == 1.0
+        assert metrics.node_count_ratio == 1.0
+
 
 class TestCassetteHashGraphStateIndependence:
     @pytest.mark.asyncio
