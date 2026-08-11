@@ -93,6 +93,14 @@ class _ScriptedExtractionLLM:
     async def complete_async(self, **kwargs) -> LLMResponse:
         return self.complete(**kwargs)
 
+    def is_model_available(self, model: str) -> bool:
+        """Check if a model is available (always true for this test double)."""
+        return True
+
+    def list_available_models(self) -> list[str]:
+        """Get list of available models (empty for this test double)."""
+        return []
+
 
 async def _record_cassette(
     dr_ontology_dir: Path, doc_fixture: dict, pass1_triples: list[dict], cassette_path: Path
