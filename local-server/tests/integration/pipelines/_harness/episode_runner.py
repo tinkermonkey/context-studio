@@ -264,7 +264,14 @@ async def run_full_pipeline_episode(
             },
         )
         result_state = await orchestrator.execute(state)
-        output = result_state.result or {}
+        if result_state.result is None:
+            raise RuntimeError(
+                f"IndividualExtractionOrchestrator returned no result for doc "
+                f"'{doc}' in episode '{episode}' (status={result_state.current_status}); "
+                "this is an orchestrator failure, not zero extracted individuals, and "
+                "must not be silently scored as NOT_EXTRACTED misses"
+            )
+        output = result_state.result
         triples = output.get("triples", [])
 
         by_alias, _ = extraction_service._class_index(taxonomy)
