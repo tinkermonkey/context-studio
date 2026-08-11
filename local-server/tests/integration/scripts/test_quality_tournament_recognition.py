@@ -26,7 +26,10 @@ from scripts.quality_tournament import (
     _render_scoreboard_digest,
 )
 from tests.integration.pipelines._harness.dataset_split import RECOGNITION_EPISODES
-from tests.integration.pipelines._harness.episode_runner import EpisodeRunResult
+from tests.integration.pipelines._harness.episode_runner import (
+    EpisodeRunResult,
+    EpisodeSetupError,
+)
 from tests.integration.pipelines._harness.metrics import RecognitionMetrics
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
 
@@ -113,12 +116,13 @@ class TestBuildRecognitionReports:
         assert reports == {}
 
     @pytest.mark.asyncio
-    async def test_episode_runtime_failure_is_skipped_not_raised(self, tmp_path, monkeypatch):
+    async def test_episode_setup_failure_is_skipped_not_raised(self, tmp_path, monkeypatch):
         """
-        A single episode blowing up at runtime (malformed cassette, DB error,
-        whatever) must not propagate and kill the whole tournament -- it should
-        be skipped so every other episode's results (and the scoreboard digest
-        built from them) still come back.
+        A single episode blowing up with a recoverable, episode-scoped setup
+        error (malformed fixture, orchestrator/import failure) must not
+        propagate and kill the whole tournament -- it should be skipped so
+        every other episode's results (and the scoreboard digest built from
+        them) still come back.
         """
         import scripts.quality_tournament as quality_tournament
         import tests.integration.pipelines.conftest as conftest
@@ -133,7 +137,7 @@ class TestBuildRecognitionReports:
 
         async def fake_run_full_pipeline_episode(episode, cassette_dir, dr_ontology_dir, embed):
             if episode == failing_episode:
-                raise RuntimeError("boom")
+                raise EpisodeSetupError("boom")
             return EpisodeRunResult(
                 episode=episode,
                 mentions=[
@@ -154,6 +158,35 @@ class TestBuildRecognitionReports:
 
         assert failing_episode not in reports
         assert set(reports) == set(RECOGNITION_EPISODES) - {failing_episode}
+
+    @pytest.mark.asyncio
+    async def test_infrastructure_runtime_error_propagates(self, tmp_path, monkeypatch):
+        """
+        A bare `RuntimeError` (e.g. WAL contention/corruption surfaced by
+        `save_individual()`) or an unrelated `RuntimeError` subclass (e.g.
+        `NotImplementedError` from an accidental ORM-mapper fallback) is an
+        infrastructure failure, not a recoverable episode-setup error -- it
+        must propagate rather than being silently skipped, so the tournament
+        does not exit 0 with an incomplete, unflagged scoreboard.
+        """
+        import scripts.quality_tournament as quality_tournament
+        import tests.integration.pipelines.conftest as conftest
+
+        monkeypatch.setattr(conftest, "_find_dr_spec_dir", lambda: tmp_path)
+        cassettes_root = tmp_path / "episodes"
+        for episode in RECOGNITION_EPISODES:
+            (cassettes_root / episode / "cassettes").mkdir(parents=True)
+        monkeypatch.setattr(quality_tournament, "_RECOGNITION_EPISODES_DIR", cassettes_root)
+
+        async def fake_run_full_pipeline_episode(episode, cassette_dir, dr_ontology_dir, embed):
+            raise RuntimeError("WAL contention while reloading individual after save")
+
+        monkeypatch.setattr(
+            quality_tournament, "run_full_pipeline_episode", fake_run_full_pipeline_episode
+        )
+
+        with pytest.raises(RuntimeError):
+            await _build_recognition_reports(embedding=None)
 
     @pytest.mark.asyncio
     async def test_episode_with_zero_scoreable_mentions_is_skipped(self, tmp_path, monkeypatch):

@@ -52,6 +52,17 @@ _EPISODES_DIR = (
     Path(__file__).parent.parent.parent / "fixtures" / "pipelines" / "individual_recognition"
 )
 
+
+class EpisodeSetupError(RuntimeError):
+    """
+    Raised when a recognition episode cannot be run to completion due to a
+    misconfigured fixture or a broken orchestrator contract -- not an
+    infrastructure failure. Callers should catch this specifically rather
+    than the broader `RuntimeError`, since `RuntimeError` is also the parent
+    class of unrelated errors (e.g. `NotImplementedError`, `RecursionError`)
+    that should propagate instead of being treated as a skippable episode.
+    """
+
 # Why a mention lands out of the mention->node mapping recognition_metrics() scores.
 NOT_EXTRACTED = "not_extracted"  # the LLM never produced a matching individual mention
 NOT_MATERIALIZED = "not_materialized"  # extracted, but apply() could not resolve/create a node
@@ -220,7 +231,7 @@ async def run_full_pipeline_episode(
     import_dr_ontology(ontology_service, repo, dr_ontology_dir)
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     if taxonomy is None:
-        raise RuntimeError(
+        raise EpisodeSetupError(
             f"Import of {dr_ontology_dir} did not create the '{DR_TAXONOMY_IDENTIFIER}' taxonomy"
         )
 
@@ -265,7 +276,7 @@ async def run_full_pipeline_episode(
         )
         result_state = await orchestrator.execute(state)
         if result_state.result is None:
-            raise RuntimeError(
+            raise EpisodeSetupError(
                 f"IndividualExtractionOrchestrator returned no result for doc "
                 f"'{doc}' in episode '{episode}' (status={result_state.current_status}); "
                 "this is an orchestrator failure, not zero extracted individuals, and "

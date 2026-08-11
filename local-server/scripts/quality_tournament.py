@@ -98,7 +98,10 @@ from tests.integration.pipelines._harness.dataset_split import (
     ontology_context_for,
     split_for,
 )
-from tests.integration.pipelines._harness.episode_runner import run_full_pipeline_episode
+from tests.integration.pipelines._harness.episode_runner import (
+    EpisodeSetupError,
+    run_full_pipeline_episode,
+)
 from tests.integration.pipelines._harness.error_report import (
     ScenarioReport,
     build_missed_triples,
@@ -625,13 +628,14 @@ async def _build_recognition_reports(
     episode-scoped error -- a missing/malformed fixture or cassette
     (`FileNotFoundError`, `json.JSONDecodeError`), a stale cassette
     (`CassetteStaleError`), or an orchestrator/import failure surfaced as
-    `RuntimeError` -- or one whose `EpisodeRunResult.mentions` is empty after
-    `extraction_misses` are accounted for -- `recognition_metrics([])` reports
-    a perfect 1.0 score for an empty input, so scoring a total extraction
-    failure would misrepresent it as a dedup success. Infrastructure failures
-    (`MemoryError`, `OSError`, `sqlite3.DatabaseError`, etc.) are not caught
-    here and propagate, since silently skipping them would let the tournament
-    exit 0 with an incomplete, unflagged scoreboard.
+    `EpisodeSetupError` -- or one whose `EpisodeRunResult.mentions` is empty
+    after `extraction_misses` are accounted for -- `recognition_metrics([])`
+    reports a perfect 1.0 score for an empty input, so scoring a total
+    extraction failure would misrepresent it as a dedup success. Infrastructure
+    failures (`MemoryError`, `OSError`, `sqlite3.DatabaseError`, etc.) and any
+    other `RuntimeError` (e.g. `NotImplementedError`, `RecursionError`) are not
+    caught here and propagate, since silently skipping them would let the
+    tournament exit 0 with an incomplete, unflagged scoreboard.
     """
     from tests.integration.pipelines import conftest
 
@@ -656,7 +660,12 @@ async def _build_recognition_reports(
             result = await run_full_pipeline_episode(
                 episode, cassette_dir, dr_ontology_dir, embedding
             )
-        except (FileNotFoundError, json.JSONDecodeError, CassetteStaleError, RuntimeError) as exc:
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+            CassetteStaleError,
+            EpisodeSetupError,
+        ) as exc:
             print(
                 f"WARNING: recognition episode '{episode}' failed at runtime "
                 f"({type(exc).__name__}: {exc}) -- skipped. Other episodes, variant "
