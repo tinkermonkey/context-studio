@@ -619,7 +619,12 @@ async def _build_recognition_reports(
     invocation rather than once per variant (see `_amain`). Degrades
     gracefully (returns `{}` or skips an episode) when the DR spec checkout or
     an episode's cassettes are missing, the same guard `build_registry` uses
-    for the `default` variants via `dr_spec_available()`.
+    for the `default` variants via `dr_spec_available()`. Also skips (with a
+    warning, never raising) an episode that fails at runtime, or one whose
+    `EpisodeRunResult.mentions` is empty after `extraction_misses` are
+    accounted for -- `recognition_metrics([])` reports a perfect 1.0 score for
+    an empty input, so scoring a total extraction failure would misrepresent
+    it as a dedup success.
     """
     from tests.integration.pipelines import conftest
 
@@ -640,9 +645,32 @@ async def _build_recognition_reports(
                 f"found at {cassette_dir}"
             )
             continue
-        result = await run_full_pipeline_episode(
-            episode, cassette_dir, dr_ontology_dir, embedding
-        )
+        try:
+            result = await run_full_pipeline_episode(
+                episode, cassette_dir, dr_ontology_dir, embedding
+            )
+        except Exception as exc:
+            print(
+                f"WARNING: recognition episode '{episode}' failed at runtime "
+                f"({type(exc).__name__}: {exc}) -- skipped. Other episodes, variant "
+                "results, and the scoreboard digest are unaffected."
+            )
+            continue
+        if result.extraction_misses:
+            print(
+                f"WARNING: recognition episode '{episode}' had "
+                f"{len(result.extraction_misses)} extraction miss(es) out of "
+                f"{len(result.mentions) + len(result.extraction_misses)} ground-truth "
+                "mention(s) -- misses are excluded from dedup scoring."
+            )
+        if not result.mentions:
+            print(
+                f"WARNING: recognition episode '{episode}' skipped -- extraction "
+                "produced zero scoreable mentions (total extraction failure). "
+                "recognition_metrics([]) reports a perfect 1.0 score for an empty "
+                "input, which would misrepresent this episode as a dedup success."
+            )
+            continue
         reports[episode] = recognition_metrics(result.mentions)
     return reports
 
