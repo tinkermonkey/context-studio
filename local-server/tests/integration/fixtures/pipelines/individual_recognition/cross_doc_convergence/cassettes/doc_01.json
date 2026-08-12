@@ -1,0 +1,16 @@
+{
+  "56bfe12b43492454f7fda0dd14aaa9ab768fe3d387745c4b6ef80c9d7f0e57ff": {
+    "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Ingest Worker\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Airflow Scheduler\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}]}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "cf60cd514278364e15fb0f95c767fb4b6fbd353919477479b04e5ccbafe73fb1": {
+    "content": "{\"triples\": []}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

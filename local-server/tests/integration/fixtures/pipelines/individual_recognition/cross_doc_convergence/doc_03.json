@@ -1,0 +1,1 @@
+{"text": "Under sustained load, Ingest-Workers spin up additional replicas within seconds. The nightly aggregation job is coordinated entirely by Airflow Scheduler, which reads final counts from the metrics store.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}

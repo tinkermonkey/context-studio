@@ -361,6 +361,8 @@ SCENARIO_ONTOLOGY.update(
 RECOGNITION_EPISODES: list[str] = [
     "surface_variants",
     "kubernetes_energy",
+    "distractor_same_class",
+    "cross_doc_convergence",
 ]
 
 

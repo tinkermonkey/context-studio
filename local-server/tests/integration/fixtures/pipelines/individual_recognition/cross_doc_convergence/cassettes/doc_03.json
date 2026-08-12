@@ -1,0 +1,16 @@
+{
+  "c530cf1ba062a1a52f814b8d2f833a00b445bfee47881d2d8309fc80337dd40f": {
+    "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Ingest-Workers\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Airflow Scheduler\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"metrics store\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.dataobject\"}, \"confidence\": 0.95}]}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "94f46c6c1d7826ade0cb6198ec389cb0852e0362ba7bf07f39a044dce1a540be": {
+    "content": "{\"triples\": []}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

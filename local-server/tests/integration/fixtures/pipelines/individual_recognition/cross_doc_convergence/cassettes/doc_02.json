@@ -1,0 +1,16 @@
+{
+  "d292b590d4afce582cd5130aeffa2d0074c0b72babae3a2cc813ff182a4f3129": {
+    "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"ingest worker\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Metrics Store\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.dataobject\"}, \"confidence\": 0.95}]}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5b00c55dddda6cbc673d3da38fa5c096c7c85337bb4a2247aae13c152b111852": {
+    "content": "{\"triples\": []}",
+    "tokens_in": 1,
+    "tokens_out": 1,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

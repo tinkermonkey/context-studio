@@ -1,0 +1,1 @@
+{"text": "Beacon Standby Node mirrors the heartbeat log asynchronously from the primary. It stays idle unless promoted during a failover.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}

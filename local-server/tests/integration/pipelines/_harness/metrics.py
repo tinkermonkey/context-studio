@@ -683,3 +683,16 @@ def recognition_metrics(mentions: list[dict]) -> RecognitionMetrics:
         gt_entity_count=gt_entity_count,
         predicted_node_count=predicted_node_count,
     )
+
+
+def entity_key_clusters(mentions: list[dict]) -> set[frozenset[str]]:
+    """The set of entity_key groupings that landed on the same node_id.
+
+    Node ids are fresh (non-deterministic) UUIDs each run, so comparing them
+    directly across runs is meaningless -- this normalizes by entity_key instead,
+    making the resulting clustering structure directly comparable run-to-run.
+    """
+    clusters: dict[str, set[str]] = {}
+    for mention in mentions:
+        clusters.setdefault(mention["node_id"], set()).add(mention["entity_key"])
+    return {frozenset(entity_keys) for entity_keys in clusters.values()}

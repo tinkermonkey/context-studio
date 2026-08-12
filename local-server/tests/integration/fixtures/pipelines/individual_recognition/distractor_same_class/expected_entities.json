@@ -1,0 +1,6 @@
+[
+  {"entity_key": "beacon_primary_node", "canonical_title": "Beacon Primary Node", "class_ref": "technology.node",
+   "mentions": [{"doc": "doc_01", "surface": "Beacon Primary Node"}, {"doc": "doc_03", "surface": "Beacon Primary Node"}]},
+  {"entity_key": "beacon_standby_node", "canonical_title": "Beacon Standby Node", "class_ref": "technology.node",
+   "mentions": [{"doc": "doc_02", "surface": "Beacon Standby Node"}, {"doc": "doc_03", "surface": "Beacon Standby Node"}]}
+]

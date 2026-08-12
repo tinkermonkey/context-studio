@@ -33,6 +33,7 @@ Usage (from local-server/, venv active):
 
 import argparse
 import asyncio
+import json
 import os
 import random
 import sys
@@ -42,7 +43,7 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 from uuid import uuid4
@@ -86,15 +87,20 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
-from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
+from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider, CassetteStaleError
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
+    RECOGNITION_EPISODES,
     RELABELED_ARXIV_SCENARIOS,
     WAVE4_INFORMAL_SCENARIOS,
     ontology_context_for,
     split_for,
+)
+from tests.integration.pipelines._harness.episode_runner import (
+    EpisodeSetupError,
+    run_full_pipeline_episode,
 )
 from tests.integration.pipelines._harness.error_report import (
     ScenarioReport,
@@ -103,10 +109,12 @@ from tests.integration.pipelines._harness.error_report import (
     write_report,
 )
 from tests.integration.pipelines._harness.metrics import (
+    RecognitionMetrics,
     candidate_recall,
     label_accuracy,
     precision_recall_f1,
     predicate_recall,
+    recognition_metrics,
     soft_precision_recall_f1,
 )
 from tests.integration.pipelines._harness.report import MetricsEmitter
@@ -172,6 +180,23 @@ _CANON_CASSETTE_DIR = (
     / "individual_canonicalization"
 )
 _CANON_CASSETTE_PREFIX = "individual_canon_"
+
+# Recognition episode fixtures (issue #1142 Phase 1/2): one directory per
+# episode under here, each holding ordered doc_NN.json fixtures, an
+# expected_entities.json coreference gold file, and a cassettes/ subdirectory
+# -- see tests/integration/pipelines/_harness/episode_runner.py.
+_RECOGNITION_EPISODES_DIR = (
+    Path(__file__).parent.parent
+    / "tests"
+    / "integration"
+    / "fixtures"
+    / "pipelines"
+    / "individual_recognition"
+)
+
+# JSONL emission tag for recognition diagnostics -- MetricsEmitter writes to
+# _metrics/<pipeline_type>.jsonl, so this determines the file name.
+_RECOGNITION_PIPELINE_TAG = "individual_recognition"
 
 
 def _canon_cassette_path(scenario: str) -> Path:
@@ -583,6 +608,135 @@ async def _build_arxiv_reports(
     ]
 
 
+async def _build_recognition_reports(
+    embedding: EmbeddingService,
+) -> dict[str, RecognitionMetrics]:
+    """
+    Run every `RECOGNITION_EPISODES` entry through the full extraction+apply+
+    recognition pipeline (Phase 1's `run_full_pipeline_episode`) and score it
+    with `recognition_metrics()` (issue #1142 Phase 3).
+
+    A distinct, always-reported diagnostic group, like bootstrap/wave4/arxiv --
+    but unlike them, recognition has no `Variant.run_scenario` seam: each
+    episode exercises the real pipeline directly via its own per-document
+    cassettes (not a variant's config), so this runs once per tournament
+    invocation rather than once per variant (see `_amain`). Degrades
+    gracefully (returns `{}` or skips an episode) when the DR spec checkout or
+    an episode's cassettes are missing, the same guard `build_registry` uses
+    for the `default` variants via `dr_spec_available()`. Also skips (with a
+    warning, never raising) an episode that fails with a recoverable,
+    episode-scoped error -- a missing/malformed fixture or cassette
+    (`FileNotFoundError`, `json.JSONDecodeError`), a stale cassette
+    (`CassetteStaleError`), or an orchestrator/import failure surfaced as
+    `EpisodeSetupError` -- or one whose `EpisodeRunResult.mentions` is empty
+    after `extraction_misses` are accounted for -- `recognition_metrics([])`
+    reports a perfect 1.0 score for an empty input, so scoring a total
+    extraction failure would misrepresent it as a dedup success. Infrastructure
+    failures (`MemoryError`, `OSError`, `sqlite3.DatabaseError`, etc.) and any
+    other `RuntimeError` (e.g. `NotImplementedError`, `RecursionError`) are not
+    caught here and propagate, since silently skipping them would let the
+    tournament exit 0 with an incomplete, unflagged scoreboard.
+    """
+    from tests.integration.pipelines import conftest
+
+    dr_ontology_dir = conftest._find_dr_spec_dir()
+    if dr_ontology_dir is None:
+        print(
+            "note: recognition diagnostics skipped -- DR spec checkout not "
+            "available, so recognition episodes cannot be graded."
+        )
+        return {}
+
+    reports: dict[str, RecognitionMetrics] = {}
+    for episode in RECOGNITION_EPISODES:
+        cassette_dir = _RECOGNITION_EPISODES_DIR / episode / "cassettes"
+        if not cassette_dir.exists():
+            print(
+                f"note: recognition episode '{episode}' skipped -- no cassettes "
+                f"found at {cassette_dir}"
+            )
+            continue
+        try:
+            result = await run_full_pipeline_episode(
+                episode, cassette_dir, dr_ontology_dir, embedding
+            )
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+            CassetteStaleError,
+            EpisodeSetupError,
+        ) as exc:
+            print(
+                f"WARNING: recognition episode '{episode}' failed at runtime "
+                f"({type(exc).__name__}: {exc}) -- skipped. Other episodes, variant "
+                "results, and the scoreboard digest are unaffected."
+            )
+            continue
+        if result.extraction_misses:
+            print(
+                f"WARNING: recognition episode '{episode}' had "
+                f"{len(result.extraction_misses)} extraction miss(es) out of "
+                f"{len(result.mentions) + len(result.extraction_misses)} ground-truth "
+                "mention(s) -- misses are excluded from dedup scoring."
+            )
+        if not result.mentions:
+            print(
+                f"WARNING: recognition episode '{episode}' skipped -- extraction "
+                "produced zero scoreable mentions (total extraction failure). "
+                "recognition_metrics([]) reports a perfect 1.0 score for an empty "
+                "input, which would misrepresent this episode as a dedup success."
+            )
+            continue
+        reports[episode] = recognition_metrics(result.mentions)
+    return reports
+
+
+def _aggregate_recognition(reports: dict[str, RecognitionMetrics]) -> dict[str, float]:
+    """
+    Mean dedup precision/recall/F1 + node-count ratio across recognition episodes.
+
+    This is the summary attached to every variant's result dict under the
+    `"recognition"` key (for scoreboard-table parity) -- it is never read by
+    the `results.sort(key=lambda r: r["dev"]["soft_f1"], ...)` ranking that
+    drives accept/reject, so a recognition regression alone can never flip
+    the tournament decision.
+    """
+    if not reports:
+        return {
+            "dedup_precision": 0.0,
+            "dedup_recall": 0.0,
+            "dedup_f1": 0.0,
+            "node_count_ratio": 0.0,
+        }
+    values = list(reports.values())
+
+    def _mean(attr: str) -> float:
+        return round(sum(getattr(v, attr) for v in values) / len(values), 4)
+
+    return {
+        "dedup_precision": _mean("dedup_precision"),
+        "dedup_recall": _mean("dedup_recall"),
+        "dedup_f1": _mean("dedup_f1"),
+        "node_count_ratio": _mean("node_count_ratio"),
+    }
+
+
+def _emit_recognition_metrics(recognition_reports: dict[str, RecognitionMetrics]) -> None:
+    """Emit each episode's RecognitionMetrics to _metrics/individual_recognition.jsonl."""
+    emitter = MetricsEmitter(_METRICS_DIR)
+    for episode, metrics in recognition_reports.items():
+        emitter.emit(
+            pipeline_type=_RECOGNITION_PIPELINE_TAG,
+            fixture_id=episode,
+            model="quality_tournament",
+            config_ref="recognition_episode",
+            config_version=1,
+            metrics=asdict(metrics),
+            mode="offline",
+            source="quality_tournament",
+        )
+
+
 def _aggregate(reports: list[ScenarioReport], split: str) -> dict[str, float]:
     """Mean strict/soft F1 + Phase 1 diagnostics (§3.1) over one split's scenario reports."""
     subset = [r for r in reports if r.split == split]
@@ -687,7 +841,11 @@ async def _run_variant(
     }
 
 
-def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str:
+def _render_scoreboard_digest(
+    run_id: str,
+    results: list[dict[str, Any]],
+    recognition_reports: dict[str, RecognitionMetrics],
+) -> str:
     """Markdown scoreboard: variants ranked by dev soft-F1, diagnostics alongside (§4.2)."""
     lines = [f"# Individual extraction variant tournament — {run_id}", ""]
     lines.append(
@@ -790,6 +948,33 @@ def _render_scoreboard_digest(run_id: str, results: list[dict[str, Any]]) -> str
         )
     lines.append("")
 
+    lines.append("## Recognition diagnostics (always reported, never gates accept/reject)")
+    lines.append("")
+    lines.append(
+        f"Cross-document entity-recognition (dedup) quality over {len(RECOGNITION_EPISODES)} "
+        "episode(s) (issue #1142), run once per tournament invocation through the full "
+        "extraction+apply+recognition pipeline (`episode_runner.run_full_pipeline_episode`) -- "
+        "independent of the open_v1/default variant sweep above, since recognition has no "
+        "`Variant.run_scenario` seam. Scored by pairwise dedup precision/recall/F1 and "
+        "node-count ratio (`_harness/metrics.py::recognition_metrics`); separate from, and never "
+        "gating, the strict/soft-F1 dev/holdout accept/reject decision."
+    )
+    lines.append("")
+    if recognition_reports:
+        lines.append("| episode | dedup precision | dedup recall | dedup F1 | node_count_ratio |")
+        lines.append("|---|---|---|---|---|")
+        for episode, metrics in recognition_reports.items():
+            lines.append(
+                f"| {episode} | {metrics.dedup_precision:.3f} | {metrics.dedup_recall:.3f} | "
+                f"{metrics.dedup_f1:.3f} | {metrics.node_count_ratio:.3f} |"
+            )
+    else:
+        lines.append(
+            "_Skipped -- DR spec checkout or episode cassettes not available in this "
+            "environment._"
+        )
+    lines.append("")
+
     return "\n".join(lines)
 
 
@@ -832,6 +1017,28 @@ async def _amain(args) -> int:
         for name in sorted(registry)
     ]
     results.sort(key=lambda r: r["dev"]["soft_f1"], reverse=True)
+
+    # Recognition (issue #1142 Phase 3): a fourth always-reported diagnostic
+    # group, run once per tournament invocation (not per variant -- see
+    # `_build_recognition_reports`). The same summary is attached to every
+    # variant's result dict under "recognition" for scoreboard-table parity;
+    # it is never read by the `sort(key=...)` call above, so a recognition
+    # regression alone can never flip which variant ranks first.
+    print(
+        "\n== recognition diagnostics (issue #1142, always reported, never gates "
+        "accept/reject) =="
+    )
+    recognition_reports = await _build_recognition_reports(embedding)
+    for episode, metrics in recognition_reports.items():
+        print(
+            f"   {episode:<28} dedup-P={metrics.dedup_precision:.3f}  "
+            f"dedup-R={metrics.dedup_recall:.3f}  dedup-F1={metrics.dedup_f1:.3f}  "
+            f"node_count_ratio={metrics.node_count_ratio:.3f}"
+        )
+    recognition_summary = _aggregate_recognition(recognition_reports)
+    for result in results:
+        result["recognition"] = recognition_summary
+    _emit_recognition_metrics(recognition_reports)
 
     scoreboard_emitter = MetricsEmitter(_METRICS_DIR)
     for result in results:
@@ -900,7 +1107,7 @@ async def _amain(args) -> int:
         )
 
     run_id = f"tournament_{generate_run_id()}"
-    digest = _render_scoreboard_digest(run_id, results)
+    digest = _render_scoreboard_digest(run_id, results, recognition_reports)
     digest_path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}.md"
     digest_path.parent.mkdir(parents=True, exist_ok=True)
     digest_path.write_text(digest)

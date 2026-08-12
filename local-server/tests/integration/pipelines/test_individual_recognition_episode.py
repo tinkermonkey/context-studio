@@ -147,3 +147,27 @@ def test_recognition_is_precision_safe_on_hard_aliases():
     service, repo, index, _ = _build_service_over_dr()
     metrics = _run_episode(service, repo, index, "kubernetes_energy")
     assert metrics.dedup_precision >= 0.9  # the safety guarantee holds
+
+
+def test_recognition_keeps_same_class_distractors_distinct():
+    """
+    "Beacon Primary Node" and "Beacon Standby Node" share class technology.node
+    and a 2-of-4 word title overlap — recognition must not false-merge them
+    into a single node even when both appear in the same document (doc_03).
+    """
+    service, repo, index, _ = _build_service_over_dr()
+    metrics = _run_episode(service, repo, index, "distractor_same_class")
+    assert metrics.dedup_precision == 1.0  # no false merges between distinct entities
+    assert metrics.node_count_ratio == 1.0  # one node per entity, no under- or over-merging
+
+
+def test_recognition_converges_surface_variants_across_three_documents():
+    """
+    "Ingest Worker" / "ingest worker" / "Ingest-Workers" appears across all 3
+    documents (casing, pluralization, punctuation variants) and must converge
+    to a single node.
+    """
+    service, repo, index, _ = _build_service_over_dr()
+    metrics = _run_episode(service, repo, index, "cross_doc_convergence")
+    assert metrics.dedup_precision == 1.0  # no false merges among the 3 entities
+    assert metrics.node_count_ratio == 1.0  # every entity converges to exactly one node

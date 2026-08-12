@@ -1,0 +1,1 @@
+{"text": "During the failover drill, Beacon Primary Node was taken offline deliberately, and Beacon Standby Node began accepting heartbeat signals within two seconds.", "ontology_id": "dr_spec", "model": "claude-opus-4-7", "temperature": 0.0}
