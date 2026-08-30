@@ -190,7 +190,9 @@ def main():
                             "request": {
                                 "method": "GET",
                                 "url": (
-                                    f"https://www.wikidata.org/w/api.php?action=wbsearchentities&search={label}&language=en&limit=10&format=json"
+                                    f"https://www.wikidata.org/w/api.php"
+                                    f"?action=wbsearchentities&search={label}&language=en"
+                                    f"&limit=10&format=json"
                                 ),
                                 "headers": {},
                                 "body": None,

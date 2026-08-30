@@ -2821,7 +2821,8 @@ class OntologyService:
         existing_attrs = self._repository.list_attribute_definitions(class_id=class_id, limit=None)
         if any(a.identifier == identifier for a in existing_attrs):
             raise DuplicateEntityError(
-                f"AttributeDefinition with identifier '{identifier}' already exists in class {class_id}"
+                f"AttributeDefinition with identifier '{identifier}' already exists in class "
+                f"{class_id}"
             )
 
         attribute_definition_id = str(uuid4())
@@ -3007,8 +3008,9 @@ class OntologyService:
             if failures:
                 handler_names = ", ".join(name for name, _ in failures)
                 _logger.warning(
-                    "Event handlers failed for AttributeDefinitionUpdated (attribute_definition_id=%s):"
-                    " %s. Attribute definition is updated but audit trail may have gaps.",
+                    "Event handlers failed for AttributeDefinitionUpdated "
+                    "(attribute_definition_id=%s): %s. Attribute definition is updated but "
+                    "audit trail may have gaps.",
                     attribute_definition_id,
                     handler_names,
                 )

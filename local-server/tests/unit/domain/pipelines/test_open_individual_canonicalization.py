@@ -7,10 +7,10 @@ The end-to-end grounded behavior is exercised by the tournament and the open
 quality suite; these tests pin the deterministic logic in isolation.
 """
 
-import os
 import sys
+from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 

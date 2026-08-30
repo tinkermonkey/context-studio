@@ -481,7 +481,8 @@ class FakeOntologyRepository:
                 and existing.id != attr_def.id
             ):
                 raise DuplicateEntityError(
-                    f"AttributeDefinition with identifier '{attr_def.identifier}' already exists in class {attr_def.class_id}"
+                    f"AttributeDefinition identifier '{attr_def.identifier}' already exists in "
+                    f"class {attr_def.class_id}"
                 )
         self._attribute_definitions[attr_def.id] = attr_def
         return attr_def

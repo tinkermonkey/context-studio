@@ -11,8 +11,9 @@ import os
 import sys
 
 import pytest
+from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from scripts.quality_loop import coordinate_ascent
 from tests.integration.pipelines._harness.report import MetricsEmitter, read_scoreboard
