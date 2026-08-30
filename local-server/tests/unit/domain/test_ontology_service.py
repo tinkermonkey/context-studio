@@ -13,6 +13,9 @@ import pytest
 
 import domain.ontology.services
 from domain.ontology.events import (
+    AttributeDefinitionCreated,
+    AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -2880,3 +2883,453 @@ class TestGetPublishDiffStats:
         assert stats["added"] == 0
         assert stats["modified"] == 0
         assert stats["removed"] == 0
+
+
+class TestCreateAttributeDefinition:
+    """Tests for create_attribute_definition."""
+
+    def test_create_attribute_definition_success(self, service):
+        """Create an attribute definition and verify it's persisted and event is emitted."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+            description="The name attribute",
+            is_required=True,
+        )
+
+        assert attr_def.id is not None
+        assert attr_def.class_id == cls.id
+        assert attr_def.identifier == "name"
+        assert attr_def.title == "Name"
+        assert attr_def.datatype == "string"
+        assert attr_def.description == "The name attribute"
+        assert attr_def.is_required is True
+        assert attr_def.created_at is not None
+        assert attr_def.last_modified is not None
+
+        # Verify it was saved
+        retrieved = service.get_attribute_definition(attr_def.id)
+        assert retrieved.id == attr_def.id
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(AttributeDefinitionCreated)
+        assert len(events) == 1
+        assert events[0].attribute_definition_id == attr_def.id
+        assert events[0].class_id == cls.id
+        assert events[0].identifier == "name"
+        assert events[0].title == "Name"
+
+    def test_create_attribute_definition_nonexistent_class_raises(self, service):
+        """Creating attribute definition for nonexistent class raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.create_attribute_definition(
+                class_id="nonexistent-class-id",
+                identifier="name",
+                title="Name",
+                datatype="string",
+            )
+
+    def test_create_attribute_definition_duplicate_identifier_in_same_class_raises(self, service):
+        """Creating duplicate identifier within same class raises DuplicateEntityError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.create_attribute_definition(
+                class_id=cls.id,
+                identifier="name",
+                title="Another Name",
+                datatype="string",
+            )
+
+    def test_create_attribute_definition_same_identifier_different_classes_succeeds(self, service):
+        """Same identifier in different classes is allowed."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls1 = service.create_class(scheme.id, title="Class 1")
+        cls2 = service.create_class(scheme.id, title="Class 2")
+
+        attr1 = service.create_attribute_definition(
+            class_id=cls1.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        attr2 = service.create_attribute_definition(
+            class_id=cls2.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        assert attr1.id != attr2.id
+        assert attr1.class_id == cls1.id
+        assert attr2.class_id == cls2.id
+
+    def test_create_attribute_definition_empty_identifier_raises(self, service):
+        """Creating attribute definition with empty identifier raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        with pytest.raises(ValueError, match="Identifier cannot be empty"):
+            service.create_attribute_definition(
+                class_id=cls.id,
+                identifier="",
+                title="Name",
+                datatype="string",
+            )
+
+    def test_create_attribute_definition_empty_title_raises(self, service):
+        """Creating attribute definition with empty title raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_attribute_definition(
+                class_id=cls.id,
+                identifier="name",
+                title="",
+                datatype="string",
+            )
+
+    def test_create_attribute_definition_empty_datatype_raises(self, service):
+        """Creating attribute definition with empty datatype raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        with pytest.raises(ValueError, match="Datatype cannot be empty"):
+            service.create_attribute_definition(
+                class_id=cls.id,
+                identifier="name",
+                title="Name",
+                datatype="",
+            )
+
+    def test_create_attribute_definition_with_enum_constraint(self, service):
+        """Creating attribute definition with allowed_values."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published", "archived"],
+        )
+
+        assert attr_def.allowed_values == ["draft", "published", "archived"]
+        retrieved = service.get_attribute_definition(attr_def.id)
+        assert retrieved.allowed_values == ["draft", "published", "archived"]
+
+
+class TestGetAttributeDefinition:
+    """Tests for get_attribute_definition."""
+
+    def test_get_attribute_definition_success(self, service):
+        """Retrieve an attribute definition by ID."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        retrieved = service.get_attribute_definition(attr_def.id)
+        assert retrieved.id == attr_def.id
+        assert retrieved.class_id == cls.id
+        assert retrieved.identifier == "name"
+
+    def test_get_attribute_definition_nonexistent_raises(self, service):
+        """Retrieving nonexistent attribute definition raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="AttributeDefinition"):
+            service.get_attribute_definition("nonexistent-id")
+
+
+class TestListAttributeDefinitions:
+    """Tests for list_attribute_definitions."""
+
+    def test_list_attribute_definitions_empty(self, service):
+        """List attribute definitions when none exist."""
+        results = service.list_attribute_definitions()
+        assert results == []
+
+    def test_list_attribute_definitions_all(self, service):
+        """List all attribute definitions across classes."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls1 = service.create_class(scheme.id, title="Class 1")
+        cls2 = service.create_class(scheme.id, title="Class 2")
+
+        attr1 = service.create_attribute_definition(
+            class_id=cls1.id, identifier="name", title="Name", datatype="string"
+        )
+        attr2 = service.create_attribute_definition(
+            class_id=cls1.id, identifier="age", title="Age", datatype="integer"
+        )
+        attr3 = service.create_attribute_definition(
+            class_id=cls2.id, identifier="name", title="Name", datatype="string"
+        )
+
+        results = service.list_attribute_definitions(limit=None)
+        assert len(results) == 3
+        ids = {r.id for r in results}
+        assert attr1.id in ids
+        assert attr2.id in ids
+        assert attr3.id in ids
+
+    def test_list_attribute_definitions_filter_by_class(self, service):
+        """List attribute definitions filtered by class."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls1 = service.create_class(scheme.id, title="Class 1")
+        cls2 = service.create_class(scheme.id, title="Class 2")
+
+        attr1 = service.create_attribute_definition(
+            class_id=cls1.id, identifier="name", title="Name", datatype="string"
+        )
+        attr2 = service.create_attribute_definition(
+            class_id=cls1.id, identifier="age", title="Age", datatype="integer"
+        )
+        service.create_attribute_definition(
+            class_id=cls2.id, identifier="name", title="Name", datatype="string"
+        )
+
+        results = service.list_attribute_definitions(class_id=cls1.id, limit=None)
+        assert len(results) == 2
+        ids = {r.id for r in results}
+        assert attr1.id in ids
+        assert attr2.id in ids
+
+    def test_list_attribute_definitions_pagination(self, service):
+        """Test pagination of attribute definitions."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        service.create_attribute_definition(
+            class_id=cls.id, identifier="attr_a", title="Attr A", datatype="string"
+        )
+        service.create_attribute_definition(
+            class_id=cls.id, identifier="attr_b", title="Attr B", datatype="string"
+        )
+        service.create_attribute_definition(
+            class_id=cls.id, identifier="attr_c", title="Attr C", datatype="string"
+        )
+
+        page1 = service.list_attribute_definitions(class_id=cls.id, limit=2, offset=0)
+        assert len(page1) == 2
+
+        page2 = service.list_attribute_definitions(class_id=cls.id, limit=2, offset=2)
+        assert len(page2) == 1
+
+
+class TestUpdateAttributeDefinition:
+    """Tests for update_attribute_definition."""
+
+    def test_update_attribute_definition_title(self, service):
+        """Update attribute definition title."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        original_version = attr_def.version
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            title="Full Name",
+        )
+
+        assert updated.title == "Full Name"
+        assert updated.version == original_version + 1
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(AttributeDefinitionUpdated)
+        assert len(events) == 1
+        assert events[0].attribute_definition_id == attr_def.id
+        assert "title" in events[0].changed_fields
+        assert events[0].old_values["title"] == "Name"
+        assert events[0].new_values["title"] == "Full Name"
+
+    def test_update_attribute_definition_multiple_fields(self, service):
+        """Update multiple fields of attribute definition."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            is_required=False,
+        )
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            title="Status Code",
+            datatype="integer",
+            is_required=True,
+            allowed_values=["0", "1", "2"],
+        )
+
+        assert updated.title == "Status Code"
+        assert updated.datatype == "integer"
+        assert updated.is_required is True
+        assert updated.allowed_values == ["0", "1", "2"]
+
+    def test_update_attribute_definition_no_changes(self, service):
+        """Updating with no actual changes doesn't emit event."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        original_version = attr_def.version
+        original_event_count = len(service._event_publisher.get_events())
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            title="Name",  # Same value
+        )
+
+        assert updated.version == original_version
+        # Verify no new events were added
+        assert len(service._event_publisher.get_events()) == original_event_count
+
+    def test_update_attribute_definition_nonexistent_raises(self, service):
+        """Updating nonexistent attribute definition raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="AttributeDefinition"):
+            service.update_attribute_definition(
+                attribute_definition_id="nonexistent-id",
+                title="New Title",
+            )
+
+
+class TestDeleteAttributeDefinition:
+    """Tests for delete_attribute_definition."""
+
+    def test_delete_attribute_definition_success(self, service):
+        """Delete an attribute definition."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        service.delete_attribute_definition(attr_def.id)
+
+        with pytest.raises(EntityNotFoundError):
+            service.get_attribute_definition(attr_def.id)
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(AttributeDefinitionDeleted)
+        assert len(events) == 1
+        assert events[0].attribute_definition_id == attr_def.id
+        assert events[0].class_id == cls.id
+        assert events[0].identifier == "name"
+        assert events[0].title == "Name"
+
+    def test_delete_attribute_definition_nonexistent_raises(self, service):
+        """Deleting nonexistent attribute definition raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="AttributeDefinition"):
+            service.delete_attribute_definition("nonexistent-id")
+
+
+class TestCountAttributeDefinitions:
+    """Tests for count_attribute_definitions."""
+
+    def test_count_attribute_definitions_all(self, service):
+        """Count all attribute definitions."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls1 = service.create_class(scheme.id, title="Class 1")
+        cls2 = service.create_class(scheme.id, title="Class 2")
+
+        service.create_attribute_definition(
+            class_id=cls1.id, identifier="name", title="Name", datatype="string"
+        )
+        service.create_attribute_definition(
+            class_id=cls1.id, identifier="age", title="Age", datatype="integer"
+        )
+        service.create_attribute_definition(
+            class_id=cls2.id, identifier="name", title="Name", datatype="string"
+        )
+
+        count = service.count_attribute_definitions()
+        assert count == 3
+
+    def test_count_attribute_definitions_filter_by_class(self, service):
+        """Count attribute definitions filtered by class."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls1 = service.create_class(scheme.id, title="Class 1")
+        cls2 = service.create_class(scheme.id, title="Class 2")
+
+        service.create_attribute_definition(
+            class_id=cls1.id, identifier="name", title="Name", datatype="string"
+        )
+        service.create_attribute_definition(
+            class_id=cls1.id, identifier="age", title="Age", datatype="integer"
+        )
+        service.create_attribute_definition(
+            class_id=cls2.id, identifier="name", title="Name", datatype="string"
+        )
+
+        count = service.count_attribute_definitions(class_id=cls1.id)
+        assert count == 2
+
+
+class TestExistingServiceMethodsCompatibility:
+    """Tests to verify existing service methods remain unchanged and functional."""
+
+    def test_get_individual_properties_unchanged(self, service):
+        """Verify get_individual_properties continues to work with existing behavior."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        individual = service.create_individual(class_ids=[cls.id], title="Individual 1")
+
+        properties = service.get_individual_properties(individual.id)
+        assert isinstance(properties, list)
