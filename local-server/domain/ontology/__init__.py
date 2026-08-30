@@ -7,6 +7,7 @@ classes, individuals, relationships, and property definitions.
 """
 
 from .entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -15,6 +16,9 @@ from .entities import (
     Taxonomy,
 )
 from .events import (
+    AttributeDefinitionCreated,
+    AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -57,6 +61,7 @@ __all__ = [
     "Individual",
     "Relationship",
     "PropertyDefinition",
+    "AttributeDefinition",
     # Domain Events
     "TaxonomyCreated",
     "TaxonomyUpdated",
@@ -71,6 +76,9 @@ __all__ = [
     "RelationshipCreated",
     "RelationshipDeleted",
     "PropertyDefinitionCreated",
+    "AttributeDefinitionCreated",
+    "AttributeDefinitionUpdated",
+    "AttributeDefinitionDeleted",
     "GraphInvalidated",
     # Ports (Protocols)
     "OntologyRepository",

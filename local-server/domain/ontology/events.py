@@ -357,3 +357,60 @@ class GraphInvalidated(DomainEvent):
     _aggregate_id_field: ClassVar[str] = "taxonomy_id"
     taxonomy_id: str = ""
     reason: str = ""
+
+
+@dataclass(frozen=True)
+class AttributeDefinitionCreated(DomainEvent):
+    """
+    Event emitted when a new attribute definition is created.
+
+    Attributes:
+        attribute_definition_id: ID of the created attribute definition
+        class_id: ID of the parent class
+        identifier: Machine-readable identifier for the attribute
+        title: Display name for the attribute
+    """
+
+    _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
+    attribute_definition_id: str = ""
+    class_id: str = ""
+    identifier: str = ""
+    title: str = ""
+
+
+@dataclass(frozen=True)
+class AttributeDefinitionUpdated(DomainEvent):
+    """
+    Event emitted when an attribute definition is updated.
+
+    Attributes:
+        attribute_definition_id: ID of the updated attribute definition
+        changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
+    """
+
+    _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
+    attribute_definition_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, object] = field(default_factory=dict)
+    new_values: dict[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class AttributeDefinitionDeleted(DomainEvent):
+    """
+    Event emitted when an attribute definition is deleted.
+
+    Attributes:
+        attribute_definition_id: ID of the deleted attribute definition
+        class_id: ID of the parent class
+        identifier: Machine-readable identifier for the attribute
+        title: Display name for the attribute
+    """
+
+    _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
+    attribute_definition_id: str = ""
+    class_id: str = ""
+    identifier: str = ""
+    title: str = ""

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Literal, Protocol, Sequence
 
 from .entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -527,6 +528,74 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the individual was deleted, False if it did not exist
+        """
+        ...
+
+    # AttributeDefinition operations
+    def get_attribute_definition(self, attribute_definition_id: str) -> AttributeDefinition | None:
+        """
+        Retrieve an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition
+
+        Returns:
+            The AttributeDefinition if found, None otherwise
+        """
+        ...
+
+    def list_attribute_definitions(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[AttributeDefinition]:
+        """
+        Retrieve attribute definitions with optional filtering and pagination.
+
+        Args:
+            class_id: Optional class ID to filter by (primary filter)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+
+        Returns:
+            List of AttributeDefinition entities
+        """
+        ...
+
+    def save_attribute_definition(self, attr_def: AttributeDefinition) -> AttributeDefinition:
+        """
+        Persist an attribute definition (create or update).
+
+        Args:
+            attr_def: The AttributeDefinition entity to save
+
+        Returns:
+            The persisted AttributeDefinition entity
+        """
+        ...
+
+    def delete_attribute_definition(self, attribute_definition_id: str) -> bool:
+        """
+        Delete an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition to delete
+
+        Returns:
+            True if the attribute definition was deleted, False if it did not exist
+        """
+        ...
+
+    def count_attribute_definitions(self, class_id: str | None = None) -> int:
+        """
+        Count attribute definitions, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Total count of attribute definitions
         """
         ...
 

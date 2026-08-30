@@ -409,3 +409,66 @@ class PropertyDefinition:
             raise ValueError("Title cannot be empty")
         self.title = new_title
         self.last_modified = datetime.now(timezone.utc)
+
+
+@dataclass
+class AttributeDefinition:
+    """
+    Defines the type-level (TBox) declaration of an attribute on a Class (OWL DatatypeProperty).
+
+    AttributeDefinition is the complement to DataPropertyValue (instance/ABox level).
+    It declares "Class X has an attribute named Y of type Z with these constraints",
+    scoped to a single class (class_id is required, not global).
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        class_id: ID of the class this attribute is scoped to (required; no global registry)
+        identifier: Machine-readable identifier for the attribute within its class
+        title: Display name for the attribute
+        datatype: The data type (e.g. "string", "integer", "boolean", "array", "object")
+        description: Optional longer description
+        is_required: Whether this attribute must be present on instances of the class
+        allowed_values: Enum constraint; a list of allowed string values, or None if unconstrained
+        default_value: Optional default value (as string)
+        sort_order: Display order within the class's attribute list
+        external_references: List of references to external knowledge bases (e.g., DR provenance)
+        created_at: Timestamp of creation
+        last_modified: Timestamp of last modification
+        version: Version number for optimistic concurrency control
+        status: Publication status (draft or published)
+    """
+
+    id: str
+    class_id: str
+    identifier: str
+    title: str
+    datatype: str
+    description: str | None = None
+    is_required: bool = False
+    allowed_values: list[str] | None = None
+    default_value: str | None = None
+    sort_order: int = 0
+    external_references: list[ExternalReference] = field(default_factory=list)
+    created_at: datetime | None = None
+    last_modified: datetime | None = None
+    version: int = 1
+    status: Status = Status.DRAFT
+    source_run_id: str | None = None
+
+    def __post_init__(self) -> None:
+        self.identifier = validate_identifier(self.identifier)
+
+    def rename(self, new_title: str) -> None:
+        """
+        Rename the attribute definition.
+
+        Args:
+            new_title: The new title
+
+        Raises:
+            ValueError: If new_title is empty or only whitespace
+        """
+        if not new_title or not new_title.strip():
+            raise ValueError("Title cannot be empty")
+        self.title = new_title
+        self.last_modified = datetime.now(timezone.utc)
