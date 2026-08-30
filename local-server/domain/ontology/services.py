@@ -2941,7 +2941,9 @@ class OntologyService:
         old_values: dict[str, object] = {}
         new_values: dict[str, object] = {}
 
-        if title is not None and title.strip():
+        if title is not None:
+            if not title.strip():
+                raise ValueError("Title cannot be empty")
             if title != attr_def.title:
                 changed_fields.append("title")
                 old_values["title"] = attr_def.title
@@ -2954,7 +2956,9 @@ class OntologyService:
             new_values["description"] = description
             attr_def.description = description
 
-        if datatype is not None and datatype.strip():
+        if datatype is not None:
+            if not datatype.strip():
+                raise ValueError("Datatype cannot be empty")
             if datatype != attr_def.datatype:
                 changed_fields.append("datatype")
                 old_values["datatype"] = attr_def.datatype
