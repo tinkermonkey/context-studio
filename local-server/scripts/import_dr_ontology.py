@@ -33,6 +33,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -43,6 +44,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
 from domain.ontology.services import OntologyService
+from domain.ontology.ports import OntologyRepository
 from experiments.ledger import append_baseline_reset, latest_baseline_reset
 from scripts.dr_ontology_loader import ImportSummary, import_dr_ontology
 
@@ -141,14 +143,14 @@ def main() -> int:
     # schema_index=None suppresses per-entity vector sync during creation;
     # reindex_all() below runs the embedding batch exactly once, at the end.
     ontology_service = OntologyService(
-        repository=ontology_repo,
+        repository=cast(OntologyRepository, ontology_repo),
         embedding_service=embedding_service,
         event_publisher=InProcessEventPublisher(),
         schema_index=None,
     )
 
     print(f"Importing DR ontology spec from {spec_dir} ...")
-    summary = import_dr_ontology(ontology_service, ontology_repo, spec_dir)
+    summary = import_dr_ontology(ontology_service, cast(OntologyRepository, ontology_repo), spec_dir)
 
     print(f"Spec version: {summary.spec_version}")
     print(

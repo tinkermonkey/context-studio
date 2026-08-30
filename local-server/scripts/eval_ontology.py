@@ -26,6 +26,7 @@ the loop degrades to its pre-DR behavior with no hard dependency.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 from adapters.events.in_process import InProcessEventPublisher
@@ -34,7 +35,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.ontology.ports import EmbeddingService
+from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from scripts.dr_ontology_loader import import_dr_ontology
 from scripts.import_dr_ontology import DEFAULT_SPEC_DIR
@@ -105,12 +106,12 @@ def build_eval_ontology(
         # schema_index=None here suppresses per-entity embedding sync during the
         # bulk import; the single reindex_all() below populates every vector once.
         ontology_service = OntologyService(
-            repository=repo,
+        repository=cast(OntologyRepository, repo),
             embedding_service=embedding_service,
             event_publisher=InProcessEventPublisher(),
             schema_index=None,
         )
-        import_dr_ontology(ontology_service, repo, spec_dir)
+        import_dr_ontology(ontology_service, cast(OntologyRepository, repo), spec_dir)
 
     index = SqliteSchemaVectorIndex(session_factory, embedding_service)
     index.reindex_all()

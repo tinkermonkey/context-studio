@@ -16,6 +16,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import cast
 
 import uvicorn
 from fastapi import FastAPI
@@ -113,6 +114,7 @@ from domain.ontology.events import (
 )
 
 # Import domain services
+from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.individual_extraction.apply_service import (
@@ -214,7 +216,7 @@ async def lifespan(app: FastAPI):
         # Repositories receive session factories, not sessions.
         # Per-request sessions are created in route dependencies.
         local_session_factory = db_manager.get_local_session_factory()
-        ontology_repo = SQLiteOntologyRepository(local_session_factory)
+        ontology_repo: OntologyRepository = cast(OntologyRepository, SQLiteOntologyRepository(local_session_factory))
         extraction_repo = SQLiteExtractionRepository(local_session_factory)
         extraction_run_repo = SQLiteExtractionRunRepository(local_session_factory)
         interchange_repo = SQLiteInterchangeRepository(local_session_factory)
@@ -331,14 +333,14 @@ async def lifespan(app: FastAPI):
         graph_engine = NetworkXGraphEngine()
         query_engine = RDFLibQueryEngine()
         graph_service = GraphAnalysisService(
-            repository=ontology_repo,
+            repository=cast(OntologyRepository, ontology_repo),
             graph_engine=graph_engine,
             query_engine=query_engine,
         )
         logger.info("GraphAnalysisService created and wired with adapters")
 
         extraction_service = ExtractionService(
-            ontology_repo=ontology_repo,
+            ontology_repo=cast(OntologyRepository, ontology_repo),
             embedding_service=embedding_service,
             llm=llm_router,
             nlp=nlp_processor,
@@ -508,7 +510,7 @@ async def lifespan(app: FastAPI):
 
         revert_service = RevertService(
             change_repo=change_repo,
-            ontology_repo=ontology_repo,
+            ontology_repo=cast(OntologyRepository, ontology_repo),
         )
         logger.info("RevertService created and wired with change and ontology repositories")
 

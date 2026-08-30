@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -35,7 +36,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from domain.extraction.services import ExtractionService
-from domain.ontology.ports import EmbeddingService
+from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRun, PipelineType
@@ -222,13 +223,13 @@ async def run_full_pipeline_episode(
     repo = SQLiteOntologyRepository(session_factory)
     index = SqliteIndividualVectorIndex(session_factory, embedding_service)
     ontology_service = OntologyService(
-        repository=repo,
+        repository=cast(OntologyRepository, repo),
         embedding_service=embedding_service,
         event_publisher=InProcessEventPublisher(),
         schema_index=None,
         individual_index=index,
     )
-    import_dr_ontology(ontology_service, repo, dr_ontology_dir)
+    import_dr_ontology(ontology_service, cast(OntologyRepository, repo), dr_ontology_dir)
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     if taxonomy is None:
         raise EpisodeSetupError(
@@ -239,7 +240,7 @@ async def run_full_pipeline_episode(
         individual_index=index, embedding_service=embedding_service, llm=None
     )
     apply_service = IndividualExtractionApplyService(
-        ontology_service, repo, individual_recognizer=recognizer
+        ontology_service, cast(OntologyRepository, repo), individual_recognizer=recognizer
     )
 
     result = EpisodeRunResult(episode=episode)
@@ -250,7 +251,7 @@ async def run_full_pipeline_episode(
         llm = CassetteLLMProvider(cassette_dir / f"{doc}.json")
 
         extraction_service = ExtractionService(
-            ontology_repo=repo,
+            ontology_repo=cast(OntologyRepository, repo),
             embedding_service=embedding_service,
             llm=llm,
             nlp=Mock(),

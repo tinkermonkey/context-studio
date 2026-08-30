@@ -34,7 +34,7 @@ import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 # Ensure local-server is in sys.path so domain/ + adapters/ + benchmark/ resolve.
@@ -47,6 +47,7 @@ from adapters.demo.canon_loader import CanonDemoDatasetLoader
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from benchmark.canon_metrics import aggregate_canon_metrics
+from domain.ontology.ports import OntologyRepository
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -105,7 +106,7 @@ def _materialise_canon(canon_root: Path, db_path: Path) -> str:
     session_factory = sessionmaker(bind=engine)
 
     repo = SQLiteOntologyRepository(session_factory)
-    loader = CanonDemoDatasetLoader(canon_root=canon_root, ontology_repo=repo)
+    loader = CanonDemoDatasetLoader(canon_root=canon_root, ontology_repo=cast(OntologyRepository, repo))
 
     run_id = str(uuid4())
     result = loader.load(name="software-architecture", run_id=run_id)

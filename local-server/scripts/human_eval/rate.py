@@ -55,7 +55,7 @@ def fetch_pipeline_runs(
         requests.RequestException: If API call fails
     """
     url = f"{api_url}/api/pipelines/runs"
-    params = {
+    params: dict[str, str | int] = {
         "pipeline_type": pipeline_type,
         "limit": limit,
     }

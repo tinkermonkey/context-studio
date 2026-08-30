@@ -6,6 +6,7 @@ Tests exercise the domain GraphAnalysisService through its ports.
 """
 
 import time
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -18,6 +19,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.ports import OntologyRepository
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
@@ -93,7 +95,7 @@ def _setup_graph_service(
     # Create service with ports
     graph_engine = NetworkXGraphEngine()
     query_engine = RDFLibQueryEngine()
-    service = GraphAnalysisService(repository, graph_engine, query_engine)
+    service = GraphAnalysisService(cast(OntologyRepository, repository), graph_engine, query_engine)
 
     return service, repository, class_ids
 
