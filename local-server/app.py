@@ -216,7 +216,9 @@ async def lifespan(app: FastAPI):
         # Repositories receive session factories, not sessions.
         # Per-request sessions are created in route dependencies.
         local_session_factory = db_manager.get_local_session_factory()
-        ontology_repo: OntologyRepository = cast(OntologyRepository, SQLiteOntologyRepository(local_session_factory))
+        ontology_repo: OntologyRepository = cast(
+            OntologyRepository, SQLiteOntologyRepository(local_session_factory)
+        )
         extraction_repo = SQLiteExtractionRepository(local_session_factory)
         extraction_run_repo = SQLiteExtractionRunRepository(local_session_factory)
         interchange_repo = SQLiteInterchangeRepository(local_session_factory)

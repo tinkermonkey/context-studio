@@ -89,7 +89,8 @@ class TestAttributeDefinitionCreation:
         assert attr_def.class_id is not None
 
     def test_attribute_definition_two_with_same_identifier_different_class_ids(self):
-        """Two AttributeDefinitions with same identifier but different class_ids construct independently."""
+        """Two AttributeDefinitions with same identifier but different class_ids construct
+        independently."""
         attr_def_1 = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",

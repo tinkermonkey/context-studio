@@ -43,8 +43,8 @@ from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
-from domain.ontology.services import OntologyService
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.services import OntologyService
 from experiments.ledger import append_baseline_reset, latest_baseline_reset
 from scripts.dr_ontology_loader import ImportSummary, import_dr_ontology
 
@@ -150,7 +150,9 @@ def main() -> int:
     )
 
     print(f"Importing DR ontology spec from {spec_dir} ...")
-    summary = import_dr_ontology(ontology_service, cast(OntologyRepository, ontology_repo), spec_dir)
+    summary = import_dr_ontology(
+        ontology_service, cast(OntologyRepository, ontology_repo), spec_dir
+    )
 
     print(f"Spec version: {summary.spec_version}")
     print(

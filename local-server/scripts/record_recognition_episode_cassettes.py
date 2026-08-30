@@ -48,8 +48,8 @@ from adapters.persistence.sqlite.connection import create_local_db_engine, creat
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
-from domain.ontology.services import OntologyService
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,

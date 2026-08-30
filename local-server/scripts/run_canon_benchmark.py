@@ -106,7 +106,9 @@ def _materialise_canon(canon_root: Path, db_path: Path) -> str:
     session_factory = sessionmaker(bind=engine)
 
     repo = SQLiteOntologyRepository(session_factory)
-    loader = CanonDemoDatasetLoader(canon_root=canon_root, ontology_repo=cast(OntologyRepository, repo))
+    loader = CanonDemoDatasetLoader(
+        canon_root=canon_root, ontology_repo=cast(OntologyRepository, repo)
+    )
 
     run_id = str(uuid4())
     result = loader.load(name="software-architecture", run_id=run_id)

@@ -30,8 +30,8 @@ from adapters.persistence.sqlite.connection import create_local_db_engine, creat
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
-from domain.ontology.services import OntologyService
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -126,9 +126,14 @@ async def _record_cassette(
 
     recorder = RecordingLLMProvider(_ScriptedExtractionLLM(pass1_triples), cassette_path)
     extraction_service = ExtractionService(
-        ontology_repo=cast(OntologyRepository, repo), embedding_service=embedding, llm=recorder, nlp=Mock(),
-        reference_sources=[], event_publisher=InProcessEventPublisher(),
-        extraction_repo=Mock(), extraction_run_repo=Mock(),
+        ontology_repo=cast(OntologyRepository, repo),
+        embedding_service=embedding,
+        llm=recorder,
+        nlp=Mock(),
+        reference_sources=[],
+        event_publisher=InProcessEventPublisher(),
+        extraction_repo=Mock(),
+        extraction_run_repo=Mock(),
     )
     orchestrator = IndividualExtractionOrchestrator(
         llm_provider=recorder, extraction_service=extraction_service

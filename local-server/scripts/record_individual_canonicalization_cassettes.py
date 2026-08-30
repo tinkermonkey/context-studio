@@ -42,8 +42,8 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from config import get_settings
-from domain.pipelines.entities import PipelineType
 from domain.ontology.ports import OntologyRepository
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,

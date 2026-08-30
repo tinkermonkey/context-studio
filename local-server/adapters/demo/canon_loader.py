@@ -26,7 +26,6 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.admin.exceptions import (
     DemoDatasetAlreadyLoadedError,
     DemoDatasetMalformedError,
