@@ -6,7 +6,6 @@ embedding service with hand-crafted orthogonal vectors, so similarity outcomes
 are predictable without loading the SentenceTransformer model.
 """
 
-import os
 import sys
 import tempfile
 from pathlib import Path

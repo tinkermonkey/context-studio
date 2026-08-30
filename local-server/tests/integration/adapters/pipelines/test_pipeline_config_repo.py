@@ -4,7 +4,6 @@ Integration tests for PipelineConfigurationRepository.
 Tests CRUD operations, soft-delete, config_ref uniqueness, and error handling.
 """
 
-import os
 import sys
 from pathlib import Path
 
