@@ -1485,12 +1485,11 @@ class SQLiteOntologyRepository:
                 session.commit()
             except IntegrityError as e:
                 session.rollback()
-                logger.error(
-                    f"Database integrity error when saving relationship {rel.id}: {e}"
-                )
+                logger.error(f"Database integrity error when saving relationship {rel.id}: {e}")
                 raise DuplicateEntityError(
                     f"Relationship with (source_id, target_id, property_definition_id) = "
-                    f"({rel.source_id}, {rel.target_id}, {rel.property_definition_id}) already exists"
+                    f"({rel.source_id}, {rel.target_id}, "
+                    f"{rel.property_definition_id}) already exists"
                 ) from e
 
             return map_relationship_orm_to_domain(orm_rel)
@@ -1574,9 +1573,7 @@ class SQLiteOntologyRepository:
             orm_attrs = query.offset(offset).all()
             return [self._map_attribute_definition_orm_to_domain(a) for a in orm_attrs]
 
-    def save_attribute_definition(
-        self, attr_def: AttributeDefinition
-    ) -> AttributeDefinition:
+    def save_attribute_definition(self, attr_def: AttributeDefinition) -> AttributeDefinition:
         """
         Create or update an attribute definition.
 
@@ -1877,9 +1874,7 @@ class SQLiteOntologyRepository:
             allowed_values=attr_def.allowed_values,
             default_value=attr_def.default_value,
             sort_order=attr_def.sort_order,
-            external_references=serialize_external_references(
-                attr_def.external_references
-            ),
+            external_references=serialize_external_references(attr_def.external_references),
             status=attr_def.status.value,
             source_run_id=attr_def.source_run_id,
         )
@@ -2287,9 +2282,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of AttributeDefinition entities
         """
-        return await run_sync_in_executor(
-            self.list_attribute_definitions, class_id, limit, offset
-        )
+        return await run_sync_in_executor(self.list_attribute_definitions, class_id, limit, offset)
 
     async def save_attribute_definition_async(
         self, attr_def: AttributeDefinition
@@ -2315,13 +2308,9 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        return await run_sync_in_executor(
-            self.delete_attribute_definition, attribute_definition_id
-        )
+        return await run_sync_in_executor(self.delete_attribute_definition, attribute_definition_id)
 
-    async def count_attribute_definitions_async(
-        self, class_id: Optional[str] = None
-    ) -> int:
+    async def count_attribute_definitions_async(self, class_id: Optional[str] = None) -> int:
         """
         Count attribute definitions, optionally filtered by class (async version).
 
