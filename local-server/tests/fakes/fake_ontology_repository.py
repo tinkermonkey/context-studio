@@ -484,6 +484,9 @@ class FakeOntologyRepository:
                     f"AttributeDefinition identifier '{attr_def.identifier}' already exists in "
                     f"class {attr_def.class_id}"
                 )
+        # Increment version if updating existing attribute definition
+        if attr_def.id in self._attribute_definitions:
+            attr_def.version += 1
         self._attribute_definitions[attr_def.id] = attr_def
         return attr_def
 

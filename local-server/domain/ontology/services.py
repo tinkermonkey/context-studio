@@ -1173,6 +1173,31 @@ class OntologyService:
                     handler_names,
                 )
 
+        # Find and delete all attribute definitions belonging to this class
+        orphaned_attribute_definitions = self._repository.list_attribute_definitions(
+            class_id=class_id, limit=None
+        )
+
+        for attr_def in orphaned_attribute_definitions:
+            self._repository.delete_attribute_definition(attr_def.id)
+            failures = self._event_publisher.publish(
+                AttributeDefinitionDeleted(
+                    attribute_definition_id=attr_def.id,
+                    class_id=attr_def.class_id,
+                    identifier=attr_def.identifier,
+                    title=attr_def.title,
+                )
+            )
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for AttributeDefinitionDeleted"
+                    " (attribute_definition_id=%s): %s. Attribute definition is deleted but"
+                    " audit trail may have gaps.",
+                    attr_def.id,
+                    handler_names,
+                )
+
         self._repository.delete_class(class_id)
 
         failures = self._event_publisher.publish(
@@ -2993,7 +3018,6 @@ class OntologyService:
         # Update last_modified timestamp if any changes were made
         if changed_fields:
             attr_def.last_modified = datetime.now(timezone.utc)
-            attr_def.version += 1
             attr_def = self._repository.save_attribute_definition(attr_def)
 
             # Emit event
