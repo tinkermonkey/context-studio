@@ -12,8 +12,8 @@ if str(project_root) not in sys.path:
 
 # Pre-import utils to ensure it's available when other modules need it
 try:
-    import utils.logger  # noqa: F401
     import utils.async_executor  # noqa: F401
+    import utils.logger  # noqa: F401
 except ImportError:
     # If utils is not available yet, it will be handled when the root is added to sys.path
     pass

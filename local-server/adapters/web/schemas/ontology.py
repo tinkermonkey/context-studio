@@ -500,7 +500,7 @@ class AttributeDefinitionCreateRequest(BaseModel):
         min_length=1,
     )
     description: Optional[str] = Field(None, description="Optional longer description")
-    is_required: bool = Field(False, description="Whether this attribute is required on class instances")
+    is_required: bool = Field(False, description="Whether attribute is required on instances")
     allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
     default_value: Optional[str] = Field(None, description="Optional default value")
     sort_order: int = Field(0, description="Display order within the class's attribute list")
