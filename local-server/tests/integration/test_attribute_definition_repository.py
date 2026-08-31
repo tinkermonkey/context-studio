@@ -21,6 +21,7 @@ from domain.ontology.entities import (
     ConceptScheme,
     Taxonomy,
 )
+from domain.ontology.exceptions import DuplicateEntityError
 from domain.ontology.value_objects import ExternalReference
 
 
@@ -292,7 +293,7 @@ class TestAttributeDefinitionSave:
             repo.save_attribute_definition(attr_def)
 
     def test_save_duplicate_identifier_raises_error(self, repo, sample_class):
-        """Test that saving with duplicate (class_id, identifier) raises ValueError."""
+        """Test that saving with duplicate (class_id, identifier) raises DuplicateEntityError."""
         attr_def1 = AttributeDefinition(
             id="attr-1",
             class_id=sample_class.id,
@@ -310,7 +311,7 @@ class TestAttributeDefinitionSave:
             datatype="string",
         )
 
-        with pytest.raises(ValueError, match="already exists"):
+        with pytest.raises(DuplicateEntityError):
             repo.save_attribute_definition(attr_def2)
 
 
