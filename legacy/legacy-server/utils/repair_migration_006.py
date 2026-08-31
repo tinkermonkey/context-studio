@@ -10,18 +10,19 @@ This script:
 4. Does not modify the migration version (since 006 was already marked complete)  # noqa: E501
 """
 
-import sys
-import os
-import sqlite3
 import argparse
 import logging
-from typing import Any, Dict
+import os
+import sqlite3
+import sys
+from typing import Any
 
 # Add the parent directory to the path so we can import from the project
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import create_engine, text  # noqa: E402
-import importlib.util  # noqa: E402
+import importlib.util
+
+from sqlalchemy import create_engine, text
 
 # Import the migration module dynamically since it starts with a number
 migration_file = os.path.join(
@@ -33,7 +34,7 @@ migration_file = os.path.join(
 )
 spec = importlib.util.spec_from_file_location(
     "migration_006_nodes", migration_file
-)  # noqa: E501
+)
 if not spec or not spec.loader:
     raise RuntimeError(f"Failed to load migration spec from {migration_file}")
 
@@ -57,7 +58,7 @@ def check_migration_status(db_path: str) -> bool:
             try:
                 cursor.execute(
                     "SELECT version FROM schema_history WHERE version = 6"
-                )  # noqa: E501
+                )
                 result = cursor.fetchone()
                 return result is not None
             except sqlite3.OperationalError:
@@ -72,7 +73,7 @@ def check_migration_status(db_path: str) -> bool:
         return False
 
 
-def analyze_database(db_path: str) -> Dict[str, Any]:
+def analyze_database(db_path: str) -> dict[str, Any]:
     """Analyze the database to understand the migration state."""
     try:
         with sqlite3.connect(db_path) as conn:
@@ -80,13 +81,13 @@ def analyze_database(db_path: str) -> Dict[str, Any]:
 
             # Check if legacy tables exist
             cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('layers', 'domains', 'terms')"  # noqa: E501
+                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('layers', 'domains', 'terms')"
             )
             legacy_tables = [row[0] for row in cursor.fetchall()]
 
             # Check if new tables exist
             cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('structure_nodes', 'structure_node_links')"  # noqa: E501
+                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('structure_nodes', 'structure_node_links')"
             )
             new_tables = [row[0] for row in cursor.fetchall()]
 
@@ -113,13 +114,13 @@ def analyze_database(db_path: str) -> Dict[str, Any]:
         return {}
 
 
-def needs_repair(analysis: Dict[str, Any]) -> bool:
+def needs_repair(analysis: dict[str, Any]) -> bool:
     """Determine if the database needs repair."""
     # Check if we have legacy data but missing structure_nodes data
     total_legacy: int = sum(analysis.get("legacy_counts", {}).values(), 0)
     structure_nodes_count: int = analysis.get("new_counts", {}).get(
         "structure_nodes", 0
-    )  # noqa: E501
+    )
 
     return bool(total_legacy > 0 and structure_nodes_count == 0)
 
@@ -144,7 +145,7 @@ def repair_database(db_path: str) -> bool:
             migration._migrate_terms_to_structure_nodes(connection)
             migration._migrate_term_relationships_to_structure_node_links(
                 connection
-            )  # noqa: E501
+            )
 
             # Populate vector embeddings if the table exists
             try:
@@ -161,7 +162,7 @@ def repair_database(db_path: str) -> bool:
             ).scalar()
 
             logger.info(
-                f"Repair completed: {structure_nodes_count} structure_nodes, {structure_node_links_count} structure_node_links"  # noqa: E501
+                f"Repair completed: {structure_nodes_count} structure_nodes, {structure_node_links_count} structure_node_links"
             )
 
             # Commit the changes
@@ -182,7 +183,7 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Analyze only, don't make changes",  # noqa: E501
+        help="Analyze only, don't make changes",
     )
     parser.add_argument(
         "--force",
@@ -202,12 +203,12 @@ def main():
     # Check migration status
     migration_complete = check_migration_status(db_path)
     logger.info(
-        f"Migration 006 status: {'Complete' if migration_complete else 'Not complete'}"  # noqa: E501
+        f"Migration 006 status: {'Complete' if migration_complete else 'Not complete'}"
     )
 
     if not migration_complete and not args.force:
         logger.error(
-            "Migration 006 is not marked as complete. Use --force to repair anyway."  # noqa: E501
+            "Migration 006 is not marked as complete. Use --force to repair anyway."
         )
         sys.exit(1)
 
@@ -229,7 +230,7 @@ def main():
     if not repair_needed:
         logger.info(
             "Database appears to be in good condition, no repair needed"
-        )  # noqa: E501
+        )
         sys.exit(0)
 
     if args.dry_run:

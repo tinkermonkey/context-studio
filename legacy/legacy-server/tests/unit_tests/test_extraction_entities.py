@@ -5,15 +5,14 @@ Tests validate invariant enforcement, enum usage, immutability of
 extracted entities, layer results, and extraction results.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest
-
 from domain.extraction.entities import (
     ExtractedEntity,
     ExtractionLayerResult,

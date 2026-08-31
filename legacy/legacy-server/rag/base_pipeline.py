@@ -7,11 +7,12 @@ the standard interface for entity extraction.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Any
+
 from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from rag.models import RAGExtractionResponse
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,7 @@ class BaseRAGPipeline(ABC):
         self,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
     ):
         """
         Initialize the RAG pipeline.
@@ -59,17 +60,15 @@ class BaseRAGPipeline(ABC):
         Returns:
             RAGExtractionResponse with extracted entities, metrics, and trace info
         """
-        pass
 
     @abstractmethod
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """
         Get the current configuration of this pipeline.
 
         Returns:
             Dictionary containing pipeline configuration for auditing and comparison
         """
-        pass
 
     @classmethod
     def get_name(cls) -> str:

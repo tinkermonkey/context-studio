@@ -12,13 +12,14 @@ These tests validate complete user workflows from start to finish:
 import os
 import sys
 import tempfile
+
 import pytest
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from reference_db.config import ReferenceConfig  # noqa: E402
-from reference_db.manager import ReferenceManager  # noqa: E402
+from reference_db.config import ReferenceConfig
+from reference_db.manager import ReferenceManager
 
 
 class TestExternalPredicatesE2E:
@@ -33,19 +34,19 @@ class TestExternalPredicatesE2E:
 
     @pytest.fixture(autouse=True)
     def check_sqlite_vec(self):
-        """Check if sqlite-vec is available and properly loaded, skip tests if not."""  # noqa: E501
+        """Check if sqlite-vec is available and properly loaded, skip tests if not."""
         try:
             import sqlite_vec as _  # noqa: F401 # type: ignore[import-untyped]
         except ImportError:
             pytest.skip(
                 "sqlite-vec not available (expected in Docker environment)"
-            )  # noqa: E501
+            )
 
         # Also verify that vec functions are actually available in SQLite
         test_db_path = None
         try:
-            from sqlalchemy import create_engine, text
             from database.utils import init_db
+            from sqlalchemy import create_engine, text
 
             with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
                 test_db_path = tf.name
@@ -59,12 +60,12 @@ class TestExternalPredicatesE2E:
                     conn.execute(
                         text(
                             "SELECT vec_distance_cosine(x'00000000', x'00000000')"
-                        )  # noqa: E501
+                        )
                     )
                 except Exception as e:
                     pytest.skip(
                         f"sqlite-vec extension not properly loaded: {e}"
-                    )  # noqa: E501
+                    )
 
             test_engine.dispose()
         finally:
@@ -97,34 +98,34 @@ class TestExternalPredicatesE2E:
             # Step 1: Database is initialized (happens automatically)
             initial_count = len(
                 manager.list_external_predicates(source="schema.org")
-            )  # noqa: E501
+            )
             assert initial_count == 0
 
             # Step 2: Import Schema.org predicates
             schema_predicates = [
                 {
                     "title": "subClassOf",
-                    "definition": "Indicates that one class is a subclass of another class",  # noqa: E501
+                    "definition": "Indicates that one class is a subclass of another class",
                     "external_id": "subClassOf",
                 },
                 {
                     "title": "domainIncludes",
-                    "definition": "Relates a property to a class that is (one of) the type(s) the property is expected to be used on",  # noqa: E501
+                    "definition": "Relates a property to a class that is (one of) the type(s) the property is expected to be used on",
                     "external_id": "domainIncludes",
                 },
                 {
                     "title": "rangeIncludes",
-                    "definition": "Relates a property to a class that constitutes (one of) the expected type(s) for values of the property",  # noqa: E501
+                    "definition": "Relates a property to a class that constitutes (one of) the expected type(s) for values of the property",
                     "external_id": "rangeIncludes",
                 },
                 {
                     "title": "inverseOf",
-                    "definition": "Relates a property to a property that is its inverse",  # noqa: E501
+                    "definition": "Relates a property to a property that is its inverse",
                     "external_id": "inverseOf",
                 },
                 {
                     "title": "supersededBy",
-                    "definition": "Relates a term to a term that supersedes it",  # noqa: E501
+                    "definition": "Relates a term to a term that supersedes it",
                     "external_id": "supersededBy",
                 },
             ]
@@ -161,7 +162,7 @@ class TestExternalPredicatesE2E:
 
             # Search for property-related predicates
             property_results = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "property domain range type",
                     source="schema.org",
                     threshold=0.4,
@@ -174,7 +175,7 @@ class TestExternalPredicatesE2E:
             # Should find domain/range predicates
             assert any(
                 t in property_titles
-                for t in ["domainIncludes", "rangeIncludes"]  # noqa: E501
+                for t in ["domainIncludes", "rangeIncludes"]
             )
 
             # Step 5: Retrieve specific predicates by source ID
@@ -217,14 +218,14 @@ class TestExternalPredicatesE2E:
             # Step 2: Import similar Wikidata predicates
             manager.add_external_predicate(
                 title="subclass of",
-                definition="Class of which this subject is a particular example or subclass",  # noqa: E501
+                definition="Class of which this subject is a particular example or subclass",
                 source="wikidata",
                 external_id="P279",
             )
 
             manager.add_external_predicate(
                 title="instance of",
-                definition="That class of which this subject is a particular example",  # noqa: E501
+                definition="That class of which this subject is a particular example",
                 source="wikidata",
                 external_id="P31",
             )
@@ -238,7 +239,7 @@ class TestExternalPredicatesE2E:
 
             # Step 3: Search across all sources
             hierarchy_results = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "class hierarchy subclass", threshold=0.3, limit=10
                 )
             )
@@ -246,9 +247,9 @@ class TestExternalPredicatesE2E:
             assert len(hierarchy_results) > 0
 
             # Should find predicates from both sources
-            sources_found = set(
+            sources_found = {
                 pred.source for pred, score in hierarchy_results
-            )  # noqa: E501
+            }
             assert "schema.org" in sources_found
             assert "wikidata" in sources_found
 
@@ -259,7 +260,7 @@ class TestExternalPredicatesE2E:
 
             assert all(
                 pred.source == "schema.org" for pred, score in schema_only
-            )  # noqa: E501
+            )
 
             wikidata_only = manager.search_external_predicates_by_similarity(
                 "class hierarchy", source="wikidata", threshold=0.3, limit=10
@@ -267,10 +268,10 @@ class TestExternalPredicatesE2E:
 
             assert all(
                 pred.source == "wikidata" for pred, score in wikidata_only
-            )  # noqa: E501
+            )
 
             # Step 5: Compare semantic similarity
-            # Both "subClassOf" and "subclass of" should have high similarity to query  # noqa: E501
+            # Both "subClassOf" and "subclass of" should have high similarity to query
             schema_subclass = next(
                 (
                     score
@@ -282,7 +283,7 @@ class TestExternalPredicatesE2E:
             wikidata_subclass = next(
                 (
                     score for pred, score in wikidata_only if pred.external_id == "P279"
-                ),  # noqa: E501
+                ),
                 None,
             )
 
@@ -316,7 +317,7 @@ class TestExternalPredicatesE2E:
                 {
                     "id": "int_002",
                     "label": "has_attribute",
-                    "description": "Entity has a specific attribute or property",  # noqa: E501
+                    "description": "Entity has a specific attribute or property",
                 },
                 {
                     "id": "int_003",
@@ -341,7 +342,7 @@ class TestExternalPredicatesE2E:
                 ("relatedTo", "Related entity or concept", "relatedTo"),
                 (
                     "mentions",
-                    "Indicates that this CreativeWork mentions a person, organization, or other entity",  # noqa: E501
+                    "Indicates that this CreativeWork mentions a person, organization, or other entity",
                     "mentions",
                 ),
             ]
@@ -372,7 +373,7 @@ class TestExternalPredicatesE2E:
                     "internal": internal_pred,
                     "matches": [
                         (pred.external_id, pred.title, score)
-                        for pred, score in matches  # noqa: E501
+                        for pred, score in matches
                     ],
                 }
 
@@ -395,7 +396,7 @@ class TestExternalPredicatesE2E:
             refers_titles = [title for ext_id, title, score in refers_matches]
             assert any(
                 title.lower() in ["relatedto", "mentions"]
-                for title in refers_titles  # noqa: E501
+                for title in refers_titles
             )
 
     def test_e2e_incremental_update_workflow(self, temp_db):
@@ -432,7 +433,7 @@ class TestExternalPredicatesE2E:
 
             initial_count = len(
                 manager.list_external_predicates(source="schema.org")
-            )  # noqa: E501
+            )
             assert initial_count == 2
 
             # Step 2 & 3: Check for existing and add only new
@@ -441,7 +442,7 @@ class TestExternalPredicatesE2E:
                     "subClassOf",
                     "Updated definition",
                     "subClassOf",
-                ),  # Duplicate  # noqa: E501
+                ),  # Duplicate
                 (
                     "rangeIncludes",
                     "Relates a property to a class",
@@ -479,7 +480,7 @@ class TestExternalPredicatesE2E:
             # Step 4: Verify no duplicates
             final_count = len(
                 manager.list_external_predicates(source="schema.org")
-            )  # noqa: E501
+            )
             assert final_count == 4  # 2 initial + 2 new
             assert added_count == 2
             assert skipped_count == 2
@@ -490,11 +491,11 @@ class TestExternalPredicatesE2E:
                 "property",
                 "rangeIncludes",
                 "domainIncludes",
-            ]  # noqa: E501
+            ]
             for ext_id in expected_ids:
                 pred = manager.get_external_predicate_by_source(
                     "schema.org", ext_id
-                )  # noqa: E501
+                )
                 assert pred is not None
 
     def test_e2e_large_dataset_workflow(self, temp_db):
@@ -515,7 +516,7 @@ class TestExternalPredicatesE2E:
             for i in range(30):
                 manager.add_external_predicate(
                     title=f"schema_predicate_{i}",
-                    definition=f"A Schema.org predicate for testing, number {i}",  # noqa: E501
+                    definition=f"A Schema.org predicate for testing, number {i}",
                     source="schema.org",
                     external_id=f"pred_{i}",
                 )
@@ -535,12 +536,12 @@ class TestExternalPredicatesE2E:
 
             schema_predicates = manager.list_external_predicates(
                 source="schema.org"
-            )  # noqa: E501
+            )
             assert len(schema_predicates) == 30
 
             wikidata_predicates = manager.list_external_predicates(
                 source="wikidata"
-            )  # noqa: E501
+            )
             assert len(wikidata_predicates) == 30
 
             # Step 3: Bulk search
@@ -593,12 +594,12 @@ class TestExternalPredicatesE2E:
                     successful.append(pred.external_id)
                 except Exception as e:
                     failed.append((external_id, str(e)))
-                    # Rollback the session after error to allow subsequent operations  # noqa: E501
+                    # Rollback the session after error to allow subsequent operations
                     manager.session.rollback()
 
             # Verify results
-            # Note: After rollback from duplicate, subsequent operations should work  # noqa: E501
-            # We expect: pred1 (success), pred2 (success), pred1 duplicate (fail), pred3 (success after rollback)  # noqa: E501
+            # Note: After rollback from duplicate, subsequent operations should work
+            # We expect: pred1 (success), pred2 (success), pred1 duplicate (fail), pred3 (success after rollback)
             assert len(successful) == 3  # pred1, pred2, pred3
             assert len(failed) == 1  # Duplicate pred1
 
@@ -609,13 +610,13 @@ class TestExternalPredicatesE2E:
             # Verify specific predicates
             assert (
                 manager.get_external_predicate_by_source("test", "pred1") is not None
-            )  # noqa: E501
+            )
             assert (
                 manager.get_external_predicate_by_source("test", "pred2") is not None
-            )  # noqa: E501
+            )
             assert (
                 manager.get_external_predicate_by_source("test", "pred3") is not None
-            )  # noqa: E501
+            )
 
     def test_e2e_semantic_grouping_workflow(self, temp_db):
         """
@@ -638,12 +639,12 @@ class TestExternalPredicatesE2E:
                     "subClassOf",
                     "One class is a subclass of another",
                     "subClassOf",
-                ),  # noqa: E501
+                ),
                 (
                     "parentClass",
                     "The parent class in a hierarchy",
                     "parentClass",
-                ),  # noqa: E501
+                ),
                 ("childClass", "The child class in a hierarchy", "childClass"),
             ]
 
@@ -662,7 +663,7 @@ class TestExternalPredicatesE2E:
                     "dateCreated",
                     "The date something was created",
                     "dateCreated",
-                ),  # noqa: E501
+                ),
             ]
 
             all_preds = hierarchy_preds + property_preds + temporal_preds
@@ -679,7 +680,7 @@ class TestExternalPredicatesE2E:
 
             # Search for hierarchy predicates
             hierarchy_search = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "class hierarchy parent child subclass",
                     source="test",
                     threshold=0.3,
@@ -718,7 +719,7 @@ class TestExternalPredicatesE2E:
             # Should find temporal predicates at top
             assert any(
                 t in temporal_titles
-                for t in ["startDate", "endDate", "dateCreated"]  # noqa: E501
+                for t in ["startDate", "endDate", "dateCreated"]
             )
 
     def test_e2e_cross_lingual_search(self, temp_db):
@@ -736,7 +737,7 @@ class TestExternalPredicatesE2E:
             # Import predicates
             manager.add_external_predicate(
                 title="subClassOf",
-                definition="Indicates that one class is a subclass of another class",  # noqa: E501
+                definition="Indicates that one class is a subclass of another class",
                 source="schema.org",
                 external_id="subClassOf",
             )
@@ -809,13 +810,13 @@ class TestExternalPredicatesE2E:
 
             persist1 = manager.get_external_predicate_by_source(
                 "test", "persist1"
-            )  # noqa: E501
+            )
             assert persist1 is not None
             assert persist1.title == "persistent1"
 
             persist2 = manager.get_external_predicate_by_source(
                 "test", "persist2"
-            )  # noqa: E501
+            )
             assert persist2 is not None
             assert persist2.title == "persistent2"
 
@@ -873,7 +874,7 @@ class TestExternalPredicatesE2E:
 
             # Search for location-related predicates
             location_results = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "geographic location place position",
                     source="dbpedia",
                     threshold=0.3,
@@ -918,7 +919,7 @@ class TestExternalPredicatesE2E:
 
             manager.add_external_predicate(
                 title="IsA",
-                definition="Indicates that one concept is a type or instance of another",  # noqa: E501
+                definition="Indicates that one concept is a type or instance of another",
                 source="conceptnet",
                 external_id="/r/IsA",
             )
@@ -932,21 +933,21 @@ class TestExternalPredicatesE2E:
 
             manager.add_external_predicate(
                 title="HasProperty",
-                definition="Indicates that an entity has a specific property or attribute",  # noqa: E501
+                definition="Indicates that an entity has a specific property or attribute",
                 source="conceptnet",
                 external_id="/r/HasProperty",
             )
 
             manager.add_external_predicate(
                 title="Causes",
-                definition="Indicates a causal relationship where one event causes another",  # noqa: E501
+                definition="Indicates a causal relationship where one event causes another",
                 source="conceptnet",
                 external_id="/r/Causes",
             )
 
             # Search for hierarchy-related predicates
             hierarchy_results = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "type classification taxonomy hierarchy",
                     source="conceptnet",
                     threshold=0.3,
@@ -965,7 +966,7 @@ class TestExternalPredicatesE2E:
 
             # Search for property-related predicates
             property_results = (
-                manager.search_external_predicates_by_similarity(  # noqa: E501
+                manager.search_external_predicates_by_similarity(
                     "attribute characteristic property feature",
                     source="conceptnet",
                     threshold=0.3,
@@ -981,7 +982,7 @@ class TestExternalPredicatesE2E:
             property_titles = [pred.title for pred, score in property_results]
             assert (
                 "HasProperty" in property_titles or "RelatedTo" in property_titles
-            )  # noqa: E501
+            )
 
             # Verify all scores are valid
             for pred, score in hierarchy_results + property_results:

@@ -4,21 +4,21 @@ Unit tests for ChangesetManager - Testing changeset creation, management, and S3
 Tests changeset lifecycle, state management, version tracking, and error handling.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import uuid  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+import uuid
+from unittest.mock import Mock, patch
 
-from services.changeset_manager import ChangesetManager  # noqa: E402
-from services.collaboration_models import ChangesetState  # noqa: E402
-from services.working_tree_manager import WorkingTreeManager  # noqa: E402
-from services.s3_sync_manager import S3SyncManager  # noqa: E402
+import pytest
+from services.changeset_manager import ChangesetManager
+from services.collaboration_models import ChangesetState
+from services.s3_sync_manager import S3SyncManager
+from services.working_tree_manager import WorkingTreeManager
 
 
 class TestChangesetManager:
@@ -243,11 +243,10 @@ class TestChangesetManager:
 
         with patch.object(
             changeset_manager, "get_changeset", return_value=mock_changeset
+        ), pytest.raises(
+            ValueError, match="Cannot delete changeset in merged state"
         ):
-            with pytest.raises(
-                ValueError, match="Cannot delete changeset in merged state"
-            ):
-                changeset_manager.delete_changeset("changeset123")
+            changeset_manager.delete_changeset("changeset123")
 
     def test_delete_changeset_not_found(self, changeset_manager):
         """Test changeset deletion when not found."""

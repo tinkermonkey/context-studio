@@ -5,19 +5,19 @@ This template demonstrates how to migrate existing integration tests to use the
 service factory pattern while maintaining test isolation and performance benefits.  # noqa: E501
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )  # noqa: E501
+    )
 )
 
-import pytest  # noqa: E402
+import pytest
 
 # Import the new service factory dependencies
-from services.node_service import NodeService  # noqa: E402
+from services.node_service import NodeService
 
 # Example of migrating an existing integration test
 
@@ -46,7 +46,7 @@ class TestServiceFactoryIntegration:
             json={
                 "node_type": "layer",
                 "title": "Test Layer for Service Factory",
-                "definition": "A test layer to verify service factory integration",  # noqa: E501
+                "definition": "A test layer to verify service factory integration",
             },
         )
 
@@ -71,7 +71,7 @@ class TestServiceFactoryIntegration:
     @pytest.mark.skip_suite
     def test_service_caching_across_requests(
         self, shared_client, test_service_factory
-    ):  # noqa: E501
+    ):
         """
         Test that service factory caching works across multiple API requests.
         """
@@ -104,22 +104,22 @@ class TestServiceFactoryIntegration:
             cache_hits = node_service_metrics["cache_hits"]
             cache_misses = node_service_metrics["cache_misses"]
 
-            # Verify services were created (should be at least 1 per request type)  # noqa: E501
+            # Verify services were created (should be at least 1 per request type)
             assert (
                 total_created > 0
-            ), "Expected at least some services to be created"  # noqa: E501
+            ), "Expected at least some services to be created"
 
-            # Verify that requests were processed (either hits or misses should occur)  # noqa: E501
+            # Verify that requests were processed (either hits or misses should occur)
             total_requests = cache_hits + cache_misses
             assert (
                 total_requests > 0
-            ), "Expected cache hits or misses to be recorded"  # noqa: E501
+            ), "Expected cache hits or misses to be recorded"
 
         # Clean up
         for created_id in created_ids:
             delete_response = client.delete(
                 f"/api/structure_nodes/{created_id}"
-            )  # noqa: E501
+            )
             assert delete_response.status_code == 204
 
     def test_database_manager_with_service_factory(
@@ -128,7 +128,7 @@ class TestServiceFactoryIntegration:
         """
         Test that the database manager works correctly with the service factory.  # noqa: E501
         """
-        # This test uses the managed_db_session fixture which uses DatabaseManager  # noqa: E501
+        # This test uses the managed_db_session fixture which uses DatabaseManager
         db = managed_db_session
 
         # Get a service from the factory that uses the database
@@ -139,7 +139,7 @@ class TestServiceFactoryIntegration:
         assert isinstance(node_service, NodeService)
 
         # Test that we can perform database operations
-        # (This would normally create actual data, but we're just testing the connection)  # noqa: E501
+        # (This would normally create actual data, but we're just testing the connection)
         from sqlalchemy import text
 
         result = db.execute(text("SELECT 1")).scalar()
@@ -158,7 +158,7 @@ class TestServiceFactoryIntegration:
         response = client.post(
             "/api/structure_nodes/",
             json={
-                "node_type": "invalid_type",  # This should cause validation error  # noqa: E501
+                "node_type": "invalid_type",  # This should cause validation error
                 "title": "",  # Empty title should also cause error
                 "definition": "",
             },
@@ -189,7 +189,7 @@ class TestServiceFactoryIntegration:
         # Time multiple similar operations
         start_time = time.time()
 
-        # Create multiple layers (similar operations that should benefit from caching)  # noqa: E501
+        # Create multiple layers (similar operations that should benefit from caching)
         created_ids = []
         for i in range(5):
             response = client.post(
@@ -212,7 +212,7 @@ class TestServiceFactoryIntegration:
         # Should have reasonable cache hit rate after first operation
         overall_hit_rate = performance_summary[
             "overall_cache_hit_rate_percent"
-        ]  # noqa: E501
+        ]
 
         # Log performance for analysis
         print(f"Total time for 5 operations: {total_time:.3f}s")
@@ -222,7 +222,7 @@ class TestServiceFactoryIntegration:
         for created_id in created_ids:
             delete_response = client.delete(
                 f"/api/structure_nodes/{created_id}"
-            )  # noqa: E501
+            )
             assert delete_response.status_code == 204
 
 
@@ -237,14 +237,14 @@ class TestMigratedIntegrationTest:
 
     # BEFORE (Old pattern):
     # def test_create_layer_old_pattern(self, db_session):
-    #     node_service = NodeService(db=db_session, graph_service=GraphService(db_session))  # noqa: E501
+    #     node_service = NodeService(db=db_session, graph_service=GraphService(db_session))
     #     result = node_service.create_layer(...)
 
     # AFTER (New pattern with service factory):
     @pytest.mark.skip_suite
     def test_create_layer_new_pattern(
         self, shared_client, test_service_factory
-    ):  # noqa: E501
+    ):
         """
         Migrated test that uses service factory and monitoring.
         """
@@ -263,7 +263,7 @@ class TestMigratedIntegrationTest:
         # After clear_cache, initial count should be 0
         assert (
             initial_service_count == 0
-        ), "Expected initial service count to be 0 after clear_cache"  # noqa: E501
+        ), "Expected initial service count to be 0 after clear_cache"
 
         # Perform the actual test
         response = client.post(
@@ -271,7 +271,7 @@ class TestMigratedIntegrationTest:
             json={
                 "node_type": "layer",
                 "title": "Migrated Test Layer",
-                "definition": "A layer created using the new service factory pattern",  # noqa: E501
+                "definition": "A layer created using the new service factory pattern",
             },
         )
 
@@ -289,12 +289,12 @@ class TestMigratedIntegrationTest:
         # Should have created services for the request
         assert (
             final_service_count > 0
-        ), "Expected services to be created for the API request"  # noqa: E501
+        ), "Expected services to be created for the API request"
 
         # Clean up
         delete_response = client.delete(
             f"/api/structure_nodes/{layer_data['id']}"
-        )  # noqa: E501
+        )
         assert delete_response.status_code == 204
 
 
@@ -343,7 +343,7 @@ class TestNewIntegrationTestTemplate:
             performance = test_service_factory.get_performance_summary()
             print(f"Test used {total_services_used} total services")
             print(
-                f"Cache hit rate: {performance['overall_cache_hit_rate_percent']:.1f}%"  # noqa: E501
+                f"Cache hit rate: {performance['overall_cache_hit_rate_percent']:.1f}%"
             )
 
         # 6. Clean up any created resources

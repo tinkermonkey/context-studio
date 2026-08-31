@@ -4,19 +4,19 @@ Unit tests for RAG Observability Store.
 Tests persistence, retrieval, and cleanup of RAG observability data.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-from datetime import datetime, timedelta, timezone  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-import json  # noqa: E402
+import json
+import tempfile
+from datetime import datetime, timedelta, timezone
 
-from rag.observability_store import RAGObservabilityStore  # noqa: E402
+import pytest
+from rag.observability_store import RAGObservabilityStore
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ class TestRAGObservabilityStore:
 
     def test_initialization(self, test_db):
         """Test observability store initializes correctly."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -88,7 +88,7 @@ class TestRAGObservabilityStore:
 
     def test_save_metrics(self, test_db):
         """Test saving processing metrics."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -137,7 +137,7 @@ class TestRAGObservabilityStore:
 
     def test_save_metrics_truncates_long_text(self, test_db):
         """Test that long input text is truncated to 500 chars."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -179,7 +179,7 @@ class TestRAGObservabilityStore:
 
     def test_save_trace(self, test_db):
         """Test saving trace data."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -228,7 +228,7 @@ class TestRAGObservabilityStore:
 
     def test_save_multiple_traces(self, test_db):
         """Test saving multiple trace records for different layers."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -276,7 +276,7 @@ class TestRAGObservabilityStore:
 
     def test_get_metrics(self, test_db):
         """Test retrieving metrics by request ID."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -318,7 +318,7 @@ class TestRAGObservabilityStore:
 
     def test_get_metrics_not_found(self, test_db):
         """Test retrieving metrics for non-existent request returns None."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -332,7 +332,7 @@ class TestRAGObservabilityStore:
 
     def test_get_traces(self, test_db):
         """Test retrieving all traces for a request."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -374,7 +374,7 @@ class TestRAGObservabilityStore:
 
     def test_get_traces_empty(self, test_db):
         """Test retrieving traces for non-existent request returns empty list."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -388,7 +388,7 @@ class TestRAGObservabilityStore:
 
     def test_get_traces_ordered(self, test_db):
         """Test that traces are returned ordered by sentence index and timestamp."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -426,7 +426,7 @@ class TestRAGObservabilityStore:
 
     def test_cleanup_old_data(self, test_db):
         """Test cleanup of old metrics and traces."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -517,7 +517,7 @@ class TestRAGObservabilityStore:
 
     def test_cleanup_with_no_old_data(self, test_db):
         """Test cleanup when there's no old data to remove."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -534,7 +534,7 @@ class TestRAGObservabilityStore:
 
     def test_save_metrics_rollback_on_error(self, test_db):
         """Test that save_metrics rolls back on error."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:
@@ -565,7 +565,7 @@ class TestRAGObservabilityStore:
 
     def test_save_trace_rollback_on_error(self, test_db):
         """Test that save_trace rolls back on error."""
-        engine, SessionLocal = test_db
+        _engine, SessionLocal = test_db
         session = SessionLocal()
 
         try:

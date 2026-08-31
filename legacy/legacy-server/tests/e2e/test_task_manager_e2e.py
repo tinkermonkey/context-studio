@@ -6,23 +6,24 @@ completion, testing real-world usage scenarios and integration with
 the full application stack.
 """
 
-import sys
-import os
-import pytest
 import asyncio
+import os
+import sys
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-from services.task_manager import (  # noqa: E402
+from api import background_tasks
+from services.task_manager import (
     TaskStatus,
     initialize_task_manager,
     shutdown_task_manager,
 )
-from api import background_tasks  # noqa: E402
 
 
 class TestCompleteTaskWorkflowE2E:
@@ -108,7 +109,7 @@ class TestCompleteTaskWorkflowE2E:
         assert len(progress_history) > 1
         assert (
             progress_history[-1] >= progress_history[0]
-        )  # Progress increased  # noqa: E501
+        )  # Progress increased
 
         # Cleanup
         await task_manager.shutdown()
@@ -153,7 +154,7 @@ class TestCompleteTaskWorkflowE2E:
         assert status["status"] in [
             TaskStatus.RUNNING.value,
             TaskStatus.PENDING.value,
-        ]  # noqa: E501
+        ]
 
         # Cancel the task
         cancelled = await task_manager.cancel_task(task_id)
@@ -220,7 +221,7 @@ class TestCompleteTaskWorkflowE2E:
                 next_start_idx = execution_log.index(f"start_{i+1}")
                 assert (
                     end_idx < next_start_idx
-                ), f"Task {i} should complete before task {i+1} starts"  # noqa: E501
+                ), f"Task {i} should complete before task {i+1} starts"
 
         # Cleanup
         await task_manager.shutdown()
@@ -247,7 +248,7 @@ class TestCompleteTaskWorkflowE2E:
             if attempt_count[task_name] < max_attempts:
                 raise RuntimeError(
                     f"{task_name} failed on attempt {attempt_count[task_name]}"
-                )  # noqa: E501
+                )
             return f"{task_name} succeeded"
 
         # Submit first task (will fail)
@@ -275,7 +276,7 @@ class TestCompleteTaskWorkflowE2E:
             metadata={
                 "description": "Retry of task 1",
                 "original_task_id": task_id_1,
-            },  # noqa: E501
+            },
         )
 
         # Wait for retry to complete
@@ -441,8 +442,7 @@ class TestProgressCallbackE2E:
         """
         # This test validates a feature that is not implemented in TaskManager.
         # Progress updates must be checked via get_task_status() polling,
-        # not through callbacks. Removing this test as it tests non-existent functionality.  # noqa: E501
-        pass
+        # not through callbacks. Removing this test as it tests non-existent functionality.
 
 
 class TestTimeoutHandlingE2E:
@@ -509,7 +509,6 @@ class TestResourceManagementE2E:
         Removing this test as it tested functionality based on incorrect assumptions  # noqa: E501
         about queue semantics.
         """
-        pass
 
     @pytest.mark.asyncio
     async def test_dlq_size_limit_e2e(self):

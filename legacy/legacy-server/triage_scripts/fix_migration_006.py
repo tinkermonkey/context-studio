@@ -6,8 +6,9 @@ This script fixes databases that have the wrong migration 006 applied.
 It removes the incorrect migration history entry and re-runs the correct migration.
 """
 
-import os
 import importlib.util
+import os
+
 from sqlalchemy import create_engine, text
 
 

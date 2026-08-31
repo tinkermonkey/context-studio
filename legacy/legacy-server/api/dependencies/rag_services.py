@@ -6,13 +6,12 @@ This module provides dependency injection for RAG-related services
 following the established pattern in the codebase.
 """
 
-from fastapi import Depends
-from sqlalchemy.orm import Session
-
 from database.utils import get_db
+from fastapi import Depends
 from pipeline.manager import get_pipeline_database_manager
-from rag.rag_pipeline_service import RAGPipelineService
 from rag.observability_store import RAGObservabilityStore
+from rag.rag_pipeline_service import RAGPipelineService
+from sqlalchemy.orm import Session
 
 
 def get_operations_db() -> Session:

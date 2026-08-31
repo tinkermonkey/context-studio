@@ -5,7 +5,7 @@ Provides an in-memory event publisher that collects published events and
 manages subscriptions for testing event-driven behavior.
 """
 
-from typing import List, Dict, Callable
+from collections.abc import Callable
 
 from domain.ontology.events import DomainEvent
 
@@ -18,8 +18,8 @@ class FakeEventPublisher:
     """
 
     def __init__(self):
-        self._events: List[DomainEvent] = []
-        self._handlers: Dict[type, List[Callable]] = {}
+        self._events: list[DomainEvent] = []
+        self._handlers: dict[type, list[Callable]] = {}
 
     def publish(self, event: DomainEvent) -> None:
         """Publish a domain event.
@@ -43,7 +43,7 @@ class FakeEventPublisher:
         """
         self._handlers.setdefault(event_type, []).append(handler)
 
-    def get_events(self) -> List[DomainEvent]:
+    def get_events(self) -> list[DomainEvent]:
         """Retrieve all published events.
 
         Returns:
@@ -51,7 +51,7 @@ class FakeEventPublisher:
         """
         return list(self._events)
 
-    def get_events_of_type(self, event_type: type) -> List[DomainEvent]:
+    def get_events_of_type(self, event_type: type) -> list[DomainEvent]:
         """Retrieve all published events of a specific type.
 
         Args:

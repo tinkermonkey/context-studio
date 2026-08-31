@@ -5,11 +5,11 @@ Data models for the collaborative change management system including changesets,
 proposals, voting, and identity management.
 """
 
+import json
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
-import json
+from typing import Any
 
 
 class ChangesetState(Enum):
@@ -34,7 +34,6 @@ class ProposalStatus(Enum):
 class CRDTConflictError(Exception):
     """Exception raised when CRDT merge conflicts cannot be automatically resolved."""
 
-    pass
 
 
 @dataclass
@@ -45,14 +44,14 @@ class Changeset:
     title: str
     description: str
     state: ChangesetState
-    branch_name: Optional[str]
-    parent_changeset_id: Optional[str]
+    branch_name: str | None
+    parent_changeset_id: str | None
     author_id: str
     created_at: datetime
-    merged_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    merged_at: datetime | None = None
+    metadata: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert changeset to dictionary for serialization."""
         return {
             "id": self.id,
@@ -68,7 +67,7 @@ class Changeset:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Changeset":
+    def from_dict(cls, data: dict[str, Any]) -> "Changeset":
         """Create changeset from dictionary."""
         return cls(
             id=data["id"],
@@ -93,11 +92,11 @@ class ChangesetVersion:
     """A specific version of entities included in a changeset."""
 
     changeset_id: str
-    version_ids: List[str]  # List of entity_version IDs included
-    summary: Dict[str, Any]  # Summary statistics
+    version_ids: list[str]  # List of entity_version IDs included
+    summary: dict[str, Any]  # Summary statistics
     created_at: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert changeset version to dictionary."""
         return {
             "changeset_id": self.changeset_id,
@@ -119,11 +118,11 @@ class Proposal:
     required_approvals: int
     created_by: str
     created_at: datetime
-    closed_at: Optional[datetime] = None
-    merge_commit_id: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    closed_at: datetime | None = None
+    merge_commit_id: str | None = None
+    metadata: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert proposal to dictionary for serialization."""
         return {
             "id": self.id,
@@ -140,7 +139,7 @@ class Proposal:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Proposal":
+    def from_dict(cls, data: dict[str, Any]) -> "Proposal":
         """Create proposal from dictionary."""
         return cls(
             id=data["id"],
@@ -168,10 +167,10 @@ class ProposalVote:
     proposal_id: str
     user_id: str
     vote: str  # 'approve', 'reject', 'abstain'
-    comment: Optional[str]
+    comment: str | None
     voted_at: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert vote to dictionary for serialization."""
         return {
             "proposal_id": self.proposal_id,
@@ -182,7 +181,7 @@ class ProposalVote:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ProposalVote":
+    def from_dict(cls, data: dict[str, Any]) -> "ProposalVote":
         """Create vote from dictionary."""
         return cls(
             proposal_id=data["proposal_id"],
@@ -200,13 +199,13 @@ class UserIdentity:
     user_id: str
     email: str
     display_name: str
-    public_key: Optional[str]
+    public_key: str | None
     verified: bool
     trust_level: int  # 0=unverified, 1=email verified, 2=team verified
     created_at: datetime
-    verified_at: Optional[datetime] = None
+    verified_at: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert user identity to dictionary for serialization."""
         return {
             "user_id": self.user_id,
@@ -220,7 +219,7 @@ class UserIdentity:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "UserIdentity":
+    def from_dict(cls, data: dict[str, Any]) -> "UserIdentity":
         """Create user identity from dictionary."""
         return cls(
             user_id=data["user_id"],

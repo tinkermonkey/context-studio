@@ -6,14 +6,14 @@ from NLP analysis results, with conservative filtering to preserve existing sens
 """
 
 import json
-from typing import List, Optional
-from sqlalchemy.orm import Session
 
-from database.models import StructureNode
 from api.models.structure_nodes import WordSense
+from database.models import StructureNode
 from nlp.models import NLPAnalysisResponse
-from services.exceptions import ValidationError
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.exceptions import ValidationError
 
 logger = get_logger(__name__)
 
@@ -31,8 +31,8 @@ class WordSenseService:
         self.db = db
 
     def extract_word_senses(
-        self, nlp_response: NLPAnalysisResponse, term: Optional[str] = None
-    ) -> List[WordSense]:
+        self, nlp_response: NLPAnalysisResponse, term: str | None = None
+    ) -> list[WordSense]:
         """
         Extract word senses from NLP analysis results.
 
@@ -101,8 +101,8 @@ class WordSenseService:
         return word_senses
 
     def update_word_senses(
-        self, node_id: str, new_senses: List[WordSense], conservative: bool = True
-    ) -> List[WordSense]:
+        self, node_id: str, new_senses: list[WordSense], conservative: bool = True
+    ) -> list[WordSense]:
         """
         Update word senses for a structure node.
 
@@ -188,7 +188,7 @@ class WordSenseService:
             logger.error(f"Failed to update word senses for node {node_id}: {e}")
             raise ValueError(f"Failed to update word senses: {e}")
 
-    def get_word_senses(self, node_id: str) -> List[WordSense]:
+    def get_word_senses(self, node_id: str) -> list[WordSense]:
         """
         Get all word senses for a structure node.
 
@@ -256,7 +256,7 @@ class WordSenseService:
                 f"Please contact support to recover this data."
             )
 
-    def remove_word_senses(self, node_id: str, sense_ids: List[str]) -> List[WordSense]:
+    def remove_word_senses(self, node_id: str, sense_ids: list[str]) -> list[WordSense]:
         """
         Remove specific word senses from a structure node by sense_id.
 
@@ -339,7 +339,7 @@ class WordSenseService:
                     f"Expected format: word.pos.number (e.g., 'bank.n.01')"
                 )
 
-            word, pos, number = parts
+            _word, pos, number = parts
 
             # Validate POS tag is valid WordNet POS
             valid_pos = {
@@ -374,8 +374,8 @@ class WordSenseService:
             return True
 
     def update_selected_senses(
-        self, node_id: str, selected_senses: List[WordSense]
-    ) -> List[WordSense]:
+        self, node_id: str, selected_senses: list[WordSense]
+    ) -> list[WordSense]:
         """
         Update selected word senses for a structure node.
 
@@ -460,8 +460,8 @@ class WordSenseService:
             raise ValueError(f"Failed to update selected word senses: {e}")
 
     def get_nodes_with_word_sense(
-        self, sense_id: str, limit: Optional[int] = None
-    ) -> List[StructureNode]:
+        self, sense_id: str, limit: int | None = None
+    ) -> list[StructureNode]:
         """
         Find all structure nodes that have a specific word sense.
 

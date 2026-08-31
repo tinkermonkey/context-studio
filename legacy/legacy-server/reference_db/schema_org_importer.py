@@ -14,23 +14,23 @@ This module implements Phase 2 of the reference database import workflow:
 - Implements lock file management for concurrent import protection
 """
 
-import os
 import json
-import time
 import logging
+import os
 import tempfile
-from typing import List, Dict, Any, Optional, Tuple
+import time
 from datetime import datetime
+from typing import Any
 from uuid import uuid4
 
 import requests
+from embeddings.generate_embeddings import generate_embedding
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
-from embeddings.generate_embeddings import generate_embedding
+from reference_db.models import ExternalPredicate, ReferenceLink, ReferenceNode
 
 logger = logging.getLogger(__name__)
 
@@ -48,31 +48,26 @@ SOURCE_NAME = "schema.org"
 class SchemaOrgImportError(Exception):
     """Base exception for Schema.org import errors."""
 
-    pass
 
 
 class DownloadError(SchemaOrgImportError):
     """Error during Schema.org data download."""
 
-    pass
 
 
 class ParseError(SchemaOrgImportError):
     """Error during JSON-LD parsing."""
 
-    pass
 
 
 class EmbeddingError(SchemaOrgImportError):
     """Error during embedding generation."""
 
-    pass
 
 
 class LockError(SchemaOrgImportError):
     """Error acquiring or managing lock file."""
 
-    pass
 
 
 class SchemaOrgImporter:
@@ -121,7 +116,7 @@ class SchemaOrgImporter:
         self._release_lock()
         raise SystemExit(0)
 
-    def import_schema_org(self, batch_size: int = DEFAULT_BATCH_SIZE) -> Dict[str, Any]:
+    def import_schema_org(self, batch_size: int = DEFAULT_BATCH_SIZE) -> dict[str, Any]:
         """
         Execute the complete Schema.org import pipeline.
 
@@ -388,7 +383,7 @@ class SchemaOrgImporter:
         # This should not be reached due to exceptions, but as a safety net
         raise DownloadError(f"Download failed: {last_error}")
 
-    def _parse_jsonld(self, file_path: str) -> Tuple[List[Dict], List[Dict]]:
+    def _parse_jsonld(self, file_path: str) -> tuple[list[dict], list[dict]]:
         """
         Parse Schema.org JSON-LD file into entities and properties.
 
@@ -457,8 +452,8 @@ class SchemaOrgImporter:
         return entities, properties
 
     def _generate_embeddings_batch(
-        self, items: List[Dict], batch_size: int = DEFAULT_BATCH_SIZE
-    ) -> List[Dict[str, Any]]:
+        self, items: list[dict], batch_size: int = DEFAULT_BATCH_SIZE
+    ) -> list[dict[str, Any]]:
         """
         Generate embeddings for a list of Schema.org items.
 
@@ -606,8 +601,8 @@ class SchemaOrgImporter:
         return embedded_items
 
     def _insert_nodes_transaction(
-        self, embedded_nodes: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+        self, embedded_nodes: list[dict[str, Any]]
+    ) -> dict[str, str]:
         """
         Insert Schema.org Classes as ReferenceNodes with embeddings in a single transaction.
 
@@ -671,8 +666,8 @@ class SchemaOrgImporter:
         return node_map
 
     def _insert_predicates_transaction(
-        self, embedded_predicates: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+        self, embedded_predicates: list[dict[str, Any]]
+    ) -> dict[str, str]:
         """
         Insert Schema.org Properties as ExternalPredicates with embeddings in a single transaction.
 
@@ -855,10 +850,10 @@ class SchemaOrgImporter:
 
     def _insert_relationships_transaction(
         self,
-        entities: List[Dict],
-        properties: List[Dict],
-        node_map: Dict[str, str],
-        predicate_map: Dict[str, str],
+        entities: list[dict],
+        properties: list[dict],
+        node_map: dict[str, str],
+        predicate_map: dict[str, str],
     ) -> int:
         """
         Extract and insert Schema.org metadata relationships in separate transaction.
@@ -964,7 +959,7 @@ class SchemaOrgImporter:
 
         return len(links_to_insert)
 
-    def _extract_id(self, value: Any) -> Optional[str]:
+    def _extract_id(self, value: Any) -> str | None:
         """
         Extract @id from a value that might be a dict or string.
 

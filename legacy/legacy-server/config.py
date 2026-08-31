@@ -3,16 +3,17 @@
 Configuration settings for the Context Studio Local Server.
 """
 
-import os
-import json
-import threading
 import asyncio
-from typing import Dict, Any, Optional, List, Callable
-from pydantic import BaseModel, Field, ValidationError, ConfigDict
-from enum import Enum
+import json
+import os
+import threading
+from collections.abc import Callable
 from dataclasses import dataclass
-from dotenv import load_dotenv
+from enum import Enum
+from typing import Any
 
+from dotenv import load_dotenv
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,30 +31,30 @@ class LogLevel(str, Enum):
 class S3Config:
     bucket: str
     region: str = "us-east-1"
-    access_key: Optional[str] = None
-    secret_key: Optional[str] = None
-    endpoint: Optional[str] = None  # For S3-compatible services
+    access_key: str | None = None
+    secret_key: str | None = None
+    endpoint: str | None = None  # For S3-compatible services
 
 
 class ServerConfig(BaseModel):
     """Server configuration section"""
 
-    host: str = Field(  # noqa: E501
+    host: str = Field(
         default="127.0.0.1", description="Server host address"
     )
-    port: int = Field(  # noqa: E501
+    port: int = Field(
         default=8000, ge=1024, le=65535, description="Server port"
     )
-    reload: bool = Field(  # noqa: E501
+    reload: bool = Field(
         default=True, description="Enable auto-reload in development"
     )
-    cors_origins: List[str] = Field(  # noqa: E501
+    cors_origins: list[str] = Field(
         default=["*"], description="CORS allowed origins"
     )
-    access_log: bool = Field(  # noqa: E501
+    access_log: bool = Field(
         default=False, description="Enable uvicorn access logs"
     )
-    log_level: LogLevel = Field(  # noqa: E501
+    log_level: LogLevel = Field(
         default=LogLevel.INFO, description="Server log level"
     )
 
@@ -61,13 +62,13 @@ class ServerConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     """Database configuration section"""
 
-    default_url: str = Field(  # noqa: E501
+    default_url: str = Field(
         default="sqlite:///./datafiles/local.db", description="Default database URL"
     )
-    default_dataset_filename: str = Field(  # noqa: E501
+    default_dataset_filename: str = Field(
         default="default.db", description="Default dataset filename"
     )
-    datasets_directory: Optional[str] = Field(  # noqa: E501
+    datasets_directory: str | None = Field(
         default=None,
         description=(
             "Directory for dataset management. If None or path "
@@ -75,25 +76,25 @@ class DatabaseConfig(BaseModel):
             "default_url is used directly."
         ),
     )
-    reference_path: str = Field(  # noqa: E501
+    reference_path: str = Field(
         default="./datafiles/reference.db",
         description="Reference database path (multi-source knowledge graph)",
     )
-    reference_cache_path: str = Field(  # noqa: E501
+    reference_cache_path: str = Field(
         default="./datafiles/reference_api_cache.db",
         description="Reference API cache database path",
     )
-    operations_path: str = Field(  # noqa: E501
+    operations_path: str = Field(
         default="./datafiles/operations.db",
         description=(
             "Operations database path "
             "(pipeline configs, audit logs, task management)"
         ),
     )
-    check_same_thread: bool = Field(  # noqa: E501
+    check_same_thread: bool = Field(
         default=False, description="SQLite check_same_thread setting"
     )
-    pool_timeout: int = Field(  # noqa: E501
+    pool_timeout: int = Field(
         default=30, ge=1, description="Database pool timeout seconds"
     )
 
@@ -101,22 +102,22 @@ class DatabaseConfig(BaseModel):
 class LLMConfig(BaseModel):
     """Large Language Model configuration section"""
 
-    model_name: str = Field(  # noqa: E501
+    model_name: str = Field(
         default="gpt-4o-mini", description="OpenAI model name"
     )
-    temperature: float = Field(  # noqa: E501
+    temperature: float = Field(
         default=0.0, ge=0.0, le=2.0, description="Model temperature"
     )
-    max_tokens: Optional[int] = Field(  # noqa: E501
+    max_tokens: int | None = Field(
         default=None, ge=1, le=32000, description="Maximum tokens for response"
     )
-    timeout: int = Field(  # noqa: E501
+    timeout: int = Field(
         default=60, ge=1, le=300, description="Request timeout in seconds"
     )
-    max_text_length: int = Field(  # noqa: E501
+    max_text_length: int = Field(
         default=1000, ge=1, le=10000, description="Maximum input text length"
     )
-    retry_attempts: int = Field(  # noqa: E501
+    retry_attempts: int = Field(
         default=3, ge=0, le=10, description="Number of retry attempts"
     )
 
@@ -126,37 +127,37 @@ class NLPConfig(BaseModel):
 
     model_name: str = Field(
         default="en_core_web_lg", description="spaCy model name"
-    )  # noqa: E501
+    )
     max_text_length: int = Field(
         default=512, ge=1, le=10000, description="Maximum text length for analysis"
-    )  # noqa: E501
+    )
     sense2vec_path: str = Field(
         default="./downloads/s2v_reddit_2015_md", description="Sense2Vec model path"
-    )  # noqa: E501
-    concepcy_relations: List[str] = Field(
+    )
+    concepcy_relations: list[str] = Field(
         default=["RELATED_TO", "IS_A", "PART_OF"],
         description="List of ConceptNet relations to use",
-    )  # noqa: E501
+    )
     filter_missing_text: bool = Field(
         default=True, description="Whether to filter out missing text"
-    )  # noqa: E501
+    )
     edge_weight_filter: float = Field(
         default=2.0, ge=0.0, description="Minimum edge weight for filtering"
-    )  # noqa: E501
+    )
     request_timeout: int = Field(
         default=30, ge=1, description="Request timeout in seconds"
-    )  # noqa: E501
+    )
 
     # Model auto-download settings
     auto_download_models: bool = Field(
         default=True, description="Automatically download missing NLP models on startup"
-    )  # noqa: E501
+    )
     download_timeout: int = Field(
         default=600,
         ge=60,
         le=1800,
         description="Timeout for model downloads in seconds",
-    )  # noqa: E501
+    )
 
 
 class RAGPipelineConfig(BaseModel):
@@ -168,13 +169,13 @@ class RAGPipelineConfig(BaseModel):
         ge=1,
         le=1000,
         description="Top-k results for knowledge graph context retrieval",
-    )  # noqa: E501
+    )
     kg_vector_threshold: float = Field(
         default=0.6,
         ge=0.0,
         le=1.0,
         description="Minimum similarity threshold for vector search in knowledge graph (Layer 0 and Layer 3)",
-    )  # noqa: E501
+    )
 
     # RAG Pipeline layer timeouts (in seconds)
     timeout_layer_0: float = Field(
@@ -182,82 +183,82 @@ class RAGPipelineConfig(BaseModel):
         ge=0.1,
         le=60.0,
         description="Timeout for Layer 0 (KG context preparation) in seconds",
-    )  # noqa: E501
+    )
     timeout_layer_1: float = Field(
         default=30.0,
         ge=1.0,
         le=300.0,
         description="Timeout for Layer 1 (LLM extraction) in seconds",
-    )  # noqa: E501
+    )
     timeout_layer_2: float = Field(
         default=0.5,
         ge=0.1,
         le=60.0,
         description="Timeout for Layer 2 (spaCy gap detection) in seconds",
-    )  # noqa: E501
+    )
     timeout_layer_3: float = Field(
         default=30.0,
         ge=1.0,
         le=300.0,
         description="Timeout for Layer 3 (concept resolution) in seconds",
-    )  # noqa: E501
+    )
 
     # LLM pipeline settings
-    llm_pipeline_flavor: Optional[str] = Field(
+    llm_pipeline_flavor: str | None = Field(
         default=None, description="LLM pipeline flavor to use for RAG operations"
-    )  # noqa: E501
+    )
     llm_timeout: int = Field(
         default=30,
         ge=1,
         le=300,
         description="LLM request timeout in seconds (deprecated: use timeout_layer_1 instead)",
-    )  # noqa: E501
+    )
     enable_llm_layer: bool = Field(
         default=True,
         description="Enable Layer 1 LLM extraction (can be disabled for testing or cost reduction)",
-    )  # noqa: E501
+    )
 
     # Gap detection settings
-    gap_detection_deps: List[str] = Field(
+    gap_detection_deps: list[str] = Field(
         default_factory=list, description="Dependencies for gap detection layer"
-    )  # noqa: E501
+    )
 
     # Web search settings
     web_search_enabled: bool = Field(
         default=True, description="Enable web search for gap filling"
-    )  # noqa: E501
+    )
     web_search_max_attempts: int = Field(
         default=3, ge=1, le=10, description="Maximum web search attempts per query"
-    )  # noqa: E501
+    )
     web_search_rate_limit: int = Field(
         default=5,
         ge=1,
         le=100,
         description="Web search rate limit (searches per minute)",
-    )  # noqa: E501
+    )
     web_search_max_per_session: int = Field(
         default=10, ge=1, le=100, description="Maximum web searches per session"
-    )  # noqa: E501
+    )
 
     # Observability settings
     enable_observability: bool = Field(
         default=True, description="Enable observability and metrics collection"
-    )  # noqa: E501
+    )
     observability_retention_days: int = Field(
         default=30,
         ge=1,
         le=365,
         description="Retention period for metrics data in days",
-    )  # noqa: E501
+    )
     trace_retention_days: int = Field(
         default=7, ge=1, le=90, description="Retention period for trace data in days"
-    )  # noqa: E501
+    )
     trace_max_data_size_kb: int = Field(
         default=100,
         ge=1,
         le=10000,
         description="Maximum size of trace data per request in KB",
-    )  # noqa: E501
+    )
 
     # Deduplication settings
     deduplication_threshold: float = Field(
@@ -265,7 +266,7 @@ class RAGPipelineConfig(BaseModel):
         ge=0.0,
         le=1.0,
         description="Similarity threshold for entity deduplication",
-    )  # noqa: E501
+    )
 
     # Extraction decision thresholds
     extraction_confidence_threshold: float = Field(
@@ -273,7 +274,7 @@ class RAGPipelineConfig(BaseModel):
         ge=0.0,
         le=1.0,
         description="Minimum confidence threshold for entity extraction",
-    )  # noqa: E501
+    )
 
 
 class ReferenceSourceRateLimitConfig(BaseModel):
@@ -281,19 +282,19 @@ class ReferenceSourceRateLimitConfig(BaseModel):
 
     requests_per_hour: int = Field(
         default=1000, ge=1, description="Requests per hour limit"
-    )  # noqa: E501
-    requests_per_minute: Optional[int] = Field(
+    )
+    requests_per_minute: int | None = Field(
         default=None, ge=1, description="Requests per minute limit (optional)"
-    )  # noqa: E501
-    requests_per_second: Optional[int] = Field(
+    )
+    requests_per_second: int | None = Field(
         default=None, ge=1, description="Requests per second limit (optional)"
-    )  # noqa: E501
+    )
     progressive_delay: bool = Field(
         default=True, description="Enable progressive delay on rate limit"
-    )  # noqa: E501
+    )
     max_delay: int = Field(
         default=300, ge=1, description="Maximum delay in seconds"
-    )  # noqa: E501
+    )
 
 
 class ReferenceSourceConfig(BaseModel):
@@ -301,30 +302,30 @@ class ReferenceSourceConfig(BaseModel):
 
     enabled: bool = Field(
         default=True, description="Enable this reference source"
-    )  # noqa: E501
+    )
     upstream_url: str = Field(
         ..., description="Upstream API URL for this source"
-    )  # noqa: E501
+    )
     use_proxy: bool = Field(
         default=True, description="Route requests through caching proxy"
-    )  # noqa: E501
+    )
     timeout: int = Field(
         default=30, ge=1, le=300, description="Request timeout in seconds"
-    )  # noqa: E501
+    )
     max_retries: int = Field(
         default=3, ge=0, le=10, description="Maximum retry attempts"
-    )  # noqa: E501
+    )
     rate_limit: ReferenceSourceRateLimitConfig = Field(
         default_factory=ReferenceSourceRateLimitConfig
-    )  # noqa: E501
+    )
 
     # Source-specific configuration overrides
-    custom_headers: Dict[str, str] = Field(
+    custom_headers: dict[str, str] = Field(
         default_factory=dict, description="Custom headers for requests"
-    )  # noqa: E501
-    custom_params: Dict[str, str] = Field(
+    )
+    custom_params: dict[str, str] = Field(
         default_factory=dict, description="Custom query parameters"
-    )  # noqa: E501
+    )
 
 
 class ReferenceSourcesConfig(BaseModel):
@@ -334,7 +335,7 @@ class ReferenceSourcesConfig(BaseModel):
     default_language: str = Field(
         default="en",
         description="Default language code for all reference source queries",
-    )  # noqa: E501
+    )
 
     # Global search timeout for multi-source search operations
     search_timeout: int = Field(
@@ -342,27 +343,27 @@ class ReferenceSourcesConfig(BaseModel):
         ge=5,
         le=300,
         description="Timeout in seconds for multi-source search operations",
-    )  # noqa: E501
+    )
 
     # Reference link filtering settings
     enable_relevance_filtering: bool = Field(
         default=False,
         description="Enable predicate relevance filtering for reference queries by default",
-    )  # noqa: E501
+    )
     filter_cache_ttl: int = Field(
         default=300,
         ge=60,
         le=3600,
         description="Cache TTL for predicate relevance filters in seconds",
-    )  # noqa: E501
+    )
 
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://api.conceptnet.io",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=3600,
-                requests_per_minute=60,  # Conservative: ~1/sec to avoid 30-60s hangs reported by users  # noqa: E501
+                requests_per_minute=60,  # Conservative: ~1/sec to avoid 30-60s hangs reported by users
                 requests_per_second=1,  # Very conservative to avoid API hangs
             ),
         )
@@ -370,7 +371,7 @@ class ReferenceSourcesConfig(BaseModel):
 
     # DBpedia has multiple services, so we configure them separately
     dbpedia_lookup: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://lookup.dbpedia.org",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=360000,  # 100 req/sec * 3600 sec
@@ -381,7 +382,7 @@ class ReferenceSourcesConfig(BaseModel):
     )
 
     dbpedia_sparql: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://dbpedia.org",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=360000,  # 100 req/sec * 3600 sec
@@ -392,47 +393,47 @@ class ReferenceSourcesConfig(BaseModel):
     )
 
     dbpedia_spotlight: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://api.dbpedia-spotlight.org/en/",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=100000,  # No official limit, but be reasonable
-                requests_per_minute=1800,  # ~30 req/sec (documented self-hosted performance)  # noqa: E501
-                requests_per_second=30,  # Conservative based on documented performance  # noqa: E501
+                requests_per_minute=1800,  # ~30 req/sec (documented self-hosted performance)
+                requests_per_second=30,  # Conservative based on documented performance
             ),
         )
     )
 
     wikidata: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://query.wikidata.org",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=3000,  # Conservative hourly limit
-                requests_per_minute=50,  # 60 seconds of query time per minute, be conservative  # noqa: E501
-                requests_per_second=2,  # Conservative: allow short bursts but avoid overwhelming  # noqa: E501
+                requests_per_minute=50,  # 60 seconds of query time per minute, be conservative
+                requests_per_second=2,  # Conservative: allow short bursts but avoid overwhelming
             ),
         )
     )
 
     duckduckgo: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://api.duckduckgo.com",
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=3600,  # Free API, conservative limit
                 requests_per_minute=60,  # ~1 per second
-                requests_per_second=1,  # Conservative to avoid overwhelming free service  # noqa: E501
+                requests_per_second=1,  # Conservative to avoid overwhelming free service
             ),
         )
     )
 
     schema_org: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://schema.org",
             use_proxy=False,  # Local database, no proxy needed
             timeout=10,
             max_retries=1,
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=10000
-            ),  # Local, no real limit  # noqa: E501
+            ),  # Local, no real limit
         )
     )
 
@@ -441,7 +442,7 @@ class ReferenceSourcesConfig(BaseModel):
     # HTTPS CONNECT tunneling required by OpenAI/Anthropic clients.
     # LLM response caching is handled by LangChain's built-in cache instead.
     openai: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://api.openai.com",
             use_proxy=False,  # Disabled: requires CONNECT proxy, not reverse proxy
             enabled=True,
@@ -449,7 +450,7 @@ class ReferenceSourcesConfig(BaseModel):
             max_retries=2,
             rate_limit=ReferenceSourceRateLimitConfig(
                 requests_per_hour=500,  # Tier 1: 500 RPM for most models
-                requests_per_minute=10,  # Conservative for free tier (3 RPM) / Tier 1  # noqa: E501
+                requests_per_minute=10,  # Conservative for free tier (3 RPM) / Tier 1
                 requests_per_second=1,  # Avoid bursts, smooth rate limiting
                 progressive_delay=True,
                 max_delay=60,
@@ -458,7 +459,7 @@ class ReferenceSourcesConfig(BaseModel):
     )
 
     anthropic: ReferenceSourceConfig = Field(
-        default_factory=lambda: ReferenceSourceConfig(  # noqa: E501
+        default_factory=lambda: ReferenceSourceConfig(
             upstream_url="https://api.anthropic.com",
             use_proxy=False,  # Disabled: requires CONNECT proxy, not reverse proxy
             enabled=True,
@@ -481,34 +482,34 @@ class ProxyServerConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="Proxy server host")
     port: int = Field(
         default=18080, ge=1024, le=65535, description="Proxy server port"
-    )  # noqa: E501
+    )
     enabled: bool = Field(
         default=True, description="Enable proxy server globally"
-    )  # noqa: E501
+    )
     database_path: str = Field(
         default="./datafiles/reference_api_cache.db", description="Cache database path"
-    )  # noqa: E501
+    )
     max_cache_entries: int = Field(
         default=10000, ge=100, description="Maximum total cache entries"
-    )  # noqa: E501
+    )
 
     # Global cache defaults (can be overridden per source)
     default_cache_ttl: int = Field(
         default=3600, ge=60, description="Default cache TTL (seconds)"
-    )  # noqa: E501
+    )
     default_max_response_size: int = Field(
         default=10485760,
         ge=1024,
         description="Default maximum cached response size (bytes)",
-    )  # noqa: E501
+    )
 
     # Global rate limiting defaults
     default_requests_per_hour: int = Field(
         default=1000, ge=1, description="Default requests per hour"
-    )  # noqa: E501
+    )
     progressive_max_delay: int = Field(
         default=300, ge=1, description="Default maximum progressive delay (seconds)"
-    )  # noqa: E501
+    )
 
 
 class LoggingConfig(BaseModel):
@@ -517,24 +518,24 @@ class LoggingConfig(BaseModel):
     level: LogLevel = Field(default=LogLevel.INFO, description="Log level")
     enable_console: bool = Field(
         default=False, description="Enable console logging"
-    )  # noqa: E501
+    )
     enable_file: bool = Field(default=True, description="Enable file logging")
     file_path: str = Field(
         default="./logs/context_studio.log", description="Log file path"
-    )  # noqa: E501
+    )
     format: str = Field(
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Log format",
-    )  # noqa: E501
+    )
     date_format: str = Field(
         default="%Y-%m-%d %H:%M:%S", description="Date format"
-    )  # noqa: E501
+    )
     max_file_size: int = Field(
         default=10485760, ge=1024, description="Maximum log file size (bytes)"
-    )  # noqa: E501
+    )
     backup_count: int = Field(
         default=5, ge=0, description="Number of backup files"
-    )  # noqa: E501
+    )
 
 
 class SecurityConfig(BaseModel):
@@ -542,21 +543,21 @@ class SecurityConfig(BaseModel):
 
     require_secure_key: bool = Field(
         default=False, description="Require secure key for proxy"
-    )  # noqa: E501
-    secure_key: Optional[str] = Field(
+    )
+    secure_key: str | None = Field(
         default=None, description="Secure key for proxy access"
-    )  # noqa: E501
+    )
     log_security_events: bool = Field(
         default=False, description="Log security events"
-    )  # noqa: E501
+    )
     api_key_header: str = Field(
         default="X-API-Key", description="API key header name"
-    )  # noqa: E501
+    )
 
 
 # Legacy compatibility classes for backward compatibility
 class SourceType(str, Enum):
-    """Reference API source types for reference service (legacy compatibility)"""  # noqa: E501
+    """Reference API source types for reference service (legacy compatibility)"""
 
     DBPEDIA = "dbpedia"
     CONCEPTNET = "conceptnet"
@@ -566,21 +567,21 @@ class SourceType(str, Enum):
 
 
 class SourceConfig(BaseModel):
-    """Configuration for individual reference API source (legacy compatibility)"""  # noqa: E501
+    """Configuration for individual reference API source (legacy compatibility)"""
 
     enabled: bool = Field(True, description="Whether this source is enabled")
     use_proxy: bool = Field(
         True, description="Whether to use caching proxy for this source"
-    )  # noqa: E501
+    )
     timeout: int = Field(
         30, ge=1, le=300, description="Request timeout in seconds"
-    )  # noqa: E501
+    )
     max_retries: int = Field(
         3, ge=0, le=10, description="Maximum number of retries"
-    )  # noqa: E501
-    base_url: Optional[str] = Field(
+    )
+    base_url: str | None = Field(
         None, description="Override base URL for source"
-    )  # noqa: E501
+    )
 
 
 class Settings(BaseModel):
@@ -601,24 +602,24 @@ class Settings(BaseModel):
     rag_pipeline: RAGPipelineConfig = Field(default_factory=RAGPipelineConfig)
     reference_sources: ReferenceSourcesConfig = Field(
         default_factory=ReferenceSourcesConfig
-    )  # noqa: E501
+    )
     proxy_server: ProxyServerConfig = Field(default_factory=ProxyServerConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
 
     # S3 Configuration
-    S3_BUCKET: Optional[str] = None
+    S3_BUCKET: str | None = None
     S3_REGION: str = "us-east-1"
-    S3_ACCESS_KEY: Optional[str] = None
-    S3_SECRET_KEY: Optional[str] = None
-    S3_ENDPOINT: Optional[str] = None
+    S3_ACCESS_KEY: str | None = None
+    S3_SECRET_KEY: str | None = None
+    S3_ENDPOINT: str | None = None
 
     # DuckDB Configuration
     DUCKDB_MEMORY_LIMIT: str = "2GB"
     DUCKDB_THREADS: int = 4
 
     @property
-    def s3_bucket(self) -> Optional[str]:
+    def s3_bucket(self) -> str | None:
         return self.S3_BUCKET
 
     @property
@@ -626,15 +627,15 @@ class Settings(BaseModel):
         return self.S3_REGION
 
     @property
-    def s3_access_key(self) -> Optional[str]:
+    def s3_access_key(self) -> str | None:
         return self.S3_ACCESS_KEY
 
     @property
-    def s3_secret_key(self) -> Optional[str]:
+    def s3_secret_key(self) -> str | None:
         return self.S3_SECRET_KEY
 
     @property
-    def s3_endpoint(self) -> Optional[str]:
+    def s3_endpoint(self) -> str | None:
         return self.S3_ENDPOINT
 
     @property
@@ -645,7 +646,7 @@ class Settings(BaseModel):
     def duckdb_threads(self) -> int:
         return self.DUCKDB_THREADS
 
-    def get_s3_config(self) -> Optional[S3Config]:
+    def get_s3_config(self) -> S3Config | None:
         if not self.s3_bucket:
             return None
         return S3Config(
@@ -671,7 +672,7 @@ class Settings(BaseModel):
             return getattr(self.reference_sources, source_name)
         raise ValueError(f"Unknown reference source: {source_name}")
 
-    def get_enabled_sources(self) -> List[str]:
+    def get_enabled_sources(self) -> list[str]:
         """Get list of enabled reference sources"""
         enabled = []
         for source_name in [
@@ -681,15 +682,15 @@ class Settings(BaseModel):
             "dbpedia_spotlight",
             "wikidata",
             "schema_org",
-        ]:  # noqa: E501
+        ]:
             config = getattr(self.reference_sources, source_name, None)
             if config and config.enabled:
                 enabled.append(source_name)
         return enabled
 
-    def get_proxy_enabled_sources(self) -> List[str]:
+    def get_proxy_enabled_sources(self) -> list[str]:
         """Get list of sources that should use the proxy"""
-        proxy_enabled: List[str] = []
+        proxy_enabled: list[str] = []
         if not self.proxy_server.enabled:
             return proxy_enabled
 
@@ -699,7 +700,7 @@ class Settings(BaseModel):
                 proxy_enabled.append(source_name)
         return proxy_enabled
 
-    def get_proxy_domain_mappings(self) -> Dict[str, Dict[str, Any]]:
+    def get_proxy_domain_mappings(self) -> dict[str, dict[str, Any]]:
         """Build domain mappings for proxy configuration compatibility"""
         mappings = {}
         for source_name in self.get_proxy_enabled_sources():
@@ -715,7 +716,7 @@ class Settings(BaseModel):
 
     # Legacy compatibility methods for gradual migration
     def get_concepcy_config(self, use_proxy: bool = False) -> dict:
-        """Get concepcy configuration with optional proxy URL (legacy compatibility)"""  # noqa: E501
+        """Get concepcy configuration with optional proxy URL (legacy compatibility)"""
         config = {
             "relations_of_interest": self.nlp.concepcy_relations,
             "filter_missing_text": self.nlp.filter_missing_text,
@@ -725,12 +726,12 @@ class Settings(BaseModel):
             host = self.proxy_server.host
             port = self.proxy_server.port
             config["url"] = (
-                f"http://{host}:{port}/conceptnet/query?node=/c/{{lang}}/{{word}}&other=/c/{{lang}}"  # noqa: E501
+                f"http://{host}:{port}/conceptnet/query?node=/c/{{lang}}/{{word}}&other=/c/{{lang}}"
             )
         return config
 
     def get_reference_api_buddy_config(self) -> dict:
-        """Get complete reference API buddy configuration (legacy compatibility)"""  # noqa: E501
+        """Get complete reference API buddy configuration (legacy compatibility)"""
         domain_mappings = {}
         for source_name in self.get_proxy_enabled_sources():
             config = getattr(self.reference_sources, source_name)
@@ -740,11 +741,11 @@ class Settings(BaseModel):
                 "dbpedia_spotlight": [
                     "spacy_dbpedia_spotlight",
                     "dbpedia_spotlight",
-                ],  # noqa: E501
+                ],
                 "dbpedia_lookup": [
                     "dbpedia",
                     "dbpedia_lookup",
-                ],  # Map dbpedia_lookup to legacy 'dbpedia' key  # noqa: E501
+                ],  # Map dbpedia_lookup to legacy 'dbpedia' key
                 "dbpedia_sparql": ["dbpedia_sparql"],
                 "wikidata": ["wikidata"],
                 "duckduckgo": ["duckduckgo"],
@@ -759,7 +760,7 @@ class Settings(BaseModel):
             }
             domain_mappings[source_name] = mapping_entry
 
-            # Add mappings for all legacy keys pointing to the same upstream URL  # noqa: E501
+            # Add mappings for all legacy keys pointing to the same upstream URL
             for legacy_key in legacy_keys.get(source_name, []):
                 if legacy_key != source_name:
                     domain_mappings[legacy_key] = mapping_entry
@@ -768,22 +769,22 @@ class Settings(BaseModel):
             "server": {"host": self.proxy_server.host, "port": self.proxy_server.port},
             "cache": {
                 "database_path": self.proxy_server.database_path,
-                "max_cache_response_size": self.proxy_server.default_max_response_size,  # noqa: E501
+                "max_cache_response_size": self.proxy_server.default_max_response_size,
                 "max_cache_entries": self.proxy_server.max_cache_entries,
             },
             "domain_mappings": domain_mappings,
             "throttling": {
-                "default_requests_per_hour": self.proxy_server.default_requests_per_hour,  # noqa: E501
-                "progressive_max_delay": self.proxy_server.progressive_max_delay,  # noqa: E501
+                "default_requests_per_hour": self.proxy_server.default_requests_per_hour,
+                "progressive_max_delay": self.proxy_server.progressive_max_delay,
                 "domain_limits": {
-                    "conceptnet": self.reference_sources.conceptnet.rate_limit.requests_per_hour,  # noqa: E501
-                    "dbpedia_lookup": self.reference_sources.dbpedia_lookup.rate_limit.requests_per_hour,  # noqa: E501
-                    "dbpedia_sparql": self.reference_sources.dbpedia_sparql.rate_limit.requests_per_hour,  # noqa: E501
-                    "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.rate_limit.requests_per_hour,  # noqa: E501
-                    "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour,  # noqa: E501
-                    "duckduckgo": self.reference_sources.duckduckgo.rate_limit.requests_per_hour,  # noqa: E501
-                    "openai": self.reference_sources.openai.rate_limit.requests_per_hour,  # noqa: E501
-                    "anthropic": self.reference_sources.anthropic.rate_limit.requests_per_hour,  # noqa: E501
+                    "conceptnet": self.reference_sources.conceptnet.rate_limit.requests_per_hour,
+                    "dbpedia_lookup": self.reference_sources.dbpedia_lookup.rate_limit.requests_per_hour,
+                    "dbpedia_sparql": self.reference_sources.dbpedia_sparql.rate_limit.requests_per_hour,
+                    "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.rate_limit.requests_per_hour,
+                    "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour,
+                    "duckduckgo": self.reference_sources.duckduckgo.rate_limit.requests_per_hour,
+                    "openai": self.reference_sources.openai.rate_limit.requests_per_hour,
+                    "anthropic": self.reference_sources.anthropic.rate_limit.requests_per_hour,
                 },
             },
             "security": {
@@ -819,7 +820,7 @@ class Settings(BaseModel):
         return self.llm.temperature
 
     @property
-    def LLM_MAX_TOKENS(self) -> Optional[int]:
+    def LLM_MAX_TOKENS(self) -> int | None:
         """Legacy compatibility property"""
         return self.llm.max_tokens
 
@@ -829,18 +830,18 @@ class Settings(BaseModel):
         return self.llm.timeout
 
     @property
-    def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
+    def ENABLE_CACHING_PROXY(self) -> dict[str, bool]:
         """Legacy compatibility property"""
         return {
             "concepcy": (
                 self.reference_sources.conceptnet.enabled
                 and self.reference_sources.conceptnet.use_proxy
             ),
-            "spacy_dbpedia_spotlight": (  # noqa: E501
+            "spacy_dbpedia_spotlight": (
                 self.reference_sources.dbpedia_spotlight.enabled
                 and self.reference_sources.dbpedia_spotlight.use_proxy
             ),
-            "dbpedia_spotlight": (  # noqa: E501
+            "dbpedia_spotlight": (
                 self.reference_sources.dbpedia_spotlight.enabled
                 and self.reference_sources.dbpedia_spotlight.use_proxy
             ),
@@ -853,11 +854,11 @@ class Settings(BaseModel):
                 self.reference_sources.dbpedia_lookup.enabled
                 and self.reference_sources.dbpedia_lookup.use_proxy
             ),
-            "dbpedia_lookup": (  # noqa: E501
+            "dbpedia_lookup": (
                 self.reference_sources.dbpedia_lookup.enabled
                 and self.reference_sources.dbpedia_lookup.use_proxy
             ),
-            "dbpedia_sparql": (  # noqa: E501
+            "dbpedia_sparql": (
                 self.reference_sources.dbpedia_sparql.enabled
                 and self.reference_sources.dbpedia_sparql.use_proxy
             ),
@@ -880,17 +881,17 @@ class Settings(BaseModel):
         }
 
     @property
-    def REFERENCE_API_BUDDY_CONFIG(self) -> Dict[str, Any]:
+    def REFERENCE_API_BUDDY_CONFIG(self) -> dict[str, Any]:
         """Legacy compatibility property"""
         return self.get_reference_api_buddy_config()
 
     @property
-    def s2v_config(self) -> Dict[str, Any]:
+    def s2v_config(self) -> dict[str, Any]:
         """Legacy compatibility property"""
         return {"abs_path": os.path.abspath(self.nlp.sense2vec_path)}
 
     @property
-    def concepcy_config(self) -> Dict[str, Any]:
+    def concepcy_config(self) -> dict[str, Any]:
         """Legacy compatibility property"""
         return {
             "relations_of_interest": self.nlp.concepcy_relations,
@@ -899,13 +900,13 @@ class Settings(BaseModel):
         }
 
     @property
-    def reference_sources_dict(self) -> Dict[str, str]:
+    def reference_sources_dict(self) -> dict[str, str]:
         """Legacy compatibility property for reference sources URLs"""
         return {
-            "dbpedia": self.reference_sources.dbpedia_sparql.upstream_url,  # Map legacy 'dbpedia' to dbpedia_sparql  # noqa: E501
+            "dbpedia": self.reference_sources.dbpedia_sparql.upstream_url,  # Map legacy 'dbpedia' to dbpedia_sparql
             "conceptnet": self.reference_sources.conceptnet.upstream_url,
             "wikidata": self.reference_sources.wikidata.upstream_url,
-            "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.upstream_url,  # noqa: E501
+            "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.upstream_url,
             "schema_org": self.reference_sources.schema_org.upstream_url,
         }
 
@@ -915,11 +916,11 @@ class ConfigurationManager:
 
     def __init__(self, config_file: str = "./config.json"):
         self.config_file = config_file
-        self.settings: Optional[Settings] = None
+        self.settings: Settings | None = None
         self._lock = threading.Lock()
         print(
             f"[ConfigurationManager] Loading config from: {self.config_file}"
-        )  # noqa: E501
+        )
         self.load()
 
     def load(self) -> Settings:
@@ -929,24 +930,24 @@ class ConfigurationManager:
 
         if (
             os.path.exists(self.config_file) and os.path.getsize(self.config_file) > 0
-        ):  # noqa: E501
+        ):
             with open(self.config_file, "r") as f:
                 config_data = json.load(f)
 
             self.settings = Settings(**config_data)
             print(
                 f"[ConfigurationManager] Config loaded successfully from {self.config_file}"
-            )  # noqa: E501
+            )
             print(
                 f"[ConfigurationManager] Server port: {self.settings.server.port}"
-            )  # noqa: E501
+            )
             print(
                 f"[ConfigurationManager] Database URL: {self.settings.database.default_url}"
-            )  # noqa: E501
+            )
         else:
             print(
                 f"[ConfigurationManager] Config file not found or empty: {self.config_file}, using defaults"
-            )  # noqa: E501
+            )
             self.settings = Settings()
             self.save()  # Create default config file
         return self.settings
@@ -959,7 +960,7 @@ class ConfigurationManager:
         except Exception as e:
             print(
                 f"Error saving config: {e}"
-            )  # Use print to avoid circular dependency  # noqa: E501
+            )  # Use print to avoid circular dependency
             return False
 
     def _save_locked(self) -> bool:
@@ -976,7 +977,7 @@ class ConfigurationManager:
         except Exception as e:
             print(
                 f"Error saving config: {e}"
-            )  # Use print to avoid circular dependency  # noqa: E501
+            )  # Use print to avoid circular dependency
             return False
 
     def get(self, path: str) -> Any:
@@ -994,7 +995,7 @@ class ConfigurationManager:
         except Exception as e:
             print(
                 f"Error getting config value {path}: {e}"
-            )  # Use print to avoid circular dependency  # noqa: E501
+            )  # Use print to avoid circular dependency
             raise
 
     def set(self, path: str, value: Any) -> bool:
@@ -1011,7 +1012,7 @@ class ConfigurationManager:
                     else:
                         raise KeyError(
                             f"Configuration path not found: {'.'.join(parts[:-1])}"
-                        )  # noqa: E501
+                        )
 
                 # Set the final value
                 final_key = parts[-1]
@@ -1036,18 +1037,18 @@ class ConfigurationManager:
         except Exception as e:
             print(
                 f"Error setting config value {path}: {e}"
-            )  # Use print to avoid circular dependency  # noqa: E501
+            )  # Use print to avoid circular dependency
             return False
 
-    def get_reference_sources(self) -> Dict[str, Any]:
+    def get_reference_sources(self) -> dict[str, Any]:
         """Get all reference source configurations"""
         if self.settings is None:
             return {}
         return self.settings.reference_sources.model_dump()
 
     async def update_reference_source(
-        self, source_name: str, update_data: Dict[str, Any]
-    ):  # noqa: E501
+        self, source_name: str, update_data: dict[str, Any]
+    ):
         """Update a specific reference source configuration"""
         if self.settings is None:
             raise ValueError("Settings not initialized")
@@ -1061,7 +1062,7 @@ class ConfigurationManager:
             if not success:
                 raise ValueError(f"Failed to update {path}")
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate current configuration and return errors"""
         errors = []
         try:
@@ -1076,7 +1077,7 @@ class ConfigurationManager:
 
 
 # Global configuration manager instance
-_config_manager: Optional[ConfigurationManager] = None
+_config_manager: ConfigurationManager | None = None
 
 
 def get_config_manager() -> ConfigurationManager:
@@ -1125,8 +1126,8 @@ class ConfigurationNotifier:
     """Manages configuration change notifications"""
 
     def __init__(self):
-        self.listeners: Dict[str, List[Callable]] = {}
-        self.global_listeners: List[Callable] = []
+        self.listeners: dict[str, list[Callable]] = {}
+        self.global_listeners: list[Callable] = []
 
     def register_listener(self, path_pattern: str, callback: Callable):
         """Register a listener for specific configuration paths"""
@@ -1213,7 +1214,7 @@ async def handle_reference_source_config_change(path: str, value: Any):
                 "enabled",
                 "use_proxy",
                 "upstream_url",
-            ]:  # noqa: E501
+            ]:
                 try:
                     from nlp.pipeline import invalidate_pipeline
 
@@ -1239,7 +1240,7 @@ _config_notifier.register_listener("nlp.", handle_nlp_config_change)
 _config_notifier.register_listener("llm.", handle_llm_config_change)
 _config_notifier.register_listener(
     "reference_sources.", handle_reference_source_config_change
-)  # noqa: E501
+)
 _config_notifier.register_listener("proxy_server.", handle_proxy_config_change)
 
 

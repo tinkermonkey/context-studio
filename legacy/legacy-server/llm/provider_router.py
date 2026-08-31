@@ -7,13 +7,14 @@ This module handles routing LLM requests to the appropriate provider
 
 import os
 import warnings
-from typing import Optional, Dict, Any, cast
-from langchain.chat_models import init_chat_model
+from typing import Any, cast
 
-from .enabled_models import ProviderType, EnabledModelConfig, get_enabled_models_manager
-from .model_capabilities import validate_model_config
-from .exceptions import LLMConfigurationError
+from langchain.chat_models import init_chat_model
 from utils.logger import get_logger
+
+from .enabled_models import EnabledModelConfig, ProviderType, get_enabled_models_manager
+from .exceptions import LLMConfigurationError
+from .model_capabilities import validate_model_config
 
 logger = get_logger(__name__)
 
@@ -24,7 +25,7 @@ class ProviderRouter:
     def __init__(self):
         self.logger = logger
         self.models_manager = get_enabled_models_manager()
-        self._llm_cache: Dict[str, Any] = {}  # Cache initialized LLMs
+        self._llm_cache: dict[str, Any] = {}  # Cache initialized LLMs
 
     def get_llm_for_model(self, model_name: str, **kwargs) -> Any:
         """
@@ -64,7 +65,7 @@ class ProviderRouter:
         return llm
 
     def _get_cache_key(
-        self, model_name: str, config: EnabledModelConfig, kwargs: Dict
+        self, model_name: str, config: EnabledModelConfig, kwargs: dict
     ) -> str:
         """Generate cache key for LLM instance"""
         # Include key parameters that affect LLM initialization
@@ -161,7 +162,7 @@ class ProviderRouter:
             self.logger.error(
                 f"Failed to create OpenAI LLM for {config.model_name}: {e}"
             )
-            raise LLMConfigurationError(f"OpenAI LLM creation failed: {str(e)}")
+            raise LLMConfigurationError(f"OpenAI LLM creation failed: {e!s}")
 
     def _create_anthropic_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
         """Create Anthropic LLM via LangChain"""
@@ -221,7 +222,7 @@ class ProviderRouter:
             self.logger.error(
                 f"Failed to create Anthropic LLM for {config.model_name}: {e}"
             )
-            raise LLMConfigurationError(f"Anthropic LLM creation failed: {str(e)}")
+            raise LLMConfigurationError(f"Anthropic LLM creation failed: {e!s}")
 
     def _create_google_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
         """Create Google LLM via LangChain"""
@@ -265,7 +266,7 @@ class ProviderRouter:
             self.logger.error(
                 f"Failed to create Google LLM for {config.model_name}: {e}"
             )
-            raise LLMConfigurationError(f"Google LLM creation failed: {str(e)}")
+            raise LLMConfigurationError(f"Google LLM creation failed: {e!s}")
 
     def _create_openrouter_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
         """Create OpenRouter LLM via LangChain OpenAI-compatible interface"""
@@ -314,7 +315,7 @@ class ProviderRouter:
             self.logger.error(
                 f"Failed to create OpenRouter LLM for {config.model_name}: {e}"
             )
-            raise LLMConfigurationError(f"OpenRouter LLM creation failed: {str(e)}")
+            raise LLMConfigurationError(f"OpenRouter LLM creation failed: {e!s}")
 
     def clear_cache(self) -> None:
         """Clear the LLM cache"""
@@ -331,16 +332,16 @@ class ProviderRouter:
         """Check if a model is available (enabled and configured)"""
         return cast(bool, self.models_manager.is_model_enabled(model_name))
 
-    def get_provider_for_model(self, model_name: str) -> Optional[ProviderType]:
+    def get_provider_for_model(self, model_name: str) -> ProviderType | None:
         """Get the provider type for a model"""
         return cast(
-            Optional[ProviderType],
+            ProviderType | None,
             self.models_manager.get_provider_for_model(model_name),
         )
 
 
 # Global instance
-_provider_router: Optional[ProviderRouter] = None
+_provider_router: ProviderRouter | None = None
 
 
 def get_provider_router() -> ProviderRouter:

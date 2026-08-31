@@ -6,14 +6,14 @@ predicate pushdown, partition elimination, intelligent caching, and materialized
 views for enterprise-scale analytical performance.
 """
 
-import time
 import hashlib
 import re
-import duckdb
-from typing import Dict, Optional, Any, Tuple, cast
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any, cast
 
+import duckdb
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -47,13 +47,13 @@ class IntelligentQueryCache:
         """
         self.max_cache_size = max_cache_size
         self.ttl_seconds = ttl_seconds
-        self.cache: Dict[str, Dict[str, Any]] = {}
+        self.cache: dict[str, dict[str, Any]] = {}
         self.cache_stats = {"hits": 0, "misses": 0, "evictions": 0}
         logger.info(
             f"IntelligentQueryCache initialized with max_size={max_cache_size}, ttl={ttl_seconds}s"
         )
 
-    def get_cached_result(self, query_hash: str) -> Optional[Dict[str, Any]]:
+    def get_cached_result(self, query_hash: str) -> dict[str, Any] | None:
         """Get cached query result if valid."""
 
         if query_hash not in self.cache:
@@ -80,9 +80,9 @@ class IntelligentQueryCache:
 
         self.cache_stats["hits"] += 1
         logger.debug(f"Cache hit for query hash: {query_hash[:8]}...")
-        return cast(Dict[str, Any], cached_entry["result"])
+        return cast(dict[str, Any], cached_entry["result"])
 
-    def cache_result(self, query_hash: str, result: Any, metadata: Dict[str, Any]):
+    def cache_result(self, query_hash: str, result: Any, metadata: dict[str, Any]):
         """Cache query result with metadata."""
 
         # Implement LRU eviction if cache is full
@@ -99,7 +99,7 @@ class IntelligentQueryCache:
 
         logger.debug(f"Cached query result for hash: {query_hash[:8]}...")
 
-    def _is_data_fresh(self, cached_entry: Dict[str, Any]) -> bool:
+    def _is_data_fresh(self, cached_entry: dict[str, Any]) -> bool:
         """Check if cached data is still fresh based on metadata."""
         return True
 
@@ -115,7 +115,7 @@ class IntelligentQueryCache:
         self.cache_stats["evictions"] += 1
         logger.debug(f"Evicted LRU cache entry: {lru_key[:8]}...")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache performance statistics."""
 
         total_requests = self.cache_stats["hits"] + self.cache_stats["misses"]
@@ -136,7 +136,7 @@ class DuckDBQueryAnalyzer:
     """Advanced query analysis and optimization for analytical workloads."""
 
     def __init__(
-        self, duckdb_conn: duckdb.DuckDBPyConnection, s3_config: Dict[str, str]
+        self, duckdb_conn: duckdb.DuckDBPyConnection, s3_config: dict[str, str]
     ):
         """
         Initialize the query analyzer.
@@ -148,7 +148,7 @@ class DuckDBQueryAnalyzer:
         self.duckdb_conn = duckdb_conn
         self.s3_config = s3_config
         self.query_cache = IntelligentQueryCache()
-        self.materialized_views: Dict[str, Dict[str, Any]] = {}
+        self.materialized_views: dict[str, dict[str, Any]] = {}
         self.performance_metrics: list[QueryPerformanceMetrics] = []
 
         self._setup_analysis_settings()
@@ -208,8 +208,8 @@ class DuckDBQueryAnalyzer:
                 )
 
     def analyze_query(
-        self, query: str, query_context: Optional[Dict[str, Any]] = None
-    ) -> Tuple[str, QueryPerformanceMetrics]:
+        self, query: str, query_context: dict[str, Any] | None = None
+    ) -> tuple[str, QueryPerformanceMetrics]:
         """Apply analysis techniques to improve query performance."""
 
         query_context = query_context or {}
@@ -241,7 +241,7 @@ class DuckDBQueryAnalyzer:
 
         return analyzed_query, metrics
 
-    def _apply_analysis_strategies(self, query: str, context: Dict[str, Any]) -> str:
+    def _apply_analysis_strategies(self, query: str, context: dict[str, Any]) -> str:
         """Apply various analysis strategies to the query."""
 
         analyzed = query
@@ -264,7 +264,7 @@ class DuckDBQueryAnalyzer:
         logger.debug(f"Applied {5} analysis strategies to query")
         return analyzed
 
-    def _analyze_predicate_pushdown(self, query: str, context: Dict[str, Any]) -> str:
+    def _analyze_predicate_pushdown(self, query: str, context: dict[str, Any]) -> str:
         """Push predicates down to S3 level for efficient filtering."""
 
         # Add time-based partition filters
@@ -296,7 +296,7 @@ class DuckDBQueryAnalyzer:
         return query
 
     def _analyze_partition_elimination(
-        self, query: str, context: Dict[str, Any]
+        self, query: str, context: dict[str, Any]
     ) -> str:
         """Eliminate unnecessary partitions from S3 scan."""
 
@@ -329,7 +329,7 @@ class DuckDBQueryAnalyzer:
 
         return query
 
-    def _analyze_column_pruning(self, query: str, context: Dict[str, Any]) -> str:
+    def _analyze_column_pruning(self, query: str, context: dict[str, Any]) -> str:
         """Analyze column selection to reduce I/O."""
 
         # Simple column pruning - replace SELECT * with specific columns if provided
@@ -348,14 +348,14 @@ class DuckDBQueryAnalyzer:
 
         return query
 
-    def _analyze_joins(self, query: str, context: Dict[str, Any]) -> str:
+    def _analyze_joins(self, query: str, context: dict[str, Any]) -> str:
         """Analyze join operations."""
 
         # Basic join analysis - ensure smaller tables are on the right
         # This is a simplified implementation
         return query
 
-    def _analyze_aggregation_pushdown(self, query: str, context: Dict[str, Any]) -> str:
+    def _analyze_aggregation_pushdown(self, query: str, context: dict[str, Any]) -> str:
         """Push aggregations down to reduce data movement."""
 
         # Basic aggregation analysis
@@ -406,10 +406,10 @@ class DuckDBQueryAnalyzer:
         # Basic pattern generation - advanced partitioning strategies not yet implemented
         return f"changes/*/*/*{start_date}*{end_date}*.parquet"
 
-    def _generate_query_hash(self, query: str, context: Dict[str, Any]) -> str:
+    def _generate_query_hash(self, query: str, context: dict[str, Any]) -> str:
         """Generate unique hash for query and context."""
 
-        query_string = f"{query}|{str(sorted(context.items()))}"
+        query_string = f"{query}|{sorted(context.items())!s}"
         return hashlib.sha256(query_string.encode()).hexdigest()
 
     def _measure_query_performance(
@@ -603,7 +603,7 @@ class DuckDBQueryAnalyzer:
         except Exception:
             return 0
 
-    def get_analysis_statistics(self) -> Dict[str, Any]:
+    def get_analysis_statistics(self) -> dict[str, Any]:
         """Get comprehensive analysis statistics."""
 
         if not self.performance_metrics:

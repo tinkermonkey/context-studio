@@ -5,24 +5,25 @@ These tests verify end-to-end functionality for managing test paragraphs,
 annotations, and executing parallel pipeline tests with scoring.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from uuid import uuid4  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-import asyncio  # noqa: E402
+import asyncio
+import tempfile
+from unittest.mock import Mock, patch
+from uuid import uuid4
 
-from app import create_app  # noqa: E402
-from database.models import Base, StructureNode  # noqa: E402
-from database.custom_types import NodeType  # noqa: E402
-from operations.models import OperationsBase  # noqa: E402
+import pytest
+from database.custom_types import NodeType
+from database.models import Base, StructureNode
+from fastapi.testclient import TestClient
+from operations.models import OperationsBase
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app import create_app
 
 
 @pytest.fixture
@@ -99,9 +100,9 @@ def test_ops_db():
 
 @pytest.fixture
 def test_client(test_kg_db, test_ops_db):
-    """Create test client for API integration tests with mocked dependencies."""  # noqa: E501
-    kg_engine, kg_session_maker, node_ids = test_kg_db
-    ops_engine, ops_session_maker = test_ops_db
+    """Create test client for API integration tests with mocked dependencies."""
+    _kg_engine, kg_session_maker, node_ids = test_kg_db
+    _ops_engine, ops_session_maker = test_ops_db
 
     # Mock the embedding model to avoid loading it
     # Create a mock model that returns dummy embeddings
@@ -110,7 +111,7 @@ def test_client(test_kg_db, test_ops_db):
 
     with patch(
         "embeddings.generate_embeddings.get_model", return_value=mock_model
-    ):  # noqa: E501
+    ):
         # Create app with test database sessions
         app = create_app(session_local=kg_session_maker)
 
@@ -151,7 +152,7 @@ class TestParagraphCRUD:
         assert "id" in data
         assert (
             data["text"] == "Apple is a technology company founded by Steve Jobs."
-        )  # noqa: E501
+        )
         assert data["notes"] == "Test paragraph for entity extraction"
         assert "created_at" in data
         assert data["annotations"] == []
@@ -237,7 +238,7 @@ class TestParagraphCRUD:
         # Test limit + offset
         response = test_client.get(
             "/api/rag-experiments/paragraphs?limit=2&offset=2"
-        )  # noqa: E501
+        )
         assert response.status_code == 200
         data = response.json()
         assert len(data["paragraphs"]) == 2
@@ -255,7 +256,7 @@ class TestParagraphCRUD:
         # Get paragraph
         response = test_client.get(
             f"/api/rag-experiments/paragraphs/{paragraph_id}"
-        )  # noqa: E501
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -267,7 +268,7 @@ class TestParagraphCRUD:
         fake_id = str(uuid4())
         response = test_client.get(
             f"/api/rag-experiments/paragraphs/{fake_id}"
-        )  # noqa: E501
+        )
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
@@ -330,13 +331,13 @@ class TestParagraphCRUD:
         # Delete paragraph
         response = test_client.delete(
             f"/api/rag-experiments/paragraphs/{paragraph_id}"
-        )  # noqa: E501
+        )
         assert response.status_code == 204
 
         # Verify deleted
         get_response = test_client.get(
             f"/api/rag-experiments/paragraphs/{paragraph_id}"
-        )  # noqa: E501
+        )
         assert get_response.status_code == 404
 
     def test_delete_paragraph_not_found(self, test_client):
@@ -344,7 +345,7 @@ class TestParagraphCRUD:
         fake_id = str(uuid4())
         response = test_client.delete(
             f"/api/rag-experiments/paragraphs/{fake_id}"
-        )  # noqa: E501
+        )
 
         assert response.status_code == 404
 
@@ -385,7 +386,7 @@ class TestAnnotationCRUD:
         assert data["text"] == "Apple"
 
     def test_create_annotation_invalid_structure_node(self, test_client):
-        """Test creating annotation with non-existent structure_node_id fails."""  # noqa: E501
+        """Test creating annotation with non-existent structure_node_id fails."""
         paragraph_response = test_client.post(
             "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
@@ -513,13 +514,13 @@ class TestAnnotationCRUD:
         # Delete annotation
         response = test_client.delete(
             f"/api/rag-experiments/annotations/{annotation_id}"
-        )  # noqa: E501
+        )
         assert response.status_code == 204
 
         # Verify annotation deleted
         paragraph = test_client.get(
             f"/api/rag-experiments/paragraphs/{paragraph_id}"
-        ).json()  # noqa: E501
+        ).json()
         assert len(paragraph["annotations"]) == 0
 
     def test_delete_annotation_not_found(self, test_client):
@@ -527,7 +528,7 @@ class TestAnnotationCRUD:
         fake_id = str(uuid4())
         response = test_client.delete(
             f"/api/rag-experiments/annotations/{fake_id}"
-        )  # noqa: E501
+        )
         assert response.status_code == 404
 
 
@@ -579,7 +580,7 @@ class TestPipelineExecution:
         # Mock the pipeline registry validation
         with patch(
             "rag.pipeline_registry.get_pipeline_registry"
-        ) as mock_get_registry:  # noqa: E501
+        ) as mock_get_registry:
             mock_registry = Mock()
             mock_registry.list_pipelines.return_value = ["StandardRAGPipeline"]
             mock_get_registry.return_value = mock_registry
@@ -618,7 +619,7 @@ class TestPipelineExecution:
         # Mock the pipeline registry validation to return empty list
         with patch(
             "rag.pipeline_registry.get_pipeline_registry"
-        ) as mock_get_registry:  # noqa: E501
+        ) as mock_get_registry:
             mock_registry = Mock()
             mock_registry.list_pipelines.return_value = []
             mock_get_registry.return_value = mock_registry
@@ -641,7 +642,7 @@ class TestResultsQuery:
     """Integration tests for querying and comparing pipeline results."""
 
     def test_get_pipeline_comparison_empty(self, test_client):
-        """Test GET /api/rag-experiments/results/paragraphs/{id} with no runs."""  # noqa: E501
+        """Test GET /api/rag-experiments/results/paragraphs/{id} with no runs."""
         paragraph_response = test_client.post(
             "/api/rag-experiments/paragraphs", json={"text": "Test paragraph."}
         )
@@ -667,7 +668,7 @@ class TestResultsQuery:
         assert response.status_code == 404
 
     def test_get_pipeline_run_details_not_found(self, test_client):
-        """Test GET /api/rag-experiments/results/runs/{id} for non-existent run."""  # noqa: E501
+        """Test GET /api/rag-experiments/results/runs/{id} for non-existent run."""
         fake_run_id = str(uuid4())
         response = test_client.get(f"/api/rag-experiments/results/runs/{fake_run_id}")
 

@@ -1,6 +1,6 @@
 """Utility helpers for reference package"""
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 
 def utcnow_iso():

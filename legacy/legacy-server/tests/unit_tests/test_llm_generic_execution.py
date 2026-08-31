@@ -2,23 +2,24 @@
 Unit tests for the generic LLM pipeline execution methods.
 """
 
-import sys
 import os
-import pytest
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from llm.service import LLMService  # noqa: E402
-from llm.models import (  # noqa: E402
+from llm.exceptions import LLMProcessingError, LLMTimeoutError
+from llm.models import (
     PipelineExecutionRequest,
     PipelineExecutionResponse,
     PipelineType,
     StreamingLLMResponse,
 )
-from llm.exceptions import LLMProcessingError, LLMTimeoutError  # noqa: E402
+from llm.service import LLMService
 
 
 class TestGenericPipelineExecution:
@@ -55,13 +56,12 @@ class TestGenericPipelineExecution:
 
             with patch(
                 "llm.service.get_provider_router", return_value=mock_provider_router
-            ):
-                with patch("llm.service.PipelineFlavorService"):
-                    with patch("llm.service.ExecutionTracker"):
-                        service = LLMService()
-                        service.flavor_service = AsyncMock()
-                        service.execution_tracker = MagicMock()
-                        return service
+            ), patch("llm.service.PipelineFlavorService"):
+                with patch("llm.service.ExecutionTracker"):
+                    service = LLMService()
+                    service.flavor_service = AsyncMock()
+                    service.execution_tracker = MagicMock()
+                    return service
 
     @pytest.fixture
     def sample_request(self):
@@ -117,11 +117,10 @@ class TestGenericPipelineExecution:
 
         with patch.object(
             mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ), patch.object(
+            mock_llm_service, "_get_flavor", return_value=mock_flavor
         ):
-            with patch.object(
-                mock_llm_service, "_get_flavor", return_value=mock_flavor
-            ):
-                result = await mock_llm_service.execute_pipeline_flavor(sample_request)
+            result = await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Assertions
         assert isinstance(result, PipelineExecutionResponse)
@@ -152,13 +151,11 @@ class TestGenericPipelineExecution:
 
         with patch.object(
             mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
-        ):
-            with patch.object(
-                mock_llm_service, "_get_flavor", return_value=mock_flavor
-            ):
-                with patch("asyncio.wait_for", side_effect=TimeoutError()):
-                    with pytest.raises(LLMTimeoutError):
-                        await mock_llm_service.execute_pipeline_flavor(sample_request)
+        ), patch.object(
+            mock_llm_service, "_get_flavor", return_value=mock_flavor
+        ), patch("asyncio.wait_for", side_effect=TimeoutError()):
+            with pytest.raises(LLMTimeoutError):
+                await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Verify error tracking
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
@@ -182,12 +179,10 @@ class TestGenericPipelineExecution:
 
         with patch.object(
             mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
-        ):
-            with patch.object(
-                mock_llm_service, "_get_flavor", return_value=mock_flavor
-            ):
-                with pytest.raises(LLMProcessingError) as exc_info:
-                    await mock_llm_service.execute_pipeline_flavor(sample_request)
+        ), patch.object(
+            mock_llm_service, "_get_flavor", return_value=mock_flavor
+        ), pytest.raises(LLMProcessingError) as exc_info:
+            await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         assert "Failed to execute pipeline" in str(exc_info.value)
 
@@ -227,15 +222,14 @@ class TestGenericPipelineExecution:
 
         with patch.object(
             mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ), patch.object(
+            mock_llm_service, "_get_flavor", return_value=mock_flavor
         ):
-            with patch.object(
-                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            chunks = []
+            async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
+                sample_request
             ):
-                chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
-                    sample_request
-                ):
-                    chunks.append(chunk)
+                chunks.append(chunk)
 
         # Verify streaming response structure
         assert len(chunks) >= 3  # Initial response + content chunks + completion
@@ -273,15 +267,14 @@ class TestGenericPipelineExecution:
 
         with patch.object(
             mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ), patch.object(
+            mock_llm_service, "_get_flavor", return_value=mock_flavor
         ):
-            with patch.object(
-                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            chunks = []
+            async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
+                sample_request
             ):
-                chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
-                    sample_request
-                ):
-                    chunks.append(chunk)
+                chunks.append(chunk)
 
         # Verify error response
         assert len(chunks) > 0

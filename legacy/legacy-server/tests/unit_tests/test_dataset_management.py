@@ -1,17 +1,18 @@
 """Unit tests for dataset management functionality."""
 
 import os
+import shutil
 import sys
 import tempfile
-import shutil
+
 import pytest
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dataset.manager import DatasetManager  # noqa: E402
-from dataset.models import DatasetMetrics  # noqa: E402
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+from database.migrations.migration_manager import MigrationManager
+from dataset.manager import DatasetManager
+from dataset.models import DatasetMetrics
 
 
 class TestDatasetManager:

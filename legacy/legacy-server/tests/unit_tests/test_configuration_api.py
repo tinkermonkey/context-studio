@@ -2,15 +2,17 @@
 Unit tests for configuration API endpoints
 """
 
-import sys
 import os
+import sys
+
 from fastapi.testclient import TestClient
 
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import create_app  # noqa: E402
-from config import get_config_manager  # noqa: E402
+from config import get_config_manager
+
+from app import create_app
 
 
 class TestConfigurationAPI:

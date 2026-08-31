@@ -6,14 +6,14 @@ by validating that search_by_similarity correctly uses the shared builder functi
 for computing max(title_similarity, definition_similarity) across various embedding scenarios.
 """
 
-import pytest
-import tempfile
 import os
 import sqlite3
-import numpy as np
-from uuid import uuid4
+import tempfile
 from datetime import date
+from uuid import uuid4
 
+import numpy as np
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
@@ -144,7 +144,7 @@ def test_reference_nodes_max_similarity_title_only(reference_manager_with_embedd
     assert len(title_only_results) > 0
 
     # Verify similarity is computed correctly
-    node, similarity = title_only_results[0]
+    _node, similarity = title_only_results[0]
     assert similarity is not None
     assert 0.0 <= similarity <= 1.0
 
@@ -181,7 +181,7 @@ def test_reference_nodes_max_similarity_definition_only(
     assert len(def_only_results) > 0
 
     # Verify similarity is computed correctly
-    node, similarity = def_only_results[0]
+    _node, similarity = def_only_results[0]
     assert similarity is not None
     assert 0.0 <= similarity <= 1.0
 
@@ -454,7 +454,7 @@ def test_external_predicates_max_similarity_title_only(
     assert len(title_only_results) > 0
 
     # Verify similarity is computed correctly
-    predicate, similarity = title_only_results[0]
+    _predicate, similarity = title_only_results[0]
     assert similarity is not None
     assert 0.0 <= similarity <= 1.0
 
@@ -495,7 +495,7 @@ def test_external_predicates_max_similarity_definition_only(
     assert len(def_only_results) > 0
 
     # Verify similarity is computed correctly
-    predicate, similarity = def_only_results[0]
+    _predicate, similarity = def_only_results[0]
     assert similarity is not None
     assert 0.0 <= similarity <= 1.0
 

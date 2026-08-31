@@ -12,7 +12,7 @@ def decode_emb(emb):
     return emb
 
 
-import numpy as np  # noqa: E402
+import numpy as np
 
 
 def cosine_similarity(vec1, vec2):

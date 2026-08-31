@@ -1,8 +1,8 @@
 """Migration 004: Enforce uniqueness for domain title within layer and term title within domain."""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 
 class Migration004(Migration):

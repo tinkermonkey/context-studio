@@ -6,17 +6,18 @@ This service implements CRDT semantics for merging approved changes,
 providing automatic conflict resolution for collaborative workflows.
 """
 
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
+from typing import Any
 
-from services.collaboration_models import CRDTConflictError, ChangesetState
-from services.version_manager import VersionManager, EntityVersion, ChangeState
-from services.changeset_manager import ChangesetManager
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.changeset_manager import ChangesetManager
+from services.collaboration_models import ChangesetState, CRDTConflictError
+from services.version_manager import ChangeState, EntityVersion, VersionManager
 
 logger = get_logger(__name__)
 
@@ -36,10 +37,10 @@ class MergeResult:
 
     entity_type: str
     entity_id: str
-    merged_version_id: Optional[str]
+    merged_version_id: str | None
     status: str  # 'success', 'conflict', 'error'
-    error_message: Optional[str] = None
-    conflicts: Optional[List[str]] = None
+    error_message: str | None = None
+    conflicts: list[str] | None = None
 
 
 @dataclass
@@ -49,9 +50,9 @@ class ChangesetMergeResult:
     changeset_id: str
     merged_entities: int
     conflicts: int
-    results: List[MergeResult]
-    conflict_details: List[Dict[str, Any]]
-    merge_commit_id: Optional[str] = None
+    results: list[MergeResult]
+    conflict_details: list[dict[str, Any]]
+    merge_commit_id: str | None = None
 
 
 class CRDTMergeEngine:
@@ -246,7 +247,7 @@ class CRDTMergeEngine:
         self,
         entity_type: str,
         entity_id: str,
-        resolution_content: Dict[str, Any],
+        resolution_content: dict[str, Any],
         resolver_id: str,
     ) -> EntityVersion:
         """
@@ -291,7 +292,7 @@ class CRDTMergeEngine:
             self.db.rollback()
             raise RuntimeError(f"Failed to resolve conflict: {e}")
 
-    def _get_changeset_versions(self, changeset_id: str) -> List[EntityVersion]:
+    def _get_changeset_versions(self, changeset_id: str) -> list[EntityVersion]:
         """
         Get all versions associated with a changeset.
 
@@ -343,8 +344,8 @@ class CRDTMergeEngine:
             return []
 
     def _group_versions_by_entity(
-        self, versions: List[EntityVersion]
-    ) -> Dict[Tuple[str, str], List[EntityVersion]]:
+        self, versions: list[EntityVersion]
+    ) -> dict[tuple[str, str], list[EntityVersion]]:
         """
         Group versions by entity (type, id).
 
@@ -370,7 +371,7 @@ class CRDTMergeEngine:
 
     def _get_canonical_version(
         self, entity_type: str, entity_id: str
-    ) -> Optional[EntityVersion]:
+    ) -> EntityVersion | None:
         """
         Get current canonical version for an entity.
 
@@ -443,9 +444,9 @@ class CRDTMergeEngine:
 
     def _apply_crdt_merge(
         self,
-        canonical_version: Optional[EntityVersion],
-        changeset_versions: List[EntityVersion],
-    ) -> Dict[str, Any]:
+        canonical_version: EntityVersion | None,
+        changeset_versions: list[EntityVersion],
+    ) -> dict[str, Any]:
         """
         Apply CRDT merge logic to combine versions.
 
@@ -488,8 +489,8 @@ class CRDTMergeEngine:
         return merged_content
 
     def _merge_content_crdt(
-        self, base: Dict[str, Any], changes: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, base: dict[str, Any], changes: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Merge two content objects using CRDT semantics.
 
@@ -516,7 +517,7 @@ class CRDTMergeEngine:
                 try:
                     result[key] = self._merge_content_crdt(result[key], value)
                 except CRDTConflictError as e:
-                    conflicting_fields.append(f"{key}.{str(e)}")
+                    conflicting_fields.append(f"{key}.{e!s}")
 
             elif isinstance(value, list) and isinstance(result[key], list):
                 # List merge - union with deduplication (set-based CRDT)
@@ -560,28 +561,20 @@ class CRDTMergeEngine:
         """
         # For timestamps, use latest (last-writer-wins)
         if (
-            field.endswith("_at")
-            or field.endswith("_time")
-            or "timestamp" in field.lower()
+            field.endswith(("_at", "_time")) or "timestamp" in field.lower()
         ):
             return True
 
         # For counters or numeric fields, use maximum
         if isinstance(base_value, (int, float)) and isinstance(
             change_value, (int, float)
+        ) and (
+            field.endswith(("_count", "_number")) or "version" in field.lower()
         ):
-            if (
-                field.endswith("_count")
-                or field.endswith("_number")
-                or "version" in field.lower()
-            ):
-                return True
-
-        # For boolean flags, use OR (true wins)
-        if isinstance(base_value, bool) and isinstance(change_value, bool):
             return True
 
-        return False
+        # For boolean flags, use OR (true wins)
+        return bool(isinstance(base_value, bool) and isinstance(change_value, bool))
 
     def _resolve_scalar_conflict(
         self, field: str, base_value: Any, change_value: Any
@@ -599,9 +592,7 @@ class CRDTMergeEngine:
         """
         # For timestamps, use latest
         if (
-            field.endswith("_at")
-            or field.endswith("_time")
-            or "timestamp" in field.lower()
+            field.endswith(("_at", "_time")) or "timestamp" in field.lower()
         ):
             if isinstance(base_value, str) and isinstance(change_value, str):
                 return max(

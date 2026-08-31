@@ -4,24 +4,24 @@ Unit Tests for node_conversion module
 Tests embedding deserialization from numpy binary format and node conversion utilities.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from uuid import UUID  # noqa: E402
-import numpy as np  # noqa: E402
+from datetime import datetime, timezone
+from unittest.mock import Mock
+from uuid import UUID
 
+import numpy as np
+import pytest
+from api.models.structure_nodes import NodeTypeEnum
 from api.utils.node_conversion import (
-    to_node_out,
-    to_node_link_out,
     nodes_to_paginated_response,
-)  # noqa: E402, E501
-from database.models import StructureNode, StructureNodeLink  # noqa: E402
-from api.models.structure_nodes import NodeTypeEnum  # noqa: E402
+    to_node_link_out,
+    to_node_out,
+)
+from database.models import StructureNode, StructureNodeLink
 
 
 class TestNodeConversionEmbeddingDeserialization:

@@ -1,21 +1,22 @@
-import sys
 import os
+import sys
 
 sys.path.insert(
     0,
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    ),  # noqa: E501
+    ),
 )
-import sqlite3  # noqa: E402
-import time  # noqa: E402
-import tempfile  # noqa: E402
-import pytest  # noqa: E402
-from utils.event_processor import EventProcessor  # noqa: E402
-from datetime import datetime, timedelta  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-from database.utils import get_database_manager  # noqa: E402
-from utils.logger import get_logger  # noqa: E402
+import sqlite3
+import tempfile
+import time
+from datetime import datetime, timedelta
+
+import pytest
+from database.utils import get_database_manager
+from sqlalchemy import text
+from utils.event_processor import EventProcessor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -80,7 +81,7 @@ def temp_db():
 
 def insert_event(
     db_url, engine_id, record_type, event_type, processed=0, ts=None, record_id=None
-):  # noqa: E501
+):
     from datetime import timezone
 
     if ts is None:
@@ -94,7 +95,7 @@ def insert_event(
     with db_manager.get_session(engine_id, db_url) as db:
         db.execute(
             text(
-                "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :timestamp, :processed)"  # noqa: E501
+                "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :timestamp, :processed)"
             ),
             {
                 "event_type": event_type,
@@ -119,8 +120,8 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     insert_event(db_url, engine_id, "structure_node_link", "create")
     insert_event(db_url, engine_id, "unknown_record_type", "create")  # negative case
 
-    import logging
     import io
+    import logging
 
     log_stream = io.StringIO()
     handler = logging.StreamHandler(log_stream)
@@ -166,7 +167,7 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     assert (
         "[EventProcessor] Event 5 has invalid record_type 'unknown_record_type'. Valid types: ['ontology_entity', 'relationship', 'property_definition', 'structure_node', 'structure_node_link', 'predicate']. This event will be skipped."
         in log_contents
-    )  # noqa: E501
+    )
 
 
 def test_integration_event_processor_cleanup(temp_db, capsys):

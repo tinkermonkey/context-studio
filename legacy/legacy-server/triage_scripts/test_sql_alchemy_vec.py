@@ -1,6 +1,7 @@
 import sqlite3
+
 import sqlite_vec
-from sqlalchemy import event, create_engine, text
+from sqlalchemy import create_engine, event, text
 
 print("SQLite Version:", sqlite3.sqlite_version)
 print("SQLite File:", sqlite3.__file__)

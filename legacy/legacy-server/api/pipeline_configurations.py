@@ -12,43 +12,43 @@ Endpoints:
 - DELETE /api/pipeline_configurations/{configuration_id} - Delete a configuration  # noqa: E501
 """
 
-from typing import Optional
+
 from fastapi import (
     APIRouter,
-    HTTPException,
-    Depends,
-    Query,
-    Path,
-    status,
     Body,
-)  # noqa: E501
-
-from api.dependencies.llm_services import get_pipeline_flavor_service
-from llm.flavor_service import PipelineFlavorService
-from llm.models import (
-    PipelineFlavor,
-    CreatePipelineFlavorRequest,
-    UpdatePipelineFlavorRequest,
-    PipelineFlavorListResponse,
-    PipelineType,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    status,
 )
 from llm.exceptions import FlavorNotFoundError, FlavorValidationError
+from llm.flavor_service import PipelineFlavorService
+from llm.models import (
+    CreatePipelineFlavorRequest,
+    PipelineFlavor,
+    PipelineFlavorListResponse,
+    PipelineType,
+    UpdatePipelineFlavorRequest,
+)
 from utils.logger import get_logger
+
+from api.dependencies.llm_services import get_pipeline_flavor_service
 
 router = APIRouter(
     prefix="/api/pipeline_configurations", tags=["Pipeline Configurations"]
-)  # noqa: E501
+)
 logger = get_logger(__name__)
 
 
 @router.post(
     "", response_model=PipelineFlavor, status_code=status.HTTP_201_CREATED
-)  # noqa: E501
+)
 async def create_configuration(
     request: CreatePipelineFlavorRequest,
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """
     Create a new pipeline configuration.
@@ -59,7 +59,7 @@ async def create_configuration(
     try:
         logger.info(
             f"Creating new configuration '{request.title}' for pipeline '{request.pipeline.value}'"
-        )  # noqa: E501
+        )
         flavor = flavor_service.create_flavor(request)
         logger.info(f"Successfully created configuration with ID: {flavor.id}")
         return flavor
@@ -68,23 +68,23 @@ async def create_configuration(
         logger.warning(f"Configuration validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error creating configuration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("", response_model=PipelineFlavorListResponse)
 async def list_configurations(
-    pipeline: Optional[PipelineType] = Query(
+    pipeline: PipelineType | None = Query(
         None, description="Filter by pipeline type"
-    ),  # noqa: E501
+    ),
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """
     List all pipeline configurations, optionally filtered by pipeline type.
@@ -95,7 +95,7 @@ async def list_configurations(
     try:
         logger.info(
             f"Listing configurations for pipeline: {pipeline.value if pipeline else 'all'}"
-        )  # noqa: E501
+        )
         flavors = flavor_service.list_flavors(pipeline)
         return PipelineFlavorListResponse(flavors=flavors, total_count=len(flavors))
 
@@ -104,20 +104,20 @@ async def list_configurations(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("/{configuration_id}", response_model=PipelineFlavor)
 async def get_configuration(
     configuration_id: str = Path(
         ..., description="The ID of the configuration to retrieve"
-    ),  # noqa: E501
-    pipeline: Optional[PipelineType] = Query(
+    ),
+    pipeline: PipelineType | None = Query(
         None, description="Pipeline type (required for default configuration)"
-    ),  # noqa: E501
+    ),
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """
     Get a specific pipeline configuration by ID.
@@ -131,7 +131,7 @@ async def get_configuration(
             if not pipeline:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Pipeline parameter required when requesting default configuration",  # noqa: E501
+                    detail="Pipeline parameter required when requesting default configuration",
                 )
             return flavor_service.get_default_flavor(pipeline)
 
@@ -141,7 +141,7 @@ async def get_configuration(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -149,18 +149,18 @@ async def get_configuration(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.put("/{configuration_id}", response_model=PipelineFlavor)
 async def update_configuration(
     configuration_id: str = Path(
         ..., description="The ID of the configuration to update"
-    ),  # noqa: E501
+    ),
     request: UpdatePipelineFlavorRequest = Body(...),
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """
     Update an existing pipeline configuration.
@@ -172,7 +172,7 @@ async def update_configuration(
     if configuration_id == "default":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot update default configuration. Create a new configuration instead.",  # noqa: E501
+            detail="Cannot update default configuration. Create a new configuration instead.",
         )
 
     try:
@@ -184,28 +184,28 @@ async def update_configuration(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except FlavorValidationError as e:
         logger.warning(f"Configuration validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error updating configuration {configuration_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.delete("/{configuration_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_configuration(
     configuration_id: str = Path(
         ..., description="The ID of the configuration to delete"
-    ),  # noqa: E501
+    ),
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """
     Delete a pipeline configuration.
@@ -227,15 +227,15 @@ async def delete_configuration(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except FlavorValidationError as e:
         logger.warning(f"Configuration validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error deleting configuration {configuration_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )

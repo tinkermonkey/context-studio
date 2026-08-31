@@ -14,20 +14,19 @@ Tests the renaming of tables, columns, and enum values to standard ontology term
 Tests include schema validation, data preservation, enum value updates, and complete rollback.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-from typing import Dict, List, Tuple  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+import tempfile
 
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
-from database.utils import init_db  # noqa: E402
+import pytest
+from database.migrations.migration_manager import MigrationManager
+from database.utils import init_db
+from sqlalchemy import create_engine, text
 
 
 class MigrationTestHarness:
@@ -103,7 +102,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def get_table_columns(self, table_name: str) -> List[str]:
+    def get_table_columns(self, table_name: str) -> list[str]:
         """Get all column names for a table."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -179,9 +178,9 @@ class MigrationTestHarness:
             """)
 
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
@@ -198,9 +197,9 @@ class MigrationTestHarness:
                     ('flavor-1', 'test_pipeline', 'Test Flavor', 'openai', 'gpt-4', '{}', 'System', 'User', 1, 1)
             """)
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
@@ -243,16 +242,15 @@ class MigrationTestHarness:
         if not migration_019:
             raise RuntimeError("Migration 019 not found")
 
-        with self.engine.connect() as conn:
-            with conn.begin():
-                migration_019.down(conn)
-                # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 19"))
+        with self.engine.connect() as conn, conn.begin():
+            migration_019.down(conn)
+            # Remove from schema_history
+            conn.execute(text("DELETE FROM schema_history WHERE version = 19"))
 
         # Update current version
         self.migration_manager.current_version = 18
 
-    def get_node_type_values(self, table_name: str) -> Dict[str, int]:
+    def get_node_type_values(self, table_name: str) -> dict[str, int]:
         """Get counts of each node_type value."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -264,7 +262,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def get_record_type_values(self) -> Dict[str, int]:
+    def get_record_type_values(self) -> dict[str, int]:
         """Get counts of each record_type value in change_events."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -276,7 +274,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def get_node_by_id(self, table_name: str, node_id: str) -> Tuple:
+    def get_node_by_id(self, table_name: str, node_id: str) -> tuple:
         """Get a node by ID from specified table."""
         conn = self.get_connection()
         cursor = conn.cursor()

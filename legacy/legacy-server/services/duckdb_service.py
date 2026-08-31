@@ -6,10 +6,10 @@ This service provides DuckDB connection management and analytical view setup
 for comprehensive change analytics and reporting in collaborative workflows.
 """
 
-import pandas as pd
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any
 
+import pandas as pd
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,7 +28,7 @@ class DuckDBService:
     """Manages DuckDB connection and analytical capabilities."""
 
     def __init__(
-        self, db_path: Optional[str] = None, s3_config: Optional[Dict[str, str]] = None
+        self, db_path: str | None = None, s3_config: dict[str, str] | None = None
     ):
         """
         Initialize DuckDB service.
@@ -113,7 +113,7 @@ class DuckDBService:
         except Exception as e:
             logger.warning(f"Failed to configure S3 for DuckDB: {e}")
 
-    def execute_query(self, query: str, params: Optional[List] = None) -> pd.DataFrame:
+    def execute_query(self, query: str, params: list | None = None) -> pd.DataFrame:
         """
         Execute analytical query and return results as DataFrame.
 
@@ -388,7 +388,7 @@ class ChangeAnalyticsEngine:
                     f"Failed to create fallback analytical views: {fallback_error}"
                 )
 
-    def get_change_summary(self, days: int = 30) -> Dict[str, Any]:
+    def get_change_summary(self, days: int = 30) -> dict[str, Any]:
         """Get comprehensive change summary for specified period."""
         logger.debug(f"Getting change summary for {days} days")
 
@@ -419,7 +419,7 @@ class ChangeAnalyticsEngine:
             return self._get_fallback_change_summary(days)
 
     def get_user_activity_report(
-        self, user_id: Optional[str] = None, days: int = 30
+        self, user_id: str | None = None, days: int = 30
     ) -> pd.DataFrame:
         """Generate user activity report."""
         logger.debug(f"Getting user activity report for {user_id or 'all users'}")
@@ -479,7 +479,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get entity hotspots: {e}")
             return self._get_fallback_entity_hotspots(limit)
 
-    def get_collaboration_metrics(self, days: int = 60) -> Dict[str, Any]:
+    def get_collaboration_metrics(self, days: int = 60) -> dict[str, Any]:
         """Analyze collaboration effectiveness."""
         logger.debug(f"Getting collaboration metrics for {days} days")
 
@@ -519,7 +519,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get collaboration metrics: {e}")
             return self._get_fallback_collaboration_metrics(days)
 
-    def generate_change_impact_analysis(self, changeset_id: str) -> Dict[str, Any]:
+    def generate_change_impact_analysis(self, changeset_id: str) -> dict[str, Any]:
         """Analyze the impact of a specific changeset."""
         logger.debug(f"Generating change impact analysis for changeset {changeset_id}")
 
@@ -578,7 +578,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to generate change impact analysis: {e}")
             return self._get_fallback_change_impact_analysis(changeset_id)
 
-    def get_branch_analytics(self) -> Dict[str, Any]:
+    def get_branch_analytics(self) -> dict[str, Any]:
         """Get branch management analytics."""
         logger.debug("Getting branch analytics")
 
@@ -631,7 +631,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get branch analytics: {e}")
             return self._get_fallback_branch_analytics()
 
-    def get_conflict_resolution_metrics(self) -> Dict[str, Any]:
+    def get_conflict_resolution_metrics(self) -> dict[str, Any]:
         """Get conflict resolution analytics."""
         logger.debug("Getting conflict resolution metrics")
 
@@ -665,7 +665,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get conflict resolution metrics: {e}")
             return self._get_fallback_conflict_resolution_metrics()
 
-    def get_comprehensive_change_trends(self, days: int = 90) -> Dict[str, Any]:
+    def get_comprehensive_change_trends(self, days: int = 90) -> dict[str, Any]:
         """Get comprehensive change trends and patterns over time."""
         logger.debug(f"Getting comprehensive change trends for {days} days")
 
@@ -727,7 +727,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get change trends: {e}")
             return self._get_fallback_change_trends(days)
 
-    def get_system_performance_metrics(self) -> Dict[str, Any]:
+    def get_system_performance_metrics(self) -> dict[str, Any]:
         """Get system performance and health metrics."""
         logger.debug("Getting system performance metrics")
 
@@ -785,7 +785,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get performance metrics: {e}")
             return self._get_fallback_performance_metrics()
 
-    def get_advanced_collaboration_insights(self, days: int = 60) -> Dict[str, Any]:
+    def get_advanced_collaboration_insights(self, days: int = 60) -> dict[str, Any]:
         """Get advanced insights into collaboration patterns."""
         logger.debug(f"Getting advanced collaboration insights for {days} days")
 
@@ -853,7 +853,7 @@ class ChangeAnalyticsEngine:
             logger.error(f"Failed to get collaboration insights: {e}")
             return self._get_fallback_collaboration_insights(days)
 
-    def generate_executive_summary(self, days: int = 30) -> Dict[str, Any]:
+    def generate_executive_summary(self, days: int = 30) -> dict[str, Any]:
         """Generate executive summary of system activity and health."""
         logger.debug(f"Generating executive summary for {days} days")
 
@@ -932,7 +932,7 @@ class ChangeAnalyticsEngine:
         except Exception:
             return False
 
-    def _get_fallback_change_summary(self, days: int) -> Dict[str, Any]:
+    def _get_fallback_change_summary(self, days: int) -> dict[str, Any]:
         """Fallback change summary when DuckDB not available."""
         # Return zero values for fallback when DuckDB is not available
         return {
@@ -945,7 +945,7 @@ class ChangeAnalyticsEngine:
         }
 
     def _get_fallback_user_activity(
-        self, user_id: Optional[str], days: int
+        self, user_id: str | None, days: int
     ) -> pd.DataFrame:
         """Fallback user activity when DuckDB not available."""
         return pd.DataFrame([])
@@ -954,7 +954,7 @@ class ChangeAnalyticsEngine:
         """Fallback entity hotspots when DuckDB not available."""
         return pd.DataFrame([])
 
-    def _get_fallback_collaboration_metrics(self, days: int) -> Dict[str, Any]:
+    def _get_fallback_collaboration_metrics(self, days: int) -> dict[str, Any]:
         """Fallback collaboration metrics when DuckDB not available."""
         return {
             "proposal_authors": 0,
@@ -964,7 +964,7 @@ class ChangeAnalyticsEngine:
             "approval_rate": 0,
         }
 
-    def _get_fallback_change_impact_analysis(self, changeset_id: str) -> Dict[str, Any]:
+    def _get_fallback_change_impact_analysis(self, changeset_id: str) -> dict[str, Any]:
         """Fallback change impact analysis when DuckDB not available."""
         return {
             "changeset_id": changeset_id,
@@ -977,7 +977,7 @@ class ChangeAnalyticsEngine:
             "impact_by_type": [],
         }
 
-    def _get_fallback_branch_analytics(self) -> Dict[str, Any]:
+    def _get_fallback_branch_analytics(self) -> dict[str, Any]:
         """Fallback branch analytics when DuckDB not available."""
         return {
             "branch_statistics": {
@@ -994,7 +994,7 @@ class ChangeAnalyticsEngine:
             },
         }
 
-    def _get_fallback_conflict_resolution_metrics(self) -> Dict[str, Any]:
+    def _get_fallback_conflict_resolution_metrics(self) -> dict[str, Any]:
         """Fallback conflict resolution metrics when DuckDB not available."""
         return {
             "total_conflicts": 0,
@@ -1004,11 +1004,11 @@ class ChangeAnalyticsEngine:
             "avg_resolution_time_hours": 0,
         }
 
-    def _get_fallback_change_trends(self, days: int) -> Dict[str, Any]:
+    def _get_fallback_change_trends(self, days: int) -> dict[str, Any]:
         """Fallback change trends when DuckDB not available."""
         return {"daily_trends": [], "peak_hours": [], "analysis_period_days": days}
 
-    def _get_fallback_performance_metrics(self) -> Dict[str, Any]:
+    def _get_fallback_performance_metrics(self) -> dict[str, Any]:
         """Fallback performance metrics when DuckDB not available."""
         return {
             "sync_performance": {
@@ -1022,7 +1022,7 @@ class ChangeAnalyticsEngine:
             "system_load": [],
         }
 
-    def _get_fallback_collaboration_insights(self, days: int) -> Dict[str, Any]:
+    def _get_fallback_collaboration_insights(self, days: int) -> dict[str, Any]:
         """Fallback collaboration insights when DuckDB not available."""
         return {
             "collaboration_networks": [],
@@ -1030,7 +1030,7 @@ class ChangeAnalyticsEngine:
             "analysis_period_days": days,
         }
 
-    def _get_fallback_executive_summary(self, days: int) -> Dict[str, Any]:
+    def _get_fallback_executive_summary(self, days: int) -> dict[str, Any]:
         """Fallback executive summary when DuckDB not available."""
         return {
             "summary_period_days": days,

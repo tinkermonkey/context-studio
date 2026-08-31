@@ -4,16 +4,16 @@ Unit tests for RAG pipeline configuration.
 Tests configuration defaults, field types, and validation for RAGPipelineConfig.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from pydantic import ValidationError  # noqa: E402
-from config import RAGPipelineConfig, Settings  # noqa: E402
+import pytest
+from config import RAGPipelineConfig, Settings
+from pydantic import ValidationError
 
 
 def test_rag_config_defaults():

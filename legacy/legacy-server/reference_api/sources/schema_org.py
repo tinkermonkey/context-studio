@@ -1,16 +1,18 @@
 """Schema.org source implementation using reference_db"""
 
+import json
 from typing import cast
-from .base import BaseReferenceSource
+
+from reference_db.config import ReferenceConfig
+from reference_db.manager import ReferenceManager
+from sqlalchemy import text
+
 from ..models import (
     SchemaOrgEntityResponse,
     SchemaOrgPropertyResponse,
     SchemaOrgSearchResponse,
 )
-from reference_db.manager import ReferenceManager
-from reference_db.config import ReferenceConfig
-from sqlalchemy import text
-import json
+from .base import BaseReferenceSource
 
 
 class SchemaOrgSource(BaseReferenceSource):

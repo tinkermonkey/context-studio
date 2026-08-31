@@ -5,14 +5,15 @@ This service provides comprehensive diff generation capabilities using DeepDiff 
 comparison, enabling detailed analysis of changes between entity versions.
 """
 
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
-from deepdiff import DeepDiff
 from datetime import datetime
+from typing import Any
+
+from deepdiff import DeepDiff
+from utils.logger import get_logger
 
 from services.version_manager import EntityVersion, VersionManager
 from services.working_tree_manager import WorkingTreeManager
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -23,10 +24,10 @@ class EntityDiff:
 
     entity_type: str
     entity_id: str
-    before_version: Optional[EntityVersion]
+    before_version: EntityVersion | None
     after_version: EntityVersion
-    changes: Dict[str, Any]
-    summary: Dict[str, int]
+    changes: dict[str, Any]
+    summary: dict[str, int]
     generated_at: datetime
 
     def has_changes(self) -> bool:
@@ -69,10 +70,10 @@ class DiffGenerator:
 
     def generate_diff(
         self,
-        before_content: Dict[str, Any],
-        after_content: Dict[str, Any],
-        ignore_keys: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        before_content: dict[str, Any],
+        after_content: dict[str, Any],
+        ignore_keys: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Generate structured diff using DeepDiff.
 
@@ -111,13 +112,13 @@ class DiffGenerator:
 
         except Exception as e:
             logger.error(f"Failed to generate diff: {e}")
-            return {"error": f"Diff generation failed: {str(e)}"}
+            return {"error": f"Diff generation failed: {e!s}"}
 
     def generate_version_diff(
         self,
         entity_type: str,
         entity_id: str,
-        before_version_number: Optional[int],
+        before_version_number: int | None,
         after_version_number: int,
     ) -> EntityDiff:
         """
@@ -226,7 +227,7 @@ class DiffGenerator:
             generated_at=datetime.utcnow(),
         )
 
-    def generate_all_working_diffs(self) -> List[EntityDiff]:
+    def generate_all_working_diffs(self) -> list[EntityDiff]:
         """
         Generate diffs for all entities with working changes.
 
@@ -252,7 +253,7 @@ class DiffGenerator:
         logger.info(f"Generated {len(diffs)} working diffs")
         return diffs
 
-    def generate_commit_preview(self) -> List[EntityDiff]:
+    def generate_commit_preview(self) -> list[EntityDiff]:
         """
         Generate preview of what would be committed (staged changes).
 
@@ -300,7 +301,7 @@ class DiffGenerator:
 
     def format_diff_for_display(
         self, diff: EntityDiff, format_type: str = "summary"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Format diff for human-readable display.
 
@@ -330,7 +331,7 @@ class DiffGenerator:
         else:
             raise ValueError(f"Unsupported format type: {format_type}")
 
-    def _get_version_by_id(self, version_id: str) -> Optional[EntityVersion]:
+    def _get_version_by_id(self, version_id: str) -> EntityVersion | None:
         """Get version by ID from the database."""
         from sqlalchemy import text
 
@@ -351,7 +352,7 @@ class DiffGenerator:
             logger.error(f"Failed to get version by ID {version_id}: {e}")
             return None
 
-    def _analyze_diff_summary(self, changes: Dict[str, Any]) -> Dict[str, int]:
+    def _analyze_diff_summary(self, changes: dict[str, Any]) -> dict[str, int]:
         """Analyze diff changes and create summary counts."""
         summary = {
             "values_changed": 0,
@@ -363,16 +364,14 @@ class DiffGenerator:
         }
 
         for change_type, change_data in changes.items():
-            if isinstance(change_data, dict):
-                summary[change_type] = len(change_data)
-            elif isinstance(change_data, list):
+            if isinstance(change_data, (dict, list)):
                 summary[change_type] = len(change_data)
             else:
                 summary[change_type] = 1
 
         return summary
 
-    def _create_diff_summary(self, summary_dict: Dict[str, int]) -> DiffSummary:
+    def _create_diff_summary(self, summary_dict: dict[str, int]) -> DiffSummary:
         """Create DiffSummary from summary dictionary."""
         added = summary_dict.get("dictionary_item_added", 0) + summary_dict.get(
             "iterable_item_added", 0
@@ -392,7 +391,7 @@ class DiffGenerator:
             total_changes=added + removed + modified + type_changes,
         )
 
-    def _format_diff_summary(self, diff: EntityDiff) -> Dict[str, Any]:
+    def _format_diff_summary(self, diff: EntityDiff) -> dict[str, Any]:
         """Format diff as a summary."""
         return {
             "entity": f"{diff.entity_type}:{diff.entity_id}",
@@ -407,7 +406,7 @@ class DiffGenerator:
             "generated_at": diff.generated_at.isoformat(),
         }
 
-    def _format_diff_detailed(self, diff: EntityDiff) -> Dict[str, Any]:
+    def _format_diff_detailed(self, diff: EntityDiff) -> dict[str, Any]:
         """Format diff with detailed change information."""
         formatted = self._format_diff_summary(diff)
         formatted["changes"] = diff.changes

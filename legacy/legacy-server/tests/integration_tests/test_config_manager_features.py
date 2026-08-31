@@ -5,17 +5,17 @@ This file tests configuration validation, runtime reload, nested access,
 and key existence checks without dependencies on the full application stack.
 """
 
-import sys
-import os
-import tempfile
 import json
+import os
+import sys
+import tempfile
 from pathlib import Path
 
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import only what we need for configuration testing
-from config import ConfigurationManager  # noqa: E402
+from config import ConfigurationManager
 
 
 def test_config_validation_enforcement():
@@ -26,7 +26,7 @@ def test_config_validation_enforcement():
 
         # Set an invalid value (port out of range)
         config_manager.settings.server.port = (
-            99999  # Exceeds max value of 65535  # noqa: E501
+            99999  # Exceeds max value of 65535
         )
 
         # Validate should return errors
@@ -34,7 +34,7 @@ def test_config_validation_enforcement():
         assert len(errors) > 0, "Invalid configuration should be rejected"
         assert any(
             "port" in error.lower() for error in errors
-        ), f"Expected port validation error, got: {errors}"  # noqa: E501
+        ), f"Expected port validation error, got: {errors}"
 
 
 def test_reload_configuration_at_runtime():
@@ -57,14 +57,14 @@ def test_reload_configuration_at_runtime():
         # Verify configuration was reloaded
         assert (
             reloaded_settings.server.port == 9999
-        ), "Configuration reload failed"  # noqa: E501
+        ), "Configuration reload failed"
         assert (
             config_manager.settings.server.port == 9999
-        ), "Configuration manager state not updated"  # noqa: E501
+        ), "Configuration manager state not updated"
 
 
 def test_nested_config_value_access():
-    """Test that nested configuration values can be accessed using dot notation."""  # noqa: E501
+    """Test that nested configuration values can be accessed using dot notation."""
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = os.path.join(tmpdir, "config.json")
         config_manager = ConfigurationManager(config_file)
@@ -73,16 +73,16 @@ def test_nested_config_value_access():
         port = config_manager.get("server.port")
         assert (
             port == config_manager.settings.server.port
-        ), "Nested configuration access failed"  # noqa: E501
+        ), "Nested configuration access failed"
 
         # Test deeper nesting
         cache_ttl = config_manager.get(
             "reference_sources.conceptnet.rate_limit.requests_per_hour"
-        )  # noqa: E501
+        )
         assert (
             cache_ttl
             == config_manager.settings.reference_sources.conceptnet.rate_limit.requests_per_hour
-        )  # noqa: E501
+        )
 
 
 def test_config_key_existence_checks():
@@ -99,7 +99,7 @@ def test_config_key_existence_checks():
         except KeyError:
             raise AssertionError(
                 "Configuration key existence check failed - valid keys should exist"
-            )  # noqa: E501
+            )
 
         # Test that invalid keys raise KeyError
         try:

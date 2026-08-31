@@ -7,15 +7,15 @@ Tests the FastAPI endpoints for:
 - /api/reference/ref-db/nodes/{node_id}/links (link retrieval)
 """
 
-import pytest
-import tempfile
 import os
-from unittest.mock import patch, MagicMock
-import numpy as np
+import tempfile
+from unittest.mock import MagicMock, patch
 
-from reference_db.models import ReferenceLink
+import numpy as np
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
+from reference_db.models import ReferenceLink
 
 
 @pytest.fixture(scope="module")
@@ -71,8 +71,8 @@ def test_database():
 
     # Add test links using direct session operations
     # (workaround for transaction conflict issue)
-    from uuid import uuid4
     from datetime import date
+    from uuid import uuid4
 
     link1 = ReferenceLink(
         id=str(uuid4()),
@@ -102,7 +102,7 @@ def test_database():
     manager.session.add_all([link1, link2, link3])
     manager.session.commit()
 
-    # Store IDs as strings before closing session (to avoid detached instance errors)  # noqa: E501
+    # Store IDs as strings before closing session (to avoid detached instance errors)
     node_ids = (node1.id, node2.id, node3.id)
     link_ids = (link1.id, link2.id, link3.id)
 
@@ -120,10 +120,11 @@ class TestVectorSearchAPI:
 
     def test_search_endpoint_basic(self, client, test_database):
         """Test basic vector search API endpoint."""
-        db_path, nodes, links, create_embedding = test_database
+        db_path, _nodes, _links, create_embedding = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -137,32 +138,32 @@ class TestVectorSearchAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
-            with patch(
-                "embeddings.generate_embeddings.generate_embedding"
-            ) as mock_embed:  # noqa: E501
-                mock_embed.return_value = create_embedding(0.5)
+        ), patch(
+            "embeddings.generate_embeddings.generate_embedding"
+        ) as mock_embed:
+            mock_embed.return_value = create_embedding(0.5)
 
-                response = client.get(
-                    "/api/reference/ref-db/search",
-                    params={"query": "person", "limit": 10, "threshold": 0.0},
-                )
+            response = client.get(
+                "/api/reference/ref-db/search",
+                params={"query": "person", "limit": 10, "threshold": 0.0},
+            )
 
-                assert response.status_code == 200
-                data = response.json()
+            assert response.status_code == 200
+            data = response.json()
 
-                assert "query" in data
-                assert data["query"] == "person"
-                assert "total_results" in data
-                assert "results" in data
-                assert isinstance(data["results"], list)
+            assert "query" in data
+            assert data["query"] == "person"
+            assert "total_results" in data
+            assert "results" in data
+            assert isinstance(data["results"], list)
 
     def test_search_endpoint_with_source_filter(self, client, test_database):
         """Test vector search with source filtering."""
-        db_path, nodes, links, create_embedding = test_database
+        db_path, _nodes, _links, create_embedding = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -176,28 +177,27 @@ class TestVectorSearchAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
-            with patch(
-                "embeddings.generate_embeddings.generate_embedding"
-            ) as mock_embed:  # noqa: E501
-                mock_embed.return_value = create_embedding(0.5)
+        ), patch(
+            "embeddings.generate_embeddings.generate_embedding"
+        ) as mock_embed:
+            mock_embed.return_value = create_embedding(0.5)
 
-                response = client.get(
-                    "/api/reference/ref-db/search",
-                    params={
-                        "query": "person",
-                        "source": "schema.org",
-                        "limit": 10,
-                        "threshold": 0.0,
-                    },
-                )
+            response = client.get(
+                "/api/reference/ref-db/search",
+                params={
+                    "query": "person",
+                    "source": "schema.org",
+                    "limit": 10,
+                    "threshold": 0.0,
+                },
+            )
 
-                assert response.status_code == 200
-                data = response.json()
+            assert response.status_code == 200
+            data = response.json()
 
-                # All results should be from schema.org
-                for result in data["results"]:
-                    assert result["source"] == "schema.org"
+            # All results should be from schema.org
+            for result in data["results"]:
+                assert result["source"] == "schema.org"
 
     def test_search_endpoint_threshold_validation(self, client):
         """Test that search endpoint validates threshold parameter."""
@@ -240,12 +240,13 @@ class TestVectorSearchAPI:
 
     def test_search_endpoint_includes_similarity_scores(
         self, client, test_database
-    ):  # noqa: E501
+    ):
         """Test that search results include similarity scores."""
-        db_path, nodes, links, create_embedding = test_database
+        db_path, _nodes, _links, create_embedding = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -259,25 +260,24 @@ class TestVectorSearchAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
-            with patch(
-                "embeddings.generate_embeddings.generate_embedding"
-            ) as mock_embed:  # noqa: E501
-                mock_embed.return_value = create_embedding(0.5)
+        ), patch(
+            "embeddings.generate_embeddings.generate_embedding"
+        ) as mock_embed:
+            mock_embed.return_value = create_embedding(0.5)
 
-                response = client.get(
-                    "/api/reference/ref-db/search",
-                    params={"query": "person", "limit": 10, "threshold": 0.0},
-                )
+            response = client.get(
+                "/api/reference/ref-db/search",
+                params={"query": "person", "limit": 10, "threshold": 0.0},
+            )
 
-                assert response.status_code == 200
-                data = response.json()
+            assert response.status_code == 200
+            data = response.json()
 
-                # Verify similarity scores are included
-                for result in data["results"]:
-                    assert "similarity_score" in result
-                    assert isinstance(result["similarity_score"], (int, float))
-                    assert -1.0 <= result["similarity_score"] <= 1.0
+            # Verify similarity scores are included
+            for result in data["results"]:
+                assert "similarity_score" in result
+                assert isinstance(result["similarity_score"], (int, float))
+                assert -1.0 <= result["similarity_score"] <= 1.0
 
     def test_search_endpoint_fails_fast_on_error(self, client):
         """Test that search endpoint returns 500 on vector search errors."""
@@ -289,13 +289,13 @@ class TestVectorSearchAPI:
             mock_manager = MagicMock()
             mock_manager.search_by_similarity.side_effect = RuntimeError(
                 "Vector search failed"
-            )  # noqa: E501
+            )
             yield mock_manager
 
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context_error,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 "/api/reference/ref-db/search", params={"query": "test", "limit": 10}
             )
@@ -309,12 +309,13 @@ class TestNodeRetrievalAPI:
 
     def test_get_node_by_id(self, client, test_database):
         """Test retrieving a node by ID."""
-        db_path, (node1_id, node2_id, node3_id), link_ids, create_embedding = (
-            test_database  # noqa: E501
+        db_path, (node1_id, _node2_id, _node3_id), _link_ids, _create_embedding = (
+            test_database
         )
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -328,7 +329,7 @@ class TestNodeRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(f"/api/reference/ref-db/nodes/{node1_id}")
 
             assert response.status_code == 200
@@ -344,10 +345,11 @@ class TestNodeRetrievalAPI:
 
     def test_get_node_not_found(self, client, test_database):
         """Test retrieving a non-existent node returns 404."""
-        db_path, nodes, links, create_embedding = test_database
+        db_path, _nodes, _links, _create_embedding = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -361,7 +363,7 @@ class TestNodeRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get("/api/reference/ref-db/nodes/nonexistent-id")
 
             assert response.status_code == 404
@@ -375,13 +377,14 @@ class TestLinkRetrievalAPI:
         """Test retrieving outbound links for a node."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (node1_id, _node2_id, _node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -395,7 +398,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound"},
@@ -416,13 +419,14 @@ class TestLinkRetrievalAPI:
         """Test retrieving inbound links for a node."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (_node1_id, _node2_id, node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -436,7 +440,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node3_id}/links",
                 params={"direction": "inbound"},
@@ -455,13 +459,14 @@ class TestLinkRetrievalAPI:
         """Test retrieving links in both directions."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (node1_id, _node2_id, _node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -475,7 +480,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "both"},
@@ -486,19 +491,20 @@ class TestLinkRetrievalAPI:
 
             assert (
                 data["total_links"] == 2
-            )  # node1 has 2 total links (both outbound)  # noqa: E501
+            )  # node1 has 2 total links (both outbound)
 
     def test_get_links_with_predicate_filter(self, client, test_database):
         """Test retrieving links filtered by predicate."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (node1_id, _node2_id, _node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -512,7 +518,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound", "predicate": "subClassOf"},
@@ -531,13 +537,14 @@ class TestLinkRetrievalAPI:
         """Test that link retrieval respects limit parameter."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (node1_id, _node2_id, _node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -551,7 +558,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound", "limit": 1},
@@ -564,10 +571,11 @@ class TestLinkRetrievalAPI:
 
     def test_get_links_node_not_found(self, client, test_database):
         """Test that getting links for non-existent node returns 404."""
-        db_path, nodes, links, create_embedding = test_database
+        db_path, _nodes, _links, _create_embedding = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -581,7 +589,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 "/api/reference/ref-db/nodes/nonexistent-id/links",
                 params={"direction": "both"},
@@ -592,12 +600,13 @@ class TestLinkRetrievalAPI:
 
     def test_get_links_invalid_direction(self, client, test_database):
         """Test that invalid direction parameter returns error."""
-        db_path, (node1_id, node2_id, node3_id), link_ids, create_embedding = (
-            test_database  # noqa: E501
+        db_path, (node1_id, _node2_id, _node3_id), _link_ids, _create_embedding = (
+            test_database
         )
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -611,7 +620,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "invalid"},
@@ -624,13 +633,14 @@ class TestLinkRetrievalAPI:
         """Test that links are returned ordered by created_at DESC."""
         (
             db_path,
-            (node1_id, node2_id, node3_id),
-            (link1_id, link2_id, link3_id),
-            create_embedding,
-        ) = test_database  # noqa: E501
+            (node1_id, _node2_id, _node3_id),
+            (_link1_id, _link2_id, _link3_id),
+            _create_embedding,
+        ) = test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -644,7 +654,7 @@ class TestLinkRetrievalAPI:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):  # noqa: E501
+        ):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound"},

@@ -6,17 +6,18 @@ using new terminology (taxonomy, concept_scheme, class) alongside the
 existing structure_nodes API.
 """
 
+import re
+from enum import Enum
+from typing import Any
+from uuid import UUID
+
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     field_validator,
     model_validator,
-    ConfigDict,
-)  # noqa: E501
-from typing import Optional, List, Any
-from uuid import UUID
-from enum import Enum
-import re
+)
 
 
 class EntityTypeEnum(str, Enum):
@@ -31,10 +32,10 @@ class EntityBase(BaseModel):
     """Base model for ontology entity data."""
 
     node_type: EntityTypeEnum
-    parent_entity_id: Optional[UUID] = None
+    parent_entity_id: UUID | None = None
     title: str = Field(..., min_length=2, max_length=255)
-    definition: Optional[str] = None
-    structural_predicate_id: Optional[UUID] = None
+    definition: str | None = None
+    structural_predicate_id: UUID | None = None
 
 
 class EntityCreate(EntityBase):
@@ -43,35 +44,35 @@ class EntityCreate(EntityBase):
     @field_validator("parent_entity_id")
     @classmethod
     def validate_parent_for_type(cls, v, info):
-        """Validate parent entity requirements based on entity type."""  # noqa: E501
+        """Validate parent entity requirements based on entity type."""
         node_type = info.data.get("node_type")
         if node_type == EntityTypeEnum.TAXONOMY and v is not None:
             raise ValueError("Taxonomies cannot have parent entities")
         if (
             node_type in [EntityTypeEnum.CONCEPT_SCHEME, EntityTypeEnum.CLASS]
             and v is None
-        ):  # noqa: E501
+        ):
             raise ValueError(
                 f"{node_type.value.title().replace('_', ' ')} must have a parent entity"
-            )  # noqa: E501
+            )
         return v
 
 
 class EntityUpdate(BaseModel):
     """Model for updating an existing ontology entity."""
 
-    title: Optional[str] = Field(None, min_length=2, max_length=255)
-    definition: Optional[str] = None
-    parent_entity_id: Optional[UUID] = None
-    structural_predicate_id: Optional[UUID] = None
+    title: str | None = Field(None, min_length=2, max_length=255)
+    definition: str | None = None
+    parent_entity_id: UUID | None = None
+    structural_predicate_id: UUID | None = None
 
 
 class EntityOut(EntityBase):
     """Model for ontology entity output/response."""
 
     id: UUID
-    title_embedding: Optional[List[float]] = None
-    definition_embedding: Optional[List[float]] = None
+    title_embedding: list[float] | None = None
+    definition_embedding: list[float] | None = None
     created_at: str  # ISO8601 string
     version: int
     last_modified: str  # ISO8601 string
@@ -85,13 +86,12 @@ class RelationshipBase(BaseModel):
     source_entity_id: UUID
     target_entity_id: UUID
     predicate: str
-    predicate_id: Optional[UUID] = None
+    predicate_id: UUID | None = None
 
 
 class RelationshipCreate(RelationshipBase):
     """Model for creating a new entity relationship."""
 
-    pass
 
 
 class RelationshipOut(RelationshipBase):
@@ -107,18 +107,18 @@ class EntitySearchRequest(BaseModel):
     """Model for ontology entity search requests."""
 
     query: str = Field(..., min_length=1, description="Search query text")
-    node_type: Optional[EntityTypeEnum] = Field(
+    node_type: EntityTypeEnum | None = Field(
         None, description="Filter by entity type"
-    )  # noqa: E501
-    parent_entity_id: Optional[UUID] = Field(
+    )
+    parent_entity_id: UUID | None = Field(
         None, description="Filter by parent entity"
-    )  # noqa: E501
-    threshold: Optional[float] = Field(
+    )
+    threshold: float | None = Field(
         0.0, ge=0.0, le=1.0, description="Minimum similarity score"
-    )  # noqa: E501
-    limit: Optional[int] = Field(
+    )
+    limit: int | None = Field(
         20, ge=1, le=100, description="Maximum number of results"
-    )  # noqa: E501
+    )
 
 
 class EntitySearchResult(EntityOut):
@@ -131,7 +131,7 @@ class EntitySearchResult(EntityOut):
 class PaginatedEntitiesResponse(BaseModel):
     """Model for paginated ontology entity responses."""
 
-    data: List[EntityOut]
+    data: list[EntityOut]
     total: int
     skip: int
     limit: int
@@ -140,7 +140,7 @@ class PaginatedEntitiesResponse(BaseModel):
 class PaginatedRelationshipsResponse(BaseModel):
     """Model for paginated entity relationship responses."""
 
-    data: List[RelationshipOut]
+    data: list[RelationshipOut]
     total: int
     skip: int
     limit: int
@@ -150,41 +150,41 @@ class PaginatedRelationshipsResponse(BaseModel):
 class MoveEntitiesRequest(BaseModel):
     """Model for moving ontology entities to a new parent."""
 
-    entity_ids: List[UUID] = Field(
+    entity_ids: list[UUID] = Field(
         ..., min_length=1, description="List of entity IDs to move"
-    )  # noqa: E501
-    target_parent_id: Optional[UUID] = Field(
+    )
+    target_parent_id: UUID | None = Field(
         None, description="Target parent entity ID (None for root level)"
-    )  # noqa: E501
+    )
     move_children: bool = Field(
         True, description="Whether to move all child entities"
-    )  # noqa: E501
+    )
     handle_conflicts: str = Field(
         "warn",
         pattern="^(warn|rename|error)$",
         description="How to handle title conflicts",
-    )  # noqa: E501
+    )
 
 
 class MoveEntitiesResponse(BaseModel):
     """Model for move operation results with automatic type conversion."""
 
-    moved_entities: List[EntityOut] = Field(
+    moved_entities: list[EntityOut] = Field(
         description="List of successfully moved entities"
-    )  # noqa: E501
-    updated_children: List[EntityOut] = Field(
+    )
+    updated_children: list[EntityOut] = Field(
         description="List of child entities that were also moved"
-    )  # noqa: E501
-    converted_entities: List[EntityOut] = Field(
+    )
+    converted_entities: list[EntityOut] = Field(
         default_factory=list,
         description="List of entities that had their type automatically converted",
-    )  # noqa: E501
-    warnings: List[str] = Field(
+    )
+    warnings: list[str] = Field(
         description="List of warnings encountered during the move"
-    )  # noqa: E501
-    errors: List[str] = Field(
+    )
+    errors: list[str] = Field(
         description="List of errors that prevented some moves"
-    )  # noqa: E501
+    )
 
 
 # Utility models for hierarchy operations
@@ -192,7 +192,7 @@ class EntityHierarchy(BaseModel):
     """Model representing an ontology entity with its children."""
 
     entity: EntityOut
-    children: List["EntityHierarchy"] = []
+    children: list["EntityHierarchy"] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -201,7 +201,7 @@ class EntityHierarchy(BaseModel):
 EntityHierarchy.model_rebuild()
 
 
-# Models for Reference Links and Word Senses (reusing same concepts from structure_nodes)  # noqa: E501
+# Models for Reference Links and Word Senses (reusing same concepts from structure_nodes)
 class ReferenceLink(BaseModel):
     """Model for reference data links from external knowledge sources."""
 
@@ -210,10 +210,10 @@ class ReferenceLink(BaseModel):
         min_length=1,
         max_length=255,
         description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')",
-    )  # noqa: E501
+    )
     external_id: str = Field(
         ..., min_length=1, max_length=255, description="Source-specific identifier"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -226,19 +226,19 @@ class WordSense(BaseModel):
         min_length=1,
         max_length=255,
         description="The term/word this sense refers to",
-    )  # noqa: E501
+    )
     sense_type: str = Field(
         ..., description="Type of sense system (e.g., 'wordnet')"
-    )  # noqa: E501
+    )
     sense_id: str = Field(
         ..., description="Unique identifier for the sense (e.g., 'bank.n.01')"
-    )  # noqa: E501
+    )
     definition: str = Field(
         ..., description="Human-readable definition of the sense"
-    )  # noqa: E501
-    domain: Optional[str] = Field(
+    )
+    domain: str | None = Field(
         None, description="Semantic domain or category (e.g., 'noun.group')"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -246,9 +246,9 @@ class WordSense(BaseModel):
 class SelectedWordSensesUpdate(BaseModel):
     """Model for updating selected word senses on an entity."""
 
-    selected_senses: List[WordSense] = Field(
+    selected_senses: list[WordSense] = Field(
         ..., description="List of word senses to persist as selected"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -273,7 +273,7 @@ class EntityAttribute(BaseModel):
     value_type: AttributeValueType = Field(
         ..., description="Type constraint for values"
     )
-    value: Optional[Any] = Field(None, description="The actual attribute value")
+    value: Any | None = Field(None, description="The actual attribute value")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -315,7 +315,7 @@ class ResolvedAttribute(EntityAttribute):
     """Model for resolved attributes with inheritance information."""
 
     inherited: bool = Field(False, description="True if inherited from ancestor")
-    source_entity_id: Optional[UUID] = Field(
+    source_entity_id: UUID | None = Field(
         None, description="ID of the entity defining this attribute"
     )
 
@@ -330,14 +330,14 @@ class ResolvedAttribute(EntityAttribute):
 
 
 class SetEntityAttributesRequest(BaseModel):
-    """Request model for setting entity attributes with optimistic locking support."""  # noqa: E501
+    """Request model for setting entity attributes with optimistic locking support."""
 
-    attributes: List[EntityAttribute] = Field(
+    attributes: list[EntityAttribute] = Field(
         ..., description="List of attributes to set on the entity"
     )
-    expected_version: Optional[int] = Field(
+    expected_version: int | None = Field(
         None,
-        description="Expected entity version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match.",  # noqa: E501
+        description="Expected entity version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match.",
     )
 
     model_config = ConfigDict(from_attributes=True)

@@ -5,14 +5,14 @@ This module provides SPARQL query capabilities for the Context Studio graph data
 using RDFLib to create an in-memory RDF representation of the SQLite database.
 """
 
-from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
-from rdflib.namespace import FOAF, DCTERMS, SKOS
-from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional, cast
 from datetime import datetime
+from typing import Any, cast
 
-from database.models import StructureNode, StructureNodeLink
 from database.enums import NodeType
+from database.models import StructureNode, StructureNodeLink
+from rdflib import RDF, RDFS, Graph, Literal, Namespace, URIRef
+from rdflib.namespace import DCTERMS, FOAF, SKOS
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -92,7 +92,7 @@ class SPARQLService:
 
             # Hierarchical relationships using parent_node_id
             if structure_node.parent_node_id:
-                parent_node: Optional[StructureNode] = (
+                parent_node: StructureNode | None = (
                     self.db_session.query(StructureNode)
                     .filter(StructureNode.id == structure_node.parent_node_id)
                     .first()
@@ -149,12 +149,12 @@ class SPARQLService:
 
         for link in links:
             # Get source and target structure_nodes to determine their types
-            source_node: Optional[StructureNode] = (
+            source_node: StructureNode | None = (
                 self.db_session.query(StructureNode)
                 .filter(StructureNode.id == link.source_node_id)
                 .first()
             )
-            target_node: Optional[StructureNode] = (
+            target_node: StructureNode | None = (
                 self.db_session.query(StructureNode)
                 .filter(StructureNode.id == link.target_node_id)
                 .first()
@@ -201,7 +201,7 @@ class SPARQLService:
 
     def _get_layer_ancestor(
         self, structure_node: StructureNode
-    ) -> Optional[StructureNode]:
+    ) -> StructureNode | None:
         """
         Get the layer ancestor of a structure_node by walking up the hierarchy.
 
@@ -211,7 +211,7 @@ class SPARQLService:
         Returns:
             The layer ancestor structure_node, or None if not found
         """
-        current: Optional[StructureNode] = structure_node
+        current: StructureNode | None = structure_node
         while current:
             if current.node_type == NodeType.LAYER:
                 return current
@@ -228,8 +228,8 @@ class SPARQLService:
         return None
 
     def query(
-        self, sparql_query: str, initNs: Optional[Dict[str, Namespace]] = None
-    ) -> List[Dict[str, Any]]:
+        self, sparql_query: str, initNs: dict[str, Namespace] | None = None
+    ) -> list[dict[str, Any]]:
         """
         Execute a SPARQL query against the RDF graph.
 
@@ -283,7 +283,7 @@ class SPARQLService:
         logger.info("Refreshing RDF graph from database...")
         self._build_graph()
 
-    def get_graph_stats(self) -> Dict[str, Any]:
+    def get_graph_stats(self) -> dict[str, Any]:
         """
         Get statistics about the RDF graph.
 
@@ -313,7 +313,7 @@ class SPARQLService:
 
     def find_terms_by_title(
         self, title: str, exact: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find terms by title using SPARQL.
 
@@ -353,7 +353,7 @@ class SPARQLService:
 
     def find_related_terms(
         self, term_id: str, max_depth: int = 2
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find terms related to a given term using SPARQL property paths.
 
@@ -393,8 +393,8 @@ class SPARQLService:
         return self.query(query)
 
     def get_domain_hierarchy(
-        self, layer_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, layer_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         Get the domain hierarchy for a layer or all layers.
 
@@ -427,7 +427,7 @@ class SPARQLService:
 
         return self.query(query)
 
-    def get_structure_nodes_with_embeddings(self) -> List[Dict[str, Any]]:
+    def get_structure_nodes_with_embeddings(self) -> list[dict[str, Any]]:
         """
         Get all structure_nodes that have embeddings using SPARQL.
 
@@ -450,7 +450,7 @@ class SPARQLService:
 
         return self.query(query)
 
-    def get_structure_node_relationships(self, node_id: str) -> List[Dict[str, Any]]:
+    def get_structure_node_relationships(self, node_id: str) -> list[dict[str, Any]]:
         """
         Get all relationships for a specific structure_node using SPARQL.
 

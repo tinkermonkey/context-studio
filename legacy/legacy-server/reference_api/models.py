@@ -4,10 +4,11 @@ This module implements the full set of request/response models described in
 the reference design (DBpedia, ConceptNet, Wikidata, Schema.org).
 """
 
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Dict, Optional, Any, Literal
 from datetime import datetime
 from enum import Enum
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class SourceType(str, Enum):
@@ -30,7 +31,7 @@ class BaseSourceResponse(BaseModel):
     success: bool = Field(..., description="Whether the request was successful")
     source: SourceType = Field(..., description="Source that provided the data")
     retrieved_at: datetime = Field(..., description="Timestamp when data was retrieved")
-    error: Optional[str] = Field(None, description="Error message if success is false")
+    error: str | None = Field(None, description="Error message if success is false")
 
 
 # ------------------ DBpedia Models ------------------
@@ -54,9 +55,9 @@ class DBpediaResourceRequest(BaseModel):
 class DBpediaResourceResponse(BaseSourceResponse):
     """Response model for DBpedia resource data"""
 
-    resource_uri: Optional[str] = None
-    data_url: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    resource_uri: str | None = None
+    data_url: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class DBpediaSearchResult(BaseModel):
@@ -64,17 +65,17 @@ class DBpediaSearchResult(BaseModel):
 
     uri: str
     label: str
-    description: Optional[str] = None
+    description: str | None = None
     score: float = Field(..., ge=0.0)
-    types: List[str] = Field(default_factory=list)
+    types: list[str] = Field(default_factory=list)
 
 
 class DBpediaSearchResponse(BaseSourceResponse):
     """Response model for DBpedia search"""
 
-    query: Optional[str] = None
-    total_results: Optional[int] = None
-    results: List[DBpediaSearchResult] = Field(default_factory=list)
+    query: str | None = None
+    total_results: int | None = None
+    results: list[DBpediaSearchResult] = Field(default_factory=list)
 
 
 class DBpediaSearchRequest(BaseModel):
@@ -109,19 +110,19 @@ class DBpediaSparqlResponse(BaseSourceResponse):
     """Response model for DBpedia SPARQL query"""
 
     query_type: str = "sparql"
-    results: Optional[Dict[str, Any]] = None
+    results: dict[str, Any] | None = None
 
 
 # ------------------ ConceptNet Models ------------------
 class ConceptNetQueryRequest(BaseModel):
     """Request model for ConceptNet query"""
 
-    start: Optional[str] = Field(
+    start: str | None = Field(
         None, description="Starting concept (e.g., /c/en/apple)"
     )
-    end: Optional[str] = Field(None, description="Ending concept")
-    node: Optional[str] = Field(None, description="Any concept")
-    rel: Optional[str] = Field(None, description="Relation type (e.g., /r/IsA)")
+    end: str | None = Field(None, description="Ending concept")
+    node: str | None = Field(None, description="Any concept")
+    rel: str | None = Field(None, description="Relation type (e.g., /r/IsA)")
     limit: int = Field(20, ge=1, le=100, description="Result limit")
     offset: int = Field(0, ge=0, description="Result offset")
 
@@ -144,25 +145,25 @@ class ConceptNetEdge(BaseModel):
     """ConceptNet edge representation"""
 
     id: str = Field(..., alias="@id")
-    start: Dict[str, str]
-    rel: Dict[str, str]
-    end: Dict[str, str]
+    start: dict[str, str]
+    rel: dict[str, str]
+    end: dict[str, str]
     weight: float
-    sources: Optional[List[Dict[str, str]]] = None
+    sources: list[dict[str, str]] | None = None
 
 
 class ConceptNetQueryResponse(BaseSourceResponse):
     """Response model for ConceptNet query"""
 
-    query_params: Optional[Dict[str, str]] = None
-    edges: List[ConceptNetEdge] = Field(default_factory=list)
+    query_params: dict[str, str] | None = None
+    edges: list[ConceptNetEdge] = Field(default_factory=list)
 
 
 class ConceptNetConceptResponse(BaseSourceResponse):
     """Response model for ConceptNet concept lookup"""
 
-    concept: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    concept: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class ConceptNetRelatedConcept(BaseModel):
@@ -176,9 +177,9 @@ class ConceptNetRelatedConcept(BaseModel):
 class ConceptNetRelatedResponse(BaseSourceResponse):
     """Response model for ConceptNet related concepts"""
 
-    concept: Optional[str] = None
-    filter: Optional[str] = None
-    related: List[ConceptNetRelatedConcept] = Field(default_factory=list)
+    concept: str | None = None
+    filter: str | None = None
+    related: list[ConceptNetRelatedConcept] = Field(default_factory=list)
 
 
 # ------------------ Wikidata Models ------------------
@@ -193,14 +194,14 @@ class WikidataSparqlResponse(BaseSourceResponse):
     """Response model for Wikidata SPARQL query"""
 
     query_type: str = "sparql"
-    results: Optional[Dict[str, Any]] = None
+    results: dict[str, Any] | None = None
 
 
 class WikidataEntityRequest(BaseModel):
     """Request model for Wikidata entity retrieval"""
 
     entity_url: str = Field(..., description="Wikidata entity URL")
-    properties: Optional[List[str]] = Field(
+    properties: list[str] | None = Field(
         None, description="Specific properties to retrieve"
     )
     format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
@@ -219,18 +220,18 @@ class WikidataEntityRequest(BaseModel):
 class WikidataEntityResponse(BaseSourceResponse):
     """Response model for Wikidata entity data"""
 
-    entity_id: Optional[str] = None
-    entity_url: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    entity_id: str | None = None
+    entity_url: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class WikidataSearchResult(BaseModel):
     """Individual search result from Wikidata"""
 
     id: str = Field(..., description="Wikidata entity ID")
-    label: Optional[str] = Field(None, description="Entity label")
-    description: Optional[str] = Field(None, description="Entity description")
-    url: Optional[str] = Field(None, description="Entity URL")
+    label: str | None = Field(None, description="Entity label")
+    description: str | None = Field(None, description="Entity description")
+    url: str | None = Field(None, description="Entity URL")
 
 
 class WikidataSearchResponse(BaseSourceResponse):
@@ -238,7 +239,7 @@ class WikidataSearchResponse(BaseSourceResponse):
 
     query: str
     total_results: int
-    results: List[WikidataSearchResult] = Field(default_factory=list)
+    results: list[WikidataSearchResult] = Field(default_factory=list)
 
 
 class WikidataSearchRequest(BaseModel):
@@ -264,10 +265,10 @@ class SchemaOrgProperty(BaseModel):
 
     identifier: str
     title: str
-    definition: Optional[str] = None
-    expected_types: List[str] = Field(default_factory=list)
+    definition: str | None = None
+    expected_types: list[str] = Field(default_factory=list)
     inherited: bool = False
-    inherited_from: Optional[str] = None
+    inherited_from: str | None = None
 
 
 class SchemaOrgChildEntity(BaseModel):
@@ -283,17 +284,17 @@ class SchemaOrgEntity(BaseModel):
     id: str
     identifier: str
     title: str
-    definition: Optional[str] = None
-    parent_identifier: Optional[str] = None
-    properties: List[SchemaOrgProperty] = Field(default_factory=list)
-    children: List[SchemaOrgChildEntity] = Field(default_factory=list)
+    definition: str | None = None
+    parent_identifier: str | None = None
+    properties: list[SchemaOrgProperty] = Field(default_factory=list)
+    children: list[SchemaOrgChildEntity] = Field(default_factory=list)
 
 
 class SchemaOrgEntityResponse(BaseSourceResponse):
     """Response model for Schema.org entity retrieval"""
 
-    identifier: Optional[str] = None
-    entity: Optional[SchemaOrgEntity] = None
+    identifier: str | None = None
+    entity: SchemaOrgEntity | None = None
 
 
 class SchemaOrgPropertyRequest(BaseModel):
@@ -311,18 +312,18 @@ class SchemaOrgPropertyData(BaseModel):
     id: str
     identifier: str
     title: str
-    definition: Optional[str] = None
-    domain_includes: List[str] = Field(default_factory=list)
-    range_includes: List[str] = Field(default_factory=list)
-    inverse_of: List[str] = Field(default_factory=list)
-    used_by_entities: List[Dict[str, str]] = Field(default_factory=list)
+    definition: str | None = None
+    domain_includes: list[str] = Field(default_factory=list)
+    range_includes: list[str] = Field(default_factory=list)
+    inverse_of: list[str] = Field(default_factory=list)
+    used_by_entities: list[dict[str, str]] = Field(default_factory=list)
 
 
 class SchemaOrgPropertyResponse(BaseSourceResponse):
     """Response model for Schema.org property retrieval"""
 
-    identifier: Optional[str] = None
-    property: Optional[SchemaOrgPropertyData] = None
+    identifier: str | None = None
+    property: SchemaOrgPropertyData | None = None
 
 
 class SchemaOrgSearchRequest(BaseModel):
@@ -345,17 +346,17 @@ class SchemaOrgSearchResult(BaseModel):
     type: Literal["entity", "property"]
     identifier: str
     title: str
-    definition: Optional[str] = None
+    definition: str | None = None
     relevance_score: float
 
 
 class SchemaOrgSearchResponse(BaseSourceResponse):
     """Response model for Schema.org search"""
 
-    query: Optional[str] = None
-    search_type: Optional[str] = None
-    total_results: Optional[int] = None
-    results: List[SchemaOrgSearchResult] = Field(default_factory=list)
+    query: str | None = None
+    search_type: str | None = None
+    total_results: int | None = None
+    results: list[SchemaOrgSearchResult] = Field(default_factory=list)
 
 
 # ------------------ Multi-Source Search Models ------------------
@@ -365,11 +366,11 @@ class SearchNode(BaseModel):
     id: str = Field(..., description="Unique identifier from source")
     source: SourceType = Field(..., description="Original source of the node")
     title: str = Field(..., min_length=1, description="Primary label or title")
-    definition: Optional[str] = Field(None, description="Definition or description")
-    attributes: Dict[str, Any] = Field(
+    definition: str | None = Field(None, description="Definition or description")
+    attributes: dict[str, Any] = Field(
         default_factory=dict, description="Source-specific attributes"
     )
-    source_url: Optional[str] = Field(None, description="URL to original resource")
+    source_url: str | None = Field(None, description="URL to original resource")
     relevance_score: float = Field(
         default=1.0, ge=0, le=1, description="Source relevance score"
     )
@@ -390,8 +391,8 @@ class SearchLink(BaseModel):
     subject: str = Field(..., description="Subject node ID or URL")
     predicate: str = Field(..., description="Relationship type")
     object: str = Field(..., description="Object node ID or URL")
-    weight: Optional[float] = Field(None, ge=0, description="Link weight (0.0+)")
-    attributes: Dict[str, Any] = Field(
+    weight: float | None = Field(None, ge=0, description="Link weight (0.0+)")
+    attributes: dict[str, Any] = Field(
         default_factory=dict, description="Source-specific metadata"
     )
 
@@ -400,7 +401,7 @@ class MultiSourceSearchRequest(BaseModel):
     """Request model for multi-source search"""
 
     query: str = Field(..., min_length=1, description="Search query string")
-    sources: Optional[List[SourceType]] = Field(
+    sources: list[SourceType] | None = Field(
         None, description="Specific sources to search (default: all enabled)"
     )
     limit: int = Field(
@@ -413,10 +414,10 @@ class MultiSourceSearchResponse(BaseModel):
     """Response model for multi-source search"""
 
     query: str = Field(..., description="Original search query")
-    results: List[SearchNode] = Field(
+    results: list[SearchNode] = Field(
         ..., description="Search node results from all sources"
     )
-    links: List[SearchLink] = Field(
+    links: list[SearchLink] = Field(
         default_factory=list, description="Search link results from all sources"
     )
     total_results: int = Field(
@@ -425,8 +426,8 @@ class MultiSourceSearchResponse(BaseModel):
     total_links: int = Field(
         default=0, description="Total number of links across all sources"
     )
-    sources_queried: List[str] = Field(..., description="Sources that were queried")
-    source_errors: Dict[str, str] = Field(
+    sources_queried: list[str] = Field(..., description="Sources that were queried")
+    source_errors: dict[str, str] = Field(
         default_factory=dict, description="Errors encountered per source"
     )
     offset: int = Field(..., description="Result offset used")

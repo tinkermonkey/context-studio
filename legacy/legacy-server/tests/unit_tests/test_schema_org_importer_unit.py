@@ -6,16 +6,16 @@ a full database setup.
 """
 
 import json
-import pytest
-from unittest.mock import Mock, patch
 from datetime import datetime
+from unittest.mock import Mock, patch
 
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.schema_org_importer import (
-    SchemaOrgImporter,
     DownloadError,
     EmbeddingError,
     LockError,
+    SchemaOrgImporter,
 )
 
 
@@ -265,7 +265,7 @@ class TestEmbeddingFields:
         with patch(
             "reference_db.schema_org_importer.generate_embedding",
             return_value=b"\x00" * (384 * 4),
-        ) as mock_embed:  # noqa: E128, E501
+        ) as mock_embed:
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
@@ -403,8 +403,8 @@ class TestLockFileManagement:
 
     def test_lock_file_content(self):
         """Test lock file contains correct metadata."""
-        import tempfile
         import os
+        import tempfile
 
         config = ReferenceConfig()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -477,8 +477,8 @@ class TestErrorMessages:
 
     def test_lock_error_message(self):
         """Test lock error provides clear guidance."""
-        import tempfile
         import os
+        import tempfile
 
         config = ReferenceConfig()
         with tempfile.TemporaryDirectory() as tmpdir:

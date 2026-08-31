@@ -12,10 +12,11 @@ This migration renames legacy terminology to standard ontology terminology:
 This migration is reversible and preserves all data with zero loss.
 """
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
-from database.migrations.migration_manager import Migration
 import logging
+
+from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
 

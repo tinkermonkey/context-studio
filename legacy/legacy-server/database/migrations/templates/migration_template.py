@@ -1,7 +1,7 @@
 """Migration template for new migrations."""
 
-from sqlalchemy.engine import Connection
 from database.migrations.migration_manager import Migration
+from sqlalchemy.engine import Connection
 
 
 class MigrationXXX(Migration):
@@ -20,11 +20,9 @@ class MigrationXXX(Migration):
         #         name TEXT NOT NULL
         #     )
         # """))
-        pass
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
         # TODO: Add your rollback SQL here
         # Example:
         # connection.execute(text("DROP TABLE new_table"))
-        pass

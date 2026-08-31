@@ -9,12 +9,12 @@ this service applies those filters to reference query results.
 
 import json
 import logging
-from typing import List, Dict, Any, Optional, Set, Tuple
-from sqlalchemy.orm import Session
+from typing import Any
 
 from database.models import Predicate
-from reference_db.models import ReferenceLink
 from reference_db.manager import ReferenceManager
+from reference_db.models import ReferenceLink
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +40,10 @@ class ReferenceFilterService:
         """
         self.local_session = local_db_session
         self.ref_manager = reference_manager
-        self._relevant_cache: Optional[Set[str]] = None
-        self._irrelevant_cache: Optional[Set[str]] = None
+        self._relevant_cache: set[str] | None = None
+        self._irrelevant_cache: set[str] | None = None
 
-    def _get_all_predicate_mappings_with_relevance(self) -> Dict[str, Any]:
+    def _get_all_predicate_mappings_with_relevance(self) -> dict[str, Any]:
         """
         Get all predicate mappings with relevance flags from the global predicates table.
 
@@ -139,7 +139,7 @@ class ReferenceFilterService:
 
         return mappings
 
-    def _build_relevance_sets(self) -> Tuple[Set[str], Set[str]]:
+    def _build_relevance_sets(self) -> tuple[set[str], set[str]]:
         """
         Build sets of relevant and irrelevant external predicate identifiers.
 
@@ -152,7 +152,7 @@ class ReferenceFilterService:
         relevant = set()
         irrelevant = set()
 
-        for pred_id, info in mappings.items():
+        for info in mappings.values():
             is_relevant = info["is_relevant"]
 
             # Skip predicates with no relevance flag set (null)
@@ -171,7 +171,7 @@ class ReferenceFilterService:
 
         return relevant, irrelevant
 
-    def get_relevant_predicates(self, force_refresh: bool = False) -> Set[str]:
+    def get_relevant_predicates(self, force_refresh: bool = False) -> set[str]:
         """
         Get set of relevant external predicate identifiers.
 
@@ -186,7 +186,7 @@ class ReferenceFilterService:
 
         return self._relevant_cache
 
-    def get_irrelevant_predicates(self, force_refresh: bool = False) -> Set[str]:
+    def get_irrelevant_predicates(self, force_refresh: bool = False) -> set[str]:
         """
         Get set of irrelevant external predicate identifiers.
 
@@ -207,7 +207,7 @@ class ReferenceFilterService:
         self._irrelevant_cache = None
         logger.debug("Reference filter cache invalidated")
 
-    def _determine_filter_mode(self, relevant: Set[str], irrelevant: Set[str]) -> str:
+    def _determine_filter_mode(self, relevant: set[str], irrelevant: set[str]) -> str:
         """
         Determine the filtering strategy based on which predicates are marked.
 
@@ -232,8 +232,8 @@ class ReferenceFilterService:
             return "blacklist"
 
     def _batch_fetch_predicates_for_links(
-        self, links: List[ReferenceLink]
-    ) -> Dict[str, List[str]]:
+        self, links: list[ReferenceLink]
+    ) -> dict[str, list[str]]:
         """
         Batch fetch external predicates needed for the given links.
 
@@ -277,10 +277,10 @@ class ReferenceFilterService:
 
     def filter_links(
         self,
-        links: List[ReferenceLink],
+        links: list[ReferenceLink],
         include_relevant: bool = True,
         exclude_irrelevant: bool = True,
-    ) -> Tuple[List[ReferenceLink], Dict[str, Any]]:
+    ) -> tuple[list[ReferenceLink], dict[str, Any]]:
         """
         Filter reference links based on predicate relevance mappings.
 
@@ -380,7 +380,7 @@ class ReferenceFilterService:
             "total_before": total_before,
             "total_after": total_after,
             "filtered_count": filtered_count,
-            "predicates_used": sorted(list(predicates_used)),
+            "predicates_used": sorted(predicates_used),
             "filtering_active": True,
             "filter_mode": filter_mode,
         }
@@ -392,7 +392,7 @@ class ReferenceFilterService:
 
         return filtered_links, statistics
 
-    def get_filter_statistics(self) -> Dict[str, Any]:
+    def get_filter_statistics(self) -> dict[str, Any]:
         """
         Get current filter configuration statistics.
 
@@ -428,8 +428,8 @@ class ReferenceFilterService:
                 "relevant_count": relevant_count,
                 "irrelevant_count": irrelevant_count,
                 "unmapped_count": unmapped_count,
-                "relevant_external_predicates": sorted(list(relevant)),
-                "irrelevant_external_predicates": sorted(list(irrelevant)),
+                "relevant_external_predicates": sorted(relevant),
+                "irrelevant_external_predicates": sorted(irrelevant),
             }
         except Exception as e:
             logger.error(f"Error getting filter statistics: {e}", exc_info=True)

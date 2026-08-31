@@ -7,28 +7,29 @@ handling type-specific validations and constraints for layers, domains, and term
 """
 
 import json
-from typing import List, Optional, Dict, Any
+from typing import Any
 from uuid import UUID
-from sqlalchemy.orm import Session
-from pydantic import ValidationError as PydanticValidationError
 
-from database.models import OntologyEntity, ChangeEvent, PropertyDefinition
-from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
+from api.models.structure_nodes import ResolvedAttribute, StructureNodeAttribute
 from database.enums import NodeType
-from graph.graph_service import GraphService
+from database.models import ChangeEvent, OntologyEntity, PropertyDefinition
 from embeddings.generate_embeddings import generate_embedding
-from services.change_event_handler import ChangeEventHandler
-from services.version_manager import VersionManager, ChangeState
-from services.working_tree_manager import WorkingTreeManager
-from services.exceptions import (
-    ServiceError,
-    NotFoundError,
-    ValidationError,
-    ConflictError,
-    CircularReferenceError,
-    InvalidHierarchyError,
-)
+from graph.graph_service import GraphService
+from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.change_event_handler import ChangeEventHandler
+from services.exceptions import (
+    CircularReferenceError,
+    ConflictError,
+    InvalidHierarchyError,
+    NotFoundError,
+    ServiceError,
+    ValidationError,
+)
+from services.version_manager import ChangeState, VersionManager
+from services.working_tree_manager import WorkingTreeManager
 
 logger = get_logger(__name__)
 
@@ -39,9 +40,9 @@ class OntologyEntityService:
     def __init__(
         self,
         db: Session,
-        graph_service: Optional[GraphService] = None,
-        version_manager: Optional[VersionManager] = None,
-        working_tree_manager: Optional[WorkingTreeManager] = None,
+        graph_service: GraphService | None = None,
+        version_manager: VersionManager | None = None,
+        working_tree_manager: WorkingTreeManager | None = None,
     ):
         """
         Initialize the OntologyEntityService.
@@ -59,7 +60,7 @@ class OntologyEntityService:
         self.event_handler = ChangeEventHandler(db)
         logger.debug("OntologyEntityService initialized")
 
-    def create_entity(self, entity_data: Dict[str, Any]) -> OntologyEntity:
+    def create_entity(self, entity_data: dict[str, Any]) -> OntologyEntity:
         """
         Create a new ontology_entity with type-specific validation.
 
@@ -106,7 +107,7 @@ class OntologyEntityService:
                 raise ValidationError(
                     f"Cannot create entity: embedding generation failed. "
                     f"This may indicate LLM service issues. Please try again or contact support. "
-                    f"Error: {str(e)}"
+                    f"Error: {e!s}"
                 )
 
         if entity_data.get("definition"):
@@ -118,7 +119,7 @@ class OntologyEntityService:
                 )
                 raise ValidationError(
                     f"Cannot create entity: definition embedding generation failed. "
-                    f"Error: {str(e)}"
+                    f"Error: {e!s}"
                 )
 
         # Create ontology_entity
@@ -140,12 +141,12 @@ class OntologyEntityService:
             # Verify the ID was properly generated after refresh
             if not ontology_entity.id or not isinstance(ontology_entity.id, str):
                 logger.error(
-                    f"Invalid ID after db.refresh(): {repr(ontology_entity.id)} "
+                    f"Invalid ID after db.refresh(): {ontology_entity.id!r} "
                     f"(type: {type(ontology_entity.id).__name__})"
                 )
                 raise ValueError(
                     f"Database failed to generate valid ID for ontology_entity. "
-                    f"Got: {repr(ontology_entity.id)} (type: {type(ontology_entity.id).__name__})"
+                    f"Got: {ontology_entity.id!r} (type: {type(ontology_entity.id).__name__})"
                 )
 
             logger.info(
@@ -187,7 +188,7 @@ class OntologyEntityService:
                     self.db.rollback()
                     raise ValidationError(
                         f"Cannot create entity: version management initialization failed. "
-                        f"This indicates a database or configuration issue. Error: {str(e)}"
+                        f"This indicates a database or configuration issue. Error: {e!s}"
                     )
 
             # Fire ontology_entity created event using new ChangeEventHandler
@@ -210,7 +211,7 @@ class OntologyEntityService:
             raise ValueError(f"Failed to create ontology_entity: {e}")
 
     def update_entity(
-        self, entity_id: str, entity_data: Dict[str, Any]
+        self, entity_id: str, entity_data: dict[str, Any]
     ) -> OntologyEntity:
         """
         Update an existing ontology_entity with type-specific validation.
@@ -271,7 +272,7 @@ class OntologyEntityService:
                 raise ValidationError(
                     f"Cannot update entity: title embedding generation failed. "
                     f"This may indicate LLM service issues. Please try again or contact support. "
-                    f"Error: {str(e)}"
+                    f"Error: {e!s}"
                 )
 
         if "definition" in entity_data:
@@ -291,7 +292,7 @@ class OntologyEntityService:
                 raise ValidationError(
                     f"Cannot update entity: definition embedding generation failed. "
                     f"This may indicate LLM service issues. Please try again or contact support. "
-                    f"Error: {str(e)}"
+                    f"Error: {e!s}"
                 )
 
         if "parent_entity_id" in entity_data:
@@ -384,7 +385,7 @@ class OntologyEntityService:
             logger.error(f"Failed to delete ontology_entity: {e}")
             raise ValueError(f"Failed to delete ontology_entity: {e}")
 
-    def get_entity(self, entity_id: str) -> Optional[OntologyEntity]:
+    def get_entity(self, entity_id: str) -> OntologyEntity | None:
         """
         Get an ontology_entity by ID.
 
@@ -400,11 +401,11 @@ class OntologyEntityService:
 
     def list_entities(
         self,
-        node_type: Optional[NodeType] = None,
-        parent_entity_id: Optional[str] = None,
+        node_type: NodeType | None = None,
+        parent_entity_id: str | None = None,
         skip: int = 0,
         limit: int = 50,
-    ) -> List[OntologyEntity]:
+    ) -> list[OntologyEntity]:
         """
         List ontology_entities with optional filtering.
 
@@ -418,8 +419,9 @@ class OntologyEntityService:
             List of OntologyEntity instances
         """
         # Defer expensive vector columns for list operations to improve performance
-        from sqlalchemy.orm import defer
         import time
+
+        from sqlalchemy.orm import defer
         from utils.logger import get_logger
 
         logger = get_logger(__name__)
@@ -466,8 +468,8 @@ class OntologyEntityService:
 
     def count_entities(
         self,
-        node_type: Optional[NodeType] = None,
-        parent_entity_id: Optional[str] = None,
+        node_type: NodeType | None = None,
+        parent_entity_id: str | None = None,
     ) -> int:
         """
         Count ontology_entities with optional filtering.
@@ -491,11 +493,11 @@ class OntologyEntityService:
 
     def get_entities(
         self,
-        node_type: Optional[NodeType] = None,
-        parent_entity_id: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> List[OntologyEntity]:
+        node_type: NodeType | None = None,
+        parent_entity_id: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[OntologyEntity]:
         """
         Get ontology_entities with optional filtering and pagination.
 
@@ -528,7 +530,7 @@ class OntologyEntityService:
 
     def get_entity_children(
         self, entity_id: str, recursive: bool = False
-    ) -> List[OntologyEntity]:
+    ) -> list[OntologyEntity]:
         """
         Get children of an ontology_entity.
 
@@ -561,7 +563,7 @@ class OntologyEntityService:
 
         return all_children
 
-    def get_entity_ancestors(self, entity_id: str) -> List[OntologyEntity]:
+    def get_entity_ancestors(self, entity_id: str) -> list[OntologyEntity]:
         """
         Get all ancestors of an ontology_entity (up to root).
 
@@ -585,8 +587,8 @@ class OntologyEntityService:
         return ancestors
 
     def _parse_attributes_json(
-        self, attributes_json: Optional[str]
-    ) -> List[StructureNodeAttribute]:
+        self, attributes_json: str | None
+    ) -> list[StructureNodeAttribute]:
         """
         Parse attributes JSON string into list of StructureNodeAttribute objects.
 
@@ -606,19 +608,19 @@ class OntologyEntityService:
             data = json.loads(attributes_json)
         except json.JSONDecodeError as e:
             logger.error(f"Corrupted attribute JSON: {e}", exc_info=True)
-            raise ValueError(f"Entity has corrupted attribute data: {str(e)}")
+            raise ValueError(f"Entity has corrupted attribute data: {e!s}")
 
         try:
             return [StructureNodeAttribute(**attr) for attr in data]
         except (TypeError, KeyError, ValueError, PydanticValidationError) as e:
             logger.error(f"Invalid attribute structure: {e}", exc_info=True)
-            raise ValueError(f"Entity attributes are invalid: {str(e)}")
+            raise ValueError(f"Entity attributes are invalid: {e!s}")
 
     def set_entity_attributes(
         self,
         entity_id: UUID,
-        attributes: List[StructureNodeAttribute],
-        expected_version: Optional[int] = None,
+        attributes: list[StructureNodeAttribute],
+        expected_version: int | None = None,
     ) -> OntologyEntity:
         """
         Set local attributes on an entity, replacing existing attributes.
@@ -662,7 +664,7 @@ class OntologyEntityService:
         self.db.refresh(entity)
         return entity
 
-    def get_local_attributes(self, entity_id: UUID) -> List[StructureNodeAttribute]:
+    def get_local_attributes(self, entity_id: UUID) -> list[StructureNodeAttribute]:
         """
         Get only the entity's own attributes (not inherited).
 
@@ -680,7 +682,7 @@ class OntologyEntityService:
             raise ValueError(f"Entity {entity_id} not found")
         return self._parse_attributes_json(entity.attributes)  # type: ignore
 
-    def resolve_entity_attributes(self, entity_id: UUID) -> List[ResolvedAttribute]:
+    def resolve_entity_attributes(self, entity_id: UUID) -> list[ResolvedAttribute]:
         """
         Walk ancestor chain and return merged attributes with inheritance information.
 
@@ -764,7 +766,7 @@ class OntologyEntityService:
     # Private validation methods
 
     def _validate_entity_creation(
-        self, entity_data: Dict[str, Any], node_type: NodeType
+        self, entity_data: dict[str, Any], node_type: NodeType
     ):
         """Validate ontology_entity creation based on type-specific rules"""
         # Support both old and new terminology
@@ -776,7 +778,7 @@ class OntologyEntityService:
             self._validate_term_creation(entity_data)
 
     def _validate_entity_update(
-        self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
+        self, ontology_entity: OntologyEntity, entity_data: dict[str, Any]
     ):
         """Validate ontology_entity update based on type-specific rules"""
         # Support both old and new terminology
@@ -787,7 +789,7 @@ class OntologyEntityService:
         elif ontology_entity.node_type in (NodeType.TERM, NodeType.CLASS):
             self._validate_term_update(ontology_entity, entity_data)
 
-    def _validate_layer_creation(self, entity_data: Dict[str, Any]):
+    def _validate_layer_creation(self, entity_data: dict[str, Any]):
         """Validate layer creation rules"""
         # Layer titles must be unique globally
         # Support both old and new terminology
@@ -808,7 +810,7 @@ class OntologyEntityService:
             raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_layer_update(
-        self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
+        self, ontology_entity: OntologyEntity, entity_data: dict[str, Any]
     ):
         """Validate layer update rules"""
         # Check title uniqueness if title is being updated
@@ -834,7 +836,7 @@ class OntologyEntityService:
         ):
             raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
-    def _validate_domain_creation(self, entity_data: Dict[str, Any]):
+    def _validate_domain_creation(self, entity_data: dict[str, Any]):
         """Validate domain creation rules"""
         parent_id = entity_data.get("parent_entity_id")
         if not parent_id:
@@ -865,7 +867,7 @@ class OntologyEntityService:
             raise ValueError("Domain title must be unique within layer")
 
     def _validate_domain_update(
-        self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
+        self, ontology_entity: OntologyEntity, entity_data: dict[str, Any]
     ):
         """Validate domain update rules"""
         parent_id = entity_data.get(
@@ -917,7 +919,7 @@ class OntologyEntityService:
             if existing:
                 raise ValueError("Domain title must be unique within layer")
 
-    def _validate_term_creation(self, entity_data: Dict[str, Any]):
+    def _validate_term_creation(self, entity_data: dict[str, Any]):
         """Validate term creation rules"""
         parent_id = entity_data.get("parent_entity_id")
         if not parent_id:
@@ -942,7 +944,7 @@ class OntologyEntityService:
             raise ValueError("Term title must be unique within domain")
 
     def _validate_term_update(
-        self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
+        self, ontology_entity: OntologyEntity, entity_data: dict[str, Any]
     ):
         """Validate term update rules"""
         parent_id = entity_data.get(
@@ -995,7 +997,7 @@ class OntologyEntityService:
                 raise ValueError("Term title must be unique within domain")
 
     def _validate_no_circular_reference(
-        self, entity_id: Optional[str], parent_id: Optional[str]
+        self, entity_id: str | None, parent_id: str | None
     ):
         """
         Validate no circular references.
@@ -1019,7 +1021,7 @@ class OntologyEntityService:
 
     def _get_domain_ancestor(
         self, ontology_entity: OntologyEntity
-    ) -> Optional[OntologyEntity]:
+    ) -> OntologyEntity | None:
         """Get the domain ancestor of an ontology_entity (support both old and new terminology)"""
         current = ontology_entity
         while current:
@@ -1037,7 +1039,7 @@ class OntologyEntityService:
         return None
 
     def _check_title_uniqueness_in_domain(
-        self, domain_id: str, title: str, exclude_id: Optional[str] = None
+        self, domain_id: str, title: str, exclude_id: str | None = None
     ) -> bool:
         """
         Check if title is unique within domain.
@@ -1066,7 +1068,7 @@ class OntologyEntityService:
         existing = query.first()
         return existing is not None
 
-    def _get_all_terms_in_domain(self, domain_id: str) -> List[str]:
+    def _get_all_terms_in_domain(self, domain_id: str) -> list[str]:
         """
         Get all term IDs that belong to a domain (including terms under other terms).
 
@@ -1097,7 +1099,7 @@ class OntologyEntityService:
 
         return all_term_ids
 
-    def _get_all_terms_under_term(self, term_id: str) -> List[str]:
+    def _get_all_terms_under_term(self, term_id: str) -> list[str]:
         """
         Recursively get all term IDs under a given term.
 
@@ -1126,7 +1128,7 @@ class OntologyEntityService:
 
         return all_child_ids
 
-    def _entity_to_dict(self, ontology_entity: OntologyEntity) -> Dict[str, Any]:
+    def _entity_to_dict(self, ontology_entity: OntologyEntity) -> dict[str, Any]:
         """Convert an OntologyEntity instance to a dictionary"""
         return {
             "id": ontology_entity.id,
@@ -1156,8 +1158,8 @@ class OntologyEntityService:
         self,
         event_type: str,
         entity_type: str,
-        old_data: Optional[Dict[str, Any]],
-        new_data: Optional[Dict[str, Any]],
+        old_data: dict[str, Any] | None,
+        new_data: dict[str, Any] | None,
     ):
         """
         Fire an ontology_entity event manually (if needed).
@@ -1180,7 +1182,7 @@ class OntologyEntityService:
         except Exception as e:
             logger.warning(f"Failed to fire ontology_entity event: {e}")
 
-    def _get_all_descendants(self, entity_id: str) -> List[OntologyEntity]:
+    def _get_all_descendants(self, entity_id: str) -> list[OntologyEntity]:
         """
         Get all descendant ontology_entities recursively.
 
@@ -1209,11 +1211,11 @@ class OntologyEntityService:
 
     def move_entities(
         self,
-        entity_ids: List[str],
-        target_parent_id: Optional[str] = None,
+        entity_ids: list[str],
+        target_parent_id: str | None = None,
         move_children: bool = True,
         handle_conflicts: str = "warn",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Move ontology_entities to a new parent with automatic type conversion.
 
@@ -1274,7 +1276,7 @@ class OntologyEntityService:
 
                 except ValueError as e:
                     errors.append(
-                        f"Failed to move ontology_entity {entity_id}: {str(e)}"
+                        f"Failed to move ontology_entity {entity_id}: {e!s}"
                     )
                     logger.warning(f"Failed to move ontology_entity {entity_id}: {e}")
 
@@ -1293,16 +1295,16 @@ class OntologyEntityService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Move operation failed: {e}")
-            raise ValueError(f"Move operation failed: {str(e)}")
+            raise ValueError(f"Move operation failed: {e!s}")
 
     def _move_single_entity(
         self,
         entity_id: str,
-        target_parent_id: Optional[str],
-        target_parent: Optional[OntologyEntity],
+        target_parent_id: str | None,
+        target_parent: OntologyEntity | None,
         move_children: bool,
         handle_conflicts: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Move a single ontology_entity with automatic type conversion.
 
@@ -1374,8 +1376,8 @@ class OntologyEntityService:
     def _validate_entity_move(
         self,
         ontology_entity: OntologyEntity,
-        target_parent: Optional[OntologyEntity],
-        target_type: Optional[NodeType] = None,
+        target_parent: OntologyEntity | None,
+        target_type: NodeType | None = None,
     ):
         """
         Validate that an ontology_entity move is allowed based on type hierarchy rules.
@@ -1419,7 +1421,7 @@ class OntologyEntityService:
             raise CircularReferenceError("Move would create circular reference")
 
     def _infer_entity_type_from_parent(
-        self, target_parent: Optional[OntologyEntity]
+        self, target_parent: OntologyEntity | None
     ) -> NodeType:
         """
         Infer the appropriate entity type based on the target parent.
@@ -1443,7 +1445,7 @@ class OntologyEntityService:
         self,
         entity: OntologyEntity,
         new_type: NodeType,
-        converted_entities: List[OntologyEntity],
+        converted_entities: list[OntologyEntity],
     ) -> None:
         """
         Recursively convert an entity and all its descendants to appropriate types.
@@ -1485,10 +1487,10 @@ class OntologyEntityService:
     def _check_move_conflicts_with_type(
         self,
         ontology_entity: OntologyEntity,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
         target_type: NodeType,
         handle_conflicts: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Check for title conflicts using the TARGET type's uniqueness rules.
 
@@ -1571,7 +1573,7 @@ class OntologyEntityService:
     def _title_exists_at_target(
         self,
         title: str,
-        target_parent_id: Optional[str],
+        target_parent_id: str | None,
         target_type: NodeType,
         exclude_id: str,
     ) -> bool:
@@ -1651,7 +1653,7 @@ class OntologyEntityService:
                 )
 
     # Deprecated method wrappers for backward compatibility
-    def create_node(self, node_data: Dict[str, Any]) -> OntologyEntity:
+    def create_node(self, node_data: dict[str, Any]) -> OntologyEntity:
         """Deprecated: use create_entity() instead"""
         # Translate old key names to new ones
         translated_data = node_data.copy()
@@ -1659,7 +1661,7 @@ class OntologyEntityService:
             translated_data["parent_entity_id"] = translated_data.pop("parent_node_id")
         return self.create_entity(translated_data)
 
-    def update_node(self, node_id: str, node_data: Dict[str, Any]) -> OntologyEntity:
+    def update_node(self, node_id: str, node_data: dict[str, Any]) -> OntologyEntity:
         """Deprecated: use update_entity() instead"""
         # Translate old key names to new ones
         translated_data = node_data.copy()
@@ -1693,7 +1695,7 @@ class OntologyEntityService:
             kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
         return self.count_entities(*args, **kwargs)
 
-    def get_node_children(self, entity_id: str = None, **kwargs):
+    def get_node_children(self, entity_id: str | None = None, **kwargs):
         """Deprecated: use get_entity_children() instead"""
         # Handle old parameter name parent_node_id if provided in kwargs
         if "parent_node_id" in kwargs:
@@ -1724,11 +1726,11 @@ class OntologyEntityService:
 
     def move_nodes(
         self,
-        node_ids: List[str],
-        target_parent_id: Optional[str] = None,
+        node_ids: list[str],
+        target_parent_id: str | None = None,
         move_children: bool = True,
         handle_conflicts: str = "warn",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Deprecated: use move_entities() instead"""
         return self.move_entities(
             entity_ids=node_ids,

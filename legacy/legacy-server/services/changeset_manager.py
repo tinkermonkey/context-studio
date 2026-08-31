@@ -6,18 +6,18 @@ This service handles the creation and management of changesets for collaborative
 bundling related changes together for proposal and review processes.
 """
 
-import uuid
 import json
-from typing import List, Optional
+import uuid
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session
+
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from services.collaboration_models import Changeset, ChangesetState, row_to_changeset
+from services.s3_sync_manager import S3SyncManager
 from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
-from services.s3_sync_manager import S3SyncManager
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -129,7 +129,7 @@ class ChangesetManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to create changeset: {e}")
 
-    def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
+    def get_changeset(self, changeset_id: str) -> Changeset | None:
         """
         Retrieve changeset by ID.
 
@@ -162,10 +162,10 @@ class ChangesetManager:
 
     def list_changesets(
         self,
-        author_id: Optional[str] = None,
-        state: Optional[ChangesetState] = None,
+        author_id: str | None = None,
+        state: ChangesetState | None = None,
         limit: int = 100,
-    ) -> List[Changeset]:
+    ) -> list[Changeset]:
         """
         List changesets with optional filtering.
 
@@ -213,8 +213,8 @@ class ChangesetManager:
     def update_changeset(
         self,
         changeset_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> bool:
         """
         Update changeset metadata.
@@ -317,7 +317,7 @@ class ChangesetManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to update changeset {changeset_id} state: {e}")
 
-    def get_changeset_versions(self, changeset_id: str) -> List[str]:
+    def get_changeset_versions(self, changeset_id: str) -> list[str]:
         """
         Get all version IDs associated with a changeset.
 
@@ -411,7 +411,7 @@ class ChangesetManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to delete changeset: {e}")
 
-    def _store_changeset_locally(self, changeset: Changeset, changes: List) -> None:
+    def _store_changeset_locally(self, changeset: Changeset, changes: list) -> None:
         """
         Store changeset in local SQLite database.
 
@@ -448,7 +448,7 @@ class ChangesetManager:
         logger.debug(f"Stored changeset {changeset.id} in database")
 
     def _associate_versions_with_changeset(
-        self, changeset_id: str, changes: List
+        self, changeset_id: str, changes: list
     ) -> None:
         """
         Associate version records with changeset.

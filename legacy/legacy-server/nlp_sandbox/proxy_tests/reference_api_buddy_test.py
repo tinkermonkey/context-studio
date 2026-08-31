@@ -1,8 +1,8 @@
 # mypy: ignore-errors
-import spacy
 import time
-import requests
 
+import requests
+import spacy
 from reference_api_buddy.core.proxy import CachingProxy
 
 config = {

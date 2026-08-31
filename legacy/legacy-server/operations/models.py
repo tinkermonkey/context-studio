@@ -10,19 +10,20 @@ SQLAlchemy's metadata.create_all() handles schema updates automatically.
 Note: For change tracking, use the ChangeEvent model in database.models instead.
 """
 
+import datetime
 from typing import Any
+
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
     String,
     Text,
-    Integer,
-    DateTime,
-    Boolean,
-    Index,
-    ForeignKey,
 )
 from sqlalchemy.orm import declarative_base, relationship
-import datetime
 
 # Separate base for operations database
 OperationsBase: Any = declarative_base()

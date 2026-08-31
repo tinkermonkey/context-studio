@@ -6,21 +6,20 @@ Tests the addition of reference_links and word_senses columns to the structure_n
 including schema validation, data preservation, and rollback functionality.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-import json  # noqa: E402
-from typing import Dict, List  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+import json
+import tempfile
 
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
-from database.utils import init_db  # noqa: E402
+import pytest
+from database.migrations.migration_manager import MigrationManager
+from database.utils import init_db
+from sqlalchemy import create_engine, text
 
 
 class MigrationTestHarness:
@@ -102,9 +101,9 @@ class MigrationTestHarness:
 
             conn.commit()
 
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
@@ -173,17 +172,16 @@ class MigrationTestHarness:
         if not migration_017:
             raise RuntimeError("Migration 017 not found")
 
-        with self.engine.connect() as conn:
-            with conn.begin():
-                migration_017.down(conn)
-                # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 17"))
+        with self.engine.connect() as conn, conn.begin():
+            migration_017.down(conn)
+            # Remove from schema_history
+            conn.execute(text("DELETE FROM schema_history WHERE version = 17"))
 
         # Update current version
         self.migration_manager.current_version = 16
 
     def insert_node_with_new_columns(
-        self, node_id: str, reference_links: List[Dict], word_senses: List[Dict]
+        self, node_id: str, reference_links: list[dict], word_senses: list[dict]
     ):
         """Insert a structure_node with reference_links and word_senses."""
         conn = self.get_connection()
@@ -206,17 +204,17 @@ class MigrationTestHarness:
                 ),
             )
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
     def update_node_columns(
         self,
         node_id: str,
-        reference_links: List[Dict] = None,
-        word_senses: List[Dict] = None,
+        reference_links: list[dict] | None = None,
+        word_senses: list[dict] | None = None,
     ):
         """Update reference_links and/or word_senses for a structure_node."""
         conn = self.get_connection()
@@ -241,13 +239,13 @@ class MigrationTestHarness:
                     params,
                 )
                 conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
-    def get_node_columns(self, node_id: str) -> Dict:
+    def get_node_columns(self, node_id: str) -> dict:
         """Get reference_links and word_senses for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()

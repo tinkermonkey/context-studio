@@ -1,13 +1,13 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
 
-from llm.execution_tracker import ExecutionTracker  # noqa: E402
-from llm.models import RecordSelectionRequest, PipelineType  # noqa: E402
+import pytest
+from llm.execution_tracker import ExecutionTracker
+from llm.models import PipelineType, RecordSelectionRequest
 
 
 class TestExecutionTracker:

@@ -6,18 +6,19 @@ This module provides CRUD operations for test data and orchestrates
 parallel pipeline execution for systematic comparison and experimentation.
 """
 
-import uuid
-import json
 import asyncio
-from typing import List, Dict, Any, Optional
+import json
+import uuid
 from datetime import datetime
-from sqlalchemy.orm import Session
+from typing import Any
 
-from operations.models import TestParagraph, TestAnnotation, RAGPipelineRun
 from database.models import StructureNode
-from rag.pipeline_registry import get_pipeline_registry
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan
+from operations.models import RAGPipelineRun, TestAnnotation, TestParagraph
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from rag.pipeline_registry import get_pipeline_registry
+from rag.test_scoring import AnnotationSpan, RAGTestScoringService
 
 logger = get_logger(__name__)
 
@@ -52,7 +53,7 @@ class RAGTestManagementService:
 
     # ==================== Test Paragraph CRUD ====================
 
-    def create_test_paragraph(self, text: str, notes: str = None) -> TestParagraph:
+    def create_test_paragraph(self, text: str, notes: str | None = None) -> TestParagraph:
         """
         Create a new test paragraph.
 
@@ -73,7 +74,7 @@ class RAGTestManagementService:
         logger.info(f"Created test paragraph: {test_paragraph.id}")
         return test_paragraph
 
-    def get_test_paragraph(self, paragraph_id: str) -> Optional[TestParagraph]:
+    def get_test_paragraph(self, paragraph_id: str) -> TestParagraph | None:
         """Get a test paragraph by ID."""
         return (
             self.ops_db_session.query(TestParagraph)
@@ -83,7 +84,7 @@ class RAGTestManagementService:
 
     def list_test_paragraphs(
         self, limit: int = 100, offset: int = 0
-    ) -> tuple[List[TestParagraph], int]:
+    ) -> tuple[list[TestParagraph], int]:
         """
         List test paragraphs with pagination.
 
@@ -105,8 +106,8 @@ class RAGTestManagementService:
         return paragraphs, total_count
 
     def update_test_paragraph(
-        self, paragraph_id: str, text: str = None, notes: str = None
-    ) -> Optional[TestParagraph]:
+        self, paragraph_id: str, text: str | None = None, notes: str | None = None
+    ) -> TestParagraph | None:
         """
         Update a test paragraph.
 
@@ -167,7 +168,7 @@ class RAGTestManagementService:
 
     def create_test_annotation(
         self, paragraph_id: str, start_char: int, end_char: int, structure_node_id: str
-    ) -> Optional[TestAnnotation]:
+    ) -> TestAnnotation | None:
         """
         Create a new annotation for a test paragraph.
 
@@ -224,7 +225,7 @@ class RAGTestManagementService:
         )
         return annotation
 
-    def get_annotations_for_paragraph(self, paragraph_id: str) -> List[TestAnnotation]:
+    def get_annotations_for_paragraph(self, paragraph_id: str) -> list[TestAnnotation]:
         """Get all annotations for a test paragraph."""
         return (
             self.ops_db_session.query(TestAnnotation)
@@ -285,10 +286,10 @@ class RAGTestManagementService:
     async def run_pipeline_test(
         self,
         paragraph_id: str,
-        pipeline_names: List[str],
+        pipeline_names: list[str],
         enable_trace: bool = False,
         enable_llm_layer: bool = True,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Run one or more pipelines against a test paragraph and score the results.
 
@@ -367,11 +368,11 @@ class RAGTestManagementService:
         self,
         pipeline_name: str,
         paragraph: TestParagraph,
-        annotation_spans: List[AnnotationSpan],
+        annotation_spans: list[AnnotationSpan],
         enable_trace: bool,
         enable_llm_layer: bool,
         semaphore: asyncio.Semaphore,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run a single pipeline and score the results.
 
@@ -534,7 +535,7 @@ class RAGTestManagementService:
                     "run_id": str(uuid.uuid4()),
                     "pipeline_name": pipeline_name,
                     "paragraph_id": paragraph.id,
-                    "error": f"Scoring/save failed: {str(e)}",
+                    "error": f"Scoring/save failed: {e!s}",
                     "error_type": type(e).__name__,
                     "executed_at": start_time.isoformat(),
                 }
@@ -543,7 +544,7 @@ class RAGTestManagementService:
 
     def get_pipeline_runs_for_paragraph(
         self, paragraph_id: str, limit: int = 100
-    ) -> List[RAGPipelineRun]:
+    ) -> list[RAGPipelineRun]:
         """Get all pipeline runs for a specific test paragraph."""
         return (
             self.ops_db_session.query(RAGPipelineRun)
@@ -553,7 +554,7 @@ class RAGTestManagementService:
             .all()
         )
 
-    def get_pipeline_run_details(self, run_id: str) -> Optional[Dict[str, Any]]:
+    def get_pipeline_run_details(self, run_id: str) -> dict[str, Any] | None:
         """
         Get detailed results for a specific pipeline run.
 
@@ -588,8 +589,8 @@ class RAGTestManagementService:
         }
 
     def compare_pipeline_runs(
-        self, paragraph_id: str, pipeline_names: List[str] = None
-    ) -> Dict[str, Any]:
+        self, paragraph_id: str, pipeline_names: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Compare results across multiple pipeline runs for a paragraph.
 

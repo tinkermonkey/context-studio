@@ -7,14 +7,15 @@ based on retention policies (30 days for metrics, 7 days for traces).
 
 import asyncio
 import sys
-from datetime import datetime
-from typing import Optional, TypeVar, Callable, Any
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from typing import Any, TypeVar
 
 from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from rag.observability_store import RAGObservabilityStore
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -61,7 +62,7 @@ class RAGCleanupScheduler:
         self.ops_db_session = ops_db_session
         self.cleanup_interval_hours = cleanup_interval_hours
         self.observability_store = RAGObservabilityStore(ops_db_session)
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
         self._running = False
         logger.info(
             f"RAGCleanupScheduler initialized with interval={cleanup_interval_hours}h"

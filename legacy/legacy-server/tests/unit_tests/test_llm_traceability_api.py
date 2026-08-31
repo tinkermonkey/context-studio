@@ -1,16 +1,16 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi.testclient import TestClient  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
 
-from api.llm_traceability import router  # noqa: E402
-from llm.models import PipelineType  # noqa: E402
+from api.llm_traceability import router
 
 # Create test client
-from fastapi import FastAPI  # noqa: E402
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from llm.models import PipelineType
 
 app = FastAPI()
 app.include_router(router)

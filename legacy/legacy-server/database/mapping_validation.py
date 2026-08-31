@@ -5,9 +5,9 @@ This module provides validation for predicate mapping structures according to AD
 """
 
 import json
-from typing import Dict, Any, Optional
-from jsonschema import validate, ValidationError
+from typing import Any
 
+from jsonschema import ValidationError, validate
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,14 +31,14 @@ MAPPING_SCHEMA = {
                             "wikidata",
                             "schema_org",
                             "manual",
-                        ],  # noqa: E501
+                        ],
                     },
                     "source_id": {"type": "string", "minLength": 1},
                     "title": {"type": "string", "minLength": 1},
                     "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                 },
                 "required": ["source", "source_id", "title", "confidence"],
-                "additionalProperties": True,  # Allow extra fields for source-specific data  # noqa: E501
+                "additionalProperties": True,  # Allow extra fields for source-specific data
             },
         },
         "auto_validated": {
@@ -50,11 +50,11 @@ MAPPING_SCHEMA = {
             "description": "Optional notes from manual validation",
         },
     },
-    "additionalProperties": True,  # Allow additional fields for future extensions  # noqa: E501
+    "additionalProperties": True,  # Allow additional fields for future extensions
 }
 
 
-def validate_mapping(mapping: Dict[str, Any]) -> tuple[bool, Optional[str]]:
+def validate_mapping(mapping: dict[str, Any]) -> tuple[bool, str | None]:
     """
     Validate a predicate mapping against the JSON schema.
 
@@ -100,7 +100,7 @@ def validate_mapping(mapping: Dict[str, Any]) -> tuple[bool, Optional[str]]:
                         return (
                             False,
                             f"reference_predicates[{i}].confidence must be between 0.0 and 1.0, got {conf}",
-                        )  # noqa: E501
+                        )
 
         return True, None
 
@@ -110,12 +110,12 @@ def validate_mapping(mapping: Dict[str, Any]) -> tuple[bool, Optional[str]]:
         return False, error_msg
 
     except Exception as e:
-        error_msg = f"Unexpected validation error: {str(e)}"
+        error_msg = f"Unexpected validation error: {e!s}"
         logger.error(f"Mapping validation exception: {error_msg}")
         return False, error_msg
 
 
-def validate_mapping_json(mapping_json: str) -> tuple[bool, Optional[str]]:
+def validate_mapping_json(mapping_json: str) -> tuple[bool, str | None]:
     """
     Validate a predicate mapping from JSON string.
 
@@ -138,12 +138,12 @@ def validate_mapping_json(mapping_json: str) -> tuple[bool, Optional[str]]:
         mapping = json.loads(mapping_json)
         return validate_mapping(mapping)
     except json.JSONDecodeError as e:
-        error_msg = f"Invalid JSON: {str(e)}"
+        error_msg = f"Invalid JSON: {e!s}"
         logger.warning(f"Mapping JSON parse error: {error_msg}")
         return False, error_msg
 
 
-def validate_confidence_score(confidence: float) -> tuple[bool, Optional[str]]:
+def validate_confidence_score(confidence: float) -> tuple[bool, str | None]:
     """
     Validate a confidence score.
 
@@ -161,18 +161,18 @@ def validate_confidence_score(confidence: float) -> tuple[bool, Optional[str]]:
         return (
             False,
             f"Confidence must be a number, got {type(confidence).__name__}",
-        )  # noqa: E501
+        )
 
     if not (0.0 <= confidence <= 1.0):
         return (
             False,
             f"Confidence must be between 0.0 and 1.0, got {confidence}",
-        )  # noqa: E501
+        )
 
     return True, None
 
 
-def should_auto_validate(mapping: Dict[str, Any]) -> bool:
+def should_auto_validate(mapping: dict[str, Any]) -> bool:
     """
     Determine if a mapping should be auto-validated based on confidence scores.
 
@@ -206,13 +206,13 @@ def should_auto_validate(mapping: Dict[str, Any]) -> bool:
 
 
 def add_reference_predicate(
-    mapping: Dict[str, Any],
+    mapping: dict[str, Any],
     source: str,
     source_id: str,
     title: str,
     confidence: float,
     **extra_fields,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Add a reference predicate to a mapping.
 
@@ -265,7 +265,7 @@ def add_reference_predicate(
     return mapping
 
 
-def create_empty_mapping() -> Dict[str, Any]:
+def create_empty_mapping() -> dict[str, Any]:
     """
     Create an empty mapping structure.
 
@@ -280,8 +280,8 @@ def create_empty_mapping() -> Dict[str, Any]:
 
 
 def create_manual_mapping(
-    title: str, notes: Optional[str] = None
-) -> Dict[str, Any]:  # noqa: E501
+    title: str, notes: str | None = None
+) -> dict[str, Any]:
     """
     Create a manual mapping (confidence = 1.0).
 
@@ -300,7 +300,7 @@ def create_manual_mapping(
         {"source": "manual", "source_id": "manual", "title": title, "confidence": 1.0}
     ]
     mapping["auto_validated"] = (
-        True  # Manual mappings are automatically validated  # noqa: E501
+        True  # Manual mappings are automatically validated
     )
 
     if notes:

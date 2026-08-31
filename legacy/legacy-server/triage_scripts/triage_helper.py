@@ -1,16 +1,18 @@
 """Shared helper for triage scripts that need database setup with migrations."""
 
-import sys
 import os
+import sys
 import tempfile
+
 from fastapi.testclient import TestClient
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
-from app import create_app
-from database.utils import get_engine, get_session_local, init_db
 from database.migrations.migration_manager import MigrationManager
+from database.utils import get_engine, get_session_local, init_db
+
+from app import create_app
 
 
 def create_test_app_with_migrations():

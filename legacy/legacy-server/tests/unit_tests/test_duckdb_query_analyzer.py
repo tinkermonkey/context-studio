@@ -4,19 +4,19 @@ Unit tests for DuckDBQueryAnalyzer - Testing advanced query analysis functionali
 Tests query analysis strategies, caching, materialized views, and performance metrics.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import time  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from datetime import datetime  # noqa: E402
+import time
+from datetime import datetime
+from unittest.mock import Mock, patch
 
-from services.duckdb_query_analyzer import (  # noqa: E402
+import pytest
+from services.duckdb_query_analyzer import (
     DuckDBQueryAnalyzer,
     IntelligentQueryCache,
     QueryPerformanceMetrics,
@@ -322,7 +322,7 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
+        optimized_query, _metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should only include valid column names
         assert "id" in optimized_query
@@ -340,7 +340,7 @@ class TestSanitizationMethods:
             "partition_filter": {"year": "2024' OR '1'='1", "month": "1) OR (1=1"}
         }
 
-        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
+        optimized_query, _metrics = query_optimizer.analyze_query(test_query, context)
 
         # Query should be optimized without SQL injection
         # The exact format depends on how partition elimination is applied
@@ -359,7 +359,7 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
+        optimized_query, _metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should safely include valid types
         assert "valid_type" in optimized_query
@@ -447,7 +447,7 @@ class TestDuckDBQueryAnalyzer:
             "entity_types": ["test", "example"],
         }
 
-        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
+        optimized_query, _metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should have applied time-based partitioning
         assert (
@@ -463,7 +463,7 @@ class TestDuckDBQueryAnalyzer:
         test_query = "SELECT * FROM test_table"
         context = {"required_columns": ["id", "name", "created_at"]}
 
-        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
+        optimized_query, _metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should replace SELECT * with specific columns
         assert "SELECT id, name, created_at" in optimized_query
@@ -474,10 +474,10 @@ class TestDuckDBQueryAnalyzer:
         test_query = "SELECT COUNT(*) FROM test_table"
 
         # First execution should be a cache miss
-        result1, metrics1 = query_optimizer.analyze_query(test_query)
+        result1, _metrics1 = query_optimizer.analyze_query(test_query)
 
         # Second execution should use cached result
-        result2, metrics2 = query_optimizer.analyze_query(test_query)
+        result2, _metrics2 = query_optimizer.analyze_query(test_query)
 
         # Results should be identical
         assert result1 == result2
@@ -552,7 +552,7 @@ class TestDuckDBQueryAnalyzer:
         test_query = "SELECT COUNT(*) FROM test_table"
 
         # Execute query to generate metrics
-        optimized_query, metrics = query_optimizer.analyze_query(test_query)
+        _optimized_query, metrics = query_optimizer.analyze_query(test_query)
 
         # Check metrics structure
         assert isinstance(metrics, QueryPerformanceMetrics)
@@ -612,7 +612,7 @@ class TestDuckDBQueryAnalyzer:
         mock_duckdb_conn.execute.side_effect = Exception("Query execution failed")
 
         # Query optimization should not raise exception but return error metrics
-        optimized_query, metrics = query_optimizer.analyze_query(
+        _optimized_query, metrics = query_optimizer.analyze_query(
             "SELECT * FROM invalid_table"
         )
 
@@ -656,8 +656,8 @@ class TestDuckDBQueryAnalyzer:
 
     def test_concurrent_query_optimization(self, query_optimizer):
         """Test thread safety of query optimization."""
-        import threading
         import concurrent.futures
+        import threading
 
         results = []
         exceptions = []

@@ -2,15 +2,14 @@
 API endpoints for managing enabled LLM models configuration.
 """
 
-from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel
 
+from fastapi import APIRouter, HTTPException, Query, status
 from llm.enabled_models import (
     EnabledModelConfig,
     ProviderType,
     get_enabled_models_manager,
 )
+from pydantic import BaseModel
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/enabled-models", tags=["Enabled Models"])
@@ -24,18 +23,18 @@ class EnabledModelResponse(BaseModel):
     provider_type: ProviderType
     display_name: str
     enabled: bool
-    api_key_env_var: Optional[str] = None
-    custom_endpoint: Optional[str] = None
-    model_override: Optional[str] = None
-    description: Optional[str] = None
-    cost_tier: Optional[str] = None
-    tags: List[str] = []
+    api_key_env_var: str | None = None
+    custom_endpoint: str | None = None
+    model_override: str | None = None
+    description: str | None = None
+    cost_tier: str | None = None
+    tags: list[str] = []
 
 
 class EnabledModelsListResponse(BaseModel):
     """Response model for list of enabled models"""
 
-    models: List[EnabledModelResponse]
+    models: list[EnabledModelResponse]
     total_count: int
 
 
@@ -46,26 +45,26 @@ class AddModelRequest(BaseModel):
     provider_type: ProviderType
     display_name: str
     enabled: bool = True
-    api_key_env_var: Optional[str] = None
-    custom_endpoint: Optional[str] = None
-    model_override: Optional[str] = None
-    description: Optional[str] = None
-    cost_tier: Optional[str] = None
-    tags: List[str] = []
+    api_key_env_var: str | None = None
+    custom_endpoint: str | None = None
+    model_override: str | None = None
+    description: str | None = None
+    cost_tier: str | None = None
+    tags: list[str] = []
 
 
 class UpdateModelRequest(BaseModel):
     """Request model for updating enabled model configuration"""
 
-    provider_type: Optional[ProviderType] = None
-    display_name: Optional[str] = None
-    enabled: Optional[bool] = None
-    api_key_env_var: Optional[str] = None
-    custom_endpoint: Optional[str] = None
-    model_override: Optional[str] = None
-    description: Optional[str] = None
-    cost_tier: Optional[str] = None
-    tags: Optional[List[str]] = None
+    provider_type: ProviderType | None = None
+    display_name: str | None = None
+    enabled: bool | None = None
+    api_key_env_var: str | None = None
+    custom_endpoint: str | None = None
+    model_override: str | None = None
+    description: str | None = None
+    cost_tier: str | None = None
+    tags: list[str] | None = None
 
 
 def _config_to_response(config: EnabledModelConfig) -> EnabledModelResponse:
@@ -87,10 +86,10 @@ def _config_to_response(config: EnabledModelConfig) -> EnabledModelResponse:
 @router.get("", response_model=EnabledModelsListResponse)
 async def list_enabled_models(
     enabled_only: bool = Query(True, description="Only return enabled models"),
-    provider_type: Optional[ProviderType] = Query(
+    provider_type: ProviderType | None = Query(
         None, description="Filter by provider type"
-    ),  # noqa: E501
-    tag: Optional[str] = Query(None, description="Filter by tag"),
+    ),
+    tag: str | None = Query(None, description="Filter by tag"),
 ):
     """List configured models with optional filtering"""
     try:
@@ -112,7 +111,7 @@ async def list_enabled_models(
 
         logger.info(
             f"Listed {len(models)} models (enabled_only={enabled_only}, provider={provider_type}, tag={tag})"
-        )  # noqa: E501
+        )
 
         response_models = [_config_to_response(config) for config in models]
 
@@ -371,7 +370,7 @@ async def get_provider_summary():
         for provider_type in ProviderType:
             models = [
                 m for m in all_models if m.provider_type == provider_type
-            ]  # noqa: E501
+            ]
             enabled_count = len([m for m in models if m.enabled])
 
             provider_summary[provider_type.value] = {

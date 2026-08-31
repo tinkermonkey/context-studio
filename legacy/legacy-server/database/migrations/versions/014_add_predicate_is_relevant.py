@@ -1,8 +1,8 @@
 """Migration 014: Add is_relevant column to predicates table"""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 
 class Migration014(Migration):

@@ -7,13 +7,13 @@ reference links that connect structure nodes to external knowledge sources.
 """
 
 import json
-from typing import List, Optional
-from sqlalchemy.orm import Session
 
-from database.models import StructureNode
 from api.models.structure_nodes import ReferenceLink
+from database.models import StructureNode
 from reference_db.manager import get_reference_manager
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
 from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError
 
 logger = get_logger(__name__)
@@ -32,8 +32,8 @@ class ReferenceLinkService:
         self.db = db
 
     def add_reference_links(
-        self, node_id: str, links: List[ReferenceLink]
-    ) -> List[ReferenceLink]:
+        self, node_id: str, links: list[ReferenceLink]
+    ) -> list[ReferenceLink]:
         """
         Add reference links to a structure node.
 
@@ -98,8 +98,8 @@ class ReferenceLinkService:
             raise ValidationError(f"Failed to add reference links: {e}")
 
     def remove_reference_links(
-        self, node_id: str, links: List[ReferenceLink]
-    ) -> List[ReferenceLink]:
+        self, node_id: str, links: list[ReferenceLink]
+    ) -> list[ReferenceLink]:
         """
         Remove reference links from a structure node.
 
@@ -155,7 +155,7 @@ class ReferenceLinkService:
             logger.error(f"Failed to remove reference links from node {node_id}: {e}")
             raise ValidationError(f"Failed to remove reference links: {e}")
 
-    def get_reference_links(self, node_id: str) -> List[ReferenceLink]:
+    def get_reference_links(self, node_id: str) -> list[ReferenceLink]:
         """
         Get all reference links for a structure node.
 
@@ -265,8 +265,8 @@ class ReferenceLinkService:
             raise ValidationError(f"Failed to validate reference link: {e}")
 
     def get_nodes_with_reference_link(
-        self, source: str, external_id: str, limit: Optional[int] = None
-    ) -> List[StructureNode]:
+        self, source: str, external_id: str, limit: int | None = None
+    ) -> list[StructureNode]:
         """
         Find all structure nodes that link to a specific reference.
 
@@ -318,7 +318,7 @@ class ReferenceLinkService:
 
     def _parse_reference_links_json(
         self, node_id: str, reference_links_json: str
-    ) -> List[dict]:
+    ) -> list[dict]:
         """
         Parse reference links JSON string into list of dictionaries.
 
@@ -340,7 +340,7 @@ class ReferenceLinkService:
 
     def _validate_single_link(
         self, link_dict: dict, node_id: str, check_existence: bool
-    ) -> tuple[bool, Optional[dict]]:
+    ) -> tuple[bool, dict | None]:
         """
         Validate a single reference link.
 
@@ -391,7 +391,7 @@ class ReferenceLinkService:
                         {
                             "source": link.source,
                             "external_id": link.external_id,
-                            "reason": f"Validation error: {str(e)}",
+                            "reason": f"Validation error: {e!s}",
                         },
                     )
             else:
@@ -468,7 +468,7 @@ class ReferenceLinkService:
             logger.error(
                 f"Failed to parse reference_links JSON for node {node_id}: {e}"
             )
-            result["error"] = f"JSON decode error: {str(e)}"
+            result["error"] = f"JSON decode error: {e!s}"
             return result
         except ValueError as e:
             logger.warning(f"reference_links for node {node_id} is not an array")
@@ -478,7 +478,7 @@ class ReferenceLinkService:
             logger.error(
                 f"Unexpected error parsing reference links for node {node_id}: {e}"
             )
-            result["error"] = f"Unexpected error: {str(e)}"
+            result["error"] = f"Unexpected error: {e!s}"
             return result
 
         result["total_links"] = len(links_data)
@@ -510,7 +510,7 @@ class ReferenceLinkService:
     def validate_all_reference_links(
         self,
         check_existence: bool = True,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         batch_size: int = 100,
     ) -> dict:
         """
@@ -623,6 +623,6 @@ class ReferenceLinkService:
 
         except Exception as e:
             logger.error(f"Error during bulk validation: {e}", exc_info=True)
-            result["error"] = f"Bulk validation error: {str(e)}"
+            result["error"] = f"Bulk validation error: {e!s}"
 
         return result

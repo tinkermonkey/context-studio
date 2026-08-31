@@ -4,22 +4,22 @@ Unit tests for PerformanceMonitor - Testing comprehensive performance monitoring
 Tests performance metrics collection, trend analysis, automated optimization, and alerting.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import time  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from datetime import datetime, timezone, timedelta  # noqa: E402
+import time
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock, patch
 
-from services.performance_monitor import (  # noqa: E402
-    PerformanceMonitor,
-    PerformanceAlert,
+import pytest
+from services.performance_monitor import (
     OptimizationAction,
+    PerformanceAlert,
+    PerformanceMonitor,
 )
 
 

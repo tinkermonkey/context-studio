@@ -1,8 +1,8 @@
 """Unit tests for validation logic in predicate utilities."""
 
-import sys
-import os
 import datetime
+import os
+import sys
 from uuid import uuid4
 
 # Add the project root to the path
@@ -10,14 +10,14 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from database.models import Base, StructureNode, Predicate  # noqa: E402
-from database.predicate_utils import (  # noqa: E402
-    validate_term_relationship_predicate,
+import pytest
+from database.models import Base, Predicate, StructureNode
+from database.predicate_utils import (
     validate_predicate_identifier,
+    validate_term_relationship_predicate,
 )
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 # Create in-memory SQLite database for testing

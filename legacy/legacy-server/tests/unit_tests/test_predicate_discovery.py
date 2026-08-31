@@ -9,22 +9,22 @@ Tests the PredicateDiscoveryService class for:
 - Upsert functionality (update vs insert)
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, AsyncMock, patch  # noqa: E402
-from datetime import date  # noqa: E402
+from datetime import date
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+from config import SourceConfig
+from reference_db.config import ReferenceConfig
+from reference_db.models import ExternalPredicate
 from reference_db.predicate_discovery import (
-    PredicateDiscoveryService,
     CONCEPTNET_RELATIONS,
-)  # noqa: E402, E501
-from reference_db.models import ExternalPredicate  # noqa: E402
-from reference_db.config import ReferenceConfig  # noqa: E402
-from config import SourceConfig  # noqa: E402
+    PredicateDiscoveryService,
+)
 
 
 @pytest.fixture

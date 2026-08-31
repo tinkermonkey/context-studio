@@ -5,11 +5,10 @@ This includes pipeline configurations, audit logs, and task management.
 """
 
 import os
-from typing import Optional
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
-
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +17,7 @@ logger = get_logger(__name__)
 class OperationsDatabaseManager:
     """Manages the operations database independently of dataset databases."""
 
-    def __init__(self, operations_db_path: Optional[str] = None):
+    def __init__(self, operations_db_path: str | None = None):
         """
         Initialize operations database manager.
 

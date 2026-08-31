@@ -17,8 +17,9 @@ Tables added:
 - optimization_configuration: System optimization settings
 """
 
-from sqlalchemy import text
 from datetime import datetime
+
+from sqlalchemy import text
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

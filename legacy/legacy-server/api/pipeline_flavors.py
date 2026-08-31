@@ -2,20 +2,20 @@
 API endpoints for managing pipeline flavors.
 """
 
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, status, Response
 
-from api.dependencies.llm_services import get_pipeline_flavor_service
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from llm.exceptions import FlavorNotFoundError, FlavorValidationError
 from llm.flavor_service import PipelineFlavorService
 from llm.models import (
-    PipelineFlavor,
     CreatePipelineFlavorRequest,
-    UpdatePipelineFlavorRequest,
+    PipelineFlavor,
     PipelineFlavorListResponse,
     PipelineType,
+    UpdatePipelineFlavorRequest,
 )
-from llm.exceptions import FlavorNotFoundError, FlavorValidationError
 from utils.logger import get_logger
+
+from api.dependencies.llm_services import get_pipeline_flavor_service
 
 router = APIRouter(prefix="/api/pipeline-flavors", tags=["Pipeline Flavors"])
 logger = get_logger(__name__)
@@ -28,13 +28,13 @@ def get_flavor_service() -> PipelineFlavorService:
 
 @router.post(
     "", response_model=PipelineFlavor, status_code=status.HTTP_201_CREATED
-)  # noqa: E501
+)
 async def create_flavor(
     response: Response,
     request: CreatePipelineFlavorRequest,
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """Create a new pipeline flavor"""
     response.headers["Deprecation"] = "true"
@@ -42,7 +42,7 @@ async def create_flavor(
     try:
         logger.info(
             f"Creating new flavor '{request.title}' for pipeline '{request.pipeline.value}'"
-        )  # noqa: E501
+        )
         flavor = flavor_service.create_flavor(request)
         logger.info(f"Successfully created flavor with ID: {flavor.id}")
         return flavor
@@ -51,24 +51,24 @@ async def create_flavor(
         logger.warning(f"Flavor validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error creating flavor: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("", response_model=PipelineFlavorListResponse)
 async def list_flavors(
     response: Response,
-    pipeline: Optional[PipelineType] = Query(
+    pipeline: PipelineType | None = Query(
         None, description="Filter by pipeline type"
-    ),  # noqa: E501
+    ),
     flavor_service: PipelineFlavorService = Depends(
         get_pipeline_flavor_service
-    ),  # noqa: E501
+    ),
 ):
     """List all flavors, optionally filtered by pipeline"""
     response.headers["Deprecation"] = "true"
@@ -76,7 +76,7 @@ async def list_flavors(
     try:
         logger.info(
             f"Listing flavors for pipeline: {pipeline.value if pipeline else 'all'}"
-        )  # noqa: E501
+        )
         flavors = flavor_service.list_flavors(pipeline)
         return PipelineFlavorListResponse(flavors=flavors, total_count=len(flavors))
 
@@ -85,16 +85,16 @@ async def list_flavors(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("/{flavor_id}", response_model=PipelineFlavor)
 async def get_flavor(
     response: Response,
     flavor_id: str,
-    pipeline: Optional[PipelineType] = Query(
+    pipeline: PipelineType | None = Query(
         None, description="Pipeline type (required for default flavor)"
-    ),  # noqa: E501
+    ),
     flavor_service: PipelineFlavorService = Depends(get_flavor_service),
 ):
     """Get a specific flavor by ID"""
@@ -106,7 +106,7 @@ async def get_flavor(
             if not pipeline:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Pipeline parameter required when requesting default flavor",  # noqa: E501
+                    detail="Pipeline parameter required when requesting default flavor",
                 )
             return flavor_service.get_default_flavor(pipeline)
 
@@ -116,7 +116,7 @@ async def get_flavor(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except HTTPException:
         # Let HTTPExceptions bubble up naturally
         raise
@@ -125,7 +125,7 @@ async def get_flavor(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.put("/{flavor_id}", response_model=PipelineFlavor)
@@ -154,18 +154,18 @@ async def update_flavor(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except FlavorValidationError as e:
         logger.warning(f"Flavor validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error updating flavor {flavor_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.delete("/{flavor_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -192,15 +192,15 @@ async def delete_flavor(
     except FlavorNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
-        )  # noqa: E501
+        )
     except FlavorValidationError as e:
         logger.warning(f"Flavor validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )  # noqa: E501
+        )
     except Exception as e:
         logger.error(f"Error deleting flavor {flavor_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )

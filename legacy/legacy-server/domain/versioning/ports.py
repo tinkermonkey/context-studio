@@ -6,9 +6,10 @@ They use typing.Protocol for structural subtyping and reference only domain enti
 Response dataclasses are defined in this file alongside their corresponding ports.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Protocol, Optional, Sequence
+from typing import Protocol
 
 from domain.versioning.entities import ChangeEvent
 
@@ -29,7 +30,7 @@ class SyncResult:
 
     success: bool
     changes_pushed: int
-    remote_version: Optional[str]
+    remote_version: str | None
     errors: list[str] = field(default_factory=list)
 
 
@@ -37,7 +38,7 @@ class SyncResult:
 class SyncStatus:
     """Status of sync operations."""
 
-    last_sync: Optional[datetime]
+    last_sync: datetime | None
     pending_changes: int
     remote_reachable: bool
 
@@ -51,10 +52,10 @@ class ChangeRepository(Protocol):
 
     def get_changes(
         self,
-        record_type: Optional[str] = None,
-        record_id: Optional[str] = None,
-        since: Optional[datetime] = None,
-        processed: Optional[bool] = None,
+        record_type: str | None = None,
+        record_id: str | None = None,
+        since: datetime | None = None,
+        processed: bool | None = None,
         limit: int = 100,
     ) -> Sequence[ChangeEvent]:
         """Query change events with optional filtering."""
@@ -68,11 +69,11 @@ class ChangeRepository(Protocol):
         """Save an entity version snapshot."""
         ...
 
-    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]:
+    def get_version(self, entity_id: str, version: int) -> EntityVersion | None:
         """Retrieve a specific version of an entity."""
         ...
 
-    def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]:
+    def get_latest_version(self, entity_id: str) -> EntityVersion | None:
         """Retrieve the latest version of an entity."""
         ...
 

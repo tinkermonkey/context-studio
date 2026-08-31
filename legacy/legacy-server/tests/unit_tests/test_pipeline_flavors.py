@@ -2,27 +2,28 @@
 Unit tests for pipeline flavor functionality.
 """
 
-import pytest
-import sys
 import os
-from unittest.mock import Mock, patch
+import sys
 from datetime import datetime, timezone
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm.flavor_service import PipelineFlavorService  # noqa: E402
-from llm.models import (  # noqa: E402
-    PipelineType,
-    CreatePipelineFlavorRequest,
-    UpdatePipelineFlavorRequest,
-    LLMConfig,
-    PipelineFlavor,
-)
 from llm.exceptions import (
     FlavorNotFoundError,
     FlavorValidationError,
-)  # noqa: E402, E501
+)
+from llm.flavor_service import PipelineFlavorService
+from llm.models import (
+    CreatePipelineFlavorRequest,
+    LLMConfig,
+    PipelineFlavor,
+    PipelineType,
+    UpdatePipelineFlavorRequest,
+)
 
 
 class TestPipelineFlavorService:

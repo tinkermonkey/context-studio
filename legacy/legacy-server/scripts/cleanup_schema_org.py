@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
+from reference_db.models import ExternalPredicate, ReferenceLink, ReferenceNode
 from sqlalchemy import text
 from utils.logger import get_logger
 
@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 SOURCE_NAME = "schema.org"
 
 
-def cleanup_schema_org_data(db_path: str = None):
+def cleanup_schema_org_data(db_path: str | None = None):
     """
     Clean up all Schema.org data from the database.
 

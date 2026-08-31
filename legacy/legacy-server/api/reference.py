@@ -1,36 +1,37 @@
 # mypy: ignore-errors
 """FastAPI router for reference endpoints"""
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, Body
-from fastapi.responses import JSONResponse
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
 import logging
+from typing import Literal
 
-from api.dependencies.reference_services import get_reference_service
-from reference_api.service import ReferenceService
-from reference_api.models import (
-    DBpediaResourceRequest,
-    DBpediaSearchRequest,
-    DBpediaSparqlRequest,
-    ConceptNetQueryRequest,  # noqa: E501
-    WikidataSparqlRequest,
-    WikidataEntityRequest,
-    WikidataSearchRequest,
-    SchemaOrgEntityRequest,  # noqa: E501
-    SchemaOrgPropertyRequest,
-    SchemaOrgSearchRequest,
-    ResponseFormat,
-    SourceType,
-    MultiSourceSearchRequest,  # noqa: E501
-    MultiSourceSearchResponse,
-)
+from config import Settings, get_settings
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 from reference_api.exceptions import (
     ReferenceError,
     SourceError,
     SourceTimeoutError,
-)  # noqa: E501
-from config import get_settings, Settings
+)
+from reference_api.models import (
+    ConceptNetQueryRequest,
+    DBpediaResourceRequest,
+    DBpediaSearchRequest,
+    DBpediaSparqlRequest,
+    MultiSourceSearchRequest,
+    MultiSourceSearchResponse,
+    ResponseFormat,
+    SchemaOrgEntityRequest,
+    SchemaOrgPropertyRequest,
+    SchemaOrgSearchRequest,
+    SourceType,
+    WikidataEntityRequest,
+    WikidataSearchRequest,
+    WikidataSparqlRequest,
+)
+from reference_api.service import ReferenceService
+
+from api.dependencies.reference_services import get_reference_service
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +43,13 @@ class ReferenceSearchRequest(BaseModel):
     """Request model for reference database search"""
 
     query: str = Field(..., min_length=1, description="Search query text")
-    source: Optional[str] = Field(
+    source: str | None = Field(
         None, description="Filter by source (e.g., 'schema.org')"
-    )  # noqa: E501
+    )
     limit: int = Field(20, ge=1, le=10000, description="Maximum results")
     threshold: float = Field(
         0.7, ge=-1.0, le=1.0, description="Similarity threshold"
-    )  # noqa: E501
+    )
 
 
 def handle_service_error(e: Exception) -> HTTPException:
@@ -70,14 +71,14 @@ async def dbpedia_get_resource(
     resource_url: str = Query(..., description="DBpedia resource URL"),
     format: ResponseFormat = Query(
         ResponseFormat.JSON, description="Response format"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Retrieve structured data from a DBpedia resource URL"""
     try:
         request = DBpediaResourceRequest(
             resource_url=resource_url, format=format
-        )  # noqa: E501
+        )
         return await service.dbpedia_get_resource(request)
     except Exception as e:
         raise handle_service_error(e)
@@ -90,14 +91,14 @@ async def dbpedia_search(
     offset: int = Query(0, ge=0, description="Result offset"),
     format: ResponseFormat = Query(
         ResponseFormat.JSON, description="Response format"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Search DBpedia using the search API"""
     try:
         request = DBpediaSearchRequest(
             query=query, limit=limit, offset=offset, format=format
-        )  # noqa: E501
+        )
         return await service.dbpedia_search(request)
     except Exception as e:
         raise handle_service_error(e)
@@ -140,10 +141,10 @@ async def conceptnet_search(
 
 @router.get("/conceptnet/query", response_model=MultiSourceSearchResponse)
 async def conceptnet_query(
-    start: Optional[str] = Query(None, description="Starting concept"),
-    end: Optional[str] = Query(None, description="Ending concept"),
-    node: Optional[str] = Query(None, description="Any concept"),
-    rel: Optional[str] = Query(None, description="Relation type"),
+    start: str | None = Query(None, description="Starting concept"),
+    end: str | None = Query(None, description="Ending concept"),
+    node: str | None = Query(None, description="Any concept"),
+    rel: str | None = Query(None, description="Relation type"),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
     offset: int = Query(0, ge=0, description="Result offset"),
     service: ReferenceService = Depends(get_reference_service),
@@ -156,7 +157,7 @@ async def conceptnet_query(
             node=node,
             rel=rel,
             limit=limit,
-            offset=offset,  # noqa: E501
+            offset=offset,
         )
         return await service.conceptnet_query(request)
     except Exception as e:
@@ -165,7 +166,7 @@ async def conceptnet_query(
 
 @router.get(
     "/conceptnet/concept/{concept_path:path}", response_model=MultiSourceSearchResponse
-)  # noqa: E501
+)
 async def conceptnet_get_concept(
     concept_path: str = Path(..., description="ConceptNet concept path"),
     service: ReferenceService = Depends(get_reference_service),
@@ -179,12 +180,12 @@ async def conceptnet_get_concept(
 
 @router.get(
     "/conceptnet/related/{concept_path:path}", response_model=MultiSourceSearchResponse
-)  # noqa: E501
+)
 async def conceptnet_get_related(
     concept_path: str = Path(..., description="ConceptNet concept path"),
-    filter: Optional[str] = Query(
+    filter: str | None = Query(
         None, description="Filter for related concepts"
-    ),  # noqa: E501
+    ),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
     service: ReferenceService = Depends(get_reference_service),
 ):
@@ -192,7 +193,7 @@ async def conceptnet_get_related(
     try:
         return await service.conceptnet_get_related(
             concept_path, filter, limit
-        )  # noqa: E501
+        )
     except Exception as e:
         raise handle_service_error(e)
 
@@ -209,7 +210,7 @@ async def wikidata_search(
     try:
         request = WikidataSearchRequest(
             query=query, limit=limit, offset=offset
-        )  # noqa: E501
+        )
         return await service.wikidata_search(request)
     except Exception as e:
         raise handle_service_error(e)
@@ -230,12 +231,12 @@ async def wikidata_sparql(
 @router.get("/wikidata/entity", response_model=MultiSourceSearchResponse)
 async def wikidata_get_entity(
     entity_url: str = Query(..., description="Wikidata entity URL"),
-    properties: Optional[str] = Query(
+    properties: str | None = Query(
         None, description="Comma-separated property IDs"
-    ),  # noqa: E501
+    ),
     format: ResponseFormat = Query(
         ResponseFormat.JSON, description="Response format"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Get structured data for a Wikidata entity"""
@@ -243,7 +244,7 @@ async def wikidata_get_entity(
         property_list = properties.split(",") if properties else None
         request = WikidataEntityRequest(
             entity_url=entity_url, properties=property_list, format=format
-        )  # noqa: E501
+        )
         return await service.wikidata_get_entity(request)
     except Exception as e:
         raise handle_service_error(e)
@@ -252,15 +253,15 @@ async def wikidata_get_entity(
 # Schema.org endpoints
 @router.get(
     "/schema-org/entity/{identifier}", response_model=MultiSourceSearchResponse
-)  # noqa: E501
+)
 async def schema_org_get_entity(
     identifier: str = Path(..., description="Schema.org entity identifier"),
     include_inherited: bool = Query(
         True, description="Include inherited properties"
-    ),  # noqa: E501
+    ),
     include_children: bool = Query(
         False, description="Include child entities"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Get Schema.org entity with properties and inheritance"""
@@ -277,19 +278,19 @@ async def schema_org_get_entity(
 
 @router.get(
     "/schema-org/property/{identifier}", response_model=MultiSourceSearchResponse
-)  # noqa: E501
+)
 async def schema_org_get_property(
     identifier: str = Path(..., description="Schema.org property identifier"),
     include_usage: bool = Query(
         True, description="Include entities using this property"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Get Schema.org property definition and usage"""
     try:
         request = SchemaOrgPropertyRequest(
             identifier=identifier, include_usage=include_usage
-        )  # noqa: E501
+        )
         return await service.schema_org_get_property(request)
     except Exception as e:
         raise handle_service_error(e)
@@ -300,12 +301,12 @@ async def schema_org_search(
     query: str = Query(..., description="Search query"),
     search_type: Literal["entities", "properties", "both"] = Query(
         "both", description="Search type"
-    ),  # noqa: E501
+    ),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
     offset: int = Query(0, ge=0, description="Result offset"),
     similarity_threshold: float = Query(
         0.7, ge=0.0, le=1.0, description="Similarity threshold"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """Search Schema.org entities and properties"""
@@ -343,12 +344,12 @@ async def multi_source_search(
 @router.get("/search", response_model=MultiSourceSearchResponse)
 async def multi_source_search_get(
     query: str = Query(..., description="Search query", min_length=1),
-    sources: Optional[str] = Query(
+    sources: str | None = Query(
         None, description="Comma-separated list of source types"
-    ),  # noqa: E501
+    ),
     limit: int = Query(
         20, description="Maximum results per source", ge=1, le=100
-    ),  # noqa: E501
+    ),
     offset: int = Query(0, description="Result offset", ge=0),
     service: ReferenceService = Depends(get_reference_service),
 ):
@@ -369,7 +370,7 @@ async def multi_source_search_get(
                 except ValueError:
                     raise HTTPException(
                         status_code=400, detail=f"Invalid source: {name}"
-                    )  # noqa: E501
+                    )
 
         # Create request object
         request = MultiSourceSearchRequest(
@@ -387,13 +388,13 @@ async def multi_source_search_get(
 @router.get("/ref-db/search")
 async def reference_db_search(
     query: str = Query(..., description="Search query text", min_length=1),
-    source: Optional[str] = Query(
+    source: str | None = Query(
         None, description="Filter by source (e.g., 'schema.org')"
-    ),  # noqa: E501
+    ),
     limit: int = Query(20, ge=1, le=10000, description="Maximum results"),
     threshold: float = Query(
         0.7, ge=-1.0, le=1.0, description="Similarity threshold"
-    ),  # noqa: E501
+    ),
 ):
     """
     Search reference database using semantic vector similarity.
@@ -405,7 +406,7 @@ async def reference_db_search(
     if not query or not query.strip():
         raise HTTPException(
             status_code=400, detail="Query parameter cannot be empty"
-        )  # noqa: E501
+        )
 
     if not -1.0 <= threshold <= 1.0:
         raise HTTPException(
@@ -419,9 +420,9 @@ async def reference_db_search(
         )
 
     try:
-        from reference_db.dependencies import reference_manager_context
-        from reference_db.config import ReferenceConfig
         from embeddings.generate_embeddings import generate_embedding
+        from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -465,8 +466,8 @@ async def reference_db_search(
         # Return 500 for database/vector search errors (fail fast)
         logger.error(f"Reference DB search failed: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Vector search failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Vector search failed: {e!s}"
+        )
 
 
 @router.post("/ref-db/search")
@@ -480,9 +481,9 @@ async def reference_db_search_post(
     ranked by similarity score. Accepts a JSON body with search parameters.
     """
     try:
-        from reference_db.dependencies import reference_manager_context
-        from reference_db.config import ReferenceConfig
         from embeddings.generate_embeddings import generate_embedding
+        from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -530,18 +531,18 @@ async def reference_db_search_post(
         # Return 500 for database/vector search errors (fail fast)
         logger.error(f"Reference DB search failed: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Vector search failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Vector search failed: {e!s}"
+        )
 
 
 @router.get("/ref-db/entity/{source}/{external_id}")
 async def get_reference_entity(
     source: str = Path(
         ..., description="Source identifier (e.g., 'schema.org')"
-    ),  # noqa: E501
+    ),
     external_id: str = Path(
         ..., description="External identifier from source"
-    ),  # noqa: E501
+    ),
 ):
     """
     Get a reference entity by source and external ID.
@@ -550,8 +551,8 @@ async def get_reference_entity(
     source identifier and external ID.
     """
     try:
-        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -583,10 +584,10 @@ async def get_reference_entity(
 async def get_reference_property(
     source: str = Path(
         ..., description="Source identifier (e.g., 'schema.org')"
-    ),  # noqa: E501
+    ),
     external_id: str = Path(
         ..., description="External identifier from source"
-    ),  # noqa: E501
+    ),
 ):
     """
     Get a reference property by source and external ID.
@@ -596,8 +597,8 @@ async def get_reference_property(
     with a type attribute indicating they are properties.
     """
     try:
-        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -632,8 +633,8 @@ async def get_reference_node(
 ):
     """Get a reference node by ID."""
     try:
-        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -642,7 +643,7 @@ async def get_reference_node(
             if not node:
                 raise HTTPException(
                     status_code=404, detail=f"Node not found: {node_id}"
-                )  # noqa: E501
+                )
 
             return {
                 "id": node.id,
@@ -665,13 +666,13 @@ async def get_reference_node(
 async def get_predicate_examples(
     source: str = Path(
         ..., description="Predicate source (e.g., 'schema.org', 'dbpedia')"
-    ),  # noqa: E501
+    ),
     external_id: str = Path(
         ..., description="External predicate ID (can contain slashes)"
-    ),  # noqa: E501
+    ),
     limit: int = Query(
         10, ge=1, le=100, description="Maximum number of example uses to return"
-    ),  # noqa: E501
+    ),
     service: ReferenceService = Depends(get_reference_service),
 ):
     """
@@ -685,8 +686,8 @@ async def get_predicate_examples(
     For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.  # noqa: E501
     """
     try:
-        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
         from reference_db.models import ReferenceLink
 
         config = ReferenceConfig()
@@ -694,7 +695,7 @@ async def get_predicate_examples(
             # Get the external predicate to verify it exists
             predicate = manager.get_external_predicate_by_source(
                 source, external_id
-            )  # noqa: E501
+            )
             if not predicate:
                 raise HTTPException(
                     status_code=404,
@@ -731,22 +732,22 @@ async def get_predicate_examples(
                     # Parse SPARQL results
                     if sparql_result.get("results") and sparql_result["results"].get(
                         "bindings"
-                    ):  # noqa: E501
+                    ):
                         for binding in sparql_result["results"]["bindings"][
                             :limit
-                        ]:  # noqa: E501
+                        ]:
                             subject_uri = binding.get("subject", {}).get(
                                 "value", ""
-                            )  # noqa: E501
+                            )
                             object_uri = binding.get("object", {}).get(
                                 "value", ""
-                            )  # noqa: E501
+                            )
                             subject_label = binding.get("subjectLabel", {}).get(
                                 "value", subject_uri.split("/")[-1]
-                            )  # noqa: E501
+                            )
                             object_label = binding.get("objectLabel", {}).get(
                                 "value", object_uri.split("/")[-1]
-                            )  # noqa: E501
+                            )
 
                             examples.append(
                                 {
@@ -774,7 +775,7 @@ async def get_predicate_examples(
                     logger.error(f"DBpedia SPARQL query failed: {e}")
                     # Fall through to local database query
 
-            # For other sources or if DBpedia query failed, use local reference database  # noqa: E501
+            # For other sources or if DBpedia query failed, use local reference database
             if not examples:
                 # Try exact match first
                 links = (
@@ -784,7 +785,7 @@ async def get_predicate_examples(
                     .all()
                 )
 
-                # If no results and external_id looks like a URI, try extracting the predicate name  # noqa: E501
+                # If no results and external_id looks like a URI, try extracting the predicate name
                 if not links and "/" in external_id:
                     predicate_name = external_id.split("/")[-1]
                     if predicate_name:
@@ -848,17 +849,17 @@ async def get_node_links(
     node_id: str = Path(..., description="Reference node ID"),
     direction: str = Query(
         "both", description="Link direction: inbound, outbound, or both"
-    ),  # noqa: E501
-    predicate: Optional[str] = Query(
+    ),
+    predicate: str | None = Query(
         None, description="Filter by predicate (exact match)"
-    ),  # noqa: E501
-    limit: Optional[int] = Query(
+    ),
+    limit: int | None = Query(
         None, ge=1, le=1000, description="Maximum results"
-    ),  # noqa: E501
-    apply_relevance_filter: Optional[bool] = Query(
+    ),
+    apply_relevance_filter: bool | None = Query(
         None,
         description="Apply predicate relevance filtering (defaults to config setting)",
-    ),  # noqa: E501
+    ),
     settings: Settings = Depends(get_settings),
 ):
     """
@@ -871,16 +872,16 @@ async def get_node_links(
     enable_relevance_filtering setting from configuration.
     """
     try:
-        from reference_db.dependencies import reference_manager_context
-        from reference_db.config import ReferenceConfig
         from database.utils import get_db
+        from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
         from services.reference_filter_service import ReferenceFilterService
 
         # Use configuration default if not explicitly provided
         if apply_relevance_filter is None:
             apply_relevance_filter = (
                 settings.reference_sources.enable_relevance_filtering
-            )  # noqa: E501
+            )
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -889,7 +890,7 @@ async def get_node_links(
             if not node:
                 raise HTTPException(
                     status_code=404, detail=f"Node not found: {node_id}"
-                )  # noqa: E501
+                )
 
             # Get links
             links = manager.get_node_links(
@@ -947,7 +948,7 @@ async def get_node_links(
 @router.get("/health")
 async def health_check(
     service: ReferenceService = Depends(get_reference_service),
-):  # noqa: E501
+):
     """Check health status of all reference API sources"""
     try:
         return await service.health_check()
@@ -981,8 +982,8 @@ async def reference_db_health_check():
     start_time = time.time()
 
     try:
-        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
 
         config = ReferenceConfig()
         with reference_manager_context(config) as manager:
@@ -997,7 +998,7 @@ async def reference_db_health_check():
             # Log warning if execution time exceeds target
             if execution_time_ms > 200:
                 logger.warning(
-                    f"Health check exceeded 200ms target: {execution_time_ms:.2f}ms"  # noqa: E501
+                    f"Health check exceeded 200ms target: {execution_time_ms:.2f}ms"
                 )
 
             return status
@@ -1030,9 +1031,9 @@ async def get_filter_statistics():
     they enable relevance filtering on reference queries.
     """
     try:
-        from reference_db.dependencies import reference_manager_context
-        from reference_db.config import ReferenceConfig
         from database.utils import get_db
+        from reference_db.config import ReferenceConfig
+        from reference_db.dependencies import reference_manager_context
         from services.reference_filter_service import ReferenceFilterService
 
         config = ReferenceConfig()

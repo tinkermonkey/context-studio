@@ -5,15 +5,16 @@ This service implements working tree state management, tracking current and cano
 versions of entities, and providing staging/unstaging operations for the change management system.
 """
 
-from typing import List, Optional, Dict, Any, cast
-from datetime import datetime, timezone
 from dataclasses import dataclass
-from sqlalchemy.orm import Session
-from sqlalchemy import text, Row
-from sqlalchemy.engine.cursor import CursorResult
+from datetime import datetime, timezone
+from typing import Any, cast
 
-from services.version_manager import VersionManager, EntityVersion, ChangeState
+from sqlalchemy import Row, text
+from sqlalchemy.engine.cursor import CursorResult
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.version_manager import ChangeState, EntityVersion, VersionManager
 
 logger = get_logger(__name__)
 
@@ -42,7 +43,7 @@ class WorkingTreeStatus:
     modified_entities: int
     staged_entities: int
     unstaged_entities: int
-    entries: List[WorkingTreeEntry]
+    entries: list[WorkingTreeEntry]
 
 
 class WorkingTreeManager:
@@ -368,7 +369,7 @@ class WorkingTreeManager:
             logger.error(f"Failed to unstage {entity_type}:{entity_id}: {e}")
             raise RuntimeError(f"Database error during unstaging: {e}") from e
 
-    def commit_staged_changes(self, author_id: str) -> List[EntityVersion]:
+    def commit_staged_changes(self, author_id: str) -> list[EntityVersion]:
         """
         Commit all staged changes by updating canonical versions.
 
@@ -435,7 +436,7 @@ class WorkingTreeManager:
 
     def get_working_tree_entry(
         self, entity_type: str, entity_id: str
-    ) -> Optional[WorkingTreeEntry]:
+    ) -> WorkingTreeEntry | None:
         """
         Get working tree entry for a specific entity.
 
@@ -469,7 +470,7 @@ class WorkingTreeManager:
                 f"Database error during working tree retrieval: {e}"
             ) from e
 
-    def get_working_changes(self) -> List[WorkingTreeEntry]:
+    def get_working_changes(self) -> list[WorkingTreeEntry]:
         """
         Get all entities with working changes (current != canonical).
 
@@ -497,7 +498,7 @@ class WorkingTreeManager:
                 f"Database error during working changes retrieval: {e}"
             ) from e
 
-    def get_staged_entities(self) -> List[WorkingTreeEntry]:
+    def get_staged_entities(self) -> list[WorkingTreeEntry]:
         """
         Get all staged entities.
 
@@ -525,7 +526,7 @@ class WorkingTreeManager:
                 f"Database error during staged entities retrieval: {e}"
             ) from e
 
-    def get_staged_changes(self) -> List[Dict[str, Any]]:
+    def get_staged_changes(self) -> list[dict[str, Any]]:
         """
         Get staged changes as change dictionaries for changeset creation.
 
@@ -625,7 +626,7 @@ class WorkingTreeManager:
 
     def _get_version_number_by_id(self, version_id: str) -> int:
         """Get version number by version ID."""
-        result: Optional[int] = self.db.execute(
+        result: int | None = self.db.execute(
             text("""
             SELECT version_number FROM entity_versions WHERE id = :version_id
         """),

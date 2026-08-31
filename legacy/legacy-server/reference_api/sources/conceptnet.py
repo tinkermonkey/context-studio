@@ -1,14 +1,15 @@
 # mypy: ignore-errors
 """ConceptNet source implementation"""
 
-from typing import Optional
-from .base import BaseReferenceSource
+
 from config import get_settings
+
 from ..models import (
-    ConceptNetQueryResponse,
     ConceptNetConceptResponse,
+    ConceptNetQueryResponse,
     ConceptNetRelatedResponse,
 )
+from .base import BaseReferenceSource
 
 
 class ConceptNetSource(BaseReferenceSource):
@@ -21,10 +22,10 @@ class ConceptNetSource(BaseReferenceSource):
 
     async def query(
         self,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
-        node: Optional[str] = None,
-        rel: Optional[str] = None,
+        start: str | None = None,
+        end: str | None = None,
+        node: str | None = None,
+        rel: str | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> ConceptNetQueryResponse:
@@ -83,7 +84,7 @@ class ConceptNetSource(BaseReferenceSource):
             )
 
     async def get_related(
-        self, concept_path: str, filter: Optional[str] = None, limit: int = 20
+        self, concept_path: str, filter: str | None = None, limit: int = 20
     ) -> ConceptNetRelatedResponse:
         try:
             if not concept_path.startswith("/"):

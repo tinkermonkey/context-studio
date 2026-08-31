@@ -2,9 +2,10 @@
 Pydantic models for RAG (Retrieval-Augmented Generation) pipeline requests and responses.
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from typing import Any
 from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class RAGExtractionRequest(BaseModel):
@@ -23,7 +24,7 @@ class RAGExtractionRequest(BaseModel):
         default=False,
         description="Enable detailed tracing for observability. Defaults to false per architect requirement.",
     )
-    enable_llm_layer: Optional[bool] = Field(
+    enable_llm_layer: bool | None = Field(
         default=None,
         description="Enable Layer 1 LLM extraction. If None, uses config default.",
     )
@@ -65,7 +66,7 @@ class ExtractedEntity(BaseModel):
     sentence_index: int = Field(
         ..., ge=0, description="Index of the sentence containing this entity (0-based)."
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional metadata about the entity (e.g., KB IDs, relations, context).",
     )
@@ -146,7 +147,7 @@ class RAGExtractionResponse(BaseModel):
         default_factory=lambda: str(uuid4()),
         description="Unique identifier for this extraction request.",
     )
-    entities: List[ExtractedEntity] = Field(
+    entities: list[ExtractedEntity] = Field(
         default_factory=list,
         description="List of extracted entities with enrichment data.",
     )

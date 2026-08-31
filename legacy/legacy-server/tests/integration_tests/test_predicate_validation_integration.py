@@ -1,16 +1,16 @@
 """Integration tests for validation logic in API endpoints."""
 
-import sys
 import os
+import sys
 
 # Add the project root to the path
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )  # noqa: E501
+    )
 )
 
-import pytest  # noqa: E402
+import pytest
 
 
 @pytest.fixture(scope="function")
@@ -81,7 +81,7 @@ def test_data(client):
     assert layer2_response.status_code == 201
     layer2 = layer2_response.json()
 
-    # Create domains via API - Note: predicate_set functionality may not exist in unified model  # noqa: E501
+    # Create domains via API - Note: predicate_set functionality may not exist in unified model
     # Using structural_predicate_id instead for the first domain
     domain_with_predicates_response = client.post(
         "/api/structure_nodes/",
@@ -231,7 +231,7 @@ class TestPredicateValidationAPI:
             json={
                 "identifier": predicate[
                     "identifier"
-                ],  # Same identifier from test_data  # noqa: E501
+                ],  # Same identifier from test_data
                 "definition": "Updated definition",
             },
         )
@@ -243,12 +243,12 @@ class TestPredicateValidationAPI:
 
 
 class TestTermRelationshipValidationAPI:
-    """Tests for term relationship predicate validation in API (now using structure_node_links)."""  # noqa: E501
+    """Tests for term relationship predicate validation in API (now using structure_node_links)."""
 
     @pytest.mark.skip_suite
     def test_create_relationship_same_domain_allowed_predicate(
         self, client, test_data
-    ):  # noqa: E501
+    ):
         """Test creating relationship with allowed predicate in same domain."""
         term1 = test_data["terms"][0]  # Domain with predicates
         term2 = test_data["terms"][1]  # Same domain
@@ -264,7 +264,7 @@ class TestTermRelationshipValidationAPI:
             },
         )
 
-        # Note: The new unified system may not enforce domain-level predicate restrictions  # noqa: E501
+        # Note: The new unified system may not enforce domain-level predicate restrictions
         # This test may need to be updated based on actual behavior
         assert response.status_code == 201
 
@@ -272,12 +272,12 @@ class TestTermRelationshipValidationAPI:
     def test_create_relationship_same_domain_disallowed_predicate(
         self, client, test_data
     ):
-        """Test creating relationship with disallowed predicate in same domain - may not apply in unified system."""  # noqa: E501
+        """Test creating relationship with disallowed predicate in same domain - may not apply in unified system."""
         term1 = test_data["terms"][0]  # Domain with predicates
         term2 = test_data["terms"][1]  # Same domain
         predicate = test_data["predicates"][
             "antonym"
-        ]  # Not allowed in old system  # noqa: E501
+        ]  # Not allowed in old system
 
         response = client.post(
             "/api/structure_nodes/links",
@@ -289,8 +289,8 @@ class TestTermRelationshipValidationAPI:
             },
         )
 
-        # Note: The unified system may not implement domain-level predicate restrictions  # noqa: E501
-        # This test might need to be updated or removed based on actual implementation  # noqa: E501
+        # Note: The unified system may not implement domain-level predicate restrictions
+        # This test might need to be updated or removed based on actual implementation
         # For now, we'll expect it to succeed
         assert response.status_code == 201
 
@@ -298,7 +298,7 @@ class TestTermRelationshipValidationAPI:
     def test_create_relationship_different_domains_any_predicate(
         self, client, test_data
     ):
-        """Test creating relationship with any predicate across different domains."""  # noqa: E501
+        """Test creating relationship with any predicate across different domains."""
         term1 = test_data["terms"][0]  # Domain with predicates
         term2 = test_data["terms"][2]  # Different domain
         predicate = test_data["predicates"][
@@ -320,7 +320,7 @@ class TestTermRelationshipValidationAPI:
     @pytest.mark.skip_suite
     def test_update_relationship_same_domain_allowed_predicate(
         self, client, test_data
-    ):  # noqa: E501
+    ):
         """Test updating relationship with allowed predicate in same domain."""
         # First create a relationship
         term1 = test_data["terms"][0]
@@ -358,7 +358,7 @@ class TestTermRelationshipValidationAPI:
     def test_update_relationship_same_domain_disallowed_predicate(
         self, client, test_data
     ):
-        """Test updating relationship with disallowed predicate - may not apply in unified system."""  # noqa: E501
+        """Test updating relationship with disallowed predicate - may not apply in unified system."""
         # First create a relationship
         term1 = test_data["terms"][0]
         term2 = test_data["terms"][1]
@@ -389,15 +389,15 @@ class TestTermRelationshipValidationAPI:
             },
         )
 
-        # Note: The unified system may not implement domain-level predicate restrictions  # noqa: E501
+        # Note: The unified system may not implement domain-level predicate restrictions
         # So we expect this to succeed now
         assert response.status_code == 200
 
     @pytest.mark.skip_suite
     def test_create_relationship_no_domain_predicate_set(
         self, client, test_data
-    ):  # noqa: E501
-        """Test creating relationship in domain without structural predicate allows any predicate."""  # noqa: E501
+    ):
+        """Test creating relationship in domain without structural predicate allows any predicate."""
         # Create terms in domain without predicate set
         domain = test_data["domain_without_predicates"]
 

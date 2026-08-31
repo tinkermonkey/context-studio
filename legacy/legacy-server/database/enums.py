@@ -58,6 +58,6 @@ class RecordType(str, Enum):
     # Legacy aliases — deprecated, for backward compatibility
     STRUCTURE_NODE = "structure_node"  # For layers, domains, terms
     STRUCTURE_NODE_LINK = (
-        "structure_node_link"  # For relationships between structure nodes  # noqa: E501
+        "structure_node_link"  # For relationships between structure nodes
     )
     PREDICATE = "predicate"  # For predicate definitions

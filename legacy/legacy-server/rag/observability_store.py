@@ -5,13 +5,13 @@ This module provides persistence for RAG pipeline observability data,
 including metrics and detailed trace information.
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta, timezone
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 import json
 import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -132,7 +132,7 @@ class RAGObservabilityStore:
         sentence_index: int,
         layer_name: str,
         operation_type: str,
-        trace_data: Dict[str, Any],
+        trace_data: dict[str, Any],
     ) -> str:
         """
         Save detailed trace data for a specific layer operation.
@@ -186,7 +186,7 @@ class RAGObservabilityStore:
             )
             raise
 
-    def get_metrics(self, request_id: str) -> Optional[Dict[str, Any]]:
+    def get_metrics(self, request_id: str) -> dict[str, Any] | None:
         """
         Retrieve metrics for a specific request.
 
@@ -234,7 +234,7 @@ class RAGObservabilityStore:
             )
             return None
 
-    def get_traces(self, request_id: str) -> List[Dict[str, Any]]:
+    def get_traces(self, request_id: str) -> list[dict[str, Any]]:
         """
         Retrieve all trace records for a specific request.
 
@@ -257,7 +257,7 @@ class RAGObservabilityStore:
                 {"request_id": request_id},
             ).fetchall()
 
-            traces: List[Dict[str, Any]] = []
+            traces: list[dict[str, Any]] = []
             for row in results:
                 traces.append(
                     {
@@ -280,7 +280,7 @@ class RAGObservabilityStore:
             )
             return []
 
-    def cleanup_old_data(self) -> Dict[str, int]:
+    def cleanup_old_data(self) -> dict[str, int]:
         """
         Remove observability data that exceeds retention periods.
 

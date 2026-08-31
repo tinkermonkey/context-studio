@@ -4,17 +4,17 @@ Unit tests for VersionManager - Testing entity version management functionality.
 Tests version creation, retrieval, rollback, and state management operations.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
+from datetime import datetime, timezone
 
-from services.version_manager import VersionManager, ChangeState  # noqa: E402
+import pytest
+from services.version_manager import ChangeState, VersionManager
 
 
 class TestVersionManager:

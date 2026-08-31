@@ -8,11 +8,12 @@ allowing for easy discovery and comparison.
 """
 
 import threading
-from typing import Dict, Type, List, Any, Optional
+from typing import Any, Optional
+
 from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from rag.base_pipeline import BaseRAGPipeline
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,7 +28,7 @@ class PipelineRegistry:
 
     _instance: Optional["PipelineRegistry"] = None
     _lock = threading.Lock()
-    _pipelines: Dict[str, Type[BaseRAGPipeline]] = {}
+    _pipelines: dict[str, type[BaseRAGPipeline]] = {}
 
     def __new__(cls):
         """Ensure singleton pattern with thread safety."""
@@ -40,7 +41,7 @@ class PipelineRegistry:
         return cls._instance
 
     @classmethod
-    def register(cls, pipeline_class: Type[BaseRAGPipeline]) -> Type[BaseRAGPipeline]:
+    def register(cls, pipeline_class: type[BaseRAGPipeline]) -> type[BaseRAGPipeline]:
         """
         Register a pipeline class.
 
@@ -69,7 +70,7 @@ class PipelineRegistry:
         return pipeline_class
 
     @classmethod
-    def get_pipeline_class(cls, pipeline_name: str) -> Optional[Type[BaseRAGPipeline]]:
+    def get_pipeline_class(cls, pipeline_name: str) -> type[BaseRAGPipeline] | None:
         """
         Get a pipeline class by name.
 
@@ -82,7 +83,7 @@ class PipelineRegistry:
         return cls._pipelines.get(pipeline_name)
 
     @classmethod
-    def list_pipelines(cls) -> List[str]:
+    def list_pipelines(cls) -> list[str]:
         """
         List all registered pipeline names.
 
@@ -92,7 +93,7 @@ class PipelineRegistry:
         return list(cls._pipelines.keys())
 
     @classmethod
-    def get_pipeline_info(cls, pipeline_name: str) -> Optional[Dict[str, Any]]:
+    def get_pipeline_info(cls, pipeline_name: str) -> dict[str, Any] | None:
         """
         Get information about a registered pipeline.
 
@@ -113,7 +114,7 @@ class PipelineRegistry:
         }
 
     @classmethod
-    def list_all_pipeline_info(cls) -> List[Dict[str, Any]]:
+    def list_all_pipeline_info(cls) -> list[dict[str, Any]]:
         """
         Get information about all registered pipelines.
 
@@ -128,8 +129,8 @@ class PipelineRegistry:
         pipeline_name: str,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Dict[str, Any] = None,
-    ) -> Optional[BaseRAGPipeline]:
+        config: dict[str, Any] | None = None,
+    ) -> BaseRAGPipeline | None:
         """
         Create an instance of a registered pipeline.
 

@@ -6,31 +6,31 @@ using dictionaries to store entities. Individual support is explicitly deferred
 to a future phase per the domain model.
 """
 
-from typing import Optional, Sequence, Dict
+from collections.abc import Sequence
 
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
-    Relationship,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
 from domain.ontology.value_objects import SearchCriteria
 
 
 class InMemoryOntologyRepository:
-    """In-memory repository for ontology entities supporting full CRUD operations."""  # noqa: E501
+    """In-memory repository for ontology entities supporting full CRUD operations."""
 
     def __init__(self):
-        self._taxonomies: Dict[str, Taxonomy] = {}
-        self._schemes: Dict[str, ConceptScheme] = {}
-        self._classes: Dict[str, Class] = {}
-        self._relationships: Dict[str, Relationship] = {}
-        self._property_definitions: Dict[str, PropertyDefinition] = {}
+        self._taxonomies: dict[str, Taxonomy] = {}
+        self._schemes: dict[str, ConceptScheme] = {}
+        self._classes: dict[str, Class] = {}
+        self._relationships: dict[str, Relationship] = {}
+        self._property_definitions: dict[str, PropertyDefinition] = {}
 
     # Taxonomy operations
-    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
+    def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
         """Retrieve a taxonomy by ID."""
         return self._taxonomies.get(taxonomy_id)
 
@@ -48,7 +48,7 @@ class InMemoryOntologyRepository:
         self._taxonomies.pop(taxonomy_id, None)
 
     # ConceptScheme operations
-    def get_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+    def get_scheme(self, scheme_id: str) -> ConceptScheme | None:
         """Retrieve a concept scheme by ID."""
         return self._schemes.get(scheme_id)
 
@@ -56,7 +56,7 @@ class InMemoryOntologyRepository:
         """List all concept schemes in a taxonomy."""
         return [
             s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id
-        ]  # noqa: E501
+        ]
 
     def save_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """Save or update a concept scheme."""
@@ -68,7 +68,7 @@ class InMemoryOntologyRepository:
         self._schemes.pop(scheme_id, None)
 
     # Class operations
-    def get_class(self, class_id: str) -> Optional[Class]:
+    def get_class(self, class_id: str) -> Class | None:
         """Retrieve a class by ID."""
         return self._classes.get(class_id)
 
@@ -91,7 +91,7 @@ class InMemoryOntologyRepository:
                 c
                 for c in results
                 if q in (c.title or "").lower()
-                or q in (c.definition or "").lower()  # noqa: E501
+                or q in (c.definition or "").lower()
             ]
 
         # Filter by scheme_id
@@ -102,7 +102,7 @@ class InMemoryOntologyRepository:
         if criteria.taxonomy_id:
             results = [
                 c for c in results if c.taxonomy_id == criteria.taxonomy_id
-            ]  # noqa: E501
+            ]
 
         # Apply limit
         return results[: criteria.limit]
@@ -117,7 +117,7 @@ class InMemoryOntologyRepository:
         self._classes.pop(class_id, None)
 
     # Relationship operations
-    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
+    def get_relationship(self, relationship_id: str) -> Relationship | None:
         """Retrieve a relationship by ID."""
         return self._relationships.get(relationship_id)
 
@@ -125,7 +125,7 @@ class InMemoryOntologyRepository:
         """List all relationships from a source entity."""
         return [
             r for r in self._relationships.values() if r.source_id == source_id
-        ]  # noqa: E501
+        ]
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """Save or update a relationship."""
@@ -137,7 +137,7 @@ class InMemoryOntologyRepository:
         self._relationships.pop(relationship_id, None)
 
     # PropertyDefinition operations
-    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """Retrieve a property definition by ID."""
         return self._property_definitions.get(property_id)
 
@@ -155,7 +155,7 @@ class InMemoryOntologyRepository:
         self._property_definitions.pop(property_id, None)
 
     # Individual operations - NOT IMPLEMENTED
-    def get_individual(self, individual_id: str) -> Optional[Individual]:
+    def get_individual(self, individual_id: str) -> Individual | None:
         """Individual support is deferred to a future phase.
 
         Raises:

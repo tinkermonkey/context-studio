@@ -6,22 +6,23 @@ This processor extracts phrases from input text at sentence granularity and perf
 vector search against knowledge graph embeddings to retrieve relevant context.
 """
 
-from typing import List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-import numpy as np
+from typing import Any
 
-from database.sql_builders import build_max_similarity_case_when
-from rag.processors.models import (
-    ProcessorInput,
-    KGContextOutput,
-    ExtractedPhrase,
-    KGNode,
-)
+import numpy as np
 from database.models import StructureNode
+from database.sql_builders import build_max_similarity_case_when
 from embeddings.generate_embeddings import get_model
 from nlp.pipeline import get_pipeline
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from rag.processors.models import (
+    ExtractedPhrase,
+    KGContextOutput,
+    KGNode,
+    ProcessorInput,
+)
 
 logger = get_logger(__name__)
 
@@ -78,8 +79,8 @@ class KGContextProcessor:
         logger.debug(f"Split input into {len(sentences)} sentences")
 
         # Extract phrases from each sentence
-        all_phrases: List[ExtractedPhrase] = []
-        sentence_phrase_map: Dict[int, List[str]] = {}
+        all_phrases: list[ExtractedPhrase] = []
+        sentence_phrase_map: dict[int, list[str]] = {}
 
         for sent_idx, sent in enumerate(sentences):
             phrases = self._extract_phrases_from_sentence(sent, sent_idx)
@@ -117,7 +118,7 @@ class KGContextProcessor:
 
     def _extract_phrases_from_sentence(
         self, sent, sent_idx: int
-    ) -> List[ExtractedPhrase]:
+    ) -> list[ExtractedPhrase]:
         """
         Extract meaningful phrases from a sentence using spaCy noun chunks.
 
@@ -165,10 +166,10 @@ class KGContextProcessor:
 
     def _search_kg_nodes(
         self,
-        phrases: List[ExtractedPhrase],
+        phrases: list[ExtractedPhrase],
         enable_trace: bool,
-        trace_data: Dict[str, Any],
-    ) -> tuple[List[KGNode], Dict[str, List[Dict[str, Any]]]]:
+        trace_data: dict[str, Any],
+    ) -> tuple[list[KGNode], dict[str, list[dict[str, Any]]]]:
         """
         Perform vector search against KG embeddings for all phrases using SQLite-vec.
 
@@ -185,7 +186,7 @@ class KGContextProcessor:
             return [], {}
 
         # Aggregate all unique phrase texts
-        unique_phrase_texts = list(set(p.text for p in phrases))
+        unique_phrase_texts = list({p.text for p in phrases})
 
         logger.debug(f"Searching KG for {len(unique_phrase_texts)} unique phrases")
 
@@ -205,9 +206,9 @@ class KGContextProcessor:
             return [], {}
 
         # Track best matches across all phrases
-        node_scores: Dict[str, float] = {}  # node_id -> max similarity score
-        node_objects: Dict[str, StructureNode] = {}  # node_id -> StructureNode object
-        phrase_to_kg_map: Dict[str, List[Dict[str, Any]]] = (
+        node_scores: dict[str, float] = {}  # node_id -> max similarity score
+        node_objects: dict[str, StructureNode] = {}  # node_id -> StructureNode object
+        phrase_to_kg_map: dict[str, list[dict[str, Any]]] = (
             {}
         )  # phrase -> list of {node_id, title, similarity}
 

@@ -6,12 +6,12 @@ This module provides graph analytics capabilities using NetworkX alongside
 the SPARQL service for comprehensive graph operations.
 """
 
-import networkx as nx
-from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional, Set
 from datetime import datetime
+from typing import Any
 
+import networkx as nx
 from database.models import StructureNode, StructureNodeLink
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -131,9 +131,9 @@ class NetworkService:
                     created_at=link.created_at,
                 )
 
-    def _get_node_graph_id(self, node_db_id: str) -> Optional[str]:
+    def _get_node_graph_id(self, node_db_id: str) -> str | None:
         """Get the graph structure_node ID from database structure_node ID."""
-        structure_node: Optional[StructureNode] = (
+        structure_node: StructureNode | None = (
             self.db_session.query(StructureNode)
             .filter(StructureNode.id == node_db_id)
             .first()
@@ -147,7 +147,7 @@ class NetworkService:
         logger.info("Refreshing NetworkX graph from database...")
         self._build_graph()
 
-    def get_graph_stats(self) -> Dict[str, Any]:
+    def get_graph_stats(self) -> dict[str, Any]:
         """
         Get comprehensive statistics about the NetworkX graph.
 
@@ -169,14 +169,14 @@ class NetworkService:
         }
 
         # StructureNode type counts
-        node_types: Dict[str, int] = {}
+        node_types: dict[str, int] = {}
         for structure_node, data in self.graph.nodes(data=True):  # type: ignore
             node_type = data.get("type", "unknown")
             node_types[node_type] = node_types.get(node_type, 0) + 1
         stats["node_types"] = node_types
 
         # Edge type counts
-        edge_types: Dict[str, int] = {}
+        edge_types: dict[str, int] = {}
         for source, target, data in self.graph.edges(data=True):
             edge_type = data.get("type", "unknown")
             edge_types[edge_type] = edge_types.get(edge_type, 0) + 1
@@ -201,7 +201,7 @@ class NetworkService:
         target_id: str,
         source_type: str = "term",
         target_type: str = "term",
-    ) -> Optional[List[str]]:
+    ) -> list[str] | None:
         """
         Find the shortest path between two structure_nodes.
 
@@ -229,7 +229,7 @@ class NetworkService:
         entity_type: str = "term",
         depth: int = 1,
         direction: str = "both",
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """
         Get neighbors of a structure_node at specified depth.
 
@@ -253,7 +253,7 @@ class NetworkService:
         visited = {node_id}
 
         for d in range(1, depth + 1):
-            next_level: Set[Any] = set()
+            next_level: set[Any] = set()
 
             for structure_node in current_level:
                 if direction in ["out", "both"]:
@@ -276,7 +276,7 @@ class NetworkService:
 
         return neighbors_by_depth
 
-    def calculate_centrality(self, method: str = "pagerank") -> Dict[str, float]:
+    def calculate_centrality(self, method: str = "pagerank") -> dict[str, float]:
         """
         Calculate structure_node centrality using various algorithms.
 
@@ -298,7 +298,7 @@ class NetworkService:
         else:
             raise ValueError(f"Unknown centrality method: {method}")
 
-    def detect_communities(self, method: str = "louvain") -> List[Set[str]]:
+    def detect_communities(self, method: str = "louvain") -> list[set[str]]:
         """
         Detect communities in the graph.
 
@@ -323,7 +323,7 @@ class NetworkService:
         else:
             raise ValueError(f"Unknown community detection method: {method}")
 
-    def find_terms_in_domain_tree(self, domain_id: str) -> List[str]:
+    def find_terms_in_domain_tree(self, domain_id: str) -> list[str]:
         """
         Find all terms that belong to a domain or its sub-domains.
 
@@ -353,8 +353,8 @@ class NetworkService:
         return terms
 
     def get_node_hierarchy(
-        self, node_id: str, node_type: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, node_id: str, node_type: str | None = None
+    ) -> dict[str, Any]:
         """
         Get the full hierarchy for any structure node (ancestors and descendants).
         This is node-type agnostic.
@@ -443,7 +443,7 @@ class NetworkService:
 
         return {"ancestors": ancestors, "descendants": descendants}
 
-    def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
+    def get_term_hierarchy(self, term_id: str) -> dict[str, Any]:
         """
         Get the full hierarchy for a term (backwards compatibility wrapper).
 
@@ -468,7 +468,7 @@ class NetworkService:
 
     def get_node_info(
         self, entity_id: str, entity_type: str = "term"
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get detailed information about a specific structure_node.
 

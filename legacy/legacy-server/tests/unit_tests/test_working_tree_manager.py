@@ -4,17 +4,16 @@ Unit tests for WorkingTreeManager - Testing working tree state management functi
 Tests staging operations, working tree status, and commit operations.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-
-from services.version_manager import VersionManager, ChangeState  # noqa: E402
-from services.working_tree_manager import (  # noqa: E402
+import pytest
+from services.version_manager import ChangeState, VersionManager
+from services.working_tree_manager import (
     WorkingTreeManager,
 )
 
@@ -64,7 +63,7 @@ class TestWorkingTreeManager:
 
     def test_initialize_entity_invalid_entity_type(self, managers):
         """Test initializing entity with invalid entity type."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         with pytest.raises(ValueError, match="Invalid entity_type"):
             working_tree_manager.initialize_entity_in_working_tree(
@@ -73,7 +72,7 @@ class TestWorkingTreeManager:
 
     def test_initialize_entity_missing_parameters(self, managers):
         """Test initializing entity with missing parameters."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         with pytest.raises(
             ValueError, match="entity_id and initial_version_id are required"
@@ -115,7 +114,7 @@ class TestWorkingTreeManager:
 
     def test_initialize_entity_nonexistent_version(self, managers):
         """Test initializing entity with non-existent version."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         with pytest.raises(ValueError, match="Version .* does not exist"):
             working_tree_manager.initialize_entity_in_working_tree(
@@ -161,7 +160,7 @@ class TestWorkingTreeManager:
 
     def test_update_current_version_not_in_working_tree(self, managers):
         """Test updating current version for entity not in working tree."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         with pytest.raises(ValueError, match="not found in working tree"):
             working_tree_manager.update_current_version(
@@ -253,7 +252,7 @@ class TestWorkingTreeManager:
 
     def test_stage_entity_not_in_working_tree(self, managers):
         """Test staging entity not in working tree."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         with pytest.raises(ValueError, match="not found in working tree"):
             working_tree_manager.stage_entity("structure_node", "non-existent")
@@ -349,7 +348,7 @@ class TestWorkingTreeManager:
 
     def test_get_working_tree_entry_not_found(self, managers):
         """Test retrieving non-existent working tree entry."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         entry = working_tree_manager.get_working_tree_entry(
             "structure_node", "non-existent"
@@ -562,7 +561,7 @@ class TestWorkingTreeManager:
 
     def test_commit_no_staged_changes(self, managers):
         """Test committing when no changes are staged."""
-        version_manager, working_tree_manager = managers
+        _version_manager, working_tree_manager = managers
 
         committed_versions = working_tree_manager.commit_staged_changes("commit-user")
         assert len(committed_versions) == 0

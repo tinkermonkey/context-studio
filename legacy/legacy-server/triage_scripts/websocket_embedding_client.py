@@ -3,11 +3,12 @@
 Test script for the embedding regeneration WebSocket endpoint.
 """
 
+import argparse
 import asyncio
 import json
+
 import websockets
 from websockets.exceptions import ConnectionClosed
-import argparse
 
 
 async def test_embedding_regeneration(uri: str, force: bool = False):

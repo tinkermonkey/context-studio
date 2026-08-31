@@ -1,16 +1,16 @@
-import sys
 import os
+import sys
 
 # Ensure project root is importable
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-)  # noqa: E501
-
-from triage_scripts.triage_helper import (  # noqa: E402
-    create_test_app_with_migrations,
-    cleanup_test_database,
 )
-import pytest  # noqa: E402
+
+import pytest
+from triage_scripts.triage_helper import (
+    cleanup_test_database,
+    create_test_app_with_migrations,
+)
 
 
 def test_sqlite_vec_extension_loads():
@@ -18,7 +18,7 @@ def test_sqlite_vec_extension_loads():
 
     Fail explicitly with the loader exception message so CI can capture the root cause.  # noqa: E501
     """
-    app, test_db_fd, test_db_path, engine, TestingSessionLocal = (
+    _app, test_db_fd, test_db_path, engine, _TestingSessionLocal = (
         create_test_app_with_migrations()
     )
     try:
@@ -38,7 +38,7 @@ def test_sqlite_vec_extension_loads():
                 try:
                     raw_conn.enable_load_extension(True)
                 except Exception:
-                    # Some DB-API wrappers may not expose this; continue and let sqlite_vec.load raise if needed  # noqa: E501
+                    # Some DB-API wrappers may not expose this; continue and let sqlite_vec.load raise if needed
                     pass
                 try:
                     sqlite_vec.load(raw_conn)

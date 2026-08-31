@@ -6,17 +6,14 @@ metrics collection, automated optimization, trend analysis, and alerting for
 enterprise-scale performance management and automated tuning.
 """
 
-import time
 import statistics
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from threading import Lock
+from typing import Any
 
 from utils.logger import get_logger
-
-if TYPE_CHECKING:
-    pass
 
 logger = get_logger(__name__)
 
@@ -33,7 +30,7 @@ class PerformanceAlert:
     threshold_value: float
     description: str
     created_at: datetime
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
 
 
 @dataclass
@@ -43,10 +40,10 @@ class OptimizationAction:
     action_id: str
     action_type: str
     description: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     executed_at: datetime
     success: bool
-    impact_metrics: Dict[str, Any]
+    impact_metrics: dict[str, Any]
 
 
 class PerformanceMonitor:
@@ -105,7 +102,7 @@ class PerformanceMonitor:
             "PerformanceMonitor initialized with comprehensive monitoring capabilities"
         )
 
-    def collect_performance_metrics(self) -> Dict[str, Any]:
+    def collect_performance_metrics(self) -> dict[str, Any]:
         """Collect comprehensive performance metrics."""
 
         logger.debug("Collecting comprehensive performance metrics")
@@ -143,7 +140,7 @@ class PerformanceMonitor:
 
         return metrics
 
-    def analyze_performance_trends(self, window_hours: int = 24) -> Dict[str, Any]:
+    def analyze_performance_trends(self, window_hours: int = 24) -> dict[str, Any]:
         """Analyze performance trends and identify issues."""
 
         logger.info(f"Analyzing performance trends for the last {window_hours} hours")
@@ -225,7 +222,7 @@ class PerformanceMonitor:
             "performance_grade": self._calculate_performance_grade(health_score),
         }
 
-    def auto_optimize_based_on_metrics(self) -> Dict[str, Any]:
+    def auto_optimize_based_on_metrics(self) -> dict[str, Any]:
         """Automatically apply optimizations based on performance metrics."""
 
         if not self.optimization_enabled:
@@ -319,7 +316,7 @@ class PerformanceMonitor:
             ).isoformat(),
         }
 
-    def _collect_database_metrics(self) -> Dict[str, Any]:
+    def _collect_database_metrics(self) -> dict[str, Any]:
         """Collect SQLite database performance metrics."""
 
         try:
@@ -435,7 +432,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to collect database metrics: {e}")
             return {"error": str(e), "connection_status": "error"}
 
-    def _collect_s3_metrics(self) -> Dict[str, Any]:
+    def _collect_s3_metrics(self) -> dict[str, Any]:
         """Collect S3 storage and sync performance metrics."""
 
         if not self.s3_sync:
@@ -460,7 +457,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to collect S3 metrics: {e}")
             return {"error": str(e), "status": "error"}
 
-    def _collect_query_metrics(self) -> Dict[str, Any]:
+    def _collect_query_metrics(self) -> dict[str, Any]:
         """Collect query performance metrics."""
 
         try:
@@ -481,7 +478,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to collect query metrics: {e}")
             return {"error": str(e)}
 
-    def _collect_system_metrics(self) -> Dict[str, Any]:
+    def _collect_system_metrics(self) -> dict[str, Any]:
         """Collect system-level performance metrics."""
 
         try:
@@ -524,7 +521,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to collect system metrics: {e}")
             return {"error": str(e)}
 
-    def _collect_cache_metrics(self) -> Dict[str, Any]:
+    def _collect_cache_metrics(self) -> dict[str, Any]:
         """Collect cache performance metrics."""
 
         try:
@@ -544,7 +541,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to collect cache metrics: {e}")
             return {"error": str(e)}
 
-    def _collect_batch_metrics(self) -> Dict[str, Any]:
+    def _collect_batch_metrics(self) -> dict[str, Any]:
         """Collect batch operation performance metrics."""
 
         try:
@@ -567,8 +564,8 @@ class PerformanceMonitor:
             return {"error": str(e)}
 
     def _analyze_metric_trend(
-        self, metrics_list: List[Dict[str, Any]], metric_path: str
-    ) -> Dict[str, Any]:
+        self, metrics_list: list[dict[str, Any]], metric_path: str
+    ) -> dict[str, Any]:
         """Analyze trend for a specific metric."""
 
         values: list[float] = []
@@ -621,8 +618,8 @@ class PerformanceMonitor:
         }
 
     def _identify_performance_issues(
-        self, trends: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, trends: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Identify performance issues from trend analysis."""
 
         issues = []
@@ -694,8 +691,8 @@ class PerformanceMonitor:
         return issues
 
     def _generate_optimization_recommendations(
-        self, trends: Dict[str, Any], issues: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, trends: dict[str, Any], issues: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate intelligent optimization recommendations."""
 
         recommendations = []
@@ -753,7 +750,7 @@ class PerformanceMonitor:
 
         return recommendations
 
-    def _calculate_health_score(self, trends: Dict[str, Any]) -> float:
+    def _calculate_health_score(self, trends: dict[str, Any]) -> float:
         """Calculate overall system health score (0-1)."""
 
         scores: list[float] = []
@@ -812,7 +809,7 @@ class PerformanceMonitor:
         else:
             return "F"
 
-    def _check_performance_alerts(self, current_metrics: Dict[str, Any]):
+    def _check_performance_alerts(self, current_metrics: dict[str, Any]):
         """Check for performance alerts based on current metrics."""
 
         alerts_triggered = []
@@ -869,8 +866,8 @@ class PerformanceMonitor:
                 )
 
     def _get_nested_metric_value(
-        self, metrics: Dict[str, Any], path: str
-    ) -> Optional[float]:
+        self, metrics: dict[str, Any], path: str
+    ) -> float | None:
         """Get nested metric value from metrics dictionary."""
 
         try:
@@ -905,7 +902,7 @@ class PerformanceMonitor:
             return "low"
 
     def _is_metric_above_threshold(
-        self, metrics: Dict[str, Any], metric_path: str, threshold_key: str
+        self, metrics: dict[str, Any], metric_path: str, threshold_key: str
     ) -> bool:
         """Check if a metric is above its threshold."""
 
@@ -919,7 +916,7 @@ class PerformanceMonitor:
         )
 
     def _is_metric_below_threshold(
-        self, metrics: Dict[str, Any], metric_path: str, threshold_key: str
+        self, metrics: dict[str, Any], metric_path: str, threshold_key: str
     ) -> bool:
         """Check if a metric is below its threshold."""
 
@@ -934,7 +931,7 @@ class PerformanceMonitor:
 
     # Optimization action methods
 
-    def _optimize_slow_queries(self) -> Optional[OptimizationAction]:
+    def _optimize_slow_queries(self) -> OptimizationAction | None:
         """Optimize slow-performing queries."""
 
         try:
@@ -964,7 +961,7 @@ class PerformanceMonitor:
         # Mock check - in real implementation would check view timestamps
         return True
 
-    def _refresh_stale_materialized_views(self) -> Optional[OptimizationAction]:
+    def _refresh_stale_materialized_views(self) -> OptimizationAction | None:
         """Refresh stale materialized views."""
 
         try:
@@ -985,12 +982,12 @@ class PerformanceMonitor:
             logger.error(f"Failed to refresh materialized views: {e}")
             return None
 
-    def _is_storage_cleanup_needed(self, metrics: Dict[str, Any]) -> bool:
+    def _is_storage_cleanup_needed(self, metrics: dict[str, Any]) -> bool:
         """Check if storage cleanup is needed."""
         # Mock check based on storage growth
         return True
 
-    def _cleanup_old_data(self) -> Optional[OptimizationAction]:
+    def _cleanup_old_data(self) -> OptimizationAction | None:
         """Clean up old data to free storage."""
 
         try:
@@ -1014,7 +1011,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to cleanup old data: {e}")
             return None
 
-    def _optimize_cache_settings(self) -> Optional[OptimizationAction]:
+    def _optimize_cache_settings(self) -> OptimizationAction | None:
         """Optimize cache settings to improve hit rates."""
 
         try:
@@ -1039,8 +1036,8 @@ class PerformanceMonitor:
             return None
 
     def _optimize_batch_sizes_based_on_performance(
-        self, metrics: Dict[str, Any]
-    ) -> Optional[OptimizationAction]:
+        self, metrics: dict[str, Any]
+    ) -> OptimizationAction | None:
         """Optimize batch sizes based on current performance."""
 
         try:
@@ -1061,11 +1058,11 @@ class PerformanceMonitor:
             logger.error(f"Failed to optimize batch sizes: {e}")
             return None
 
-    def _should_optimize_s3_storage(self, metrics: Dict[str, Any]) -> bool:
+    def _should_optimize_s3_storage(self, metrics: dict[str, Any]) -> bool:
         """Check if S3 storage optimization is needed."""
         return True  # Mock check
 
-    def _optimize_s3_storage(self) -> Optional[OptimizationAction]:
+    def _optimize_s3_storage(self) -> OptimizationAction | None:
         """Optimize S3 storage settings."""
 
         try:
@@ -1089,7 +1086,7 @@ class PerformanceMonitor:
             logger.error(f"Failed to optimize S3 storage: {e}")
             return None
 
-    def get_performance_dashboard(self) -> Dict[str, Any]:
+    def get_performance_dashboard(self) -> dict[str, Any]:
         """Get comprehensive performance dashboard data."""
 
         current_metrics = self.collect_performance_metrics()

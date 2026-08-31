@@ -9,7 +9,7 @@ in the global configuration files and ensure clean test environments.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 from config import Settings
 
@@ -34,7 +34,7 @@ class TestConfigurationManager:
         self.settings = None
         self._base_config = None
 
-    def _load_base_config(self) -> Dict[str, Any]:
+    def _load_base_config(self) -> dict[str, Any]:
         """Load base configuration without modifying global state."""
         if self._base_config is None:
             # Create a default settings instance to get base configuration
@@ -43,8 +43,8 @@ class TestConfigurationManager:
         return self._base_config.copy()
 
     def get_test_settings(
-        self, overrides: Optional[Dict[str, Any]] = None
-    ) -> Settings:  # noqa: E501
+        self, overrides: dict[str, Any] | None = None
+    ) -> Settings:
         """
         Get test settings with complete isolation.
 
@@ -68,20 +68,20 @@ class TestConfigurationManager:
         # Create settings instance
         self.settings = Settings(**config_data)
 
-        # Save configuration to temporary file (for any code that reads config file directly)  # noqa: E501
+        # Save configuration to temporary file (for any code that reads config file directly)
         self._save_temp_config(config_data)
 
         return self.settings
 
-    def _get_test_defaults(self) -> Dict[str, Any]:
-        """Get test-specific configuration defaults that isolate file paths only."""  # noqa: E501
+    def _get_test_defaults(self) -> dict[str, Any]:
+        """Get test-specific configuration defaults that isolate file paths only."""
         test_logs_dir = self.temp_dir / "logs"
         test_datasets_dir = self.temp_dir / "test_datasets"
         test_logs_dir.mkdir(exist_ok=True)
         test_datasets_dir.mkdir(exist_ok=True)
 
         return {
-            # Only override file paths to prevent pollution - don't change database connections  # noqa: E501
+            # Only override file paths to prevent pollution - don't change database connections
             "logging": {
                 "file_path": str(test_logs_dir / "test_context_studio.log"),
                 "enable_console": False,  # Reduce test output noise
@@ -89,7 +89,7 @@ class TestConfigurationManager:
             },
             "proxy_server": {
                 "database_path": str(self.temp_dir / "test_proxy_cache.db"),
-                "enabled": False,  # Disable proxy for tests by default to avoid conflicts  # noqa: E501
+                "enabled": False,  # Disable proxy for tests by default to avoid conflicts
             },
             "server": {
                 "reload": False,  # Disable auto-reload in tests
@@ -107,13 +107,13 @@ class TestConfigurationManager:
                 "auto_download_models": False,    # Never download during tests
                 "download_timeout": 60,           # Minimum valid timeout
             },
-            # Note: Database URLs are NOT overridden to maintain shared database performance  # noqa: E501
-            # Tests that need database isolation should use utilities from test_db_utils.py  # noqa: E501
+            # Note: Database URLs are NOT overridden to maintain shared database performance
+            # Tests that need database isolation should use utilities from test_db_utils.py
         }
 
     def _deep_update(
-        self, base_dict: Dict[str, Any], update_dict: Dict[str, Any]
-    ) -> Dict[str, Any]:  # noqa: E501
+        self, base_dict: dict[str, Any], update_dict: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Deep update dictionary, merging nested dictionaries.
 
@@ -131,14 +131,14 @@ class TestConfigurationManager:
                 key in result
                 and isinstance(result[key], dict)
                 and isinstance(value, dict)
-            ):  # noqa: E501
+            ):
                 result[key] = self._deep_update(result[key], value)
             else:
                 result[key] = value
 
         return result
 
-    def _save_temp_config(self, config_data: Dict[str, Any]) -> None:
+    def _save_temp_config(self, config_data: dict[str, Any]) -> None:
         """Save configuration to temporary file."""
         with open(self.temp_config_file, "w") as f:
             json.dump(config_data, f, indent=2)
@@ -163,8 +163,8 @@ class TestConfigurationManager:
 
 
 def create_test_settings(
-    temp_dir: str, overrides: Optional[Dict[str, Any]] = None
-) -> Settings:  # noqa: E501
+    temp_dir: str, overrides: dict[str, Any] | None = None
+) -> Settings:
     """
     Convenience function to create isolated test settings.
 
@@ -180,8 +180,8 @@ def create_test_settings(
 
 
 def patch_config_manager_for_tests(
-    temp_dir: str, overrides: Optional[Dict[str, Any]] = None
-) -> TestConfigurationManager:  # noqa: E501
+    temp_dir: str, overrides: dict[str, Any] | None = None
+) -> TestConfigurationManager:
     """
     Create and configure a test configuration manager.
 

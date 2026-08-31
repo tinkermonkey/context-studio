@@ -1,7 +1,8 @@
 """Pydantic models for dataset management."""
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -51,7 +52,7 @@ class MigrationStatus(BaseModel):
 
     current_version: int
     target_version: int
-    pending_migrations: List[str]
+    pending_migrations: list[str]
     needs_migration: bool
 
 
@@ -74,12 +75,12 @@ class ActionLogEntry(BaseModel):
     timestamp: datetime
     action: str
     dataset_id: str
-    dataset_title: Optional[str]
-    details: Dict[str, Any]
+    dataset_title: str | None
+    details: dict[str, Any]
 
 
 class ActionLogResponse(BaseModel):
     """Response model for action log."""
 
-    entries: List[ActionLogEntry]
+    entries: list[ActionLogEntry]
     total_count: int

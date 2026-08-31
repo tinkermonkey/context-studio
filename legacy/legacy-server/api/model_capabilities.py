@@ -3,29 +3,28 @@
 API endpoints for model capabilities information.
 """
 
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query, status
 
-from llm.models import ModelCapabilitiesResponse, SupportedModelsResponse
+from fastapi import APIRouter, HTTPException, Query, status
 from llm.model_capabilities import (
     get_model_capabilities,
-    get_supported_models,
     get_models_by_provider,
+    get_supported_models,
 )
+from llm.models import ModelCapabilitiesResponse, SupportedModelsResponse
 from llm.openrouter_discovery import get_openrouter_discovery_service
 from utils.logger import get_logger
 
 router = APIRouter(
     prefix="/api/model-capabilities", tags=["Model Capabilities"]
-)  # noqa: E501
+)
 logger = get_logger(__name__)
 
 
 @router.get("", response_model=SupportedModelsResponse)
 async def list_supported_models(
-    provider: Optional[str] = Query(
+    provider: str | None = Query(
         None, description="Filter by provider (openai, anthropic, etc.)"
-    )  # noqa: E501
+    )
 ):
     """List all supported models with their capabilities"""
     try:
@@ -33,7 +32,7 @@ async def list_supported_models(
             model_names = get_models_by_provider(provider)
             logger.info(
                 f"Listing {len(model_names)} models for provider: {provider}"
-            )  # noqa: E501
+            )
         else:
             model_names = get_supported_models()
             logger.info(f"Listing all {len(model_names)} supported models")
@@ -48,10 +47,10 @@ async def list_supported_models(
                 "supports_top_p": capabilities.supports_top_p,
                 "supports_top_k": capabilities.supports_top_k,
                 "supports_max_tokens": capabilities.supports_max_tokens,
-                "supports_frequency_penalty": capabilities.supports_frequency_penalty,  # noqa: E501
-                "supports_presence_penalty": capabilities.supports_presence_penalty,  # noqa: E501
-                "supports_structured_output": capabilities.supports_structured_output,  # noqa: E501
-                "supports_function_calling": capabilities.supports_function_calling,  # noqa: E501
+                "supports_frequency_penalty": capabilities.supports_frequency_penalty,
+                "supports_presence_penalty": capabilities.supports_presence_penalty,
+                "supports_structured_output": capabilities.supports_structured_output,
+                "supports_function_calling": capabilities.supports_function_calling,
                 "supports_streaming": capabilities.supports_streaming,
                 "max_tokens_limit": capabilities.max_tokens_limit,
                 "context_window": capabilities.context_window,
@@ -72,7 +71,7 @@ async def list_supported_models(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("/{model_name}", response_model=ModelCapabilitiesResponse)
@@ -89,10 +88,10 @@ async def get_model_capabilities_endpoint(model_name: str):
             "supports_top_p": capabilities.supports_top_p,
             "supports_top_k": capabilities.supports_top_k,
             "supports_max_tokens": capabilities.supports_max_tokens,
-            "supports_frequency_penalty": capabilities.supports_frequency_penalty,  # noqa: E501
-            "supports_presence_penalty": capabilities.supports_presence_penalty,  # noqa: E501
-            "supports_structured_output": capabilities.supports_structured_output,  # noqa: E501
-            "supports_function_calling": capabilities.supports_function_calling,  # noqa: E501
+            "supports_frequency_penalty": capabilities.supports_frequency_penalty,
+            "supports_presence_penalty": capabilities.supports_presence_penalty,
+            "supports_structured_output": capabilities.supports_structured_output,
+            "supports_function_calling": capabilities.supports_function_calling,
             "supports_streaming": capabilities.supports_streaming,
             "max_tokens_limit": capabilities.max_tokens_limit,
             "context_window": capabilities.context_window,
@@ -109,12 +108,12 @@ async def get_model_capabilities_endpoint(model_name: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get(
     "/providers/{provider_name}", response_model=SupportedModelsResponse
-)  # noqa: E501
+)
 async def list_models_by_provider(provider_name: str):
     """List all models for a specific provider"""
     try:
@@ -135,10 +134,10 @@ async def list_models_by_provider(provider_name: str):
                 "supports_top_p": capabilities.supports_top_p,
                 "supports_top_k": capabilities.supports_top_k,
                 "supports_max_tokens": capabilities.supports_max_tokens,
-                "supports_frequency_penalty": capabilities.supports_frequency_penalty,  # noqa: E501
-                "supports_presence_penalty": capabilities.supports_presence_penalty,  # noqa: E501
-                "supports_structured_output": capabilities.supports_structured_output,  # noqa: E501
-                "supports_function_calling": capabilities.supports_function_calling,  # noqa: E501
+                "supports_frequency_penalty": capabilities.supports_frequency_penalty,
+                "supports_presence_penalty": capabilities.supports_presence_penalty,
+                "supports_structured_output": capabilities.supports_structured_output,
+                "supports_function_calling": capabilities.supports_function_calling,
                 "supports_streaming": capabilities.supports_streaming,
                 "max_tokens_limit": capabilities.max_tokens_limit,
                 "context_window": capabilities.context_window,
@@ -159,20 +158,20 @@ async def list_models_by_provider(provider_name: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.get("/openrouter/discover", response_model=SupportedModelsResponse)
 async def discover_openrouter_models(
-    provider_filter: Optional[str] = Query(
+    provider_filter: str | None = Query(
         None, description="Filter by provider (anthropic, openai, etc.)"
-    ),  # noqa: E501
-    min_context: Optional[int] = Query(
+    ),
+    min_context: int | None = Query(
         None, description="Minimum context window size"
-    ),  # noqa: E501
-    api_key: Optional[str] = Query(
+    ),
+    api_key: str | None = Query(
         None, description="OpenRouter API key (optional)"
-    ),  # noqa: E501
+    ),
 ):
     """Discover available models from OpenRouter API"""
     try:
@@ -195,12 +194,12 @@ async def discover_openrouter_models(
 
             openrouter_models = discovery_service.filter_models(
                 openrouter_models, criteria
-            )  # noqa: E501
+            )
 
         # Convert to our format
         capabilities_map = discovery_service.convert_to_model_capabilities(
             openrouter_models
-        )  # noqa: E501
+        )
 
         models = []
         for model_name, capabilities in capabilities_map.items():
@@ -209,10 +208,10 @@ async def discover_openrouter_models(
                 "supports_top_p": capabilities.supports_top_p,
                 "supports_top_k": capabilities.supports_top_k,
                 "supports_max_tokens": capabilities.supports_max_tokens,
-                "supports_frequency_penalty": capabilities.supports_frequency_penalty,  # noqa: E501
-                "supports_presence_penalty": capabilities.supports_presence_penalty,  # noqa: E501
-                "supports_structured_output": capabilities.supports_structured_output,  # noqa: E501
-                "supports_function_calling": capabilities.supports_function_calling,  # noqa: E501
+                "supports_frequency_penalty": capabilities.supports_frequency_penalty,
+                "supports_presence_penalty": capabilities.supports_presence_penalty,
+                "supports_structured_output": capabilities.supports_structured_output,
+                "supports_function_calling": capabilities.supports_function_calling,
                 "supports_streaming": capabilities.supports_streaming,
                 "max_tokens_limit": capabilities.max_tokens_limit,
                 "context_window": capabilities.context_window,
@@ -228,7 +227,7 @@ async def discover_openrouter_models(
 
         logger.info(
             f"Successfully discovered {len(models)} models from OpenRouter"
-        )  # noqa: E501
+        )
 
         return SupportedModelsResponse(models=models, total_count=len(models))
 
@@ -237,17 +236,17 @@ async def discover_openrouter_models(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.post("/openrouter/sync")
 async def sync_openrouter_models(
-    api_key: Optional[str] = Query(
+    api_key: str | None = Query(
         None, description="OpenRouter API key (optional)"
-    ),  # noqa: E501
-    provider_filter: Optional[str] = Query(
+    ),
+    provider_filter: str | None = Query(
         None, description="Only sync models from specific provider"
-    ),  # noqa: E501
+    ),
 ):
     """Sync OpenRouter models into our static registry (admin endpoint)"""
     try:
@@ -286,4 +285,4 @@ async def sync_openrouter_models(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )

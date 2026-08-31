@@ -1,33 +1,33 @@
 """Integration tests for refactored reference service."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-import pytest  # noqa: E402
-import asyncio  # noqa: E402
-from unittest.mock import Mock, AsyncMock, patch  # noqa: E402
-from datetime import datetime, UTC  # noqa: E402
+import asyncio
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, Mock, patch
 
-from reference_api.service import ReferenceService  # noqa: E402
-from reference_api.models import (  # noqa: E402
-    SourceType,
-    MultiSourceSearchResponse,
-    DBpediaSearchRequest,
+import pytest
+from config import ConfigurationManager
+from reference_api.models import (
     ConceptNetQueryRequest,
-    WikidataSparqlRequest,
-    SchemaOrgSearchRequest,
+    ConceptNetQueryResponse,
+    DBpediaSearchRequest,
     DBpediaSearchResponse,
     DBpediaSearchResult,
-    ConceptNetQueryResponse,
-    WikidataSparqlResponse,
+    MultiSourceSearchResponse,
+    SchemaOrgSearchRequest,
     SchemaOrgSearchResponse,
-    SchemaOrgSearchResult,  # noqa: E501
+    SchemaOrgSearchResult,
+    SourceType,
+    WikidataSparqlRequest,
+    WikidataSparqlResponse,
 )
-from config import ConfigurationManager  # noqa: E402
+from reference_api.service import ReferenceService
 
 
 class TestReferenceServiceRefactored:
@@ -111,7 +111,7 @@ class TestReferenceServiceRefactored:
                     "end": {
                         "@id": "/c/en/programming_language",
                         "label": "programming language",
-                    },  # noqa: E501
+                    },
                     "weight": 0.8,
                     "sources": [],
                 }
@@ -139,11 +139,11 @@ class TestReferenceServiceRefactored:
                         {
                             "item": {
                                 "value": "http://www.wikidata.org/entity/Q28865"
-                            },  # noqa: E501
+                            },
                             "itemLabel": {"value": "Python"},
                             "itemDescription": {
                                 "value": "programming language"
-                            },  # noqa: E501
+                            },
                         }
                     ]
                 }
@@ -184,11 +184,11 @@ class TestReferenceServiceRefactored:
     @pytest.mark.asyncio
     async def test_dbpedia_search_returns_normalized_response(
         self, service, mock_dbpedia_source
-    ):  # noqa: E501
-        """Test that DBpedia search returns normalized MultiSourceSearchResponse."""  # noqa: E501
+    ):
+        """Test that DBpedia search returns normalized MultiSourceSearchResponse."""
         with patch.object(
             service, "_get_source", return_value=mock_dbpedia_source
-        ):  # noqa: E501
+        ):
             request = DBpediaSearchRequest(query="python", limit=10)
             response = await service.dbpedia_search(request)
 
@@ -210,11 +210,11 @@ class TestReferenceServiceRefactored:
     @pytest.mark.asyncio
     async def test_conceptnet_query_returns_normalized_response(
         self, service, mock_conceptnet_source
-    ):  # noqa: E501
-        """Test that ConceptNet query returns normalized MultiSourceSearchResponse."""  # noqa: E501
+    ):
+        """Test that ConceptNet query returns normalized MultiSourceSearchResponse."""
         with patch.object(
             service, "_get_source", return_value=mock_conceptnet_source
-        ):  # noqa: E501
+        ):
             request = ConceptNetQueryRequest(node="/c/en/python", limit=20)
             response = await service.conceptnet_query(request)
 
@@ -227,7 +227,7 @@ class TestReferenceServiceRefactored:
             # Verify nodes
             python_node = next(
                 n for n in response.results if "python" in n.title
-            )  # noqa: E501
+            )
             assert python_node.id == "conceptnet:/c/en/python"
             assert python_node.source == SourceType.CONCEPTNET
 
@@ -239,14 +239,14 @@ class TestReferenceServiceRefactored:
     @pytest.mark.asyncio
     async def test_wikidata_sparql_returns_normalized_response(
         self, service, mock_wikidata_source
-    ):  # noqa: E501
-        """Test that Wikidata SPARQL returns normalized MultiSourceSearchResponse."""  # noqa: E501
+    ):
+        """Test that Wikidata SPARQL returns normalized MultiSourceSearchResponse."""
         with patch.object(
             service, "_get_source", return_value=mock_wikidata_source
-        ):  # noqa: E501
+        ):
             request = WikidataSparqlRequest(
                 query='SELECT ?item WHERE { ?item rdfs:label "Python"@en }'
-            )  # noqa: E501
+            )
             response = await service.wikidata_sparql(request)
 
             # Verify response type and structure
@@ -264,14 +264,14 @@ class TestReferenceServiceRefactored:
     @pytest.mark.asyncio
     async def test_schema_org_search_returns_normalized_response(
         self, service, mock_schema_org_source
-    ):  # noqa: E501
-        """Test that Schema.org search returns normalized MultiSourceSearchResponse."""  # noqa: E501
+    ):
+        """Test that Schema.org search returns normalized MultiSourceSearchResponse."""
         with patch.object(
             service, "_get_source", return_value=mock_schema_org_source
-        ):  # noqa: E501
+        ):
             request = SchemaOrgSearchRequest(
                 query="ComputerLanguage", limit=10
-            )  # noqa: E501
+            )
             response = await service.schema_org_search(request)
 
             # Verify response type and structure
@@ -318,7 +318,7 @@ class TestReferenceServiceRefactored:
         conceptnet_source = AsyncMock()
         conceptnet_source.__aenter__ = AsyncMock(
             return_value=conceptnet_source
-        )  # noqa: E501
+        )
         conceptnet_source.__aexit__ = AsyncMock(return_value=None)
         conceptnet_source.query.return_value = ConceptNetQueryResponse(
             success=True,
@@ -351,11 +351,11 @@ class TestReferenceServiceRefactored:
                         {
                             "item": {
                                 "value": "http://www.wikidata.org/entity/Q28865"
-                            },  # noqa: E501
+                            },
                             "itemLabel": {"value": "Python"},
                             "itemDescription": {
                                 "value": "programming language"
-                            },  # noqa: E501
+                            },
                         }
                     ]
                 }
@@ -367,7 +367,7 @@ class TestReferenceServiceRefactored:
         schema_org_source = AsyncMock()
         schema_org_source.__aenter__ = AsyncMock(
             return_value=schema_org_source
-        )  # noqa: E501
+        )
         schema_org_source.__aexit__ = AsyncMock(return_value=None)
         schema_org_source.search.return_value = SchemaOrgSearchResponse(
             success=True,
@@ -393,7 +393,7 @@ class TestReferenceServiceRefactored:
             assert response.query == "python"
             assert (
                 len(response.results) >= 3
-            )  # At least one from each successful source  # noqa: E501
+            )  # At least one from each successful source
             assert len(response.sources_queried) == 4  # All sources queried
 
             # Verify we have nodes from different sources
@@ -405,10 +405,10 @@ class TestReferenceServiceRefactored:
             # Verify cross-reference links were discovered
             cross_ref_links = [
                 link for link in response.links if link.predicate == "sameAs"
-            ]  # noqa: E501
+            ]
             assert (
                 len(cross_ref_links) > 0
-            ), "Expected cross-reference links between similar nodes"  # noqa: E501
+            ), "Expected cross-reference links between similar nodes"
 
     @pytest.mark.asyncio
     async def test_error_handling_integration(self, service):
@@ -442,7 +442,7 @@ class TestReferenceServiceRefactored:
             SourceType.DBPEDIA,
             SourceType.CONCEPTNET,
             SourceType.WIKIDATA,
-        ]:  # noqa: E501
+        ]:
             source = AsyncMock()
             source.__aenter__ = AsyncMock(return_value=source)
             source.__aexit__ = AsyncMock(return_value=None)
@@ -453,7 +453,7 @@ class TestReferenceServiceRefactored:
                 return getattr(
                     source_type,
                     "mock_response",
-                    MultiSourceSearchResponse(  # noqa: E501
+                    MultiSourceSearchResponse(
                         query="test",
                         results=[],
                         links=[],
@@ -490,26 +490,26 @@ class TestReferenceServiceRefactored:
                     SourceType.DBPEDIA,
                     SourceType.CONCEPTNET,
                     SourceType.WIKIDATA,
-                ],  # noqa: E501
+                ],
                 limit=5,
             )
             response = await service.search(request)
             execution_time = time.time() - start_time
 
-            # Should complete in roughly 100ms (parallel) rather than 300ms (sequential)  # noqa: E501
+            # Should complete in roughly 100ms (parallel) rather than 300ms (sequential)
             assert (
                 execution_time < 0.2
-            ), f"Expected parallel execution, but took {execution_time:.3f}s"  # noqa: E501
+            ), f"Expected parallel execution, but took {execution_time:.3f}s"
             assert isinstance(response, MultiSourceSearchResponse)
 
     @pytest.mark.asyncio
     async def test_backwards_compatibility_legacy_methods(
         self, service, mock_dbpedia_source
-    ):  # noqa: E501
-        """Test that legacy wrapper methods still work for backwards compatibility."""  # noqa: E501
+    ):
+        """Test that legacy wrapper methods still work for backwards compatibility."""
         with patch.object(
             service, "_get_source", return_value=mock_dbpedia_source
-        ):  # noqa: E501
+        ):
             # Test legacy DBpedia search method exists and works
             assert hasattr(service, "dbpedia_search_legacy")
 
@@ -523,7 +523,7 @@ class TestReferenceServiceRefactored:
 
     @pytest.mark.asyncio
     async def test_cross_reference_discovery_integration(self, service):
-        """Test that cross-references are discovered correctly in multi-source search."""  # noqa: E501
+        """Test that cross-references are discovered correctly in multi-source search."""
         # Create sources that return similar entities
         dbpedia_source = AsyncMock()
         dbpedia_source.__aenter__ = AsyncMock(return_value=dbpedia_source)
@@ -558,11 +558,11 @@ class TestReferenceServiceRefactored:
                         {
                             "item": {
                                 "value": "http://www.wikidata.org/entity/Q28865"
-                            },  # noqa: E501
+                            },
                             "itemLabel": {"value": "Python"},  # Same title
                             "itemDescription": {
                                 "value": "programming language"
-                            },  # noqa: E501
+                            },
                         }
                     ]
                 }
@@ -590,7 +590,7 @@ class TestReferenceServiceRefactored:
             # Should have cross-reference links
             cross_ref_links = [
                 link for link in response.links if link.predicate == "sameAs"
-            ]  # noqa: E501
+            ]
             assert len(cross_ref_links) > 0
 
             # Verify cross-reference link properties
@@ -599,10 +599,10 @@ class TestReferenceServiceRefactored:
             assert cross_ref.attributes["confidence"] >= 0.8
             assert (
                 "dbpedia:" in cross_ref.subject or "dbpedia:" in cross_ref.object
-            )  # noqa: E501
+            )
             assert (
                 "wikidata:" in cross_ref.subject or "wikidata:" in cross_ref.object
-            )  # noqa: E501
+            )
 
     @pytest.mark.asyncio
     async def test_service_components_integration(self, service):
@@ -622,4 +622,4 @@ class TestReferenceServiceRefactored:
         assert hasattr(service.aggregator, "deduplicate_nodes")
         assert hasattr(
             service.response_builder, "build_single_source_response"
-        )  # noqa: E501
+        )

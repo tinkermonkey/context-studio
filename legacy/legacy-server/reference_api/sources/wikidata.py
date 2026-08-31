@@ -1,15 +1,16 @@
 # mypy: ignore-errors
 """Wikidata source implementation"""
 
-from typing import Optional, List
-from .base import BaseReferenceSource
+
 from config import get_settings
+
 from ..models import (
-    WikidataSparqlResponse,
     WikidataEntityResponse,
     WikidataSearchResponse,
     WikidataSearchResult,
+    WikidataSparqlResponse,
 )
+from .base import BaseReferenceSource
 
 
 class WikidataSource(BaseReferenceSource):
@@ -47,14 +48,12 @@ class WikidataSource(BaseReferenceSource):
     async def get_entity_data(
         self,
         entity_url: str,
-        properties: Optional[List[str]] = None,
+        properties: list[str] | None = None,
         format: str = "json",
     ) -> WikidataEntityResponse:
         try:
             # Normalize entity id
-            if "/wiki/" in entity_url:
-                entity_id = entity_url.rstrip("/").split("/")[-1]
-            elif "/entity/" in entity_url:
+            if "/wiki/" in entity_url or "/entity/" in entity_url:
                 entity_id = entity_url.rstrip("/").split("/")[-1]
             else:
                 entity_id = entity_url

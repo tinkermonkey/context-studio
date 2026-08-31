@@ -1,16 +1,16 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-import tempfile  # noqa: E402
+import tempfile
+from unittest.mock import Mock, patch
 
-from pipeline.manager import PipelineDatabaseManager  # noqa: E402
-from llm.execution_tracker import ExecutionTracker  # noqa: E402
-from llm.models import RecordSelectionRequest, PipelineType  # noqa: E402
-from sqlalchemy import text  # noqa: E402
+import pytest
+from llm.execution_tracker import ExecutionTracker
+from llm.models import PipelineType, RecordSelectionRequest
+from pipeline.manager import PipelineDatabaseManager
+from sqlalchemy import text
 
 
 class TestLLMTraceabilityIntegration:
@@ -41,7 +41,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -80,7 +80,7 @@ class TestLLMTraceabilityIntegration:
         assert details["execution"]["status"] == "success"
         assert (
             details["execution"]["pipeline_type"] == "suggest_term_definition"
-        )  # noqa: E501
+        )
         assert details["execution"]["token_usage"]["total_tokens"] == 50
         assert details["selections"] == []  # No selections yet
 
@@ -91,7 +91,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -135,7 +135,7 @@ class TestLLMTraceabilityIntegration:
         assert selection["suggestion_field"] == "definition"
         assert (
             selection["selected_content"] == "A test is a procedure for evaluation."
-        )  # noqa: E501
+        )
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_analytics_calculation(self, mock_get_session):
@@ -144,7 +144,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -174,7 +174,7 @@ class TestLLMTraceabilityIntegration:
                     {"input_tokens": 10, "output_tokens": 15, "total_tokens": 25}
                     if success
                     else None
-                ),  # noqa: E501
+                ),
             )
 
         # Add some selections (2 out of 4 successful)
@@ -205,7 +205,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -236,7 +236,7 @@ class TestLLMTraceabilityIntegration:
                     "input_tokens": 10,
                     "output_tokens": 15,
                     "total_tokens": 25,
-                },  # noqa: E501
+                },
             )
 
         # Get analytics for all types
@@ -262,7 +262,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -277,7 +277,7 @@ class TestLLMTraceabilityIntegration:
 
         with pytest.raises(
             ValueError, match="Execution nonexistent-execution not found"
-        ):  # noqa: E501
+        ):
             tracker.record_selection(selection_request)
 
         # Test getting details for non-existent execution
@@ -291,7 +291,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -320,7 +320,7 @@ class TestLLMTraceabilityIntegration:
                     "input_tokens": 5,
                     "output_tokens": 10,
                     "total_tokens": 15,
-                },  # noqa: E501
+                },
             )
 
         # Verify all executions completed properly
@@ -339,7 +339,7 @@ class TestLLMTraceabilityIntegration:
             # Check pipeline_flavor_executions table exists
             result = conn.execute(
                 text(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavor_executions'"  # noqa: E501
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavor_executions'"
                 )
             )
             assert result.fetchone() is not None
@@ -347,7 +347,7 @@ class TestLLMTraceabilityIntegration:
             # Check pipeline_flavor_selections table exists
             result = conn.execute(
                 text(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavor_selections'"  # noqa: E501
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavor_selections'"
                 )
             )
             assert result.fetchone() is not None
@@ -355,7 +355,7 @@ class TestLLMTraceabilityIntegration:
             # Check indexes were created
             result = conn.execute(
                 text(
-                    "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'"  # noqa: E501
+                    "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'"
                 )
             )
             indexes = [row[0] for row in result.fetchall()]
@@ -372,7 +372,7 @@ class TestLLMTraceabilityIntegration:
             for expected_index in expected_indexes:
                 assert (
                     expected_index in indexes
-                ), f"Missing index: {expected_index}"  # noqa: E501
+                ), f"Missing index: {expected_index}"
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_get_execution_history_endpoint(self, mock_get_session):
@@ -381,7 +381,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -411,7 +411,7 @@ class TestLLMTraceabilityIntegration:
                     "input_tokens": 10,
                     "output_tokens": 15,
                     "total_tokens": 25,
-                },  # noqa: E501
+                },
             )
 
         # Create executions for flavor 2
@@ -436,27 +436,27 @@ class TestLLMTraceabilityIntegration:
                     "input_tokens": 8,
                     "output_tokens": 12,
                     "total_tokens": 20,
-                },  # noqa: E501
+                },
             )
 
         # Test getting execution history for flavor-1
         history_flavor_1 = tracker.get_flavor_execution_history(
             "flavor-1", limit=10
-        )  # noqa: E501
+        )
         assert history_flavor_1["flavor_id"] == "flavor-1"
         assert history_flavor_1["total_count"] == 3
         assert len(history_flavor_1["executions"]) == 3
 
-        # Verify all expected executions are present (order may vary due to timestamp precision)  # noqa: E501
+        # Verify all expected executions are present (order may vary due to timestamp precision)
         execution_ids = [exec["id"] for exec in history_flavor_1["executions"]]
         assert set(execution_ids) == set(
             flavor_1_executions
-        )  # All executions present  # noqa: E501
+        )  # All executions present
 
         # Test getting execution history for flavor-2
         history_flavor_2 = tracker.get_flavor_execution_history(
             "flavor-2", limit=10
-        )  # noqa: E501
+        )
         assert history_flavor_2["flavor_id"] == "flavor-2"
         assert history_flavor_2["total_count"] == 2
         assert len(history_flavor_2["executions"]) == 2
@@ -464,14 +464,14 @@ class TestLLMTraceabilityIntegration:
         # Test with limit
         limited_history = tracker.get_flavor_execution_history(
             "flavor-1", limit=1
-        )  # noqa: E501
+        )
         assert limited_history["total_count"] == 3  # Still shows total count
         assert len(limited_history["executions"]) == 1  # But only returns 1
 
         # Test with non-existent flavor
         empty_history = tracker.get_flavor_execution_history(
             "nonexistent-flavor"
-        )  # noqa: E501
+        )
         assert empty_history["total_count"] == 0
         assert len(empty_history["executions"]) == 0
 
@@ -482,7 +482,7 @@ class TestLLMTraceabilityIntegration:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -492,7 +492,7 @@ class TestLLMTraceabilityIntegration:
             test_request = Mock()
             test_request.model_dump.return_value = {
                 "term": f"analytics_test{i}"
-            }  # noqa: E501
+            }
 
             execution_id = tracker.start_execution(
                 pipeline_flavor_id="analytics-flavor",
@@ -509,14 +509,14 @@ class TestLLMTraceabilityIntegration:
                 execution_id=execution_id,
                 response_message=(
                     f"Response for analytics_test{i}" if success else ""
-                ),  # noqa: E501
+                ),
                 success=success,
                 error_message="Test error" if not success else None,
                 token_usage=(
                     {"input_tokens": 10, "output_tokens": 15, "total_tokens": 25}
                     if success
                     else None
-                ),  # noqa: E501
+                ),
             )
 
         # Add some selections (2 out of 3 successful executions)
@@ -533,7 +533,7 @@ class TestLLMTraceabilityIntegration:
         # Test flavor analytics
         analytics = tracker.get_flavor_analytics(
             "analytics-flavor", days_back=30
-        )  # noqa: E501
+        )
 
         assert analytics["flavor_id"] == "analytics-flavor"
         assert analytics["time_range_days"] == 30
@@ -546,12 +546,12 @@ class TestLLMTraceabilityIntegration:
         assert analytics_data["total_selections"] == 2
         assert (
             analytics_data["selection_rate"] == 2 / 3
-        )  # 2/3 successful executions  # noqa: E501
+        )  # 2/3 successful executions
 
         # Test with different days_back parameter
         analytics_short = tracker.get_flavor_analytics(
             "analytics-flavor", days_back=1
-        )  # noqa: E501
+        )
         assert analytics_short["time_range_days"] == 1
         # Should have same results since we just created the data
         assert analytics_short["analytics"]["total_executions"] == 4
@@ -564,12 +564,12 @@ class TestLLMTraceabilityIntegration:
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_execution_details_endpoint_still_works(self, mock_get_session):
-        """Test that the renamed execution-details endpoint still works correctly."""  # noqa: E501
+        """Test that the renamed execution-details endpoint still works correctly."""
 
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -577,7 +577,7 @@ class TestLLMTraceabilityIntegration:
         test_request = Mock()
         test_request.model_dump.return_value = {
             "term": "execution_details_test"
-        }  # noqa: E501
+        }
 
         execution_id = tracker.start_execution(
             pipeline_flavor_id="details-flavor",
@@ -595,7 +595,7 @@ class TestLLMTraceabilityIntegration:
                 "input_tokens": 12,
                 "output_tokens": 18,
                 "total_tokens": 30,
-            },  # noqa: E501
+            },
             start_time=1000000000.0,
         )
 
@@ -616,13 +616,13 @@ class TestLLMTraceabilityIntegration:
         assert details["execution"]["id"] == execution_id
         assert (
             details["execution"]["pipeline_type"] == "suggest_term_definition"
-        )  # noqa: E501
+        )
         assert details["execution"]["pipeline_flavor_id"] == "details-flavor"
         assert details["execution"]["pipeline_flavor_version"] == 2
         assert details["execution"]["status"] == "success"
         assert (
             details["execution"]["response_message"] == "Details test response"
-        )  # noqa: E501
+        )
         assert details["execution"]["token_usage"]["total_tokens"] == 30
 
         # Verify selection is included

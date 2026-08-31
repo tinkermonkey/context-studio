@@ -5,18 +5,19 @@ Tests the immutable value objects including NodeType, ExternalReference, Lexical
 DataPropertyValue, OntologyMapping, and SearchCriteria.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import types  # noqa: E402
-from domain.ontology.value_objects import (  # noqa: E402
-    NodeType,
+import types
+
+import pytest
+from domain.ontology.value_objects import (
+    DataPropertyValue,
     ExternalReference,
     LexicalSense,
-    DataPropertyValue,
+    NodeType,
     OntologyMapping,
     SearchCriteria,
 )

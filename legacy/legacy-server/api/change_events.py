@@ -9,18 +9,18 @@ Endpoints:
 - PUT /api/change_events/{event_id} - Update a change event (e.g., mark as processed)  # noqa: E501
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import List, Optional
-from sqlalchemy.orm import Session
 
-from database.utils import get_db
 from database.models import ChangeEvent
+from database.utils import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
+
 from api.models.change_events import (
     ChangeEventOut,
     ChangeEventUpdate,
     RecordTypeEnum,
-)  # noqa: E501
-from utils.logger import get_logger
+)
 
 logger = get_logger(__name__)
 
@@ -36,8 +36,8 @@ def to_change_event_out(event: ChangeEvent) -> ChangeEventOut:
             event.record_type.value
             if hasattr(event.record_type, "value")
             else str(event.record_type)
-        ),  # noqa: E501
-        record_id=str(event.record_id) if event.record_id else None,  # type: ignore  # noqa: E501
+        ),
+        record_id=str(event.record_id) if event.record_id else None,  # type: ignore
         old_data=event.old_data,  # type: ignore
         new_data=event.new_data,  # type: ignore
         event_timestamp=event.timestamp.isoformat(),
@@ -45,22 +45,22 @@ def to_change_event_out(event: ChangeEvent) -> ChangeEventOut:
     )
 
 
-@router.get("/", response_model=List[ChangeEventOut])
+@router.get("/", response_model=list[ChangeEventOut])
 def list_change_events(
     skip: int = Query(0, ge=0, description="Number of events to skip"),
     limit: int = Query(
         50, ge=1, le=1000, description="Maximum number of events to return"
-    ),  # noqa: E501
-    record_type: Optional[RecordTypeEnum] = Query(
+    ),
+    record_type: RecordTypeEnum | None = Query(
         None, description="Filter by record type"
-    ),  # noqa: E501
-    record_id: Optional[str] = Query(None, description="Filter by record ID"),
-    event_type: Optional[str] = Query(
+    ),
+    record_id: str | None = Query(None, description="Filter by record ID"),
+    event_type: str | None = Query(
         None, description="Filter by event type (create, update, delete)"
-    ),  # noqa: E501
-    processed: Optional[bool] = Query(
+    ),
+    processed: bool | None = Query(
         None, description="Filter by processed status"
-    ),  # noqa: E501
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -77,7 +77,7 @@ def list_change_events(
 
             query = query.filter(
                 ChangeEvent.record_type == RecordType(record_type.value)
-            )  # noqa: E501
+            )
 
         if record_id is not None:
             query = query.filter(ChangeEvent.record_id == record_id)
@@ -99,8 +99,8 @@ def list_change_events(
     except Exception as e:
         logger.error(f"Error listing change events: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Error listing change events: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Error listing change events: {e!s}"
+        )
 
 
 @router.get("/{event_id}", response_model=ChangeEventOut)
@@ -111,12 +111,12 @@ def get_change_event(event_id: int, db: Session = Depends(get_db)):
     try:
         event = (
             db.query(ChangeEvent).filter(ChangeEvent.id == event_id).first()
-        )  # noqa: E501
+        )
 
         if not event:
             raise HTTPException(
                 status_code=404, detail=f"Change event {event_id} not found"
-            )  # noqa: E501
+            )
 
         return to_change_event_out(event)
 
@@ -125,10 +125,10 @@ def get_change_event(event_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(
             f"Error getting change event {event_id}: {e}", exc_info=True
-        )  # noqa: E501
+        )
         raise HTTPException(
-            status_code=500, detail=f"Error getting change event: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Error getting change event: {e!s}"
+        )
 
 
 @router.put("/{event_id}", response_model=ChangeEventOut)
@@ -141,12 +141,12 @@ def update_change_event(
     try:
         event = (
             db.query(ChangeEvent).filter(ChangeEvent.id == event_id).first()
-        )  # noqa: E501
+        )
 
         if not event:
             raise HTTPException(
                 status_code=404, detail=f"Change event {event_id} not found"
-            )  # noqa: E501
+            )
 
         # Update the processed field
         event.processed = update_data.processed  # type: ignore
@@ -160,8 +160,8 @@ def update_change_event(
     except Exception as e:
         logger.error(
             f"Error updating change event {event_id}: {e}", exc_info=True
-        )  # noqa: E501
+        )
         db.rollback()
         raise HTTPException(
-            status_code=500, detail=f"Error updating change event: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Error updating change event: {e!s}"
+        )

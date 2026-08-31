@@ -7,11 +7,11 @@ and provides utilities for managing structure_node events.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Optional, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Any
 
 from database.models import NodeEvent
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,9 +33,9 @@ class NodeEventHandler:
         self,
         event_type: str,
         node_type: str,
-        node_id: Optional[str] = None,
-        old_data: Optional[Dict[str, Any]] = None,
-        new_data: Optional[Dict[str, Any]] = None,
+        node_id: str | None = None,
+        old_data: dict[str, Any] | None = None,
+        new_data: dict[str, Any] | None = None,
     ) -> NodeEvent:
         """
         Create a new NodeEvent.
@@ -79,9 +79,9 @@ class NodeEventHandler:
         self,
         event_type: str,
         node_type: str,
-        node_id: Optional[str] = None,
-        old_data: Optional[Dict[str, Any]] = None,
-        new_data: Optional[Dict[str, Any]] = None,
+        node_id: str | None = None,
+        old_data: dict[str, Any] | None = None,
+        new_data: dict[str, Any] | None = None,
     ) -> NodeEvent:
         """
         Fire unified structure_node event.
@@ -99,7 +99,7 @@ class NodeEventHandler:
         return self.create_event(event_type, node_type, node_id, old_data, new_data)
 
     def fire_node_created_event(
-        self, node_type: str, node_id: str, node_data: Dict[str, Any]
+        self, node_type: str, node_id: str, node_data: dict[str, Any]
     ) -> NodeEvent:
         """
         Fire a structure_node created event.
@@ -120,8 +120,8 @@ class NodeEventHandler:
         self,
         node_type: str,
         node_id: str,
-        old_data: Dict[str, Any],
-        new_data: Dict[str, Any],
+        old_data: dict[str, Any],
+        new_data: dict[str, Any],
     ) -> NodeEvent:
         """
         Fire a structure_node updated event.
@@ -140,7 +140,7 @@ class NodeEventHandler:
         )
 
     def fire_node_deleted_event(
-        self, node_type: str, node_id: str, node_data: Dict[str, Any]
+        self, node_type: str, node_id: str, node_data: dict[str, Any]
     ) -> NodeEvent:
         """
         Fire a structure_node deleted event.
@@ -207,7 +207,7 @@ class NodeEventHandler:
             True if successful, False otherwise
         """
         try:
-            event: Optional[NodeEvent] = (
+            event: NodeEvent | None = (
                 self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
             )
             if event:
@@ -223,7 +223,7 @@ class NodeEventHandler:
             self.db.rollback()
             return False
 
-    def get_event_stats(self) -> Dict[str, Any]:
+    def get_event_stats(self) -> dict[str, Any]:
         """
         Get statistics about structure_node events.
 
@@ -235,7 +235,7 @@ class NodeEventHandler:
         unprocessed_events = total_events - processed_events
 
         # Events by type
-        event_types: Dict[str, int] = {}
+        event_types: dict[str, int] = {}
         for event_type, count in (
             self.db.query(NodeEvent.event_type, func.count(NodeEvent.id))
             .group_by(NodeEvent.event_type)
@@ -244,7 +244,7 @@ class NodeEventHandler:
             event_types[event_type] = count
 
         # Events by structure_node type
-        node_types: Dict[str, int] = {}
+        node_types: dict[str, int] = {}
         for node_type, count in (
             self.db.query(NodeEvent.node_type, func.count(NodeEvent.id))
             .group_by(NodeEvent.node_type)

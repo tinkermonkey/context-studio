@@ -23,20 +23,20 @@ Endpoints:
 - GET /api/optimization/batch/stats - Get batch processing statistics
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Any
 
-from services.service_factory import (
-    get_duckdb_query_analyzer_via_factory,
-    get_s3_storage_manager_via_factory,
-    get_hierarchical_diff_engine_via_factory,
-    get_batch_operation_processor_via_factory,
-    get_performance_monitor_via_factory,
-)
 from database.utils import get_db
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from services.service_factory import (
+    get_batch_operation_processor_via_factory,
+    get_duckdb_query_analyzer_via_factory,
+    get_hierarchical_diff_engine_via_factory,
+    get_performance_monitor_via_factory,
+    get_s3_storage_manager_via_factory,
+)
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -51,32 +51,32 @@ class SystemHealthOut(BaseModel):
     """API model for system health output."""
 
     status: str
-    services_healthy: Dict[str, bool]
+    services_healthy: dict[str, bool]
     performance_score: float
     optimization_enabled: bool
-    last_optimization: Optional[str]
-    issues: List[str]
+    last_optimization: str | None
+    issues: list[str]
 
 
 class PerformanceMetricsOut(BaseModel):
     """API model for performance metrics output."""
 
     timestamp: str
-    database_metrics: Dict[str, Any]
-    s3_metrics: Dict[str, Any]
-    query_metrics: Dict[str, Any]
-    system_metrics: Dict[str, Any]
-    cache_metrics: Dict[str, Any]
-    batch_metrics: Dict[str, Any]
+    database_metrics: dict[str, Any]
+    s3_metrics: dict[str, Any]
+    query_metrics: dict[str, Any]
+    system_metrics: dict[str, Any]
+    cache_metrics: dict[str, Any]
+    batch_metrics: dict[str, Any]
 
 
 class PerformanceTrendsOut(BaseModel):
     """API model for performance trends output."""
 
     analysis_window_hours: int
-    trends: Dict[str, Any]
-    issues: List[Dict[str, Any]]
-    recommendations: List[Dict[str, Any]]
+    trends: dict[str, Any]
+    issues: list[dict[str, Any]]
+    recommendations: list[dict[str, Any]]
     overall_health_score: float
     performance_grade: str
 
@@ -85,7 +85,7 @@ class QueryOptimizationRequest(BaseModel):
     """API model for query optimization request."""
 
     query: str = Field(..., description="SQL query to optimize")
-    context: Optional[Dict[str, Any]] = Field(
+    context: dict[str, Any] | None = Field(
         None, description="Query context for optimization"
     )
 
@@ -95,8 +95,8 @@ class QueryOptimizationOut(BaseModel):
 
     original_query: str
     optimized_query: str
-    metrics: Dict[str, Any]
-    optimization_applied: List[str]
+    metrics: dict[str, Any]
+    optimization_applied: list[str]
 
 
 class MaterializedViewRequest(BaseModel):
@@ -112,7 +112,7 @@ class MaterializedViewRequest(BaseModel):
 class StorageOptimizationOut(BaseModel):
     """API model for storage optimization output."""
 
-    optimization_actions: List[Dict[str, Any]]
+    optimization_actions: list[dict[str, Any]]
     storage_saved_bytes: int
     cost_reduction_estimate: float
     objects_optimized: int
@@ -121,32 +121,32 @@ class StorageOptimizationOut(BaseModel):
 class ThreeWayDiffRequest(BaseModel):
     """API model for three-way diff request."""
 
-    base: Dict[str, Any] = Field(..., description="Base version data")
-    local: Dict[str, Any] = Field(..., description="Local version data")
-    remote: Dict[str, Any] = Field(..., description="Remote version data")
+    base: dict[str, Any] = Field(..., description="Base version data")
+    local: dict[str, Any] = Field(..., description="Local version data")
+    remote: dict[str, Any] = Field(..., description="Remote version data")
     enable_semantic_analysis: bool = Field(
         True, description="Enable semantic analysis"
-    )  # noqa: E501
+    )
 
 
 class ThreeWayDiffOut(BaseModel):
     """API model for three-way diff output."""
 
-    diff_result: Dict[str, Any]
-    conflicts_detected: List[Dict[str, Any]]
-    semantic_insights: Optional[Dict[str, Any]]
-    merge_recommendation: Optional[str]
+    diff_result: dict[str, Any]
+    conflicts_detected: list[dict[str, Any]]
+    semantic_insights: dict[str, Any] | None
+    merge_recommendation: str | None
 
 
 class BatchOperationRequest(BaseModel):
     """API model for batch operation request."""
 
     operation_type: str = Field(..., description="Type of batch operation")
-    entity_data: List[Dict[str, Any]] = Field(
+    entity_data: list[dict[str, Any]] = Field(
         ..., description="Entity data to process"
-    )  # noqa: E501
+    )
     author_id: str = Field(..., description="Author ID for the operation")
-    options: Optional[Dict[str, Any]] = Field(
+    options: dict[str, Any] | None = Field(
         None, description="Additional operation options"
     )
 
@@ -160,7 +160,7 @@ class BatchOperationOut(BaseModel):
     failed_items: int
     processing_time_seconds: float
     throughput_per_second: float
-    errors: List[Dict[str, Any]]
+    errors: list[dict[str, Any]]
 
 
 # Dependency functions for service factory
@@ -207,17 +207,17 @@ def get_optimization_system_health(
                 query_optimizer.health_check()
                 if hasattr(query_optimizer, "health_check")
                 else None
-            ),  # noqa: E501
+            ),
             "storage_optimizer": (
                 storage_optimizer.health_check()
                 if hasattr(storage_optimizer, "health_check")
                 else None
-            ),  # noqa: E501
+            ),
             "performance_monitor": (
                 performance_monitor.health_check()
                 if hasattr(performance_monitor, "health_check")
                 else None
-            ),  # noqa: E501
+            ),
             "diff_engine": None,  # Not yet available as dependency
             "batch_processor": None,  # Not yet available as dependency
         }
@@ -247,7 +247,7 @@ def get_optimization_system_health(
         if health_score < 0.7:
             issues.append(
                 f"Performance score below threshold: {performance_grade}"
-            )  # noqa: E501
+            )
 
         return SystemHealthOut(
             status=overall_status,
@@ -260,7 +260,7 @@ def get_optimization_system_health(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get system health: {str(e)}"
+            status_code=500, detail=f"Failed to get system health: {e!s}"
         )
 
 
@@ -270,7 +270,7 @@ def get_optimization_system_health(
 @router.get("/performance/dashboard")
 def get_performance_dashboard(
     performance_monitor=Depends(get_performance_monitor),
-):  # noqa: E501
+):
     """Get comprehensive performance dashboard data."""
     try:
         dashboard = performance_monitor.get_performance_dashboard()
@@ -278,14 +278,14 @@ def get_performance_dashboard(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get performance dashboard: {str(e)}",  # noqa: E501
+            detail=f"Failed to get performance dashboard: {e!s}",
         )
 
 
 @router.get("/performance/metrics", response_model=PerformanceMetricsOut)
 def get_performance_metrics(
     performance_monitor=Depends(get_performance_monitor),
-):  # noqa: E501
+):
     """Get current comprehensive performance metrics."""
     try:
         metrics = performance_monitor.collect_performance_metrics()
@@ -293,7 +293,7 @@ def get_performance_metrics(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get performance metrics: {str(e)}",  # noqa: E501
+            detail=f"Failed to get performance metrics: {e!s}",
         )
 
 
@@ -301,7 +301,7 @@ def get_performance_metrics(
 def get_performance_trends(
     window_hours: int = Query(
         24, ge=1, le=168, description="Analysis window in hours"
-    ),  # noqa: E501
+    ),
     performance_monitor=Depends(get_performance_monitor),
 ):
     """Get performance trend analysis and optimization recommendations."""
@@ -313,7 +313,7 @@ def get_performance_trends(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get performance trends: {str(e)}",  # noqa: E501
+            detail=f"Failed to get performance trends: {e!s}",
         )
 
 
@@ -338,7 +338,7 @@ def trigger_auto_optimization(
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to trigger optimization: {str(e)}"
+            status_code=500, detail=f"Failed to trigger optimization: {e!s}"
         )
 
 
@@ -363,14 +363,14 @@ def get_query_optimization_stats(query_optimizer=Depends(get_query_analyzer)):
         return response
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get query stats: {str(e)}"
+            status_code=500, detail=f"Failed to get query stats: {e!s}"
         )
 
 
 @router.post("/query/optimize", response_model=QueryOptimizationOut)
 def optimize_query(
     request: QueryOptimizationRequest,
-    query_optimizer=Depends(get_query_analyzer),  # noqa: E501
+    query_optimizer=Depends(get_query_analyzer),
 ):
     """Optimize a specific query using advanced optimization techniques."""
     try:
@@ -392,14 +392,14 @@ def optimize_query(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to optimize query: {str(e)}"
+            status_code=500, detail=f"Failed to optimize query: {e!s}"
         )
 
 
 @router.post("/query/materialized-view")
 def create_materialized_view(
     request: MaterializedViewRequest,
-    query_optimizer=Depends(get_query_analyzer),  # noqa: E501
+    query_optimizer=Depends(get_query_analyzer),
 ):
     """Create a materialized view for frequently accessed queries."""
     try:
@@ -407,7 +407,7 @@ def create_materialized_view(
         if not request.view_name or not request.query:
             raise HTTPException(
                 status_code=422, detail="Invalid view definition"
-            )  # noqa: E501
+            )
 
         success = query_optimizer.create_materialized_view(
             request.view_name, request.query, request.refresh_strategy
@@ -415,7 +415,7 @@ def create_materialized_view(
 
         if success:
             return {
-                "message": f"Materialized view '{request.view_name}' created successfully",  # noqa: E501
+                "message": f"Materialized view '{request.view_name}' created successfully",
                 "view_name": request.view_name,
                 "refresh_strategy": request.refresh_strategy,
                 "created_at": datetime.now().isoformat(),
@@ -431,7 +431,7 @@ def create_materialized_view(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to create materialized view: {str(e)}",  # noqa: E501
+            detail=f"Failed to create materialized view: {e!s}",
         )
 
 
@@ -441,7 +441,7 @@ def create_materialized_view(
 @router.get("/storage/stats")
 def get_storage_optimization_stats(
     storage_optimizer=Depends(get_storage_manager),
-):  # noqa: E501
+):
     """Get storage optimization statistics and cost metrics."""
     try:
         stats = storage_optimizer.get_management_summary()
@@ -452,26 +452,26 @@ def get_storage_optimization_stats(
                 "total_savings_bytes": stats.get("total_savings_bytes", 0),
                 "average_compression_ratio": stats.get(
                     "average_compression_ratio", 0
-                ),  # noqa: E501
+                ),
             },
             "compression_algorithms_used": stats.get(
                 "compression_algorithms_used", {}
-            ),  # noqa: E501
+            ),
             "total_optimizations": stats.get("total_optimizations", 0),
         }
         return response
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get storage stats: {str(e)}"
+            status_code=500, detail=f"Failed to get storage stats: {e!s}"
         )
 
 
 @router.post("/storage/optimize", response_model=StorageOptimizationOut)
 def optimize_storage(
     background_tasks: BackgroundTasks,
-    storage_optimizer=Depends(get_storage_manager),  # noqa: E501
+    storage_optimizer=Depends(get_storage_manager),
 ):
-    """Trigger comprehensive storage optimization including compression and lifecycle policies."""  # noqa: E501
+    """Trigger comprehensive storage optimization including compression and lifecycle policies."""
     try:
 
         def run_storage_optimization():
@@ -501,7 +501,7 @@ def optimize_storage(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to optimize storage: {str(e)}"
+            status_code=500, detail=f"Failed to optimize storage: {e!s}"
         )
 
 
@@ -532,7 +532,7 @@ def setup_lifecycle_policies(storage_optimizer=Depends(get_storage_manager)):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to setup lifecycle policies: {str(e)}",  # noqa: E501
+            detail=f"Failed to setup lifecycle policies: {e!s}",
         )
 
 
@@ -547,7 +547,7 @@ def get_diff_engine_stats(diff_engine=Depends(get_diff_engine)):
         return stats
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get diff stats: {str(e)}"
+            status_code=500, detail=f"Failed to get diff stats: {e!s}"
         )
 
 
@@ -570,7 +570,7 @@ def perform_three_way_diff(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to perform three-way diff: {str(e)}",  # noqa: E501
+            detail=f"Failed to perform three-way diff: {e!s}",
         )
 
 
@@ -585,7 +585,7 @@ def get_batch_processing_stats(batch_processor=Depends(get_batch_processor)):
         return stats
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get batch stats: {str(e)}"
+            status_code=500, detail=f"Failed to get batch stats: {e!s}"
         )
 
 
@@ -625,7 +625,7 @@ def execute_batch_operation(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to execute batch operation: {str(e)}",  # noqa: E501
+            detail=f"Failed to execute batch operation: {e!s}",
         )
 
 
@@ -665,7 +665,7 @@ def get_optimization_configuration():
 
 
 @router.put("/config")
-def update_optimization_configuration(config: Dict[str, Any]):
+def update_optimization_configuration(config: dict[str, Any]):
     """Update optimization system configuration."""
     # Configuration update not yet implemented
     logger.warning("Optimization configuration update not yet implemented")

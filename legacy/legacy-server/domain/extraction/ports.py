@@ -7,7 +7,7 @@ Response dataclasses are defined in this file alongside their corresponding port
 """
 
 from dataclasses import dataclass, field
-from typing import Protocol, Optional, List
+from typing import Protocol
 
 
 @dataclass
@@ -32,16 +32,16 @@ class NLPEntity:
     start: int
     end: int
     confidence: float
-    linked_uri: Optional[str] = None
+    linked_uri: str | None = None
 
 
 @dataclass
 class NLPResult:
     """Results from NLP processing."""
 
-    entities: List[NLPEntity]
-    tokens: List[str]
-    noun_chunks: List[str]
+    entities: list[NLPEntity]
+    tokens: list[str]
+    noun_chunks: list[str]
     language: str
 
 
@@ -52,8 +52,8 @@ class ReferenceRelation:
     subject_uri: str
     predicate: str
     object_uri: str
-    object_label: Optional[str] = None
-    weight: Optional[float] = None
+    object_label: str | None = None
+    weight: float | None = None
 
 
 @dataclass
@@ -62,10 +62,10 @@ class ReferenceResult:
 
     uri: str
     label: str
-    description: Optional[str]
+    description: str | None
     source: str
     confidence: float
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
 
 
 class LLMProvider(Protocol):
@@ -81,8 +81,8 @@ class LLMProvider(Protocol):
         user_prompt: str,
         model: str,
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
-        response_format: Optional[str] = None,  # "json", "text"
+        max_tokens: int | None = None,
+        response_format: str | None = None,  # "json", "text"
     ) -> LLMResponse:
         """Send prompts to an LLM and receive a completion."""
         ...
@@ -107,7 +107,7 @@ class NLPProcessor(Protocol):
         """Process text and return tokenized, noun chunk, and entity results."""
         ...
 
-    def extract_entities(self, text: str) -> List[NLPEntity]:
+    def extract_entities(self, text: str) -> list[NLPEntity]:
         """Extract named entities from text."""
         ...
 

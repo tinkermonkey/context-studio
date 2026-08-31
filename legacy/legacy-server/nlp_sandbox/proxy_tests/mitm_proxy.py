@@ -1,7 +1,8 @@
 # mypy: ignore-errors
-from mitmproxy import http
 import hashlib
 from collections import OrderedDict
+
+from mitmproxy import http
 
 
 class SimpleCache:

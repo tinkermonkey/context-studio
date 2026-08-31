@@ -1,8 +1,8 @@
 """Migration 001: Initial schema"""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 
 class Migration001(Migration):

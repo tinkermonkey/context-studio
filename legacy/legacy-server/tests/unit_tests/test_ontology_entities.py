@@ -4,25 +4,25 @@ Unit Tests for domain ontology entities
 Tests the business logic validation in Class, Taxonomy, ConceptScheme, and other domain entities.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
+from datetime import datetime, timezone
 
+import pytest
 from domain.ontology.entities import (
     Class,
-    Taxonomy,
     ConceptScheme,
     Individual,
-)  # noqa: E402, E501
+    Taxonomy,
+)
 from domain.ontology.value_objects import (
-    NodeType,
     ExternalReference,
     LexicalSense,
-)  # noqa: E402, E501
+    NodeType,
+)
 
 
 class TestClassEntity:

@@ -6,52 +6,54 @@ performance monitoring, and lifecycle management for better resource utilization
 """
 
 import uuid
-from typing import Dict, Any, Optional, TypeVar, Type, Callable, List, cast
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
 from threading import RLock
 from time import time
-from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-from dataclasses import dataclass, field
-from enum import Enum
-from fastapi import Depends
+from typing import Any, TypeVar, cast
 
-from services.ontology_entity_service import OntologyEntityService
-from services.relationship_service import RelationshipService
-from services.node_service import NodeService  # Re-exported from OntologyEntityService
-from services.node_link_service import (
-    NodeLinkService,
-)  # Re-exported from RelationshipService
-from services.version_manager import VersionManager
-from services.working_tree_manager import WorkingTreeManager
-from services.diff_generator import DiffGenerator
-from services.s3_sync_manager import S3SyncManager
+from config import get_settings
+from database.utils import get_db
+from fastapi import Depends
+from graph.graph_service import GraphService
+from graph.network_service import NetworkService
+from graph.sparql_service import SPARQLService
+from llm.execution_tracker import ExecutionTracker
+from llm.flavor_service import PipelineFlavorService
+from llm.service import LLMService
+from reference_api.service import ReferenceService
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
+
+from services.batch_operation_processor import BatchOperationProcessor
 from services.changeset_manager import ChangesetManager
-from services.proposal_manager import ProposalManager
-from services.crdt_merge_engine import CRDTMergeEngine
-from services.identity_manager import IdentityManager
 from services.conflict_resolution_engine import (
     ConflictResolutionEngine,
     IntelligentConflictDetector,
 )
-from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
-from services.incremental_sync_engine import IncrementalSyncEngine
+from services.crdt_merge_engine import CRDTMergeEngine
+from services.diff_generator import DiffGenerator
 
 # Phase 5 Optimization Services
 from services.duckdb_query_analyzer import DuckDBQueryAnalyzer
-from services.s3_storage_manager import S3StorageManager
+from services.duckdb_service import ChangeAnalyticsEngine, DuckDBService
 from services.hierarchical_diff_engine import HierarchicalDiffEngine
-from services.batch_operation_processor import BatchOperationProcessor
+from services.identity_manager import IdentityManager
+from services.incremental_sync_engine import IncrementalSyncEngine
+from services.node_link_service import (
+    NodeLinkService,
+)  # Re-exported from RelationshipService
+from services.node_service import NodeService  # Re-exported from OntologyEntityService
+from services.ontology_entity_service import OntologyEntityService
 from services.performance_monitor import PerformanceMonitor
-from graph.graph_service import GraphService
-from graph.network_service import NetworkService
-from graph.sparql_service import SPARQLService
-from llm.flavor_service import PipelineFlavorService
-from llm.service import LLMService
-from llm.execution_tracker import ExecutionTracker
-from reference_api.service import ReferenceService
-from database.utils import get_db
-from config import get_settings
-from utils.logger import get_logger
+from services.proposal_manager import ProposalManager
+from services.relationship_service import RelationshipService
+from services.s3_storage_manager import S3StorageManager
+from services.s3_sync_manager import S3SyncManager
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
 
 logger = get_logger(__name__)
 
@@ -104,9 +106,9 @@ class ServiceMetrics:
     total_cache_hits: int = 0
     total_cache_misses: int = 0
     avg_creation_time_ms: float = 0.0
-    last_created_at: Optional[datetime] = None
-    last_accessed_at: Optional[datetime] = None
-    creation_times: List[float] = field(default_factory=list)
+    last_created_at: datetime | None = None
+    last_accessed_at: datetime | None = None
+    creation_times: list[float] = field(default_factory=list)
 
     def record_creation(self, creation_time_ms: float):
         """Record a service creation event."""
@@ -143,7 +145,7 @@ class ServiceMetrics:
 class CachedServiceEntry:
     """Cache entry with metadata for service factory."""
 
-    service_class: Type
+    service_class: type
     service_key: str
     created_at: float
     access_count: int = 0
@@ -181,8 +183,8 @@ class ServiceFactory:
             cache_ttl_seconds: Time-to-live for cached service classes in seconds
             cleanup_interval: Interval between cache cleanup operations in seconds
         """
-        self._cache: Dict[str, CachedServiceEntry] = {}
-        self._metrics: Dict[str, ServiceMetrics] = {}
+        self._cache: dict[str, CachedServiceEntry] = {}
+        self._metrics: dict[str, ServiceMetrics] = {}
         self._lock = RLock()  # Using RLock for reentrant operations
         self._cache_ttl = cache_ttl_seconds
         self._cleanup_interval = cleanup_interval
@@ -200,9 +202,9 @@ class ServiceFactory:
     def create_ontology_entity_service(
         self,
         db: Session,
-        graph_service: Optional[GraphService] = None,
-        version_manager: Optional[VersionManager] = None,
-        working_tree_manager: Optional[WorkingTreeManager] = None,
+        graph_service: GraphService | None = None,
+        version_manager: VersionManager | None = None,
+        working_tree_manager: WorkingTreeManager | None = None,
     ) -> OntologyEntityService:
         """
         Create OntologyEntityService with optimized instantiation.
@@ -248,9 +250,9 @@ class ServiceFactory:
     def create_node_service(
         self,
         db: Session,
-        graph_service: Optional[GraphService] = None,
-        version_manager: Optional[VersionManager] = None,
-        working_tree_manager: Optional[WorkingTreeManager] = None,
+        graph_service: GraphService | None = None,
+        version_manager: VersionManager | None = None,
+        working_tree_manager: WorkingTreeManager | None = None,
     ) -> NodeService:
         """
         DEPRECATED: Use create_ontology_entity_service() instead.
@@ -297,7 +299,7 @@ class ServiceFactory:
         return self._create_service(ServiceType.VERSION_MANAGER, VersionManager, db)
 
     def create_working_tree_manager(
-        self, db: Session, version_manager: Optional[VersionManager] = None
+        self, db: Session, version_manager: VersionManager | None = None
     ) -> WorkingTreeManager:
         """
         Create WorkingTreeManager with optimized instantiation.
@@ -319,8 +321,8 @@ class ServiceFactory:
     def create_diff_generator(
         self,
         db: Session,
-        version_manager: Optional[VersionManager] = None,
-        working_tree_manager: Optional[WorkingTreeManager] = None,
+        version_manager: VersionManager | None = None,
+        working_tree_manager: WorkingTreeManager | None = None,
     ) -> DiffGenerator:
         """
         Create DiffGenerator with optimized instantiation.
@@ -434,9 +436,9 @@ class ServiceFactory:
     def create_changeset_manager(
         self,
         db: Session,
-        s3_sync_manager: Optional[S3SyncManager] = None,
-        working_tree_manager: Optional[WorkingTreeManager] = None,
-        version_manager: Optional[VersionManager] = None,
+        s3_sync_manager: S3SyncManager | None = None,
+        working_tree_manager: WorkingTreeManager | None = None,
+        version_manager: VersionManager | None = None,
     ) -> ChangesetManager:
         """
         Create ChangesetManager with optimized instantiation.
@@ -464,8 +466,8 @@ class ServiceFactory:
     def create_proposal_manager(
         self,
         db: Session,
-        s3_sync_manager: Optional[S3SyncManager] = None,
-        changeset_manager: Optional[ChangesetManager] = None,
+        s3_sync_manager: S3SyncManager | None = None,
+        changeset_manager: ChangesetManager | None = None,
     ) -> ProposalManager:
         """
         Create ProposalManager with optimized instantiation.
@@ -491,8 +493,8 @@ class ServiceFactory:
     def create_crdt_merge_engine(
         self,
         db: Session,
-        version_manager: Optional[VersionManager] = None,
-        changeset_manager: Optional[ChangesetManager] = None,
+        version_manager: VersionManager | None = None,
+        changeset_manager: ChangesetManager | None = None,
     ) -> CRDTMergeEngine:
         """
         Create CRDTMergeEngine with optimized instantiation.
@@ -516,7 +518,7 @@ class ServiceFactory:
         )
 
     def create_identity_manager(
-        self, db: Session, s3_sync_manager: Optional[S3SyncManager] = None
+        self, db: Session, s3_sync_manager: S3SyncManager | None = None
     ) -> IdentityManager:
         """
         Create IdentityManager with optimized instantiation.
@@ -562,7 +564,7 @@ class ServiceFactory:
         )
 
     def create_duckdb_service(
-        self, s3_config: Optional[Dict[str, str]] = None
+        self, s3_config: dict[str, str] | None = None
     ) -> DuckDBService:
         """
         Create DuckDBService with optimized instantiation.
@@ -598,7 +600,7 @@ class ServiceFactory:
         )
 
     def create_change_analytics_engine(
-        self, duckdb_service: Optional[DuckDBService] = None
+        self, duckdb_service: DuckDBService | None = None
     ) -> ChangeAnalyticsEngine:
         """
         Create ChangeAnalyticsEngine with optimized instantiation and dependency injection.
@@ -619,7 +621,7 @@ class ServiceFactory:
         )
 
     def create_incremental_sync_engine(
-        self, db: Session, s3_sync_manager: Optional[S3SyncManager] = None
+        self, db: Session, s3_sync_manager: S3SyncManager | None = None
     ) -> IncrementalSyncEngine:
         """
         Create IncrementalSyncEngine with optimized instantiation and dependency injection.
@@ -688,8 +690,8 @@ class ServiceFactory:
 
     def create_duckdb_query_analyzer(
         self,
-        duckdb_conn: Optional[Any] = None,
-        s3_config: Optional[Dict[str, str]] = None,
+        duckdb_conn: Any | None = None,
+        s3_config: dict[str, str] | None = None,
     ) -> DuckDBQueryAnalyzer:
         """
         Create DuckDBQueryAnalyzer with optimized instantiation and dependency injection.
@@ -727,7 +729,7 @@ class ServiceFactory:
                         "S3 bucket is required but not configured for DuckDBQueryAnalyzer."
                     )
 
-                s3_conf: Dict[str, str] = {
+                s3_conf: dict[str, str] = {
                     "enable_analyzer": "True",
                     "cache_size": "1000",
                     "query_timeout": "30",
@@ -758,7 +760,7 @@ class ServiceFactory:
         )
 
     def create_s3_storage_manager(
-        self, s3_config: Optional[Dict[str, str]] = None
+        self, s3_config: dict[str, str] | None = None
     ) -> S3StorageManager:
         """
         Create S3StorageManager with optimized instantiation and dependency injection.
@@ -772,7 +774,7 @@ class ServiceFactory:
 
         def create_service() -> S3StorageManager:
             # Use provided s3_config if available, otherwise retrieve from settings
-            s3_conf_dict: Dict[str, str]
+            s3_conf_dict: dict[str, str]
             if s3_config is not None:
                 s3_conf_dict = s3_config
             else:
@@ -854,7 +856,7 @@ class ServiceFactory:
         )
 
     def create_batch_operation_processor(
-        self, db: Session, s3_sync_manager: Optional[S3SyncManager] = None
+        self, db: Session, s3_sync_manager: S3SyncManager | None = None
     ) -> BatchOperationProcessor:
         """
         Create BatchOperationProcessor with optimized instantiation and dependency injection.
@@ -883,7 +885,7 @@ class ServiceFactory:
         self,
         db_connection=None,
         duckdb_conn=None,
-        s3_sync_manager: Optional[S3SyncManager] = None,
+        s3_sync_manager: S3SyncManager | None = None,
     ) -> PerformanceMonitor:
         """
         Create PerformanceMonitor with optimized instantiation and dependency injection.
@@ -992,7 +994,7 @@ class ServiceFactory:
             return instance
 
     def _create_service(
-        self, service_type: ServiceType, service_class: Type[T], *args, **kwargs
+        self, service_type: ServiceType, service_class: type[T], *args, **kwargs
     ) -> T:
         """
         Generic service creation with caching using service type as key.
@@ -1014,7 +1016,7 @@ class ServiceFactory:
         self,
         service_key: str,
         service_type: ServiceType,
-        service_class: Type[T],
+        service_class: type[T],
         *args,
         **kwargs,
     ) -> T:
@@ -1113,7 +1115,7 @@ class ServiceFactory:
                 f"ServiceFactory [{self._factory_id}] cleaned up {len(expired_keys)} expired cache entries"
             )
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         Get comprehensive cache statistics for monitoring.
 
@@ -1171,7 +1173,7 @@ class ServiceFactory:
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """
         Get performance summary for quick monitoring.
 
@@ -1261,7 +1263,7 @@ class ServiceFactory:
 
             return expired_count
 
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """
         Get health status of the service factory.
 
@@ -1301,7 +1303,7 @@ class ServiceFactory:
 
 
 # Application-level service factory instance (initialized in app.py)
-_service_factory: Optional[ServiceFactory] = None
+_service_factory: ServiceFactory | None = None
 
 
 def get_service_factory() -> ServiceFactory:

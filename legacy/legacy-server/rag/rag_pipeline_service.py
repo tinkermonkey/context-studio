@@ -6,28 +6,28 @@ This service orchestrates all four layers of the RAG pipeline with error handlin
 timeout enforcement, deduplication, and observability tracking.
 """
 
-from typing import List, Dict
-from sqlalchemy.orm import Session
 import asyncio
-import time
 import sys
-from uuid import uuid4
-from difflib import SequenceMatcher
+import time
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
+from uuid import uuid4
+
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from rag.models import (
-    RAGExtractionResponse,
     ExtractedEntity,
     LayerMetrics,
     ProcessingMetrics,
+    RAGExtractionResponse,
 )
-from rag.processors.models import ProcessorInput
+from rag.observability_store import RAGObservabilityStore
+from rag.processors.concept_resolution import ConceptResolutionProcessor
 from rag.processors.kg_context import KGContextProcessor
 from rag.processors.llm_extraction import LLMExtractionProcessor
+from rag.processors.models import ProcessorInput
 from rag.processors.spacy_gap import SpaCyGapProcessor
-from rag.processors.concept_resolution import ConceptResolutionProcessor
-from rag.observability_store import RAGObservabilityStore
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -249,7 +249,7 @@ class RAGPipelineService:
 
             except Exception as e:
                 layer_0_time = (time.time() - layer_0_start) * 1000
-                error_msg = f"Layer 0 error: {str(e)}"
+                error_msg = f"Layer 0 error: {e!s}"
                 logger.error(error_msg, exc_info=True)
                 layer_errors.append({"layer": "Layer 0", "error": error_msg})
                 # Create empty KG context to allow pipeline to continue
@@ -308,7 +308,7 @@ class RAGPipelineService:
 
                 except Exception as e:
                     layer_1_time = (time.time() - layer_1_start) * 1000
-                    error_msg = f"Layer 1 error: {str(e)}"
+                    error_msg = f"Layer 1 error: {e!s}"
                     logger.error(error_msg, exc_info=True)
                     layer_errors.append({"layer": "Layer 1", "error": error_msg})
                     from rag.processors.models import LLMExtractionOutput
@@ -374,7 +374,7 @@ class RAGPipelineService:
 
             except Exception as e:
                 layer_2_time = (time.time() - layer_2_start) * 1000
-                error_msg = f"Layer 2 error: {str(e)}"
+                error_msg = f"Layer 2 error: {e!s}"
                 logger.error(error_msg, exc_info=True)
                 layer_errors.append({"layer": "Layer 2", "error": error_msg})
                 from rag.processors.models import SpaCyGapOutput
@@ -433,7 +433,7 @@ class RAGPipelineService:
 
             except Exception as e:
                 layer_3_time = (time.time() - layer_3_start) * 1000
-                error_msg = f"Layer 3 error: {str(e)}"
+                error_msg = f"Layer 3 error: {e!s}"
                 logger.error(error_msg, exc_info=True)
                 layer_errors.append({"layer": "Layer 3", "error": error_msg})
                 from rag.processors.models import ConceptResolutionOutput
@@ -603,7 +603,7 @@ class RAGPipelineService:
 
     def _collect_and_deduplicate_entities(
         self, kg_output, llm_output, concept_output
-    ) -> List[ExtractedEntity]:
+    ) -> list[ExtractedEntity]:
         """
         Collect entities from all layers and deduplicate using 90% similarity threshold.
 
@@ -617,7 +617,7 @@ class RAGPipelineService:
         Returns:
             List of deduplicated ExtractedEntity objects
         """
-        entities_map: Dict[str, ExtractedEntity] = {}
+        entities_map: dict[str, ExtractedEntity] = {}
 
         # Priority 1: LLM extracted entities
         # Build KG node lookup map

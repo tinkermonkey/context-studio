@@ -10,8 +10,8 @@ Components:
 - graph_service: Combined service interface
 """
 
-from .sparql_service import SPARQLService
-from .network_service import NetworkService
 from .graph_service import GraphService
+from .network_service import NetworkService
+from .sparql_service import SPARQLService
 
-__all__ = ["SPARQLService", "NetworkService", "GraphService"]
+__all__ = ["GraphService", "NetworkService", "SPARQLService"]

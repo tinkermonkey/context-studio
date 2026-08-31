@@ -12,20 +12,21 @@ proper rate limiting and caching.
 """
 
 import asyncio
-import psutil
-import numpy as np
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, UTC, date
+from datetime import UTC, date, datetime
+from typing import Any
 
+import numpy as np
+import psutil
+from config import SourceConfig, SourceType
+from embeddings.generate_embeddings import generate_embedding, get_model
 from reference_api.sources.conceptnet import ConceptNetSource
 from reference_api.sources.dbpedia import DBpediaSource
 from reference_api.sources.wikidata import WikidataSource
+from utils.logger import get_logger
+
+from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 from reference_db.models import ExternalPredicate
-from reference_db.config import ReferenceConfig
-from embeddings.generate_embeddings import generate_embedding, get_model
-from config import SourceType, SourceConfig
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -97,7 +98,7 @@ class PredicateDiscoveryService:
     def __init__(
         self,
         config: ReferenceConfig,
-        source_configs: Dict[str, SourceConfig],
+        source_configs: dict[str, SourceConfig],
         db_path: str | None = None,
     ):
         """
@@ -111,7 +112,7 @@ class PredicateDiscoveryService:
         self.config = config
         self.source_configs = source_configs
         self.db_path = db_path
-        self.manager: Optional[ReferenceManager] = None
+        self.manager: ReferenceManager | None = None
 
     def __enter__(self):
         """Context manager entry."""
@@ -169,8 +170,8 @@ class PredicateDiscoveryService:
             return min_size
 
     def _generate_embeddings_batch(
-        self, texts: List[str], batch_size: Optional[int] = None
-    ) -> List[bytes]:
+        self, texts: list[str], batch_size: int | None = None
+    ) -> list[bytes]:
         """
         Generate embeddings for a batch of texts with adaptive batch sizing.
 
@@ -219,7 +220,7 @@ class PredicateDiscoveryService:
         definition: str,
         source: str,
         external_id: str,
-        attributes: Dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> ExternalPredicate:
         """
         Insert or update a single external predicate.
@@ -264,10 +265,10 @@ class PredicateDiscoveryService:
 
     def _upsert_predicates_batch(
         self,
-        predicates: List[Dict[str, Any]],
+        predicates: list[dict[str, Any]],
         source: str,
-        batch_size: Optional[int] = None,
-    ) -> Tuple[int, int]:
+        batch_size: int | None = None,
+    ) -> tuple[int, int]:
         """
         Insert or update a batch of external predicates with batch embedding generation.
 
@@ -356,7 +357,7 @@ class PredicateDiscoveryService:
 
         return (created, updated)
 
-    async def discover_conceptnet_predicates(self) -> Tuple[int, int, List[str]]:
+    async def discover_conceptnet_predicates(self) -> tuple[int, int, list[str]]:
         """
         Discover all ConceptNet relations (40 relations).
 
@@ -435,7 +436,7 @@ class PredicateDiscoveryService:
                             return None
 
                     except Exception as e:
-                        error_msg = f"Error processing relation {relation}: {str(e)}"
+                        error_msg = f"Error processing relation {relation}: {e!s}"
                         logger.error(error_msg, exc_info=True)
                         errors.append(error_msg)
                         return None
@@ -463,7 +464,7 @@ class PredicateDiscoveryService:
             )
 
         except Exception as e:
-            error_msg = f"Fatal error in ConceptNet discovery: {str(e)}"
+            error_msg = f"Fatal error in ConceptNet discovery: {e!s}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
             return (0, 0, errors)
@@ -472,7 +473,7 @@ class PredicateDiscoveryService:
 
     async def discover_dbpedia_predicates(
         self, limit: int = 760
-    ) -> Tuple[int, int, List[str]]:
+    ) -> tuple[int, int, list[str]]:
         """
         Discover DBpedia properties via SPARQL query.
 
@@ -574,7 +575,7 @@ class PredicateDiscoveryService:
                             )
 
                         except Exception as e:
-                            error_msg = f"Error processing DBpedia property {property_uri}: {str(e)}"
+                            error_msg = f"Error processing DBpedia property {property_uri}: {e!s}"
                             logger.error(error_msg, exc_info=True)
                             errors.append(error_msg)
 
@@ -595,7 +596,7 @@ class PredicateDiscoveryService:
             )
 
         except Exception as e:
-            error_msg = f"Fatal error in DBpedia discovery: {str(e)}"
+            error_msg = f"Fatal error in DBpedia discovery: {e!s}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
             return (0, 0, errors)
@@ -604,7 +605,7 @@ class PredicateDiscoveryService:
 
     async def discover_wikidata_predicates(
         self, limit: int = 10000
-    ) -> Tuple[int, int, List[str]]:
+    ) -> tuple[int, int, list[str]]:
         """
         Discover Wikidata properties via SPARQL query with pagination.
 
@@ -747,7 +748,7 @@ class PredicateDiscoveryService:
                                 )
 
                             except Exception as e:
-                                error_msg = f"Error processing Wikidata property {property_uri}: {str(e)}"
+                                error_msg = f"Error processing Wikidata property {property_uri}: {e!s}"
                                 logger.error(error_msg, exc_info=True)
                                 errors.append(error_msg)
 
@@ -772,14 +773,14 @@ class PredicateDiscoveryService:
             )
 
         except Exception as e:
-            error_msg = f"Fatal error in Wikidata discovery: {str(e)}"
+            error_msg = f"Fatal error in Wikidata discovery: {e!s}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
             return (total_created, total_updated, errors)
 
         return (total_created, total_updated, errors)
 
-    async def discover_schema_org_predicates(self) -> Tuple[int, int, List[str]]:
+    async def discover_schema_org_predicates(self) -> tuple[int, int, list[str]]:
         """
         Discover predicates from Schema.org by querying ExternalPredicates.
 
@@ -820,14 +821,14 @@ class PredicateDiscoveryService:
             return (0, existing_count, errors)
 
         except Exception as e:
-            error_msg = f"Error discovering Schema.org predicates: {str(e)}"
+            error_msg = f"Error discovering Schema.org predicates: {e!s}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
             return (0, 0, errors)
 
     async def discover_all_predicates(
-        self, sources: Optional[List[str]] = None
-    ) -> Dict[str, Tuple[int, int, List[str]]]:
+        self, sources: list[str] | None = None
+    ) -> dict[str, tuple[int, int, list[str]]]:
         """
         Discover predicates from all enabled sources.
 

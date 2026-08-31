@@ -5,9 +5,10 @@ This module contains custom SQLAlchemy type decorators that handle
 special data type conversions and constraints.
 """
 
-from sqlalchemy.types import TypeDecorator, String
+
+from sqlalchemy.types import String, TypeDecorator
+
 from database.enums import NodeType, RecordType
-from typing import Optional
 
 
 class NodeTypeColumn(TypeDecorator):
@@ -41,7 +42,7 @@ class NodeTypeColumn(TypeDecorator):
             return value.value
         return value
 
-    def process_result_value(self, value: Optional[str], dialect) -> Optional[NodeType]:
+    def process_result_value(self, value: str | None, dialect) -> NodeType | None:
         """
         Convert database string value to Python enum.
 
@@ -117,8 +118,8 @@ class RecordTypeColumn(TypeDecorator):
         return value
 
     def process_result_value(
-        self, value: Optional[str], dialect
-    ) -> Optional[RecordType]:
+        self, value: str | None, dialect
+    ) -> RecordType | None:
         """
         Convert database string value to Python enum.
 

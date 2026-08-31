@@ -1,20 +1,21 @@
 """Integration tests for the normalized change event system."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )  # noqa: E501
+    )
 )
 
-import pytest  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-from services.change_event_handler import ChangeEventHandler  # noqa: E402
-from database.enums import RecordType  # noqa: E402
-import json  # noqa: E402
-from uuid import uuid4  # noqa: E402
+import json
+from uuid import uuid4
+
+import pytest
+from database.enums import RecordType
+from services.change_event_handler import ChangeEventHandler
+from sqlalchemy import text
 
 
 @pytest.fixture
@@ -66,7 +67,7 @@ def test_event_statistics_integration(db_session, change_event_handler):
     assert new_stats["total_events"] == initial_stats["total_events"] + 5
     assert (
         new_stats["unprocessed_events"] == initial_stats["unprocessed_events"] + 5
-    )  # noqa: E501
+    )
 
     # Verify event type breakdown
     assert (
@@ -94,7 +95,7 @@ def test_event_statistics_integration(db_session, change_event_handler):
     assert (
         new_stats["events_by_record_type"]["structure_node_link"]
         == initial_stats["events_by_record_type"].get("structure_node_link", 0)
-        + 1  # noqa: E501
+        + 1
     )
 
 
@@ -111,7 +112,7 @@ def test_database_trigger_integration(db_session):
     # Get the engine from the db_session's bind
     engine = db_session.bind
 
-    # Insert a structure_node directly (would trigger change_events via database trigger)  # noqa: E501
+    # Insert a structure_node directly (would trigger change_events via database trigger)
     # This is a simulated test since we'd need the actual triggers in place
     with engine.connect() as conn:
         # First check if change_events table exists
@@ -128,7 +129,7 @@ def test_database_trigger_integration(db_session):
                 (event_type, record_type, record_id, old_data, new_data, processed)
                 VALUES ('create', 'structure_node', :node_id, NULL,
                         :node_data, 0)
-            """),  # noqa: E501
+            """),
                 {
                     "node_id": trigger_node_id,
                     "node_data": json.dumps(
@@ -186,7 +187,7 @@ def test_update_node_type_trigger(db_session):
         conn.execute(
             text("DELETE FROM change_events WHERE record_id = :node_id"),
             {"node_id": node_id},
-        )  # noqa: E501
+        )
         conn.commit()
 
         # Update the node_type
@@ -227,16 +228,16 @@ def test_update_node_type_trigger(db_session):
         conn.execute(
             text("DELETE FROM change_events WHERE record_id = :node_id"),
             {"node_id": node_id},
-        )  # noqa: E501
+        )
         conn.execute(
             text("DELETE FROM ontology_entities WHERE id = :node_id"),
             {"node_id": node_id},
-        )  # noqa: E501
+        )
         conn.commit()
 
 
 def test_move_node_trigger(db_session):
-    """Test that moving a node (changing parent_entity_id) generates a move event."""  # noqa: E501
+    """Test that moving a node (changing parent_entity_id) generates a move event."""
 
     # Generate unique IDs for this test
     node_id = f"move-node-{uuid4()}"
@@ -277,13 +278,13 @@ def test_move_node_trigger(db_session):
         conn.execute(
             text(
                 "DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"
-            ),  # noqa: E501
+            ),
             {
                 "node_id": node_id,
                 "old_parent_id": old_parent_id,
                 "new_parent_id": new_parent_id,
             },
-        )  # noqa: E501, E128
+        )
         conn.commit()
 
         # Move the node to new parent
@@ -324,21 +325,21 @@ def test_move_node_trigger(db_session):
         conn.execute(
             text(
                 "DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"
-            ),  # noqa: E501
+            ),
             {
                 "node_id": node_id,
                 "old_parent_id": old_parent_id,
                 "new_parent_id": new_parent_id,
             },
-        )  # noqa: E501, E128
+        )
         conn.execute(
             text(
                 "DELETE FROM ontology_entities WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"
-            ),  # noqa: E501
+            ),
             {
                 "node_id": node_id,
                 "old_parent_id": old_parent_id,
                 "new_parent_id": new_parent_id,
             },
-        )  # noqa: E501, E128
+        )
         conn.commit()

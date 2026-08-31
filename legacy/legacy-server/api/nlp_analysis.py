@@ -2,15 +2,15 @@
 FastAPI router for NLP Analysis API endpoint.
 """
 
-from fastapi import APIRouter, status, Request
+from config import get_settings
+from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
 from nlp.models import NLPAnalysisRequest, NLPErrorResponse, NLPSuccessResponse
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
 from nlp.proxy_manager import get_proxy_manager
+from pydantic import ValidationError
 from utils.logger import get_logger
-from config import get_settings
 
 logger = get_logger("nlp_analysis")
 
@@ -39,7 +39,7 @@ async def nlp_analysis(request: Request):
         logger.error(f"Validation error: {ve}")
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={  # noqa: E501
+            content={
                 "success": False,
                 "error": "Invalid request format.",
                 "details": ve.errors(),
@@ -66,12 +66,12 @@ async def nlp_analysis(request: Request):
     if len(text) > settings["NLP_MAX_TEXT_LENGTH"]:
         logger.warning(
             f"Text length {len(text)} exceeds max allowed {settings['NLP_MAX_TEXT_LENGTH']}."
-        )  # noqa: E501
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
                 "success": False,
-                "error": f"Text exceeds maximum length of {settings['NLP_MAX_TEXT_LENGTH']} characters.",  # noqa: E501
+                "error": f"Text exceeds maximum length of {settings['NLP_MAX_TEXT_LENGTH']} characters.",
             },
         )
 
@@ -86,7 +86,7 @@ async def nlp_analysis(request: Request):
         logger.error(f"NLP pipeline error: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={  # noqa: E501
+            content={
                 "success": False,
                 "error": "Internal server error during NLP analysis.",
                 "details": str(e),
@@ -116,7 +116,7 @@ async def configure_proxy(request: Request):
                     content={
                         "success": False,
                         "error": f"Value for {api} must be boolean",
-                    },  # noqa: E501
+                    },
                 )
 
         # Update settings
@@ -167,10 +167,10 @@ async def get_proxy_status():
                 "proxy_config": {
                     "host": settings.get_reference_api_buddy_config()["server"][
                         "host"
-                    ],  # noqa: E501
+                    ],
                     "port": settings.get_reference_api_buddy_config()["server"][
                         "port"
-                    ],  # noqa: E501
+                    ],
                 },
             }
         )

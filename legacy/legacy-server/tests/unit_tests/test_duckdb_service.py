@@ -5,19 +5,19 @@ Tests the DuckDB integration and analytics functionality including query executi
 view creation, and comprehensive analytics reporting in Phase 4 implementation.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import pandas as pd  # type: ignore[import-untyped]  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
 
+import pandas as pd  # type: ignore[import-untyped]
+import pytest
 from services.duckdb_service import (
-    DuckDBService,
     ChangeAnalyticsEngine,
-)  # noqa: E402, E501
+    DuckDBService,
+)
 
 
 class TestDuckDBService:

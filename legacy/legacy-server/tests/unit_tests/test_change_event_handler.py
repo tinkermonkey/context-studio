@@ -1,16 +1,16 @@
 """Test the ChangeEventHandler with the new normalized change event system."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from services.change_event_handler import ChangeEventHandler  # noqa: E402
-from database.models import ChangeEvent  # noqa: E402
-from database.enums import RecordType  # noqa: E402
+import pytest
+from database.enums import RecordType
+from database.models import ChangeEvent
+from services.change_event_handler import ChangeEventHandler
 
 
 def test_change_event_creation_with_record_type_enum(db_session):

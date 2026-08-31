@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import types
 from dataclasses import dataclass, field
-from typing import Optional
 
 from domain.admin.enums import (
-    SystemHealthStatus,
     BackgroundTaskStatus,
     BackgroundTaskType,
     LogLevel,
+    SystemHealthStatus,
 )
 
 
@@ -72,8 +71,8 @@ class BackgroundTask:
     status: BackgroundTaskStatus
     progress: float
     created_at: str
-    completed_at: Optional[str] = None
-    error: Optional[str] = None
+    completed_at: str | None = None
+    error: str | None = None
 
     def __post_init__(self) -> None:
         """Validate background task invariants."""

@@ -10,11 +10,11 @@ test runs. The model version is pinned in requirements_test.txt and documented i
 conftest.py to ensure deterministic embedding generation for the Phase 0 baseline.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 # Stable taxonomy used in baseline tests
 # These concepts produce predictable semantic embeddings
-STABLE_TAXONOMY: Dict[str, Any] = {
+STABLE_TAXONOMY: dict[str, Any] = {
     "layer": {
         "title": "Computer Science",
         "definition": "The study of computation and information",
@@ -72,7 +72,7 @@ STABLE_RELATIONSHIPS = [
 
 # Stable taxonomy using new terminology (taxonomy, concept_scheme, class)
 # Used in Phase 1 E2E tests to verify new API routes and field names
-STABLE_TAXONOMY_NEW_TERMINOLOGY: Dict[str, Any] = {
+STABLE_TAXONOMY_NEW_TERMINOLOGY: dict[str, Any] = {
     "taxonomy": {
         "node_type": "taxonomy",
         "title": "Computer Science",

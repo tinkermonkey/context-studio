@@ -11,10 +11,12 @@ Design based on ADR-005: Background Processing with Asyncio.
 
 import asyncio
 import uuid
+from collections.abc import Awaitable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Awaitable, Protocol
+from typing import Any, Protocol
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -66,19 +68,19 @@ class BackgroundTask:
     task_type: str
     status: TaskStatus = TaskStatus.PENDING
     progress: float = 0.0
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    result: Any | None = None
+    error: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Internal asyncio task handle (not serialized)
-    _asyncio_task: Optional[asyncio.Task] = field(
+    _asyncio_task: asyncio.Task | None = field(
         default=None, repr=False, compare=False
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert task to dictionary for API responses."""
         # Filter out internal metadata keys (those starting with '_')
         public_metadata = {
@@ -147,10 +149,10 @@ class TaskManager:
         self.task_queue: asyncio.Queue[BackgroundTask] = asyncio.Queue(
             maxsize=max_queue_size
         )
-        self.tasks: Dict[str, BackgroundTask] = {}  # All tasks by ID
-        self.dead_letter_queue: List[BackgroundTask] = []  # Failed tasks for analysis
+        self.tasks: dict[str, BackgroundTask] = {}  # All tasks by ID
+        self.dead_letter_queue: list[BackgroundTask] = []  # Failed tasks for analysis
         self._tasks_lock = asyncio.Lock()  # Protect concurrent access to tasks dict
-        self._worker_task: Optional[asyncio.Task] = None
+        self._worker_task: asyncio.Task | None = None
         self._running = False
         logger.info(
             f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}"
@@ -220,9 +222,9 @@ class TaskManager:
         self,
         task_type: str,
         coroutine: Awaitable[Any],
-        metadata: Optional[Dict[str, Any]] = None,
-        progress_callback: Optional[ProgressCallback] = None,
-        timeout: Optional[float] = None,
+        metadata: dict[str, Any] | None = None,
+        progress_callback: ProgressCallback | None = None,
+        timeout: float | None = None,
     ) -> str:
         """
         Submit a new task to the queue.
@@ -264,7 +266,7 @@ class TaskManager:
             )
             raise
 
-    def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_status(self, task_id: str) -> dict[str, Any] | None:
         """
         Get the current status of a task.
 
@@ -516,7 +518,7 @@ class TaskManager:
         self.dead_letter_queue.clear()
         logger.info(f"Cleared {count} tasks from dead letter queue")
 
-    def get_all_tasks(self) -> List[Dict[str, Any]]:
+    def get_all_tasks(self) -> list[dict[str, Any]]:
         """
         Get status of all tasks.
 
@@ -525,7 +527,7 @@ class TaskManager:
         """
         return [task.to_dict() for task in self.tasks.values()]
 
-    def get_dead_letter_queue(self) -> List[Dict[str, Any]]:
+    def get_dead_letter_queue(self) -> list[dict[str, Any]]:
         """
         Get all failed tasks from the dead letter queue.
 
@@ -538,7 +540,7 @@ class TaskManager:
         """Get current number of pending tasks in queue."""
         return self.task_queue.qsize()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get TaskManager statistics.
 
@@ -567,7 +569,7 @@ class TaskManager:
 
 
 # Global task manager instance
-_task_manager: Optional[TaskManager] = None
+_task_manager: TaskManager | None = None
 
 
 def get_task_manager() -> TaskManager:

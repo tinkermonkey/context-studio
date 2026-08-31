@@ -1,25 +1,26 @@
 # mypy: ignore-errors
-from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import StreamingResponse
 import datetime
 
-from api.dependencies.llm_services import get_default_llm_service
-from llm.service import LLMService
-from llm.models import (
-    PipelineExecutionRequest,
-    PipelineExecutionResponse,
-    LLMHealthResponse,
-    LLMErrorResponse,
-    StreamingLLMResponse,
-)
+from config import get_settings
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from llm.exceptions import (
     LLMConfigurationError,
     LLMProcessingError,
-    LLMTimeoutError,
     LLMQuotaExceededError,
-)  # noqa: E501
+    LLMTimeoutError,
+)
+from llm.models import (
+    LLMErrorResponse,
+    LLMHealthResponse,
+    PipelineExecutionRequest,
+    PipelineExecutionResponse,
+    StreamingLLMResponse,
+)
+from llm.service import LLMService
 from utils.logger import get_logger
-from config import get_settings
+
+from api.dependencies.llm_services import get_default_llm_service
 
 logger = get_logger("llm_api")
 router = APIRouter()
@@ -29,7 +30,7 @@ _llm_service: LLMService = None
 
 
 def get_llm_service() -> LLMService:
-    """Legacy dependency to get LLM service instance (kept for backward compatibility)"""  # noqa: E501
+    """Legacy dependency to get LLM service instance (kept for backward compatibility)"""
     global _llm_service
     if _llm_service is None:
         try:
@@ -40,10 +41,10 @@ def get_llm_service() -> LLMService:
 
             logger.info(
                 f"Initializing legacy LLM service with model: {model_name}"
-            )  # noqa: E501
+            )
             _llm_service = LLMService(
                 model_name=model_name, temperature=temperature
-            )  # noqa: E501
+            )
             logger.info("Legacy LLM service initialized successfully")
 
         except Exception as e:
@@ -60,32 +61,32 @@ def handle_llm_error(e: Exception) -> HTTPException:
         logger.error(f"LLM configuration error: {e}")
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"LLM configuration error: {str(e)}",  # noqa: E501
+            detail=f"LLM configuration error: {e!s}",
         )
     elif isinstance(e, LLMQuotaExceededError):
         logger.warning(f"API quota exceeded: {e}")
         return HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"API quota exceeded: {str(e)}",
-        )  # noqa: E501
+            detail=f"API quota exceeded: {e!s}",
+        )
     elif isinstance(e, LLMTimeoutError):
         logger.warning(f"LLM request timeout: {e}")
         return HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail=f"LLM request timeout: {str(e)}",
-        )  # noqa: E501
+            detail=f"LLM request timeout: {e!s}",
+        )
     elif isinstance(e, LLMProcessingError):
         logger.error(f"LLM processing error: {e}")
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"LLM processing error: {str(e)}",
-        )  # noqa: E501
+            detail=f"LLM processing error: {e!s}",
+        )
     else:
         logger.error(f"Unexpected LLM error ({error_type}): {e}")
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )  # noqa: E501
+        )
 
 
 @router.post(
@@ -96,7 +97,7 @@ def handle_llm_error(e: Exception) -> HTTPException:
         422: {
             "model": LLMErrorResponse,
             "description": "Request validation failure",
-        },  # noqa: E501
+        },
         429: {"model": LLMErrorResponse},
         500: {"model": LLMErrorResponse},
         504: {"model": LLMErrorResponse},
@@ -104,7 +105,7 @@ def handle_llm_error(e: Exception) -> HTTPException:
 )
 async def execute_pipeline(
     request: PipelineExecutionRequest,
-    llm_service: LLMService = Depends(get_default_llm_service),  # noqa: E501
+    llm_service: LLMService = Depends(get_default_llm_service),
 ):
     """
     Execute a generic pipeline with arbitrary context data.
@@ -118,7 +119,7 @@ async def execute_pipeline(
     """
     try:
         logger.info(
-            f"Processing generic pipeline execution request - Type: {request.pipeline_type}, Flavor: {request.flavor_id}"  # noqa: E501
+            f"Processing generic pipeline execution request - Type: {request.pipeline_type}, Flavor: {request.flavor_id}"
         )
         logger.debug(f"Context data keys: {list(request.context_data.keys())}")
 
@@ -128,24 +129,24 @@ async def execute_pipeline(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="context_data cannot be empty",
-            )  # noqa: E501
+            )
 
         # Additional validation - check for reasonable context data size
         context_str = str(request.context_data)
         if len(context_str) > 50000:  # Reasonable limit
             logger.warning(
                 f"Context data too large: {len(context_str)} characters"
-            )  # noqa: E501
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Context data is too large (maximum 50000 characters)",  # noqa: E501
+                detail="Context data is too large (maximum 50000 characters)",
             )
 
         # Process the request
         result = await llm_service.execute_pipeline_flavor(request)
 
         logger.info(
-            f"Successfully executed generic pipeline - Type: {request.pipeline_type}, execution: {result.execution_id}"  # noqa: E501
+            f"Successfully executed generic pipeline - Type: {request.pipeline_type}, execution: {result.execution_id}"
         )
         return result
 
@@ -155,14 +156,14 @@ async def execute_pipeline(
     except Exception as e:
         logger.error(
             f"Error in execute_pipeline endpoint for pipeline {request.pipeline_type}: {e}"
-        )  # noqa: E501
+        )
         raise handle_llm_error(e)
 
 
 @router.post("/llm/execute_pipeline/stream")
 async def execute_pipeline_stream(
     request: PipelineExecutionRequest,
-    llm_service: LLMService = Depends(get_default_llm_service),  # noqa: E501
+    llm_service: LLMService = Depends(get_default_llm_service),
 ):
     """
     Execute a generic pipeline with streaming response.
@@ -176,7 +177,7 @@ async def execute_pipeline_stream(
     """
     try:
         logger.info(
-            f"Processing streaming generic pipeline execution request - Type: {request.pipeline_type}, Flavor: {request.flavor_id}"  # noqa: E501
+            f"Processing streaming generic pipeline execution request - Type: {request.pipeline_type}, Flavor: {request.flavor_id}"
         )
         logger.debug(f"Context data keys: {list(request.context_data.keys())}")
 
@@ -186,23 +187,23 @@ async def execute_pipeline_stream(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="context_data cannot be empty",
-            )  # noqa: E501
+            )
 
         context_str = str(request.context_data)
         if len(context_str) > 50000:
             logger.warning(
                 f"Context data too large: {len(context_str)} characters"
-            )  # noqa: E501
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Context data is too large (maximum 50000 characters)",  # noqa: E501
+                detail="Context data is too large (maximum 50000 characters)",
             )
 
         async def stream_generator():
             try:
                 async for chunk in llm_service.execute_pipeline_flavor_streaming(
                     request
-                ):  # noqa: E501
+                ):
                     # Convert to JSON and add SSE formatting
                     data = chunk.model_dump_json()
                     yield f"data: {data}\n\n"
@@ -212,19 +213,19 @@ async def execute_pipeline_stream(
                         if chunk.error:
                             logger.error(
                                 f"Streaming generic pipeline execution failed: {chunk.error}"
-                            )  # noqa: E501
+                            )
                         else:
                             logger.info(
-                                f"Successfully completed streaming generic pipeline execution - Type: {request.pipeline_type}"  # noqa: E501
+                                f"Successfully completed streaming generic pipeline execution - Type: {request.pipeline_type}"
                             )
                         break
             except Exception as e:
                 logger.error(
                     f"Error during streaming generic pipeline execution: {e}"
-                )  # noqa: E501
+                )
                 error_chunk = StreamingLLMResponse(
                     flavor_id="unknown", done=True, error=str(e)
-                )  # noqa: E501
+                )
                 yield f"data: {error_chunk.model_dump_json()}\n\n"
 
         return StreamingResponse(
@@ -239,7 +240,7 @@ async def execute_pipeline_stream(
     except Exception as e:
         logger.error(
             f"Error in execute_pipeline/stream endpoint for pipeline {request.pipeline_type}: {e}"
-        )  # noqa: E501
+        )
         raise handle_llm_error(e)
 
 
@@ -255,7 +256,7 @@ async def health_check(llm_service: LLMService = Depends(get_llm_service)):
 
         status_value = (
             "healthy" if service_initialized and service_configured else "unhealthy"
-        )  # noqa: E501
+        )
         logger.info(f"LLM health check completed: {status_value}")
 
         return LLMHealthResponse(
@@ -263,7 +264,7 @@ async def health_check(llm_service: LLMService = Depends(get_llm_service)):
             model_info={
                 "initialized": service_initialized,
                 "configured": service_configured,
-            },  # noqa: E501
+            },
             timestamp=datetime.datetime.utcnow().isoformat(),
         )
     except Exception as e:
@@ -271,5 +272,5 @@ async def health_check(llm_service: LLMService = Depends(get_llm_service)):
         return LLMHealthResponse(
             status="unhealthy",
             model_info={"error": str(e)},
-            timestamp=datetime.datetime.utcnow().isoformat(),  # noqa: E501
+            timestamp=datetime.datetime.utcnow().isoformat(),
         )

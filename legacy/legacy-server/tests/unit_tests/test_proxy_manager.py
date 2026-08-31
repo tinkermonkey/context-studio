@@ -2,17 +2,18 @@
 Unit tests for the Reference API Proxy Manager.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
+
+import pytest
 from nlp.proxy_manager import (
     ReferenceAPIProxyManager,
     get_proxy_manager,
-)  # noqa: E402, E501
+)
 
 
 class TestReferenceAPIProxyManager:

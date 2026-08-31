@@ -7,15 +7,14 @@ ReferenceConfig, and ReferenceManager classes.
 
 import os
 import tempfile
-import pytest
 from datetime import date
 from uuid import uuid4
 
-from reference_db.models import ReferenceNode, ReferenceLink
-from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
-from reference_db.manager import ReferenceManager
-
+import pytest
 from pydantic import ValidationError
+from reference_db.config import REFERENCE_SCHEMA_VERSION, ReferenceConfig
+from reference_db.manager import ReferenceManager
+from reference_db.models import ReferenceLink, ReferenceNode
 
 # Test constants - Named constants for magic numbers used in tests
 
@@ -450,7 +449,7 @@ class TestReferenceManagerCore:
                 f
                 for f in os.listdir(os.path.dirname(db_path))
                 if f.startswith(os.path.basename(backup_pattern))
-            ]  # noqa: E127, E501
+            ]
 
             # Note: In actual usage, backup is only created during rebuild
             # This test validates the concept; actual rebuild testing requires

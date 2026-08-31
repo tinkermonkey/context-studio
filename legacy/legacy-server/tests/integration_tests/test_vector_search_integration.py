@@ -5,12 +5,12 @@ Tests search_by_similarity with real sentence-transformers model to validate
 known-query accuracy requirements (TC-I002).
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 import time
 from typing import cast
 
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
@@ -44,27 +44,27 @@ def manager_with_schema_org_data():
         },
         {
             "title": "Organization",
-            "definition": "An organization such as a school, NGO, corporation, club, etc.",  # noqa: E501
+            "definition": "An organization such as a school, NGO, corporation, club, etc.",
             "external_id": "Organization",
         },
         {
             "title": "CreativeWork",
-            "definition": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",  # noqa: E501
+            "definition": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",
             "external_id": "CreativeWork",
         },
         {
             "title": "Event",
-            "definition": "An event happening at a certain time and location, such as a concert, lecture, or festival.",  # noqa: E501
+            "definition": "An event happening at a certain time and location, such as a concert, lecture, or festival.",
             "external_id": "Event",
         },
         {
             "title": "Place",
-            "definition": "Entities that have a somewhat fixed, physical extension.",  # noqa: E501
+            "definition": "Entities that have a somewhat fixed, physical extension.",
             "external_id": "Place",
         },
         {
             "title": "Product",
-            "definition": "Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a car.",  # noqa: E501
+            "definition": "Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a car.",
             "external_id": "Product",
         },
         {"title": "Book", "definition": "A book.", "external_id": "Book"},
@@ -81,17 +81,17 @@ def manager_with_schema_org_data():
         },
         {
             "title": "Hotel",
-            "definition": "A hotel is an establishment that provides paid lodging.",  # noqa: E501
+            "definition": "A hotel is an establishment that provides paid lodging.",
             "external_id": "Hotel",
         },
         {
             "title": "LocalBusiness",
-            "definition": "A particular physical business or branch of an organization.",  # noqa: E501
+            "definition": "A particular physical business or branch of an organization.",
             "external_id": "LocalBusiness",
         },
         {
             "title": "Article",
-            "definition": "An article, such as a news article or piece of investigative report.",  # noqa: E501
+            "definition": "An article, such as a news article or piece of investigative report.",
             "external_id": "Article",
         },
         {
@@ -101,7 +101,7 @@ def manager_with_schema_org_data():
         },
         {
             "title": "WebPage",
-            "definition": "A web page. Every web page is implicitly assumed to be declared to be of type WebPage.",  # noqa: E501
+            "definition": "A web page. Every web page is implicitly assumed to be declared to be of type WebPage.",
             "external_id": "WebPage",
         },
     ]
@@ -145,7 +145,7 @@ class TestVectorSearchAccuracy:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = manager_with_schema_org_data
+        manager, _db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
             return cast(bytes, generate_embedding(text))
@@ -217,10 +217,10 @@ class TestVectorSearchAccuracy:
                 print(f"    Expected: {failure['expected']}")
                 print(f"    Got top-3: {failure['got_top_3']}")
 
-        # Validate TC-I002: ≥90% accuracy (allows 2-3 failures out of 15-20 queries)  # noqa: E501
+        # Validate TC-I002: ≥90% accuracy (allows 2-3 failures out of 15-20 queries)
         assert (
             accuracy >= 90.0
-        ), f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"  # noqa: E501
+        ), f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"
 
     def test_threshold_filtering_accuracy(self, manager_with_schema_org_data):
         """
@@ -230,7 +230,7 @@ class TestVectorSearchAccuracy:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = manager_with_schema_org_data
+        manager, _db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
             return cast(bytes, generate_embedding(text))
@@ -286,7 +286,7 @@ class TestVectorSearchPerformance:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = manager_with_schema_org_data
+        manager, _db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
             return cast(bytes, generate_embedding(text))
@@ -335,11 +335,11 @@ class TestVectorSearchPerformance:
         print(f"Individual times: {[f'{t:.2f}ms' for t in search_times]}")
 
         # Validate TC-P002 and TC-S003: <50ms for top-20 queries
-        # Note: This is for the search operation only, not including embedding generation  # noqa: E501
+        # Note: This is for the search operation only, not including embedding generation
         # In production, embedding generation would be done once and cached
         assert (
             avg_search_time < 50.0
-        ), f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"  # noqa: E501
+        ), f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"
 
     def test_search_fails_fast_on_error(self, manager_with_schema_org_data):
         """
@@ -347,7 +347,7 @@ class TestVectorSearchPerformance:
 
         Validates that errors are not silently converted to empty results.
         """
-        manager, db_path = manager_with_schema_org_data
+        manager, _db_path = manager_with_schema_org_data
 
         # Test with invalid embedding generator that returns wrong size
         def bad_embedding_gen(text: str) -> bytes:

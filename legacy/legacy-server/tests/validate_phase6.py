@@ -3,23 +3,23 @@ Validation script for Phase 6 implementation.
 Tests the core functionality without requiring full test infrastructure.
 """
 
-import sys
-import os
 import json
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def test_imports():  # noqa: E302
+def test_imports():
     """Test that all required modules can be imported."""
     print("Testing imports...")
     try:
-        import services.reference_filter_service  # noqa: F401
-        import reference_db.models  # noqa: F401
-        import reference_db.manager  # noqa: F401
-        import reference_db.config  # noqa: F401
-        import database.models  # noqa: F401
         import config  # noqa: F401
+        import database.models  # noqa: F401
+        import reference_db.config
+        import reference_db.manager
+        import reference_db.models  # noqa: F401
+        import services.reference_filter_service  # noqa: F401
 
         print("  ✓ All imports successful")
         return True
@@ -39,7 +39,7 @@ def test_configuration():
         # Check for enable_relevance_filtering setting
         assert hasattr(
             settings.reference_sources, "enable_relevance_filtering"
-        ), "Missing enable_relevance_filtering setting"  # noqa: E501
+        ), "Missing enable_relevance_filtering setting"
 
         # Check for filter_cache_ttl setting
         assert hasattr(
@@ -48,10 +48,10 @@ def test_configuration():
 
         print(
             f"  ✓ enable_relevance_filtering: {settings.reference_sources.enable_relevance_filtering}"
-        )  # noqa: E501
+        )
         print(
             f"  ✓ filter_cache_ttl: {settings.reference_sources.filter_cache_ttl}"
-        )  # noqa: E501
+        )
         return True
     except Exception as e:
         print(f"  ✗ Configuration test failed: {e}")
@@ -62,8 +62,9 @@ def test_api_endpoint():
     """Test that API endpoint includes filtering parameter."""
     print("\nTesting API endpoint...")
     try:
-        from api import reference
         import inspect
+
+        from api import reference
 
         # Get the get_node_links function
         func = reference.get_node_links
@@ -88,9 +89,10 @@ def test_filter_service_basic():
     """Test basic filter service functionality."""
     print("\nTesting filter service...")
     try:
-        from services.reference_filter_service import ReferenceFilterService
         from unittest.mock import Mock
+
         from reference_db.models import ReferenceLink
+        from services.reference_filter_service import ReferenceFilterService
 
         # Create mocks
         mock_session = Mock()
@@ -108,10 +110,10 @@ def test_filter_service_basic():
 
         assert (
             len(filtered) == 3
-        ), "Should return all links when no filtering configured"  # noqa: E501
+        ), "Should return all links when no filtering configured"
         assert (
             stats["filtering_active"] is False
-        ), "Filtering should not be active"  # noqa: E501
+        ), "Filtering should not be active"
         assert stats["total_before"] == 3, "Should track total_before"
         assert stats["total_after"] == 3, "Should track total_after"
         assert stats["filtered_count"] == 0, "Should track filtered_count"
@@ -132,8 +134,9 @@ def test_filter_statistics():
     """Test filter statistics endpoint."""
     print("\nTesting filter statistics...")
     try:
-        from services.reference_filter_service import ReferenceFilterService
         from unittest.mock import Mock
+
+        from services.reference_filter_service import ReferenceFilterService
 
         # Create mocks
         mock_session = Mock()
@@ -145,17 +148,17 @@ def test_filter_statistics():
                 id="p1",
                 is_relevant=True,
                 mapping=json.dumps([{"source": "test", "external_id": "test1"}]),
-            ),  # noqa: E501
+            ),
             Mock(
                 id="p2",
                 is_relevant=False,
                 mapping=json.dumps([{"source": "test", "external_id": "test2"}]),
-            ),  # noqa: E501
+            ),
             Mock(
                 id="p3",
                 is_relevant=None,
                 mapping=json.dumps([{"source": "test", "external_id": "test3"}]),
-            ),  # noqa: E501
+            ),
         ]
         mock_session.query.return_value.all.return_value = mock_preds
 
@@ -166,14 +169,14 @@ def test_filter_statistics():
         assert stats["relevant_count"] == 1, "Should count relevant predicates"
         assert (
             stats["irrelevant_count"] == 1
-        ), "Should count irrelevant predicates"  # noqa: E501
+        ), "Should count irrelevant predicates"
         assert stats["unmapped_count"] == 1, "Should count unmapped predicates"
         assert (
             len(stats["relevant_external_predicates"]) == 1
-        ), "Should list relevant external predicates"  # noqa: E501
+        ), "Should list relevant external predicates"
         assert (
             len(stats["irrelevant_external_predicates"]) == 1
-        ), "Should list irrelevant external predicates"  # noqa: E501
+        ), "Should list irrelevant external predicates"
 
         print("  ✓ Statistics calculated correctly")
         print(f"    - Total: {stats['total_predicates']}")

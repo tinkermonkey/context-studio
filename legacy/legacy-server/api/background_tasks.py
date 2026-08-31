@@ -5,10 +5,10 @@ This module provides REST API endpoints for managing background tasks,
 including task submission, status retrieval, and cancellation.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
-
 from services.task_manager import get_task_manager
 from utils.logger import get_logger
 
@@ -24,18 +24,18 @@ class TaskStatusResponse(BaseModel):
     task_type: str
     status: str
     progress: float = Field(ge=0.0, le=1.0)
-    result: Optional[Any] = None
-    error: Optional[str] = None
-    created_at: Optional[str] = None
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    result: Any | None = None
+    error: str | None = None
+    created_at: str | None = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class TaskListResponse(BaseModel):
     """Response model for list of tasks."""
 
-    tasks: List[TaskStatusResponse]
+    tasks: list[TaskStatusResponse]
     total: int
 
 
@@ -46,7 +46,7 @@ class TaskStatsResponse(BaseModel):
     queue_size: int
     max_queue_size: int
     dead_letter_queue_size: int
-    status_counts: Dict[str, int]
+    status_counts: dict[str, int]
     is_running: bool
 
 
@@ -64,7 +64,7 @@ class CancelTaskResponse(BaseModel):
 
 @router.get("", response_model=TaskListResponse)
 async def list_tasks(
-    status_filter: Optional[str] = None, task_type: Optional[str] = None
+    status_filter: str | None = None, task_type: str | None = None
 ):
     """
     List all background tasks with optional filtering.
@@ -243,7 +243,7 @@ async def cancel_task(task_id: str):
             return CancelTaskResponse(
                 task_id=task_id,
                 cancelled=False,
-                message=f"Task is in state '{current_status}' and cannot be cancelled",  # noqa: E501
+                message=f"Task is in state '{current_status}' and cannot be cancelled",
             )
 
         # Cancel the task
@@ -256,7 +256,7 @@ async def cancel_task(task_id: str):
                 "Task cancelled successfully"
                 if cancelled
                 else "Task cancellation failed"
-            ),  # noqa: E501
+            ),
         )
 
     except RuntimeError as e:

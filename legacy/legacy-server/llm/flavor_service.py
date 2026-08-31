@@ -2,22 +2,23 @@
 Service for managing pipeline flavors.
 """
 
-from typing import List, Optional, cast
-from datetime import datetime, timezone
-from sqlalchemy import text
 import uuid
+from datetime import datetime, timezone
+from typing import cast
 
-from .models import (
-    PipelineFlavor,
-    CreatePipelineFlavorRequest,
-    UpdatePipelineFlavorRequest,
-    PipelineType,
-    LLMConfig,
-)
-from .exceptions import FlavorNotFoundError, FlavorValidationError
-from .default_flavors import DefaultFlavorProvider
 from pipeline.manager import get_pipeline_session
+from sqlalchemy import text
 from utils.logger import get_logger
+
+from .default_flavors import DefaultFlavorProvider
+from .exceptions import FlavorNotFoundError, FlavorValidationError
+from .models import (
+    CreatePipelineFlavorRequest,
+    LLMConfig,
+    PipelineFlavor,
+    PipelineType,
+    UpdatePipelineFlavorRequest,
+)
 
 
 class PipelineFlavorService:
@@ -226,8 +227,8 @@ class PipelineFlavorService:
             return self._row_to_flavor(row)
 
     def list_flavors(
-        self, pipeline: Optional[PipelineType] = None
-    ) -> List[PipelineFlavor]:
+        self, pipeline: PipelineType | None = None
+    ) -> list[PipelineFlavor]:
         """List all flavors, optionally filtered by pipeline"""
         flavors = []
 
@@ -252,7 +253,7 @@ class PipelineFlavorService:
 
         return flavors
 
-    def get_enabled_flavors(self, pipeline: PipelineType) -> List[PipelineFlavor]:
+    def get_enabled_flavors(self, pipeline: PipelineType) -> list[PipelineFlavor]:
         """Get all enabled flavors for a pipeline"""
         flavors = []
 
@@ -289,7 +290,7 @@ class PipelineFlavorService:
 
     def _get_user_flavors(
         self, pipeline: PipelineType, enabled_only: bool = False
-    ) -> List[PipelineFlavor]:
+    ) -> list[PipelineFlavor]:
         """Get user-created flavors for a specific pipeline"""
         with get_pipeline_session() as db:
             if enabled_only:
@@ -313,7 +314,7 @@ class PipelineFlavorService:
 
             return [self._row_to_flavor(row) for row in rows]
 
-    def _get_all_user_flavors(self) -> List[PipelineFlavor]:
+    def _get_all_user_flavors(self) -> list[PipelineFlavor]:
         """Get all user-created flavors across all pipelines"""
         with get_pipeline_session() as db:
             rows = db.execute(text("""

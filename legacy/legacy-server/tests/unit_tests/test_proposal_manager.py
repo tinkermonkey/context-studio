@@ -4,26 +4,26 @@ Unit tests for ProposalManager - Testing proposal creation, voting, and lifecycl
 Tests proposal workflows, voting logic, auto-approval/rejection, and S3 integration.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import uuid  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+import uuid
+from unittest.mock import Mock, patch
 
-from services.proposal_manager import ProposalManager  # noqa: E402
-from services.collaboration_models import (  # noqa: E402
+import pytest
+from services.changeset_manager import ChangesetManager
+from services.collaboration_models import (
+    Changeset,
+    ChangesetState,
     Proposal,
     ProposalStatus,
-    ChangesetState,
-    Changeset,
 )
-from services.changeset_manager import ChangesetManager  # noqa: E402
-from services.s3_sync_manager import S3SyncManager  # noqa: E402
+from services.proposal_manager import ProposalManager
+from services.s3_sync_manager import S3SyncManager
 
 
 class TestProposalManager:

@@ -5,18 +5,18 @@ This module provides sophisticated conflict detection with semantic analysis and
 both automatic and guided manual resolution capabilities for collaborative workflows.
 """
 
-import uuid
 import json
-from typing import List, Optional, Dict, Any, Tuple
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+import uuid
 from dataclasses import dataclass, field
-
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from services.version_manager import VersionManager
-from services.version_manager import EntityVersion, ChangeState
+from typing import Any
+
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.version_manager import ChangeState, EntityVersion, VersionManager
 
 logger = get_logger(__name__)
 
@@ -40,8 +40,8 @@ class ConflictDescriptor:
     entity_id: str
     local_version: EntityVersion
     remote_version: EntityVersion
-    conflict_details: Dict[str, Any]
-    resolution_suggestions: List[Dict[str, Any]]
+    conflict_details: dict[str, Any]
+    resolution_suggestions: list[dict[str, Any]]
     severity: str  # 'low', 'medium', 'high'
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -69,7 +69,7 @@ class ConflictAnalysis:
     """Result of conflict analysis between versions."""
 
     has_conflicts: bool
-    conflict_descriptors: List[ConflictDescriptor]
+    conflict_descriptors: list[ConflictDescriptor]
     auto_resolvable: int
     manual_required: int
     high_severity: int
@@ -91,8 +91,8 @@ class IntelligentConflictDetector:
         logger.info("IntelligentConflictDetector initialized")
 
     def detect_conflicts(
-        self, local_versions: List[EntityVersion], remote_versions: List[EntityVersion]
-    ) -> List[ConflictDescriptor]:
+        self, local_versions: list[EntityVersion], remote_versions: list[EntityVersion]
+    ) -> list[ConflictDescriptor]:
         """
         Detect and categorize conflicts between version sets.
 
@@ -132,7 +132,7 @@ class IntelligentConflictDetector:
         return conflicts
 
     def analyze_conflicts(
-        self, conflicts: List[ConflictDescriptor]
+        self, conflicts: list[ConflictDescriptor]
     ) -> ConflictAnalysis:
         """
         Analyze conflict set to determine resolution complexity.
@@ -156,10 +156,10 @@ class IntelligentConflictDetector:
         )
 
     def _group_versions_by_entity(
-        self, versions: List[EntityVersion]
-    ) -> Dict[Tuple[str, str], List[EntityVersion]]:
+        self, versions: list[EntityVersion]
+    ) -> dict[tuple[str, str], list[EntityVersion]]:
         """Group versions by entity type and ID."""
-        grouped: Dict[Tuple[str, str], List[EntityVersion]] = {}
+        grouped: dict[tuple[str, str], list[EntityVersion]] = {}
         for version in versions:
             key = (version.entity_type, version.entity_id)
             if key not in grouped:
@@ -174,7 +174,7 @@ class IntelligentConflictDetector:
 
     def _analyze_version_conflict(
         self, local_version: EntityVersion, remote_version: EntityVersion
-    ) -> Optional[ConflictDescriptor]:
+    ) -> ConflictDescriptor | None:
         """
         Analyze specific version conflict and generate resolution suggestions.
 
@@ -260,8 +260,8 @@ class IntelligentConflictDetector:
         )
 
     def _detect_structural_conflicts(
-        self, local_content: Dict, remote_content: Dict
-    ) -> List[Dict[str, Any]]:
+        self, local_content: dict, remote_content: dict
+    ) -> list[dict[str, Any]]:
         """Detect structural differences in entity content."""
         conflicts = []
 
@@ -319,7 +319,7 @@ class IntelligentConflictDetector:
 
     def _detect_dependency_conflicts(
         self, local_version: EntityVersion, remote_version: EntityVersion
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Detect dependency-related conflicts."""
         conflicts = []
 
@@ -346,7 +346,7 @@ class IntelligentConflictDetector:
 
         return conflicts
 
-    def _extract_dependencies(self, content: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_dependencies(self, content: dict[str, Any]) -> dict[str, Any]:
         """Extract dependency information from entity content."""
         dependencies = {}
 
@@ -366,7 +366,7 @@ class IntelligentConflictDetector:
 
     def _detect_semantic_conflicts(
         self, local_version: EntityVersion, remote_version: EntityVersion
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Detect semantic conflicts using NLP analysis."""
         if not self.nlp_analyzer:
             return []
@@ -402,7 +402,7 @@ class IntelligentConflictDetector:
 
         return conflicts
 
-    def _extract_text_content(self, content: Dict[str, Any]) -> str:
+    def _extract_text_content(self, content: dict[str, Any]) -> str:
         """Extract text content from entity for semantic analysis."""
         text_fields = ["title", "description", "content", "text", "body"]
 
@@ -418,7 +418,7 @@ class IntelligentConflictDetector:
         conflict_type: ConflictType,
         local_version: EntityVersion,
         remote_version: EntityVersion,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Generate resolution suggestions based on conflict analysis."""
         suggestions = []
 
@@ -541,8 +541,8 @@ class ConflictResolutionEngine:
         logger.info("ConflictResolutionEngine initialized")
 
     def resolve_conflicts_auto(
-        self, conflicts: List[ConflictDescriptor]
-    ) -> Dict[str, Any]:
+        self, conflicts: list[ConflictDescriptor]
+    ) -> dict[str, Any]:
         """
         Attempt automatic resolution of conflicts.
 
@@ -583,8 +583,8 @@ class ConflictResolutionEngine:
         }
 
     def resolve_conflict_manual(
-        self, conflict_id: str, resolution_choice: Dict[str, Any], resolved_by: str
-    ) -> Dict[str, Any]:
+        self, conflict_id: str, resolution_choice: dict[str, Any], resolved_by: str
+    ) -> dict[str, Any]:
         """
         Apply manual conflict resolution.
 
@@ -660,7 +660,7 @@ class ConflictResolutionEngine:
             logger.error(f"Failed to resolve conflict {conflict_id}: {e}")
             return {"status": "error", "message": f"Failed to resolve conflict: {e}"}
 
-    def get_conflict_suggestions(self, conflict_id: str) -> List[Dict[str, Any]]:
+    def get_conflict_suggestions(self, conflict_id: str) -> list[dict[str, Any]]:
         """Get resolution suggestions for a conflict."""
         conflict = self._get_conflict(conflict_id)
         if not conflict:
@@ -670,7 +670,7 @@ class ConflictResolutionEngine:
 
     def _auto_resolve_conflict(
         self, conflict: ConflictDescriptor
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Attempt automatic resolution using CRDT and heuristics."""
         # Use highest confidence suggestion
         best_suggestion = max(
@@ -712,8 +712,8 @@ class ConflictResolutionEngine:
         return None
 
     def _merge_fields_automatically(
-        self, local_content: Dict[str, Any], remote_content: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, local_content: dict[str, Any], remote_content: dict[str, Any]
+    ) -> dict[str, Any]:
         """Merge fields automatically using CRDT-like semantics."""
         merged = {}
 
@@ -746,7 +746,7 @@ class ConflictResolutionEngine:
 
         return merged
 
-    def get_conflict(self, conflict_id: str) -> Optional[Dict[str, Any]]:
+    def get_conflict(self, conflict_id: str) -> dict[str, Any] | None:
         """Get conflict by ID from database."""
         try:
             result = self.db.execute(
@@ -780,7 +780,7 @@ class ConflictResolutionEngine:
             logger.error(f"Failed to get conflict {conflict_id}: {e}")
             return None
 
-    def _get_conflict(self, conflict_id: str) -> Optional[ConflictDescriptor]:
+    def _get_conflict(self, conflict_id: str) -> ConflictDescriptor | None:
         """Internal method to get ConflictDescriptor object."""
         try:
             result = self.db.execute(
@@ -797,7 +797,7 @@ class ConflictResolutionEngine:
             return None
 
     def _store_conflict_resolution(
-        self, conflict: ConflictDescriptor, resolution: Dict[str, Any]
+        self, conflict: ConflictDescriptor, resolution: dict[str, Any]
     ) -> None:
         """Store conflict resolution in database."""
         try:
@@ -821,8 +821,8 @@ class ConflictResolutionEngine:
             self.db.rollback()
 
     def detect_conflicts_between_versions(
-        self, local_versions: List[Dict], remote_versions: List[Dict], entity_type: str
-    ) -> List[Dict]:
+        self, local_versions: list[dict], remote_versions: list[dict], entity_type: str
+    ) -> list[dict]:
         """
         Detect conflicts between version sets and store them in database.
 
@@ -839,8 +839,8 @@ class ConflictResolutionEngine:
         )
 
         # Convert to EntityVersion objects for conflict detector
-        local_entity_versions: List[EntityVersion] = []
-        remote_entity_versions: List[EntityVersion] = []
+        local_entity_versions: list[EntityVersion] = []
+        remote_entity_versions: list[EntityVersion] = []
 
         try:
             # For now, delegate to conflict detector if available
@@ -874,13 +874,13 @@ class ConflictResolutionEngine:
 
     def list_conflicts(
         self,
-        conflict_type: Optional[str] = None,
-        severity: Optional[str] = None,
-        entity_type: Optional[str] = None,
-        resolved: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> List[Dict]:
+        conflict_type: str | None = None,
+        severity: str | None = None,
+        entity_type: str | None = None,
+        resolved: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[dict]:
         """
         List conflicts with optional filters.
 
@@ -962,7 +962,7 @@ class ConflictResolutionEngine:
 
     def get_entity_conflicts(
         self, entity_type: str, entity_id: str, resolved: bool = False
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get conflicts for a specific entity.
 
@@ -1019,7 +1019,7 @@ class ConflictResolutionEngine:
             return []
 
     def resolve_conflict_manually(
-        self, conflict_id: str, resolved_by: str, resolution_choice: Dict
+        self, conflict_id: str, resolved_by: str, resolution_choice: dict
     ) -> bool:
         """
         Apply manual conflict resolution (updated signature to match tests).
@@ -1076,7 +1076,7 @@ class ConflictResolutionEngine:
         resolved_by: str,
         confidence_threshold: float,
         max_attempts: int = 3,
-    ) -> Dict:
+    ) -> dict:
         """
         Attempt automatic conflict resolution.
 
@@ -1152,8 +1152,8 @@ class ConflictResolutionEngine:
             return {"resolved": False, "reason": f"Database error: {e}"}
 
     def batch_resolve_conflicts(
-        self, conflict_ids: List[str], resolved_by: str, resolution_strategy: str
-    ) -> List[Dict]:
+        self, conflict_ids: list[str], resolved_by: str, resolution_strategy: str
+    ) -> list[dict]:
         """
         Resolve multiple conflicts with same strategy.
 
@@ -1230,8 +1230,8 @@ class ConflictResolutionEngine:
         return results
 
     def resolve_conflicts_prefer_local(
-        self, conflict_ids: List[str], resolved_by: str
-    ) -> List[Dict]:
+        self, conflict_ids: list[str], resolved_by: str
+    ) -> list[dict]:
         """
         Resolve conflicts with prefer local strategy.
 
@@ -1244,7 +1244,7 @@ class ConflictResolutionEngine:
         """
         return self.batch_resolve_conflicts(conflict_ids, resolved_by, "prefer_local")
 
-    def get_conflict_analytics(self, days: int = 30) -> Dict:
+    def get_conflict_analytics(self, days: int = 30) -> dict:
         """
         Generate conflict analytics for specified time period.
 
@@ -1350,7 +1350,7 @@ class ConflictResolutionEngine:
             logger.error(f"Failed to generate conflict analytics: {e}")
             return {}
 
-    def get_system_health(self) -> Dict:
+    def get_system_health(self) -> dict:
         """
         Get conflict resolution system health status.
 
@@ -1415,7 +1415,7 @@ class ConflictResolutionEngine:
                 "auto_resolution_success_rate": 0.0,
             }
 
-    def analyze_conflict_risk(self, entity_type: str, entity_id: str) -> Dict:
+    def analyze_conflict_risk(self, entity_type: str, entity_id: str) -> dict:
         """
         Analyze conflict risk for specific entity.
 
@@ -1500,7 +1500,7 @@ class ConflictResolutionEngine:
                 "recommendations": ["Unable to analyze risk"],
             }
 
-    def get_conflict_hotspots(self, days: int = 30, limit: int = 10) -> List[Dict]:
+    def get_conflict_hotspots(self, days: int = 30, limit: int = 10) -> list[dict]:
         """
         Get conflict hotspots (entities with most conflicts).
 
@@ -1550,7 +1550,7 @@ class ConflictResolutionEngine:
 
     def get_resolution_suggestions(
         self, conflict_id: str, max_suggestions: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get resolution suggestions for a specific conflict.
 
@@ -1565,7 +1565,7 @@ class ConflictResolutionEngine:
         if not conflict_data:
             return []
 
-        suggestions: List[Dict[str, Any]] = conflict_data.get(
+        suggestions: list[dict[str, Any]] = conflict_data.get(
             "resolution_suggestions", []
         )
 
@@ -1609,7 +1609,7 @@ class ConflictResolutionEngine:
             self.db.rollback()
 
 
-def row_to_conflict_descriptor(row) -> Optional[ConflictDescriptor]:
+def row_to_conflict_descriptor(row) -> ConflictDescriptor | None:
     """Convert database row to ConflictDescriptor object."""
     if not row:
         return None

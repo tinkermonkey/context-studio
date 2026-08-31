@@ -4,15 +4,16 @@ Unit tests for RAG Cleanup Scheduler.
 Tests scheduled cleanup functionality for RAG observability data.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import asyncio  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from rag.cleanup_scheduler import RAGCleanupScheduler  # noqa: E402
+import asyncio
+from unittest.mock import Mock, patch
+
+import pytest
+from rag.cleanup_scheduler import RAGCleanupScheduler
 
 
 @pytest.fixture

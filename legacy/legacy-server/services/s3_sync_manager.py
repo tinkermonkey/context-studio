@@ -1,16 +1,17 @@
 # mypy: ignore-errors
-import pandas as pd
-import uuid
 import json
+import uuid
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
+from typing import Any
 
+import pandas as pd
 from config import S3Config
-from services.duckdb_service import DuckDBService
-from services.change_extractor import ChangeExtractor
-from services.s3_storage_schema import S3StorageSchema
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.change_extractor import ChangeExtractor
+from services.duckdb_service import DuckDBService
+from services.s3_storage_schema import S3StorageSchema
 
 logger = get_logger(__name__)
 
@@ -18,13 +19,13 @@ logger = get_logger(__name__)
 class S3SyncManager:
     """Manages synchronization operations with S3."""
 
-    def __init__(self, db_session: Session, s3_config: Optional[S3Config] = None):
+    def __init__(self, db_session: Session, s3_config: S3Config | None = None):
         self.db_session = db_session
         self.s3_config = s3_config
         self.duckdb_service = DuckDBService(s3_config)
         self.change_extractor = ChangeExtractor(db_session)
 
-    def push_changes(self, author_id: str = "system") -> Dict[str, Any]:
+    def push_changes(self, author_id: str = "system") -> dict[str, Any]:
         """Push local changes to S3."""
 
         if not self.s3_config:
@@ -91,9 +92,9 @@ class S3SyncManager:
 
         except Exception as e:
             logger.error(f"Error pushing changes: {e}")
-            return {"status": "error", "message": f"Push failed: {str(e)}"}
+            return {"status": "error", "message": f"Push failed: {e!s}"}
 
-    def pull_changes(self, since: Optional[datetime] = None) -> Dict[str, Any]:
+    def pull_changes(self, since: datetime | None = None) -> dict[str, Any]:
         """Pull remote changes from S3."""
 
         if not self.s3_config:
@@ -136,9 +137,9 @@ class S3SyncManager:
 
         except Exception as e:
             logger.error(f"Error pulling changes: {e}")
-            return {"status": "error", "message": f"Pull failed: {str(e)}"}
+            return {"status": "error", "message": f"Pull failed: {e!s}"}
 
-    def get_sync_status(self) -> Dict[str, Any]:
+    def get_sync_status(self) -> dict[str, Any]:
         """Get current synchronization status."""
 
         # Count pending local changes
@@ -160,7 +161,7 @@ class S3SyncManager:
             "local_changes": len(pending_changes) > 0,
         }
 
-    def write_metadata_to_s3(self, metadata: Dict[str, Any], s3_path: str) -> bool:
+    def write_metadata_to_s3(self, metadata: dict[str, Any], s3_path: str) -> bool:
         """Write metadata dictionary to S3 as Parquet."""
 
         try:
@@ -213,7 +214,7 @@ class S3SyncManager:
             logger.error(f"Error writing to S3: {e}")
             return False
 
-    def _dataframe_to_changes(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _dataframe_to_changes(self, df: pd.DataFrame) -> list[dict[str, Any]]:
         """Convert DataFrame back to change records."""
 
         changes = []

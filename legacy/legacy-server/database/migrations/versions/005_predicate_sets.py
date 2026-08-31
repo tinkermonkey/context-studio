@@ -1,9 +1,9 @@
 # mypy: ignore-errors
 """Migration 005: Add predicate sets functionality."""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 
 class Migration005(Migration):

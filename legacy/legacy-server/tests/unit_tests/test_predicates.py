@@ -1,23 +1,24 @@
 """Unit tests for predicate CRUD operations, identifier generation, and ConceptNet mapping."""
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import json  # noqa: E402
-import uuid  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
+import json
+import uuid
+from unittest.mock import Mock, patch
+
+import pytest
 from database.models import (
     Base,
     Predicate,
     StructureNode,
     StructureNodeLink,
-)  # noqa: E402, E501
-from database.predicate_utils import generate_identifier_from_title  # noqa: E402, E501
+)
+from database.predicate_utils import generate_identifier_from_title
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 class TestPredicateCRUDOperations:

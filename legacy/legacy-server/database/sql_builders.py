@@ -35,7 +35,7 @@ def build_max_similarity_case_when(
     title_column: str = "title_embedding",
     definition_column: str = "definition_embedding",
 ) -> str:
-    """
+    r"""
     Build a CASE WHEN SQL fragment that computes max similarity between title and definition embeddings.
 
     This handles the logic:

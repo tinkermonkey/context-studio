@@ -1,16 +1,17 @@
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-import time  # noqa: E402
-import uuid  # noqa: E402
-import pytest  # noqa: E402
-from utils.event_processor import EventProcessor  # noqa: E402
-from database.utils import get_current_engine  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-from datetime import datetime, timezone, timedelta  # noqa: E402
+import time
+import uuid
+from datetime import datetime, timedelta, timezone
+
+import pytest
+from database.utils import get_current_engine
+from sqlalchemy import text
+from utils.event_processor import EventProcessor
 
 # Mark all tests in this file for separate execution
 pytestmark = pytest.mark.event_processor
@@ -250,8 +251,8 @@ def test_event_processor_handles_all_record_types(
     )
 
     # Capture logs to verify handlers are called
-    import logging
     import io
+    import logging
 
     log_stream = io.StringIO()
     handler = logging.StreamHandler(log_stream)
@@ -385,8 +386,8 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     )
 
     # Capture logs to verify predicate handler is called
-    import logging
     import io
+    import logging
 
     log_stream = io.StringIO()
     handler = logging.StreamHandler(log_stream)

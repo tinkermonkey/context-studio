@@ -15,43 +15,44 @@ Endpoints:
 
 import datetime
 import json
-from fastapi import APIRouter, HTTPException, Query, Depends, Path, Body
 from uuid import UUID, uuid4
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from database import models
-from database.utils import get_db
 from database.predicate_utils import (
     generate_identifier_from_title,
     validate_predicate_identifier,
 )
-from api.models.property_definitions import (
-    PropertyDefinitionCreate,
-    PropertyDefinitionUpdate,
-    PropertyDefinitionOut,
-    PaginatedPropertyDefinitionsResponse,
-)
+from database.utils import get_db
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from api.models.property_definitions import (
+    PaginatedPropertyDefinitionsResponse,
+    PropertyDefinitionCreate,
+    PropertyDefinitionOut,
+    PropertyDefinitionUpdate,
+)
 
 logger = get_logger("property_definitions_api")
 router = APIRouter(
     prefix="/api/property_definitions", tags=["property_definitions"]
-)  # noqa: E501
+)
 
 
 def to_property_definition_out(
     predicate: models.Predicate,
-) -> PropertyDefinitionOut:  # noqa: E501
+) -> PropertyDefinitionOut:
     """Convert database predicate model to property definition API response."""
     mapping_dict = None
     if predicate.mapping:
         try:
-            mapping_dict = json.loads(predicate.mapping)  # type: ignore[arg-type]  # noqa: E501
+            mapping_dict = json.loads(predicate.mapping)  # type: ignore[arg-type]
         except json.JSONDecodeError:
             logger.warning(
                 f"Invalid JSON in predicate {predicate.id} mapping: {predicate.mapping}"
-            )  # noqa: E501
+            )
             mapping_dict = None
 
     return PropertyDefinitionOut(
@@ -77,7 +78,7 @@ def create_property_definition(
     if not property_def.title or not property_def.title.strip():
         raise HTTPException(
             status_code=400, detail="Property definition title must not be empty."
-        )  # noqa: E501
+        )
 
     # Generate identifier if not provided
     identifier = property_def.identifier
@@ -89,14 +90,14 @@ def create_property_definition(
         raise HTTPException(
             status_code=409,
             detail=f"Property definition with identifier '{identifier}' already exists.",
-        )  # noqa: E501
+        )
 
     # Validate title uniqueness
     if db.query(models.Predicate).filter_by(title=property_def.title).first():
         raise HTTPException(
             status_code=409,
             detail=f"Property definition with title '{property_def.title}' already exists.",
-        )  # noqa: E501
+        )
 
     # Serialize mapping to JSON if provided
     mapping_json = None
@@ -105,8 +106,8 @@ def create_property_definition(
             mapping_json = json.dumps(property_def.mapping)
         except (TypeError, ValueError) as e:
             raise HTTPException(
-                status_code=400, detail=f"Invalid mapping format: {str(e)}"
-            )  # noqa: E501
+                status_code=400, detail=f"Invalid mapping format: {e!s}"
+            )
 
     try:
         db_predicate = models.Predicate(
@@ -129,7 +130,7 @@ def create_property_definition(
         raise HTTPException(
             status_code=409,
             detail="Property definition with this identifier or title already exists.",
-        )  # noqa: E501
+        )
 
 
 @router.get("/", response_model=PaginatedPropertyDefinitionsResponse)
@@ -172,7 +173,7 @@ def list_property_definitions(
 def get_property_definition(
     property_def_id: UUID = Path(
         ..., description="The ID of the property definition to retrieve"
-    ),  # noqa: E501
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -182,22 +183,22 @@ def get_property_definition(
     """
     predicate = (
         db.query(models.Predicate).filter_by(id=str(property_def_id)).first()
-    )  # noqa: E501
+    )
     if not predicate:
         raise HTTPException(
             status_code=404, detail="Property definition not found"
-        )  # noqa: E501
+        )
 
     return to_property_definition_out(predicate)
 
 
 @router.get(
     "/by-identifier/{identifier}", response_model=PropertyDefinitionOut
-)  # noqa: E501
+)
 def get_property_definition_by_identifier(
     identifier: str = Path(
         ..., description="The identifier of the property definition"
-    ),  # noqa: E501
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -207,11 +208,11 @@ def get_property_definition_by_identifier(
     """
     predicate = (
         db.query(models.Predicate).filter_by(identifier=identifier).first()
-    )  # noqa: E501
+    )
     if not predicate:
         raise HTTPException(
             status_code=404, detail="Property definition not found"
-        )  # noqa: E501
+        )
 
     return to_property_definition_out(predicate)
 
@@ -220,7 +221,7 @@ def get_property_definition_by_identifier(
 def update_property_definition(
     property_def_id: UUID = Path(
         ..., description="The ID of the property definition to update"
-    ),  # noqa: E501
+    ),
     property_def_update: PropertyDefinitionUpdate = Body(...),
     db: Session = Depends(get_db),
 ):
@@ -231,11 +232,11 @@ def update_property_definition(
     """
     predicate = (
         db.query(models.Predicate).filter_by(id=str(property_def_id)).first()
-    )  # noqa: E501
+    )
     if not predicate:
         raise HTTPException(
             status_code=404, detail="Property definition not found"
-        )  # noqa: E501
+        )
 
     try:
         # Update fields if provided
@@ -246,37 +247,37 @@ def update_property_definition(
                     db.query(models.Predicate)
                     .filter_by(title=property_def_update.title)
                     .first()
-                ):  # noqa: E501
+                ):
                     raise HTTPException(
                         status_code=409,
                         detail=f"Property definition with title '{property_def_update.title}' already exists.",
-                    )  # noqa: E501
-            predicate.title = property_def_update.title  # type: ignore[assignment]  # noqa: E501
+                    )
+            predicate.title = property_def_update.title  # type: ignore[assignment]
 
         if property_def_update.definition is not None:
-            predicate.definition = property_def_update.definition  # type: ignore[assignment]  # noqa: E501
+            predicate.definition = property_def_update.definition  # type: ignore[assignment]
 
         if property_def_update.identifier is not None:
             # Validate identifier uniqueness if changed
             if property_def_update.identifier != predicate.identifier:
                 if not validate_predicate_identifier(
                     property_def_update.identifier, str(property_def_id), db
-                ):  # noqa: E501
+                ):
                     raise HTTPException(
                         status_code=409,
                         detail=f"Property definition with identifier '{property_def_update.identifier}' already exists.",
-                    )  # noqa: E501
-            predicate.identifier = property_def_update.identifier  # type: ignore[assignment]  # noqa: E501
+                    )
+            predicate.identifier = property_def_update.identifier  # type: ignore[assignment]
 
         if property_def_update.mapping is not None:
             try:
-                predicate.mapping = json.dumps(property_def_update.mapping)  # type: ignore[assignment]  # noqa: E501
+                predicate.mapping = json.dumps(property_def_update.mapping)  # type: ignore[assignment]
             except (TypeError, ValueError) as e:
                 raise HTTPException(
-                    status_code=400, detail=f"Invalid mapping format: {str(e)}"
-                )  # noqa: E501
+                    status_code=400, detail=f"Invalid mapping format: {e!s}"
+                )
 
-        predicate.date_modified = datetime.datetime.now(datetime.UTC)  # type: ignore[assignment]  # noqa: E501
+        predicate.date_modified = datetime.datetime.now(datetime.UTC)  # type: ignore[assignment]
         db.commit()
         db.refresh(predicate)
 
@@ -287,14 +288,14 @@ def update_property_definition(
         raise HTTPException(
             status_code=409,
             detail="Property definition with this identifier or title already exists.",
-        )  # noqa: E501
+        )
 
 
 @router.delete("/{property_def_id}", status_code=204)
 def delete_property_definition(
     property_def_id: UUID = Path(
         ..., description="The ID of the property definition to delete"
-    ),  # noqa: E501
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -304,11 +305,11 @@ def delete_property_definition(
     """
     predicate = (
         db.query(models.Predicate).filter_by(id=str(property_def_id)).first()
-    )  # noqa: E501
+    )
     if not predicate:
         raise HTTPException(
             status_code=404, detail="Property definition not found"
-        )  # noqa: E501
+        )
 
     try:
         db.delete(predicate)
@@ -320,4 +321,4 @@ def delete_property_definition(
         raise HTTPException(
             status_code=409,
             detail="Cannot delete property definition: it may be in use",
-        )  # noqa: E501
+        )

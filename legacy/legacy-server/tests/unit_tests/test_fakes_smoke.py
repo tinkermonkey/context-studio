@@ -5,19 +5,19 @@ Validates that the fake implementations correctly satisfy their port interfaces
 and provide the expected behavior for testing.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.fakes import (  # noqa: E402
-    InMemoryOntologyRepository,
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.events import ClassCreated
+from domain.ontology.value_objects import NodeType, SearchCriteria
+from tests.fakes import (
     FakeEmbeddingService,
     FakeEventPublisher,
+    InMemoryOntologyRepository,
 )
-from domain.ontology.value_objects import NodeType, SearchCriteria  # noqa: E402, E501
-from domain.ontology.entities import Taxonomy, Class, ConceptScheme  # noqa: E402, E501
-from domain.ontology.events import ClassCreated  # noqa: E402
 
 
 def test_in_memory_repository_basic_taxonomy_operations():
@@ -350,7 +350,7 @@ def test_fake_event_publisher_get_events_of_type():
     """Test filtering events by type."""
     pub = FakeEventPublisher()
 
-    from domain.ontology.events import ClassUpdated, ClassDeleted
+    from domain.ontology.events import ClassDeleted, ClassUpdated
 
     event1 = ClassCreated(class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1")
     event2 = ClassUpdated(class_id="c1", changed_fields=("title",))

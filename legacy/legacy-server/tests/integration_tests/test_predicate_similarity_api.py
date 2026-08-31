@@ -7,33 +7,34 @@ Tests the API endpoints:
 - POST /api/predicates/invalidate-similarity-cache
 """
 
-import pytest
-import tempfile
 import os
+
+# Setup test environment
+import sys
+import tempfile
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Setup test environment
-import sys
-
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-from app import app  # noqa: E402
-from database.models import Base, Predicate  # noqa: E402
-from database.utils import get_db  # noqa: E402
-from reference_db.config import ReferenceConfig  # noqa: E402
-from reference_db.manager import ReferenceManager  # noqa: E402
-from embeddings.generate_embeddings import generate_embedding  # noqa: E402
+from database.models import Base, Predicate
+from database.utils import get_db
+from embeddings.generate_embeddings import generate_embedding
+from reference_db.config import ReferenceConfig
+from reference_db.manager import ReferenceManager
+
+from app import app
 
 # Skip if embeddings not available
 pytest.importorskip(
     "embeddings.generate_embeddings", reason="embeddings module not available"
-)  # noqa: E501
+)
 
 
 @pytest.fixture(scope="module")
@@ -141,8 +142,8 @@ def test_reference_db():
 @pytest.fixture
 def client(test_db, test_reference_db):
     """Create a test client with database override."""
-    session, db_path = test_db
-    ref_manager, ref_db_path = test_reference_db
+    session, _db_path = test_db
+    _ref_manager, _ref_db_path = test_reference_db
 
     def override_get_db():
         try:
@@ -238,7 +239,7 @@ class TestFindSimilarEndpoint:
 
         assert response1.status_code == 200
         data1 = response1.json()
-        # Note: First request cached status may vary depending on test execution order  # noqa: E501
+        # Note: First request cached status may vary depending on test execution order
 
         # Second request (should be consistent with first)
         response2 = client.post(
@@ -268,7 +269,7 @@ class TestFindSimilarEndpoint:
     def test_find_similar_nonexistent_predicate(self, client):
         """Test similarity search with nonexistent predicate."""
         response = client.post(
-            "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",  # noqa: E501
+            "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",
             params={"limit": 10, "threshold": 0.7},
         )
 
@@ -433,7 +434,7 @@ class TestEndToEndWorkflow:
         # 3. Invalidate cache
         cache_response = client.post(
             "/api/predicates/invalidate-similarity-cache"
-        )  # noqa: E501
+        )
         assert cache_response.status_code == 200
         assert cache_response.json()["success"] is True
 

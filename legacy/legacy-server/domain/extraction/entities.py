@@ -8,7 +8,6 @@ and complete extraction results. They import only from Python stdlib.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from domain.extraction.enums import EntityType, LayerName
 
@@ -32,7 +31,7 @@ class ExtractedEntity:
     confidence: float
     start_pos: int
     end_pos: int
-    suggested_class_id: Optional[str] = None
+    suggested_class_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate extracted entity invariants."""
@@ -121,7 +120,7 @@ class ExtractionResult:
 
     source_text: str
     layers: tuple[ExtractionLayerResult, ...] = field(default_factory=tuple)
-    execution_id: Optional[str] = None
+    execution_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate extraction result invariants."""

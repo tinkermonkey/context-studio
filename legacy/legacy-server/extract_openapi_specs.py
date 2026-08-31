@@ -6,8 +6,9 @@ that can be used to update the DR model.
 """
 
 import json
-import yaml
 from pathlib import Path
+
+import yaml
 
 # Load the OpenAPI specification
 openapi_file = Path("local-server/documentation/openapi.json")

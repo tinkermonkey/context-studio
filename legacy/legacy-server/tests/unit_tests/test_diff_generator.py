@@ -4,22 +4,21 @@ Unit tests for DiffGenerator - Testing diff generation functionality.
 Tests diff generation between versions, working diffs, and diff formatting.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-
-from services.version_manager import VersionManager  # noqa: E402
-from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+import pytest
 from services.diff_generator import (
     DiffGenerator,
-    EntityDiff,
     DiffSummary,
-)  # noqa: E402, E501
+    EntityDiff,
+)
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
 
 
 class TestDiffGenerator:
@@ -70,7 +69,7 @@ class TestDiffGenerator:
 
     def test_generate_diff_basic(self, managers, sample_content_v1, sample_content_v2):
         """Test basic diff generation between two contents."""
-        version_manager, working_tree_manager, diff_generator = managers
+        _version_manager, _working_tree_manager, diff_generator = managers
 
         diff = diff_generator.generate_diff(sample_content_v1, sample_content_v2)
 
@@ -85,7 +84,7 @@ class TestDiffGenerator:
 
     def test_generate_diff_no_changes(self, managers, sample_content_v1):
         """Test diff generation with identical content."""
-        version_manager, working_tree_manager, diff_generator = managers
+        _version_manager, _working_tree_manager, diff_generator = managers
 
         diff = diff_generator.generate_diff(sample_content_v1, sample_content_v1)
 
@@ -98,7 +97,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1, sample_content_v2
     ):
         """Test diff generation with ignored keys."""
-        version_manager, working_tree_manager, diff_generator = managers
+        _version_manager, _working_tree_manager, diff_generator = managers
 
         # Ignore the 'version' field changes
         diff = diff_generator.generate_diff(
@@ -112,7 +111,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1, sample_content_v2
     ):
         """Test generating diff between two specific versions."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create two versions
         version_manager.create_version(
@@ -143,7 +142,7 @@ class TestDiffGenerator:
 
     def test_generate_version_diff_creation(self, managers, sample_content_v1):
         """Test generating diff for entity creation (no before version)."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create one version
         version_manager.create_version(
@@ -167,7 +166,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1
     ):
         """Test generating diff with non-existent version."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create one version
         version_manager.create_version(
@@ -227,7 +226,7 @@ class TestDiffGenerator:
 
     def test_generate_working_diff_no_working_tree(self, managers):
         """Test generating working diff for entity not in working tree."""
-        version_manager, working_tree_manager, diff_generator = managers
+        _version_manager, _working_tree_manager, diff_generator = managers
 
         with pytest.raises(ValueError, match="not found in working tree"):
             diff_generator.generate_working_diff("structure_node", "non-existent")
@@ -367,7 +366,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1, sample_content_v2
     ):
         """Test formatting diff for summary display."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create versions and diff
         version_manager.create_version(
@@ -401,7 +400,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1, sample_content_v2
     ):
         """Test formatting diff for detailed display."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create versions and diff
         version_manager.create_version(
@@ -434,7 +433,7 @@ class TestDiffGenerator:
         self, managers, sample_content_v1, sample_content_v2
     ):
         """Test formatting diff for JSON display."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create versions and diff
         version_manager.create_version(
@@ -467,7 +466,7 @@ class TestDiffGenerator:
 
     def test_format_diff_for_display_invalid_format(self, managers, sample_content_v1):
         """Test formatting diff with invalid format type."""
-        version_manager, working_tree_manager, diff_generator = managers
+        version_manager, _working_tree_manager, diff_generator = managers
 
         # Create version and diff
         version_manager.create_version(

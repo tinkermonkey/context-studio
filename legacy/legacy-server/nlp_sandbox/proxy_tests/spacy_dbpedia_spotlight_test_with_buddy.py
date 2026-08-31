@@ -1,7 +1,8 @@
 # mypy: ignore-errors
-import spacy
 import time
+
 import requests
+import spacy
 from reference_api_buddy.core.proxy import CachingProxy
 
 # os.environ['HTTP_PROXY'] = 'http://localhost:8080'

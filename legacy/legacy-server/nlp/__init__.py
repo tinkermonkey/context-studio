@@ -3,29 +3,29 @@ NLP module initialization.
 Exports core pipeline and models.
 """
 
-from .pipeline import NLPPipeline, get_pipeline
 from .models import (
-    NLPAnalysisRequest,
     ConcepcyData,
-    WordNetData,
     DBpediaData,
-    TokenData,
     EntityData,
+    NLPAnalysisRequest,
     NLPAnalysisResponse,
-    NLPSuccessResponse,
     NLPErrorResponse,
+    NLPSuccessResponse,
+    TokenData,
+    WordNetData,
 )
+from .pipeline import NLPPipeline, get_pipeline
 
 __all__ = [
-    "NLPPipeline",
-    "get_pipeline",
-    "NLPAnalysisRequest",
     "ConcepcyData",
-    "WordNetData",
     "DBpediaData",
-    "TokenData",
     "EntityData",
+    "NLPAnalysisRequest",
     "NLPAnalysisResponse",
-    "NLPSuccessResponse",
     "NLPErrorResponse",
+    "NLPPipeline",
+    "NLPSuccessResponse",
+    "TokenData",
+    "WordNetData",
+    "get_pipeline",
 ]

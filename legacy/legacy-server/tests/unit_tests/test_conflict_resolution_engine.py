@@ -5,22 +5,22 @@ Tests the advanced conflict resolution functionality including intelligent detec
 automatic resolution, and manual conflict resolution in Phase 4 implementation.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch, MagicMock  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, Mock, patch
 
-from services.conflict_resolution_engine import (  # noqa: E402
-    ConflictResolutionEngine,
-    IntelligentConflictDetector,
+import pytest
+from services.conflict_resolution_engine import (
     ConflictDescriptor,
+    ConflictResolutionEngine,
     ConflictType,
+    IntelligentConflictDetector,
 )
+from sqlalchemy.orm import Session
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ class TestConflictResolutionEngine:
     def sample_conflict(self):
         """Create sample conflict descriptor for testing."""
         # Mock EntityVersion objects
-        from services.version_manager import EntityVersion, ChangeState
+        from services.version_manager import ChangeState, EntityVersion
 
         mock_local_version = EntityVersion(
             id="version-local",
@@ -704,7 +704,7 @@ class TestIntelligentConflictDetector:
     def test_detect_concurrent_modification_conflict(self, detector):
         """Test detection of concurrent modification conflicts using main detect_conflicts method."""
         # Setup - Create EntityVersion objects
-        from services.version_manager import EntityVersion, ChangeState
+        from services.version_manager import ChangeState, EntityVersion
 
         local_version = EntityVersion(
             id="version-local",
@@ -753,8 +753,8 @@ class TestIntelligentConflictDetector:
     def test_generate_resolution_suggestions(self, detector):
         """Test generation of resolution suggestions."""
         # Setup - Create EntityVersion objects as required by the method signature
-        from services.version_manager import EntityVersion, ChangeState
         from services.conflict_resolution_engine import ConflictType
+        from services.version_manager import ChangeState, EntityVersion
 
         local_version = EntityVersion(
             id="version-local",

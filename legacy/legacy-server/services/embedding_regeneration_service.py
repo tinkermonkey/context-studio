@@ -5,16 +5,14 @@ Service for regenerating embeddings for structure_nodes with WebSocket progress 
 
 import asyncio
 import json
-from typing import Dict, List, Optional
-from datetime import datetime
 from dataclasses import dataclass
-
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from fastapi import WebSocket
+from datetime import datetime
 
 from database.utils import get_db
 from embeddings.generate_embeddings import generate_embedding
+from fastapi import WebSocket
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,7 +31,7 @@ class EmbeddingProgress:
     estimated_remaining_seconds: float
     processing_rate_per_second: float
     error_count: int = 0
-    errors: List[str] = None
+    errors: list[str] = None
 
     def __post_init__(self):
         if self.errors is None:
@@ -46,7 +44,7 @@ class EmbeddingProgress:
             return 100.0
         return (self.completed_nodes / self.total_nodes) * 100.0
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
             "total_nodes": self.total_nodes,
@@ -68,7 +66,7 @@ class EmbeddingRegenerationService:
 
     def __init__(self):
         self.is_running = False
-        self._current_session: Optional[Session] = None
+        self._current_session: Session | None = None
 
     async def regenerate_all_embeddings(
         self, websocket: WebSocket, force_regenerate: bool = False
@@ -151,7 +149,7 @@ class EmbeddingRegenerationService:
                 json.dumps(
                     {
                         "type": "error",
-                        "message": f"Embedding regeneration failed: {str(e)}",
+                        "message": f"Embedding regeneration failed: {e!s}",
                     }
                 )
             )
@@ -163,7 +161,7 @@ class EmbeddingRegenerationService:
 
     def _get_nodes_for_regeneration(
         self, db: Session, force_regenerate: bool = False
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Get structure_nodes that need embedding regeneration."""
         if force_regenerate:
             # Regenerate all nodes
@@ -190,7 +188,7 @@ class EmbeddingRegenerationService:
         ]
 
     async def _process_nodes_with_progress(
-        self, db: Session, nodes: List[Dict], websocket: WebSocket, start_time: datetime
+        self, db: Session, nodes: list[dict], websocket: WebSocket, start_time: datetime
     ) -> None:
         """Process nodes with regular progress updates."""
         total_nodes = len(nodes)
@@ -239,14 +237,14 @@ class EmbeddingRegenerationService:
                 completed_nodes += 1
             except Exception as e:
                 error_count += 1
-                error_msg = f"Error processing {node['title']}: {str(e)}"
+                error_msg = f"Error processing {node['title']}: {e!s}"
                 errors.append(error_msg)
                 logger.warning(error_msg)
 
             # Small delay to prevent overwhelming the WebSocket
             await asyncio.sleep(0.01)
 
-    async def _regenerate_node_embeddings(self, db: Session, node: Dict) -> None:
+    async def _regenerate_node_embeddings(self, db: Session, node: dict) -> None:
         """Regenerate embeddings for a single node."""
         node_id = node["id"]
         title = node["title"]

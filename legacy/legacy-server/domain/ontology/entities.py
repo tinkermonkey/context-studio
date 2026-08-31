@@ -8,13 +8,12 @@ They import only from domain/ontology/value_objects.py and Python stdlib.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, List
 
 from domain.ontology.value_objects import (
-    NodeType,
+    DataPropertyValue,
     ExternalReference,
     LexicalSense,
-    DataPropertyValue,
+    NodeType,
     OntologyMapping,
 )
 
@@ -30,11 +29,11 @@ class Taxonomy:
 
     id: str
     title: str
-    description: Optional[str]
+    description: str | None
     node_type: NodeType  # always NodeType.TAXONOMY
     created_at: str
     updated_at: str
-    concept_schemes: List[str] = field(default_factory=list)  # IDs
+    concept_schemes: list[str] = field(default_factory=list)  # IDs
 
 
 @dataclass
@@ -48,12 +47,12 @@ class ConceptScheme:
 
     id: str
     title: str
-    description: Optional[str]
+    description: str | None
     taxonomy_id: str
     node_type: NodeType  # always NodeType.CONCEPT_SCHEME
     created_at: str
     updated_at: str
-    classes: List[str] = field(default_factory=list)  # IDs
+    classes: list[str] = field(default_factory=list)  # IDs
 
 
 @dataclass
@@ -68,19 +67,19 @@ class Class:
 
     id: str
     title: str
-    definition: Optional[str]
+    definition: str | None
     scheme_id: str
     taxonomy_id: str
     node_type: NodeType  # always NodeType.CLASS
-    parent_id: Optional[str]
+    parent_id: str | None
     created_at: str
     updated_at: str
-    subclass_of: List[str] = field(default_factory=list)  # IDs
-    external_references: List[ExternalReference] = field(default_factory=list)
-    lexical_senses: List[LexicalSense] = field(default_factory=list)
-    data_properties: List[DataPropertyValue] = field(default_factory=list)
-    ontology_mappings: List[OntologyMapping] = field(default_factory=list)
-    embedding: Optional[bytes] = None
+    subclass_of: list[str] = field(default_factory=list)  # IDs
+    external_references: list[ExternalReference] = field(default_factory=list)
+    lexical_senses: list[LexicalSense] = field(default_factory=list)
+    data_properties: list[DataPropertyValue] = field(default_factory=list)
+    ontology_mappings: list[OntologyMapping] = field(default_factory=list)
+    embedding: bytes | None = None
 
     def rename(self, new_title: str) -> None:
         """
@@ -160,7 +159,7 @@ class PropertyDefinition:
 
     id: str
     label: str
-    description: Optional[str]
-    ontology_uri: Optional[str]
+    description: str | None
+    ontology_uri: str | None
     created_at: str
     updated_at: str

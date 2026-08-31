@@ -4,18 +4,18 @@ Manual test runner for config_phase2_integration tests.
 Runs tests without pytest to avoid conftest dependency issues.
 """
 
-import sys
 import os
+import sys
 import tempfile
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-from config import Settings, ConfigurationManager  # noqa: E402
-from pipeline.manager import PipelineDatabaseManager  # noqa: E402
-from reference_db.manager import ReferenceManager  # noqa: E402
-from reference_db.config import ReferenceConfig  # noqa: E402
+from config import ConfigurationManager, Settings
+from pipeline.manager import PipelineDatabaseManager
+from reference_db.config import ReferenceConfig
+from reference_db.manager import ReferenceManager
 
 
 def test_pipeline_manager_integration_with_config():
@@ -89,7 +89,7 @@ def test_reference_manager_integration_with_config():
 
 
 def test_all_managers_coexist_in_same_directory():
-    """Test that all database managers can coexist in the same datafiles directory."""  # noqa: E501
+    """Test that all database managers can coexist in the same datafiles directory."""
     print("Test: test_all_managers_coexist_in_same_directory")
     with tempfile.TemporaryDirectory() as tmpdir:
         datafiles_dir = os.path.join(tmpdir, "datafiles")
@@ -120,7 +120,7 @@ def test_all_managers_coexist_in_same_directory():
 def test_proxy_manager_directory_creation_integration():
     """Test ReferenceAPIProxyManager creates directory for cache database."""
     print("Test: test_proxy_manager_directory_creation_integration")
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import MagicMock, patch
 
     with tempfile.TemporaryDirectory() as tmpdir:
         cache_dir = os.path.join(tmpdir, "datafiles")
@@ -141,19 +141,18 @@ def test_proxy_manager_directory_creation_integration():
 
         with patch(
             "nlp.proxy_manager.get_settings", return_value=mock_settings
-        ):  # noqa: E501
-            with patch("nlp.proxy_manager.CachingProxy") as mock_proxy_class:
-                mock_proxy_instance = MagicMock()
-                mock_proxy_class.return_value = mock_proxy_instance
+        ), patch("nlp.proxy_manager.CachingProxy") as mock_proxy_class:
+            mock_proxy_instance = MagicMock()
+            mock_proxy_class.return_value = mock_proxy_instance
 
-                from nlp.proxy_manager import ReferenceAPIProxyManager
+            from nlp.proxy_manager import ReferenceAPIProxyManager
 
-                manager = ReferenceAPIProxyManager()
-                result = manager.start_proxy()
+            manager = ReferenceAPIProxyManager()
+            result = manager.start_proxy()
 
-                assert os.path.exists(cache_dir)
-                assert os.path.isdir(cache_dir)
-                assert result is True
+            assert os.path.exists(cache_dir)
+            assert os.path.isdir(cache_dir)
+            assert result is True
     print("  ✓ PASSED")
 
 
@@ -228,7 +227,7 @@ def test_invalid_path_handling():
     print("Test: test_invalid_path_handling")
     try:
         # PipelineDatabaseManager should accept empty paths or raise ValueError
-        # This test is no longer needed as the manager handles empty paths gracefully  # noqa: E501
+        # This test is no longer needed as the manager handles empty paths gracefully
         print("  ✓ PASSED (test deprecated)")
         return True
     except Exception as e:

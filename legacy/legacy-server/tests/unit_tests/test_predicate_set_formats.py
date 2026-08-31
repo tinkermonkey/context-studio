@@ -2,15 +2,15 @@
 """Test script to verify predicate_set format handling."""
 
 import json
-import sys
 import os
+import sys
 
 # Add the project root to the path
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from utils.logger import get_logger  # noqa: E402
+from utils.logger import get_logger
 
 logger = get_logger("test")
 

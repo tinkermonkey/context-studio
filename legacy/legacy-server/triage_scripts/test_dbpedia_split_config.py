@@ -16,7 +16,7 @@ from pathlib import Path
 # Add local-server to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config import get_settings, SourceType
+from config import SourceType, get_settings
 from reference_api.sources.dbpedia import DBpediaSource
 
 

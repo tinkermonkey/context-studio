@@ -11,23 +11,24 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import sys
-import os
-import pytest
 import asyncio
 import logging
+import os
+import sys
+
+import pytest
 
 # Add parent directory to path for imports
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from services.task_manager import (  # noqa: E402
-    TaskManager,
+from services.task_manager import (
     BackgroundTask,
+    TaskManager,
     TaskStatus,
-    initialize_task_manager,
     get_task_manager,
+    initialize_task_manager,
     shutdown_task_manager,
 )
 

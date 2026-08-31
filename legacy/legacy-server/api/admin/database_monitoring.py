@@ -13,17 +13,17 @@ Features:
 - Performance recommendations
 """
 
-from fastapi import APIRouter, HTTPException
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any
 
 from database.utils import get_database_manager
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
 
 @router.get("/admin/database/health", summary="Enhanced Database Health Check")
-async def get_database_health() -> Dict[str, Any]:
+async def get_database_health() -> dict[str, Any]:
     """Get comprehensive health status of the enhanced database manager."""
     try:
         manager = get_database_manager()
@@ -31,26 +31,26 @@ async def get_database_health() -> Dict[str, Any]:
         return health_status
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Health check failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Health check failed: {e!s}"
+        )
 
 
 @router.get(
     "/admin/database/performance", summary="Database Performance Metrics"
-)  # noqa: E501
-async def get_database_performance_metrics() -> Dict[str, Any]:
+)
+async def get_database_performance_metrics() -> dict[str, Any]:
     """Get detailed performance metrics from the enhanced database manager."""
     try:
         manager = get_database_manager()
         return manager.get_performance_report()
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Performance metrics failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Performance metrics failed: {e!s}"
+        )
 
 
 @router.get("/admin/database/engines", summary="Database Engines Status")
-async def get_database_engines_status() -> Dict[str, Any]:
+async def get_database_engines_status() -> dict[str, Any]:
     """Get status information for all database engines."""
     try:
         manager = get_database_manager()
@@ -65,12 +65,12 @@ async def get_database_engines_status() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Engines status failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Engines status failed: {e!s}"
+        )
 
 
 @router.get("/admin/database/metrics", summary="Connection Metrics Summary")
-async def get_connection_metrics() -> Dict[str, Any]:
+async def get_connection_metrics() -> dict[str, Any]:
     """Get detailed connection metrics and statistics."""
     try:
         manager = get_database_manager()
@@ -80,16 +80,16 @@ async def get_connection_metrics() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Metrics retrieval failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Metrics retrieval failed: {e!s}"
+        )
 
 
 @router.post(
     "/admin/database/optimize", summary="Optimize Database for Workload"
-)  # noqa: E501
+)
 async def optimize_database_for_workload(
     workload_type: str = "mixed",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Optimize database configuration for specific workload types.
 
@@ -104,7 +104,7 @@ async def optimize_database_for_workload(
         if workload_type not in valid_workloads:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid workload type. Must be one of: {', '.join(valid_workloads)}",  # noqa: E501
+                detail=f"Invalid workload type. Must be one of: {', '.join(valid_workloads)}",
             )
 
         manager = get_database_manager()
@@ -114,15 +114,15 @@ async def optimize_database_for_workload(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Optimization failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Optimization failed: {e!s}"
+        )
 
 
 @router.get(
     "/admin/database/recommendations", summary="Performance Recommendations"
-)  # noqa: E501
-async def get_performance_recommendations() -> Dict[str, Any]:
-    """Get AI-generated performance recommendations based on current metrics."""  # noqa: E501
+)
+async def get_performance_recommendations() -> dict[str, Any]:
+    """Get AI-generated performance recommendations based on current metrics."""
     try:
         manager = get_database_manager()
         metrics = manager._get_metrics_summary()
@@ -136,14 +136,14 @@ async def get_performance_recommendations() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Recommendations failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Recommendations failed: {e!s}"
+        )
 
 
 @router.post(
     "/admin/database/reset-metrics", summary="Reset Performance Metrics"
-)  # noqa: E501
-async def reset_performance_metrics() -> Dict[str, Any]:
+)
+async def reset_performance_metrics() -> dict[str, Any]:
     """Reset all performance metrics counters."""
     try:
         manager = get_database_manager()
@@ -159,14 +159,14 @@ async def reset_performance_metrics() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Metrics reset failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Metrics reset failed: {e!s}"
+        )
 
 
 @router.get(
     "/admin/database/environment", summary="Database Environment Configuration"
-)  # noqa: E501
-async def get_environment_configuration() -> Dict[str, Any]:
+)
+async def get_environment_configuration() -> dict[str, Any]:
     """Get current database environment configuration and optimizations."""
     try:
         manager = get_database_manager()
@@ -192,21 +192,21 @@ async def get_environment_configuration() -> Dict[str, Any]:
             },
             "database_url_type": (
                 "sqlite" if database_url.startswith("sqlite://") else "external"
-            ),  # noqa: E501
+            ),
             "is_memory_db": ":memory:" in database_url,
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Environment config failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Environment config failed: {e!s}"
+        )
 
 
 @router.post(
     "/admin/database/create-engine", summary="Create Database Engine"
-)  # noqa: E501
+)
 async def create_database_engine(
-    engine_id: str, database_url: Optional[str] = None
-) -> Dict[str, Any]:
+    engine_id: str, database_url: str | None = None
+) -> dict[str, Any]:
     """Create a new database engine with specified configuration."""
     try:
         manager = get_database_manager()
@@ -234,12 +234,12 @@ async def create_database_engine(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Engine creation failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Engine creation failed: {e!s}"
+        )
 
 
 @router.delete("/admin/database/cleanup", summary="Cleanup Database Resources")
-async def cleanup_database_resources() -> Dict[str, Any]:
+async def cleanup_database_resources() -> dict[str, Any]:
     """Clean up all database resources and reset the manager."""
     try:
         manager = get_database_manager()
@@ -258,12 +258,12 @@ async def cleanup_database_resources() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Cleanup failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Cleanup failed: {e!s}"
+        )
 
 
 @router.get("/admin/database/dashboard", summary="Enhanced Database Dashboard")
-async def get_database_dashboard() -> Dict[str, Any]:
+async def get_database_dashboard() -> dict[str, Any]:
     """Get comprehensive dashboard data for the enhanced database manager."""
     try:
         manager = get_database_manager()
@@ -302,12 +302,12 @@ async def get_database_dashboard() -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Dashboard data failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Dashboard data failed: {e!s}"
+        )
 
 
 # Helper functions
-def _calculate_health_score(metrics: Dict[str, Any]) -> float:
+def _calculate_health_score(metrics: dict[str, Any]) -> float:
     """Calculate a health score based on performance metrics."""
     score = 100.0
 
@@ -334,7 +334,7 @@ def _calculate_health_score(metrics: Dict[str, Any]) -> float:
     return max(0.0, score)
 
 
-def _get_engine_pool_info(engine) -> Dict[str, Any]:
+def _get_engine_pool_info(engine) -> dict[str, Any]:
     """Extract pool information from an engine."""
     try:
         pool = engine.pool

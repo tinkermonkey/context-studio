@@ -6,14 +6,14 @@ high-performance batch merge operations, system checkpoint capabilities, and
 dynamic batch size optimization for enterprise-scale performance.
 """
 
-import uuid
 import json
 import time
-from typing import Dict, List, Optional, Any
+import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from typing import Any
 
 from utils.logger import get_logger
 
@@ -27,7 +27,7 @@ class BatchOperationError:
     entity_id: str
     error_type: str
     error_message: str
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: dict[str, Any] | None = None
 
 
 @dataclass
@@ -42,9 +42,9 @@ class BatchOperationResult:
     processing_time_seconds: float
     throughput_per_second: float
     start_time: datetime
-    errors: List[BatchOperationError]
-    metadata: Dict[str, Any]
-    processed_items: Optional[int] = (
+    errors: list[BatchOperationError]
+    metadata: dict[str, Any]
+    processed_items: int | None = (
         None  # Made optional, will be calculated from successful + failed
     )
 
@@ -61,12 +61,12 @@ class SystemCheckpoint:
     checkpoint_id: str
     checkpoint_name: str
     created_at: datetime
-    system_state: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
-    components: Optional[Dict[str, Any]] = None  # Made optional
+    system_state: dict[str, Any]
+    metadata: dict[str, Any] | None = None
+    components: dict[str, Any] | None = None  # Made optional
     total_size_bytes: int = 0  # Made optional with default
     compression_ratio: float = 1.0  # Made optional with default
-    s3_path: Optional[str] = None
+    s3_path: str | None = None
 
 
 class BatchOperationProcessor:
@@ -116,7 +116,7 @@ class BatchOperationProcessor:
         return self.batch_size
 
     def batch_create_versions(
-        self, entity_data: List[Dict[str, Any]], author_id: str
+        self, entity_data: list[dict[str, Any]], author_id: str
     ) -> BatchOperationResult:
         """Create multiple entity versions in optimized batches."""
 
@@ -128,7 +128,7 @@ class BatchOperationProcessor:
         )
 
         # Group by entity type for optimized processing
-        grouped_data: Dict[str, List[Dict[str, Any]]] = {}
+        grouped_data: dict[str, list[dict[str, Any]]] = {}
         for item in entity_data:
             entity_type = item.get("entity_type", "unknown")
             if entity_type not in grouped_data:
@@ -186,7 +186,7 @@ class BatchOperationProcessor:
         throughput = total_created / processing_time if processing_time > 0 else 0
 
         # Create batch operation result
-        batch_errors: List[BatchOperationError] = []
+        batch_errors: list[BatchOperationError] = []
         for error in all_errors:
             if isinstance(error, dict):
                 entity_id: str = str(
@@ -274,7 +274,7 @@ class BatchOperationProcessor:
         return batch_result
 
     def batch_merge_changesets(
-        self, changeset_ids: List[str], merge_author: str
+        self, changeset_ids: list[str], merge_author: str
     ) -> BatchOperationResult:
         """Merge multiple changesets efficiently."""
 
@@ -286,7 +286,7 @@ class BatchOperationProcessor:
             f"operation_id={operation_id}"
         )
 
-        merge_results: Dict[str, Any] = {
+        merge_results: dict[str, Any] = {
             "successful_merges": [],
             "failed_merges": [],
             "conflict_resolutions": [],
@@ -520,7 +520,7 @@ class BatchOperationProcessor:
             logger.error(f"Failed to create system checkpoint {checkpoint_name}: {e}")
             raise
 
-    def optimize_batch_sizes(self) -> Dict[str, Any]:
+    def optimize_batch_sizes(self) -> dict[str, Any]:
         """Optimize batch sizes based on performance metrics."""
 
         logger.info("Optimizing batch sizes based on performance metrics")
@@ -533,7 +533,7 @@ class BatchOperationProcessor:
         recent_metrics = self.performance_metrics[-50:]  # Last 50 operations
 
         # Group by operation type
-        metrics_by_type: Dict[str, List[Dict[str, Any]]] = {}
+        metrics_by_type: dict[str, list[dict[str, Any]]] = {}
         for metric in recent_metrics:
             op_type = metric["operation_type"]
             if op_type not in metrics_by_type:
@@ -582,7 +582,7 @@ class BatchOperationProcessor:
         return optimization_results
 
     def batch_merge_changes(
-        self, change_data: List[Dict[str, Any]], author_id: str
+        self, change_data: list[dict[str, Any]], author_id: str
     ) -> BatchOperationResult:
         """Merge multiple changes efficiently - alias for batch_merge_changesets."""
         # Convert change_data to changeset_ids format expected by batch_merge_changesets
@@ -592,7 +592,7 @@ class BatchOperationProcessor:
         ]
         return self.batch_merge_changesets(changeset_ids, author_id)
 
-    def get_performance_statistics(self) -> Dict[str, Any]:
+    def get_performance_statistics(self) -> dict[str, Any]:
         """Get performance statistics - enhanced version of get_performance_summary."""
         base_stats = self.get_performance_summary()
 
@@ -645,10 +645,10 @@ class BatchOperationProcessor:
     def _batch_process_entity_type(
         self,
         entity_type: str,
-        entity_data: List[Dict[str, Any]],
+        entity_data: list[dict[str, Any]],
         author_id: str,
         operation_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process batch of entities of the same type."""
 
         created_count = 0
@@ -787,7 +787,7 @@ class BatchOperationProcessor:
             "errors": errors,
         }
 
-    def _batch_insert_versions(self, version_records: List[Dict[str, Any]]) -> int:
+    def _batch_insert_versions(self, version_records: list[dict[str, Any]]) -> int:
         """Perform optimized batch insert of version records."""
 
         if not version_records:
@@ -829,7 +829,7 @@ class BatchOperationProcessor:
             self.sqlite_conn.rollback()
             return 0
 
-    def _analyze_batch_conflicts(self, changeset_ids: List[str]) -> Dict[str, Any]:
+    def _analyze_batch_conflicts(self, changeset_ids: list[str]) -> dict[str, Any]:
         """Analyze conflicts across multiple changesets."""
 
         # Comprehensive conflict detection not yet implemented
@@ -848,8 +848,8 @@ class BatchOperationProcessor:
         return analysis
 
     def _calculate_optimal_merge_order(
-        self, changeset_ids: List[str], conflict_analysis: Dict[str, Any]
-    ) -> List[str]:
+        self, changeset_ids: list[str], conflict_analysis: dict[str, Any]
+    ) -> list[str]:
         """Calculate optimal order for merging changesets."""
 
         # Optimal merge order calculation not yet implemented
@@ -861,7 +861,7 @@ class BatchOperationProcessor:
 
     def _merge_single_changeset_optimized(
         self, changeset_id: str, merge_author: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Merge a single changeset with optimization."""
 
         # Optimized changeset merge not yet implemented
@@ -877,7 +877,7 @@ class BatchOperationProcessor:
             "merge_time": time.time(),
         }
 
-    def _checkpoint_entity_versions(self) -> Dict[str, Any]:
+    def _checkpoint_entity_versions(self) -> dict[str, Any]:
         """Create checkpoint of entity versions table."""
 
         try:
@@ -900,7 +900,7 @@ class BatchOperationProcessor:
             logger.debug(f"Failed to checkpoint entity versions: {e}")
             return {"error": str(e), "size_bytes": 0}
 
-    def _checkpoint_changesets(self) -> Dict[str, Any]:
+    def _checkpoint_changesets(self) -> dict[str, Any]:
         """Create checkpoint of changesets table."""
 
         try:
@@ -922,7 +922,7 @@ class BatchOperationProcessor:
             logger.debug(f"Failed to checkpoint changesets: {e}")
             return {"error": str(e), "size_bytes": 0}
 
-    def _checkpoint_proposals(self) -> Dict[str, Any]:
+    def _checkpoint_proposals(self) -> dict[str, Any]:
         """Create checkpoint of proposals table."""
 
         try:
@@ -944,7 +944,7 @@ class BatchOperationProcessor:
             logger.debug(f"Failed to checkpoint proposals: {e}")
             return {"error": str(e), "size_bytes": 0}
 
-    def _checkpoint_user_identities(self) -> Dict[str, Any]:
+    def _checkpoint_user_identities(self) -> dict[str, Any]:
         """Create checkpoint of user identities table."""
 
         try:
@@ -966,13 +966,13 @@ class BatchOperationProcessor:
             logger.debug(f"Failed to checkpoint user identities: {e}")
             return {"error": str(e), "size_bytes": 0}
 
-    def get_operation_history(self, limit: int = 100) -> List[BatchOperationResult]:
+    def get_operation_history(self, limit: int = 100) -> list[BatchOperationResult]:
         """Get recent batch operation history."""
 
         with self._operation_lock:
             return self.operation_history[-limit:] if self.operation_history else []
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get comprehensive performance summary."""
 
         if not self.performance_metrics:
@@ -992,7 +992,7 @@ class BatchOperationProcessor:
         )
 
         # Group by operation type
-        ops_by_type: Dict[str, List[Dict[str, Any]]] = {}
+        ops_by_type: dict[str, list[dict[str, Any]]] = {}
         for metric in self.performance_metrics:
             op_type = metric["operation_type"]
             if op_type not in ops_by_type:

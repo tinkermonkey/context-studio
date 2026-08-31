@@ -9,9 +9,8 @@ from __future__ import annotations
 
 import types
 from dataclasses import dataclass, field
-from typing import Optional
 
-from domain.pipeline.enums import PipelineType, ExecutionStatus
+from domain.pipeline.enums import ExecutionStatus, PipelineType
 
 
 @dataclass
@@ -33,7 +32,7 @@ class PipelineConfiguration:
 
     id: str
     name: str
-    description: Optional[str]
+    description: str | None
     pipeline_type: PipelineType
     model_name: str
     prompt_template: str
@@ -89,10 +88,10 @@ class Execution:
     pipeline_id: str
     status: ExecutionStatus
     input_data: types.MappingProxyType
-    output_data: Optional[types.MappingProxyType] = None
-    error_message: Optional[str] = None
+    output_data: types.MappingProxyType | None = None
+    error_message: str | None = None
     created_at: str = ""
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
 
     def __post_init__(self) -> None:
         """Validate execution invariants."""

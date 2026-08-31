@@ -4,9 +4,10 @@ API Models for Change Events
 This module contains the Pydantic models for the change_events API.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EventTypeEnum(str, Enum):
@@ -31,9 +32,9 @@ class ChangeEventOut(BaseModel):
     id: int
     event_type: str
     record_type: str
-    record_id: Optional[str] = None
-    old_data: Optional[Dict[str, Any]] = None
-    new_data: Optional[Dict[str, Any]] = None
+    record_id: str | None = None
+    old_data: dict[str, Any] | None = None
+    new_data: dict[str, Any] | None = None
     event_timestamp: str  # ISO8601 string
     processed: bool
 

@@ -5,14 +5,15 @@ Note: This file inherits fixtures from the root conftest.py.
 The 'client' fixture is provided by tests/conftest.py.
 """
 
-import sys
 import os
-import pytest
+import sys
 from pathlib import Path
+
+import pytest
 
 # Set up mock environment BEFORE any imports
 os.environ["OPENAI_API_KEY"] = (
-    "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"  # noqa: E501
+    "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"
 )
 
 # Add local-server to path
@@ -37,14 +38,14 @@ def minimal_reference_client():
     This avoids loading the full app and all its dependencies.
     Used by reference API tests that don't need the full application.
     """
+    from api.reference import router
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
-    from api.reference import router
     from services.service_factory import (
         ServiceFactory,
-        set_service_factory,
         get_service_factory,
-    )  # noqa: E501
+        set_service_factory,
+    )
 
     # Save the current service factory to restore it later
     try:

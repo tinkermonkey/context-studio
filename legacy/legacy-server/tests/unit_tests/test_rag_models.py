@@ -4,22 +4,23 @@ Unit tests for RAG pipeline Pydantic models.
 Tests request/response models for RAG entity extraction pipeline.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from pydantic import ValidationError  # noqa: E402
-from uuid import UUID  # noqa: E402
-from rag.models import (  # noqa: E402
-    RAGExtractionRequest,
-    RAGExtractionResponse,
+from uuid import UUID
+
+import pytest
+from pydantic import ValidationError
+from rag.models import (
     ExtractedEntity,
     LayerMetrics,
     ProcessingMetrics,
+    RAGExtractionRequest,
+    RAGExtractionResponse,
 )
 
 

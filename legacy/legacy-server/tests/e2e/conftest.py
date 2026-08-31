@@ -19,10 +19,6 @@ sys.path.append(
 )
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import text
-
-from app import create_app
 from database.migrations.migration_manager import MigrationManager
 from database.utils import (
     get_engine,
@@ -31,8 +27,12 @@ from database.utils import (
     set_current_engine_for_testing,
 )
 from embeddings.generate_embeddings import get_model
+from fastapi.testclient import TestClient
 from services.service_factory import ServiceFactory, set_service_factory
+from sqlalchemy import text
 from utils.event_processor import get_global_event_processor, set_global_event_processor
+
+from app import create_app
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ def e2e_client(e2e_app):
     Yields:
         TestClient: A FastAPI TestClient instance ready to make HTTP requests
     """
-    app, engine, session_local = e2e_app
+    app, _engine, _session_local = e2e_app
     with TestClient(app) as client:
         yield client
 
@@ -194,7 +194,7 @@ def clean_tables(e2e_app):
     yield
 
     # After test runs, clean all tables
-    app, engine, session_local = e2e_app
+    _app, _engine, session_local = e2e_app
     cleanup_session = session_local()
 
     try:

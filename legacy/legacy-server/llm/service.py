@@ -3,36 +3,38 @@
 LLM service for handling Langchain interactions.
 """
 
-from typing import Optional, Dict, Any, AsyncGenerator
-import os
-import time
 import asyncio
+import os
 import string
+import time
+from collections.abc import AsyncGenerator
+from typing import Any
+
+from config import get_settings
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
-from openai import RateLimitError, APITimeoutError, APIError, AuthenticationError
+from openai import APIError, APITimeoutError, AuthenticationError, RateLimitError
+from utils.logger import get_logger
 
-from .models import (
-    PipelineType,
-    StreamingLLMResponse,
-    PipelineFlavor,
-    PipelineExecutionRequest,
-    PipelineExecutionResponse,
-    PIPELINE_STRUCTURED_OUTPUT_MAPPING,
-)
-from .model_capabilities import validate_model_config
-from .provider_router import get_provider_router
 from .exceptions import (
+    FlavorNotFoundError,
     LLMConfigurationError,
     LLMProcessingError,
-    LLMTimeoutError,
     LLMQuotaExceededError,
-    FlavorNotFoundError,
+    LLMTimeoutError,
 )
-from .flavor_service import PipelineFlavorService
 from .execution_tracker import ExecutionTracker
-from config import get_settings
-from utils.logger import get_logger
+from .flavor_service import PipelineFlavorService
+from .model_capabilities import validate_model_config
+from .models import (
+    PIPELINE_STRUCTURED_OUTPUT_MAPPING,
+    PipelineExecutionRequest,
+    PipelineExecutionResponse,
+    PipelineFlavor,
+    PipelineType,
+    StreamingLLMResponse,
+)
+from .provider_router import get_provider_router
 
 
 class LLMService:
@@ -101,7 +103,7 @@ class LLMService:
         """Check if a specific model is available"""
         return self.provider_router.is_model_available(model_name)
 
-    def get_provider_for_model(self, model_name: str) -> Optional[str]:
+    def get_provider_for_model(self, model_name: str) -> str | None:
         """Get the provider type for a model"""
         provider_type = self.provider_router.get_provider_for_model(model_name)
         return provider_type.value if provider_type else None
@@ -250,10 +252,10 @@ class LLMService:
                 execution_id=execution_id,
                 response_message="",
                 success=False,
-                error_message=f"Rate limit exceeded: {str(e)}",
+                error_message=f"Rate limit exceeded: {e!s}",
                 start_time=start_time,
             )
-            raise LLMQuotaExceededError(f"API rate limit exceeded: {str(e)}")
+            raise LLMQuotaExceededError(f"API rate limit exceeded: {e!s}")
         except APITimeoutError as e:
             self.logger.warning(
                 f"OpenAI API timeout for pipeline {request.pipeline_type}: {e}"
@@ -262,11 +264,11 @@ class LLMService:
                 execution_id=execution_id,
                 response_message="",
                 success=False,
-                error_message=f"API timeout: {str(e)}",
+                error_message=f"API timeout: {e!s}",
                 start_time=start_time,
             )
             raise LLMTimeoutError(
-                f"API request timeout for pipeline {request.pipeline_type}: {str(e)}"
+                f"API request timeout for pipeline {request.pipeline_type}: {e!s}"
             )
         except AuthenticationError as e:
             self.logger.error(
@@ -276,15 +278,15 @@ class LLMService:
                 execution_id=execution_id,
                 response_message="",
                 success=False,
-                error_message=f"Authentication failed: {str(e)}",
+                error_message=f"Authentication failed: {e!s}",
                 start_time=start_time,
             )
-            raise LLMConfigurationError(f"Authentication failed: {str(e)}")
+            raise LLMConfigurationError(f"Authentication failed: {e!s}")
         except APIError as e:
             self.logger.error(
                 f"OpenAI API error for pipeline {request.pipeline_type}: {e}"
             )
-            error_msg = f"API error: {str(e)}"
+            error_msg = f"API error: {e!s}"
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
                 response_message="",
@@ -294,7 +296,7 @@ class LLMService:
             )
             # Check if it's a quota/billing issue
             if "quota" in str(e).lower() or "billing" in str(e).lower():
-                raise LLMQuotaExceededError(f"API quota/billing error: {str(e)}")
+                raise LLMQuotaExceededError(f"API quota/billing error: {e!s}")
             else:
                 raise LLMProcessingError(error_msg)
         except Exception as e:
@@ -305,10 +307,10 @@ class LLMService:
                 execution_id=execution_id,
                 response_message="",
                 success=False,
-                error_message=f"Unexpected error: {str(e)}",
+                error_message=f"Unexpected error: {e!s}",
                 start_time=start_time,
             )
-            raise LLMProcessingError(f"Failed to execute pipeline: {str(e)}")
+            raise LLMProcessingError(f"Failed to execute pipeline: {e!s}")
 
     async def execute_pipeline_flavor_streaming(
         self, request: PipelineExecutionRequest
@@ -371,7 +373,7 @@ class LLMService:
                 error=str(e),
             )
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Get information about the current model configuration"""
         return {
             "model_name": self.model_name,
@@ -381,7 +383,7 @@ class LLMService:
         }
 
     async def _get_flavor(
-        self, pipeline: PipelineType, flavor_identifier: Optional[str]
+        self, pipeline: PipelineType, flavor_identifier: str | None
     ) -> PipelineFlavor:
         """Get flavor by ID, title, or default"""
         if not flavor_identifier:
@@ -488,9 +490,9 @@ class LLMService:
     def _process_response_with_structured_output(
         self,
         response: Any,
-        structured_output_class: Optional[type],
+        structured_output_class: type | None,
         pipeline_type: PipelineType,
-    ) -> tuple[Optional[Dict[str, Any]], str]:
+    ) -> tuple[dict[str, Any] | None, str]:
         """
         Process LLM response with structured output, handling both direct structured responses
         and fallback text parsing.
@@ -539,7 +541,7 @@ class LLMService:
 
     def _extract_structured_output_from_response(
         self, response: Any, structured_output_class: type
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Extract structured output from LangChain structured response object."""
         try:
             if not structured_output_class:
@@ -605,7 +607,7 @@ class LLMService:
             return None
 
     def _structured_output_to_text(
-        self, structured_output: Dict[str, Any], structured_output_class: type
+        self, structured_output: dict[str, Any], structured_output_class: type
     ) -> str:
         """Convert structured output dictionary back to formatted text."""
         try:
@@ -631,7 +633,7 @@ class LLMService:
         response_content: str,
         structured_output_class: type,
         pipeline_type: PipelineType,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Parse structured output from raw text response using regex based on Pydantic model fields."""
         try:
             if not structured_output_class:
@@ -698,7 +700,7 @@ class LLMService:
             return None
 
     def _render_user_prompt_generic(
-        self, template: str, context_data: Dict[str, Any], strict: bool = True
+        self, template: str, context_data: dict[str, Any], strict: bool = True
     ) -> str:
         """Render user prompt template with arbitrary context data"""
         self.logger.debug("Rendering generic user prompt template with context data")
@@ -767,4 +769,4 @@ class LLMService:
             raise
         except Exception as e:
             self.logger.error(f"Error rendering generic user prompt template: {e}")
-            raise LLMProcessingError(f"Template rendering failed: {str(e)}")
+            raise LLMProcessingError(f"Template rendering failed: {e!s}")

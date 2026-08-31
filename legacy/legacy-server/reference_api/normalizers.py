@@ -4,25 +4,25 @@ This module provides normalization logic to convert source-specific responses
 into standardized SearchNode and SearchLink objects.
 """
 
-from typing import List, Tuple
+
+from utils.logger import get_logger
 
 from .models import (
-    SourceType,
-    SearchNode,
-    SearchLink,
-    DBpediaSearchResponse,
-    ConceptNetQueryResponse,
-    WikidataSparqlResponse,
-    SchemaOrgSearchResponse,
-    DBpediaResourceResponse,
-    DBpediaSparqlResponse,
-    WikidataEntityResponse,
-    SchemaOrgEntityResponse,
     ConceptNetConceptResponse,
+    ConceptNetQueryResponse,
     ConceptNetRelatedResponse,
+    DBpediaResourceResponse,
+    DBpediaSearchResponse,
+    DBpediaSparqlResponse,
+    SchemaOrgEntityResponse,
     SchemaOrgPropertyResponse,
+    SchemaOrgSearchResponse,
+    SearchLink,
+    SearchNode,
+    SourceType,
+    WikidataEntityResponse,
+    WikidataSparqlResponse,
 )
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -36,7 +36,7 @@ class ResultNormalizer:
 
     def normalize_dbpedia_search_response(
         self, response: DBpediaSearchResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize DBpedia search response to SearchNode format."""
         if not response.success or not response.results:
             return [], []
@@ -68,7 +68,7 @@ class ResultNormalizer:
 
     def normalize_dbpedia_resource_response(
         self, response: DBpediaResourceResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize DBpedia resource response to SearchNode format."""
         if not response.success or not response.resource_uri:
             return [], []
@@ -113,13 +113,13 @@ class ResultNormalizer:
 
     def normalize_dbpedia_sparql_response(
         self, response: DBpediaSparqlResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize DBpedia SPARQL response to SearchNode and SearchLink format."""
         if not response.success or not response.results:
             return [], []
 
-        nodes: List[SearchNode] = []
-        links: List[SearchLink] = []
+        nodes: list[SearchNode] = []
+        links: list[SearchLink] = []
         seen_entities = set()
 
         # Parse SPARQL results
@@ -156,7 +156,7 @@ class ResultNormalizer:
 
     def normalize_conceptnet_query_response(
         self, response: ConceptNetQueryResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize ConceptNet query response to SearchNode and SearchLink format."""
         if not response.success or not response.edges:
             return [], []
@@ -280,7 +280,7 @@ class ResultNormalizer:
 
     def normalize_conceptnet_concept_response(
         self, response: ConceptNetConceptResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize ConceptNet concept response to SearchNode format."""
         if not response.success or not response.concept:
             return [], []
@@ -313,7 +313,7 @@ class ResultNormalizer:
 
     def normalize_conceptnet_related_response(
         self, response: ConceptNetRelatedResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize ConceptNet related concepts response to SearchNode format."""
         if not response.success or not response.related:
             return [], []
@@ -338,7 +338,7 @@ class ResultNormalizer:
 
     def normalize_wikidata_sparql_response(
         self, response: WikidataSparqlResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize Wikidata SPARQL response to SearchNode and SearchLink format."""
         if not response.success or not response.results:
             return [], []
@@ -477,7 +477,7 @@ class ResultNormalizer:
 
     def normalize_wikidata_entity_response(
         self, response: WikidataEntityResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize Wikidata entity response to SearchNode format."""
         if not response.success or not response.entity_id:
             return [], []
@@ -524,7 +524,7 @@ class ResultNormalizer:
 
     def normalize_schema_org_search_response(
         self, response: SchemaOrgSearchResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize Schema.org search response to SearchNode format."""
         if not response.success or not response.results:
             return [], []
@@ -547,7 +547,7 @@ class ResultNormalizer:
 
     def normalize_schema_org_entity_response(
         self, response: SchemaOrgEntityResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize Schema.org entity response to SearchNode format."""
         if not response.success or not response.entity:
             return [], []
@@ -572,7 +572,7 @@ class ResultNormalizer:
 
     def normalize_schema_org_property_response(
         self, response: SchemaOrgPropertyResponse, query: str = ""
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Normalize Schema.org property response to SearchNode format."""
         if not response.success or not response.property:
             return [], []

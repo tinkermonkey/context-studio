@@ -6,21 +6,20 @@ Tests the addition of attributes column to the structure_nodes table,
 including schema validation, data preservation, and rollback functionality.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-import json  # noqa: E402
-from typing import Dict, List  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+import json
+import tempfile
 
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
-from database.utils import init_db  # noqa: E402
+import pytest
+from database.migrations.migration_manager import MigrationManager
+from database.utils import init_db
+from sqlalchemy import create_engine, text
 
 
 class MigrationTestHarness:
@@ -102,9 +101,9 @@ class MigrationTestHarness:
 
             conn.commit()
 
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
@@ -173,16 +172,15 @@ class MigrationTestHarness:
         if not migration_018:
             raise RuntimeError("Migration 018 not found")
 
-        with self.engine.connect() as conn:
-            with conn.begin():
-                migration_018.down(conn)
-                # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 18"))
+        with self.engine.connect() as conn, conn.begin():
+            migration_018.down(conn)
+            # Remove from schema_history
+            conn.execute(text("DELETE FROM schema_history WHERE version = 18"))
 
         # Update current version
         self.migration_manager.current_version = 17
 
-    def insert_node_with_attributes(self, node_id: str, attributes: List[Dict]):
+    def insert_node_with_attributes(self, node_id: str, attributes: list[dict]):
         """Insert a structure_node with attributes."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -203,13 +201,13 @@ class MigrationTestHarness:
                 ),
             )
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
-    def update_node_attributes(self, node_id: str, attributes: List[Dict] = None):
+    def update_node_attributes(self, node_id: str, attributes: list[dict] | None = None):
         """Update attributes for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -221,13 +219,13 @@ class MigrationTestHarness:
                     (json.dumps(attributes), node_id),
                 )
                 conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
-    def get_node_attributes(self, node_id: str) -> List[Dict]:
+    def get_node_attributes(self, node_id: str) -> list[dict]:
         """Get attributes for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()
