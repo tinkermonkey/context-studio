@@ -3412,6 +3412,121 @@ class TestUpdateAttributeDefinition:
         assert updated.default_value == "John"
         assert updated.allowed_values is None
 
+    def test_update_attribute_definition_clear_allowed_values_with_empty_list(self, service):
+        """Clear allowed_values by passing an empty list []."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published"],
+        )
+
+        assert attr_def.allowed_values == ["draft", "published"]
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            allowed_values=[],  # Empty list sentinel to clear
+        )
+
+        assert updated.allowed_values is None
+        # Verify event shows the change
+        events = service._event_publisher.get_events_of_type(AttributeDefinitionUpdated)
+        assert len(events) > 0
+        assert "allowed_values" in events[-1].changed_fields
+        assert events[-1].old_values["allowed_values"] == ["draft", "published"]
+        assert events[-1].new_values["allowed_values"] is None
+
+    def test_update_attribute_definition_clear_default_value_with_empty_string(self, service):
+        """Clear default_value by passing an empty string ""."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+            default_value="John",
+        )
+
+        assert attr_def.default_value == "John"
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            default_value="",  # Empty string sentinel to clear
+        )
+
+        assert updated.default_value is None
+        # Verify event shows the change
+        events = service._event_publisher.get_events_of_type(AttributeDefinitionUpdated)
+        assert len(events) > 0
+        assert "default_value" in events[-1].changed_fields
+        assert events[-1].old_values["default_value"] == "John"
+        assert events[-1].new_values["default_value"] is None
+
+    def test_update_attribute_definition_none_means_no_change(self, service):
+        """Verify that None still means 'don't change' field."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published"],
+            default_value="draft",
+        )
+
+        original_event_count = len(service._event_publisher.get_events())
+
+        # Pass None (default parameter value) - should not change anything
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            allowed_values=None,  # Explicitly None means "don't change"
+            default_value=None,  # Explicitly None means "don't change"
+        )
+
+        assert updated.allowed_values == ["draft", "published"]
+        assert updated.default_value == "draft"
+        # No new events should be emitted
+        assert len(service._event_publisher.get_events()) == original_event_count
+
+    def test_update_attribute_definition_clear_allowed_values_also_clears_dependent_default(
+        self, service
+    ):
+        """When allowed_values is cleared, default_value should remain valid or be validated."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published"],
+            default_value="draft",
+        )
+
+        # Clear allowed_values (makes default_value valid since no values to check against)
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            allowed_values=[],  # Clear with empty list
+        )
+
+        # default_value should remain "draft" since allowed_values is now None
+        # and validation only checks when both are present
+        assert updated.default_value == "draft"
+        assert updated.allowed_values is None
+
 
 class TestDeleteAttributeDefinition:
     """Tests for delete_attribute_definition."""

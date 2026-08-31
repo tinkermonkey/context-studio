@@ -2951,8 +2951,8 @@ class OntologyService:
             description: New description (or None to leave unchanged)
             datatype: New datatype (or None to leave unchanged)
             is_required: New required flag (or None to leave unchanged)
-            allowed_values: New allowed values list (or None to leave unchanged)
-            default_value: New default value (or None to leave unchanged)
+            allowed_values: New allowed values list (or None to leave unchanged; pass [] to clear)
+            default_value: New default value (or None to leave unchanged; pass "" to clear)
             sort_order: New sort order (or None to leave unchanged)
 
         Returns:
@@ -3001,17 +3001,23 @@ class OntologyService:
             new_values["is_required"] = is_required
             attr_def.is_required = is_required
 
-        if allowed_values is not None and allowed_values != attr_def.allowed_values:
-            changed_fields.append("allowed_values")
-            old_values["allowed_values"] = attr_def.allowed_values
-            new_values["allowed_values"] = allowed_values
-            attr_def.allowed_values = allowed_values
+        # Handle allowed_values: None means "don't change", [] means "clear"
+        if allowed_values is not None:
+            new_allowed_values = None if allowed_values == [] else allowed_values
+            if new_allowed_values != attr_def.allowed_values:
+                changed_fields.append("allowed_values")
+                old_values["allowed_values"] = attr_def.allowed_values
+                new_values["allowed_values"] = new_allowed_values
+                attr_def.allowed_values = new_allowed_values
 
-        if default_value is not None and default_value != attr_def.default_value:
-            changed_fields.append("default_value")
-            old_values["default_value"] = attr_def.default_value
-            new_values["default_value"] = default_value
-            attr_def.default_value = default_value
+        # Handle default_value: None means "don't change", "" means "clear"
+        if default_value is not None:
+            new_default_value = None if default_value == "" else default_value
+            if new_default_value != attr_def.default_value:
+                changed_fields.append("default_value")
+                old_values["default_value"] = attr_def.default_value
+                new_values["default_value"] = new_default_value
+                attr_def.default_value = new_default_value
 
         if sort_order is not None and sort_order != attr_def.sort_order:
             changed_fields.append("sort_order")

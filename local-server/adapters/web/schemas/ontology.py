@@ -531,8 +531,8 @@ class AttributeDefinitionUpdateRequest(BaseModel):
         min_length=1,
     )
     is_required: Optional[bool] = Field(None, description="Update required flag")
-    allowed_values: Optional[list[str]] = Field(None, description="Update enum constraint")
-    default_value: Optional[str] = Field(None, description="Update default value")
+    allowed_values: Optional[list[str]] = Field(None, description="Update enum constraint; pass [] to clear")
+    default_value: Optional[str] = Field(None, description="Update default value; pass empty string to clear")
     sort_order: Optional[int] = Field(None, description="Update display order")
 
     @field_validator("datatype")

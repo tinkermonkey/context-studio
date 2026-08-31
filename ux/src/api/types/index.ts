@@ -3807,7 +3807,7 @@ export interface components {
       description?: string | null;
       /**
        * Is Required
-       * @description Whether this attribute is required on class instances
+       * @description Whether attribute is required on instances
        * @default false
        */
       is_required: boolean;
@@ -3886,6 +3886,11 @@ export interface components {
        */
       sort_order: number;
       /**
+       * External References
+       * @description References to external knowledge bases
+       */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /**
        * Created At
        * @description Creation timestamp
        */
@@ -3908,6 +3913,11 @@ export interface components {
        * @enum {string}
        */
       status: "draft" | "published";
+      /**
+       * Source Run Id
+       * @description ID of the pipeline run that created or last modified this entity
+       */
+      source_run_id?: string | null;
     };
     /**
      * AttributeDefinitionUpdateRequest
@@ -3936,12 +3946,12 @@ export interface components {
       is_required?: boolean | null;
       /**
        * Allowed Values
-       * @description Update enum constraint
+       * @description Update enum constraint; pass [] to clear
        */
       allowed_values?: string[] | null;
       /**
        * Default Value
-       * @description Update default value
+       * @description Update default value; pass empty string to clear
        */
       default_value?: string | null;
       /**

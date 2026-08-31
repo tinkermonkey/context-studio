@@ -6543,7 +6543,7 @@
           "is_required": {
             "type": "boolean",
             "title": "Is Required",
-            "description": "Whether this attribute is required on class instances",
+            "description": "Whether attribute is required on instances",
             "default": false
           },
           "allowed_values": {
@@ -6667,6 +6667,14 @@
             "description": "Display order within the class's attributes",
             "default": 0
           },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References",
+            "description": "References to external knowledge bases"
+          },
           "created_at": {
             "anyOf": [
               {
@@ -6708,6 +6716,18 @@
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
+          },
+          "source_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Id",
+            "description": "ID of the pipeline run that created or last modified this entity"
           }
         },
         "type": "object",
@@ -6786,7 +6806,7 @@
               }
             ],
             "title": "Allowed Values",
-            "description": "Update enum constraint"
+            "description": "Update enum constraint; pass [] to clear"
           },
           "default_value": {
             "anyOf": [
@@ -6798,7 +6818,7 @@
               }
             ],
             "title": "Default Value",
-            "description": "Update default value"
+            "description": "Update default value; pass empty string to clear"
           },
           "sort_order": {
             "anyOf": [
