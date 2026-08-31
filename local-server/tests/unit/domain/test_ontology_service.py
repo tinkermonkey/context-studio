@@ -3062,7 +3062,7 @@ class TestCreateAttributeDefinition:
         assert retrieved.default_value == "draft"
 
     def test_create_attribute_definition_invalid_default_value_raises(self, service):
-        """Creating attribute definition with default_value not in allowed_values raises ValueError."""
+        """Raises ValueError when default_value is not in allowed_values."""
         tax = service.create_taxonomy(title="Test")
         scheme = service.create_scheme(tax.id, title="Scheme")
         cls = service.create_class(scheme.id, title="Class")
@@ -3080,9 +3080,7 @@ class TestCreateAttributeDefinition:
                 default_value="yellow",
             )
 
-    def test_create_attribute_definition_default_value_without_allowed_values(
-        self, service
-    ):
+    def test_create_attribute_definition_default_value_without_allowed_values(self, service):
         """Creating attribute definition with default_value but no allowed_values succeeds."""
         tax = service.create_taxonomy(title="Test")
         scheme = service.create_scheme(tax.id, title="Scheme")
@@ -3343,9 +3341,7 @@ class TestUpdateAttributeDefinition:
                 default_value="yellow",
             )
 
-    def test_update_attribute_definition_update_allowed_values_and_default_together(
-        self, service
-    ):
+    def test_update_attribute_definition_update_allowed_values_and_default_together(self, service):
         """Update both allowed_values and default_value together."""
         tax = service.create_taxonomy(title="Test")
         scheme = service.create_scheme(tax.id, title="Scheme")
@@ -3395,9 +3391,7 @@ class TestUpdateAttributeDefinition:
                 allowed_values=["archived", "deleted"],  # draft is no longer valid
             )
 
-    def test_update_attribute_definition_set_default_value_without_allowed_values(
-        self, service
-    ):
+    def test_update_attribute_definition_set_default_value_without_allowed_values(self, service):
         """Update to add default_value when there are no allowed_values."""
         tax = service.create_taxonomy(title="Test")
         scheme = service.create_scheme(tax.id, title="Scheme")
