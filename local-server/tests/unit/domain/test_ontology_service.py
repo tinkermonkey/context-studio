@@ -1021,6 +1021,81 @@ class TestDeleteClass:
         with pytest.raises(OntologyError, match="referenced as domain/range"):
             service.delete_class(class_id=mammal.id)
 
+    def test_delete_class_cleans_up_attribute_definitions(self, service):
+        """Delete class cleans up attribute definitions and emits deletion events."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+
+        # Create multiple attribute definitions for the class
+        attr_def_1 = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+        attr_def_2 = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="age",
+            title="Age",
+            datatype="integer",
+        )
+        attr_def_3 = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="weight",
+            title="Weight",
+            datatype="integer",
+        )
+
+        # Clear events from attribute definition creation
+        service._event_publisher.clear()
+
+        # Delete the class
+        service.delete_class(class_id=cls.id)
+
+        # Verify the class is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_class(cls.id)
+
+        # Verify all attribute definitions are deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_attribute_definition(attr_def_1.id)
+        with pytest.raises(EntityNotFoundError):
+            service.get_attribute_definition(attr_def_2.id)
+        with pytest.raises(EntityNotFoundError):
+            service.get_attribute_definition(attr_def_3.id)
+
+        # Verify AttributeDefinitionDeleted events were emitted for each
+        attr_delete_events = service._event_publisher.get_events_of_type(
+            AttributeDefinitionDeleted
+        )
+        assert len(attr_delete_events) == 3
+
+        # Verify event data is correct
+        attr_ids = {e.attribute_definition_id for e in attr_delete_events}
+        assert attr_def_1.id in attr_ids
+        assert attr_def_2.id in attr_ids
+        assert attr_def_3.id in attr_ids
+
+        # Verify each event has correct class_id, identifier, and title
+        event_map = {e.attribute_definition_id: e for e in attr_delete_events}
+
+        assert event_map[attr_def_1.id].class_id == cls.id
+        assert event_map[attr_def_1.id].identifier == "name"
+        assert event_map[attr_def_1.id].title == "Name"
+
+        assert event_map[attr_def_2.id].class_id == cls.id
+        assert event_map[attr_def_2.id].identifier == "age"
+        assert event_map[attr_def_2.id].title == "Age"
+
+        assert event_map[attr_def_3.id].class_id == cls.id
+        assert event_map[attr_def_3.id].identifier == "weight"
+        assert event_map[attr_def_3.id].title == "Weight"
+
+        # Verify ClassDeleted event was also emitted
+        class_delete_events = service._event_publisher.get_events_of_type(ClassDeleted)
+        assert any(e.class_id == cls.id for e in class_delete_events)
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""
