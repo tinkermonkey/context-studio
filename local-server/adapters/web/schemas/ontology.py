@@ -558,11 +558,17 @@ class AttributeDefinitionResponse(BaseModel):
     allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
     default_value: Optional[str] = Field(None, description="Optional default value")
     sort_order: int = Field(0, description="Display order within the class's attributes")
+    external_references: list[ExternalReferenceResponse] = Field(
+        default_factory=list, description="References to external knowledge bases"
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
+    )
+    source_run_id: Optional[str] = Field(
+        None, description="ID of the pipeline run that created or last modified this entity"
     )
 
 
