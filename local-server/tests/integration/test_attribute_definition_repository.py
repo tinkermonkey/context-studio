@@ -21,7 +21,7 @@ from domain.ontology.entities import (
     ConceptScheme,
     Taxonomy,
 )
-from domain.ontology.value_objects import ExternalReference, Status
+from domain.ontology.value_objects import ExternalReference
 
 
 @pytest.fixture

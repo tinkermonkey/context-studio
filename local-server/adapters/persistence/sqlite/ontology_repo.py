@@ -29,6 +29,8 @@ from adapters.persistence.sqlite.mappers import (
 )
 from adapters.persistence.sqlite.models import (
     AttributeDefinition as AttributeDefinitionORM,
+)
+from adapters.persistence.sqlite.models import (
     IndividualClass,
     OntologyEntity,
 )
