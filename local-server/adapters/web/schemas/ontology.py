@@ -30,6 +30,8 @@ from typing import Any, Generic, Literal, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from domain.ontology.value_objects import DataType
+
 T = TypeVar("T")
 
 
@@ -517,7 +519,7 @@ class AttributeDefinitionCreateRequest(BaseModel):
     def _validate_datatype_field(cls, value: str) -> str:
         if not value or not value.strip():
             raise ValueError("Datatype cannot be empty")
-        valid_types = {"string", "integer", "boolean", "array", "object"}
+        valid_types = {dt.value for dt in DataType}
         if value.strip().lower() not in valid_types:
             raise ValueError(
                 f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"
@@ -550,7 +552,7 @@ class AttributeDefinitionUpdateRequest(BaseModel):
         if value is not None and not value.strip():
             raise ValueError("Datatype cannot be empty")
         if value is not None:
-            valid_types = {"string", "integer", "boolean", "array", "object"}
+            valid_types = {dt.value for dt in DataType}
             if value.strip().lower() not in valid_types:
                 raise ValueError(
                     f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"

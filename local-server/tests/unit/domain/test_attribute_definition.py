@@ -36,6 +36,39 @@ class TestAttributeDefinitionCreation:
         assert attr_def.status == Status.DRAFT
         assert len(attr_def.external_references) == 0
 
+    def test_attribute_definition_invalid_datatype_raises_error(self):
+        """Creating an AttributeDefinition with invalid datatype raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid datatype 'banana'"):
+            AttributeDefinition(
+                id="attr-1",
+                class_id="cls-1",
+                identifier="name",
+                title="Name",
+                datatype="banana",
+            )
+
+    def test_attribute_definition_invalid_datatype_empty_raises_error(self):
+        """Creating an AttributeDefinition with empty datatype raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid datatype"):
+            AttributeDefinition(
+                id="attr-1",
+                class_id="cls-1",
+                identifier="name",
+                title="Name",
+                datatype="",
+            )
+
+    def test_attribute_definition_invalid_datatype_whitespace_raises_error(self):
+        """Creating an AttributeDefinition with whitespace-only datatype raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid datatype"):
+            AttributeDefinition(
+                id="attr-1",
+                class_id="cls-1",
+                identifier="name",
+                title="Name",
+                datatype="   ",
+            )
+
     def test_attribute_definition_creation_with_all_fields(self):
         """Create an attribute definition with all optional fields."""
         ext_ref = ExternalReference(source="DR", identifier="node_schema.attribute_name")

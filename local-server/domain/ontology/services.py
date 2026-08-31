@@ -65,6 +65,7 @@ from .ports import (
 )
 from .value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     Status,
     validate_default_value_against_allowed_values,
@@ -2989,11 +2990,18 @@ class OntologyService:
         if datatype is not None:
             if not datatype.strip():
                 raise ValueError("Datatype cannot be empty")
-            if datatype != attr_def.datatype:
+            try:
+                validated_datatype = DataType(datatype.strip())
+            except ValueError:
+                raise ValueError(
+                    f"Invalid datatype '{datatype}'. Must be one of: "
+                    f"{', '.join(dt.value for dt in DataType)}"
+                )
+            if validated_datatype != attr_def.datatype:
                 changed_fields.append("datatype")
                 old_values["datatype"] = attr_def.datatype
-                new_values["datatype"] = datatype
-                attr_def.datatype = datatype
+                new_values["datatype"] = validated_datatype
+                attr_def.datatype = validated_datatype
 
         if is_required is not None and is_required != attr_def.is_required:
             changed_fields.append("is_required")

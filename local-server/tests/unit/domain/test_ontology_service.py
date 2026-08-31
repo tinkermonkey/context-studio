@@ -3527,6 +3527,66 @@ class TestUpdateAttributeDefinition:
         assert updated.default_value == "draft"
         assert updated.allowed_values is None
 
+    def test_update_attribute_definition_invalid_datatype_raises(self, service):
+        """Updating with invalid datatype raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        with pytest.raises(ValueError, match="Invalid datatype 'banana'"):
+            service.update_attribute_definition(
+                attribute_definition_id=attr_def.id,
+                datatype="banana",
+            )
+
+    def test_update_attribute_definition_empty_datatype_raises(self, service):
+        """Updating with empty datatype raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        with pytest.raises(ValueError, match="Datatype cannot be empty"):
+            service.update_attribute_definition(
+                attribute_definition_id=attr_def.id,
+                datatype="",
+            )
+
+    def test_update_attribute_definition_valid_datatype_succeeds(self, service):
+        """Updating with valid datatype succeeds and updates the entity."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="age",
+            title="Age",
+            datatype="string",
+        )
+
+        assert attr_def.datatype == "string"
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            datatype="integer",
+        )
+
+        assert updated.datatype == "integer"
+
 
 class TestDeleteAttributeDefinition:
     """Tests for delete_attribute_definition."""
