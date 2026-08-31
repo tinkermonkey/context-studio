@@ -1582,6 +1582,255 @@
         }
       }
     },
+    "/api/classes/{class_id}/attribute-definitions": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Attribute Definition",
+        "description": "Create a new attribute definition scoped to a class.\n\nArgs:\n    class_id: The ID of the parent class\n    request: AttributeDefinitionCreateRequest with identifier, title, and datatype\n    service: OntologyService from dependency injection\n\nReturns:\n    Created AttributeDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if class not found, 409 if identifier exists in class",
+        "operationId": "create_attribute_definition_api_classes__class_id__attribute_definitions_post",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeDefinitionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Class Attribute Definitions",
+        "description": "Retrieve attribute definitions for a class with pagination.\n\nArgs:\n    class_id: The ID of the class\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing attribute definitions for the class\n\nRaises:\n    HTTPException: 404 if class not found",
+        "operationId": "list_class_attribute_definitions_api_classes__class_id__attribute_definitions_get",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_AttributeDefinitionResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attribute-definitions/{attribute_definition_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Attribute Definition",
+        "description": "Retrieve an attribute definition by ID.\n\nArgs:\n    attribute_definition_id: The attribute definition ID\n    service: OntologyService from dependency injection\n\nReturns:\n    AttributeDefinitionResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_attribute_definition_api_attribute_definitions__attribute_definition_id__get",
+        "parameters": [
+          {
+            "name": "attribute_definition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Attribute Definition Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Update Attribute Definition",
+        "description": "Update an attribute definition (partial update).\n\nArgs:\n    attribute_definition_id: The attribute definition ID\n    request: AttributeDefinitionUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated AttributeDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "operationId": "update_attribute_definition_api_attribute_definitions__attribute_definition_id__put",
+        "parameters": [
+          {
+            "name": "attribute_definition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Attribute Definition Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeDefinitionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Attribute Definition",
+        "description": "Delete an attribute definition.\n\nArgs:\n    attribute_definition_id: The attribute definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "delete_attribute_definition_api_attribute_definitions__attribute_definition_id__delete",
+        "parameters": [
+          {
+            "name": "attribute_definition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Attribute Definition Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/individuals": {
       "post": {
         "tags": [
@@ -6259,6 +6508,315 @@
         "title": "ApplyRunResponse",
         "description": "Response from applying a pipeline run's output to the ontology."
       },
+      "AttributeDefinitionCreateRequest": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Identifier",
+            "description": "Machine-readable identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name for the attribute"
+          },
+          "datatype": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Datatype",
+            "description": "Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional longer description"
+          },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required",
+            "description": "Whether this attribute is required on class instances",
+            "default": false
+          },
+          "allowed_values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Values",
+            "description": "Optional enum constraint"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value",
+            "description": "Optional default value"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "description": "Display order within the class's attribute list",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "title",
+          "datatype"
+        ],
+        "title": "AttributeDefinitionCreateRequest",
+        "description": "Request to create a new attribute definition."
+      },
+      "AttributeDefinitionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier (UUID)"
+          },
+          "class_id": {
+            "type": "string",
+            "title": "Class Id",
+            "description": "Parent class ID"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Machine-readable identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "datatype": {
+            "type": "string",
+            "title": "Datatype",
+            "description": "Data type (e.g. 'string', 'integer', 'boolean')"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required",
+            "description": "Whether this attribute is required",
+            "default": false
+          },
+          "allowed_values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Values",
+            "description": "Optional enum constraint"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value",
+            "description": "Optional default value"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "description": "Display order within the class's attributes",
+            "default": 0
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number for optimistic concurrency control",
+            "default": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "description": "Publication status (draft or published)",
+            "default": "draft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "class_id",
+          "identifier",
+          "title",
+          "datatype"
+        ],
+        "title": "AttributeDefinitionResponse",
+        "description": "Response containing attribute definition data."
+      },
+      "AttributeDefinitionUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          },
+          "datatype": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datatype",
+            "description": "New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')"
+          },
+          "is_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Required",
+            "description": "Update required flag"
+          },
+          "allowed_values": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Values",
+            "description": "Update enum constraint"
+          },
+          "default_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Value",
+            "description": "Update default value"
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order",
+            "description": "Update display order"
+          }
+        },
+        "type": "object",
+        "title": "AttributeDefinitionUpdateRequest",
+        "description": "Request to update an attribute definition (partial update)."
+      },
       "AutoResolveConflictsRequest": {
         "properties": {
           "strategy": {
@@ -9101,6 +9659,41 @@
         ],
         "title": "LexicalSenseResponse",
         "description": "Response containing lexical sense data."
+      },
+      "ListResponse_AttributeDefinitionResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AttributeDefinitionResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[AttributeDefinitionResponse]"
       },
       "ListResponse_ClassResponse_": {
         "properties": {

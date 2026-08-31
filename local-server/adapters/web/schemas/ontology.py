@@ -486,6 +486,86 @@ class IndividualClassListRequest(BaseModel):
     )
 
 
+# ==================== AttributeDefinition Schemas ====================
+
+
+class AttributeDefinitionCreateRequest(BaseModel):
+    """Request to create a new attribute definition."""
+
+    identifier: str = Field(..., description="Machine-readable identifier", min_length=1)
+    title: str = Field(..., description="Display name for the attribute", min_length=1)
+    datatype: str = Field(
+        ...,
+        description="Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        min_length=1,
+    )
+    description: Optional[str] = Field(None, description="Optional longer description")
+    is_required: bool = Field(False, description="Whether this attribute is required on class instances")
+    allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
+    default_value: Optional[str] = Field(None, description="Optional default value")
+    sort_order: int = Field(0, description="Display order within the class's attribute list")
+
+    @field_validator("title")
+    @classmethod
+    def _validate_title_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value
+
+    @field_validator("datatype")
+    @classmethod
+    def _validate_datatype_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Datatype cannot be empty")
+        return value
+
+
+class AttributeDefinitionUpdateRequest(BaseModel):
+    """Request to update an attribute definition (partial update)."""
+
+    title: Optional[str] = Field(None, description="New title", min_length=1)
+    description: Optional[str] = Field(None, description="New description")
+    datatype: Optional[str] = Field(
+        None,
+        description="New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        min_length=1,
+    )
+    is_required: Optional[bool] = Field(None, description="Update required flag")
+    allowed_values: Optional[list[str]] = Field(None, description="Update enum constraint")
+    default_value: Optional[str] = Field(None, description="Update default value")
+    sort_order: Optional[int] = Field(None, description="Update display order")
+
+    @field_validator("datatype")
+    @classmethod
+    def _validate_datatype_field(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and not value.strip():
+            raise ValueError("Datatype cannot be empty")
+        return value
+
+
+class AttributeDefinitionResponse(BaseModel):
+    """Response containing attribute definition data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier (UUID)")
+    class_id: str = Field(..., description="Parent class ID")
+    identifier: str = Field(..., description="Machine-readable identifier")
+    title: str = Field(..., description="Display name")
+    datatype: str = Field(..., description="Data type (e.g. 'string', 'integer', 'boolean')")
+    description: Optional[str] = Field(None, description="Optional description")
+    is_required: bool = Field(False, description="Whether this attribute is required")
+    allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
+    default_value: Optional[str] = Field(None, description="Optional default value")
+    sort_order: int = Field(0, description="Display order within the class's attributes")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
+
+
 # ==================== List Response Schemas ====================
 
 

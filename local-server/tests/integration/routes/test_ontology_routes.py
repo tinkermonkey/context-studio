@@ -1235,3 +1235,340 @@ class TestIndividualCRUD:
         # Verify deletion
         get_response = client.get(f"/api/individuals/{individual_id}")
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+class TestAttributeDefinitionCRUD:
+    """Integration tests for attribute definition CRUD operations."""
+
+    @pytest.fixture
+    def class_fixture(self, client):
+        """Create a class for attribute definition tests."""
+        tax_response = client.post("/api/taxonomies", json={"title": "Attribute Test Taxonomy"})
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Attribute Test Scheme"}
+        )
+        scheme_id = scheme_response.json()["id"]
+
+        class_response = client.post(
+            f"/api/schemes/{scheme_id}/classes", json={"title": "Attribute Test Class"}
+        )
+        class_id = class_response.json()["id"]
+
+        return {"class_id": class_id, "taxonomy_id": taxonomy_id, "scheme_id": scheme_id}
+
+    def test_create_attribute_definition_returns_201(self, client, class_fixture):
+        """POST /api/classes/{class_id}/attribute-definitions returns 201."""
+        response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "test_attr",
+                "title": "Test Attribute",
+                "datatype": "string",
+                "description": "A test attribute",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert "id" in body
+        assert body["class_id"] == class_fixture["class_id"]
+        assert body["identifier"] == "test_attr"
+        assert body["title"] == "Test Attribute"
+        assert body["datatype"] == "string"
+
+    def test_create_attribute_definition_with_nonexistent_class_returns_404(self, client):
+        """POST /api/classes/{invalid_id}/attribute-definitions returns 404."""
+        response = client.post(
+            "/api/classes/invalid-class-id/attribute-definitions",
+            json={
+                "identifier": "test_attr",
+                "title": "Test Attribute",
+                "datatype": "string",
+            },
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_create_attribute_definition_with_all_fields(self, client, class_fixture):
+        """Create attribute with all optional fields."""
+        response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "full_attr",
+                "title": "Full Attribute",
+                "datatype": "integer",
+                "description": "Full attribute with all fields",
+                "is_required": True,
+                "allowed_values": ["1", "2", "3"],
+                "default_value": "1",
+                "sort_order": 5,
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["is_required"] is True
+        assert body["allowed_values"] == ["1", "2", "3"]
+        assert body["default_value"] == "1"
+        assert body["sort_order"] == 5
+
+    def test_create_duplicate_attribute_identifier_in_class_fails(self, client, class_fixture):
+        """Creating duplicate identifier in same class fails."""
+        # Create first attribute
+        client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "dup_attr",
+                "title": "First Attribute",
+                "datatype": "string",
+            },
+        )
+
+        # Try to create duplicate
+        response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "dup_attr",
+                "title": "Second Attribute",
+                "datatype": "string",
+            },
+        )
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_create_attribute_definition_with_empty_title_fails(self, client, class_fixture):
+        """Create attribute with empty title fails."""
+        response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "empty_title",
+                "title": "",
+                "datatype": "string",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_create_attribute_definition_with_empty_datatype_fails(self, client, class_fixture):
+        """Create attribute with empty datatype fails."""
+        response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "empty_datatype",
+                "title": "Test",
+                "datatype": "",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_list_class_attribute_definitions_returns_200(self, client, class_fixture):
+        """GET /api/classes/{class_id}/attribute-definitions returns 200."""
+        # Create multiple attributes
+        client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={"identifier": "attr1", "title": "Attribute 1", "datatype": "string"},
+        )
+        client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={"identifier": "attr2", "title": "Attribute 2", "datatype": "integer"},
+        )
+
+        response = client.get(f"/api/classes/{class_fixture['class_id']}/attribute-definitions")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "items" in body
+        assert len(body["items"]) >= 2
+
+    def test_list_class_attribute_definitions_for_nonexistent_class_returns_404(self, client):
+        """GET /api/classes/{invalid_id}/attribute-definitions returns 404."""
+        response = client.get("/api/classes/invalid-class-id/attribute-definitions")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_list_class_attribute_definitions_pagination(self, client, class_fixture):
+        """List attribute definitions with pagination."""
+        # Create 3 attributes
+        for i in range(3):
+            client.post(
+                f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+                json={
+                    "identifier": f"attr_{i}",
+                    "title": f"Attribute {i}",
+                    "datatype": "string",
+                },
+            )
+
+        response = client.get(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            params={"limit": 2, "offset": 0},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert len(body["items"]) == 2
+        assert body["limit"] == 2
+        assert body["offset"] == 0
+
+    def test_get_attribute_definition_returns_200(self, client, class_fixture):
+        """GET /api/attribute-definitions/{id} returns 200."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "get_test",
+                "title": "Get Test Attribute",
+                "datatype": "string",
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        response = client.get(f"/api/attribute-definitions/{attr_id}")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["id"] == attr_id
+        assert body["identifier"] == "get_test"
+        assert body["title"] == "Get Test Attribute"
+        assert body["datatype"] == "string"
+
+    def test_get_nonexistent_attribute_definition_returns_404(self, client):
+        """GET /api/attribute-definitions/{invalid_id} returns 404."""
+        response = client.get("/api/attribute-definitions/invalid-attr-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_update_attribute_definition_returns_200(self, client, class_fixture):
+        """PUT /api/attribute-definitions/{id} returns 200."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "update_test",
+                "title": "Update Test",
+                "datatype": "string",
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        response = client.put(
+            f"/api/attribute-definitions/{attr_id}",
+            json={
+                "title": "Updated Title",
+                "description": "Updated description",
+                "is_required": True,
+            },
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["title"] == "Updated Title"
+        assert body["description"] == "Updated description"
+        assert body["is_required"] is True
+
+    def test_update_attribute_definition_partial(self, client, class_fixture):
+        """Partial update only changes specified fields."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "partial_test",
+                "title": "Original Title",
+                "datatype": "string",
+                "description": "Original description",
+                "is_required": False,
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        # Update only title
+        response = client.put(
+            f"/api/attribute-definitions/{attr_id}",
+            json={"title": "New Title"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["title"] == "New Title"
+        assert body["description"] == "Original description"
+        assert body["is_required"] is False
+
+    def test_update_attribute_definition_datatype(self, client, class_fixture):
+        """Update datatype field."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "datatype_test",
+                "title": "Datatype Test",
+                "datatype": "string",
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        response = client.put(
+            f"/api/attribute-definitions/{attr_id}",
+            json={"datatype": "integer"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["datatype"] == "integer"
+
+    def test_update_attribute_definition_allowed_values(self, client, class_fixture):
+        """Update allowed_values field."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "enum_test",
+                "title": "Enum Test",
+                "datatype": "string",
+                "allowed_values": ["a", "b"],
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        response = client.put(
+            f"/api/attribute-definitions/{attr_id}",
+            json={"allowed_values": ["x", "y", "z"]},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["allowed_values"] == ["x", "y", "z"]
+
+    def test_update_nonexistent_attribute_definition_returns_404(self, client):
+        """PUT /api/attribute-definitions/{invalid_id} returns 404."""
+        response = client.put(
+            "/api/attribute-definitions/invalid-attr-id",
+            json={"title": "Updated Title"},
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_attribute_definition_returns_204(self, client, class_fixture):
+        """DELETE /api/attribute-definitions/{id} returns 204."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "delete_test",
+                "title": "Delete Test",
+                "datatype": "string",
+            },
+        )
+        attr_id = create_response.json()["id"]
+
+        response = client.delete(f"/api/attribute-definitions/{attr_id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify deletion
+        get_response = client.get(f"/api/attribute-definitions/{attr_id}")
+        assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_nonexistent_attribute_definition_returns_404(self, client):
+        """DELETE /api/attribute-definitions/{invalid_id} returns 404."""
+        response = client.delete("/api/attribute-definitions/invalid-attr-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_attribute_definition_version_increments_on_update(self, client, class_fixture):
+        """Version number increments on update."""
+        create_response = client.post(
+            f"/api/classes/{class_fixture['class_id']}/attribute-definitions",
+            json={
+                "identifier": "version_test",
+                "title": "Version Test",
+                "datatype": "string",
+            },
+        )
+        attr_id = create_response.json()["id"]
+        initial_version = create_response.json()["version"]
+
+        # Update
+        update_response = client.put(
+            f"/api/attribute-definitions/{attr_id}",
+            json={"title": "Updated Title"},
+        )
+        assert update_response.json()["version"] == initial_version + 1
