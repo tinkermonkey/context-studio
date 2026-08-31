@@ -2862,7 +2862,7 @@ class OntologyService:
             class_id=class_id,
             identifier=identifier,
             title=title,
-            datatype=datatype,
+            datatype=DataType(datatype),
             description=description,
             is_required=is_required,
             allowed_values=allowed_values,

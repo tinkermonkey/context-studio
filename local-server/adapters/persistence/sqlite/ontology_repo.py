@@ -54,7 +54,7 @@ from domain.ontology.exceptions import (
     DuplicateEntityError,
     IdentifierConflictError,
 )
-from domain.ontology.value_objects import NodeType, SearchCriteria, Status
+from domain.ontology.value_objects import DataType, NodeType, SearchCriteria, Status
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -1872,7 +1872,7 @@ class SQLiteOntologyRepository:
             class_id=cast(str, orm_attr.class_id),
             identifier=cast(str, orm_attr.identifier),
             title=cast(str, orm_attr.title),
-            datatype=cast(str, orm_attr.datatype),
+            datatype=DataType(cast(str, orm_attr.datatype)),
             description=cast(str | None, orm_attr.description),
             is_required=cast(bool, orm_attr.is_required),
             allowed_values=cast(list[str] | None, orm_attr.allowed_values),
