@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from .value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     LexicalSense,
     OntologyMapping,
@@ -426,7 +427,7 @@ class AttributeDefinition:
         class_id: ID of the class this attribute is scoped to (required; no global registry)
         identifier: Machine-readable identifier for the attribute within its class
         title: Display name for the attribute
-        datatype: The data type (e.g. "string", "integer", "boolean", "array", "object")
+        datatype: The data type (must be one of: string, integer, boolean, array, object)
         description: Optional longer description
         is_required: Whether this attribute must be present on instances of the class
         allowed_values: Enum constraint; a list of allowed string values, or None if unconstrained
@@ -443,7 +444,7 @@ class AttributeDefinition:
     class_id: str
     identifier: str
     title: str
-    datatype: str
+    datatype: DataType
     description: str | None = None
     is_required: bool = False
     allowed_values: list[str] | None = None
@@ -458,6 +459,14 @@ class AttributeDefinition:
 
     def __post_init__(self) -> None:
         self.identifier = validate_identifier(self.identifier)
+        if isinstance(self.datatype, str):
+            try:
+                self.datatype = DataType(self.datatype)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid datatype '{self.datatype}'. Must be one of: "
+                    f"{', '.join(dt.value for dt in DataType)}"
+                )
         validate_default_value_against_allowed_values(self.default_value, self.allowed_values)
 
     def rename(self, new_title: str) -> None:

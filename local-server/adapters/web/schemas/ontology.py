@@ -517,7 +517,12 @@ class AttributeDefinitionCreateRequest(BaseModel):
     def _validate_datatype_field(cls, value: str) -> str:
         if not value or not value.strip():
             raise ValueError("Datatype cannot be empty")
-        return value
+        valid_types = {"string", "integer", "boolean", "array", "object"}
+        if value.strip().lower() not in valid_types:
+            raise ValueError(
+                f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"
+            )
+        return value.strip().lower()
 
 
 class AttributeDefinitionUpdateRequest(BaseModel):
@@ -544,6 +549,13 @@ class AttributeDefinitionUpdateRequest(BaseModel):
     def _validate_datatype_field(cls, value: Optional[str]) -> Optional[str]:
         if value is not None and not value.strip():
             raise ValueError("Datatype cannot be empty")
+        if value is not None:
+            valid_types = {"string", "integer", "boolean", "array", "object"}
+            if value.strip().lower() not in valid_types:
+                raise ValueError(
+                    f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"
+                )
+            return value.strip().lower()
         return value
 
 

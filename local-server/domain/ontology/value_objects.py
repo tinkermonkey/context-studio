@@ -107,6 +107,16 @@ class Status(str, Enum):
     PUBLISHED = "published"
 
 
+class DataType(str, Enum):
+    """Enumeration of valid data types for AttributeDefinition."""
+
+    STRING = "string"
+    INTEGER = "integer"
+    BOOLEAN = "boolean"
+    ARRAY = "array"
+    OBJECT = "object"
+
+
 @dataclass(frozen=True)
 class ExternalReference:
     """
