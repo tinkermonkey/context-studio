@@ -68,6 +68,28 @@ def validate_hex_color(color: str | None) -> str | None:
     return candidate
 
 
+def validate_default_value_against_allowed_values(
+    default_value: str | None,
+    allowed_values: list[str] | None,
+) -> None:
+    """
+    Validate that default_value is in allowed_values (if both are present).
+
+    Args:
+        default_value: Optional default value
+        allowed_values: Optional list of allowed values
+
+    Raises:
+        ValueError: If default_value is set and allowed_values is non-empty
+                   but does not contain default_value
+    """
+    if default_value is not None and allowed_values:
+        if default_value not in allowed_values:
+            raise ValueError(
+                f"Default value '{default_value}' is not in allowed values: {allowed_values}"
+            )
+
+
 class NodeType(str, Enum):
     """Enumeration of ontology node types."""
 

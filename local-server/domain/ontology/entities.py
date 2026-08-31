@@ -18,6 +18,7 @@ from .value_objects import (
     LexicalSense,
     OntologyMapping,
     Status,
+    validate_default_value_against_allowed_values,
     validate_hex_color,
     validate_identifier,
 )
@@ -457,6 +458,7 @@ class AttributeDefinition:
 
     def __post_init__(self) -> None:
         self.identifier = validate_identifier(self.identifier)
+        validate_default_value_against_allowed_values(self.default_value, self.allowed_values)
 
     def rename(self, new_title: str) -> None:
         """

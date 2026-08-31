@@ -3041,6 +3041,64 @@ class TestCreateAttributeDefinition:
         retrieved = service.get_attribute_definition(attr_def.id)
         assert retrieved.allowed_values == ["draft", "published", "archived"]
 
+    def test_create_attribute_definition_with_valid_default_value(self, service):
+        """Creating attribute definition with default_value in allowed_values."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published", "archived"],
+            default_value="draft",
+        )
+
+        assert attr_def.default_value == "draft"
+        assert attr_def.allowed_values == ["draft", "published", "archived"]
+        retrieved = service.get_attribute_definition(attr_def.id)
+        assert retrieved.default_value == "draft"
+
+    def test_create_attribute_definition_invalid_default_value_raises(self, service):
+        """Creating attribute definition with default_value not in allowed_values raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        with pytest.raises(
+            ValueError,
+            match="Default value 'yellow' is not in allowed values",
+        ):
+            service.create_attribute_definition(
+                class_id=cls.id,
+                identifier="color",
+                title="Color",
+                datatype="string",
+                allowed_values=["red", "green", "blue"],
+                default_value="yellow",
+            )
+
+    def test_create_attribute_definition_default_value_without_allowed_values(
+        self, service
+    ):
+        """Creating attribute definition with default_value but no allowed_values succeeds."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+            default_value="John",
+        )
+
+        assert attr_def.default_value == "John"
+        assert attr_def.allowed_values is None
+
 
 class TestGetAttributeDefinition:
     """Tests for get_attribute_definition."""
@@ -3239,6 +3297,126 @@ class TestUpdateAttributeDefinition:
                 attribute_definition_id="nonexistent-id",
                 title="New Title",
             )
+
+    def test_update_attribute_definition_valid_default_value(self, service):
+        """Update attribute definition with default_value in allowed_values."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=["red", "green", "blue"],
+        )
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            default_value="red",
+        )
+
+        assert updated.default_value == "red"
+        assert updated.allowed_values == ["red", "green", "blue"]
+
+    def test_update_attribute_definition_invalid_default_value_raises(self, service):
+        """Updating with default_value not in existing allowed_values raises ValueError."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=["red", "green", "blue"],
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Default value 'yellow' is not in allowed values",
+        ):
+            service.update_attribute_definition(
+                attribute_definition_id=attr_def.id,
+                default_value="yellow",
+            )
+
+    def test_update_attribute_definition_update_allowed_values_and_default_together(
+        self, service
+    ):
+        """Update both allowed_values and default_value together."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published"],
+            default_value="draft",
+        )
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            allowed_values=["draft", "published", "archived"],
+            default_value="archived",
+        )
+
+        assert updated.allowed_values == ["draft", "published", "archived"]
+        assert updated.default_value == "archived"
+
+    def test_update_attribute_definition_update_allowed_values_conflicting_default_raises(
+        self, service
+    ):
+        """Update allowed_values such that current default_value is no longer valid."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="status",
+            title="Status",
+            datatype="string",
+            allowed_values=["draft", "published"],
+            default_value="draft",
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Default value 'draft' is not in allowed values",
+        ):
+            service.update_attribute_definition(
+                attribute_definition_id=attr_def.id,
+                allowed_values=["archived", "deleted"],  # draft is no longer valid
+            )
+
+    def test_update_attribute_definition_set_default_value_without_allowed_values(
+        self, service
+    ):
+        """Update to add default_value when there are no allowed_values."""
+        tax = service.create_taxonomy(title="Test")
+        scheme = service.create_scheme(tax.id, title="Scheme")
+        cls = service.create_class(scheme.id, title="Class")
+
+        attr_def = service.create_attribute_definition(
+            class_id=cls.id,
+            identifier="name",
+            title="Name",
+            datatype="string",
+        )
+
+        updated = service.update_attribute_definition(
+            attribute_definition_id=attr_def.id,
+            default_value="John",
+        )
+
+        assert updated.default_value == "John"
+        assert updated.allowed_values is None
 
 
 class TestDeleteAttributeDefinition:

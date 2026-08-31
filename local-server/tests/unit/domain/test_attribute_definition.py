@@ -471,3 +471,122 @@ class TestAttributeDefinitionExternalReferences:
         assert len(attr_def.external_references) == 2
         assert attr_def.external_references[0].source == "DR"
         assert attr_def.external_references[1].source == "schema.org"
+
+
+class TestAttributeDefinitionDefaultValueValidation:
+    """Tests for cross-field validation of default_value against allowed_values."""
+
+    def test_default_value_in_allowed_values_valid(self):
+        """Creating an AttributeDefinition with default_value in allowed_values succeeds."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=["red", "green", "blue"],
+            default_value="red",
+        )
+        assert attr_def.default_value == "red"
+        assert attr_def.allowed_values == ["red", "green", "blue"]
+
+    def test_default_value_not_in_allowed_values_raises_error(self):
+        """Creating an AttributeDefinition with default_value not in allowed_values raises ValueError."""
+        with pytest.raises(
+            ValueError,
+            match="Default value 'yellow' is not in allowed values",
+        ):
+            AttributeDefinition(
+                id="attr-1",
+                class_id="cls-1",
+                identifier="color",
+                title="Color",
+                datatype="string",
+                allowed_values=["red", "green", "blue"],
+                default_value="yellow",
+            )
+
+    def test_no_default_value_with_allowed_values(self):
+        """Creating an AttributeDefinition with allowed_values but no default_value is valid."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=["red", "green", "blue"],
+            default_value=None,
+        )
+        assert attr_def.default_value is None
+        assert attr_def.allowed_values == ["red", "green", "blue"]
+
+    def test_default_value_without_allowed_values(self):
+        """Creating an AttributeDefinition with default_value but no allowed_values is valid."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="name",
+            title="Name",
+            datatype="string",
+            allowed_values=None,
+            default_value="John",
+        )
+        assert attr_def.default_value == "John"
+        assert attr_def.allowed_values is None
+
+    def test_neither_default_value_nor_allowed_values(self):
+        """Creating an AttributeDefinition with neither default_value nor allowed_values is valid."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="name",
+            title="Name",
+            datatype="string",
+            allowed_values=None,
+            default_value=None,
+        )
+        assert attr_def.default_value is None
+        assert attr_def.allowed_values is None
+
+    def test_empty_allowed_values_list_with_default_value(self):
+        """Creating an AttributeDefinition with empty allowed_values list and default_value is valid."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=[],
+            default_value="red",
+        )
+        assert attr_def.default_value == "red"
+        assert attr_def.allowed_values == []
+
+    def test_default_value_last_item_in_allowed_values(self):
+        """Default value can be the last item in allowed_values."""
+        attr_def = AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="color",
+            title="Color",
+            datatype="string",
+            allowed_values=["red", "green", "blue"],
+            default_value="blue",
+        )
+        assert attr_def.default_value == "blue"
+
+    def test_default_value_exact_match_case_sensitive(self):
+        """Default value matching is case-sensitive."""
+        with pytest.raises(
+            ValueError,
+            match="Default value 'Red' is not in allowed values",
+        ):
+            AttributeDefinition(
+                id="attr-1",
+                class_id="cls-1",
+                identifier="color",
+                title="Color",
+                datatype="string",
+                allowed_values=["red", "green", "blue"],
+                default_value="Red",
+            )

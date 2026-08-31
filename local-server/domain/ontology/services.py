@@ -63,7 +63,12 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
-from .value_objects import DataPropertyValue, ExternalReference, Status
+from .value_objects import (
+    DataPropertyValue,
+    ExternalReference,
+    Status,
+    validate_default_value_against_allowed_values,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -2837,6 +2842,9 @@ class OntologyService:
         if not datatype or not datatype.strip():
             raise ValueError("Datatype cannot be empty")
 
+        # Validate cross-field constraint: default_value must be in allowed_values
+        validate_default_value_against_allowed_values(default_value, allowed_values)
+
         # Verify class exists
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -3014,6 +3022,9 @@ class OntologyService:
             old_values["sort_order"] = attr_def.sort_order
             new_values["sort_order"] = sort_order
             attr_def.sort_order = sort_order
+
+        # Validate cross-field constraint after all updates are applied
+        validate_default_value_against_allowed_values(attr_def.default_value, attr_def.allowed_values)
 
         # Update last_modified timestamp if any changes were made
         if changed_fields:
