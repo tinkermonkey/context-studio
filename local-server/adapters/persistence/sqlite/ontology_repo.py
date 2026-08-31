@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal, Optional, cast
 
 from sqlalchemy import and_, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.mappers import (
@@ -49,8 +50,15 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.exceptions import (
+    DuplicateEntityError,
+    IdentifierConflictError,
+)
 from domain.ontology.value_objects import NodeType, SearchCriteria, Status
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class SQLiteOntologyRepository:
@@ -1154,7 +1162,8 @@ class SQLiteOntologyRepository:
             Saved PropertyDefinition entity
 
         Raises:
-            ValueError: If title is empty or identifier is not unique
+            ValueError: If title is empty or identifier is empty
+            IdentifierConflictError: If identifier is not unique (duplicate detected)
         """
         if not prop.title or not prop.title.strip():
             raise ValueError("PropertyDefinition title cannot be empty")
@@ -1176,9 +1185,7 @@ class SQLiteOntologyRepository:
                 .first()
             )
             if existing is not None:
-                raise ValueError(
-                    f"PropertyDefinition with identifier {prop.identifier} already" " exists"
-                )
+                raise IdentifierConflictError(prop.identifier)
 
             orm_entity = (
                 session.query(OntologyEntity)
@@ -1264,7 +1271,15 @@ class SQLiteOntologyRepository:
                         prop_def_orm_maybe.version + 1  # type: ignore[assignment]
                     )
 
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                logger.error(
+                    f"Database integrity error when saving property definition {prop.id}: {e}"
+                )
+                raise IdentifierConflictError(prop.identifier) from e
+
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def delete_property_definition(self, property_id: str) -> bool:
@@ -1426,6 +1441,8 @@ class SQLiteOntologyRepository:
         Raises:
             ValueError: If source, target, or property definition doesn't exist,
                        or if source == target
+            DuplicateEntityError: If a relationship with this (source_id, target_id,
+                                 property_definition_id) triple already exists
         """
         if rel.source_id == rel.target_id:
             raise ValueError("A relationship cannot have the same source and target")
@@ -1464,7 +1481,18 @@ class SQLiteOntologyRepository:
                     rel.property_definition_id  # type: ignore[assignment]
                 )
 
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                logger.error(
+                    f"Database integrity error when saving relationship {rel.id}: {e}"
+                )
+                raise DuplicateEntityError(
+                    f"Relationship with (source_id, target_id, property_definition_id) = "
+                    f"({rel.source_id}, {rel.target_id}, {rel.property_definition_id}) already exists"
+                ) from e
+
             return map_relationship_orm_to_domain(orm_rel)
 
     def delete_relationship(self, relationship_id: str) -> bool:
@@ -1561,8 +1589,8 @@ class SQLiteOntologyRepository:
             Saved AttributeDefinition entity
 
         Raises:
-            ValueError: If title is empty, parent class doesn't exist,
-                       or (class_id, identifier) pair is not unique
+            ValueError: If title is empty or parent class doesn't exist
+            DuplicateEntityError: If (class_id, identifier) pair is not unique
         """
         if not attr_def.title or not attr_def.title.strip():
             raise ValueError("AttributeDefinition title cannot be empty")
@@ -1589,7 +1617,7 @@ class SQLiteOntologyRepository:
                 .first()
             )
             if existing is not None:
-                raise ValueError(
+                raise DuplicateEntityError(
                     f"AttributeDefinition with (class_id, identifier) = "
                     f"({attr_def.class_id}, {attr_def.identifier}) already exists"
                 )
@@ -1626,7 +1654,18 @@ class SQLiteOntologyRepository:
                 orm_attr.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_attr.version = orm_attr.version + 1  # type: ignore[assignment]
 
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                logger.error(
+                    f"Database integrity error when saving attribute definition {attr_def.id}: {e}"
+                )
+                raise DuplicateEntityError(
+                    f"AttributeDefinition with (class_id, identifier) = "
+                    f"({attr_def.class_id}, {attr_def.identifier}) already exists"
+                ) from e
+
             return self._map_attribute_definition_orm_to_domain(orm_attr)
 
     def delete_attribute_definition(self, attribute_definition_id: str) -> bool:
