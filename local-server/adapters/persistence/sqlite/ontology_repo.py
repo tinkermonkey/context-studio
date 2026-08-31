@@ -61,6 +61,34 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str | None:
+    """
+    Extract the constraint name from an SQLAlchemy IntegrityError.
+
+    SQLite includes constraint names in error messages like:
+    - "UNIQUE constraint failed: ontology_entities.identifier"
+    - "UNIQUE constraint failed: relationships.uk_relationship_triple"
+    - "UNIQUE constraint failed: attribute_definitions.uk_attribute_class_identifier"
+    - "NOT NULL constraint failed: ..."
+    - "FOREIGN KEY constraint failed"
+
+    Args:
+        error: The IntegrityError to inspect
+
+    Returns:
+        The constraint name if found, None otherwise
+    """
+    error_str = str(error).lower()
+    if "unique constraint" in error_str:
+        if "uk_relationship_triple" in error_str:
+            return "uk_relationship_triple"
+        if "uk_attribute_class_identifier" in error_str:
+            return "uk_attribute_class_identifier"
+        if "identifier" in error_str:
+            return "identifier"
+    return None
+
+
 class SQLiteOntologyRepository:
     """
     SQLAlchemy-based implementation of the OntologyRepository port (structural subtyping).
@@ -1278,7 +1306,10 @@ class SQLiteOntologyRepository:
                 logger.error(
                     f"Database integrity error when saving property definition {prop.id}: {e}"
                 )
-                raise IdentifierConflictError(prop.identifier) from e
+                constraint_name = _extract_constraint_name_from_integrity_error(e)
+                if constraint_name == "identifier":
+                    raise IdentifierConflictError(prop.identifier) from e
+                raise e
 
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
@@ -1486,11 +1517,14 @@ class SQLiteOntologyRepository:
             except IntegrityError as e:
                 session.rollback()
                 logger.error(f"Database integrity error when saving relationship {rel.id}: {e}")
-                raise DuplicateEntityError(
-                    f"Relationship with (source_id, target_id, property_definition_id) = "
-                    f"({rel.source_id}, {rel.target_id}, "
-                    f"{rel.property_definition_id}) already exists"
-                ) from e
+                constraint_name = _extract_constraint_name_from_integrity_error(e)
+                if constraint_name == "uk_relationship_triple":
+                    raise DuplicateEntityError(
+                        f"Relationship with (source_id, target_id, property_definition_id) = "
+                        f"({rel.source_id}, {rel.target_id}, "
+                        f"{rel.property_definition_id}) already exists"
+                    ) from e
+                raise e
 
             return map_relationship_orm_to_domain(orm_rel)
 
@@ -1658,10 +1692,13 @@ class SQLiteOntologyRepository:
                 logger.error(
                     f"Database integrity error when saving attribute definition {attr_def.id}: {e}"
                 )
-                raise DuplicateEntityError(
-                    f"AttributeDefinition with (class_id, identifier) = "
-                    f"({attr_def.class_id}, {attr_def.identifier}) already exists"
-                ) from e
+                constraint_name = _extract_constraint_name_from_integrity_error(e)
+                if constraint_name == "uk_attribute_class_identifier":
+                    raise DuplicateEntityError(
+                        f"AttributeDefinition with (class_id, identifier) = "
+                        f"({attr_def.class_id}, {attr_def.identifier}) already exists"
+                    ) from e
+                raise e
 
             return self._map_attribute_definition_orm_to_domain(orm_attr)
 
