@@ -25,8 +25,10 @@ from adapters.persistence.sqlite.mappers import (
     map_orm_to_domain,
     map_relationship_domain_to_orm,
     map_relationship_orm_to_domain,
+    serialize_external_references,
 )
 from adapters.persistence.sqlite.models import (
+    AttributeDefinition as AttributeDefinitionORM,
     IndividualClass,
     OntologyEntity,
 )
@@ -37,6 +39,7 @@ from adapters.persistence.sqlite.models import (
     Relationship as RelationshipORM,
 )
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -1484,6 +1487,188 @@ class SQLiteOntologyRepository:
             session.commit()
             return True
 
+    # ==================== AttributeDefinition CRUD ====================
+
+    def get_attribute_definition(
+        self, attribute_definition_id: str
+    ) -> Optional[AttributeDefinition]:
+        """
+        Retrieve an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: UUID of the attribute definition
+
+        Returns:
+            AttributeDefinition entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            orm_attr = (
+                session.query(AttributeDefinitionORM)
+                .filter(AttributeDefinitionORM.id == attribute_definition_id)
+                .first()
+            )
+
+            if orm_attr is None:
+                return None
+
+            return self._map_attribute_definition_orm_to_domain(orm_attr)
+
+    def list_attribute_definitions(
+        self,
+        class_id: Optional[str] = None,
+        limit: Optional[int] = 100,
+        offset: int = 0,
+    ) -> list[AttributeDefinition]:
+        """
+        List attribute definitions, optionally filtered by class and ordered by sort_order.
+
+        Args:
+            class_id: Optional class ID to filter by
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of AttributeDefinition entities, ordered by sort_order
+        """
+        with self.session_factory() as session:
+            query = session.query(AttributeDefinitionORM)
+
+            if class_id is not None:
+                query = query.filter(AttributeDefinitionORM.class_id == class_id)
+
+            query = query.order_by(AttributeDefinitionORM.sort_order)
+
+            if limit is not None:
+                query = query.limit(limit)
+
+            orm_attrs = query.offset(offset).all()
+            return [self._map_attribute_definition_orm_to_domain(a) for a in orm_attrs]
+
+    def save_attribute_definition(
+        self, attr_def: AttributeDefinition
+    ) -> AttributeDefinition:
+        """
+        Create or update an attribute definition.
+
+        Validates that the parent class exists and enforces unique (class_id, identifier).
+
+        Args:
+            attr_def: AttributeDefinition entity to save
+
+        Returns:
+            Saved AttributeDefinition entity
+
+        Raises:
+            ValueError: If title is empty, parent class doesn't exist,
+                       or (class_id, identifier) pair is not unique
+        """
+        if not attr_def.title or not attr_def.title.strip():
+            raise ValueError("AttributeDefinition title cannot be empty")
+
+        if not attr_def.identifier or not attr_def.identifier.strip():
+            raise ValueError("AttributeDefinition identifier cannot be empty")
+
+        with self.session_factory() as session:
+            # Verify parent class exists
+            parent_class = self.get_class(attr_def.class_id, session)
+            if parent_class is None:
+                raise ValueError(f"Parent class {attr_def.class_id} does not exist")
+
+            # Check uniqueness of (class_id, identifier) for other attribute definitions
+            existing = (
+                session.query(AttributeDefinitionORM)
+                .filter(
+                    and_(
+                        AttributeDefinitionORM.class_id == attr_def.class_id,
+                        AttributeDefinitionORM.identifier == attr_def.identifier,
+                        AttributeDefinitionORM.id != attr_def.id,
+                    )
+                )
+                .first()
+            )
+            if existing is not None:
+                raise ValueError(
+                    f"AttributeDefinition with (class_id, identifier) = "
+                    f"({attr_def.class_id}, {attr_def.identifier}) already exists"
+                )
+
+            orm_attr = (
+                session.query(AttributeDefinitionORM)
+                .filter(AttributeDefinitionORM.id == attr_def.id)
+                .first()
+            )
+
+            if orm_attr is None:
+                # Create new
+                orm_attr = self._map_attribute_definition_domain_to_orm(attr_def)
+                orm_attr.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_attr.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_attr.version = 1  # type: ignore[assignment]
+                session.add(orm_attr)
+            else:
+                # Update existing
+                orm_attr.class_id = attr_def.class_id  # type: ignore[assignment]
+                orm_attr.identifier = attr_def.identifier  # type: ignore[assignment]
+                orm_attr.title = attr_def.title  # type: ignore[assignment]
+                orm_attr.datatype = attr_def.datatype  # type: ignore[assignment]
+                orm_attr.description = attr_def.description  # type: ignore[assignment]
+                orm_attr.is_required = attr_def.is_required  # type: ignore[assignment]
+                orm_attr.allowed_values = attr_def.allowed_values  # type: ignore[assignment]
+                orm_attr.default_value = attr_def.default_value  # type: ignore[assignment]
+                orm_attr.sort_order = attr_def.sort_order  # type: ignore[assignment]
+                orm_attr.external_references = serialize_external_references(
+                    attr_def.external_references
+                )  # type: ignore[assignment]
+                orm_attr.status = attr_def.status.value  # type: ignore[assignment]
+                orm_attr.source_run_id = attr_def.source_run_id  # type: ignore[assignment]
+                orm_attr.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_attr.version = orm_attr.version + 1  # type: ignore[assignment]
+
+            session.commit()
+            return self._map_attribute_definition_orm_to_domain(orm_attr)
+
+    def delete_attribute_definition(self, attribute_definition_id: str) -> bool:
+        """
+        Delete an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: UUID of the attribute definition
+
+        Returns:
+            True if deleted, False if not found
+        """
+        with self.session_factory() as session:
+            orm_attr = (
+                session.query(AttributeDefinitionORM)
+                .filter(AttributeDefinitionORM.id == attribute_definition_id)
+                .first()
+            )
+
+            if orm_attr is None:
+                return False
+
+            session.delete(orm_attr)
+            session.commit()
+            return True
+
+    def count_attribute_definitions(self, class_id: Optional[str] = None) -> int:
+        """
+        Count attribute definitions, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Total count of attribute definitions
+        """
+        with self.session_factory() as session:
+            query = session.query(AttributeDefinitionORM)
+
+            if class_id is not None:
+                query = query.filter(AttributeDefinitionORM.class_id == class_id)
+
+            return query.count()
+
     # ==================== Utility Methods ====================
 
     def get_all_entities_and_relationships(
@@ -1594,6 +1779,69 @@ class SQLiteOntologyRepository:
             current = parent_class.parent_class_id
 
         return False
+
+    def _map_attribute_definition_orm_to_domain(
+        self, orm_attr: AttributeDefinitionORM
+    ) -> AttributeDefinition:
+        """
+        Map an ORM AttributeDefinition to a domain AttributeDefinition.
+
+        Args:
+            orm_attr: The ORM AttributeDefinition
+
+        Returns:
+            Domain AttributeDefinition entity
+        """
+        return AttributeDefinition(
+            id=cast(str, orm_attr.id),
+            class_id=cast(str, orm_attr.class_id),
+            identifier=cast(str, orm_attr.identifier),
+            title=cast(str, orm_attr.title),
+            datatype=cast(str, orm_attr.datatype),
+            description=cast(str | None, orm_attr.description),
+            is_required=cast(bool, orm_attr.is_required),
+            allowed_values=cast(list[str] | None, orm_attr.allowed_values),
+            default_value=cast(str | None, orm_attr.default_value),
+            sort_order=cast(int, orm_attr.sort_order),
+            external_references=deserialize_external_references(
+                cast(list[dict[str, Any]], orm_attr.external_references) or []
+            ),
+            created_at=cast(datetime | None, orm_attr.created_at),
+            last_modified=cast(datetime | None, orm_attr.last_modified),
+            version=cast(int, orm_attr.version),
+            status=Status(cast(str, orm_attr.status)),
+            source_run_id=cast(str | None, orm_attr.source_run_id),
+        )
+
+    def _map_attribute_definition_domain_to_orm(
+        self, attr_def: AttributeDefinition
+    ) -> AttributeDefinitionORM:
+        """
+        Map a domain AttributeDefinition to an ORM AttributeDefinition.
+
+        Args:
+            attr_def: The domain AttributeDefinition
+
+        Returns:
+            ORM AttributeDefinition entity
+        """
+        return AttributeDefinitionORM(
+            id=attr_def.id,
+            class_id=attr_def.class_id,
+            identifier=attr_def.identifier,
+            title=attr_def.title,
+            datatype=attr_def.datatype,
+            description=attr_def.description,
+            is_required=attr_def.is_required,
+            allowed_values=attr_def.allowed_values,
+            default_value=attr_def.default_value,
+            sort_order=attr_def.sort_order,
+            external_references=serialize_external_references(
+                attr_def.external_references
+            ),
+            status=attr_def.status.value,
+            source_run_id=attr_def.source_run_id,
+        )
 
     # ==================== Async Methods ====================
 
@@ -1966,6 +2214,83 @@ class SQLiteOntologyRepository:
             True if deleted, False if not found
         """
         return await run_sync_in_executor(self.delete_relationship, relationship_id)
+
+    async def get_attribute_definition_async(
+        self, attribute_definition_id: str
+    ) -> Optional[AttributeDefinition]:
+        """
+        Retrieve an attribute definition by ID (async version).
+
+        Args:
+            attribute_definition_id: UUID of the attribute definition
+
+        Returns:
+            AttributeDefinition entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_attribute_definition, attribute_definition_id)
+
+    async def list_attribute_definitions_async(
+        self,
+        class_id: Optional[str] = None,
+        limit: Optional[int] = 100,
+        offset: int = 0,
+    ) -> list[AttributeDefinition]:
+        """
+        List attribute definitions, optionally filtered by class (async version).
+
+        Args:
+            class_id: Optional class ID to filter by
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of AttributeDefinition entities
+        """
+        return await run_sync_in_executor(
+            self.list_attribute_definitions, class_id, limit, offset
+        )
+
+    async def save_attribute_definition_async(
+        self, attr_def: AttributeDefinition
+    ) -> AttributeDefinition:
+        """
+        Create or update an attribute definition (async version).
+
+        Args:
+            attr_def: AttributeDefinition entity to save
+
+        Returns:
+            Saved AttributeDefinition entity
+        """
+        return await run_sync_in_executor(self.save_attribute_definition, attr_def)
+
+    async def delete_attribute_definition_async(self, attribute_definition_id: str) -> bool:
+        """
+        Delete an attribute definition by ID (async version).
+
+        Args:
+            attribute_definition_id: UUID of the attribute definition
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(
+            self.delete_attribute_definition, attribute_definition_id
+        )
+
+    async def count_attribute_definitions_async(
+        self, class_id: Optional[str] = None
+    ) -> int:
+        """
+        Count attribute definitions, optionally filtered by class (async version).
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Total count of attribute definitions
+        """
+        return await run_sync_in_executor(self.count_attribute_definitions, class_id)
 
     async def get_all_entities_and_relationships_async(
         self,
