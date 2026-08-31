@@ -38,9 +38,7 @@ class TestAttributeDefinitionCreation:
 
     def test_attribute_definition_creation_with_all_fields(self):
         """Create an attribute definition with all optional fields."""
-        ext_ref = ExternalReference(
-            source="DR", identifier="node_schema.attribute_name"
-        )
+        ext_ref = ExternalReference(source="DR", identifier="node_schema.attribute_name")
         attr_def = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",
@@ -438,9 +436,7 @@ class TestAttributeDefinitionExternalReferences:
 
     def test_external_references_with_single_reference(self):
         """AttributeDefinition can have a single external reference."""
-        ref = ExternalReference(
-            source="DR", identifier="node_schema.attribute_name"
-        )
+        ref = ExternalReference(source="DR", identifier="node_schema.attribute_name")
         attr_def = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",
@@ -454,12 +450,8 @@ class TestAttributeDefinitionExternalReferences:
 
     def test_external_references_with_multiple_references(self):
         """AttributeDefinition can have multiple external references."""
-        ref1 = ExternalReference(
-            source="DR", identifier="node_schema.attribute_name"
-        )
-        ref2 = ExternalReference(
-            source="schema.org", identifier="https://schema.org/name"
-        )
+        ref1 = ExternalReference(source="DR", identifier="node_schema.attribute_name")
+        ref2 = ExternalReference(source="schema.org", identifier="https://schema.org/name")
         attr_def = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",
@@ -491,7 +483,7 @@ class TestAttributeDefinitionDefaultValueValidation:
         assert attr_def.allowed_values == ["red", "green", "blue"]
 
     def test_default_value_not_in_allowed_values_raises_error(self):
-        """Creating an AttributeDefinition with default_value not in allowed_values raises ValueError."""
+        """Default value not in allowed_values raises ValueError."""
         with pytest.raises(
             ValueError,
             match="Default value 'yellow' is not in allowed values",
@@ -535,7 +527,7 @@ class TestAttributeDefinitionDefaultValueValidation:
         assert attr_def.allowed_values is None
 
     def test_neither_default_value_nor_allowed_values(self):
-        """Creating an AttributeDefinition with neither default_value nor allowed_values is valid."""
+        """Neither default_value nor allowed_values is valid."""
         attr_def = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",
@@ -549,7 +541,7 @@ class TestAttributeDefinitionDefaultValueValidation:
         assert attr_def.allowed_values is None
 
     def test_empty_allowed_values_list_with_default_value(self):
-        """Creating an AttributeDefinition with empty allowed_values list and default_value is valid."""
+        """Empty allowed_values list with default_value is valid."""
         attr_def = AttributeDefinition(
             id="attr-1",
             class_id="cls-1",

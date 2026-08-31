@@ -1144,9 +1144,7 @@ class OntologyService:
         # connection.py), so the declared ondelete="SET NULL" never fires —
         # deleting without this check would leave dangling domain_class_id/
         # range_class_id references instead.
-        referencing_count = self._repository.count_property_definitions_referencing_class(
-            class_id
-        )
+        referencing_count = self._repository.count_property_definitions_referencing_class(class_id)
         if referencing_count:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it is referenced as domain/range by "
@@ -2389,9 +2387,7 @@ class OntologyService:
         individual.last_modified = datetime.now(timezone.utc)
 
         individual = self._repository.save_individual(individual)
-        self._sync_individual_index(
-            individual_id, individual.title, individual.description
-        )
+        self._sync_individual_index(individual_id, individual.title, individual.description)
         self._sync_vector_index(individual_id, individual.title, individual.description)
 
         # Emit IndividualUpdated event
@@ -3024,7 +3020,9 @@ class OntologyService:
             attr_def.sort_order = sort_order
 
         # Validate cross-field constraint after all updates are applied
-        validate_default_value_against_allowed_values(attr_def.default_value, attr_def.allowed_values)
+        validate_default_value_against_allowed_values(
+            attr_def.default_value, attr_def.allowed_values
+        )
 
         # Update last_modified timestamp if any changes were made
         if changed_fields:
