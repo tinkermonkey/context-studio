@@ -568,7 +568,10 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
     )
 
     def __repr__(self) -> str:
-        return f"<AttributeDefinition(id={self.id}, class_id={self.class_id}, identifier={self.identifier})>"
+        return (
+            f"<AttributeDefinition(id={self.id}, class_id={self.class_id},"
+            f" identifier={self.identifier})>"
+        )
 
 
 class ChangeEvent(Base):  # type: ignore[valid-type,misc]
