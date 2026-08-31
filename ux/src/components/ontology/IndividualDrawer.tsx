@@ -130,7 +130,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     error: classesErrorObj,
     refetch: refetchClasses,
   } = useClasses();
-  const classes = classesResponse?.items || [];
+  const classes = useMemo(() => classesResponse?.items || [], [classesResponse]);
   const classMap = useMemo(
     () => new Map(classes.map((c: ClassResponse) => [c.id, c.title])),
     [classes],
