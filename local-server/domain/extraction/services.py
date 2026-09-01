@@ -720,8 +720,8 @@ class ExtractionService:
         # Enforce minimum results threshold; below it, fallback to full catalog
         if len(matches) < _RELEVANT_CATALOG_MIN_RESULTS:
             _logger.debug(
-                f"Retrieved only {len(matches)} classes (below minimum {_RELEVANT_CATALOG_MIN_RESULTS}); "
-                "falling back to full catalog"
+                f"Retrieved only {len(matches)} classes (below minimum "
+                f"{_RELEVANT_CATALOG_MIN_RESULTS}); falling back to full catalog"
             )
             return self._ontology_class_catalog(ontology)
 

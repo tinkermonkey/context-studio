@@ -52,7 +52,9 @@ class TestRelevantClassCatalog:
             schema_index=schema_index,
         )
 
-    def _setup_taxonomy_with_classes(self, ontology_repo, taxonomy_id: str, scheme_id: str, num_classes: int):
+    def _setup_taxonomy_with_classes(
+        self, ontology_repo, taxonomy_id: str, scheme_id: str, num_classes: int
+    ):
         """Helper to set up a taxonomy, concept scheme, and classes in the ontology repository."""
         taxonomy = Taxonomy(
             id=taxonomy_id,
@@ -115,7 +117,9 @@ class TestRelevantClassCatalog:
         assert len(result) == 50
         assert len(service._embedding_service.embed_calls) == 0
 
-    def test_fallback_to_full_catalog_when_taxonomy_below_skip_threshold(self, service, ontology_repo):
+    def test_fallback_to_full_catalog_when_taxonomy_below_skip_threshold(
+        self, service, ontology_repo
+    ):
         """When class count is below skip threshold, returns full catalog without search."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 30)
 
@@ -124,7 +128,9 @@ class TestRelevantClassCatalog:
         assert len(result) == 30
         assert len(service._embedding_service.embed_calls) == 0
 
-    def test_fallback_to_full_catalog_when_embedding_fails(self, service, ontology_repo, embedding_service):
+    def test_fallback_to_full_catalog_when_embedding_fails(
+        self, service, ontology_repo, embedding_service
+    ):
         """When embedding raises exception, falls back to full catalog."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
@@ -152,7 +158,9 @@ class TestRelevantClassCatalog:
 
         schema_index.search = original_search
 
-    def test_fallback_to_full_catalog_when_results_below_minimum(self, service, ontology_repo, schema_index):
+    def test_fallback_to_full_catalog_when_results_below_minimum(
+        self, service, ontology_repo, schema_index
+    ):
         """When search returns fewer than minimum results, falls back to full catalog."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
@@ -175,7 +183,9 @@ class TestRelevantClassCatalog:
         # Should return full catalog instead of the 3 retrieved classes
         assert len(result) == 100
 
-    def test_retrieval_produces_subset_different_from_full_catalog(self, service, ontology_repo, schema_index):
+    def test_retrieval_produces_subset_different_from_full_catalog(
+        self, service, ontology_repo, schema_index
+    ):
         """When retrieval succeeds, returns relevant subset different from full catalog."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
@@ -315,7 +325,10 @@ class TestRelevantClassCatalog:
         ]
 
         all_matches = tax1_matches + tax2_matches
-        taxonomies = {m.entity_id: ("tax_1" if m.entity_id.startswith("tax1_") else "tax_2") for m in all_matches}
+        taxonomies = {
+            m.entity_id: ("tax_1" if m.entity_id.startswith("tax1_") else "tax_2")
+            for m in all_matches
+        }
         schema_index.set_search_results(all_matches, taxonomies)
 
         result = service._relevant_class_catalog("test text", taxonomy)
@@ -354,7 +367,7 @@ class TestRelevantClassCatalog:
         assert source_text in embedding_service.embed_calls
 
     def test_prompt_format_preserved_ref_title_pairs(self, service, ontology_repo, schema_index):
-        """Verifies returned format is (ref, title) tuples matching _ontology_class_catalog format."""
+        """Verifies returned format is (ref, title) tuples matching _ontology_class_catalog."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         matches = [
