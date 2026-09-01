@@ -698,9 +698,10 @@ class ExtractionService:
         # Embed the source text
         try:
             embedding = self._embedding_service.embed(text)
-        except Exception as exc:
+        except (RuntimeError, OSError, ValueError) as exc:
             _logger.warning(
-                f"Failed to embed text for class retrieval: {exc}; falling back to full catalog"
+                f"Failed to embed text for class retrieval: {exc}; falling back to full catalog",
+                exc_info=exc,
             )
             return self._ontology_class_catalog(ontology)
 
@@ -713,9 +714,10 @@ class ExtractionService:
                 threshold=_CATALOG_RETRIEVAL_THRESHOLD,
                 taxonomy_id=str(taxonomy_id),
             )
-        except Exception as exc:
+        except (RuntimeError, OSError, ValueError) as exc:
             _logger.warning(
-                f"Schema index search failed: {exc}; falling back to full catalog"
+                f"Schema index search failed: {exc}; falling back to full catalog",
+                exc_info=exc,
             )
             return self._ontology_class_catalog(ontology)
 
@@ -733,7 +735,7 @@ class ExtractionService:
 
         # Enforce minimum results threshold after deduplication; below it, fallback
         if len(catalog) < _CATALOG_RETRIEVAL_MIN_RESULTS:
-            _logger.debug(
+            _logger.warning(
                 f"Retrieved only {len(catalog)} unique classes after deduplication "
                 f"(below minimum {_CATALOG_RETRIEVAL_MIN_RESULTS}); falling back to full catalog"
             )
