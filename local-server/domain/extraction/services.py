@@ -698,7 +698,7 @@ class ExtractionService:
         # Embed the source text
         try:
             embedding = self._embedding_service.embed(text)
-        except (RuntimeError, OSError, ValueError) as exc:
+        except Exception as exc:
             _logger.warning(
                 f"Failed to embed text for class retrieval: {exc}; falling back to full catalog",
                 exc_info=exc,
@@ -714,7 +714,7 @@ class ExtractionService:
                 threshold=_CATALOG_RETRIEVAL_THRESHOLD,
                 taxonomy_id=str(taxonomy_id),
             )
-        except (RuntimeError, OSError, ValueError) as exc:
+        except Exception as exc:
             _logger.warning(
                 f"Schema index search failed: {exc}; falling back to full catalog",
                 exc_info=exc,
