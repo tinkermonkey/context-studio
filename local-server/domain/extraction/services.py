@@ -675,7 +675,7 @@ class ExtractionService:
         """
         taxonomy_id = getattr(ontology, "id", None)
         if not taxonomy_id:
-            return []
+            return self._ontology_class_catalog(ontology)
 
         # Vector index is not available: fall back to full catalog
         if self._schema_index is None:
@@ -962,7 +962,7 @@ class ExtractionService:
         candidates: list[tuple[str, Any]] = []
         lines: list[str] = []
         for match in matches:
-            ref = match.external_id or match.label
+            ref = match.external_id or match.identifier or match.label
             if not ref:
                 continue
             cls = self._ontology_repo.get_class(match.entity_id)
@@ -1015,7 +1015,7 @@ class ExtractionService:
     @staticmethod
     def _make_typing_triple(label: str, match, chunk) -> dict:
         """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk."""
-        class_ref = match.external_id or match.label
+        class_ref = match.external_id or match.identifier or match.label
         return {
             "subject": {
                 "kind": "individual",
