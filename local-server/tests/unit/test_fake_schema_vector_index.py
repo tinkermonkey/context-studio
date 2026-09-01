@@ -176,8 +176,8 @@ class TestFakeSchemaVectorIndexConfigurable:
         assert all(match.kind == "class" for match in result)
         assert all(match.entity_id in ["class_1", "class_2"] for match in result)
 
-    def test_no_taxonomy_configured_ignores_filter(self):
-        """Results without configured taxonomies match any taxonomy_id filter."""
+    def test_no_taxonomy_configured_excludes_from_taxonomy_filter(self):
+        """Results without configured taxonomies are excluded by taxonomy_id filters."""
         matches = [
             SchemaMatch(
                 entity_id="class_1",
@@ -189,16 +189,11 @@ class TestFakeSchemaVectorIndexConfigurable:
         ]
         fake = FakeSchemaVectorIndex(search_results=matches)
 
-        # Even though we filter by taxonomy_id, result should be included
-        # because taxonomies dict defaults to None for unconfigured taxonomies
         result = fake.search(
             query_embedding=[0.1] * 8,
             kinds=["class"],
             taxonomy_id="tax_any",
         )
-        # Since taxonomy_id is None for unconfigured matches and we're filtering for
-        # "tax_any", it won't match. This is expected behavior - if you want results
-        # to match any taxonomy, don't provide taxonomies dict or set it to None
         assert len(result) == 0
 
     def test_set_search_results_with_explicit_taxonomies(self):

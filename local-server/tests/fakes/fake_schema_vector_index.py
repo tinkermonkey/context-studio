@@ -37,7 +37,8 @@ class FakeSchemaVectorIndex:
         Args:
             results: List of SchemaMatch objects to return from search()
             taxonomies: Optional dict mapping entity_id to taxonomy_id for filtering.
-                       If not provided, all results are assumed to belong to any taxonomy.
+                       If not provided, results have no taxonomy association and will be
+                       excluded by any taxonomy_id filter in search().
         """
         if taxonomies is None:
             taxonomies = {match.entity_id: None for match in results}
