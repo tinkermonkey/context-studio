@@ -5,11 +5,10 @@ import importlib.util
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import List, Optional
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Connection
 
 from dataset.models import MigrationStatus
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Connection
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,12 +23,10 @@ class Migration(ABC):
     @abstractmethod
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
-        pass
 
     @abstractmethod
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
-        pass
 
 
 class MigrationManager:
@@ -89,9 +86,9 @@ class MigrationManager:
             return 0
         return max(migration.version for migration in migrations)
 
-    def _discover_migrations(self) -> List[Migration]:
+    def _discover_migrations(self) -> list[Migration]:
         """Discover all migration files in the versions directory."""
-        migrations: List[Migration] = []
+        migrations: list[Migration] = []
 
         if not os.path.exists(self.migrations_dir):
             logger.warning(f"Migrations directory not found: {self.migrations_dir}")
@@ -109,7 +106,7 @@ class MigrationManager:
 
         return sorted(migrations, key=lambda m: m.version)
 
-    def _load_migration(self, migration_path: str) -> Optional[Migration]:
+    def _load_migration(self, migration_path: str) -> Migration | None:
         """Load a migration from a Python file."""
         spec = importlib.util.spec_from_file_location("migration", migration_path)
         if not spec or not spec.loader:

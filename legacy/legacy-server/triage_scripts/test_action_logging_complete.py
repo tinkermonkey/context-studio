@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Test the dataset action logging functionality end-to-end."""
 
-import os
-import tempfile
 import json
+import os
 import sys
+import tempfile
 from datetime import datetime
 
 # Add project root to path

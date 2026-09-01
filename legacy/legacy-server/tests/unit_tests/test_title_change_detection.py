@@ -4,19 +4,19 @@ Unit tests for title change detection in EventProcessor.
 Tests edge cases and error handling for the title change detection logic.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import json  # noqa: E402
-from unittest.mock import Mock, patch, MagicMock  # noqa: E402
-from uuid import uuid4  # noqa: E402
+import json
+from unittest.mock import MagicMock, Mock, patch
+from uuid import uuid4
 
-from utils.event_processor import EventProcessor  # noqa: E402
+import pytest
+from utils.event_processor import EventProcessor
 
 
 class TestTitleChangeDetection:

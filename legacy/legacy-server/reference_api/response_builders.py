@@ -3,11 +3,11 @@
 This module provides consistent response construction for all reference service methods.
 """
 
-from typing import List, Dict, Optional
 import time
 
-from .models import SearchNode, SearchLink, SourceType, MultiSourceSearchResponse
 from utils.logger import get_logger
+
+from .models import MultiSourceSearchResponse, SearchLink, SearchNode, SourceType
 
 logger = get_logger(__name__)
 
@@ -22,12 +22,12 @@ class ResponseBuilder:
         self,
         source: SourceType,
         query: str,
-        nodes: List[SearchNode],
-        links: List[SearchLink],
+        nodes: list[SearchNode],
+        links: list[SearchLink],
         limit: int = 20,
         offset: int = 0,
-        search_time_ms: Optional[float] = None,
-        error: Optional[str] = None,
+        search_time_ms: float | None = None,
+        error: str | None = None,
     ) -> MultiSourceSearchResponse:
         """
         Build a MultiSourceSearchResponse for a single source.
@@ -68,10 +68,10 @@ class ResponseBuilder:
     def build_multi_source_response(
         self,
         query: str,
-        all_nodes: List[SearchNode],
-        all_links: List[SearchLink],
-        sources_queried: List[str],
-        source_errors: Dict[str, str],
+        all_nodes: list[SearchNode],
+        all_links: list[SearchLink],
+        sources_queried: list[str],
+        source_errors: dict[str, str],
         limit: int = 20,
         offset: int = 0,
         search_time_ms: float = 0.0,
@@ -108,8 +108,8 @@ class ResponseBuilder:
     def build_empty_response(
         self,
         query: str,
-        source: Optional[SourceType] = None,
-        error: Optional[str] = None,
+        source: SourceType | None = None,
+        error: str | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> MultiSourceSearchResponse:
@@ -146,7 +146,7 @@ class ResponseBuilder:
         self,
         query: str,
         error: str,
-        source: Optional[SourceType] = None,
+        source: SourceType | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> MultiSourceSearchResponse:
@@ -180,7 +180,7 @@ class ResponseBuilder:
         )
 
     def merge_responses(
-        self, responses: List[MultiSourceSearchResponse]
+        self, responses: list[MultiSourceSearchResponse]
     ) -> MultiSourceSearchResponse:
         """
         Merge multiple MultiSourceSearchResponse objects into a single response.

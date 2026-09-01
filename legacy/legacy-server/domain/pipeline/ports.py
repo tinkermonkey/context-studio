@@ -5,20 +5,21 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
 
-from typing import Protocol, Optional, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
+from domain.pipeline.entities import Execution, PipelineConfiguration
 
 
 class PipelineRepository(Protocol):
     """Repository for pipeline configurations and execution logs."""
 
-    def get_config(self, config_id: str) -> Optional[PipelineConfiguration]:
+    def get_config(self, config_id: str) -> PipelineConfiguration | None:
         """Retrieve a pipeline configuration by ID."""
         ...
 
     def list_configs(
-        self, pipeline: Optional[str] = None, enabled_only: bool = False
+        self, pipeline: str | None = None, enabled_only: bool = False
     ) -> Sequence[PipelineConfiguration]:
         """List pipeline configurations with optional filtering."""
         ...

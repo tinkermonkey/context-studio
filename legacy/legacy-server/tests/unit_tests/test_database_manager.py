@@ -5,27 +5,27 @@ Tests connection pooling strategies, health monitoring, performance optimization
 and resource cleanup.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-import threading  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-from sqlalchemy.pool import NullPool, StaticPool  # noqa: E402
+import tempfile
+import threading
 
-from database.utils import (  # noqa: E402
-    DatabaseManager,
-    PoolStrategy,
-    PoolConfiguration,
+import pytest
+from database.utils import (
     ConnectionMetrics,
-    get_database_manager,
+    DatabaseManager,
+    PoolConfiguration,
+    PoolStrategy,
     cleanup_database_resources,
+    get_database_manager,
 )
+from sqlalchemy import text
+from sqlalchemy.pool import NullPool, StaticPool
 
 
 class TestDatabaseManager:

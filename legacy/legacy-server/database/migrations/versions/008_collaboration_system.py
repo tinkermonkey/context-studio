@@ -1,9 +1,10 @@
 """Migration 008: Add Collaboration System - Changesets, proposals, voting, and identity management."""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
-from database.migrations.migration_manager import Migration
 import logging
+
+from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,6 @@ Uses dependency injection to receive port implementations at runtime.
 Imports only from Python stdlib and domain entities/ports — zero infrastructure dependencies.
 """
 
-from typing import Optional
 
 from domain.graph.entities import KnowledgeGraph, PathResult
 from domain.graph.ports import GraphEngine, SemanticQueryEngine
@@ -68,7 +67,7 @@ class GraphAnalysisService:
 
     def find_shortest_path(
         self, source_id: str, target_id: str
-    ) -> Optional[PathResult]:
+    ) -> PathResult | None:
         """
         Find the shortest path between two nodes in the graph.
 

@@ -1,18 +1,19 @@
 """Tests for validating the migration forwards and backwards for Phase 2 normalization."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-import shutil  # noqa: E402
-from pathlib import Path  # noqa: E402
-from sqlalchemy import create_engine, text, inspect  # noqa: E402
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+import shutil
+import tempfile
+from pathlib import Path
+
+import pytest
+from database.migrations.migration_manager import MigrationManager
+from sqlalchemy import create_engine, inspect, text
 
 
 @pytest.fixture
@@ -208,7 +209,7 @@ def test_migration_006_migrates_existing_events(temp_db):
         if len(migrated_events) > 0:
             # Verify schema transformation
             for event in migrated_events:
-                event_type, record_type, record_id, old_data, new_data, processed = (
+                _event_type, record_type, record_id, _old_data, new_data, _processed = (
                     event
                 )
 
@@ -279,7 +280,7 @@ def test_migration_006_rollback_preserves_data(temp_db):
 
             # Verify data integrity
             for event in structure_events:
-                event_type, node_type, node_id, old_data, new_data, processed = event
+                event_type, _node_type, node_id, _old_data, _new_data, _processed = event
                 assert event_type in ["create", "update", "delete"]
                 assert node_id.startswith("rollback-test")
 

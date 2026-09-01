@@ -5,13 +5,14 @@ This service implements the business logic for ontology_entity relationships,
 ensuring that only compatible ontology_entities can be linked together.
 """
 
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+from typing import Any
 
-from database.models import OntologyEntity, Relationship
 from database.enums import NodeType
-from services.change_event_handler import ChangeEventHandler
+from database.models import OntologyEntity, Relationship
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.change_event_handler import ChangeEventHandler
 
 logger = get_logger(__name__)
 
@@ -30,7 +31,7 @@ class RelationshipService:
         self.event_handler = ChangeEventHandler(db)
         logger.info("RelationshipService initialized with event handling")
 
-    def create_relationship(self, relationship_data: Dict[str, Any]) -> Relationship:
+    def create_relationship(self, relationship_data: dict[str, Any]) -> Relationship:
         """
         Create a new relationship with validation.
 
@@ -62,10 +63,10 @@ class RelationshipService:
             raise ValueError("Source and target ontology_entities cannot be the same")
 
         # Get source and target ontology_entities
-        source: Optional[OntologyEntity] = (
+        source: OntologyEntity | None = (
             self.db.query(OntologyEntity).filter(OntologyEntity.id == source_id).first()
         )
-        target: Optional[OntologyEntity] = (
+        target: OntologyEntity | None = (
             self.db.query(OntologyEntity).filter(OntologyEntity.id == target_id).first()
         )
 
@@ -82,7 +83,7 @@ class RelationshipService:
             )
 
         # Check for duplicate relationships
-        existing: Optional[Relationship] = (
+        existing: Relationship | None = (
             self.db.query(Relationship)
             .filter(
                 Relationship.source_entity_id == source_id,
@@ -128,7 +129,7 @@ class RelationshipService:
             raise ValueError(f"Failed to create relationship: {e}")
 
     def update_relationship(
-        self, relationship_id: str, relationship_data: Dict[str, Any]
+        self, relationship_id: str, relationship_data: dict[str, Any]
     ) -> Relationship:
         """
         Update an existing relationship.
@@ -146,7 +147,7 @@ class RelationshipService:
         logger.info(f"Updating relationship: {relationship_id}")
 
         # Get existing relationship
-        relationship: Optional[Relationship] = (
+        relationship: Relationship | None = (
             self.db.query(Relationship)
             .filter(Relationship.id == relationship_id)
             .first()
@@ -172,12 +173,12 @@ class RelationshipService:
                 )
 
             # Get ontology_entities to validate
-            source: Optional[OntologyEntity] = (
+            source: OntologyEntity | None = (
                 self.db.query(OntologyEntity)
                 .filter(OntologyEntity.id == source_id)
                 .first()
             )
-            target: Optional[OntologyEntity] = (
+            target: OntologyEntity | None = (
                 self.db.query(OntologyEntity)
                 .filter(OntologyEntity.id == target_id)
                 .first()
@@ -197,7 +198,7 @@ class RelationshipService:
 
             # Check for duplicate relationships (excluding current relationship)
             predicate = relationship_data.get("predicate", relationship.predicate)
-            existing: Optional[Relationship] = (
+            existing: Relationship | None = (
                 self.db.query(Relationship)
                 .filter(
                     Relationship.source_entity_id == source_id,
@@ -299,7 +300,7 @@ class RelationshipService:
             logger.error(f"Failed to delete relationship: {e}")
             raise ValueError(f"Failed to delete relationship: {e}")
 
-    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
+    def get_relationship(self, relationship_id: str) -> Relationship | None:
         """
         Get a relationship by ID.
 
@@ -317,12 +318,12 @@ class RelationshipService:
 
     def list_relationships(
         self,
-        source_entity_id: Optional[str] = None,
-        target_entity_id: Optional[str] = None,
-        predicate: Optional[str] = None,
+        source_entity_id: str | None = None,
+        target_entity_id: str | None = None,
+        predicate: str | None = None,
         skip: int = 0,
         limit: int = 50,
-    ) -> List[Relationship]:
+    ) -> list[Relationship]:
         """
         List relationships with optional filtering.
 
@@ -356,9 +357,9 @@ class RelationshipService:
 
     def count_relationships(
         self,
-        source_entity_id: Optional[str] = None,
-        target_entity_id: Optional[str] = None,
-        predicate: Optional[str] = None,
+        source_entity_id: str | None = None,
+        target_entity_id: str | None = None,
+        predicate: str | None = None,
     ) -> int:
         """
         Count relationships with optional filtering.
@@ -386,7 +387,7 @@ class RelationshipService:
 
     def get_entity_relationships(
         self, entity_id: str, direction: str = "both"
-    ) -> List[Relationship]:
+    ) -> list[Relationship]:
         """
         Get all relationships for a specific ontology_entity.
 
@@ -421,8 +422,8 @@ class RelationshipService:
         self,
         entity_id: str,
         direction: str = "both",
-        node_type: Optional[NodeType] = None,
-    ) -> List[OntologyEntity]:
+        node_type: NodeType | None = None,
+    ) -> list[OntologyEntity]:
         """
         Get all ontology_entities related to a specific ontology_entity.
 
@@ -500,7 +501,7 @@ class RelationshipService:
         # Must be same entity type
         return source.node_type == target.node_type
 
-    def get_relationship_statistics(self) -> Dict[str, Any]:
+    def get_relationship_statistics(self) -> dict[str, Any]:
         """
         Get statistics about relationships in the system.
 
@@ -540,7 +541,7 @@ class RelationshipService:
             "relationships_by_source_entity_type": node_type_stats,
         }
 
-    def _relationship_to_dict(self, relationship: Relationship) -> Dict[str, Any]:
+    def _relationship_to_dict(self, relationship: Relationship) -> dict[str, Any]:
         """Convert a Relationship instance to a dictionary"""
         return {
             "id": relationship.id,
@@ -554,7 +555,7 @@ class RelationshipService:
         }
 
     # Deprecated method wrappers for backward compatibility
-    def create_link(self, link_data: Dict[str, Any]) -> Relationship:
+    def create_link(self, link_data: dict[str, Any]) -> Relationship:
         """Deprecated: use create_relationship() instead"""
         # Translate old key names to new ones, preferring new names over old
         translated_data = {}
@@ -579,7 +580,7 @@ class RelationshipService:
 
         return self.create_relationship(translated_data)
 
-    def update_link(self, link_id: str, link_data: Dict[str, Any]) -> Relationship:
+    def update_link(self, link_id: str, link_data: dict[str, Any]) -> Relationship:
         """Deprecated: use update_relationship() instead"""
         # Translate old key names to new ones
         translated_data = link_data.copy()
@@ -593,7 +594,7 @@ class RelationshipService:
         """Deprecated: use delete_relationship() instead"""
         return self.delete_relationship(*args, **kwargs)
 
-    def _node_link_to_dict(self, relationship: Relationship) -> Dict[str, Any]:
+    def _node_link_to_dict(self, relationship: Relationship) -> dict[str, Any]:
         """Deprecated: use _relationship_to_dict() instead"""
         result = self._relationship_to_dict(relationship)
         # Translate new keys back to old keys for backward compatibility
@@ -606,18 +607,18 @@ class RelationshipService:
             "created_at": result["created_at"],
         }
 
-    def get_link(self, link_id: str) -> Optional[Relationship]:
+    def get_link(self, link_id: str) -> Relationship | None:
         """Deprecated: use get_relationship() instead"""
         return self.get_relationship(link_id)
 
     def list_links(
         self,
-        source_node_id: Optional[str] = None,
-        target_node_id: Optional[str] = None,
-        predicate: Optional[str] = None,
+        source_node_id: str | None = None,
+        target_node_id: str | None = None,
+        predicate: str | None = None,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[Relationship]:
+    ) -> list[Relationship]:
         """Deprecated: use list_relationships() instead"""
         # Translate old parameter names to new ones
         return self.list_relationships(
@@ -630,9 +631,9 @@ class RelationshipService:
 
     def count_links(
         self,
-        source_node_id: Optional[str] = None,
-        target_node_id: Optional[str] = None,
-        predicate: Optional[str] = None,
+        source_node_id: str | None = None,
+        target_node_id: str | None = None,
+        predicate: str | None = None,
     ) -> int:
         """Deprecated: use count_relationships() instead"""
         # Translate old parameter names to new ones
@@ -644,7 +645,7 @@ class RelationshipService:
 
     def get_node_links(
         self, node_id: str, direction: str = "both"
-    ) -> List[Relationship]:
+    ) -> list[Relationship]:
         """Deprecated: use get_entity_relationships() instead"""
         return self.get_entity_relationships(node_id, direction)
 
@@ -652,8 +653,8 @@ class RelationshipService:
         self,
         node_id: str,
         direction: str = "both",
-        node_type: Optional[NodeType] = None,
-    ) -> List[OntologyEntity]:
+        node_type: NodeType | None = None,
+    ) -> list[OntologyEntity]:
         """Deprecated: use get_related_entities() instead"""
         return self.get_related_entities(node_id, direction, node_type)
 

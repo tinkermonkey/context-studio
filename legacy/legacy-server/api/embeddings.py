@@ -6,11 +6,11 @@ including WebSocket-based embedding regeneration with real-time progress updates
 """
 
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from services.embedding_regeneration_service import (
     get_embedding_regeneration_service,
-)  # noqa: E501
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,7 +23,7 @@ async def websocket_regenerate_embeddings(
     websocket: WebSocket,
     force: bool = Query(
         False, description="Force regeneration even if embeddings exist"
-    ),  # noqa: E501
+    ),
 ):
     """
     WebSocket endpoint for regenerating structure_nodes embeddings with real-time progress.  # noqa: E501
@@ -69,7 +69,7 @@ async def websocket_regenerate_embeddings(
         # Start the regeneration process
         await service.regenerate_all_embeddings(
             websocket, force_regenerate=force
-        )  # noqa: E501
+        )
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected during embedding regeneration")
@@ -80,7 +80,7 @@ async def websocket_regenerate_embeddings(
         logger.error(f"Error in embedding regeneration WebSocket: {e}")
         try:
             await websocket.send_text(
-                json.dumps({"type": "error", "message": f"Unexpected error: {str(e)}"})
+                json.dumps({"type": "error", "message": f"Unexpected error: {e!s}"})
             )
         except Exception:
             # WebSocket might be closed already

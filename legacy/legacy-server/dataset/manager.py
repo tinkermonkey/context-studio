@@ -4,16 +4,16 @@
 import json
 import os
 import platform
-import uuid
 import shutil
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional
-from sqlalchemy import create_engine, text
+import uuid
+from datetime import datetime, timedelta, timezone
 
-from database.utils import init_db, get_session_local
-from dataset.models import DatasetInfo, DatasetMetrics
-from utils.logger import get_logger
 from database.migrations.migration_manager import MigrationManager
+from database.utils import get_session_local, init_db
+from sqlalchemy import create_engine, text
+from utils.logger import get_logger
+
+from dataset.models import DatasetInfo, DatasetMetrics
 
 logger = get_logger(__name__)
 
@@ -24,7 +24,7 @@ class DatasetManager:
     def __init__(
         self,
         datasets_config_path: str = "./datasets.json",
-        datasets_directory: Optional[str] = None,
+        datasets_directory: str | None = None,
     ):
         self.config_path = datasets_config_path
         # If datasets_directory is provided, use it. Otherwise try to get from config.
@@ -105,7 +105,7 @@ class DatasetManager:
         else:  # macOS and Linux
             return os.path.join(home, "Documents", "ContextStudio", "datasets")
 
-    def _load_datasets_config(self) -> Dict:
+    def _load_datasets_config(self) -> dict:
         """Load datasets configuration from JSON file."""
         if not os.path.exists(self.config_path):
             logger.info(
@@ -135,7 +135,7 @@ class DatasetManager:
                 "datasets": {},
             }
 
-    def _save_datasets_config(self, config: Dict = None) -> None:
+    def _save_datasets_config(self, config: dict | None = None) -> None:
         """Save datasets configuration to JSON file."""
         config = config or self.datasets_config
         try:
@@ -160,8 +160,8 @@ class DatasetManager:
         self,
         action: str,
         dataset_id: str,
-        dataset_title: Optional[str] = None,
-        details: Dict = None,
+        dataset_title: str | None = None,
+        details: dict | None = None,
     ) -> None:
         """Log a dataset action to the action log file."""
         try:
@@ -187,7 +187,7 @@ class DatasetManager:
         except Exception as e:
             logger.error(f"Failed to log action {action} for dataset {dataset_id}: {e}")
 
-    def _load_action_log(self) -> List[Dict]:
+    def _load_action_log(self) -> list[dict]:
         """Load the action log from file."""
         if not os.path.exists(self.action_log_path):
             return []
@@ -223,7 +223,7 @@ class DatasetManager:
         except Exception as e:
             logger.error(f"Failed to cleanup old log entries: {e}")
 
-    def get_action_log(self, days: int = 30) -> List[Dict]:
+    def get_action_log(self, days: int = 30) -> list[dict]:
         """Get action log entries for the specified number of days."""
         try:
             action_log = self._load_action_log()
@@ -249,7 +249,7 @@ class DatasetManager:
         """Get the full path to a dataset file."""
         return os.path.join(self.datasets_directory, filename)
 
-    def list_datasets(self) -> List[DatasetInfo]:
+    def list_datasets(self) -> list[DatasetInfo]:
         """List all known datasets with metrics."""
         datasets = []
         for dataset_id, dataset_data in self.datasets_config.get(
@@ -447,7 +447,7 @@ class DatasetManager:
             logger.error(f"Failed to switch to dataset {dataset_id}: {e}")
             return False
 
-    def get_active_dataset(self) -> Optional[DatasetInfo]:
+    def get_active_dataset(self) -> DatasetInfo | None:
         """Get currently active dataset information."""
         if (
             not self.active_dataset_id
@@ -658,7 +658,7 @@ class DatasetManager:
             logger.error(f"Failed to forget dataset {dataset_id}: {e}")
             return False
 
-    def get_startup_behavior_info(self) -> Dict[str, any]:
+    def get_startup_behavior_info(self) -> dict[str, any]:
         """Get information about what dataset will be loaded on startup."""
         datasets = self.list_datasets()
 

@@ -5,23 +5,23 @@ Tests validate invariant enforcement, enum usage, and immutability of
 change events, entity versions, conflicts, and conflict reports.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import types
-import pytest
 
+import pytest
 from domain.versioning.entities import (
     ChangeEvent,
-    EntityVersion,
+    ChangeState,
     Conflict,
     ConflictReport,
+    EntityVersion,
     MergeResult,
-    ChangeState,
 )
 from domain.versioning.enums import ChangeType
 

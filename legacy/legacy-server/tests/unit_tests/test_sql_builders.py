@@ -6,11 +6,11 @@ across multiple modules to generate the CASE WHEN pattern for max similarity
 calculation across different embedding scenarios.
 """
 
-import pytest
-import sqlite3
 import json
-import numpy as np
+import sqlite3
 
+import numpy as np
+import pytest
 from database.sql_builders import build_max_similarity_case_when
 
 

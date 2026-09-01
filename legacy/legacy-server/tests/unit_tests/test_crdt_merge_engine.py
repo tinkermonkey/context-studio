@@ -4,27 +4,27 @@ Unit tests for CRDTMergeEngine - Testing CRDT-based conflict-free merging.
 Tests merge strategies, conflict resolution, and automatic merging workflows.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from datetime import datetime, timezone
+from unittest.mock import Mock, patch
 
+import pytest
+from services.changeset_manager import ChangesetManager
+from services.collaboration_models import Changeset, ChangesetState
 from services.crdt_merge_engine import (
-    CRDTMergeEngine,
-    MergeStrategy,
-    MergeResult,
     ChangesetMergeResult,
-)  # noqa: E402, E501
-from services.collaboration_models import Changeset, ChangesetState  # noqa: E402, E501
-from services.changeset_manager import ChangesetManager  # noqa: E402
-from services.working_tree_manager import WorkingTreeManager  # noqa: E402
-from services.version_manager import VersionManager  # noqa: E402
+    CRDTMergeEngine,
+    MergeResult,
+    MergeStrategy,
+)
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
 
 
 class TestCRDTMergeEngine:
@@ -103,16 +103,14 @@ class TestCRDTMergeEngine:
 
         with patch.object(
             crdt_merge_engine, "_get_changeset_versions", return_value=[]
-        ):
-            with patch.object(
-                crdt_merge_engine, "_group_versions_by_entity", return_value={}
-            ):
-                with patch.object(crdt_merge_engine, "db") as mock_db:
-                    mock_db.commit.return_value = None
+        ), patch.object(
+            crdt_merge_engine, "_group_versions_by_entity", return_value={}
+        ), patch.object(crdt_merge_engine, "db") as mock_db:
+            mock_db.commit.return_value = None
 
-                    result = crdt_merge_engine.merge_changeset(
-                        "changeset123", "user123"
-                    )
+            result = crdt_merge_engine.merge_changeset(
+                "changeset123", "user123"
+            )
 
         assert isinstance(result, ChangesetMergeResult)
         assert result.changeset_id == "changeset123"
@@ -208,9 +206,8 @@ class TestCRDTMergeEngine:
             crdt_merge_engine,
             "_get_changeset_versions",
             side_effect=Exception("Merge error"),
-        ):
-            with pytest.raises(RuntimeError, match="Failed to merge changeset"):
-                crdt_merge_engine.merge_changeset("changeset1", "user123")
+        ), pytest.raises(RuntimeError, match="Failed to merge changeset"):
+            crdt_merge_engine.merge_changeset("changeset1", "user123")
 
         mock_db_session.rollback.assert_called_once()
 

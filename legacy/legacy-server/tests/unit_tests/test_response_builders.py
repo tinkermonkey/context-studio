@@ -1,21 +1,20 @@
 """Unit tests for reference response builders."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-
-from reference_api.response_builders import ResponseBuilder  # noqa: E402
-from reference_api.models import (  # noqa: E402
-    SourceType,
-    SearchNode,
-    SearchLink,
+import pytest
+from reference_api.models import (
     MultiSourceSearchResponse,
+    SearchLink,
+    SearchNode,
+    SourceType,
 )
+from reference_api.response_builders import ResponseBuilder
 
 
 class TestResponseBuilder:

@@ -5,19 +5,19 @@ Tests the StructureNodeAttribute and ResolvedAttribute Pydantic models,
 including key format validation, value type validation, and inheritance markers.
 """
 
-import sys
 import os
+import sys
 from uuid import UUID, uuid4
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from pydantic import ValidationError  # noqa: E402
-import pytest  # noqa: E402
-from api.models.structure_nodes import (  # noqa: E402
+import pytest
+from api.models.structure_nodes import (
     AttributeValueType,
-    StructureNodeAttribute,
     ResolvedAttribute,
+    StructureNodeAttribute,
 )
+from pydantic import ValidationError
 
 
 class TestAttributeValueType:

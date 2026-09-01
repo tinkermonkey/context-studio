@@ -9,20 +9,20 @@ Tests the PredicateSimilarityService functionality including:
 - Confidence scoring
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 from uuid import uuid4
 
+import pytest
+from embeddings.generate_embeddings import generate_embedding
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 from services.predicate_similarity import (
+    BatchError,
+    ClusterResult,
     PredicateSimilarityService,
     SimilarityResult,
-    ClusterResult,
-    BatchError,
 )
-from embeddings.generate_embeddings import generate_embedding
 
 # Skip if embeddings not available
 pytest.importorskip(
@@ -353,7 +353,6 @@ class TestEdgeCases:
         """Test handling of invalid threshold."""
         # Threshold is validated in ReferenceManager, not service
         # Service should pass through the values
-        pass
 
     def test_clustering_empty_list(self, similarity_service):
         """Test clustering with empty predicate list."""

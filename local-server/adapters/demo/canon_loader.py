@@ -26,7 +26,6 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.admin.exceptions import (
     DemoDatasetAlreadyLoadedError,
     DemoDatasetMalformedError,
@@ -39,6 +38,7 @@ from domain.ontology.entities import (
     PropertyDefinition,
     Taxonomy,
 )
+from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import (
     ExternalReference,
     LexicalSense,
@@ -81,7 +81,7 @@ class CanonDemoDatasetLoader:
     def __init__(
         self,
         canon_root: Path,
-        ontology_repo: SQLiteOntologyRepository,
+        ontology_repo: OntologyRepository,
     ) -> None:
         """
         Initialize the loader.

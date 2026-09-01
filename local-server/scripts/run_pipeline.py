@@ -43,7 +43,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 # Add local-server to path so we can import domain modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -71,6 +71,7 @@ from adapters.reference.wikidata import WikidataSource
 from config import get_settings
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -227,7 +228,7 @@ def main() -> int:
         ]
 
         extraction_service = ExtractionService(
-            ontology_repo=ontology_repo,
+            ontology_repo=cast(OntologyRepository, ontology_repo),
             embedding_service=embedding_service,
             llm=llm_provider,
             nlp=nlp_processor,

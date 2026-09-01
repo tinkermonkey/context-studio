@@ -4,22 +4,24 @@ NLP data processors for token and entity extraction.
 
 # mypy: ignore-errors
 
-from typing import List, Any
-from nlp.models import (
-    TokenData,
-    EntityData,
-    ConcepcyData,
-    WordNetData,
-    DBpediaData,
-    NLPAnalysisResponse,
-    TokenReference,
-)
+from typing import Any
+
 from utils.logger import get_logger
+
+from nlp.models import (
+    ConcepcyData,
+    DBpediaData,
+    EntityData,
+    NLPAnalysisResponse,
+    TokenData,
+    TokenReference,
+    WordNetData,
+)
 
 logger = get_logger("nlp_processors")
 
 
-def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
+def extract_token_data(doc, filter: bool = False) -> list[TokenData]:
     """
     Extract token-level data from spaCy doc.
     By default, filters out punctuation and stopword tokens. Set filter=False to disable filtering.
@@ -41,7 +43,8 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
         )
 
     from config import get_settings
-    from nlp.models import ConcepcyRelation, ConcepcyNode
+
+    from nlp.models import ConcepcyNode, ConcepcyRelation
 
     settings = get_settings()
     relations_of_interest = [
@@ -350,7 +353,7 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
     return tokens
 
 
-def extract_entity_data(doc) -> List[EntityData]:
+def extract_entity_data(doc) -> list[EntityData]:
     """
     Extract entity-level NLP data from spaCy doc.
     Handles DBpedia extraction, with error handling.

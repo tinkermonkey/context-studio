@@ -2,27 +2,27 @@
 Unit tests for configuration change notification system
 """
 
-import pytest
 import asyncio
 import os
 import sys
-from typing import List, Tuple
+
+import pytest
 
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import (
+    ConfigurationNotifier,
     get_config_manager,
     get_config_notifier,
-    ConfigurationNotifier,
-)  # noqa: E402, E501
+)
 
 
 class NotificationCapture:
     """Helper class to capture notifications for testing"""
 
     def __init__(self):
-        self.notifications: List[Tuple[str, any]] = []
+        self.notifications: list[tuple[str, any]] = []
 
     async def async_listener(self, path: str, value):
         """Async notification listener"""

@@ -5,15 +5,15 @@ Tests the PUT /api/structure_nodes/{node_id}/word_senses endpoint for updating
 selected word senses with conservative merge strategy.
 """
 
-import sys
 import os
+import sys
 from uuid import uuid4
 
 sys.path.insert(
     0,
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    ),  # noqa: E501
+    ),
 )
 
 
@@ -38,7 +38,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -79,7 +79,7 @@ class TestWordSenseUpdateAPI:
         # Verify persisted by fetching again
         get_response = client.get(
             f"/api/structure_nodes/{node_id}/word_senses"
-        )  # noqa: E501
+        )
         assert get_response.status_code == 200
         fetched = get_response.json()
         assert len(fetched) == 1
@@ -102,7 +102,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -187,7 +187,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -261,7 +261,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -332,7 +332,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -345,7 +345,7 @@ class TestWordSenseUpdateAPI:
         node_id = term["id"]
         initial_version = term[
             "version"
-        ]  # Get initial version from create response  # noqa: E501
+        ]  # Get initial version from create response
 
         # Update word senses
         word_senses_data = {
@@ -368,7 +368,7 @@ class TestWordSenseUpdateAPI:
         assert updated_node["version"] == initial_version + 1
 
     def test_update_word_senses_empty_list(self, client):
-        """Test updating with empty list removes all senses for specified terms."""  # noqa: E501
+        """Test updating with empty list removes all senses for specified terms."""
         # Create a test node
         layer_data = {
             "node_type": "layer",
@@ -384,7 +384,7 @@ class TestWordSenseUpdateAPI:
         }
         domain_response = client.post(
             "/api/structure_nodes/", json=domain_data
-        )  # noqa: E501
+        )
         domain = domain_response.json()
 
         term_data = {
@@ -410,7 +410,7 @@ class TestWordSenseUpdateAPI:
 
         client.put(f"/api/structure_nodes/{node_id}/word_senses", json=initial_senses)
 
-        # Update with empty list (technically no terms to update, so all senses preserved)  # noqa: E501
+        # Update with empty list (technically no terms to update, so all senses preserved)
         empty_update = {"selected_senses": []}
 
         response = client.put(
@@ -420,7 +420,7 @@ class TestWordSenseUpdateAPI:
         assert response.status_code == 200
         result = response.json()
 
-        # Since we're not updating any terms, existing senses should be preserved  # noqa: E501
+        # Since we're not updating any terms, existing senses should be preserved
         assert len(result) == 1
         assert result[0]["sense_id"] == "test.n.01"
 

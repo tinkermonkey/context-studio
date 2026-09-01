@@ -4,18 +4,19 @@ Unit tests for Reference Filter Service
 Tests the filtering of reference links based on predicate relevance.
 """
 
+import json
 import os
 import sys
-import pytest
-import json
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
-from reference_db.models import ReferenceLink, ExternalPredicate  # noqa: E402
-from database.models import Predicate  # noqa: E402
+from database.models import Predicate
+from reference_db.models import ExternalPredicate, ReferenceLink
+from services.reference_filter_service import ReferenceFilterService
 
 
 class TestReferenceFilterService:
@@ -237,11 +238,10 @@ class TestReferenceFilterService:
 
         with patch.object(
             filter_service, "get_relevant_predicates", return_value=set()
+        ), patch.object(
+            filter_service, "get_irrelevant_predicates", return_value=set()
         ):
-            with patch.object(
-                filter_service, "get_irrelevant_predicates", return_value=set()
-            ):
-                filtered, stats = filter_service.filter_links(mock_links)
+            filtered, stats = filter_service.filter_links(mock_links)
 
         # Should return all links when no filtering configured
         assert len(filtered) == 5
@@ -292,11 +292,10 @@ class TestReferenceFilterService:
             filter_service,
             "get_relevant_predicates",
             return_value={"schema.org:subClassOf", "wikidata:P279"},
+        ), patch.object(
+            filter_service, "get_irrelevant_predicates", return_value=set()
         ):
-            with patch.object(
-                filter_service, "get_irrelevant_predicates", return_value=set()
-            ):
-                filtered, stats = filter_service.filter_links(mock_links)
+            filtered, stats = filter_service.filter_links(mock_links)
 
         # Should only include relevant predicates
         assert len(filtered) == 2
@@ -332,15 +331,14 @@ class TestReferenceFilterService:
         # Mark property as irrelevant
         with patch.object(
             filter_service, "get_relevant_predicates", return_value=set()
+        ), patch.object(
+            filter_service,
+            "get_irrelevant_predicates",
+            return_value={"schema.org:property"},
         ):
-            with patch.object(
-                filter_service,
-                "get_irrelevant_predicates",
-                return_value={"schema.org:property"},
-            ):
-                filtered, stats = filter_service.filter_links(
-                    mock_links, exclude_irrelevant=True
-                )
+            filtered, _stats = filter_service.filter_links(
+                mock_links, exclude_irrelevant=True
+            )
 
         # Should exclude irrelevant
         assert len(filtered) == 1
@@ -363,11 +361,10 @@ class TestReferenceFilterService:
             filter_service,
             "get_relevant_predicates",
             return_value={"schema.org:subClassOf"},
+        ), patch.object(
+            filter_service, "get_irrelevant_predicates", return_value=set()
         ):
-            with patch.object(
-                filter_service, "get_irrelevant_predicates", return_value=set()
-            ):
-                filtered, stats = filter_service.filter_links(mock_links)
+            filtered, _stats = filter_service.filter_links(mock_links)
 
         # Should exclude unmapped predicates in whitelist mode
         assert len(filtered) == 0
@@ -389,13 +386,12 @@ class TestReferenceFilterService:
         # In blacklist mode (only irrelevant predicates exist), unmapped predicates should be included
         with patch.object(
             filter_service, "get_relevant_predicates", return_value=set()
+        ), patch.object(
+            filter_service,
+            "get_irrelevant_predicates",
+            return_value={"schema.org:deprecated"},
         ):
-            with patch.object(
-                filter_service,
-                "get_irrelevant_predicates",
-                return_value={"schema.org:deprecated"},
-            ):
-                filtered, stats = filter_service.filter_links(mock_links)
+            filtered, _stats = filter_service.filter_links(mock_links)
 
         # Should include unmapped predicates in blacklist mode
         assert len(filtered) == 1
@@ -457,11 +453,10 @@ class TestReferenceFilterService:
 
         with patch.object(
             filter_service, "get_relevant_predicates", return_value=relevant_preds
+        ), patch.object(
+            filter_service, "get_irrelevant_predicates", return_value=set()
         ):
-            with patch.object(
-                filter_service, "get_irrelevant_predicates", return_value=set()
-            ):
-                filtered, stats = filter_service.filter_links(mock_links)
+            _filtered, stats = filter_service.filter_links(mock_links)
 
         assert stats["total_before"] == 10
         assert stats["total_after"] == 3

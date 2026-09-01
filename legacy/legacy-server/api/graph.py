@@ -7,19 +7,19 @@ SPARQL and NetworkX capabilities with optimized service management.
 """
 
 import threading
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 from database.utils import get_current_session_local, get_dataset_manager
-from api.dependencies.graph_services import get_graph_service
+from fastapi import APIRouter, Depends, HTTPException, Query
 from graph.graph_service import GraphService
+from pydantic import BaseModel
 from utils.logger import get_logger
+
+from api.dependencies.graph_services import get_graph_service
 
 logger = get_logger(__name__)
 
-# Global cached graph service with session management (for backward compatibility)  # noqa: E501
+# Global cached graph service with session management (for backward compatibility)
 _cached_graph_service = None
 _cached_session = None
 _graph_service_lock = None
@@ -28,7 +28,7 @@ _graph_cache_dataset_id = None
 
 def get_cached_graph_service() -> GraphService:
     """Get a cached GraphService instance, creating it if necessary."""
-    global _cached_graph_service, _cached_session, _graph_service_lock, _graph_cache_dataset_id  # noqa: E501
+    global _cached_graph_service, _cached_session, _graph_service_lock, _graph_cache_dataset_id
 
     if _graph_service_lock is None:
         _graph_service_lock = threading.Lock()
@@ -43,7 +43,7 @@ def get_cached_graph_service() -> GraphService:
     current_dataset_id = active_dataset.id
     logger.debug(
         f"get_cached_graph_service called for dataset: {current_dataset_id}"
-    )  # noqa: E501
+    )
 
     # Check if we need to create/recreate the graph service
     if (
@@ -59,10 +59,10 @@ def get_cached_graph_service() -> GraphService:
 
                 logger.info(
                     f"CACHE MISS: Creating new GraphService for dataset: {active_dataset.title}"
-                )  # noqa: E501
+                )
                 logger.debug(
                     f"Previous cached dataset: {_graph_cache_dataset_id}, Current: {current_dataset_id}"
-                )  # noqa: E501
+                )
 
                 # Clean up old session if exists
                 if _cached_session:
@@ -76,29 +76,29 @@ def get_cached_graph_service() -> GraphService:
                 if not session_local:
                     raise RuntimeError(
                         "No session available for current dataset"
-                    )  # noqa: E501
+                    )
 
                 _cached_session = session_local()
                 _cached_graph_service = GraphService(_cached_session)
                 _graph_cache_dataset_id = current_dataset_id
                 logger.info(
                     f"GraphService cached successfully with ID: {id(_cached_graph_service)}"
-                )  # noqa: E501
+                )
             else:
                 logger.debug(
                     f"CACHE HIT: Race condition avoided, using existing service: {id(_cached_graph_service)}"
-                )  # noqa: E501
+                )
     else:
         logger.debug(
             f"CACHE HIT: Returning existing GraphService: {id(_cached_graph_service)}"
-        )  # noqa: E501
+        )
 
     return _cached_graph_service
 
 
 def invalidate_graph_cache():
     """Invalidate the cached graph service (call when data changes)."""
-    global _cached_graph_service, _cached_session, _graph_cache_dataset_id, _graph_service_lock  # noqa: E501
+    global _cached_graph_service, _cached_session, _graph_cache_dataset_id, _graph_service_lock
 
     if _graph_service_lock is None:
         _graph_service_lock = threading.Lock()
@@ -122,7 +122,7 @@ def invalidate_graph_cache():
 
 router = APIRouter(prefix="/graph", tags=["Graph"])
 
-# Legacy dependency to get graph service (cached) - kept for backward compatibility  # noqa: E501
+# Legacy dependency to get graph service (cached) - kept for backward compatibility
 
 
 def get_cached_graph_service_legacy() -> GraphService:
@@ -134,46 +134,46 @@ def get_cached_graph_service_legacy() -> GraphService:
 
 class SPARQLQuery(BaseModel):
     query: str
-    format: Optional[str] = "json"
+    format: str | None = "json"
 
 
 class SearchRequest(BaseModel):
     term: str
-    exact: Optional[bool] = False
-    analysis_depth: Optional[int] = 1
+    exact: bool | None = False
+    analysis_depth: int | None = 1
 
 
 class PathRequest(BaseModel):
     source_id: str
     target_id: str
-    source_type: Optional[str] = "term"
-    target_type: Optional[str] = "term"
+    source_type: str | None = "term"
+    target_type: str | None = "term"
 
 
 class CentralityRequest(BaseModel):
-    method: Optional[str] = "pagerank"
+    method: str | None = "pagerank"
 
 
 class NeighborsRequest(BaseModel):
     entity_id: str
-    entity_type: Optional[str] = "term"
-    depth: Optional[int] = 1
-    direction: Optional[str] = "both"
+    entity_type: str | None = "term"
+    depth: int | None = 1
+    direction: str | None = "both"
 
 
 # Graph statistics and information endpoints
 @router.get("/stats")
 async def get_graph_stats(
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, Any]:  # noqa: E501
-    """Get comprehensive graph statistics from both SPARQL and NetworkX services."""  # noqa: E501
+) -> dict[str, Any]:
+    """Get comprehensive graph statistics from both SPARQL and NetworkX services."""
     return graph_service.get_comprehensive_stats()
 
 
 @router.post("/refresh")
 async def refresh_graphs(
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, str]:  # noqa: E501
+) -> dict[str, str]:
     """Refresh both SPARQL and NetworkX graphs from the database."""
     graph_service.refresh()
     return {"status": "success", "message": "Graphs refreshed from database"}
@@ -185,7 +185,7 @@ async def refresh_graphs(
 @router.post("/sparql/query")
 async def execute_sparql_query(
     query_request: SPARQLQuery, graph_service: GraphService = Depends(get_graph_service)
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Execute a SPARQL query against the RDF graph."""
     try:
         results = graph_service.sparql_query(query_request.query)
@@ -193,8 +193,8 @@ async def execute_sparql_query(
     except Exception as e:
         logger.error(f"SPARQL query failed: {e}")
         raise HTTPException(
-            status_code=400, detail=f"SPARQL query failed: {str(e)}"
-        )  # noqa: E501
+            status_code=400, detail=f"SPARQL query failed: {e!s}"
+        )
 
 
 @router.get("/sparql/export")
@@ -208,8 +208,8 @@ async def export_rdf(
     except Exception as e:
         logger.error(f"RDF export failed: {e}")
         raise HTTPException(
-            status_code=400, detail=f"RDF export failed: {str(e)}"
-        )  # noqa: E501
+            status_code=400, detail=f"RDF export failed: {e!s}"
+        )
 
 
 # Search and discovery endpoints
@@ -220,7 +220,7 @@ async def search_terms(
     title: str = Query(..., description="Term title to search for"),
     exact: bool = Query(False, description="Whether to do exact match"),
     graph_service: GraphService = Depends(get_graph_service),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Search for terms by title using SPARQL."""
     return graph_service.find_terms_by_title(title, exact)
 
@@ -229,7 +229,7 @@ async def search_terms(
 async def search_and_analyze(
     search_request: SearchRequest,
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search for terms and provide comprehensive analysis."""
     return graph_service.search_and_analyze(
         search_request.term, search_request.analysis_depth
@@ -242,30 +242,30 @@ async def search_and_analyze(
 @router.post("/analytics/centrality")
 async def calculate_centrality(
     request: CentralityRequest, graph_service: GraphService = Depends(get_graph_service)
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculate node centrality using NetworkX algorithms."""
     try:
         return graph_service.calculate_centrality(request.method)
     except Exception as e:
         logger.error(f"Centrality calculation failed: {e}")
         raise HTTPException(
-            status_code=400, detail=f"Centrality calculation failed: {str(e)}"
-        )  # noqa: E501
+            status_code=400, detail=f"Centrality calculation failed: {e!s}"
+        )
 
 
 @router.get("/analytics/communities")
 async def detect_communities(
     method: str = Query("louvain", description="Community detection method"),
     graph_service: GraphService = Depends(get_graph_service),
-) -> List[List[str]]:
+) -> list[list[str]]:
     """Detect communities in the graph using NetworkX algorithms."""
     try:
         return graph_service.detect_communities(method)
     except Exception as e:
         logger.error(f"Community detection failed: {e}")
         raise HTTPException(
-            status_code=400, detail=f"Community detection failed: {str(e)}"
-        )  # noqa: E501
+            status_code=400, detail=f"Community detection failed: {e!s}"
+        )
 
 
 # Path and relationship endpoints
@@ -274,7 +274,7 @@ async def detect_communities(
 @router.post("/path/shortest")
 async def find_shortest_path(
     path_request: PathRequest, graph_service: GraphService = Depends(get_graph_service)
-) -> Optional[List[str]]:
+) -> list[str] | None:
     """Find the shortest path between two structure_nodes."""
     return graph_service.find_shortest_path(
         path_request.source_id,
@@ -288,7 +288,7 @@ async def find_shortest_path(
 async def get_neighbors(
     neighbors_request: NeighborsRequest,
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """Get neighbors of a node at specified depth."""
     return graph_service.get_neighbors(
         neighbors_request.entity_id,
@@ -303,17 +303,17 @@ async def find_related_terms(
     term_id: str,
     max_depth: int = Query(
         2, description="Maximum depth of relationships to traverse"
-    ),  # noqa: E501
+    ),
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, Any]:
-    """Find related terms using both SPARQL and NetworkX for comprehensive results."""  # noqa: E501
+) -> dict[str, Any]:
+    """Find related terms using both SPARQL and NetworkX for comprehensive results."""
     return graph_service.find_related_terms_comprehensive(term_id, max_depth)
 
 
 @router.get("/terms/{term_id}/hierarchy")
 async def get_term_hierarchy(
     term_id: str, graph_service: GraphService = Depends(get_graph_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get the full hierarchy for a term (ancestors and descendants)."""
     return graph_service.get_term_hierarchy(term_id)
 
@@ -321,7 +321,7 @@ async def get_term_hierarchy(
 @router.get("/terms/{term_id}/info")
 async def get_term_info(
     term_id: str, graph_service: GraphService = Depends(get_graph_service)
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Get detailed information about a specific term."""
     result = graph_service.get_node_info(term_id, "term")
     if result is None:
@@ -335,29 +335,29 @@ async def get_term_info(
 @router.get("/domains/{domain_id}/analyze")
 async def analyze_domain(
     domain_id: str, graph_service: GraphService = Depends(get_graph_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Comprehensive analysis of a domain's structure."""
     return graph_service.analyze_domain_structure(domain_id)
 
 
 @router.get("/domains/hierarchy")
 async def get_domain_hierarchy(
-    layer_id: Optional[str] = Query(
+    layer_id: str | None = Query(
         None, description="Optional layer ID to filter by"
-    ),  # noqa: E501
+    ),
     graph_service: GraphService = Depends(get_graph_service),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get the domain hierarchy for a layer or all layers."""
     return graph_service.get_domain_hierarchy(layer_id)
 
 
 @router.get("/layers/analytics")
 async def get_layer_analytics(
-    layer_id: Optional[str] = Query(
+    layer_id: str | None = Query(
         None, description="Optional layer ID to analyze"
-    ),  # noqa: E501
+    ),
     graph_service: GraphService = Depends(get_graph_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get comprehensive analytics for a layer or all layers."""
     return graph_service.get_layer_analytics(layer_id)
 
@@ -365,7 +365,7 @@ async def get_layer_analytics(
 @router.get("/layers/{layer_id}/info")
 async def get_layer_info(
     layer_id: str, graph_service: GraphService = Depends(get_graph_service)
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Get detailed information about a specific layer."""
     result = graph_service.get_node_info(layer_id, "layer")
     if result is None:
@@ -376,7 +376,7 @@ async def get_layer_info(
 @router.get("/domains/{domain_id}/info")
 async def get_domain_info(
     domain_id: str, graph_service: GraphService = Depends(get_graph_service)
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Get detailed information about a specific domain."""
     result = graph_service.get_node_info(domain_id, "domain")
     if result is None:
@@ -391,7 +391,7 @@ async def get_domain_info(
 async def export_graph_data(
     format: str = Query(
         "json", description="Export format (json, turtle, graphml)"
-    ),  # noqa: E501
+    ),
     graph_service: GraphService = Depends(get_graph_service),
 ) -> Any:
     """Export comprehensive graph data in various formats."""
@@ -400,15 +400,15 @@ async def export_graph_data(
     except Exception as e:
         logger.error(f"Graph export failed: {e}")
         raise HTTPException(
-            status_code=400, detail=f"Graph export failed: {str(e)}"
-        )  # noqa: E501
+            status_code=400, detail=f"Graph export failed: {e!s}"
+        )
 
 
 # Example SPARQL queries endpoint
 
 
 @router.get("/examples/sparql")
-async def get_sparql_examples() -> Dict[str, str]:
+async def get_sparql_examples() -> dict[str, str]:
     """Get example SPARQL queries for the Context Studio graph."""
     return {
         "find_all_terms": """

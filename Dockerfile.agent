@@ -156,10 +156,11 @@ RUN claude --version && \
 RUN node --version && \
     npm --version && \
     python3 --version && \
-    pip --version
+    pip --version && \
+    ruff --version
 
 # Verify Python dependencies are importable
-RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import pytest_asyncio; import networkx; import rdflib; import boto3; import duckdb; import pyarrow; import datasets; import vcr; print('Python deps OK')"
+RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import pytest_asyncio; import networkx; import rdflib; import boto3; import duckdb; import pyarrow; import datasets; print('Python deps OK')"
 
 # Verify OpenTelemetry packages are importable
 RUN python3 -c "import opentelemetry; from opentelemetry import trace; from opentelemetry.sdk.trace import TracerProvider; from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter; from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor; from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor; from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor; print('OpenTelemetry deps OK')"
@@ -173,8 +174,10 @@ RUN cd /workspace/context-studio/ux && \
 # Verify mypy type stubs are installed
 RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-networkx'); print('types-networkx OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('types-SQLAlchemy'); print('types-SQLAlchemy OK')" && \
+    python3 -c "import importlib.metadata; importlib.metadata.version('types-PyYAML'); print('types-PyYAML OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('pyarrow-stubs'); print('pyarrow-stubs OK')" && \
-    python3 -c "import importlib.metadata; importlib.metadata.version('boto3-stubs'); print('boto3-stubs OK')"
+    python3 -c "import importlib.metadata; importlib.metadata.version('boto3-stubs'); print('boto3-stubs OK')" && \
+    python3 -c "import importlib.metadata; importlib.metadata.version('botocore-stubs'); print('botocore-stubs OK')"
 
 # Verify key frontend packages are installed
 RUN test -f /workspace/context-studio/ux/node_modules/@tinkermonkey/heimdall-ui/dist/index.js && \

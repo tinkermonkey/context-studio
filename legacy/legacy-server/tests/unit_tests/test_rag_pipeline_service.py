@@ -2,28 +2,30 @@
 Unit tests for RAG Pipeline Service with mocked processors.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
 
-from rag.rag_pipeline_service import RAGPipelineService  # noqa: E402
-from rag.processors.models import (  # noqa: E402
-    KGContextOutput,
-    LLMExtractionOutput,
-    SpaCyGapOutput,
+import pytest
+from rag.processors.models import (
     ConceptResolutionOutput,
-    ExtractedEntity as ProcessorExtractedEntity,
-    KGNode,
+    ExtractedPhrase,
     GapConcept,
     GapPriority,
-    ResolvedConcept,
+    KGContextOutput,
+    KGNode,
+    LLMExtractionOutput,
     ResolutionMethod,
-    ExtractedPhrase,
+    ResolvedConcept,
+    SpaCyGapOutput,
 )
+from rag.processors.models import (
+    ExtractedEntity as ProcessorExtractedEntity,
+)
+from rag.rag_pipeline_service import RAGPipelineService
 
 
 @pytest.fixture

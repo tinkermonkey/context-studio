@@ -8,14 +8,15 @@ and peer trust systems for collaborative workflows without complex infrastructur
 
 import hashlib
 import random
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from services.collaboration_models import UserIdentity, row_to_identity
 from services.s3_sync_manager import S3SyncManager
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -35,7 +36,7 @@ class IdentityManager:
         self.s3_sync = s3_sync_manager
         logger.info("IdentityManager initialized")
 
-    def register_user(self, email: str, display_name: str) -> Dict[str, Any]:
+    def register_user(self, email: str, display_name: str) -> dict[str, Any]:
         """
         Register new user with email-based identity.
 
@@ -240,7 +241,7 @@ class IdentityManager:
             self.db.rollback()
             return False
 
-    def get_user(self, user_id: str) -> Optional[UserIdentity]:
+    def get_user(self, user_id: str) -> UserIdentity | None:
         """
         Get user identity by ID.
 
@@ -268,7 +269,7 @@ class IdentityManager:
             logger.error(f"Failed to get user {user_id}: {e}")
             return None
 
-    def get_user_by_email(self, email: str) -> Optional[UserIdentity]:
+    def get_user_by_email(self, email: str) -> UserIdentity | None:
         """
         Get user identity by email address.
 
@@ -298,7 +299,7 @@ class IdentityManager:
 
     def list_users(
         self, verified_only: bool = False, min_trust_level: int = 0, limit: int = 100
-    ) -> List[UserIdentity]:
+    ) -> list[UserIdentity]:
         """
         List users with optional filtering.
 
@@ -338,7 +339,7 @@ class IdentityManager:
             logger.error(f"Failed to list users: {e}")
             return []
 
-    def get_trust_network(self, user_id: str) -> Dict[str, Any]:
+    def get_trust_network(self, user_id: str) -> dict[str, Any]:
         """
         Get trust network information for a user.
 
@@ -543,7 +544,7 @@ class IdentityManager:
         self.db.execute(text(query), params)
         logger.debug(f"Stored verification code for user {user_id}")
 
-    def _get_verification_code(self, user_id: str) -> Optional[str]:
+    def _get_verification_code(self, user_id: str) -> str | None:
         """
         Get stored verification code for user.
 

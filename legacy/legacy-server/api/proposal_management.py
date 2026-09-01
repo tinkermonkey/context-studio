@@ -14,15 +14,14 @@ Endpoints:
 - GET /api/proposals/{proposal_id}/summary - Get vote summary
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from typing import List, Optional
-from pydantic import BaseModel
 from datetime import datetime
 
-from services.proposal_manager import ProposalManager
-from services.collaboration_models import ProposalStatus
-from services.service_factory import ServiceFactory
 from database.utils import get_db
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import BaseModel
+from services.collaboration_models import ProposalStatus
+from services.proposal_manager import ProposalManager
+from services.service_factory import ServiceFactory
 from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
@@ -46,7 +45,7 @@ class VoteRequest(BaseModel):
     """Request model for voting on a proposal."""
 
     vote: str  # 'approve', 'reject', 'abstain'
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class ProposalVoteResponse(BaseModel):
@@ -55,7 +54,7 @@ class ProposalVoteResponse(BaseModel):
     proposal_id: str
     user_id: str
     vote: str
-    comment: Optional[str]
+    comment: str | None
     voted_at: datetime
 
 
@@ -70,15 +69,15 @@ class ProposalResponse(BaseModel):
     required_approvals: int
     created_by: str
     created_at: datetime
-    closed_at: Optional[datetime]
-    merge_commit_id: Optional[str]
-    metadata: Optional[dict]
+    closed_at: datetime | None
+    merge_commit_id: str | None
+    metadata: dict | None
 
 
 class ProposalListResponse(BaseModel):
     """Response model for proposal list."""
 
-    proposals: List[ProposalResponse]
+    proposals: list[ProposalResponse]
     total_count: int
 
 
@@ -90,14 +89,14 @@ class VoteSummaryResponse(BaseModel):
     approve_votes: int
     reject_votes: int
     abstain_votes: int
-    voters: List[str]
+    voters: list[str]
 
 
 class ProposalVotesResponse(BaseModel):
     """Response model for proposal votes list."""
 
     proposal_id: str
-    votes: List[ProposalVoteResponse]
+    votes: list[ProposalVoteResponse]
     total_votes: int
 
 
@@ -130,7 +129,7 @@ def create_proposal(
     """
     logger.info(
         f"Creating proposal for changeset {request.changeset_id} by {request.created_by}"
-    )  # noqa: E501
+    )
 
     try:
         proposal = proposal_manager.create_proposal(
@@ -162,20 +161,20 @@ def create_proposal(
         logger.error(f"Failed to create proposal: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to create proposal"
-        )  # noqa: E501
+        )
 
 
 @router.get("", response_model=ProposalListResponse)
 def list_proposals(
-    status: Optional[str] = Query(
+    status: str | None = Query(
         None, description="Filter by proposal status"
-    ),  # noqa: E501
-    created_by: Optional[str] = Query(
+    ),
+    created_by: str | None = Query(
         None, description="Filter by creator ID"
-    ),  # noqa: E501
-    changeset_id: Optional[str] = Query(
+    ),
+    changeset_id: str | None = Query(
         None, description="Filter by changeset ID"
-    ),  # noqa: E501
+    ),
     limit: int = Query(100, description="Maximum number of results", le=1000),
     proposal_manager: ProposalManager = Depends(get_proposal_manager),
 ):
@@ -197,7 +196,7 @@ def list_proposals(
     """
     logger.debug(
         f"Listing proposals (status={status}, created_by={created_by}, changeset_id={changeset_id}, limit={limit})"
-    )  # noqa: E501
+    )
 
     try:
         # Validate status if provided
@@ -209,7 +208,7 @@ def list_proposals(
                 valid_statuses = [s.value for s in ProposalStatus]
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid status '{status}'. Valid statuses: {valid_statuses}",  # noqa: E501
+                    detail=f"Invalid status '{status}'. Valid statuses: {valid_statuses}",
                 )
 
         proposals = proposal_manager.list_proposals(
@@ -273,7 +272,7 @@ def get_proposal(
         if not proposal:
             raise HTTPException(
                 status_code=404, detail=f"Proposal {proposal_id} not found"
-            )  # noqa: E501
+            )
 
         return ProposalResponse(
             id=proposal.id,
@@ -320,7 +319,7 @@ def vote_on_proposal(
     """
     logger.info(
         f"User {user_id} voting '{request.vote}' on proposal {proposal_id}"
-    )  # noqa: E501
+    )
 
     try:
         vote = proposal_manager.vote_on_proposal(
@@ -372,7 +371,7 @@ def get_proposal_votes(
         if not proposal:
             raise HTTPException(
                 status_code=404, detail=f"Proposal {proposal_id} not found"
-            )  # noqa: E501
+            )
 
         votes = proposal_manager.get_proposal_votes(proposal_id)
 
@@ -400,7 +399,7 @@ def get_proposal_votes(
         logger.error(f"Failed to get votes for proposal {proposal_id}: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to get proposal votes"
-        )  # noqa: E501
+        )
 
 
 @router.get("/{proposal_id}/summary", response_model=VoteSummaryResponse)
@@ -429,7 +428,7 @@ def get_vote_summary(
         if not proposal:
             raise HTTPException(
                 status_code=404, detail=f"Proposal {proposal_id} not found"
-            )  # noqa: E501
+            )
 
         summary = proposal_manager.get_vote_summary(proposal_id)
 
@@ -447,7 +446,7 @@ def get_vote_summary(
     except Exception as e:
         logger.error(
             f"Failed to get vote summary for proposal {proposal_id}: {e}"
-        )  # noqa: E501
+        )
         raise HTTPException(
             status_code=500, detail="Failed to get vote summary"
-        )  # noqa: E501
+        )

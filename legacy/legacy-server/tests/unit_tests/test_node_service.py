@@ -5,27 +5,28 @@ Tests the business logic and validation rules for the unified NodeService
 as specified in section 8.2 of the Great Normalization design.
 """
 
-import sys
-import os
 import json
-import pytest
+import os
+import sys
 import uuid
 from unittest.mock import Mock
+
+import pytest
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from services.node_service import NodeService  # noqa: E402
-from database.models import StructureNode  # noqa: E402
-from database.enums import NodeType  # noqa: E402
-from graph.graph_service import GraphService  # noqa: E402
+from api.models.structure_nodes import StructureNodeAttribute
+from database.enums import NodeType
+from database.models import StructureNode
+from graph.graph_service import GraphService
 from services.exceptions import (
-    InvalidHierarchyError,
     CircularReferenceError,
+    InvalidHierarchyError,
     NotFoundError,
-)  # noqa: E402, E501
-from api.models.structure_nodes import StructureNodeAttribute  # noqa: E402
+)
+from services.node_service import NodeService
 
 
 @pytest.fixture
@@ -1112,11 +1113,11 @@ class TestNodeAttributeInheritance:
 
         assert len(result) == 2
         # Find inherited attribute
-        inherited = [r for r in result if r.key == "category"][0]
+        inherited = next(r for r in result if r.key == "category")
         assert inherited.inherited is True
         assert str(inherited.source_node_id) == layer_id
         # Find local attribute
-        local = [r for r in result if r.key == "jurisdiction"][0]
+        local = next(r for r in result if r.key == "jurisdiction")
         assert local.inherited is False
         assert str(local.source_node_id) == domain_id
 
@@ -1193,7 +1194,7 @@ class TestNodeAttributeInheritance:
             "term3_attr",
         }
         # All but last should be inherited
-        term3_attr = [r for r in result if r.key == "term3_attr"][0]
+        term3_attr = next(r for r in result if r.key == "term3_attr")
         assert term3_attr.inherited is False
 
     def test_resolve_node_attributes_multiple_keys(self, node_service):
@@ -1321,7 +1322,7 @@ class TestLegalDomainHierarchyFixture:
         assert keys == {"category", "jurisdiction", "definition_date"}
 
         # Verify overrides
-        jurisdiction = [r for r in result if r.key == "jurisdiction"][0]
+        jurisdiction = next(r for r in result if r.key == "jurisdiction")
         assert jurisdiction.value == "New York State"
         assert str(jurisdiction.source_node_id) == term1_id
 

@@ -5,11 +5,13 @@ SQLite-vec validation script for ARM64/aarch64 architecture
 Validates extension loading, architecture compatibility, and basic operations
 """
 
-import sqlite3
-import platform
-import sqlite_vec
-import tempfile
 import os
+import platform
+import sqlite3
+import sys
+import tempfile
+
+import sqlite_vec
 
 
 def validate_sqlite_vec():
@@ -52,7 +54,7 @@ def validate_sqlite_vec():
         serialized = sqlite_vec.serialize_float32(test_vector)
         length = conn.execute("SELECT vec_length(?)", [serialized]).fetchone()[
             0
-        ]  # noqa: E501
+        ]
 
         if length == 4:
             print("✓ Vector serialization and length calculation working")
@@ -81,11 +83,11 @@ def validate_sqlite_vec():
         print("=" * 50)
         print(
             "🎉 All validations passed! sqlite-vec is properly installed for ARM64"
-        )  # noqa: E501
+        )
         return True
 
     except Exception as e:
-        print(f"❌ Validation failed: {str(e)}")
+        print(f"❌ Validation failed: {e!s}")
         return False
 
     finally:
@@ -97,4 +99,4 @@ def validate_sqlite_vec():
 
 if __name__ == "__main__":
     success = validate_sqlite_vec()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)

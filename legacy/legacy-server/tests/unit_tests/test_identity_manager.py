@@ -4,20 +4,20 @@ Unit tests for IdentityManager - Testing user identity, email verification, and 
 Tests user registration, email verification, peer trust networks, and identity management.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from datetime import datetime, timezone
+from unittest.mock import Mock, patch
 
-from services.identity_manager import IdentityManager  # noqa: E402
-from services.collaboration_models import UserIdentity  # noqa: E402
-from services.s3_sync_manager import S3SyncManager  # noqa: E402
+import pytest
+from services.collaboration_models import UserIdentity
+from services.identity_manager import IdentityManager
+from services.s3_sync_manager import S3SyncManager
 
 
 class TestIdentityManager:
@@ -104,20 +104,17 @@ class TestIdentityManager:
         """Test registration of existing user."""
         with patch.object(
             identity_manager, "get_user", return_value=mock_user_identity
-        ):
-            with patch.object(
-                identity_manager, "_generate_user_id", return_value="user123"
-            ):
-                with patch.object(
-                    identity_manager,
-                    "_generate_verification_code",
-                    return_value="654321",
-                ):
-                    with patch.object(identity_manager, "_store_verification_code"):
+        ), patch.object(
+            identity_manager, "_generate_user_id", return_value="user123"
+        ), patch.object(
+            identity_manager,
+            "_generate_verification_code",
+            return_value="654321",
+        ), patch.object(identity_manager, "_store_verification_code"):
 
-                        result = identity_manager.register_user(
-                            email="test@example.com", display_name="Test User"
-                        )
+            result = identity_manager.register_user(
+                email="test@example.com", display_name="Test User"
+            )
 
         assert (
             result["message"] == "User already exists, new verification code generated"
@@ -147,11 +144,10 @@ class TestIdentityManager:
         """Test successful email verification."""
         with patch.object(
             identity_manager, "_get_verification_code", return_value="123456"
-        ):
-            with patch.object(identity_manager, "_delete_verification_code"):
-                mock_db_session.execute.return_value.rowcount = 1
+        ), patch.object(identity_manager, "_delete_verification_code"):
+            mock_db_session.execute.return_value.rowcount = 1
 
-                success = identity_manager.verify_email("user123", "123456")
+            success = identity_manager.verify_email("user123", "123456")
 
         assert success is True
 
@@ -458,13 +454,12 @@ class TestIdentityManager:
         """Test verification code is cleaned up after successful verification."""
         with patch.object(
             identity_manager, "_get_verification_code", return_value="123456"
-        ):
-            with patch.object(
-                identity_manager, "_delete_verification_code"
-            ) as mock_delete:
-                mock_db_session.execute.return_value.rowcount = 1
+        ), patch.object(
+            identity_manager, "_delete_verification_code"
+        ) as mock_delete:
+            mock_db_session.execute.return_value.rowcount = 1
 
-                success = identity_manager.verify_email("user123", "123456")
+            success = identity_manager.verify_email("user123", "123456")
 
         assert success is True
         mock_delete.assert_called_once_with("user123")

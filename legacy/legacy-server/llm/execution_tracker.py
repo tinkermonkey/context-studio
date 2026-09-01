@@ -1,15 +1,16 @@
 """Service for tracking LLM pipeline flavor executions."""
 
-import time
 import json
+import time
 import uuid
-from typing import Dict, Any, Optional
 from datetime import datetime
-from sqlalchemy import text
+from typing import Any
 
 from pipeline.manager import get_pipeline_session
-from llm.models import PipelineType, RecordSelectionRequest
+from sqlalchemy import text
 from utils.logger import get_logger
+
+from llm.models import PipelineType, RecordSelectionRequest
 
 logger = get_logger(__name__)
 
@@ -82,10 +83,10 @@ class ExecutionTracker:
         execution_id: str,
         response_message: str,
         success: bool = True,
-        error_message: Optional[str] = None,
-        token_usage: Optional[Dict[str, int]] = None,
-        start_time: Optional[float] = None,
-        structured_output: Optional[Dict[str, Any]] = None,
+        error_message: str | None = None,
+        token_usage: dict[str, int] | None = None,
+        start_time: float | None = None,
+        structured_output: dict[str, Any] | None = None,
     ) -> None:
         """Complete execution tracking with response data."""
 
@@ -207,8 +208,8 @@ class ExecutionTracker:
             raise
 
     def get_execution_analytics(
-        self, pipeline_type: Optional[PipelineType] = None, days_back: int = 30
-    ) -> Dict[str, Any]:
+        self, pipeline_type: PipelineType | None = None, days_back: int = 30
+    ) -> dict[str, Any]:
         """Get analytics for pipeline executions."""
 
         try:
@@ -216,9 +217,7 @@ class ExecutionTracker:
 
             try:
                 # Build query with optional pipeline type filter
-                where_clause = "WHERE started_at >= date('now', '-{} days')".format(
-                    days_back
-                )
+                where_clause = f"WHERE started_at >= date('now', '-{days_back} days')"
                 if pipeline_type:
                     where_clause += f" AND pipeline_type = '{pipeline_type.value}'"
 
@@ -287,7 +286,7 @@ class ExecutionTracker:
 
     def get_flavor_execution_history(
         self, flavor_id: str, limit: int = 100
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get execution history for a specific flavor."""
 
         try:
@@ -364,7 +363,7 @@ class ExecutionTracker:
 
     def get_flavor_analytics(
         self, flavor_id: str, days_back: int = 30
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get analytics for a specific flavor."""
 
         try:
@@ -372,9 +371,7 @@ class ExecutionTracker:
 
             try:
                 # Build query with flavor filter and date range
-                where_clause = "WHERE pipeline_flavor_id = :flavor_id AND started_at >= date('now', '-{} days')".format(
-                    days_back
-                )
+                where_clause = f"WHERE pipeline_flavor_id = :flavor_id AND started_at >= date('now', '-{days_back} days')"
 
                 # Get execution statistics for the specific flavor
                 result = session.execute(
@@ -455,7 +452,7 @@ class ExecutionTracker:
             logger.error(f"Failed to get flavor analytics: {e}")
             return {"error": str(e)}
 
-    def get_execution_details(self, execution_id: str) -> Optional[Dict[str, Any]]:
+    def get_execution_details(self, execution_id: str) -> dict[str, Any] | None:
         """Get detailed information about a specific execution."""
 
         try:

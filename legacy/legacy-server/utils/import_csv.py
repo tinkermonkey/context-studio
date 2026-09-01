@@ -2,11 +2,12 @@
 import argparse
 import csv
 import sys
-
 import uuid
-from sqlalchemy.orm import Session
+
+from database.models import Domain, Layer, Term
 from database.utils import get_engine, get_session_local, init_db
-from database.models import Layer, Domain, Term
+from sqlalchemy.orm import Session
+
 from utils.logger import get_logger
 
 logger = get_logger("import_csv")

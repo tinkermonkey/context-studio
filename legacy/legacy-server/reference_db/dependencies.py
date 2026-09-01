@@ -7,12 +7,13 @@ database in FastAPI endpoints, using a singleton ReferenceManager pattern for
 optimal performance.
 """
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
+
 from sqlalchemy.orm import Session
 
-from reference_db.manager import get_reference_manager, ReferenceManager
 from reference_db.config import ReferenceConfig
+from reference_db.manager import ReferenceManager, get_reference_manager
 
 
 def get_reference_db_session() -> Generator[Session, None, None]:

@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from typing import Tuple, Optional
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +38,7 @@ class ModelDownloader:
 
     def download_spacy_model(
         self, model_name: str, timeout: int = 300
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Download a spaCy model using spacy download command.
 
@@ -79,7 +79,7 @@ class ModelDownloader:
 
     def ensure_spacy_model(
         self, model_name: str, auto_download: bool = True, timeout: int = 300
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Ensure a spaCy model is available, downloading if necessary and enabled.
 
@@ -107,7 +107,7 @@ class ModelDownloader:
 
 
 # Singleton instance for easy access
-_model_downloader: Optional[ModelDownloader] = None
+_model_downloader: ModelDownloader | None = None
 
 
 def get_model_downloader() -> ModelDownloader:

@@ -1,12 +1,12 @@
 """API endpoints for schema management."""
 
 from typing import cast
-from fastapi import APIRouter, HTTPException, Depends
 
 from database.migrations.migration_manager import MigrationManager
+from database.utils import get_dataset_manager
 from dataset.manager import DatasetManager
 from dataset.models import MigrationStatus
-from database.utils import get_dataset_manager
+from fastapi import APIRouter, Depends, HTTPException
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,7 +28,7 @@ def get_migration_manager(
 
     dataset_path = dataset_manager.get_dataset_file_path(
         active_dataset.filename
-    )  # noqa: E501
+    )
     return MigrationManager(dataset_path)
 
 
@@ -53,7 +53,7 @@ async def migrate_schema(
     try:
         success = migration_manager.migrate_to_latest(
             skip_on_error=skip_on_error
-        )  # noqa: E501
+        )
         if not success:
             raise HTTPException(status_code=500, detail="Migration failed")
 
@@ -63,7 +63,7 @@ async def migrate_schema(
             "current_version": status.current_version,
             "applied_migrations": (
                 len(status.pending_migrations) if status.needs_migration else 0
-            ),  # noqa: E501
+            ),
         }
     except HTTPException:
         raise
@@ -84,7 +84,7 @@ async def get_migration_history(
 
         dataset_path = dataset_manager.get_dataset_file_path(
             active_dataset.filename
-        )  # noqa: E501
+        )
 
         # Get migration history from database
         from sqlalchemy import create_engine, text
@@ -92,7 +92,7 @@ async def get_migration_history(
         database_url = f"sqlite:///{dataset_path}"
         engine = create_engine(
             database_url, connect_args={"check_same_thread": False}
-        )  # noqa: E501
+        )
 
         with engine.connect() as conn:
             result = conn.execute(text("""

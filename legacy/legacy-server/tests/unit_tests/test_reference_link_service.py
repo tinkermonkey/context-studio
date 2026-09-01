@@ -4,25 +4,25 @@ Unit tests for ReferenceLinkService.
 Tests JSON operations, validation, and error handling for reference link management.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-import json  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from sqlalchemy.orm import Session  # noqa: E402
+import json
+from unittest.mock import Mock, patch
 
-from services.reference_link_service import ReferenceLinkService  # noqa: E402
-from api.models.structure_nodes import ReferenceLink  # noqa: E402
-from database.models import StructureNode  # noqa: E402
-from database.enums import NodeType  # noqa: E402
+import pytest
+from api.models.structure_nodes import ReferenceLink
+from database.enums import NodeType
+from database.models import StructureNode
 from services.exceptions import (
     NotFoundError,
     ReferenceNotFoundError,
     ValidationError,
-)  # noqa: E402, E501
+)
+from services.reference_link_service import ReferenceLinkService
+from sqlalchemy.orm import Session
 
 
 class TestReferenceLinkService:

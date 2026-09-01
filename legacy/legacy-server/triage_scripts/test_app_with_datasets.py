@@ -1,14 +1,16 @@
 """Test FastAPI application with dataset creation."""
 
-import sys
 import os
+import sys
 
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import create_app
-from database.utils import get_dataset_manager
 import asyncio
+
+from database.utils import get_dataset_manager
+
+from app import create_app
 
 
 async def test_app_with_datasets():

@@ -5,11 +5,12 @@ This module contains the Pydantic models for the version management system,
 supporting entity versioning, working tree state, and diff operations.
 """
 
-from pydantic import BaseModel, Field, ConfigDict, field_validator
-from typing import Optional, List, Dict, Any
-from uuid import UUID
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ChangeStateEnum(str, Enum):
@@ -38,12 +39,12 @@ class EntityVersionBase(BaseModel):
 
     entity_type: EntityTypeEnum
     entity_id: UUID
-    content: Dict[str, Any] = Field(
+    content: dict[str, Any] = Field(
         ..., description="Full entity snapshot as JSON"
-    )  # noqa: E501
+    )
     state: ChangeStateEnum = ChangeStateEnum.WORKING
     author_id: str = Field(..., min_length=1, max_length=255)
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class EntityVersionOut(EntityVersionBase):
@@ -51,8 +52,8 @@ class EntityVersionOut(EntityVersionBase):
 
     id: UUID
     version_number: int
-    parent_version_id: Optional[UUID] = None
-    changeset_id: Optional[UUID] = None
+    parent_version_id: UUID | None = None
+    changeset_id: UUID | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -68,8 +69,8 @@ class EntityVersionSummary(BaseModel):
     state: ChangeStateEnum
     author_id: str
     created_at: datetime
-    parent_version_id: Optional[UUID] = None
-    changeset_id: Optional[UUID] = None
+    parent_version_id: UUID | None = None
+    changeset_id: UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -88,7 +89,7 @@ class WorkingTreeEntryOut(BaseModel):
     modified_at: datetime
     has_changes: bool = Field(
         ..., description="Whether working differs from canonical"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -100,7 +101,7 @@ class WorkingTreeStatusOut(BaseModel):
     modified_entities: int
     staged_entities: int
     unstaged_entities: int
-    entries: List[WorkingTreeEntryOut]
+    entries: list[WorkingTreeEntryOut]
 
 
 # Diff Models
@@ -122,11 +123,11 @@ class EntityDiffOut(BaseModel):
 
     entity_type: EntityTypeEnum
     entity_id: UUID
-    before_version: Optional[EntityVersionSummary] = None
+    before_version: EntityVersionSummary | None = None
     after_version: EntityVersionSummary
-    changes: Dict[str, Any] = Field(
+    changes: dict[str, Any] = Field(
         ..., description="Structured diff using DeepDiff format"
-    )  # noqa: E501
+    )
     summary: DiffSummaryOut
     has_changes: bool
     generated_at: datetime
@@ -142,7 +143,7 @@ class RollbackRequest(BaseModel):
 
     target_version_number: int = Field(
         ..., ge=1, description="Version number to rollback to", alias="target_version"
-    )  # noqa: E501
+    )
     author_id: str = Field(..., min_length=1, max_length=255)
 
     model_config = ConfigDict(populate_by_name=True)
@@ -159,9 +160,9 @@ class CommitRequest(BaseModel):
     """Model for committing staged changes."""
 
     author_id: str = Field(..., min_length=1, max_length=255)
-    message: Optional[str] = Field(
+    message: str | None = Field(
         None, max_length=1000, description="Optional commit message"
-    )  # noqa: E501
+    )
 
 
 class StageRequest(BaseModel):
@@ -177,14 +178,14 @@ class StageRequest(BaseModel):
 class BatchStageRequest(BaseModel):
     """Model for batch staging operations."""
 
-    entities: List[StageRequest] = Field(..., min_length=1)
+    entities: list[StageRequest] = Field(..., min_length=1)
 
 
 class BatchOperationResult(BaseModel):
     """Model for batch operation results."""
 
-    successful: List[Dict[str, Any]]
-    failed: List[Dict[str, Any]]
+    successful: list[dict[str, Any]]
+    failed: list[dict[str, Any]]
     total_requested: int
     total_successful: int
     total_failed: int
@@ -196,10 +197,10 @@ class BatchOperationResult(BaseModel):
 class VersionQueryParams(BaseModel):
     """Model for version query parameters."""
 
-    entity_type: Optional[EntityTypeEnum] = None
-    entity_id: Optional[UUID] = None
-    state: Optional[ChangeStateEnum] = None
-    author_id: Optional[str] = None
+    entity_type: EntityTypeEnum | None = None
+    entity_id: UUID | None = None
+    state: ChangeStateEnum | None = None
+    author_id: str | None = None
     limit: int = Field(50, ge=1, le=1000)
     offset: int = Field(0, ge=0)
 
@@ -217,9 +218,9 @@ class DiffRequest(BaseModel):
 
     entity_type: EntityTypeEnum
     entity_id: UUID
-    before_version_number: Optional[int] = Field(
+    before_version_number: int | None = Field(
         None, ge=0, alias="before_version"
-    )  # Allow 0  # noqa: E501
+    )  # Allow 0
     after_version_number: int = Field(..., ge=1, alias="after_version")
     format: DiffFormatEnum = DiffFormatEnum.SUMMARY
 
@@ -232,7 +233,7 @@ class DiffRequest(BaseModel):
             if v >= info.data["after_version_number"]:
                 raise ValueError(
                     "before_version must be less than after_version"
-                )  # noqa: E501
+                )
         return v
 
 
@@ -244,21 +245,21 @@ class VersionManagementHealthOut(BaseModel):
 
     status: str = Field(
         ..., description="Overall health status: healthy, warning, error"
-    )  # noqa: E501
+    )
     total_versions: int
     total_working_tree_entries: int
     total_staged_entities: int
     total_modified_entities: int
-    issues: List[str] = Field(default_factory=list)
-    last_event_processed: Optional[datetime] = None
+    issues: list[str] = Field(default_factory=list)
+    last_event_processed: datetime | None = None
     database_status: str
 
 
 class VersionManagementStatsOut(BaseModel):
     """Model for version management statistics."""
 
-    versions_by_entity_type: Dict[str, int]
-    versions_by_state: Dict[str, int]
+    versions_by_entity_type: dict[str, int]
+    versions_by_state: dict[str, int]
     working_tree_summary: WorkingTreeStatusOut
-    recent_activity: List[Dict[str, Any]]
-    performance_metrics: Dict[str, Any]
+    recent_activity: list[dict[str, Any]]
+    performance_metrics: dict[str, Any]

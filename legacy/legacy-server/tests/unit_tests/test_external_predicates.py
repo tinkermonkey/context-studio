@@ -7,13 +7,13 @@ ReferenceManager external predicate operations.
 
 import os
 import tempfile
-import pytest
 from datetime import date
 from uuid import uuid4
 
-from reference_db.models import ExternalPredicate
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
+from reference_db.models import ExternalPredicate
 
 # Test constants
 EMBEDDING_DIMS_SMALL = 128  # Small embedding dimension for testing

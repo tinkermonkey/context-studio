@@ -5,18 +5,18 @@ Tests validate invariant enforcement, enum usage, and immutability of
 pipeline configuration and execution entities.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import types
-import pytest
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
-from domain.pipeline.enums import PipelineType, ExecutionStatus
+import pytest
+from domain.pipeline.entities import Execution, PipelineConfiguration
+from domain.pipeline.enums import ExecutionStatus, PipelineType
 
 
 class TestPipelineType:

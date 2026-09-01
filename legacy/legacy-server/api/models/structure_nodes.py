@@ -5,17 +5,18 @@ This module contains the Pydantic models for the unified structure_nodes API,
 supporting the Great Normalization requirements.
 """
 
+import re
+from enum import Enum
+from typing import Any
+from uuid import UUID
+
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     field_validator,
     model_validator,
-    ConfigDict,
-)  # noqa: E501
-from typing import Optional, List, Any
-from uuid import UUID
-from enum import Enum
-import re
+)
 
 
 class NodeTypeEnum(str, Enum):
@@ -30,10 +31,10 @@ class NodeBase(BaseModel):
     """Base model for structure_node data."""
 
     node_type: NodeTypeEnum
-    parent_node_id: Optional[UUID] = None
+    parent_node_id: UUID | None = None
     title: str = Field(..., min_length=2, max_length=255)
-    definition: Optional[str] = None
-    structural_predicate_id: Optional[UUID] = None
+    definition: str | None = None
+    structural_predicate_id: UUID | None = None
 
 
 class NodeCreate(NodeBase):
@@ -42,32 +43,32 @@ class NodeCreate(NodeBase):
     @field_validator("parent_node_id")
     @classmethod
     def validate_parent_for_type(cls, v, info):
-        """Validate parent structure_node requirements based on structure_node type."""  # noqa: E501
+        """Validate parent structure_node requirements based on structure_node type."""
         node_type = info.data.get("node_type")
         if node_type == NodeTypeEnum.LAYER and v is not None:
             raise ValueError("Layers cannot have parent structure_nodes")
         if node_type in [NodeTypeEnum.DOMAIN, NodeTypeEnum.TERM] and v is None:
             raise ValueError(
                 f"{node_type.value.title()} must have a parent structure_node"
-            )  # noqa: E501
+            )
         return v
 
 
 class NodeUpdate(BaseModel):
     """Model for updating an existing structure_node."""
 
-    title: Optional[str] = Field(None, min_length=2, max_length=255)
-    definition: Optional[str] = None
-    parent_node_id: Optional[UUID] = None
-    structural_predicate_id: Optional[UUID] = None
+    title: str | None = Field(None, min_length=2, max_length=255)
+    definition: str | None = None
+    parent_node_id: UUID | None = None
+    structural_predicate_id: UUID | None = None
 
 
 class NodeOut(NodeBase):
     """Model for structure_node output/response."""
 
     id: UUID
-    title_embedding: Optional[List[float]] = None
-    definition_embedding: Optional[List[float]] = None
+    title_embedding: list[float] | None = None
+    definition_embedding: list[float] | None = None
     created_at: str  # ISO8601 string
     version: int
     last_modified: str  # ISO8601 string
@@ -81,13 +82,12 @@ class NodeLinkBase(BaseModel):
     source_node_id: UUID
     target_node_id: UUID
     predicate: str
-    predicate_id: Optional[UUID] = None
+    predicate_id: UUID | None = None
 
 
 class NodeLinkCreate(NodeLinkBase):
     """Model for creating a new structure_node link."""
 
-    pass
 
 
 class NodeLinkOut(NodeLinkBase):
@@ -103,18 +103,18 @@ class NodeSearchRequest(BaseModel):
     """Model for structure_node search requests."""
 
     query: str = Field(..., min_length=1, description="Search query text")
-    node_type: Optional[NodeTypeEnum] = Field(
+    node_type: NodeTypeEnum | None = Field(
         None, description="Filter by node type"
-    )  # noqa: E501
-    parent_node_id: Optional[UUID] = Field(
+    )
+    parent_node_id: UUID | None = Field(
         None, description="Filter by parent node"
-    )  # noqa: E501
-    threshold: Optional[float] = Field(
+    )
+    threshold: float | None = Field(
         0.0, ge=0.0, le=1.0, description="Minimum similarity score"
-    )  # noqa: E501
-    limit: Optional[int] = Field(
+    )
+    limit: int | None = Field(
         20, ge=1, le=100, description="Maximum number of results"
-    )  # noqa: E501
+    )
 
 
 class NodeSearchResult(NodeOut):
@@ -127,7 +127,7 @@ class NodeSearchResult(NodeOut):
 class PaginatedNodesResponse(BaseModel):
     """Model for paginated structure_node responses."""
 
-    data: List[NodeOut]
+    data: list[NodeOut]
     total: int
     skip: int
     limit: int
@@ -136,7 +136,7 @@ class PaginatedNodesResponse(BaseModel):
 class PaginatedNodeLinksResponse(BaseModel):
     """Model for paginated structure_node link responses."""
 
-    data: List[NodeLinkOut]
+    data: list[NodeLinkOut]
     total: int
     skip: int
     limit: int
@@ -146,41 +146,41 @@ class PaginatedNodeLinksResponse(BaseModel):
 class MoveNodesRequest(BaseModel):
     """Model for moving structure_nodes to a new parent."""
 
-    node_ids: List[UUID] = Field(
+    node_ids: list[UUID] = Field(
         ..., min_length=1, description="List of structure_node IDs to move"
-    )  # noqa: E501
-    target_parent_id: Optional[UUID] = Field(
+    )
+    target_parent_id: UUID | None = Field(
         None, description="Target parent structure_node ID (None for root level)"
-    )  # noqa: E501
+    )
     move_children: bool = Field(
         True, description="Whether to move all child structure_nodes"
-    )  # noqa: E501
+    )
     handle_conflicts: str = Field(
         "warn",
         pattern="^(warn|rename|error)$",
         description="How to handle title conflicts",
-    )  # noqa: E501
+    )
 
 
 class MoveNodesResponse(BaseModel):
     """Model for move operation results with automatic type conversion."""
 
-    moved_nodes: List[NodeOut] = Field(
+    moved_nodes: list[NodeOut] = Field(
         description="List of successfully moved structure_nodes"
-    )  # noqa: E501
-    updated_children: List[NodeOut] = Field(
+    )
+    updated_children: list[NodeOut] = Field(
         description="List of child structure_nodes that were also moved"
-    )  # noqa: E501
-    converted_nodes: List[NodeOut] = Field(
+    )
+    converted_nodes: list[NodeOut] = Field(
         default_factory=list,
         description="List of nodes that had their type automatically converted",
-    )  # noqa: E501
-    warnings: List[str] = Field(
+    )
+    warnings: list[str] = Field(
         description="List of warnings encountered during the move"
-    )  # noqa: E501
-    errors: List[str] = Field(
+    )
+    errors: list[str] = Field(
         description="List of errors that prevented some moves"
-    )  # noqa: E501
+    )
 
 
 # Utility models for hierarchy operations
@@ -188,7 +188,7 @@ class NodeHierarchy(BaseModel):
     """Model representing a structure_node with its children."""
 
     structure_node: NodeOut
-    children: List["NodeHierarchy"] = []
+    children: list["NodeHierarchy"] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -206,10 +206,10 @@ class ReferenceLink(BaseModel):
         min_length=1,
         max_length=255,
         description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')",
-    )  # noqa: E501
+    )
     external_id: str = Field(
         ..., min_length=1, max_length=255, description="Source-specific identifier"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -222,19 +222,19 @@ class WordSense(BaseModel):
         min_length=1,
         max_length=255,
         description="The term/word this sense refers to",
-    )  # noqa: E501
+    )
     sense_type: str = Field(
         ..., description="Type of sense system (e.g., 'wordnet')"
-    )  # noqa: E501
+    )
     sense_id: str = Field(
         ..., description="Unique identifier for the sense (e.g., 'bank.n.01')"
-    )  # noqa: E501
+    )
     definition: str = Field(
         ..., description="Human-readable definition of the sense"
-    )  # noqa: E501
-    domain: Optional[str] = Field(
+    )
+    domain: str | None = Field(
         None, description="Semantic domain or category (e.g., 'noun.group')"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -242,9 +242,9 @@ class WordSense(BaseModel):
 class SelectedWordSensesUpdate(BaseModel):
     """Model for updating selected word senses on a structure node."""
 
-    selected_senses: List[WordSense] = Field(
+    selected_senses: list[WordSense] = Field(
         ..., description="List of word senses to persist as selected"
-    )  # noqa: E501
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -269,7 +269,7 @@ class StructureNodeAttribute(BaseModel):
     value_type: AttributeValueType = Field(
         ..., description="Type constraint for values"
     )
-    value: Optional[Any] = Field(None, description="The actual attribute value")
+    value: Any | None = Field(None, description="The actual attribute value")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -311,7 +311,7 @@ class ResolvedAttribute(StructureNodeAttribute):
     """Model for resolved attributes with inheritance information."""
 
     inherited: bool = Field(False, description="True if inherited from ancestor")
-    source_node_id: Optional[UUID] = Field(
+    source_node_id: UUID | None = Field(
         None, description="ID of the node defining this attribute"
     )
 
@@ -326,14 +326,14 @@ class ResolvedAttribute(StructureNodeAttribute):
 
 
 class SetNodeAttributesRequest(BaseModel):
-    """Request model for setting node attributes with optimistic locking support."""  # noqa: E501
+    """Request model for setting node attributes with optimistic locking support."""
 
-    attributes: List[StructureNodeAttribute] = Field(
+    attributes: list[StructureNodeAttribute] = Field(
         ..., description="List of attributes to set on the node"
     )
-    expected_version: Optional[int] = Field(
+    expected_version: int | None = Field(
         None,
-        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match.",  # noqa: E501
+        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match.",
     )
 
     model_config = ConfigDict(from_attributes=True)

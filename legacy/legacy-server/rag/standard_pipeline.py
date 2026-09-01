@@ -6,13 +6,14 @@ This module provides the StandardRAGPipeline which wraps the existing
 RAGPipelineService as the default baseline implementation for comparison.
 """
 
-from typing import Dict, Any
+from typing import Any
+
 from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from rag.base_pipeline import BaseRAGPipeline
-from rag.rag_pipeline_service import RAGPipelineService
 from rag.models import RAGExtractionResponse
-from utils.logger import get_logger
+from rag.rag_pipeline_service import RAGPipelineService
 
 logger = get_logger(__name__)
 
@@ -40,7 +41,7 @@ class StandardRAGPipeline(BaseRAGPipeline):
         self,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Dict[str, Any] = None,
+        config: dict[str, Any] | None = None,
     ):
         """
         Initialize Standard RAG Pipeline.
@@ -129,7 +130,7 @@ class StandardRAGPipeline(BaseRAGPipeline):
             text=text, enable_trace=enable_trace, enable_llm_layer=enable_llm_layer
         )
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """
         Get the current configuration of this pipeline.
 

@@ -5,11 +5,13 @@ using both fake and real NLP adapters.
 """
 
 import time
+from typing import cast
 
 import pytest
 
 from domain.extraction.ports import NLPProcessor
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import OntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_extraction_repository import FakeExtractionRepository
@@ -94,7 +96,7 @@ def _setup_extraction_service(
     event_publisher = FakeEventPublisher()
 
     service = ExtractionService(
-        ontology_repo=ontology_repo,
+        ontology_repo=cast(OntologyRepository, ontology_repo),
         embedding_service=embedding_service,
         llm=llm_provider,
         nlp=nlp_processor,

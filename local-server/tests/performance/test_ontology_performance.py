@@ -5,9 +5,11 @@ at multiple entity counts (100, 500, 1000) using both fake and real embedding ad
 """
 
 import time
+from typing import cast
 
 import pytest
 
+from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -23,7 +25,9 @@ def _setup_ontology_context() -> tuple[OntologyService, FakeOntologyRepository]:
     repository = FakeOntologyRepository()
     embedding_service = FakeEmbeddingService()
     event_publisher = FakeEventPublisher()
-    service = OntologyService(repository, embedding_service, event_publisher)
+    service = OntologyService(
+        cast(OntologyRepository, repository), embedding_service, event_publisher
+    )
     return service, repository
 
 
@@ -150,7 +154,9 @@ def test_bulk_insert_100_classes_real_embedding() -> None:
     repository = FakeOntologyRepository()
     embedding_service = SentenceTransformerEmbedding()
     event_publisher = FakeEventPublisher()
-    service = OntologyService(repository, embedding_service, event_publisher)
+    service = OntologyService(
+        cast(OntologyRepository, repository), embedding_service, event_publisher
+    )
 
     _, scheme_id = _create_test_taxonomy_and_scheme(service)
 

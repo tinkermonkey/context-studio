@@ -2,9 +2,10 @@
 Pydantic models for RAG processor inputs and outputs.
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class GapPriority(str, Enum):
@@ -36,7 +37,7 @@ class ProcessorInput(BaseModel):
 class ProcessorOutput(BaseModel):
     """Base output model for all processors"""
 
-    trace_data: Dict[str, Any] = Field(
+    trace_data: dict[str, Any] = Field(
         default_factory=dict, description="Trace data for observability"
     )
 
@@ -63,20 +64,20 @@ class KGNode(BaseModel):
     similarity_score: float = Field(
         ..., ge=0.0, le=1.0, description="Vector similarity score"
     )
-    definition: Optional[str] = Field(None, description="Node definition if available")
+    definition: str | None = Field(None, description="Node definition if available")
 
 
 class KGContextOutput(ProcessorOutput):
     """Output from Layer 0: KG Context Preparation"""
 
-    extracted_phrases: List[ExtractedPhrase] = Field(
+    extracted_phrases: list[ExtractedPhrase] = Field(
         default_factory=list, description="Phrases extracted from text"
     )
-    kg_nodes: List[KGNode] = Field(
+    kg_nodes: list[KGNode] = Field(
         default_factory=list, description="Top-k KG nodes from vector search"
     )
     total_sentences: int = Field(..., description="Total number of sentences processed")
-    phrase_to_kg_map: Optional[Dict[str, List[Dict[str, Any]]]] = Field(
+    phrase_to_kg_map: dict[str, list[dict[str, Any]]] | None = Field(
         None,
         description="Mapping of phrase text to list of matched KG nodes with similarities (for Layer 3 reuse)",
     )
@@ -90,10 +91,10 @@ class ExtractedEntity(BaseModel):
         ..., description="Entity type (e.g., CONCEPT, PERSON, ORG)"
     )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
-    sentence_indices: List[int] = Field(
+    sentence_indices: list[int] = Field(
         default_factory=list, description="Sentence indices where entity appears"
     )
-    matched_kg_node: Optional[str] = Field(
+    matched_kg_node: str | None = Field(
         None, description="Matched KG node ID if found"
     )
     start_char: int = Field(..., description="Starting character position")
@@ -103,13 +104,13 @@ class ExtractedEntity(BaseModel):
 class LLMExtractionOutput(ProcessorOutput):
     """Output from Layer 1: LLM Extraction"""
 
-    entities: List[ExtractedEntity] = Field(
+    entities: list[ExtractedEntity] = Field(
         default_factory=list, description="Entities extracted by LLM"
     )
     kg_context_size: int = Field(
         ..., description="Number of KG nodes provided as context"
     )
-    token_usage: Optional[Dict[str, int]] = Field(
+    token_usage: dict[str, int] | None = Field(
         None, description="LLM token usage stats"
     )
 
@@ -124,18 +125,18 @@ class GapConcept(BaseModel):
     )
     dep_role: str = Field(..., description="Dependency role (nsubj, dobj, pobj)")
     head_word: str = Field(..., description="Head word of the dependency")
-    connected_verb: Optional[str] = Field(
+    connected_verb: str | None = Field(
         None, description="Connected verb if applicable"
     )
     start_char: int = Field(..., description="Starting character position")
     end_char: int = Field(..., description="Ending character position")
-    tf_idf_score: Optional[float] = Field(None, description="TF-IDF significance score")
+    tf_idf_score: float | None = Field(None, description="TF-IDF significance score")
 
 
 class SpaCyGapOutput(ProcessorOutput):
     """Output from Layer 2: spaCy Gap Detection"""
 
-    gaps: List[GapConcept] = Field(
+    gaps: list[GapConcept] = Field(
         default_factory=list, description="Detected syntactic gaps"
     )
     total_noun_phrases: int = Field(..., description="Total noun phrases analyzed")
@@ -149,10 +150,10 @@ class ResolvedConcept(BaseModel):
     resolution_method: ResolutionMethod = Field(
         ..., description="Method used for resolution"
     )
-    matched_kg_node: Optional[KGNode] = Field(
+    matched_kg_node: KGNode | None = Field(
         None, description="Matched KG node if found"
     )
-    web_definition: Optional[str] = Field(
+    web_definition: str | None = Field(
         None, description="Definition from web search"
     )
     confidence: float = Field(
@@ -163,10 +164,10 @@ class ResolvedConcept(BaseModel):
 class ConceptResolutionOutput(ProcessorOutput):
     """Output from Layer 3: Concept Resolution"""
 
-    resolved_concepts: List[ResolvedConcept] = Field(
+    resolved_concepts: list[ResolvedConcept] = Field(
         default_factory=list, description="Successfully resolved concepts"
     )
-    unresolved_gaps: List[GapConcept] = Field(
+    unresolved_gaps: list[GapConcept] = Field(
         default_factory=list, description="Gaps that could not be resolved"
     )
     web_searches_performed: int = Field(

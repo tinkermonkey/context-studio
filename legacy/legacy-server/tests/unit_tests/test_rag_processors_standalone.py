@@ -5,32 +5,33 @@ Tests each of the four processor layers with mocked dependencies.
 This file is self-contained and doesn't rely on conftest.py.
 """
 
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from unittest.mock import Mock  # noqa: E402
-import numpy as np  # noqa: E402
+from unittest.mock import Mock
+
+import numpy as np
+import pytest
 
 # Import processor models
-from rag.processors.models import (  # noqa: E402
-    ProcessorInput,
-    KGContextOutput,
-    LLMExtractionOutput,
-    SpaCyGapOutput,
+from rag.processors.models import (
     ConceptResolutionOutput,
-    ExtractedPhrase,
     ExtractedEntity,
-    KGNode,
+    ExtractedPhrase,
     GapConcept,
     GapPriority,
-    ResolvedConcept,
+    KGContextOutput,
+    KGNode,
+    LLMExtractionOutput,
+    ProcessorInput,
     ResolutionMethod,
+    ResolvedConcept,
+    SpaCyGapOutput,
 )
 
 
@@ -320,10 +321,10 @@ def test_concept_resolution_confidence_calculation():
 def test_processors_import():
     """Test that all processors can be imported"""
     from rag.processors import (
+        ConceptResolutionProcessor,
         KGContextProcessor,
         LLMExtractionProcessor,
         SpaCyGapProcessor,
-        ConceptResolutionProcessor,
     )
 
     assert KGContextProcessor is not None

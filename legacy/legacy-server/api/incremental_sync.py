@@ -16,20 +16,21 @@ Endpoints:
 - GET /api/sync/health - Get sync system health
 """
 
+from datetime import datetime, timezone
+from typing import Any
+
+from database.utils import get_db
 from fastapi import (
     APIRouter,
-    HTTPException,
-    Query,
-    Depends,
-    Path,
     BackgroundTasks,
-)  # noqa: E501
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from datetime import datetime, timezone
-from database.utils import get_db
-from services.service_factory import get_incremental_sync_engine_via_factory
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+)
 from pydantic import BaseModel, Field
+from services.service_factory import get_incremental_sync_engine_via_factory
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/sync", tags=["incremental_sync"])
 
@@ -39,22 +40,22 @@ class IncrementalSyncRequest(BaseModel):
 
     since: datetime = Field(
         ..., description="Start timestamp for sync (ISO format)"
-    )  # noqa: E501
-    until: Optional[datetime] = Field(
+    )
+    until: datetime | None = Field(
         None, description="End timestamp for sync (ISO format)"
-    )  # noqa: E501
-    entity_types: Optional[List[str]] = Field(
+    )
+    entity_types: list[str] | None = Field(
         None, description="Specific entity types to sync"
-    )  # noqa: E501
+    )
     sync_strategy: str = Field(
         "auto", description="Sync strategy: auto, parallel, sequential"
-    )  # noqa: E501
+    )
     batch_size: int = Field(
         1000, ge=100, le=10000, description="Batch size for processing"
-    )  # noqa: E501
+    )
     max_parallel_workers: int = Field(
         4, ge=1, le=20, description="Max parallel workers"
-    )  # noqa: E501
+    )
 
 
 class SyncOperationOut(BaseModel):
@@ -63,15 +64,15 @@ class SyncOperationOut(BaseModel):
     id: str
     sync_type: str
     started_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
     since_timestamp: datetime
-    until_timestamp: Optional[datetime]
-    entity_types: Optional[List[str]]
+    until_timestamp: datetime | None
+    entity_types: list[str] | None
     synced_changes: int
     new_entities: int
     updated_entities: int
-    errors: Optional[List[str]]
-    metadata: Optional[Dict[str, Any]]
+    errors: list[str] | None
+    metadata: dict[str, Any] | None
 
 
 class SyncStatusOut(BaseModel):
@@ -80,7 +81,7 @@ class SyncStatusOut(BaseModel):
     active_operations: int
     queued_operations: int
     total_operations_today: int
-    last_successful_sync: Optional[datetime]
+    last_successful_sync: datetime | None
     system_load_percent: float
     available_workers: int
     sync_health_score: float
@@ -93,8 +94,8 @@ class SyncPerformanceOut(BaseModel):
     throughput_changes_per_minute: float
     success_rate_percent: float
     error_rate_percent: float
-    peak_performance_hour: Optional[int]
-    bottleneck_analysis: Dict[str, Any]
+    peak_performance_hour: int | None
+    bottleneck_analysis: dict[str, Any]
 
 
 class SyncHealthOut(BaseModel):
@@ -106,31 +107,31 @@ class SyncHealthOut(BaseModel):
     worker_pool_health: bool
     last_health_check: datetime
     performance_grade: str
-    recommended_actions: List[str]
+    recommended_actions: list[str]
 
 
 class OptimizationRequest(BaseModel):
     """API model for sync optimization request."""
 
-    target_throughput: Optional[float] = Field(
+    target_throughput: float | None = Field(
         None, description="Target throughput in changes/minute"
-    )  # noqa: E501
-    max_batch_size: Optional[int] = Field(None, ge=100, le=50000)
+    )
+    max_batch_size: int | None = Field(None, ge=100, le=50000)
     optimize_for: str = Field(
         "balanced", description="Optimization target: speed, memory, balanced"
-    )  # noqa: E501
+    )
     enable_auto_tuning: bool = Field(
         True, description="Enable automatic parameter tuning"
-    )  # noqa: E501
+    )
 
 
 class OptimizationResultOut(BaseModel):
     """API model for optimization result."""
 
-    optimized_parameters: Dict[str, Any]
+    optimized_parameters: dict[str, Any]
     expected_improvement_percent: float
     recommendation_summary: str
-    applied_changes: List[str]
+    applied_changes: list[str]
 
 
 def get_incremental_sync_engine(db: Session = Depends(get_db)):
@@ -154,7 +155,7 @@ def start_incremental_sync(
             raise HTTPException(
                 status_code=400,
                 detail="'since' timestamp must be before 'until' timestamp",
-            )  # noqa: E501
+            )
 
         # Start sync operation (runs in background)
         operation = sync_engine.sync_incremental(
@@ -171,22 +172,22 @@ def start_incremental_sync(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to start incremental sync: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to start incremental sync: {e!s}"
+        )
 
 
-@router.get("/operations", response_model=List[SyncOperationOut])
+@router.get("/operations", response_model=list[SyncOperationOut])
 def list_sync_operations(
-    sync_type: Optional[str] = Query(None, description="Filter by sync type"),
-    status: Optional[str] = Query(
+    sync_type: str | None = Query(None, description="Filter by sync type"),
+    status: str | None = Query(
         None, description="Filter by status (completed, running, failed)"
-    ),  # noqa: E501
-    since: Optional[datetime] = Query(
+    ),
+    since: datetime | None = Query(
         None, description="List operations since timestamp"
-    ),  # noqa: E501
+    ),
     limit: int = Query(
         50, ge=1, le=500, description="Maximum number of operations to return"
-    ),  # noqa: E501
+    ),
     offset: int = Query(0, ge=0, description="Number of operations to skip"),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
@@ -198,8 +199,8 @@ def list_sync_operations(
         return [SyncOperationOut.model_validate(op) for op in operations]
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to list sync operations: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to list sync operations: {e!s}"
+        )
 
 
 @router.get("/operations/{operation_id}", response_model=SyncOperationOut)
@@ -213,14 +214,14 @@ def get_sync_operation(
         if not operation:
             raise HTTPException(
                 status_code=404, detail=f"Sync operation {operation_id} not found"
-            )  # noqa: E501
+            )
         return SyncOperationOut.model_validate(operation)
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get sync operation: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get sync operation: {e!s}"
+        )
 
 
 @router.post("/operations/{operation_id}/cancel")
@@ -235,16 +236,16 @@ def cancel_sync_operation(
             raise HTTPException(
                 status_code=400,
                 detail="Cannot cancel sync operation - may not be running",
-            )  # noqa: E501
+            )
         return {
             "message": f"Sync operation {operation_id} cancelled successfully"
-        }  # noqa: E501
+        }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to cancel sync operation: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to cancel sync operation: {e!s}"
+        )
 
 
 # Sync System Status and Monitoring
@@ -258,8 +259,8 @@ def get_sync_status(sync_engine=Depends(get_incremental_sync_engine)):
         return SyncStatusOut.model_validate(status)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get sync status: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get sync status: {e!s}"
+        )
 
 
 @router.get("/performance", response_model=SyncPerformanceOut)
@@ -273,8 +274,8 @@ def get_sync_performance_metrics(
         return SyncPerformanceOut.model_validate(performance)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get sync performance: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get sync performance: {e!s}"
+        )
 
 
 @router.get("/health", response_model=SyncHealthOut)
@@ -285,8 +286,8 @@ def get_sync_health(sync_engine=Depends(get_incremental_sync_engine)):
         return SyncHealthOut.model_validate(health)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get sync health: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get sync health: {e!s}"
+        )
 
 
 # Optimization and Performance Tuning
@@ -307,8 +308,8 @@ def optimize_sync_configuration(
         return OptimizationResultOut.model_validate(optimization_result)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to optimize sync configuration: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to optimize sync configuration: {e!s}"
+        )
 
 
 @router.get("/recommendations")
@@ -319,11 +320,11 @@ def get_sync_recommendations(sync_engine=Depends(get_incremental_sync_engine)):
         return {
             "recommendations": recommendations,
             "generated_at": datetime.now(timezone.utc).isoformat(),
-        }  # noqa: E501
+        }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get recommendations: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get recommendations: {e!s}"
+        )
 
 
 # Advanced Sync Features
@@ -331,12 +332,12 @@ def get_sync_recommendations(sync_engine=Depends(get_incremental_sync_engine)):
 
 @router.post("/full-resync")
 def trigger_full_resync(
-    entity_types: Optional[List[str]] = Query(
+    entity_types: list[str] | None = Query(
         None, description="Specific entity types to resync"
-    ),  # noqa: E501
+    ),
     force: bool = Query(
         False, description="Force resync even if recent sync exists"
-    ),  # noqa: E501
+    ),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
     """Trigger a full data resynchronization."""
@@ -347,25 +348,25 @@ def trigger_full_resync(
         return {
             "message": "Full resync triggered",
             "operation_id": operation["id"],
-        }  # noqa: E501
+        }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to trigger full resync: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to trigger full resync: {e!s}"
+        )
 
 
 @router.post("/validate-data")
 def validate_sync_data_integrity(
     sample_size: int = Query(
         1000, ge=100, le=10000, description="Number of records to sample"
-    ),  # noqa: E501
+    ),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
     """Validate data integrity between local and remote sources."""
     try:
         validation_result = sync_engine.validate_data_integrity(
             sample_size=sample_size
-        )  # noqa: E501
+        )
         return {
             "validation_status": validation_result["status"],
             "integrity_score": validation_result["integrity_score"],
@@ -375,15 +376,15 @@ def validate_sync_data_integrity(
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to validate data integrity: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to validate data integrity: {e!s}"
+        )
 
 
 @router.get("/partition-analytics")
 def get_partition_analytics(
     days: int = Query(
         30, ge=1, le=365, description="Number of days to analyze"
-    ),  # noqa: E501
+    ),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
     """Get analytics about data partition performance."""
@@ -392,8 +393,8 @@ def get_partition_analytics(
         return analytics
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get partition analytics: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get partition analytics: {e!s}"
+        )
 
 
 # Batch and Scheduled Operations
@@ -403,7 +404,7 @@ def get_partition_analytics(
 def schedule_recurring_sync(
     cron_expression: str = Query(
         ..., description="Cron expression for sync schedule"
-    ),  # noqa: E501
+    ),
     sync_config: IncrementalSyncRequest = ...,
     sync_engine=Depends(get_incremental_sync_engine),
 ):
@@ -415,11 +416,11 @@ def schedule_recurring_sync(
         return {
             "message": "Sync scheduled successfully",
             "schedule_id": schedule_id,
-        }  # noqa: E501
+        }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to schedule sync: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to schedule sync: {e!s}"
+        )
 
 
 @router.get("/schedules")
@@ -433,8 +434,8 @@ def list_sync_schedules(
         return {"schedules": schedules}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to list sync schedules: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to list sync schedules: {e!s}"
+        )
 
 
 @router.delete("/schedules/{schedule_id}")
@@ -448,14 +449,14 @@ def cancel_sync_schedule(
         if not success:
             raise HTTPException(
                 status_code=404, detail=f"Schedule {schedule_id} not found"
-            )  # noqa: E501
+            )
         return {"message": f"Schedule {schedule_id} cancelled successfully"}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to cancel schedule: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to cancel schedule: {e!s}"
+        )
 
 
 # Emergency and Recovery Operations
@@ -477,22 +478,22 @@ def emergency_stop_all_sync(
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to execute emergency stop: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to execute emergency stop: {e!s}"
+        )
 
 
 @router.post("/recovery/resume-failed")
 def resume_failed_operations(
     max_retry_count: int = Query(
         3, ge=1, le=10, description="Maximum retry attempts"
-    ),  # noqa: E501
+    ),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
     """Resume failed sync operations with retry logic."""
     try:
         resumed_operations = sync_engine.resume_failed_operations(
             max_retry_count=max_retry_count
-        )  # noqa: E501
+        )
         return {
             "message": "Failed operations resumed",
             "resumed_count": len(resumed_operations),
@@ -500,8 +501,8 @@ def resume_failed_operations(
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to resume operations: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to resume operations: {e!s}"
+        )
 
 
 @router.get("/metrics/export")
@@ -509,13 +510,14 @@ def export_sync_metrics(
     format: str = Query("json", description="Export format: json, csv"),
     days: int = Query(
         30, ge=1, le=365, description="Number of days to export"
-    ),  # noqa: E501
+    ),
     sync_engine=Depends(get_incremental_sync_engine),
 ):
     """Export sync metrics for external analysis."""
-    from fastapi.responses import StreamingResponse
     import io
     import json
+
+    from fastapi.responses import StreamingResponse
 
     try:
         metrics = sync_engine.export_sync_metrics(days=days, format=format)
@@ -533,7 +535,7 @@ def export_sync_metrics(
                 media_type="text/csv",
                 headers={
                     "Content-Disposition": f"attachment; filename=sync_metrics_{days}days.csv"
-                },  # noqa: E501
+                },
             )
         else:
             json_str = json.dumps(metrics, indent=2, default=str)
@@ -542,9 +544,9 @@ def export_sync_metrics(
                 media_type="application/json",
                 headers={
                     "Content-Disposition": f"attachment; filename=sync_metrics_{days}days.json"
-                },  # noqa: E501
+                },
             )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to export metrics: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to export metrics: {e!s}"
+        )

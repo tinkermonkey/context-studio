@@ -1,47 +1,48 @@
 # mypy: ignore-errors
 """Core reference service coordinating all reference API sources"""
 
-from typing import Dict, Any, Optional, List, Tuple
 import asyncio
-from datetime import datetime, UTC
 import time
+from datetime import UTC, datetime
+from typing import Any
 
-from config import get_config_manager, ConfigurationManager
+from config import ConfigurationManager, get_config_manager
+from utils.logger import get_logger
+
+from .aggregators import ResultAggregator
 from .exceptions import ReferenceError
 from .models import (
-    SourceType,
-    DBpediaResourceRequest,
-    DBpediaSearchRequest,
-    DBpediaSparqlRequest,
+    ConceptNetConceptResponse,
     ConceptNetQueryRequest,
-    WikidataSparqlRequest,
-    WikidataEntityRequest,
-    WikidataSearchRequest,
-    SchemaOrgEntityRequest,
-    SchemaOrgPropertyRequest,
-    SchemaOrgSearchRequest,
+    ConceptNetQueryResponse,
+    ConceptNetRelatedResponse,
+    DBpediaResourceRequest,
+    DBpediaResourceResponse,
+    DBpediaSearchRequest,
+    DBpediaSearchResponse,
+    DBpediaSparqlRequest,
+    DBpediaSparqlResponse,
     MultiSourceSearchRequest,
     MultiSourceSearchResponse,
-    SearchNode,
-    SearchLink,
-    DBpediaResourceResponse,
-    DBpediaSearchResponse,
-    DBpediaSparqlResponse,
-    ConceptNetQueryResponse,
-    ConceptNetConceptResponse,
-    ConceptNetRelatedResponse,
-    WikidataSparqlResponse,
-    WikidataEntityResponse,
-    WikidataSearchResponse,
+    SchemaOrgEntityRequest,
     SchemaOrgEntityResponse,
+    SchemaOrgPropertyRequest,
     SchemaOrgPropertyResponse,
+    SchemaOrgSearchRequest,
     SchemaOrgSearchResponse,
+    SearchLink,
+    SearchNode,
+    SourceType,
+    WikidataEntityRequest,
+    WikidataEntityResponse,
+    WikidataSearchRequest,
+    WikidataSearchResponse,
+    WikidataSparqlRequest,
+    WikidataSparqlResponse,
 )
-from .sources import DBpediaSource, ConceptNetSource, WikidataSource, SchemaOrgSource
 from .normalizers import ResultNormalizer
-from .aggregators import ResultAggregator
 from .response_builders import ResponseBuilder
-from utils.logger import get_logger
+from .sources import ConceptNetSource, DBpediaSource, SchemaOrgSource, WikidataSource
 
 logger = get_logger(__name__)
 
@@ -242,7 +243,7 @@ class ReferenceService:
             )
 
     async def conceptnet_get_related(
-        self, concept_path: str, filter: Optional[str] = None, limit: int = 20
+        self, concept_path: str, filter: str | None = None, limit: int = 20
     ) -> MultiSourceSearchResponse:
         """Get ConceptNet related concepts"""
         start_time = time.time()
@@ -542,7 +543,7 @@ class ReferenceService:
 
     async def _search_single_source_normalized(
         self, source_type: SourceType, query: str, limit: int, offset: int
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Search a single source using new normalized architecture"""
         try:
             logger.debug(f"Searching {source_type.value} for '{query}'")
@@ -591,11 +592,11 @@ class ReferenceService:
 
         except Exception as e:
             logger.error(f"Error searching {source_type.value}: {e}")
-            raise e
+            raise
 
     async def _gather_search_results_normalized(
-        self, search_tasks: List[tuple], search_timeout: int
-    ) -> List[Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]]:
+        self, search_tasks: list[tuple], search_timeout: int
+    ) -> list[tuple[SourceType, tuple[list[SearchNode], list[SearchLink]]]]:
         """Execute search tasks in parallel and gather normalized results"""
         results = []
 
@@ -631,8 +632,8 @@ class ReferenceService:
         return results
 
     async def _gather_search_results(
-        self, search_tasks: List[tuple], search_timeout: int
-    ) -> List[tuple]:
+        self, search_tasks: list[tuple], search_timeout: int
+    ) -> list[tuple]:
         """Execute search tasks in parallel and gather results"""
         results = []
 
@@ -663,7 +664,7 @@ class ReferenceService:
 
         return results
 
-    def _discover_cross_references(self, nodes: List[SearchNode]) -> List[SearchLink]:
+    def _discover_cross_references(self, nodes: list[SearchNode]) -> list[SearchLink]:
         """
         Discover cross-references between nodes from different sources based on title matching.
         Creates 'sameAs' links when nodes from different sources likely refer to the same concept.
@@ -789,7 +790,7 @@ class ReferenceService:
 
     async def _fetch_conceptnet_external_urls(
         self, concept_ids: set
-    ) -> List[SearchLink]:
+    ) -> list[SearchLink]:
         """
         Fetch external URL relations from ConceptNet for the given concept IDs.
         Creates links to DBpedia, Wikidata, WordNet, and other external knowledge bases.
@@ -875,13 +876,13 @@ class ReferenceService:
     # Keep the old methods for backward compatibility
     async def _search_single_source(
         self, source_type: SourceType, query: str, limit: int, offset: int
-    ) -> Tuple[List[SearchNode], List[SearchLink]]:
+    ) -> tuple[list[SearchNode], list[SearchLink]]:
         """Legacy method for backward compatibility - delegates to normalized version"""
         return await self._search_single_source_normalized(
             source_type, query, limit, offset
         )
 
-    def _discover_cross_references(self, nodes: List[SearchNode]) -> List[SearchLink]:
+    def _discover_cross_references(self, nodes: list[SearchNode]) -> list[SearchLink]:
         """Legacy method for backward compatibility - delegates to aggregator"""
         return self.aggregator.discover_cross_references(nodes)
 
@@ -893,7 +894,7 @@ class ReferenceService:
         """Legacy method for backward compatibility - delegates to aggregator"""
         return self.aggregator._calculate_title_similarity(title1, title2)
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of all configured sources"""
         health_status = {
             "overall": "healthy",
@@ -940,14 +941,14 @@ class ReferenceService:
                             )
                     health_status["sources"][source_type.value] = "healthy"
                 except Exception as e:
-                    health_status["sources"][source_type.value] = f"unhealthy: {str(e)}"
+                    health_status["sources"][source_type.value] = f"unhealthy: {e!s}"
                     health_status["overall"] = "degraded"
             else:
                 health_status["sources"][source_type.value] = "disabled"
 
         return health_status
 
-    def get_enabled_sources(self) -> List[str]:
+    def get_enabled_sources(self) -> list[str]:
         """Get list of enabled reference sources"""
         enabled_sources = []
         sources = [
@@ -965,7 +966,7 @@ class ReferenceService:
 
         return enabled_sources
 
-    async def get_source_status(self) -> Dict[str, Dict[str, Any]]:
+    async def get_source_status(self) -> dict[str, dict[str, Any]]:
         """Get status of all reference sources"""
         status = {}
         for source_name in [
@@ -1040,7 +1041,7 @@ class ReferenceService:
             return await source.get_concept(concept_path)
 
     async def conceptnet_get_related_legacy(
-        self, concept_path: str, filter: Optional[str] = None, limit: int = 20
+        self, concept_path: str, filter: str | None = None, limit: int = 20
     ) -> ConceptNetRelatedResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.CONCEPTNET)

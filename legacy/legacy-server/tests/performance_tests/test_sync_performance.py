@@ -1,7 +1,8 @@
 import time
-from unittest.mock import Mock
-from services.change_extractor import ChangeExtractor
 from datetime import datetime
+from unittest.mock import Mock
+
+from services.change_extractor import ChangeExtractor
 
 
 class TestSyncPerformance:

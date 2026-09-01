@@ -6,16 +6,16 @@ context-aware search queries. Uses the reference API caching proxy
 when available for improved performance.
 """
 
-from typing import Optional, Dict, Any
-import time
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime
-import requests
+from typing import Any
 
-from utils.logger import get_logger
-from nlp.proxy_manager import get_proxy_manager
+import requests
 from config import get_settings
+from nlp.proxy_manager import get_proxy_manager
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -140,9 +140,9 @@ class RateLimitedWebSearchClient:
     def search(
         self,
         query: str,
-        domain_context: Optional[str] = None,
-        grammatical_context: Optional[str] = None,
-    ) -> Optional[SearchResult]:
+        domain_context: str | None = None,
+        grammatical_context: str | None = None,
+    ) -> SearchResult | None:
         """
         Perform rate-limited web search.
 
@@ -228,8 +228,8 @@ class RateLimitedWebSearchClient:
     def _build_context_aware_query(
         self,
         query: str,
-        domain_context: Optional[str],
-        grammatical_context: Optional[str],
+        domain_context: str | None,
+        grammatical_context: str | None,
     ) -> str:
         """
         Build context-aware search query optimized for definition retrieval.
@@ -286,7 +286,7 @@ class RateLimitedWebSearchClient:
         # Fallback to upstream URL
         return duckduckgo_config.upstream_url
 
-    def _search_duckduckgo(self, query: str) -> Optional[SearchResult]:
+    def _search_duckduckgo(self, query: str) -> SearchResult | None:
         """
         Search using DuckDuckGo Instant Answer API.
 
@@ -359,7 +359,7 @@ class RateLimitedWebSearchClient:
             logger.error(f"Error in DuckDuckGo search: {e}")
             return None
 
-    def get_session_stats(self) -> Dict[str, Any]:
+    def get_session_stats(self) -> dict[str, Any]:
         """
         Get current session statistics.
 

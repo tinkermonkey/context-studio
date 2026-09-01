@@ -1,8 +1,8 @@
 """Reference API source implementations package"""
 
-from .dbpedia import DBpediaSource
 from .conceptnet import ConceptNetSource
-from .wikidata import WikidataSource
+from .dbpedia import DBpediaSource
 from .schema_org import SchemaOrgSource
+from .wikidata import WikidataSource
 
-__all__ = ["DBpediaSource", "ConceptNetSource", "WikidataSource", "SchemaOrgSource"]
+__all__ = ["ConceptNetSource", "DBpediaSource", "SchemaOrgSource", "WikidataSource"]

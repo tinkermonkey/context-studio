@@ -9,22 +9,24 @@ Tests cover:
 - Statistics API
 """
 
-import sys
-import os
-import pytest
 import asyncio
+import os
+import sys
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-from app import create_app  # noqa: E402
 from services.task_manager import (
     initialize_task_manager,
     shutdown_task_manager,
-)  # noqa: E402, E501
+)
+
+from app import create_app
 
 
 @pytest.fixture
@@ -69,8 +71,8 @@ class TestTaskStatusAPI:
         await task_manager.start()
 
         # Create app with router
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -101,8 +103,8 @@ class TestTaskStatusAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -122,8 +124,8 @@ class TestTaskStatusAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -158,8 +160,8 @@ class TestCancelTaskAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -195,8 +197,8 @@ class TestCancelTaskAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -227,8 +229,8 @@ class TestCancelTaskAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -251,8 +253,8 @@ class TestListTasksAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -281,8 +283,8 @@ class TestListTasksAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -320,8 +322,8 @@ class TestListTasksAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -357,8 +359,8 @@ class TestTaskStatsAPI:
         task_manager = initialize_task_manager(max_queue_size=50)
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -399,8 +401,8 @@ class TestDeadLetterQueueAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -435,8 +437,8 @@ class TestDeadLetterQueueAPI:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -468,8 +470,8 @@ class TestErrorHandling:
         # Ensure task manager is not initialized
         await shutdown_task_manager()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -487,8 +489,8 @@ class TestErrorHandling:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -524,8 +526,8 @@ class TestCompleteTaskLifecycle:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -572,8 +574,8 @@ class TestCompleteTaskLifecycle:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)
@@ -608,8 +610,8 @@ class TestCompleteTaskLifecycle:
         task_manager = initialize_task_manager()
         await task_manager.start()
 
-        from fastapi import FastAPI
         from api import background_tasks
+        from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(background_tasks.router)

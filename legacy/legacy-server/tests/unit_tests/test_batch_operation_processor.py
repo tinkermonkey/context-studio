@@ -4,23 +4,23 @@ Unit tests for BatchOperationProcessor - Testing high-performance batch operatio
 Tests parallel batch processing, performance optimization, checkpoint management, and error handling.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import time  # noqa: E402
-import threading  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
+import threading
+import time
+from datetime import datetime, timezone
+from unittest.mock import Mock, patch
 
-from services.batch_operation_processor import (  # noqa: E402
+import pytest
+from services.batch_operation_processor import (
+    BatchOperationError,
     BatchOperationProcessor,
     BatchOperationResult,
-    BatchOperationError,
     SystemCheckpoint,
 )
 

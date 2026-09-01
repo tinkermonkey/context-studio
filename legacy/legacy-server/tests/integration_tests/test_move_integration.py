@@ -1,9 +1,9 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import uuid  # noqa: E402
+import uuid
 
 
 def create_layer(client, title=None):
@@ -15,7 +15,7 @@ def create_layer(client, title=None):
     assert resp.status_code == 201
     client.get(
         "/api/structure_nodes/?node_type=layer"
-    )  # Force SQLite visibility  # noqa: E501
+    )  # Force SQLite visibility
     return resp.json()["id"]
 
 
@@ -33,7 +33,7 @@ def create_domain(client, layer_id, title=None):
     assert resp.status_code == 201
     client.get(
         "/api/structure_nodes/?node_type=domain"
-    )  # Force SQLite visibility  # noqa: E501
+    )  # Force SQLite visibility
     return resp.json()
 
 
@@ -52,7 +52,7 @@ def create_term(client, domain_id, layer_id, title=None, parent_term_id=None):
     assert resp.status_code == 201
     client.get(
         "/api/structure_nodes/?node_type=term"
-    )  # Force SQLite visibility  # noqa: E501
+    )  # Force SQLite visibility
     return resp.json()
 
 
@@ -78,7 +78,7 @@ def test_complete_domain_move_workflow(client):
         json={
             "node_ids": [domain1["id"]],
             "target_parent_id": target_layer_id,
-        },  # noqa: E501
+        },
     )
     assert move_resp.status_code == 200
 
@@ -88,7 +88,7 @@ def test_complete_domain_move_workflow(client):
         json={
             "node_ids": [domain2["id"]],
             "target_parent_id": target_layer_id,
-        },  # noqa: E501
+        },
     )
     assert move_resp2.status_code == 200
 
@@ -132,7 +132,7 @@ def test_complex_term_hierarchy_move(client):
         json={
             "node_ids": [root_term["id"]],
             "target_parent_id": target_domain["id"],
-        },  # noqa: E501
+        },
     )
     assert move_resp.status_code == 200
 
@@ -158,15 +158,15 @@ def test_safe_deletion_with_move_integration(client):
     # Create two domains - one for moving children to
     source_domain = create_domain(
         client, layer_id, f"Source Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
     target_domain = create_domain(
         client, layer_id, f"Target Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
 
     # Create a parent term with children
     parent_term = create_term(
         client, source_domain["id"], layer_id, "Parent to Delete"
-    )  # noqa: E501
+    )
     child1 = create_term(
         client, source_domain["id"], layer_id, "Child 1", parent_term["id"]
     )
@@ -185,7 +185,7 @@ def test_safe_deletion_with_move_integration(client):
             json={
                 "node_ids": [child_id],
                 "target_parent_id": target_domain["id"],
-            },  # noqa: E501
+            },
         )
         assert move_resp.status_code == 200
 
@@ -239,16 +239,16 @@ def test_cross_layer_term_move_integration(client):
 def test_event_logging_for_moves(client):
     """Test that move operations are properly logged to NodeEvent table"""
     # This test would need access to the database to check NodeEvent table
-    # For now, we'll just verify the operations work and assume logging is correct  # noqa: E501
+    # For now, we'll just verify the operations work and assume logging is correct
     # based on the implementation
 
     layer_id = create_layer(client, f"Test Layer {uuid.uuid4()}")
     source_domain = create_domain(
         client, layer_id, f"Source Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
     target_domain = create_domain(
         client, layer_id, f"Target Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
 
     # Create and move a term
     term = create_term(client, source_domain["id"], layer_id, "Test Term")
@@ -258,7 +258,7 @@ def test_event_logging_for_moves(client):
         json={
             "node_ids": [term["id"]],
             "target_parent_id": target_domain["id"],
-        },  # noqa: E501
+        },
     )
     assert move_resp.status_code == 200
 
@@ -272,16 +272,16 @@ def test_batch_operations_with_warnings(client):
     layer_id = create_layer(client, f"Test Layer {uuid.uuid4()}")
     source_domain = create_domain(
         client, layer_id, f"Source Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
     target_domain = create_domain(
         client, layer_id, f"Target Domain {uuid.uuid4()}"
-    )  # noqa: E501
+    )
 
     # Create terms with potential conflicts
     term1 = create_term(client, source_domain["id"], layer_id, "Unique Term")
     term2 = create_term(
         client, source_domain["id"], layer_id, "Conflicting Term"
-    )  # noqa: E501
+    )
 
     # Create a term with same name in target domain
     create_term(client, target_domain["id"], layer_id, "Conflicting Term")
@@ -292,7 +292,7 @@ def test_batch_operations_with_warnings(client):
         json={
             "node_ids": [term1["id"]],
             "target_parent_id": target_domain["id"],
-        },  # noqa: E501
+        },
     )
     assert move_resp.status_code == 200
 
@@ -302,13 +302,13 @@ def test_batch_operations_with_warnings(client):
     term_data = term_resp.json()
     assert term_data["parent_node_id"] == target_domain["id"]
 
-    # Try to move the conflicting term (behavior may vary based on implementation)  # noqa: E501
+    # Try to move the conflicting term (behavior may vary based on implementation)
     move_resp2 = client.post(
         "/api/structure_nodes/move",
         json={
             "node_ids": [term2["id"]],
             "target_parent_id": target_domain["id"],
-        },  # noqa: E501
+        },
     )
     # This may succeed or fail depending on implementation
     assert move_resp2.status_code in [200, 400, 409]

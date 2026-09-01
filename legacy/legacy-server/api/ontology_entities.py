@@ -17,41 +17,41 @@ Endpoints:
 - DELETE /api/ontology_entities/relationships/{rel_id} - Delete an entity relationship  # noqa: E501
 """
 
-from fastapi import (
-    APIRouter,
-    HTTPException,
-    Query,
-    Depends,
-    Path,
-    Response,
-    Body,
-)  # noqa: E501
-from typing import List, Optional
 from uuid import UUID
 
 from database.sql_builders import build_max_similarity_case_when
-from services.node_service import NodeService
-from services.node_link_service import NodeLinkService
-from services.exceptions import NotFoundError, ValidationError, ConflictError
-from api.models.ontology_entities import (
-    EntityCreate,
-    EntityUpdate,
-    EntityOut,
-    RelationshipCreate,
-    RelationshipOut,
-    EntitySearchRequest,
-    EntitySearchResult,
-    PaginatedEntitiesResponse,
-    PaginatedRelationshipsResponse,
-    EntityTypeEnum,  # noqa: E501
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Response,
 )
-from api.utils.node_conversion import uuid_to_str, normalize_legacy_node_type_to_db
+from services.exceptions import ConflictError, NotFoundError, ValidationError
+from services.node_link_service import NodeLinkService
+from services.node_service import NodeService
+
+from api.api_errors import conflict_error_response
 from api.dependencies.structure_nodes import (
+    get_node_link_service,
     get_node_service,
     get_node_service_simple,
-    get_node_link_service,
 )
-from api.api_errors import conflict_error_response
+from api.models.ontology_entities import (
+    EntityCreate,
+    EntityOut,
+    EntitySearchRequest,
+    EntitySearchResult,
+    EntityTypeEnum,
+    EntityUpdate,
+    PaginatedEntitiesResponse,
+    PaginatedRelationshipsResponse,
+    RelationshipCreate,
+    RelationshipOut,
+)
+from api.utils.node_conversion import normalize_legacy_node_type_to_db, uuid_to_str
 
 router = APIRouter(prefix="/api/ontology_entities", tags=["ontology_entities"])
 
@@ -73,33 +73,33 @@ def _to_entity_out(node_orm_object) -> EntityOut:
             UUID(str(node_orm_object.id))
             if hasattr(node_orm_object.id, "__str__")
             else node_orm_object.id
-        ),  # noqa: E501
+        ),
         node_type=EntityTypeEnum(
             _normalize_entity_type(node_orm_object.node_type)
-        ),  # noqa: E501
+        ),
         parent_entity_id=(
             UUID(str(node_orm_object.parent_node_id))
             if node_orm_object.parent_node_id
             else None
-        ),  # noqa: E501
+        ),
         title=node_orm_object.title,
         definition=node_orm_object.definition,
         structural_predicate_id=(
             UUID(str(node_orm_object.structural_predicate_id))
             if node_orm_object.structural_predicate_id
             else None
-        ),  # noqa: E501
+        ),
         created_at=(
             node_orm_object.created_at.isoformat()
             if hasattr(node_orm_object.created_at, "isoformat")
             else str(node_orm_object.created_at)
-        ),  # noqa: E501
+        ),
         version=node_orm_object.version,
         last_modified=(
             node_orm_object.last_modified.isoformat()
             if hasattr(node_orm_object.last_modified, "isoformat")
             else str(node_orm_object.last_modified)
-        ),  # noqa: E501
+        ),
     )
 
 
@@ -112,28 +112,28 @@ def _to_relationship_out(link_orm_object) -> RelationshipOut:
             UUID(str(link_orm_object.id))
             if hasattr(link_orm_object.id, "__str__")
             else link_orm_object.id
-        ),  # noqa: E501
+        ),
         source_entity_id=(
             UUID(str(link_orm_object.source_node_id))
             if hasattr(link_orm_object.source_node_id, "__str__")
             else link_orm_object.source_node_id
-        ),  # noqa: E501
+        ),
         target_entity_id=(
             UUID(str(link_orm_object.target_node_id))
             if hasattr(link_orm_object.target_node_id, "__str__")
             else link_orm_object.target_node_id
-        ),  # noqa: E501
+        ),
         predicate=link_orm_object.predicate,
         predicate_id=(
             UUID(str(link_orm_object.predicate_id))
             if link_orm_object.predicate_id
             else None
-        ),  # noqa: E501
+        ),
         created_at=(
             link_orm_object.created_at.isoformat()
             if hasattr(link_orm_object.created_at, "isoformat")
             else str(link_orm_object.created_at)
-        ),  # noqa: E501
+        ),
     )
 
 
@@ -153,6 +153,7 @@ def create_entity(
     - Classes must have a concept_scheme parent
     """
     from utils.logger import get_logger
+
     from api.graph import invalidate_graph_cache
 
     logger = get_logger(__name__)
@@ -166,7 +167,7 @@ def create_entity(
             "definition": entity.definition,
             "structural_predicate_id": uuid_to_str(
                 entity.structural_predicate_id
-            ),  # noqa: E501
+            ),
         }
 
         created_node = node_service.create_node(node_data)
@@ -188,29 +189,29 @@ def create_entity(
             raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
         logger.error(
-            f"Unexpected error creating entity: {type(e).__name__}: {str(e)}",
+            f"Unexpected error creating entity: {type(e).__name__}: {e!s}",
             exc_info=True,
-        )  # noqa: E501
+        )
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.get("/", response_model=PaginatedEntitiesResponse)
 def list_entities(
-    node_type: Optional[EntityTypeEnum] = Query(
+    node_type: EntityTypeEnum | None = Query(
         None, description="Filter by entity type"
-    ),  # noqa: E501
-    parent_entity_id: Optional[UUID] = Query(
+    ),
+    parent_entity_id: UUID | None = Query(
         None, description="Filter by parent entity ID"
-    ),  # noqa: E501
+    ),
     skip: int = Query(0, ge=0, description="Number of entities to skip"),
     limit: int = Query(
         50, ge=1, le=1000, description="Maximum number of entities to return"
-    ),  # noqa: E501
+    ),
     sort_by: str = Query(
         "title", pattern="^(title|created_at)$", description="Sort field"
-    ),  # noqa: E501
+    ),
     node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
@@ -221,6 +222,7 @@ def list_entities(
     """
     try:
         import time
+
         from utils.logger import get_logger
 
         logger = get_logger(__name__)
@@ -234,7 +236,7 @@ def list_entities(
         # Convert UUID to string for parent_entity_id
         parent_entity_id_str = (
             str(parent_entity_id) if parent_entity_id else None
-        )  # noqa: E501
+        )
 
         setup_time = time.time() - request_start
         logger.debug(f"API setup time: {setup_time*1000:.2f}ms")
@@ -269,7 +271,7 @@ def list_entities(
         serialization_time = time.time() - serialization_start
         logger.debug(
             f"Response serialization time: {serialization_time*1000:.2f}ms"
-        )  # noqa: E501
+        )
 
         pydantic_start = time.time()
         result = PaginatedEntitiesResponse(**response_data)
@@ -279,17 +281,17 @@ def list_entities(
         total_time = time.time() - request_start
         logger.debug(
             f"Total API endpoint time: {total_time*1000:.2f}ms (skip={skip})"
-        )  # noqa: E501
+        )
 
         return result
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
-@router.post("/find", response_model=List[EntitySearchResult])
+@router.post("/find", response_model=list[EntitySearchResult])
 def search_entities(
     search_request: EntitySearchRequest,
     node_service: NodeService = Depends(get_node_service),
@@ -300,9 +302,9 @@ def search_entities(
     Supports semantic search across entity titles and definitions with optional
     type filtering and configurable similarity thresholds.
     """
-    from utils.logger import get_logger
-    from sqlalchemy import text
     from embeddings.generate_embeddings import generate_embedding
+    from sqlalchemy import text
+    from utils.logger import get_logger
 
     logger = get_logger(__name__)
 
@@ -321,7 +323,7 @@ def search_entities(
         if search_request.node_type:
             db_node_type = _normalize_entity_type(
                 search_request.node_type.value
-            )  # noqa: E501
+            )
             type_filter = "AND node_type = :node_type"
             params["node_type"] = db_node_type
 
@@ -369,7 +371,7 @@ def search_entities(
                 id=row.id,
                 node_type=EntityTypeEnum(
                     _normalize_entity_type(row.node_type)
-                ),  # noqa: E501
+                ),
                 parent_entity_id=row.parent_entity_id,
                 title=row.title,
                 definition=row.definition,
@@ -378,13 +380,13 @@ def search_entities(
                     row.created_at.isoformat()
                     if hasattr(row.created_at, "isoformat")
                     else str(row.created_at)
-                ),  # noqa: E501
+                ),
                 version=1,  # Use version 1 as placeholder for search results
                 last_modified=(
                     row.last_modified.isoformat()
                     if hasattr(row.last_modified, "isoformat")
                     else str(row.last_modified)
-                ),  # noqa: E501
+                ),
                 score=float(row.similarity),
                 distance=1.0 - float(row.similarity),
             )
@@ -400,8 +402,8 @@ def search_entities(
     except Exception as e:
         logger.error(f"Vector search failed: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Vector search failed: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Vector search failed: {e!s}"
+        )
 
 
 # Entity Relationships endpoints
@@ -438,23 +440,23 @@ def create_relationship(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.get("/relationships", response_model=PaginatedRelationshipsResponse)
 def list_relationships(
-    source_entity_id: Optional[UUID] = Query(
+    source_entity_id: UUID | None = Query(
         None, description="Filter by source entity ID"
-    ),  # noqa: E501
-    target_entity_id: Optional[UUID] = Query(
+    ),
+    target_entity_id: UUID | None = Query(
         None, description="Filter by target entity ID"
-    ),  # noqa: E501
-    predicate: Optional[str] = Query(None, description="Filter by predicate"),
+    ),
+    predicate: str | None = Query(None, description="Filter by predicate"),
     skip: int = Query(0, ge=0, description="Number of relationships to skip"),
     limit: int = Query(
         100, ge=1, le=500, description="Maximum number of relationships to return"
-    ),  # noqa: E501
+    ),
     link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
@@ -467,10 +469,10 @@ def list_relationships(
         # Convert UUID to string for filtering
         source_entity_id_str = (
             str(source_entity_id) if source_entity_id else None
-        )  # noqa: E501
+        )
         target_entity_id_str = (
             str(target_entity_id) if target_entity_id else None
-        )  # noqa: E501
+        )
 
         # Get total count
         total = link_service.count_links(
@@ -498,15 +500,15 @@ def list_relationships(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.put("/relationships/{rel_id}", response_model=RelationshipOut)
 def update_relationship(
     rel_id: UUID = Path(
         ..., description="The ID of the relationship to update"
-    ),  # noqa: E501
+    ),
     link_update: RelationshipCreate = Body(...),
     link_service: NodeLinkService = Depends(get_node_link_service),
 ):
@@ -538,15 +540,15 @@ def update_relationship(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.delete("/relationships/{rel_id}", status_code=204)
 def delete_relationship(
     rel_id: UUID = Path(
         ..., description="The ID of the relationship to delete"
-    ),  # noqa: E501
+    ),
     link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
@@ -564,21 +566,21 @@ def delete_relationship(
         else:
             raise HTTPException(
                 status_code=404, detail="Entity relationship not found"
-            )  # noqa: E501
+            )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.get("/{entity_id}", response_model=EntityOut)
 def get_entity(
     entity_id: UUID = Path(
         ..., description="The ID of the entity to retrieve"
-    ),  # noqa: E501
+    ),
     node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
@@ -604,8 +606,8 @@ def get_entity(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.put("/{entity_id}", response_model=EntityOut)
@@ -630,9 +632,9 @@ def update_entity(
         if entity_update.definition is not None:
             update_data["definition"] = entity_update.definition
         if entity_update.parent_entity_id is not None:
-            update_data["parent_node_id"] = uuid_to_str(entity_update.parent_entity_id)  # type: ignore[assignment]  # noqa: E501
+            update_data["parent_node_id"] = uuid_to_str(entity_update.parent_entity_id)  # type: ignore[assignment]
         if entity_update.structural_predicate_id is not None:
-            update_data["structural_predicate_id"] = uuid_to_str(entity_update.structural_predicate_id)  # type: ignore[assignment]  # noqa: E501
+            update_data["structural_predicate_id"] = uuid_to_str(entity_update.structural_predicate_id)  # type: ignore[assignment]
 
         updated_node = node_service.update_node(str(entity_id), update_data)
 
@@ -655,8 +657,8 @@ def update_entity(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )
 
 
 @router.delete("/{entity_id}", status_code=204)
@@ -687,7 +689,7 @@ def delete_entity(
         if (
             "unique" in error_message.lower()
             or "already exists" in error_message.lower()
-        ):  # noqa: E501
+        ):
             return conflict_error_response(error_message)
         else:
             raise HTTPException(status_code=400, detail=error_message)
@@ -695,5 +697,5 @@ def delete_entity(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Internal server error: {e!s}"
+        )

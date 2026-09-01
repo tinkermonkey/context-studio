@@ -7,14 +7,16 @@ for enterprise-scale cost reduction and performance improvement.
 """
 
 import time
-import pandas as pd
-from typing import Dict, Any, Optional, cast
 from datetime import datetime, timedelta
+from typing import Any, cast
 
+import pandas as pd
 from utils.logger import get_logger
 
 try:
-    from botocore.exceptions import ClientError as BotoClientError  # type: ignore[import-untyped]
+    from botocore.exceptions import (
+        ClientError as BotoClientError,  # type: ignore[import-untyped]
+    )
 except ImportError:
     # Define a dummy ClientError for environments where boto3 is not installed
     class BotoClientError(Exception):  # type: ignore
@@ -41,8 +43,8 @@ class S3StorageManager:
         self.s3_client = s3_client
         self.bucket_name = bucket_name
         self.duckdb_conn = duckdb_conn
-        self.compression_stats: Dict[str, Dict[str, Any]] = {}
-        self.management_history: list[Dict[str, Any]] = []
+        self.compression_stats: dict[str, dict[str, Any]] = {}
+        self.management_history: list[dict[str, Any]] = []
 
         logger.info(f"S3StorageManager initialized for bucket: {bucket_name}")
 
@@ -106,7 +108,7 @@ class S3StorageManager:
 
     def compress_parquet_storage(
         self, data_df: pd.DataFrame, s3_path: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Compress Parquet file storage with compression and column optimization."""
 
         logger.info(f"Compressing Parquet storage for: {s3_path}")
@@ -179,7 +181,7 @@ class S3StorageManager:
 
     def create_storage_checkpoints(
         self, checkpoint_frequency: str = "weekly"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create periodic storage checkpoints for efficient querying."""
 
         logger.info(
@@ -275,7 +277,7 @@ class S3StorageManager:
             logger.error(f"Failed to create storage checkpoint: {e}")
             return {"error": str(e), "checkpoint_date": checkpoint_date}
 
-    def analyze_storage_costs(self, days_back: int = 30) -> Dict[str, Any]:
+    def analyze_storage_costs(self, days_back: int = 30) -> dict[str, Any]:
         """Analyze storage costs and identify management opportunities."""
 
         logger.info(f"Analyzing storage costs for the last {days_back} days")
@@ -356,7 +358,7 @@ class S3StorageManager:
             logger.error(f"Failed to analyze storage costs: {e}")
             return {"error": str(e)}
 
-    def _analyze_dataframe(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _analyze_dataframe(self, df: pd.DataFrame) -> dict[str, Any]:
         """Analyze DataFrame characteristics for compression."""
 
         analysis = {
@@ -391,7 +393,7 @@ class S3StorageManager:
 
         return analysis
 
-    def _select_compression(self, analysis: Dict[str, Any]) -> str:
+    def _select_compression(self, analysis: dict[str, Any]) -> str:
         """Select best compression algorithm based on data characteristics."""
 
         total_string_chars = sum(
@@ -412,7 +414,7 @@ class S3StorageManager:
             return "snappy"  # Default for smaller datasets
 
     def _downcast_column_types(
-        self, df: pd.DataFrame, analysis: Dict[str, Any]
+        self, df: pd.DataFrame, analysis: dict[str, Any]
     ) -> pd.DataFrame:
         """Downcast column types for better storage efficiency."""
 
@@ -449,7 +451,7 @@ class S3StorageManager:
 
         return downcasted_df
 
-    def _calculate_row_group_size(self, analysis: Dict[str, Any]) -> int:
+    def _calculate_row_group_size(self, analysis: dict[str, Any]) -> int:
         """Calculate row group size for Parquet files."""
 
         row_count = analysis["row_count"]
@@ -467,7 +469,7 @@ class S3StorageManager:
 
         return 100000  # Default
 
-    def _get_compression_level(self, compression: str) -> Optional[int]:
+    def _get_compression_level(self, compression: str) -> int | None:
         """Get compression level for the algorithm."""
 
         compression_levels = {
@@ -478,7 +480,7 @@ class S3StorageManager:
 
         return compression_levels.get(compression)
 
-    def _estimate_cost_savings(self, storage_analysis: Dict[str, Any]) -> float:
+    def _estimate_cost_savings(self, storage_analysis: dict[str, Any]) -> float:
         """Estimate monthly cost savings from management."""
 
         # Simplified cost model (AWS S3 pricing estimates)
@@ -503,7 +505,7 @@ class S3StorageManager:
         total_gb = total_bytes / (1024**3)
         return total_gb * standard_cost_per_gb
 
-    def manage_storage_comprehensive(self) -> Dict[str, Any]:
+    def manage_storage_comprehensive(self) -> dict[str, Any]:
         """Run comprehensive storage management including lifecycle policies, compression, and cost analysis."""
 
         logger.info("Starting comprehensive storage management")
@@ -571,7 +573,7 @@ class S3StorageManager:
 
             # 3. Apply compression improvements to existing compression stats
             compression_savings = 0
-            for file_path, stats in self.compression_stats.items():
+            for stats in self.compression_stats.values():
                 compression_savings += stats.get(
                     "savings_bytes", stats["original_size"] - stats["compressed_size"]
                 )
@@ -633,7 +635,7 @@ class S3StorageManager:
                     {
                         "action": "comprehensive_management",
                         "status": "failed",
-                        "description": f"Comprehensive management failed: {str(e)}",
+                        "description": f"Comprehensive management failed: {e!s}",
                     }
                 ],
                 "storage_saved_bytes": 0,
@@ -641,7 +643,7 @@ class S3StorageManager:
                 "objects_managed": 0,
             }
 
-    def get_management_summary(self) -> Dict[str, Any]:
+    def get_management_summary(self) -> dict[str, Any]:
         """Get comprehensive storage management summary."""
 
         total_files_managed = len(self.compression_stats)
@@ -669,7 +671,7 @@ class S3StorageManager:
         )
 
         # Count compression algorithms used
-        algorithm_counts: Dict[str, int] = {}
+        algorithm_counts: dict[str, int] = {}
         for stats in self.compression_stats.values():
             algo = stats["compression_algorithm"]
             algorithm_counts[algo] = algorithm_counts.get(algo, 0) + 1

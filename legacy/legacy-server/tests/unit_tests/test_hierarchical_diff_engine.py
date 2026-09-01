@@ -4,21 +4,21 @@ Unit tests for HierarchicalDiffEngine - Testing advanced diff computation functi
 Tests hierarchical diff algorithms, semantic analysis, three-way merge, and conflict detection.
 """
 
-import sys
 import os
+import sys
 import time
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+from unittest.mock import Mock, patch
 
+import pytest
 from services.hierarchical_diff_engine import (
-    HierarchicalDiffEngine,
     ConflictDescriptor,
-)  # noqa: E402, E501
+    HierarchicalDiffEngine,
+)
 
 
 class TestHierarchicalDiffEngine:

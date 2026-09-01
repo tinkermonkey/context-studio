@@ -5,8 +5,8 @@ This module provides optimized dependency injection for reference-related servic
 using the service factory pattern for better performance.
 """
 
-from services.service_factory import get_service_factory
 from reference_api.service import ReferenceService
+from services.service_factory import get_service_factory
 
 
 def get_reference_service() -> ReferenceService:

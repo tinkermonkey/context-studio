@@ -30,6 +30,8 @@ from typing import Any, Generic, Literal, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from domain.ontology.value_objects import DataType
+
 T = TypeVar("T")
 
 
@@ -483,6 +485,108 @@ class IndividualClassListRequest(BaseModel):
 
     class_ids: list[str] = Field(
         ..., description="Ordered list of class IDs (must match current membership)"
+    )
+
+
+# ==================== AttributeDefinition Schemas ====================
+
+
+class AttributeDefinitionCreateRequest(BaseModel):
+    """Request to create a new attribute definition."""
+
+    identifier: str = Field(..., description="Machine-readable identifier", min_length=1)
+    title: str = Field(..., description="Display name for the attribute", min_length=1)
+    datatype: str = Field(
+        ...,
+        description="Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        min_length=1,
+    )
+    description: Optional[str] = Field(None, description="Optional longer description")
+    is_required: bool = Field(False, description="Whether attribute is required on instances")
+    allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
+    default_value: Optional[str] = Field(None, description="Optional default value")
+    sort_order: int = Field(0, description="Display order within the class's attribute list")
+
+    @field_validator("title")
+    @classmethod
+    def _validate_title_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Title cannot be empty")
+        return value
+
+    @field_validator("datatype")
+    @classmethod
+    def _validate_datatype_field(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Datatype cannot be empty")
+        valid_types = {dt.value for dt in DataType}
+        if value.strip().lower() not in valid_types:
+            raise ValueError(
+                f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"
+            )
+        return value.strip().lower()
+
+
+class AttributeDefinitionUpdateRequest(BaseModel):
+    """Request to update an attribute definition (partial update)."""
+
+    title: Optional[str] = Field(None, description="New title", min_length=1)
+    description: Optional[str] = Field(None, description="New description")
+    datatype: Optional[str] = Field(
+        None,
+        description="New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        min_length=1,
+    )
+    is_required: Optional[bool] = Field(None, description="Update required flag")
+    allowed_values: Optional[list[str]] = Field(
+        None, description="Update enum constraint; pass [] to clear"
+    )
+    default_value: Optional[str] = Field(
+        None, description="Update default value; pass empty string to clear"
+    )
+    sort_order: Optional[int] = Field(None, description="Update display order")
+
+    @field_validator("datatype")
+    @classmethod
+    def _validate_datatype_field(cls, value: Optional[str]) -> Optional[str]:
+        if value is not None and not value.strip():
+            raise ValueError("Datatype cannot be empty")
+        if value is not None:
+            valid_types = {dt.value for dt in DataType}
+            if value.strip().lower() not in valid_types:
+                raise ValueError(
+                    f"Invalid datatype '{value}'. Must be one of: {', '.join(sorted(valid_types))}"
+                )
+            return value.strip().lower()
+        return value
+
+
+class AttributeDefinitionResponse(BaseModel):
+    """Response containing attribute definition data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier (UUID)")
+    class_id: str = Field(..., description="Parent class ID")
+    identifier: str = Field(..., description="Machine-readable identifier")
+    title: str = Field(..., description="Display name")
+    datatype: str = Field(..., description="Data type (e.g. 'string', 'integer', 'boolean')")
+    description: Optional[str] = Field(None, description="Optional description")
+    is_required: bool = Field(False, description="Whether this attribute is required")
+    allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")
+    default_value: Optional[str] = Field(None, description="Optional default value")
+    sort_order: int = Field(0, description="Display order within the class's attributes")
+    external_references: list[ExternalReferenceResponse] = Field(
+        default_factory=list, description="References to external knowledge bases"
+    )
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number for optimistic concurrency control")
+    status: Literal["draft", "published"] = Field(
+        default="draft", description="Publication status (draft or published)"
+    )
+    source_run_id: Optional[str] = Field(
+        None, description="ID of the pipeline run that created or last modified this entity"
     )
 
 

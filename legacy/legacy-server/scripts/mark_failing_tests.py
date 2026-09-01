@@ -164,7 +164,7 @@ def ensure_pytest_import(file_path: Path) -> None:
     # Add pytest import after the first import block
     lines = content.split("\n")
     for i, line in enumerate(lines):
-        if line.startswith("import ") or line.startswith("from "):
+        if line.startswith(("import ", "from ")):
             # Found first import, add pytest import here
             if i == 0 or not (
                 lines[i - 1].startswith("import ") or lines[i - 1].startswith("from ")

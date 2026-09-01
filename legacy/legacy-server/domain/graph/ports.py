@@ -5,7 +5,8 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
 
-from typing import Protocol, Optional, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 
 class GraphEngine(Protocol):
@@ -32,7 +33,7 @@ class GraphEngine(Protocol):
         """Get the number of edges in the graph."""
         ...
 
-    def shortest_path(self, source_id: str, target_id: str) -> Optional[list[str]]:
+    def shortest_path(self, source_id: str, target_id: str) -> list[str] | None:
         """Find shortest path between two nodes."""
         ...
 
@@ -89,9 +90,9 @@ class SemanticQueryEngine(Protocol):
 
     def get_triples(
         self,
-        subject: Optional[str] = None,
-        predicate: Optional[str] = None,
-        object: Optional[str] = None,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
     ) -> list[tuple[str, str, str]]:
         """Get RDF triples matching the given criteria."""
         ...

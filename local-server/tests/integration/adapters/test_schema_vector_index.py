@@ -6,7 +6,6 @@ embedding service with hand-crafted orthogonal vectors, so similarity outcomes
 are predictable without loading the SentenceTransformer model.
 """
 
-import os
 import sys
 import tempfile
 from pathlib import Path
@@ -15,7 +14,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import adapters.persistence.sqlite.schema_vector_index as svi_module
 from adapters.persistence.sqlite.mappers import _serialize_embedding

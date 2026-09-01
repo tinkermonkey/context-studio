@@ -6,10 +6,10 @@ Users can enable/disable models and configure how they should be routed (native 
 """
 
 import json
-from typing import Dict, List, Optional, Any
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from dataclasses import dataclass, asdict, field
 from pathlib import Path
+from typing import Any
 
 from utils.logger import get_logger
 
@@ -35,21 +35,21 @@ class EnabledModelConfig:
     enabled: bool = True  # Whether model is currently enabled
 
     # Provider-specific configuration
-    api_key_env_var: Optional[str] = None  # Environment variable for API key
-    custom_endpoint: Optional[str] = None  # Custom endpoint URL if needed
-    model_override: Optional[str] = None  # Override model name for provider
+    api_key_env_var: str | None = None  # Environment variable for API key
+    custom_endpoint: str | None = None  # Custom endpoint URL if needed
+    model_override: str | None = None  # Override model name for provider
 
     # Additional metadata
-    description: Optional[str] = None  # Model description for UI
-    cost_tier: Optional[str] = None  # Cost indicator (low/medium/high)
-    tags: List[str] = field(default_factory=list)  # Tags for filtering/grouping
+    description: str | None = None  # Model description for UI
+    cost_tier: str | None = None  # Cost indicator (low/medium/high)
+    tags: list[str] = field(default_factory=list)  # Tags for filtering/grouping
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EnabledModelConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "EnabledModelConfig":
         """Create from dictionary"""
         # Handle enum conversion
         if isinstance(data.get("provider_type"), str):
@@ -63,7 +63,7 @@ class EnabledModelsManager:
     def __init__(self, config_file: str = "./enabled_models.json"):
         self.config_file = Path(config_file)
         self.logger = logger
-        self._models: Dict[str, EnabledModelConfig] = {}
+        self._models: dict[str, EnabledModelConfig] = {}
         self.load()
 
     def load(self) -> None:
@@ -184,15 +184,15 @@ class EnabledModelsManager:
 
         self._models = {model.model_name: model for model in default_models}
 
-    def get_enabled_models(self) -> List[EnabledModelConfig]:
+    def get_enabled_models(self) -> list[EnabledModelConfig]:
         """Get list of currently enabled models"""
         return [config for config in self._models.values() if config.enabled]
 
-    def get_all_models(self) -> List[EnabledModelConfig]:
+    def get_all_models(self) -> list[EnabledModelConfig]:
         """Get list of all configured models (enabled and disabled)"""
         return list(self._models.values())
 
-    def get_model_config(self, model_name: str) -> Optional[EnabledModelConfig]:
+    def get_model_config(self, model_name: str) -> EnabledModelConfig | None:
         """Get configuration for a specific model"""
         return self._models.get(model_name)
 
@@ -232,14 +232,14 @@ class EnabledModelsManager:
 
     def get_models_by_provider(
         self, provider_type: ProviderType, enabled_only: bool = True
-    ) -> List[EnabledModelConfig]:
+    ) -> list[EnabledModelConfig]:
         """Get models filtered by provider type"""
         models = self.get_enabled_models() if enabled_only else self.get_all_models()
         return [model for model in models if model.provider_type == provider_type]
 
     def get_models_by_tag(
         self, tag: str, enabled_only: bool = True
-    ) -> List[EnabledModelConfig]:
+    ) -> list[EnabledModelConfig]:
         """Get models filtered by tag"""
         models = self.get_enabled_models() if enabled_only else self.get_all_models()
         return [model for model in models if tag in model.tags]
@@ -249,14 +249,14 @@ class EnabledModelsManager:
         config = self.get_model_config(model_name)
         return config is not None and config.enabled
 
-    def get_provider_for_model(self, model_name: str) -> Optional[ProviderType]:
+    def get_provider_for_model(self, model_name: str) -> ProviderType | None:
         """Get the provider type for a model"""
         config = self.get_model_config(model_name)
         return config.provider_type if config else None
 
 
 # Global instance
-_enabled_models_manager: Optional[EnabledModelsManager] = None
+_enabled_models_manager: EnabledModelsManager | None = None
 
 
 def get_enabled_models_manager() -> EnabledModelsManager:

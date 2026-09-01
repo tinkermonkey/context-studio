@@ -9,28 +9,30 @@ Database file: tests/performance_tests/scale_test.db
 import argparse
 import math
 import os
-import psutil
 import sys
 import time
 import uuid
+
+import psutil
 from fastapi.testclient import TestClient
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-)  # noqa: E501
+)
 
-from app import create_app  # noqa: E402
-from utils.logger import get_logger  # noqa: E402
-from database.utils import (  # noqa: E402
+from database.enums import NodeType
+from database.models import StructureNode, StructureNodeLink
+from database.utils import (
     get_database_manager,
 )
-from services.service_factory import (  # noqa: E402
+from services.service_factory import (
     ServiceFactory,
-    set_service_factory,
     get_service_factory,
+    set_service_factory,
 )
-from database.models import StructureNode, StructureNodeLink  # noqa: E402
-from database.enums import NodeType  # noqa: E402
+from utils.logger import get_logger
+
+from app import create_app
 
 logger = get_logger("scale_perf_test")
 
@@ -54,7 +56,7 @@ def get_persistent_client():
     app = create_app()
 
     # Use context manager to properly handle lifespan events (startup/shutdown)
-    # This ensures service factory and database manager are initialized properly  # noqa: E501
+    # This ensures service factory and database manager are initialized properly
     client = TestClient(app)
 
     # Force lifespan startup event to initialize services by entering context
@@ -83,7 +85,7 @@ def check_service_factory_stats(client, stage=""):
             factory_id = stats.get("factory_id", "unknown")
             total_entries = stats.get("total_cache_entries", 0)
             logger.info(
-                f"[SERVICE FACTORY {stage}] Factory ID: {factory_id}, Cache entries: {total_entries}"  # noqa: E501
+                f"[SERVICE FACTORY {stage}] Factory ID: {factory_id}, Cache entries: {total_entries}"
             )
 
             # Log service usage
@@ -93,13 +95,13 @@ def check_service_factory_stats(client, stage=""):
                 cache_hit_rate = metrics.get("cache_hit_rate_percent", 0)
                 if total_created > 0:
                     logger.info(
-                        f"[SERVICE FACTORY {stage}] {service_name}: {total_created} created, {cache_hit_rate:.1f}% cache hit rate"  # noqa: E501
+                        f"[SERVICE FACTORY {stage}] {service_name}: {total_created} created, {cache_hit_rate:.1f}% cache hit rate"
                     )
 
             return stats
         else:
             logger.warning(
-                f"[SERVICE FACTORY {stage}] Failed to get stats: {response.status_code}"  # noqa: E501
+                f"[SERVICE FACTORY {stage}] Failed to get stats: {response.status_code}"
             )
             return None
     except Exception as e:
@@ -108,7 +110,7 @@ def check_service_factory_stats(client, stage=""):
 
 
 def reset_service_factory_for_performance_test():
-    """Reset service factory cache and metrics for clean performance testing."""  # noqa: E501
+    """Reset service factory cache and metrics for clean performance testing."""
     try:
         factory = get_service_factory()
         if factory:
@@ -167,7 +169,7 @@ def create_term(client, domain, name=None):
 
 def create_relationship(client, source_node_id, target_node_id):
     logger.debug(
-        f"Creating relationship from node {source_node_id} to node {target_node_id}"  # noqa: E501
+        f"Creating relationship from node {source_node_id} to node {target_node_id}"
     )
     payload = {
         "source_node_id": source_node_id,
@@ -182,7 +184,7 @@ def create_relationship(client, source_node_id, target_node_id):
 def update_node(client, node_id, update_payload):
     response = client.put(
         f"/api/structure_nodes/{node_id}", json=update_payload
-    )  # noqa: E501
+    )
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -218,7 +220,7 @@ def populate_scale_test(
 ):
     logger.info("Starting scale test data population:")
     logger.info(
-        f"  - Layers: {num_layers}, Domains per layer: {num_domains_per_layer}, Terms per domain: {num_terms_per_domain}, Relationships per term: {num_relationships_per_term}"  # noqa: E501
+        f"  - Layers: {num_layers}, Domains per layer: {num_domains_per_layer}, Terms per domain: {num_terms_per_domain}, Relationships per term: {num_relationships_per_term}"
     )
 
     # Layers
@@ -231,10 +233,10 @@ def populate_scale_test(
     layer_progress = current_layer_count
     logger.info(
         f"Total layers to exist: {total_layers}, {current_layer_count} found"
-    )  # noqa: E501
+    )
     if current_layer_count < num_layers:
         logger.debug(
-            f"Creating {num_layers - current_layer_count} layers to reach {num_layers}..."  # noqa: E501
+            f"Creating {num_layers - current_layer_count} layers to reach {num_layers}..."
         )
         for i in range(current_layer_count, num_layers):
             title = f"ScaleLayer_{i+1}"
@@ -268,7 +270,7 @@ def populate_scale_test(
     domain_progress = len(domains)
     logger.info(
         f"Total domains to exist: {total_domains}, {domain_progress} found"
-    )  # noqa: E501
+    )
     for li, layer in enumerate(layers):
         current_domains = (
             DB_SESSION.query(StructureNode)
@@ -280,7 +282,7 @@ def populate_scale_test(
         )
         if current_domains < num_domains_per_layer:
             logger.debug(
-                f"Creating {num_domains_per_layer - current_domains} domains for layer {layer['id']}, {current_domains} currently exist"  # noqa: E501
+                f"Creating {num_domains_per_layer - current_domains} domains for layer {layer['id']}, {current_domains} currently exist"
             )
             for j in range(current_domains, num_domains_per_layer):
                 domain = create_domain(
@@ -290,7 +292,7 @@ def populate_scale_test(
                 )
                 if j == 0:
                     logger.debug(
-                        f"Created first domain for layer {layer['id']}: {domain['title']}"  # noqa: E501
+                        f"Created first domain for layer {layer['id']}: {domain['title']}"
                     )
                 domains.append(
                     {
@@ -302,10 +304,10 @@ def populate_scale_test(
                 domain_progress += 1
                 if (
                     domain_progress % 100 == 0 or domain_progress == total_domains
-                ):  # noqa: E501
+                ):
                     logger.info(
                         f"Domain progress: {domain_progress}/{total_domains}"
-                    )  # noqa: E501
+                    )
 
     # Terms
     total_terms = total_domains * num_terms_per_domain
@@ -319,7 +321,7 @@ def populate_scale_test(
             "id": term.id,
             "title": term.title,
             "parent_node_id": term.parent_node_id,
-        }  # noqa: E501
+        }
         for term in terms
     ]
     term_progress = len(terms)
@@ -338,7 +340,7 @@ def populate_scale_test(
         )
         if current_terms_in_domain < num_terms_per_domain:
             logger.debug(
-                f"Creating {num_terms_per_domain - current_terms_in_domain} terms for domain {domain['id']}, {current_terms_in_domain} currently exist"  # noqa: E501
+                f"Creating {num_terms_per_domain - current_terms_in_domain} terms for domain {domain['id']}, {current_terms_in_domain} currently exist"
             )
             for k in range(current_terms_in_domain, num_terms_per_domain):
                 term = create_term(
@@ -346,7 +348,7 @@ def populate_scale_test(
                 )
                 if k == 0:
                     logger.debug(
-                        f"Created first term for domain {domain['id']}: {term['title']}"  # noqa: E501
+                        f"Created first term for domain {domain['id']}: {term['title']}"
                     )
                 terms.append(
                     {
@@ -361,7 +363,7 @@ def populate_scale_test(
                     or term_progress == total_terms
                 ):
                     logger.info(
-                        f"Term progress: {term_progress}/{total_terms} ({round(term_progress / total_terms * 100):.0f}%)"  # noqa: E501
+                        f"Term progress: {term_progress}/{total_terms} ({round(term_progress / total_terms * 100):.0f}%)"
                     )
 
     # Relationships
@@ -382,7 +384,7 @@ def populate_scale_test(
         current_link_count = len(current_relationships)
         if current_link_count < num_relationships_per_term:
             logger.debug(
-                f"Creating {num_relationships_per_term - current_link_count} relationships for term {term['id']}..."  # noqa: E501
+                f"Creating {num_relationships_per_term - current_link_count} relationships for term {term['id']}..."
             )
             for r in range(num_relationships_per_term - current_link_count):
                 target_idx = (idx + r + 1) % len(terms)
@@ -399,11 +401,11 @@ def populate_scale_test(
                     relationship_progress += 1
                     if (
                         relationship_progress % relationship_progress_check
-                        == 0  # noqa: E501
+                        == 0
                         or relationship_progress == total_relationships
                     ):
                         logger.info(
-                            f"Relationship progress: {relationship_progress}/{total_relationships} ({round(relationship_progress / total_relationships * 100):.0f}%)"  # noqa: E501
+                            f"Relationship progress: {relationship_progress}/{total_relationships} ({round(relationship_progress / total_relationships * 100):.0f}%)"
                         )
 
     logger.info("Hierarchy build complete.")
@@ -418,14 +420,14 @@ def main():
         "--scale",
         type=str,
         default="small",
-        help="Scale: small, medium, large, xlarge",  # noqa: E501
+        help="Scale: small, medium, large, xlarge",
     )
     args = parser.parse_args()
     scale = args.scale.lower()
 
     # Setup performance test environment
     logger.info("Setting up performance test environment...")
-    service_factory, db_manager = setup_performance_test_environment()
+    _service_factory, _db_manager = setup_performance_test_environment()
 
     if scale == "small":
         num_layers = 2
@@ -468,7 +470,7 @@ def main():
     with client:
         # Initialize database session for populate_scale_test function
         global DB_SESSION
-        from database.utils import get_session_local, get_engine
+        from database.utils import get_engine, get_session_local
 
         # Use the scale test database URL instead of the default config
         scale_db_url = f"sqlite:///{DB_PATH}"
@@ -489,7 +491,7 @@ def main():
             )
             mem_stats[label] = (mem_mb, db_size_mb)
             logger.info(
-                f"[MEM] {label}: Python RSS={mem_mb:.2f} MB, SQLite DB={db_size_mb:.2f} MB"  # noqa: E501
+                f"[MEM] {label}: Python RSS={mem_mb:.2f} MB, SQLite DB={db_size_mb:.2f} MB"
             )
 
         print_mem_usage("Start")
@@ -509,12 +511,12 @@ def main():
         print_mem_usage("After populate_scale_test")
         logger.info(
             f"Database setup time: {db_setup_end - db_setup_start:.2f} seconds"
-        )  # noqa: E501
+        )
 
         # Check service factory stats after population
         check_service_factory_stats(client, "AFTER_POPULATE")
 
-        # Performance test phase: 100 repetitions of CRUD/search for each node type  # noqa: E501
+        # Performance test phase: 100 repetitions of CRUD/search for each node type
         repetitions = 100
         timings = {}
         created_nodes = {"layer": [], "domain": [], "term": []}
@@ -545,7 +547,7 @@ def main():
                     created_nodes["term"].append(
                         create_term(
                             client, domain=domain, name=f"PerfTerm_{node_id}"
-                        )  # noqa: E501
+                        )
                     )
             timings[f"{node_type}_create"] = time.time() - start
             # print_mem_usage(f"After {node_type} create")
@@ -596,7 +598,7 @@ def main():
                 created_nodes["term"],
                 created_nodes["domain"],
                 created_nodes["layer"],
-            ],  # noqa: E501
+            ],
         ):
             logger.info(f"Deleting {len(node_list)} {node_type}s...")
             start = time.time()
@@ -606,7 +608,7 @@ def main():
                 except Exception as e:
                     logger.error(
                         f"Failed to delete {node_type} {node['id']}: {e}"
-                    )  # noqa: E501
+                    )
 
             timings[f"{node_type}_delete"] = time.time() - start
         # print_mem_usage(f"After {node_type} delete")
@@ -615,31 +617,31 @@ def main():
         check_service_factory_stats(client, "FINAL")
 
         logger.info(
-            "============ Performance Summary ======================================"  # noqa: E501
+            "============ Performance Summary ======================================"
         )
         logger.info(f"{'Scale:':>30} {scale}")
         logger.info(f"{'Layers:':>30} {num_layers}")
         logger.info(
-            f"{'Domains:':>30} {num_domains_per_layer} per layer, {num_domains_per_layer * num_layers} total"  # noqa: E501
+            f"{'Domains:':>30} {num_domains_per_layer} per layer, {num_domains_per_layer * num_layers} total"
         )
         logger.info(
-            f"{'Terms:':>30} {num_terms_per_domain} per domain, {num_terms_per_domain * num_domains_per_layer * num_layers} total"  # noqa: E501
+            f"{'Terms:':>30} {num_terms_per_domain} per domain, {num_terms_per_domain * num_domains_per_layer * num_layers} total"
         )
         logger.info(
-            f"{'Relationships:':>30} {num_relationships_per_term} per term, {num_relationships_per_term * num_terms_per_domain * num_domains_per_layer * num_layers} total"  # noqa: E501
+            f"{'Relationships:':>30} {num_relationships_per_term} per term, {num_relationships_per_term * num_terms_per_domain * num_domains_per_layer * num_layers} total"
         )
         logger.info(
-            f"{'Total records:':>30} {num_layers * num_domains_per_layer * num_terms_per_domain + num_terms_per_domain * num_relationships_per_term}"  # noqa: E501
+            f"{'Total records:':>30} {num_layers * num_domains_per_layer * num_terms_per_domain + num_terms_per_domain * num_relationships_per_term}"
         )
         logger.info(f"{'Iterations:':>30} {repetitions}")
         logger.info(
-            f"{'Total time for iterations:':>30} {sum(timings.values()):.2f} seconds"  # noqa: E501
+            f"{'Total time for iterations:':>30} {sum(timings.values()):.2f} seconds"
         )
         logger.info(
-            f"{'Database setup time:':>30} {db_setup_end - db_setup_start:.2f} seconds"  # noqa: E501
+            f"{'Database setup time:':>30} {db_setup_end - db_setup_start:.2f} seconds"
         )
         logger.info(
-            "======================================================================="  # noqa: E501
+            "======================================================================="
         )
 
         # log table headers
@@ -648,7 +650,7 @@ def main():
             header_row += f"{op.capitalize():<12}"
         logger.info(header_row)
         logger.info(
-            "-----------------------------------------------------------------------"  # noqa: E501
+            "-----------------------------------------------------------------------"
         )
 
         for node_type in ["layer", "domain", "term"]:
@@ -661,7 +663,7 @@ def main():
             row_lead = f"{node_type.capitalize()} avg: "
             logger.info(f"{row_lead:>13}{op_row}")
         logger.info(
-            "========================================================================"  # noqa: E501
+            "========================================================================"
         )
 
         # Memory usage summary
@@ -669,11 +671,11 @@ def main():
         final_mem, final_db = mem_stats.get("After term delete", (None, None))
         if initial_mem is not None and final_mem is not None:
             logger.info(
-                f"[MEM][SUMMARY] Python RSS delta: {final_mem - initial_mem:.2f} MB (from {initial_mem:.2f} MB to {final_mem:.2f} MB)"  # noqa: E501
+                f"[MEM][SUMMARY] Python RSS delta: {final_mem - initial_mem:.2f} MB (from {initial_mem:.2f} MB to {final_mem:.2f} MB)"
             )
         if initial_db is not None and final_db is not None:
             logger.info(
-                f"[MEM][SUMMARY] SQLite DB size delta: {final_db - initial_db:.2f} MB (from {initial_db:.2f} MB to {final_db:.2f} MB)"  # noqa: E501
+                f"[MEM][SUMMARY] SQLite DB size delta: {final_db - initial_db:.2f} MB (from {initial_db:.2f} MB to {final_db:.2f} MB)"
             )
 
         logger.info("Scale performance test completed.")

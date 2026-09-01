@@ -1,34 +1,34 @@
 """Unit tests for reference normalizers."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from datetime import datetime, UTC  # noqa: E402
-from unittest.mock import Mock  # noqa: E402
+from datetime import UTC, datetime
+from unittest.mock import Mock
 
-from reference_api.normalizers import ResultNormalizer  # noqa: E402
-from reference_api.models import (  # noqa: E402
-    SourceType,
+import pytest
+from reference_api.models import (
+    ConceptNetConceptResponse,
+    ConceptNetQueryResponse,
+    ConceptNetRelatedResponse,
+    DBpediaResourceResponse,
     DBpediaSearchResponse,
     DBpediaSearchResult,
-    DBpediaResourceResponse,
-    ConceptNetQueryResponse,
-    ConceptNetConceptResponse,
-    ConceptNetRelatedResponse,
-    WikidataSparqlResponse,
-    WikidataEntityResponse,
+    SchemaOrgEntity,
+    SchemaOrgEntityResponse,
+    SchemaOrgPropertyData,
+    SchemaOrgPropertyResponse,
     SchemaOrgSearchResponse,
     SchemaOrgSearchResult,
-    SchemaOrgEntityResponse,
-    SchemaOrgEntity,
-    SchemaOrgPropertyResponse,
-    SchemaOrgPropertyData,
+    SourceType,
+    WikidataEntityResponse,
+    WikidataSparqlResponse,
 )
+from reference_api.normalizers import ResultNormalizer
 
 
 class TestResultNormalizer:
@@ -503,7 +503,7 @@ class TestResultNormalizer:
             edges=edges,
         )
 
-        nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")
+        nodes, _links = normalizer.normalize_conceptnet_query_response(response, "dog")
 
         # Should only include English concepts since default_language is "en"
         assert len(nodes) == 2  # dog and animal (both English)

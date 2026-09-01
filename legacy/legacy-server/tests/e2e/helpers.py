@@ -8,7 +8,8 @@ test data setup helpers.
 
 import functools
 import time
-from typing import Callable, Any, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -143,8 +144,8 @@ def create_test_hierarchy(
     layer_definition: str,
     scheme_title: str,
     scheme_definition: str,
-    classes: List[Dict[str, str]],
-) -> Dict[str, Any]:
+    classes: list[dict[str, str]],
+) -> dict[str, Any]:
     """
     Create a test hierarchy (layer → domain → terms) via POST requests.
 
@@ -243,9 +244,9 @@ def create_test_hierarchy(
 
 def create_test_hierarchy_new_api(
     client,
-    taxonomy_data: Optional[Dict[str, str]] = None,
-    scheme_data: Optional[Dict[str, str]] = None,
-    class_data_list: Optional[List[Dict[str, str]]] = None,
+    taxonomy_data: dict[str, str] | None = None,
+    scheme_data: dict[str, str] | None = None,
+    class_data_list: list[dict[str, str]] | None = None,
 ) -> tuple:
     """
     Create a taxonomy → concept scheme → classes hierarchy using the new /api/ontology_entities/ routes.

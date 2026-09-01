@@ -5,8 +5,8 @@ This file provides a simple mapping of model names to their supported capabiliti
 to help the UI understand which configuration options to show users.
 """
 
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -27,8 +27,8 @@ class ModelCapabilities:
     supports_streaming: bool = True
 
     # Limits and constraints
-    max_tokens_limit: Optional[int] = None
-    context_window: Optional[int] = None
+    max_tokens_limit: int | None = None
+    context_window: int | None = None
 
     # Additional metadata
     provider: str = "unknown"
@@ -36,7 +36,7 @@ class ModelCapabilities:
 
 
 # Model capabilities registry
-MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
+MODEL_CAPABILITIES: dict[str, ModelCapabilities] = {
     # OpenAI GPT-4 family (clearly inferior)
     "gpt-4": ModelCapabilities(
         supports_top_k=False,  # OpenAI doesn't support top_k
@@ -225,12 +225,12 @@ def get_model_capabilities(model_name: str) -> ModelCapabilities:
     return MODEL_CAPABILITIES.get(model_name, ModelCapabilities())
 
 
-def get_supported_models() -> List[str]:
+def get_supported_models() -> list[str]:
     """Get list of all models with defined capabilities."""
     return list(MODEL_CAPABILITIES.keys())
 
 
-def get_models_by_provider(provider: str) -> List[str]:
+def get_models_by_provider(provider: str) -> list[str]:
     """Get list of models for a specific provider."""
     return [
         model_name
@@ -239,7 +239,7 @@ def get_models_by_provider(provider: str) -> List[str]:
     ]
 
 
-def get_provider_parameter_filters(provider: str) -> Dict[str, bool]:
+def get_provider_parameter_filters(provider: str) -> dict[str, bool]:
     """
     Get parameter filters for a specific provider.
     Returns which parameters should be filtered out (removed) for the provider.
@@ -258,8 +258,8 @@ def get_provider_parameter_filters(provider: str) -> Dict[str, bool]:
 
 
 def validate_model_config(
-    model_name: str, config: Dict[str, Any]
-) -> tuple[Dict[str, Any], List[str]]:
+    model_name: str, config: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
     """
     Validate and filter model configuration based on capabilities.
 

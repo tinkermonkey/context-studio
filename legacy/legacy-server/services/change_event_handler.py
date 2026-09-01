@@ -7,12 +7,12 @@ and provides utilities for managing change events across all record types.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, cast
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Any, cast
 
-from database.models import ChangeEvent
 from database.enums import RecordType
+from database.models import ChangeEvent
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,9 +34,9 @@ class ChangeEventHandler:
         self,
         event_type: str,
         record_type: RecordType,
-        record_id: Optional[str] = None,
-        old_data: Optional[Dict[str, Any]] = None,
-        new_data: Optional[Dict[str, Any]] = None,
+        record_id: str | None = None,
+        old_data: dict[str, Any] | None = None,
+        new_data: dict[str, Any] | None = None,
     ) -> ChangeEvent:
         """
         Create a new ChangeEvent.
@@ -80,9 +80,9 @@ class ChangeEventHandler:
         self,
         event_type: str,
         record_type: RecordType,
-        record_id: Optional[str] = None,
-        old_data: Optional[Dict[str, Any]] = None,
-        new_data: Optional[Dict[str, Any]] = None,
+        record_id: str | None = None,
+        old_data: dict[str, Any] | None = None,
+        new_data: dict[str, Any] | None = None,
     ) -> ChangeEvent:
         """
         Fire unified change event.
@@ -100,7 +100,7 @@ class ChangeEventHandler:
         return self.create_event(event_type, record_type, record_id, old_data, new_data)
 
     def fire_created_event(
-        self, record_type: RecordType, record_id: str, record_data: Dict[str, Any]
+        self, record_type: RecordType, record_id: str, record_data: dict[str, Any]
     ) -> ChangeEvent:
         """
         Fire a created event with type safety.
@@ -125,8 +125,8 @@ class ChangeEventHandler:
         self,
         record_type: RecordType,
         record_id: str,
-        old_data: Dict[str, Any],
-        new_data: Dict[str, Any],
+        old_data: dict[str, Any],
+        new_data: dict[str, Any],
     ) -> ChangeEvent:
         """
         Fire an updated event with type safety.
@@ -149,7 +149,7 @@ class ChangeEventHandler:
         )
 
     def fire_deleted_event(
-        self, record_type: RecordType, record_id: str, record_data: Dict[str, Any]
+        self, record_type: RecordType, record_id: str, record_data: dict[str, Any]
     ) -> ChangeEvent:
         """
         Fire a deleted event with type safety.
@@ -172,7 +172,7 @@ class ChangeEventHandler:
 
     # Convenience methods for specific record types (using new primary names)
     def fire_property_definition_created_event(
-        self, property_definition_id: str, property_definition_data: Dict[str, Any]
+        self, property_definition_id: str, property_definition_data: dict[str, Any]
     ) -> ChangeEvent:
         """Convenience method for property definition creation events."""
         return self.fire_created_event(
@@ -182,7 +182,7 @@ class ChangeEventHandler:
         )
 
     def fire_ontology_entity_created_event(
-        self, entity_id: str, entity_data: Dict[str, Any]
+        self, entity_id: str, entity_data: dict[str, Any]
     ) -> ChangeEvent:
         """Convenience method for ontology entity creation events."""
         return self.fire_created_event(
@@ -190,7 +190,7 @@ class ChangeEventHandler:
         )
 
     def fire_relationship_created_event(
-        self, relationship_id: str, relationship_data: Dict[str, Any]
+        self, relationship_id: str, relationship_data: dict[str, Any]
     ) -> ChangeEvent:
         """Convenience method for relationship creation events."""
         return self.fire_created_event(
@@ -199,7 +199,7 @@ class ChangeEventHandler:
 
     # Deprecated convenience methods for backward compatibility
     def fire_predicate_created_event(
-        self, predicate_id: str, predicate_data: Dict[str, Any]
+        self, predicate_id: str, predicate_data: dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_property_definition_created_event() instead."""
         return self.fire_created_event(
@@ -207,13 +207,13 @@ class ChangeEventHandler:
         )
 
     def fire_structure_node_created_event(
-        self, node_id: str, node_data: Dict[str, Any]
+        self, node_id: str, node_data: dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_ontology_entity_created_event() instead."""
         return self.fire_created_event(RecordType.STRUCTURE_NODE, node_id, node_data)
 
     def fire_structure_node_link_created_event(
-        self, link_id: str, link_data: Dict[str, Any]
+        self, link_id: str, link_data: dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_relationship_created_event() instead."""
         return self.fire_created_event(
@@ -221,8 +221,8 @@ class ChangeEventHandler:
         )
 
     def get_unprocessed_events(
-        self, record_type: Optional[RecordType] = None, limit: int = 100
-    ) -> List[ChangeEvent]:
+        self, record_type: RecordType | None = None, limit: int = 100
+    ) -> list[ChangeEvent]:
         """
         Get unprocessed change events, optionally filtered by record type.
 
@@ -239,13 +239,13 @@ class ChangeEventHandler:
             query = query.filter(ChangeEvent.record_type == record_type)
 
         return cast(
-            List[ChangeEvent],
+            list[ChangeEvent],
             query.order_by(ChangeEvent.timestamp.asc()).limit(limit).all(),
         )
 
     def get_events_for_record(
         self, record_id: str, limit: int = 100
-    ) -> List[ChangeEvent]:
+    ) -> list[ChangeEvent]:
         """
         Get events for a specific record.
 
@@ -257,7 +257,7 @@ class ChangeEventHandler:
             List of ChangeEvent objects for the specified record
         """
         return cast(
-            List[ChangeEvent],
+            list[ChangeEvent],
             (
                 self.db.query(ChangeEvent)
                 .filter(ChangeEvent.record_id == record_id)
@@ -294,7 +294,7 @@ class ChangeEventHandler:
             self.db.rollback()
             return False
 
-    def get_event_stats(self) -> Dict[str, Any]:
+    def get_event_stats(self) -> dict[str, Any]:
         """
         Get statistics about change events.
 

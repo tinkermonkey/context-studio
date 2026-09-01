@@ -12,8 +12,8 @@ This script runs the complete Schema.org import pipeline:
 7. Extracts and inserts metadata relationships
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Add parent directory to path for imports

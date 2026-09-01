@@ -2,7 +2,7 @@ from uuid import uuid4
 
 # Integration tests use shared session-scoped fixtures for performance:
 # - shared_client (session-scoped test client, reused across all tests)
-# - client (function-scoped, delegates to shared_client for backwards compatibility)  # noqa: E501
+# - client (function-scoped, delegates to shared_client for backwards compatibility)
 # - db_session (function-scoped, provides clean database state per test)
 
 
@@ -116,10 +116,10 @@ def test_find_domain(client):
     unique_beta = f"BetaDomain_{uuid4()}"
     _ = create_domain(
         client, layer_id, title=unique_alpha, definition="Physics"
-    )  # noqa: E501
+    )
     _ = create_domain(
         client, layer_id, title=unique_beta, definition="Chemistry"
-    )  # noqa: E501
+    )
 
     # Note: The find endpoint is not yet implemented in structure_nodes API
     # This test is commented out until vector search is implemented
@@ -148,7 +148,7 @@ def test_find_domain_invalid_created_at(client):
     assert resp.status_code == 422  # Validation error for invalid enum value
 
 
-# Negative test: creating a domain with an invalid parent_node_id (should return 422 for invalid UUID)  # noqa: E501
+# Negative test: creating a domain with an invalid parent_node_id (should return 422 for invalid UUID)
 def test_create_domain_invalid_layer_id(client):
     payload = {
         "node_type": "domain",
@@ -179,7 +179,7 @@ def test_domains_pagination(client):
 
     # Test pagination with limit=2
     resp = client.get(
-        f"/api/structure_nodes/?node_type=domain&parent_node_id={layer_id}&limit=2&sort_by=title"  # noqa: E501
+        f"/api/structure_nodes/?node_type=domain&parent_node_id={layer_id}&limit=2&sort_by=title"
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -202,7 +202,7 @@ def test_domains_pagination(client):
 
     # Test second page
     resp2 = client.get(
-        f"/api/structure_nodes/?node_type=domain&parent_node_id={layer_id}&skip=2&limit=2&sort_by=title"  # noqa: E501
+        f"/api/structure_nodes/?node_type=domain&parent_node_id={layer_id}&skip=2&limit=2&sort_by=title"
     )
     assert resp2.status_code == 200
     data2 = resp2.json()

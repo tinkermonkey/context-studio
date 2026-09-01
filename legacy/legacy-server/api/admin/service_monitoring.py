@@ -5,11 +5,11 @@ This module provides administrative endpoints to monitor service factory perform
 cache statistics, and system health for Phase 2 implementation.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any
 
-from services.service_factory import get_service_factory, ServiceFactory
+from fastapi import APIRouter, Depends, HTTPException
+from services.service_factory import ServiceFactory, get_service_factory
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -25,7 +25,7 @@ def get_admin_service_factory() -> ServiceFactory:
 @router.get("/stats", summary="Get comprehensive service factory statistics")
 async def get_service_factory_stats(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get comprehensive statistics about the service factory including:
     - Cache hit rates
@@ -37,19 +37,19 @@ async def get_service_factory_stats(
         stats = factory.get_cache_stats()
         logger.info(
             f"Service factory stats requested - {stats['total_cache_entries']} entries"
-        )  # noqa: E501
+        )
         return stats
     except Exception as e:
         logger.error(f"Error getting service factory stats: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get service factory stats: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get service factory stats: {e!s}"
+        )
 
 
 @router.get("/performance", summary="Get performance summary")
 async def get_service_factory_performance(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get a concise performance summary for quick monitoring:
     - Overall cache hit rate
@@ -61,18 +61,18 @@ async def get_service_factory_performance(
         hit_rate = performance["overall_cache_hit_rate_percent"]
         logger.debug(
             f"Service factory performance summary: {hit_rate:.1f}% hit rate"
-        )  # noqa: E501
+        )
         return performance
     except Exception as e:
         logger.error(f"Error getting service factory performance: {e}")
-        msg = f"Failed to get service factory performance: {str(e)}"
+        msg = f"Failed to get service factory performance: {e!s}"
         raise HTTPException(status_code=500, detail=msg)
 
 
 @router.get("/health", summary="Get service factory health status")
 async def get_service_factory_health(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get health status of the service factory:
     - Overall health status
@@ -85,20 +85,20 @@ async def get_service_factory_health(
         if health["status"] != "healthy":
             logger.warning(
                 f"Service factory health issues detected: {health['issues']}"
-            )  # noqa: E501
+            )
 
         return health
     except Exception as e:
         logger.error(f"Error getting service factory health: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get service factory health: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get service factory health: {e!s}"
+        )
 
 
 @router.post("/cache/clear", summary="Clear service factory cache")
 async def clear_service_factory_cache(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Clear all cached service entries and reset metrics.
     Use with caution - this will force recreation of all services.
@@ -111,27 +111,27 @@ async def clear_service_factory_cache(
 
         logger.info(
             f"Service factory cache cleared - removed {entries_before} entries"
-        )  # noqa: E501
+        )
 
         return {
             "status": "success",
-            "message": f"Cache cleared successfully - removed {entries_before} entries",  # noqa: E501
+            "message": f"Cache cleared successfully - removed {entries_before} entries",
             "entries_cleared": entries_before,
             "cleared_at": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error clearing service factory cache: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to clear service factory cache: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to clear service factory cache: {e!s}"
+        )
 
 
 @router.post(
     "/cache/cleanup", summary="Force cleanup of expired cache entries"
-)  # noqa: E501
+)
 async def cleanup_service_factory_cache(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Force cleanup of expired cache entries.
     This is normally done automatically but can be triggered manually.
@@ -141,7 +141,7 @@ async def cleanup_service_factory_cache(
 
         logger.info(
             f"Service factory cache cleanup completed - removed {expired_count} expired entries"
-        )  # noqa: E501
+        )
 
         return {
             "status": "success",
@@ -152,16 +152,16 @@ async def cleanup_service_factory_cache(
     except Exception as e:
         logger.error(f"Error during service factory cache cleanup: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to cleanup service factory cache: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to cleanup service factory cache: {e!s}"
+        )
 
 
 @router.get(
     "/metrics/{service_type}", summary="Get metrics for specific service type"
-)  # noqa: E501
+)
 async def get_service_type_metrics(
     service_type: str, factory: ServiceFactory = Depends(get_admin_service_factory)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get detailed metrics for a specific service type.
 
@@ -175,7 +175,7 @@ async def get_service_type_metrics(
             available = list(stats["service_metrics"].keys())
             raise HTTPException(
                 status_code=404,
-                detail=f"Service type '{service_type}' not found. Available types: {available}",  # noqa: E501
+                detail=f"Service type '{service_type}' not found. Available types: {available}",
             )
 
         service_metrics = stats["service_metrics"][service_type]
@@ -199,16 +199,16 @@ async def get_service_type_metrics(
     except Exception as e:
         logger.error(
             f"Error getting metrics for service type {service_type}: {e}"
-        )  # noqa: E501
+        )
         raise HTTPException(
-            status_code=500, detail=f"Failed to get metrics for service type: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to get metrics for service type: {e!s}"
+        )
 
 
 @router.get("/dashboard", summary="Get monitoring dashboard data")
 async def get_service_factory_dashboard(
     factory: ServiceFactory = Depends(get_admin_service_factory),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get comprehensive dashboard data combining stats, performance, and health.
     Perfect for monitoring dashboards and operational visibility.
@@ -239,10 +239,10 @@ async def get_service_factory_dashboard(
             "performance": {
                 "overall_hit_rate_percent": performance[
                     "overall_cache_hit_rate_percent"
-                ],  # noqa: E501
+                ],
                 "total_services_created": performance[
                     "total_services_created"
-                ],  # noqa: E501
+                ],
                 "total_requests": total_requests,
             },
             "health": {
@@ -263,5 +263,5 @@ async def get_service_factory_dashboard(
     except Exception as e:
         logger.error(f"Error generating service factory dashboard: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate dashboard data: {str(e)}"
-        )  # noqa: E501
+            status_code=500, detail=f"Failed to generate dashboard data: {e!s}"
+        )

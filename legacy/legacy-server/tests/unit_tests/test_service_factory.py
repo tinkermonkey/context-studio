@@ -4,26 +4,26 @@ Unit tests for ServiceFactory - Testing the service factory pattern implementati
 Tests service caching, metrics tracking, performance optimization, and thread safety.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import time  # noqa: E402
-import threading  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
+import threading
+import time
+from unittest.mock import Mock, patch
 
-from services.service_factory import (  # noqa: E402
-    ServiceFactory,
-    ServiceType,
-    ServiceMetrics,
+import pytest
+from services.node_link_service import NodeLinkService
+from services.node_service import NodeService
+from services.service_factory import (
     CachedServiceEntry,
+    ServiceFactory,
+    ServiceMetrics,
+    ServiceType,
 )
-from services.node_service import NodeService  # noqa: E402
-from services.node_link_service import NodeLinkService  # noqa: E402
 
 
 class TestServiceFactory:

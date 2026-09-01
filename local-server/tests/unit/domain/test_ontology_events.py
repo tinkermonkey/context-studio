@@ -14,6 +14,9 @@ from datetime import datetime, timezone
 import pytest
 
 from domain.ontology.events import (
+    AttributeDefinitionCreated,
+    AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -683,6 +686,148 @@ class TestPropertyDefinitionCreated:
             event.title = "New Title"
 
 
+class TestAttributeDefinitionCreated:
+    """Tests for AttributeDefinitionCreated event."""
+
+    def test_attribute_definition_created_instantiation(self):
+        """AttributeDefinitionCreated can be instantiated with all required fields."""
+        event = AttributeDefinitionCreated(
+            attribute_definition_id="attr-123",
+            class_id="class-456",
+            identifier="firstName",
+            title="First Name",
+        )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
+        assert event.attribute_definition_id == "attr-123"
+        assert event.class_id == "class-456"
+        assert event.identifier == "firstName"
+        assert event.title == "First Name"
+
+    def test_attribute_definition_created_auto_populates_aggregate_id(self):
+        """AttributeDefinitionCreated auto-populates aggregate_id from attribute_definition_id."""
+        event = AttributeDefinitionCreated(
+            attribute_definition_id="attr-789",
+            class_id="class-123",
+            identifier="lastName",
+            title="Last Name",
+        )
+        assert event.aggregate_id == "attr-789"
+
+    def test_attribute_definition_created_is_frozen(self):
+        """AttributeDefinitionCreated instances are frozen."""
+        event = AttributeDefinitionCreated(
+            attribute_definition_id="attr-123",
+            class_id="class-456",
+            identifier="firstName",
+            title="First Name",
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.title = "New Title"
+
+    def test_attribute_definition_created_rejects_empty_title(self):
+        """AttributeDefinitionCreated raises ValueError if title is empty."""
+        with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
+            AttributeDefinitionCreated(
+                attribute_definition_id="attr-123",
+                class_id="class-456",
+                identifier="firstName",
+                title="",
+            )
+
+
+class TestAttributeDefinitionUpdated:
+    """Tests for AttributeDefinitionUpdated event."""
+
+    def test_attribute_definition_updated_instantiation(self):
+        """AttributeDefinitionUpdated can be instantiated with changed fields and old/new values."""
+        event = AttributeDefinitionUpdated(
+            attribute_definition_id="attr-123",
+            changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
+        )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
+        assert event.attribute_definition_id == "attr-123"
+        assert event.changed_fields == ("title",)
+        assert event.old_values == {"title": "Old Title"}
+        assert event.new_values == {"title": "New Title"}
+
+    def test_attribute_definition_updated_auto_populates_aggregate_id(self):
+        """AttributeDefinitionUpdated auto-populates aggregate_id from attribute_definition_id."""
+        event = AttributeDefinitionUpdated(
+            attribute_definition_id="attr-999",
+            changed_fields=("title",),
+            old_values={"title": "Old"},
+            new_values={"title": "New"},
+        )
+        assert event.aggregate_id == "attr-999"
+
+    def test_attribute_definition_updated_with_multiple_changed_fields(self):
+        """AttributeDefinitionUpdated can have multiple changed fields."""
+        event = AttributeDefinitionUpdated(
+            attribute_definition_id="attr-123",
+            changed_fields=("title", "description"),
+            old_values={"title": "Old Title", "description": "Old Desc"},
+            new_values={"title": "New Title", "description": "New Desc"},
+        )
+        assert event.changed_fields == ("title", "description")
+        assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
+        assert event.new_values == {"title": "New Title", "description": "New Desc"}
+
+    def test_attribute_definition_updated_is_frozen(self):
+        """AttributeDefinitionUpdated instances are frozen."""
+        event = AttributeDefinitionUpdated(
+            attribute_definition_id="attr-123",
+            changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.changed_fields = ("description",)
+
+
+class TestAttributeDefinitionDeleted:
+    """Tests for AttributeDefinitionDeleted event."""
+
+    def test_attribute_definition_deleted_instantiation(self):
+        """AttributeDefinitionDeleted can be instantiated with all required fields."""
+        event = AttributeDefinitionDeleted(
+            attribute_definition_id="attr-123",
+            class_id="class-456",
+            identifier="firstName",
+            title="First Name",
+        )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
+        assert event.attribute_definition_id == "attr-123"
+        assert event.class_id == "class-456"
+        assert event.identifier == "firstName"
+        assert event.title == "First Name"
+
+    def test_attribute_definition_deleted_auto_populates_aggregate_id(self):
+        """AttributeDefinitionDeleted auto-populates aggregate_id from attribute_definition_id."""
+        event = AttributeDefinitionDeleted(
+            attribute_definition_id="attr-789",
+            class_id="class-123",
+            identifier="lastName",
+            title="Last Name",
+        )
+        assert event.aggregate_id == "attr-789"
+
+    def test_attribute_definition_deleted_is_frozen(self):
+        """AttributeDefinitionDeleted instances are frozen."""
+        event = AttributeDefinitionDeleted(
+            attribute_definition_id="attr-123",
+            class_id="class-456",
+            identifier="firstName",
+            title="First Name",
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.title = "New Title"
+
+
 class TestGraphInvalidated:
     """Tests for GraphInvalidated event."""
 
@@ -719,7 +864,7 @@ class TestEventImportability:
     """Tests that all events can be imported from the module."""
 
     def test_all_events_importable_from_events_module(self):
-        """All eighteen event classes are importable from domain.ontology.events."""
+        """All twenty-one event classes are importable from domain.ontology.events."""
         events = [
             DomainEvent,
             TaxonomyCreated,
@@ -735,6 +880,9 @@ class TestEventImportability:
             RelationshipCreated,
             RelationshipDeleted,
             PropertyDefinitionCreated,
+            AttributeDefinitionCreated,
+            AttributeDefinitionUpdated,
+            AttributeDefinitionDeleted,
             IndividualCreated,
             IndividualUpdated,
             IndividualDeleted,

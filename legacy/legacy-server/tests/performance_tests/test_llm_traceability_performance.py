@@ -1,16 +1,16 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import time  # noqa: E402
-import tempfile  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-import statistics  # noqa: E402
+import statistics
+import tempfile
+import time
+from unittest.mock import Mock, patch
 
-from pipeline.manager import PipelineDatabaseManager  # noqa: E402
-from llm.execution_tracker import ExecutionTracker  # noqa: E402
-from llm.models import RecordSelectionRequest  # noqa: E402
+from llm.execution_tracker import ExecutionTracker
+from llm.models import RecordSelectionRequest
+from pipeline.manager import PipelineDatabaseManager
 
 
 class TestLLMTraceabilityPerformance:
@@ -38,7 +38,7 @@ class TestLLMTraceabilityPerformance:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
         num_executions = 100
@@ -72,7 +72,7 @@ class TestLLMTraceabilityPerformance:
         max_start_time = max(start_times)
         p95_start_time = statistics.quantiles(start_times, n=20)[
             18
-        ]  # 95th percentile  # noqa: E501
+        ]  # 95th percentile
 
         print(f"\nStart Execution Performance ({num_executions} operations):")
         print(f"  Average: {avg_start_time:.2f}ms")
@@ -83,10 +83,10 @@ class TestLLMTraceabilityPerformance:
         # Assuming base operation ~10ms, 5% overhead = 0.5ms
         assert (
             avg_start_time < 20.0
-        ), f"Average start time {avg_start_time:.2f}ms exceeds 20ms threshold"  # noqa: E501
+        ), f"Average start time {avg_start_time:.2f}ms exceeds 20ms threshold"
         assert (
             p95_start_time < 50.0
-        ), f"95th percentile {p95_start_time:.2f}ms exceeds 50ms threshold"  # noqa: E501
+        ), f"95th percentile {p95_start_time:.2f}ms exceeds 50ms threshold"
 
         # Test complete_execution performance
         complete_times = []
@@ -113,7 +113,7 @@ class TestLLMTraceabilityPerformance:
 
         print(
             f"\nComplete Execution Performance ({num_executions} operations):"
-        )  # noqa: E501
+        )
         print(f"  Average: {avg_complete_time:.2f}ms")
         print(f"  Maximum: {max_complete_time:.2f}ms")
         print(f"  95th percentile: {p95_complete_time:.2f}ms")
@@ -121,10 +121,10 @@ class TestLLMTraceabilityPerformance:
         # Performance assertions
         assert (
             avg_complete_time < 20.0
-        ), f"Average complete time {avg_complete_time:.2f}ms exceeds 20ms threshold"  # noqa: E501
+        ), f"Average complete time {avg_complete_time:.2f}ms exceeds 20ms threshold"
         assert (
             p95_complete_time < 50.0
-        ), f"95th percentile {p95_complete_time:.2f}ms exceeds 50ms threshold"  # noqa: E501
+        ), f"95th percentile {p95_complete_time:.2f}ms exceeds 50ms threshold"
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_selection_tracking_performance(self, mock_get_session):
@@ -133,7 +133,7 @@ class TestLLMTraceabilityPerformance:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
         num_selections = 50
@@ -144,7 +144,7 @@ class TestLLMTraceabilityPerformance:
             test_request = Mock()
             test_request.model_dump.return_value = {
                 "term": f"selection_test_{i}"
-            }  # noqa: E501
+            }
 
             execution_id = tracker.start_execution(
                 pipeline_flavor_id=f"sel-flavor-{i % 5}",
@@ -188,7 +188,7 @@ class TestLLMTraceabilityPerformance:
 
         print(
             f"\nSelection Tracking Performance ({num_selections} operations):"
-        )  # noqa: E501
+        )
         print(f"  Average: {avg_selection_time:.2f}ms")
         print(f"  Maximum: {max_selection_time:.2f}ms")
         print(f"  95th percentile: {p95_selection_time:.2f}ms")
@@ -196,10 +196,10 @@ class TestLLMTraceabilityPerformance:
         # Performance assertions
         assert (
             avg_selection_time < 30.0
-        ), f"Average selection time {avg_selection_time:.2f}ms exceeds 30ms threshold"  # noqa: E501
+        ), f"Average selection time {avg_selection_time:.2f}ms exceeds 30ms threshold"
         assert (
             p95_selection_time < 60.0
-        ), f"95th percentile {p95_selection_time:.2f}ms exceeds 60ms threshold"  # noqa: E501
+        ), f"95th percentile {p95_selection_time:.2f}ms exceeds 60ms threshold"
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_analytics_query_performance(self, mock_get_session):
@@ -208,7 +208,7 @@ class TestLLMTraceabilityPerformance:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -218,14 +218,14 @@ class TestLLMTraceabilityPerformance:
 
         print(
             f"\nCreating {num_executions} executions and {num_selections} selections for analytics test..."
-        )  # noqa: E501
+        )
 
         execution_ids = []
         for i in range(num_executions):
             test_request = Mock()
             test_request.model_dump.return_value = {
                 "term": f"analytics_test_{i}"
-            }  # noqa: E501
+            }
 
             execution_id = tracker.start_execution(
                 pipeline_flavor_id=f"analytics-flavor-{i % 20}",
@@ -235,7 +235,7 @@ class TestLLMTraceabilityPerformance:
                     "suggest_domain_definition",
                 ][
                     i % 3
-                ],  # noqa: E501
+                ],
                 pipeline_flavor_version=1,
                 request=test_request,
                 user_prompt=f"Define: analytics_test_{i}",
@@ -252,7 +252,7 @@ class TestLLMTraceabilityPerformance:
                     {"input_tokens": 10, "output_tokens": 15, "total_tokens": 25}
                     if success
                     else None
-                ),  # noqa: E501
+                ),
             )
 
             if success:
@@ -307,28 +307,28 @@ class TestLLMTraceabilityPerformance:
 
         print(
             f"\nAnalytics Query Performance (10 runs on {num_executions} executions):"
-        )  # noqa: E501
+        )
         print(
             f"  Overall analytics - Average: {avg_analytics_time:.2f}ms, Maximum: {max_analytics_time:.2f}ms"
-        )  # noqa: E501
+        )
         print(
             f"  Filtered analytics - Average: {avg_filtered_time:.2f}ms, Maximum: {max_filtered_time:.2f}ms"
-        )  # noqa: E501
+        )
 
         # Performance assertions (based on PRP requirements)
         assert (
             avg_analytics_time < 100.0
-        ), f"Average analytics time {avg_analytics_time:.2f}ms exceeds 100ms threshold"  # noqa: E501
+        ), f"Average analytics time {avg_analytics_time:.2f}ms exceeds 100ms threshold"
         assert (
             max_analytics_time < 500.0
-        ), f"Maximum analytics time {max_analytics_time:.2f}ms exceeds 500ms threshold"  # noqa: E501
+        ), f"Maximum analytics time {max_analytics_time:.2f}ms exceeds 500ms threshold"
 
         assert (
             avg_filtered_time < 150.0
-        ), f"Average filtered time {avg_filtered_time:.2f}ms exceeds 150ms threshold"  # noqa: E501
+        ), f"Average filtered time {avg_filtered_time:.2f}ms exceeds 150ms threshold"
         assert (
             max_filtered_time < 600.0
-        ), f"Maximum filtered time {max_filtered_time:.2f}ms exceeds 600ms threshold"  # noqa: E501
+        ), f"Maximum filtered time {max_filtered_time:.2f}ms exceeds 600ms threshold"
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_execution_details_query_performance(self, mock_get_session):
@@ -337,7 +337,7 @@ class TestLLMTraceabilityPerformance:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -347,7 +347,7 @@ class TestLLMTraceabilityPerformance:
             test_request = Mock()
             test_request.model_dump.return_value = {
                 "term": f"details_test_{i}"
-            }  # noqa: E501
+            }
 
             execution_id = tracker.start_execution(
                 pipeline_flavor_id=f"details-flavor-{i % 5}",
@@ -365,7 +365,7 @@ class TestLLMTraceabilityPerformance:
                     "input_tokens": 20,
                     "output_tokens": 30,
                     "total_tokens": 50,
-                },  # noqa: E501
+                },
             )
 
             execution_ids.append(execution_id)
@@ -386,7 +386,7 @@ class TestLLMTraceabilityPerformance:
 
         for execution_id in execution_ids[
             :20
-        ]:  # Test on subset to avoid excessive runtime  # noqa: E501
+        ]:  # Test on subset to avoid excessive runtime
             start_time = time.time()
             details = tracker.get_execution_details(execution_id)
             execution_time = (time.time() - start_time) * 1000
@@ -410,13 +410,13 @@ class TestLLMTraceabilityPerformance:
         # Performance assertions
         assert (
             avg_details_time < 50.0
-        ), f"Average details time {avg_details_time:.2f}ms exceeds 50ms threshold"  # noqa: E501
+        ), f"Average details time {avg_details_time:.2f}ms exceeds 50ms threshold"
         assert (
             max_details_time < 200.0
-        ), f"Maximum details time {max_details_time:.2f}ms exceeds 200ms threshold"  # noqa: E501
+        ), f"Maximum details time {max_details_time:.2f}ms exceeds 200ms threshold"
         assert (
             p95_details_time < 100.0
-        ), f"95th percentile {p95_details_time:.2f}ms exceeds 100ms threshold"  # noqa: E501
+        ), f"95th percentile {p95_details_time:.2f}ms exceeds 100ms threshold"
 
     @patch("llm.execution_tracker.get_pipeline_session")
     def test_database_index_effectiveness(self, mock_get_session):
@@ -425,7 +425,7 @@ class TestLLMTraceabilityPerformance:
         # Use real database session from our test pipeline manager
         mock_get_session.side_effect = (
             lambda: self.pipeline_manager.get_session()
-        )  # noqa: E501
+        )
 
         tracker = ExecutionTracker()
 
@@ -434,7 +434,7 @@ class TestLLMTraceabilityPerformance:
 
         print(
             f"\nCreating {num_executions} executions to test index effectiveness..."
-        )  # noqa: E501
+        )
 
         execution_ids = []
         for i in range(num_executions):
@@ -442,10 +442,10 @@ class TestLLMTraceabilityPerformance:
             test_request.model_dump.return_value = {"term": f"index_test_{i}"}
 
             execution_id = tracker.start_execution(
-                pipeline_flavor_id=f"index-flavor-{i % 50}",  # 50 different flavors  # noqa: E501
+                pipeline_flavor_id=f"index-flavor-{i % 50}",  # 50 different flavors
                 pipeline_type=["suggest_term_definition", "suggest_layer_definition"][
                     i % 2
-                ],  # Alternate types  # noqa: E501
+                ],  # Alternate types
                 pipeline_flavor_version=1,
                 request=test_request,
                 user_prompt=f"Define: index_test_{i}",
@@ -459,7 +459,7 @@ class TestLLMTraceabilityPerformance:
                     "input_tokens": 10,
                     "output_tokens": 15,
                     "total_tokens": 25,
-                },  # noqa: E501
+                },
             )
 
             execution_ids.append(execution_id)
@@ -471,15 +471,15 @@ class TestLLMTraceabilityPerformance:
                 lambda: tracker.get_execution_analytics(
                     pipeline_type=None, days_back=30
                 ),
-            ),  # noqa: E501
+            ),
             (
                 "Status-based analytics",
                 lambda: tracker.get_execution_analytics(days_back=7),
-            ),  # noqa: E501
+            ),
             (
                 "Recent executions",
                 lambda: tracker.get_execution_analytics(days_back=1),
-            ),  # noqa: E501
+            ),
         ]
 
         for scenario_name, query_func in test_scenarios:
@@ -499,12 +499,12 @@ class TestLLMTraceabilityPerformance:
 
             print(
                 f"  {scenario_name} - Average: {avg_time:.2f}ms, Maximum: {max_time:.2f}ms"
-            )  # noqa: E501
+            )
 
-            # With proper indexing, these queries should be fast even with large datasets  # noqa: E501
+            # With proper indexing, these queries should be fast even with large datasets
             assert (
                 avg_time < 150.0
-            ), f"{scenario_name} average time {avg_time:.2f}ms suggests poor index performance"  # noqa: E501
+            ), f"{scenario_name} average time {avg_time:.2f}ms suggests poor index performance"
             assert (
                 max_time < 300.0
-            ), f"{scenario_name} maximum time {max_time:.2f}ms suggests poor index performance"  # noqa: E501
+            ), f"{scenario_name} maximum time {max_time:.2f}ms suggests poor index performance"

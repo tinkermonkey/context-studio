@@ -1,6 +1,7 @@
 # mypy: ignore-errors
-import sqlite3
 import os
+import sqlite3
+
 import sqlite_vec
 
 print("SQLite Version:", sqlite3.sqlite_version)

@@ -4,12 +4,12 @@ This module provides aggregation logic to deduplicate, cross-reference,
 and merge search results from multiple sources.
 """
 
-from typing import List, Dict, Set, Tuple
 import re
 from collections import defaultdict
 
-from .models import SearchNode, SearchLink, SourceType, MultiSourceSearchResponse
 from utils.logger import get_logger
+
+from .models import MultiSourceSearchResponse, SearchLink, SearchNode, SourceType
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ class ResultAggregator:
     def __init__(self):
         pass
 
-    def deduplicate_nodes(self, nodes: List[SearchNode]) -> List[SearchNode]:
+    def deduplicate_nodes(self, nodes: list[SearchNode]) -> list[SearchNode]:
         """
         Deduplicate nodes by ID, keeping the first occurrence.
 
@@ -44,8 +44,8 @@ class ResultAggregator:
         return unique_nodes
 
     def deduplicate_links(
-        self, links: List[SearchLink], valid_node_ids: Set[str]
-    ) -> List[SearchLink]:
+        self, links: list[SearchLink], valid_node_ids: set[str]
+    ) -> list[SearchLink]:
         """
         Deduplicate links by ID and filter to only include links between valid nodes.
 
@@ -74,7 +74,7 @@ class ResultAggregator:
         )
         return unique_links
 
-    def discover_cross_references(self, nodes: List[SearchNode]) -> List[SearchLink]:
+    def discover_cross_references(self, nodes: list[SearchNode]) -> list[SearchLink]:
         """
         Discover cross-references between nodes from different sources based on title matching.
         Creates 'sameAs' links when nodes from different sources likely refer to the same concept.
@@ -148,7 +148,7 @@ class ResultAggregator:
         return cross_links
 
     def merge_responses(
-        self, responses: List[MultiSourceSearchResponse]
+        self, responses: list[MultiSourceSearchResponse]
     ) -> MultiSourceSearchResponse:
         """
         Merge multiple MultiSourceSearchResponse objects into a single aggregated response.
@@ -232,14 +232,14 @@ class ResultAggregator:
 
     def aggregate_source_results(
         self,
-        source_results: List[
-            Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]
+        source_results: list[
+            tuple[SourceType, tuple[list[SearchNode], list[SearchLink]]]
         ],
         query: str,
         limit: int,
         offset: int,
         search_time_ms: float,
-        source_errors: Dict[str, str],
+        source_errors: dict[str, str],
     ) -> MultiSourceSearchResponse:
         """
         Aggregate results from multiple sources into a single MultiSourceSearchResponse.

@@ -6,18 +6,18 @@ and database setup with automatic cleanup, ensuring complete isolation
 between tests and from the development environment.
 """
 
-import tempfile
 import shutil
-from pathlib import Path
-from typing import Optional, Dict, Any, Tuple, cast
+import tempfile
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, cast
 
+from config import Settings
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from tests.test_config import TestConfigurationManager
 from tests.test_db_utils import TestDatabaseManager
-from config import Settings
 
 
 class TestEnvironment:
@@ -31,9 +31,9 @@ class TestEnvironment:
 
     def __init__(
         self,
-        temp_dir: Optional[str] = None,
-        config_overrides: Optional[Dict[str, Any]] = None,
-    ):  # noqa: E501
+        temp_dir: str | None = None,
+        config_overrides: dict[str, Any] | None = None,
+    ):
         """
         Initialize test environment.
 
@@ -59,12 +59,12 @@ class TestEnvironment:
         self.db_manager = TestDatabaseManager(str(self.temp_dir))
 
         # Track created resources
-        self.settings: Optional[Settings] = None
-        self.primary_engine: Optional[Engine] = None
-        self.primary_session_local: Optional[sessionmaker] = None
-        self.primary_db_path: Optional[Path] = None
+        self.settings: Settings | None = None
+        self.primary_engine: Engine | None = None
+        self.primary_session_local: sessionmaker | None = None
+        self.primary_db_path: Path | None = None
 
-    def setup(self) -> Tuple[Settings, Engine, sessionmaker]:
+    def setup(self) -> tuple[Settings, Engine, sessionmaker]:
         """
         Set up the test environment.
 
@@ -74,14 +74,14 @@ class TestEnvironment:
         # Create isolated configuration
         self.settings = self.config_manager.get_test_settings(
             self.config_overrides
-        )  # noqa: E501
+        )
 
         # Create primary database with migrations
         (
             self.primary_engine,
             self.primary_session_local,
             self.primary_db_path,
-        ) = self.db_manager.create_migrated_database(  # noqa: E501
+        ) = self.db_manager.create_migrated_database(
             "primary_test.db"
         )
 
@@ -97,13 +97,13 @@ class TestEnvironment:
         if not self.primary_session_local:
             raise RuntimeError(
                 "Test environment not set up. Call setup() first."
-            )  # noqa: E501
+            )
 
         return cast(Session, self.primary_session_local())
 
     def create_additional_database(
         self, db_name: str
-    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+    ) -> tuple[Engine, sessionmaker, Path]:
         """
         Create an additional isolated database for testing.
 
@@ -115,7 +115,7 @@ class TestEnvironment:
         """
         return self.db_manager.create_migrated_database(db_name)
 
-    def create_in_memory_database(self) -> Tuple[Engine, sessionmaker]:
+    def create_in_memory_database(self) -> tuple[Engine, sessionmaker]:
         """
         Create an in-memory database for fast testing.
 
@@ -165,8 +165,8 @@ class TestEnvironment:
 
 @contextmanager
 def isolated_test_environment(
-    config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None
-):  # noqa: E501
+    config_overrides: dict[str, Any] | None = None, temp_dir: str | None = None
+):
     """
     Context manager for creating a completely isolated test environment.
 
@@ -196,8 +196,8 @@ def isolated_test_environment(
 
 @contextmanager
 def isolated_test_session(
-    config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None
-):  # noqa: E501
+    config_overrides: dict[str, Any] | None = None, temp_dir: str | None = None
+):
     """
     Context manager for creating an isolated test session with complete environment.  # noqa: E501
 
@@ -218,7 +218,7 @@ def isolated_test_session(
             # Use env for additional test resources
     """
     with isolated_test_environment(config_overrides, temp_dir) as env:
-        settings, engine, session_local = env.setup()
+        settings, _engine, _session_local = env.setup()
         session = env.create_session()
         try:
             yield session, settings, env
@@ -235,8 +235,8 @@ class TestEnvironmentBuilder:
     """
 
     def __init__(self):
-        self.temp_dir: Optional[str] = None
-        self.config_overrides: Dict[str, Any] = {}
+        self.temp_dir: str | None = None
+        self.config_overrides: dict[str, Any] = {}
         self.db_type: str = "migrated"  # "memory", "file", or "migrated"
 
     def with_temp_dir(self, temp_dir: str) -> "TestEnvironmentBuilder":
@@ -250,8 +250,8 @@ class TestEnvironmentBuilder:
         return self
 
     def with_config_dict(
-        self, overrides: Dict[str, Any]
-    ) -> "TestEnvironmentBuilder":  # noqa: E501
+        self, overrides: dict[str, Any]
+    ) -> "TestEnvironmentBuilder":
         """Add configuration overrides from a dictionary."""
         self.config_overrides.update(overrides)
         return self
@@ -280,12 +280,12 @@ class TestEnvironmentBuilder:
         """Create a context manager for the configured test environment."""
         with isolated_test_environment(
             self.config_overrides, self.temp_dir
-        ) as env:  # noqa: E501
+        ) as env:
             yield env
 
 
 # Convenience functions for common test patterns
-def fast_test_environment(config_overrides: Optional[Dict[str, Any]] = None):
+def fast_test_environment(config_overrides: dict[str, Any] | None = None):
     """
     Create a fast test environment with in-memory database.
 
@@ -301,7 +301,7 @@ def fast_test_environment(config_overrides: Optional[Dict[str, Any]] = None):
     return builder
 
 
-def debug_test_environment(config_overrides: Optional[Dict[str, Any]] = None):
+def debug_test_environment(config_overrides: dict[str, Any] | None = None):
     """
     Create a test environment with file-based database for debugging.
 
@@ -331,7 +331,7 @@ def verify_no_test_artifacts():
     if db_files:
         raise AssertionError(
             f"Test database files found in root directory: {db_files}"
-        )  # noqa: E501
+        )
 
     # Check for test configuration files
     config_files = list(current_dir.glob("*test*.json"))
@@ -339,16 +339,16 @@ def verify_no_test_artifacts():
     if config_files:
         raise AssertionError(
             f"Test configuration files found in root directory: {config_files}"
-        )  # noqa: E501
+        )
 
     # Check for temporary directories
     temp_dirs = [
         d for d in current_dir.iterdir() if d.is_dir() and "test_env_" in d.name
-    ]  # noqa: E501
+    ]
     if temp_dirs:
         raise AssertionError(
             f"Test temporary directories found in root directory: {temp_dirs}"
-        )  # noqa: E501
+        )
 
 
 def cleanup_test_artifacts():

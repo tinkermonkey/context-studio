@@ -5,7 +5,8 @@ Reference API Buddy proxy manager for caching external API requests.
 
 import threading
 import time
-from typing import Optional, Dict, Any
+from typing import Any
+
 from config import get_settings
 from utils.logger import get_logger
 
@@ -26,12 +27,12 @@ class ReferenceAPIProxyManager:
     """
 
     def __init__(self):
-        self.proxy: Optional[object] = None
-        self.proxy_thread: Optional[threading.Thread] = None
+        self.proxy: object | None = None
+        self.proxy_thread: threading.Thread | None = None
         self.is_running = False
         self._lock = threading.Lock()
 
-    def _get_proxy_config(self) -> Optional[Dict[str, Any]]:
+    def _get_proxy_config(self) -> dict[str, Any] | None:
         """Generate reference_api_buddy configuration based on enabled APIs"""
         settings = get_settings()
         enabled_apis = settings.ENABLE_CACHING_PROXY
@@ -193,13 +194,13 @@ class ReferenceAPIProxyManager:
         enabled_apis = settings.ENABLE_CACHING_PROXY
         return any(enabled_apis.values())
 
-    def get_proxy_config(self) -> Optional[Dict[str, Any]]:
+    def get_proxy_config(self) -> dict[str, Any] | None:
         """Get the current proxy configuration"""
         if not self.is_running:
             return None
         return self._get_proxy_config()
 
-    def get_monitoring_stats(self) -> Optional[Dict[str, Any]]:
+    def get_monitoring_stats(self) -> dict[str, Any] | None:
         """Get comprehensive monitoring statistics from the proxy"""
         if not self.is_running or not self.proxy:
             return None
@@ -232,7 +233,7 @@ class ReferenceAPIProxyManager:
             logger.error(f"Error getting monitoring stats: {e}")
             return None
 
-    def _safe_get_stats(self, stats_method) -> Optional[Dict[str, Any]]:
+    def _safe_get_stats(self, stats_method) -> dict[str, Any] | None:
         """Safely call a monitoring stats method and handle errors"""
         try:
             return stats_method()
@@ -240,7 +241,7 @@ class ReferenceAPIProxyManager:
             logger.warning(f"Error getting stats from {stats_method.__name__}: {e}")
             return {"error": str(e), "available": False}
 
-    def get_debug_config(self) -> Optional[Dict[str, Any]]:
+    def get_debug_config(self) -> dict[str, Any] | None:
         """Get debug configuration information from the proxy's /admin/config endpoint"""
         if not self.is_running:
             return {"error": "Proxy is not running", "available": False}
@@ -271,7 +272,7 @@ class ReferenceAPIProxyManager:
 
 
 # Global instance
-_proxy_manager: Optional[ReferenceAPIProxyManager] = None
+_proxy_manager: ReferenceAPIProxyManager | None = None
 _proxy_manager_lock = threading.Lock()
 
 

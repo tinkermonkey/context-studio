@@ -14,14 +14,13 @@ Endpoints:
 - GET /api/identity/users/{user_id}/trust-network - Get trust network
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
+from database.utils import get_db
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import BaseModel, EmailStr
 from services.identity_manager import IdentityManager
 from services.service_factory import ServiceFactory
-from database.utils import get_db
 from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
@@ -58,11 +57,11 @@ class UserIdentityResponse(BaseModel):
     user_id: str
     email: str
     display_name: str
-    public_key: Optional[str]
+    public_key: str | None
     verified: bool
     trust_level: int
     created_at: datetime
-    verified_at: Optional[datetime]
+    verified_at: datetime | None
 
 
 class RegisterUserResponse(BaseModel):
@@ -76,7 +75,7 @@ class RegisterUserResponse(BaseModel):
 class UserListResponse(BaseModel):
     """Response model for user list."""
 
-    users: List[UserIdentityResponse]
+    users: list[UserIdentityResponse]
     total_count: int
 
 
@@ -84,8 +83,8 @@ class TrustNetworkResponse(BaseModel):
     """Response model for trust network."""
 
     user_id: str
-    trustees: List[dict]  # Users who trust this user
-    trusted: List[dict]  # Users this user trusts
+    trustees: list[dict]  # Users who trust this user
+    trusted: list[dict]  # Users this user trusts
     trust_count: int
 
 
@@ -180,7 +179,7 @@ def verify_email(
 
         return {
             "message": f"Email verified successfully for user {request.user_id}"
-        }  # noqa: E501
+        }
 
     except HTTPException:
         raise
@@ -209,7 +208,7 @@ def trust_user(
     """
     logger.info(
         f"Establishing trust: {request.trustee_user_id} -> {request.trusted_user_id}"
-    )  # noqa: E501
+    )
 
     try:
         success = identity_manager.trust_user(
@@ -220,12 +219,12 @@ def trust_user(
         if not success:
             raise HTTPException(
                 status_code=400,
-                detail="Failed to establish trust relationship. Check that trustee is verified and users exist.",  # noqa: E501
+                detail="Failed to establish trust relationship. Check that trustee is verified and users exist.",
             )
 
         return {
             "message": f"Trust relationship established: {request.trustee_user_id} -> {request.trusted_user_id}"
-        }  # noqa: E501
+        }
 
     except HTTPException:
         raise
@@ -233,7 +232,7 @@ def trust_user(
         logger.error(f"Failed to establish trust relationship: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to establish trust relationship"
-        )  # noqa: E501
+        )
 
 
 @router.get("/users/{user_id}", response_model=UserIdentityResponse)
@@ -261,7 +260,7 @@ def get_user(
         if not user:
             raise HTTPException(
                 status_code=404, detail=f"User {user_id} not found"
-            )  # noqa: E501
+            )
 
         return UserIdentityResponse(
             user_id=user.user_id,
@@ -306,7 +305,7 @@ def get_user_by_email(
         if not user:
             raise HTTPException(
                 status_code=404, detail=f"User with email {email} not found"
-            )  # noqa: E501
+            )
 
         return UserIdentityResponse(
             user_id=user.user_id,
@@ -325,17 +324,17 @@ def get_user_by_email(
         logger.error(f"Failed to get user by email {email}: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to get user by email"
-        )  # noqa: E501
+        )
 
 
 @router.get("/users", response_model=UserListResponse)
 def list_users(
     verified_only: bool = Query(
         False, description="Only return verified users"
-    ),  # noqa: E501
+    ),
     min_trust_level: int = Query(
         0, description="Minimum trust level filter", ge=0, le=2
-    ),  # noqa: E501
+    ),
     limit: int = Query(100, description="Maximum number of results", le=1000),
     identity_manager: IdentityManager = Depends(get_identity_manager),
 ):
@@ -353,7 +352,7 @@ def list_users(
     """
     logger.debug(
         f"Listing users (verified_only={verified_only}, min_trust={min_trust_level}, limit={limit})"
-    )  # noqa: E501
+    )
 
     try:
         users = identity_manager.list_users(
@@ -384,7 +383,7 @@ def list_users(
 
 @router.get(
     "/users/{user_id}/trust-network", response_model=TrustNetworkResponse
-)  # noqa: E501
+)
 def get_trust_network(
     user_id: str = Path(..., description="User ID"),
     identity_manager: IdentityManager = Depends(get_identity_manager),
@@ -410,7 +409,7 @@ def get_trust_network(
         if not user:
             raise HTTPException(
                 status_code=404, detail=f"User {user_id} not found"
-            )  # noqa: E501
+            )
 
         trust_network = identity_manager.get_trust_network(user_id)
 
@@ -427,4 +426,4 @@ def get_trust_network(
         logger.error(f"Failed to get trust network for user {user_id}: {e}")
         raise HTTPException(
             status_code=500, detail="Failed to get trust network"
-        )  # noqa: E501
+        )

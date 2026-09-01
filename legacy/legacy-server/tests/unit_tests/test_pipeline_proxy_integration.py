@@ -2,14 +2,15 @@
 Unit tests for NLP Pipeline proxy integration.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-from nlp.pipeline import NLPPipeline  # noqa: E402
+from unittest.mock import Mock, patch
+
+import pytest
+from nlp.pipeline import NLPPipeline
 
 
 class TestPipelineProxyIntegration:

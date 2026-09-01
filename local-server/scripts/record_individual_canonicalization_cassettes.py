@@ -29,6 +29,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -41,6 +42,7 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from config import get_settings
+from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
 from domain.pipelines.individual_extraction.open_orchestrator import (
@@ -114,7 +116,7 @@ async def _record() -> int:
             embedding_service=embedding,
             schema_index=eval_index,
             config=config,
-            ontology_repo=eval_repo,
+            ontology_repo=cast(OntologyRepository, eval_repo),
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
         state = IndividualExtractionState(

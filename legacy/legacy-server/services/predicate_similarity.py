@@ -20,20 +20,19 @@ Performance targets:
 - <5 seconds for index warm-up (PT-VS-007)
 """
 
-import time
 import hashlib
 import json
-from typing import List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass
+import time
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
-from sklearn.cluster import DBSCAN
 from cachetools import TTLCache
-
 from embeddings.generate_embeddings import generate_embedding
-from utils.logger import get_logger
 from reference_db.manager import ReferenceManager
+from sklearn.cluster import DBSCAN
+from utils.logger import get_logger
 
 logger = get_logger("predicate_similarity")
 
@@ -76,7 +75,7 @@ class ClusterResult:
     """
 
     cluster_id: int
-    predicate_ids: List[str]
+    predicate_ids: list[str]
     centroid_title: str
     avg_similarity: float
     size: int
@@ -198,7 +197,7 @@ class PredicateSimilarityService:
     def _get_cache_key(
         self,
         query_text: str,
-        source: Optional[str] = None,
+        source: str | None = None,
         limit: int = 100,
         threshold: float = 0.7,
     ) -> str:
@@ -266,12 +265,12 @@ class PredicateSimilarityService:
     def find_similar_predicates(
         self,
         predicate_title: str,
-        predicate_definition: Optional[str] = None,
-        source: Optional[str] = None,
+        predicate_definition: str | None = None,
+        source: str | None = None,
         limit: int = 100,
         threshold: float = 0.7,
         use_cache: bool = True,
-    ) -> List[SimilarityResult]:
+    ) -> list[SimilarityResult]:
         """
         Find similar predicates using vector similarity search.
 
@@ -373,11 +372,11 @@ class PredicateSimilarityService:
 
     def find_similar_batch(
         self,
-        predicates: List[Tuple[str, Optional[str]]],
-        source: Optional[str] = None,
+        predicates: list[tuple[str, str | None]],
+        source: str | None = None,
         limit: int = 100,
         threshold: float = 0.7,
-    ) -> Tuple[Dict[str, List[SimilarityResult]], List[BatchError]]:
+    ) -> tuple[dict[str, list[SimilarityResult]], list[BatchError]]:
         """
         Find similar predicates for a batch of queries.
 
@@ -438,12 +437,12 @@ class PredicateSimilarityService:
 
     def cluster_predicates(
         self,
-        predicates: List[Tuple[str, str, Optional[str]]],  # (id, title, definition)
+        predicates: list[tuple[str, str, str | None]],  # (id, title, definition)
         min_similarity: float = 0.7,
         min_cluster_size: int = 2,
         eps: float = 0.3,  # DBSCAN epsilon (distance threshold)
         max_predicates: int = 1000,
-    ) -> List[ClusterResult]:
+    ) -> list[ClusterResult]:
         """
         Cluster similar predicates using DBSCAN algorithm.
 
@@ -602,7 +601,7 @@ class PredicateSimilarityService:
 
         return cluster_results
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         Get cache statistics.
 

@@ -5,30 +5,31 @@ Tests complete CRUD operations and workflows for version management,
 working tree operations, diff generation, and rollback functionality.
 """
 
-import sys
 import os
-from uuid import uuid4
-import pytest
+import sys
 import time
+from uuid import uuid4
+
+import pytest
 
 sys.path.insert(
     0,
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    ),  # noqa: E501
+    ),
 )
 
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
 from utils.event_processor import (
-    get_global_event_processor,
     create_event_processor,
-)  # noqa: E402, E501
-from services.version_manager import VersionManager  # noqa: E402
-from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+    get_global_event_processor,
+)
 
 
 def create_layer_and_domain(
     client, layer_title=None, domain_title=None, domain_definition=None
-):  # noqa: E501
+):
     """Helper function to create a layer and domain with proper hierarchy."""
     # Create layer first
     layer_data = {
@@ -45,7 +46,7 @@ def create_layer_and_domain(
         "node_type": "domain",
         "title": domain_title or f"Test Domain {uuid4()}",
         "definition": domain_definition
-        or "Test domain for version management",  # noqa: E501
+        or "Test domain for version management",
         "parent_node_id": layer_id,
     }
     domain_response = client.post("/api/structure_nodes/", json=domain_data)
@@ -58,7 +59,7 @@ def create_layer_and_domain(
 @pytest.fixture(autouse=True, scope="function")
 def start_event_processor_for_version_tests(db_session, shared_app):
     """Start EventProcessor for version management tests."""
-    app, engine, session_local = shared_app
+    _app, engine, _session_local = shared_app
     database_url = str(engine.url)
 
     # Always ensure we have a fresh event processor for version tests
@@ -82,12 +83,12 @@ def start_event_processor_for_version_tests(db_session, shared_app):
         )
         processor.start()
 
-        # Give the event processor a moment to start and process any existing events  # noqa: E501
+        # Give the event processor a moment to start and process any existing events
         time.sleep(0.2)
 
         print(
             f"✅ Event processor started for version tests: {processor.get_stats()}"
-        )  # noqa: E501
+        )
 
     except Exception as e:
         print(f"❌ Failed to start event processor for test: {e}")
@@ -138,7 +139,7 @@ class TestVersionManagementAPI:
     @pytest.mark.skip_suite
     def test_create_entity_and_get_versions(
         self, client, start_event_processor_for_version_tests
-    ):  # noqa: E501
+    ):
         """Test creating entity versions and retrieving version history."""
         # First create a structure node to version
         unique_title = f"Test Node {uuid4()}"
@@ -188,7 +189,7 @@ class TestVersionManagementAPI:
     def test_get_specific_version(self, client):
         """Test getting a specific version by number."""
         # Create a layer and domain with proper hierarchy
-        layer_id, node_id, node = create_layer_and_domain(
+        _layer_id, node_id, _node = create_layer_and_domain(
             client,
             domain_title=f"Test Node {uuid4()}",
             domain_definition="Test domain for version retrieval",
@@ -294,7 +295,7 @@ class TestVersionManagementAPI:
         staged_entity = next(
             (entry for entry in status["entries"] if entry["entity_id"] == node_id),
             None,
-        )  # noqa: E501
+        )
         assert staged_entity is not None
         assert staged_entity["staged"] is True
 
@@ -374,7 +375,7 @@ class TestVersionManagementAPI:
         # Get working diff for the entity
         response = client.get(
             f"/api/versions/entities/structure_node/{node_id}/diff"
-        )  # noqa: E501
+        )
         assert response.status_code == 200
 
         diff = response.json()
@@ -438,7 +439,7 @@ class TestVersionManagementAPI:
 
         compare_response = client.post(
             "/api/versions/diffs/compare", json=compare_data
-        )  # noqa: E501
+        )
         assert compare_response.status_code == 200
 
         comparison = compare_response.json()
@@ -492,10 +493,10 @@ class TestVersionManagementAPI:
         assert "version" in rollback_result
         assert (
             rollback_result["version"]["version_number"] == 2
-        )  # Rollback creates new version  # noqa: E501
+        )  # Rollback creates new version
 
-        # Note: Content rollback verification is disabled as entity update is not yet implemented  # noqa: E501
-        # The rollback successfully creates a version record with the target content  # noqa: E501
+        # Note: Content rollback verification is disabled as entity update is not yet implemented
+        # The rollback successfully creates a version record with the target content
 
     @pytest.mark.skip_suite
     def test_rollback_nonexistent_version(self, client):
@@ -526,12 +527,12 @@ class TestVersionManagementAPI:
 
             create_response = client.post(
                 "/api/structure_nodes/", json=node_data
-            )  # noqa: E501
+            )
             assert create_response.status_code == 201
             node = create_response.json()
             entities.append(
                 {"entity_type": "structure_node", "entity_id": node["id"]}
-            )  # noqa: E501
+            )
 
         # Stage all entities individually
         for entity in entities:
@@ -566,7 +567,7 @@ class TestVersionManagementAPI:
 
         # Test with state filter
         response = client.get(
-            f"/api/versions/entities/structure_node/{node_id}/versions?state=WORKING"  # noqa: E501
+            f"/api/versions/entities/structure_node/{node_id}/versions?state=WORKING"
         )
         assert response.status_code == 200
         versions = response.json()
@@ -577,7 +578,7 @@ class TestVersionManagementAPI:
         # Test invalid entity type
         response = client.get(
             "/api/versions/entities/invalid_type/123/versions"
-        )  # noqa: E501
+        )
         assert response.status_code == 422  # Validation error
 
         # Test invalid UUID format
@@ -678,6 +679,6 @@ class TestVersionManagementAPI:
             "state",
             "author_id",
             "created_at",
-        ]  # noqa: E501
+        ]
         for field in required_fields:
             assert field in version, f"Missing required field: {field}"

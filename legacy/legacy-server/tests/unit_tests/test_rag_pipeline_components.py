@@ -4,10 +4,11 @@ Unit tests for RAG pipeline components (registry, standard pipeline, test servic
 These tests verify the core functionality without requiring full application initialization.
 """
 
-import pytest
-from unittest.mock import Mock
-import sys
 import os
+import sys
+from unittest.mock import Mock
+
+import pytest
 
 # Add parent directory to path for imports
 sys.path.append(
@@ -31,8 +32,8 @@ class TestPipelineRegistry:
 
     def test_register_pipeline(self):
         """Test registering a pipeline class."""
-        from rag.pipeline_registry import PipelineRegistry
         from rag.base_pipeline import BaseRAGPipeline
+        from rag.pipeline_registry import PipelineRegistry
 
         # Create a mock pipeline class
         class MockPipeline(BaseRAGPipeline):
@@ -64,8 +65,8 @@ class TestPipelineRegistry:
 
     def test_get_pipeline_info(self):
         """Test retrieving pipeline information."""
-        from rag.pipeline_registry import PipelineRegistry
         from rag.base_pipeline import BaseRAGPipeline
+        from rag.pipeline_registry import PipelineRegistry
 
         class TestInfoPipeline(BaseRAGPipeline):
             @staticmethod
@@ -96,8 +97,8 @@ class TestPipelineRegistry:
 
     def test_unregister_pipeline(self):
         """Test unregistering a pipeline."""
-        from rag.pipeline_registry import PipelineRegistry
         from rag.base_pipeline import BaseRAGPipeline
+        from rag.pipeline_registry import PipelineRegistry
 
         class UnregisterTest(BaseRAGPipeline):
             @staticmethod
@@ -219,8 +220,8 @@ class TestRAGTestManagementService:
 
     def test_validate_structure_node_id_exists(self):
         """Test structure_node_id validation when node exists."""
-        from rag.test_service import RAGTestManagementService
         from database.models import StructureNode
+        from rag.test_service import RAGTestManagementService
 
         mock_kg_session = Mock()
         mock_ops_session = Mock()

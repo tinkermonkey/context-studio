@@ -3,8 +3,10 @@ Custom middleware for logging API access requests in Apache Common Log Format st
 """
 
 import time
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,7 +45,7 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
         log_message = (
             f"{client_host}:{client_port} - "
             f'"{request.method} {request.url.path}'
-            f'{f"?{request.url.query}" if request.url.query else ""} {http_version}" '  # noqa: E501
+            f'{f"?{request.url.query}" if request.url.query else ""} {http_version}" '
             f"{response.status_code} {status_text} {response_time_ms}ms"
         )
 

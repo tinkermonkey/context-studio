@@ -6,18 +6,18 @@ This processor performs LLM-based entity extraction enhanced by knowledge graph 
 It uses the pipeline_flavors system to extract entities with confidence scores.
 """
 
-from typing import List, Dict
 import json
 
+from llm.models import PipelineExecutionRequest, PipelineType
+from llm.service import LLMService
+from utils.logger import get_logger
+
 from rag.processors.models import (
-    ProcessorInput,
-    LLMExtractionOutput,
     ExtractedEntity,
     KGContextOutput,
+    LLMExtractionOutput,
+    ProcessorInput,
 )
-from llm.service import LLMService
-from llm.models import PipelineType, PipelineExecutionRequest
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -143,7 +143,7 @@ class LLMExtractionProcessor:
             return "No knowledge graph context available."
 
         # Group by node type
-        nodes_by_type: Dict[str, List[str]] = {}
+        nodes_by_type: dict[str, list[str]] = {}
         for node in kg_context.kg_nodes[:20]:  # Limit to top 20 for prompt
             node_type = node.node_type
             if node_type not in nodes_by_type:
@@ -164,7 +164,7 @@ class LLMExtractionProcessor:
 
     def _parse_entities_from_response(
         self, response_content: str, original_text: str, kg_context: KGContextOutput
-    ) -> List[ExtractedEntity]:
+    ) -> list[ExtractedEntity]:
         """
         Parse entities from LLM response content using structured JSON output.
 
@@ -287,9 +287,9 @@ class LLMExtractionProcessor:
         self,
         response_content: str,
         original_text: str,
-        sentences: List[str],
+        sentences: list[str],
         kg_context: KGContextOutput,
-    ) -> List[ExtractedEntity]:
+    ) -> list[ExtractedEntity]:
         """
         Fallback heuristic parser for non-JSON responses.
 

@@ -5,14 +5,15 @@ This module fetches available models from OpenRouter's API and converts them
 to our internal ModelCapabilities format for dynamic model registry updates.
 """
 
-import requests
 import asyncio
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from typing import Any
+
+import requests
+from utils.logger import get_logger
 
 from .model_capabilities import ModelCapabilities
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,18 +28,18 @@ class OpenRouterModel:
     name: str
     description: str
     context_length: int
-    pricing: Dict[str, Any]
-    architecture: Dict[str, Any]
+    pricing: dict[str, Any]
+    architecture: dict[str, Any]
 
 
 class OpenRouterDiscoveryService:
     """Service for discovering and converting OpenRouter models"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key
         self.logger = logger
 
-    async def fetch_available_models(self) -> List[OpenRouterModel]:
+    async def fetch_available_models(self) -> list[OpenRouterModel]:
         """Fetch available models from OpenRouter API"""
         try:
             headers = {}
@@ -91,8 +92,8 @@ class OpenRouterDiscoveryService:
             return []
 
     def convert_to_model_capabilities(
-        self, openrouter_models: List[OpenRouterModel]
-    ) -> Dict[str, ModelCapabilities]:
+        self, openrouter_models: list[OpenRouterModel]
+    ) -> dict[str, ModelCapabilities]:
         """Convert OpenRouter models to our ModelCapabilities format"""
         capabilities_map = {}
 
@@ -196,7 +197,7 @@ class OpenRouterDiscoveryService:
 
         return capabilities
 
-    async def get_dynamic_model_registry(self) -> Dict[str, ModelCapabilities]:
+    async def get_dynamic_model_registry(self) -> dict[str, ModelCapabilities]:
         """Get a dynamic model registry from OpenRouter"""
         try:
             models = await self.fetch_available_models()
@@ -218,8 +219,8 @@ class OpenRouterDiscoveryService:
             return {}
 
     def filter_models(
-        self, models: List[OpenRouterModel], criteria: Dict[str, Any]
-    ) -> List[OpenRouterModel]:
+        self, models: list[OpenRouterModel], criteria: dict[str, Any]
+    ) -> list[OpenRouterModel]:
         """Filter models based on criteria"""
         filtered = []
 
@@ -251,7 +252,7 @@ _discovery_service = None
 
 
 def get_openrouter_discovery_service(
-    api_key: Optional[str] = None,
+    api_key: str | None = None,
 ) -> OpenRouterDiscoveryService:
     """Get the global OpenRouter discovery service instance"""
     global _discovery_service

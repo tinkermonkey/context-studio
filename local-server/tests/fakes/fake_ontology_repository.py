@@ -9,6 +9,7 @@ from typing import Any
 from uuid import uuid4
 
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -30,6 +31,7 @@ class FakeOntologyRepository:
         self._relationships: dict[str, Relationship] = {}
         self._property_definitions: dict[str, PropertyDefinition] = {}
         self._individuals: dict[str, Individual] = {}
+        self._attribute_definitions: dict[str, AttributeDefinition] = {}
 
     # Lookup operations
 
@@ -422,6 +424,98 @@ class FakeOntologyRepository:
             self._individuals.pop(individual_id)
             return True
         return False
+
+    # AttributeDefinition operations
+
+    def get_attribute_definition(self, attribute_definition_id: str) -> AttributeDefinition | None:
+        """Retrieve an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition
+
+        Returns:
+            The AttributeDefinition if found, None otherwise
+        """
+        return self._attribute_definitions.get(attribute_definition_id)
+
+    def list_attribute_definitions(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[AttributeDefinition]:
+        """Retrieve attribute definitions with optional filtering and pagination.
+
+        Args:
+            class_id: Optional class ID to filter by
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+
+        Returns:
+            List of AttributeDefinition entities
+        """
+        results = list(self._attribute_definitions.values())
+        if class_id is not None:
+            results = [a for a in results if a.class_id == class_id]
+
+        # Sort by sort_order then by identifier for deterministic ordering
+        results.sort(key=lambda a: (a.sort_order, a.identifier))
+
+        end = None if limit is None else offset + limit
+        return results[offset:end]
+
+    def save_attribute_definition(self, attr_def: AttributeDefinition) -> AttributeDefinition:
+        """Persist an attribute definition (create or update).
+
+        Args:
+            attr_def: The AttributeDefinition entity to save
+
+        Returns:
+            The persisted AttributeDefinition entity
+        """
+        # Check for duplicate identifier within the same class
+        for existing in self._attribute_definitions.values():
+            if (
+                existing.class_id == attr_def.class_id
+                and existing.identifier == attr_def.identifier
+                and existing.id != attr_def.id
+            ):
+                raise DuplicateEntityError(
+                    f"AttributeDefinition identifier '{attr_def.identifier}' already exists in "
+                    f"class {attr_def.class_id}"
+                )
+        # Increment version if updating existing attribute definition
+        if attr_def.id in self._attribute_definitions:
+            attr_def.version += 1
+        self._attribute_definitions[attr_def.id] = attr_def
+        return attr_def
+
+    def delete_attribute_definition(self, attribute_definition_id: str) -> bool:
+        """Delete an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition to delete
+
+        Returns:
+            True if the attribute definition was deleted, False if it did not exist
+        """
+        if attribute_definition_id in self._attribute_definitions:
+            self._attribute_definitions.pop(attribute_definition_id)
+            return True
+        return False
+
+    def count_attribute_definitions(self, class_id: str | None = None) -> int:
+        """Count attribute definitions, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Total count of attribute definitions
+        """
+        if class_id is None:
+            return len(self._attribute_definitions)
+        return sum(1 for a in self._attribute_definitions.values() if a.class_id == class_id)
 
     # Bulk operations
 

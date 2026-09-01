@@ -6,11 +6,12 @@ comparing extracted entities against ground truth annotations using
 span-based matching with configurable overlap thresholds.
 """
 
-from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
+from typing import Any
+
+from utils.logger import get_logger
 
 from rag.models import ExtractedEntity
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -34,7 +35,7 @@ class ExtractionSpan:
 
     start_char: int
     end_char: int
-    matched_kg_node: Optional[str] = None
+    matched_kg_node: str | None = None
     text: str = ""
 
     def __repr__(self):
@@ -51,9 +52,9 @@ class ScoringResult:
     true_positives: int
     false_positives: int
     false_negatives: int
-    matches: List[Dict[str, Any]]  # Details of matched spans
+    matches: list[dict[str, Any]]  # Details of matched spans
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "precision": round(self.precision, 4),
@@ -90,8 +91,8 @@ class RAGTestScoringService:
 
     def score_extraction(
         self,
-        extracted_entities: List[ExtractedEntity],
-        ground_truth_annotations: List[AnnotationSpan],
+        extracted_entities: list[ExtractedEntity],
+        ground_truth_annotations: list[AnnotationSpan],
         paragraph_text: str,
     ) -> ScoringResult:
         """
@@ -150,8 +151,8 @@ class RAGTestScoringService:
         return result
 
     def _entities_to_spans(
-        self, entities: List[ExtractedEntity]
-    ) -> List[ExtractionSpan]:
+        self, entities: list[ExtractedEntity]
+    ) -> list[ExtractionSpan]:
         """Convert extracted entities to span objects."""
         spans = []
         for entity in entities:
@@ -171,12 +172,12 @@ class RAGTestScoringService:
 
     def _match_spans(
         self,
-        extraction_spans: List[ExtractionSpan],
-        annotation_spans: List[AnnotationSpan],
-    ) -> Tuple[
-        List[Tuple[ExtractionSpan, AnnotationSpan]],
-        List[ExtractionSpan],
-        List[AnnotationSpan],
+        extraction_spans: list[ExtractionSpan],
+        annotation_spans: list[AnnotationSpan],
+    ) -> tuple[
+        list[tuple[ExtractionSpan, AnnotationSpan]],
+        list[ExtractionSpan],
+        list[AnnotationSpan],
     ]:
         """
         Match extraction spans against annotation spans using overlap threshold.
@@ -252,7 +253,7 @@ class RAGTestScoringService:
         return matches, unmatched_extractions, unmatched_annotations
 
     def _calculate_overlap(
-        self, span1: Tuple[int, int], span2: Tuple[int, int]
+        self, span1: tuple[int, int], span2: tuple[int, int]
     ) -> float:
         """
         Calculate overlap ratio between two spans.
@@ -314,11 +315,11 @@ class RAGTestScoringService:
 
     def _build_match_details(
         self,
-        matches: List[Tuple[ExtractionSpan, AnnotationSpan]],
-        unmatched_extractions: List[ExtractionSpan],
-        unmatched_annotations: List[AnnotationSpan],
+        matches: list[tuple[ExtractionSpan, AnnotationSpan]],
+        unmatched_extractions: list[ExtractionSpan],
+        unmatched_annotations: list[AnnotationSpan],
         paragraph_text: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Build detailed match information for debugging."""
         details = []
 

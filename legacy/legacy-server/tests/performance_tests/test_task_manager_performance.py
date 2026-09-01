@@ -5,25 +5,26 @@ These tests validate that the TaskManager meets performance requirements
 for throughput, latency, resource usage, and scalability.
 """
 
-import sys
-import os
-import pytest
 import asyncio
+import os
+import sys
 import time
-import psutil
 from statistics import mean, stdev
+
+import psutil
+import pytest
 
 # Add parent directory to path for imports
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-from services.task_manager import (  # noqa: E402
+from services.task_manager import (
     TaskStatus,
     initialize_task_manager,
     shutdown_task_manager,
 )
-from utils.logger import get_logger  # noqa: E402
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -74,7 +75,7 @@ class TestTaskSubmissionPerformance:
         # Assert performance target
         assert (
             throughput > 1000
-        ), f"Throughput {throughput:.1f} is below target of 1000 tasks/second"  # noqa: E501
+        ), f"Throughput {throughput:.1f} is below target of 1000 tasks/second"
 
         # Cleanup
         await task_manager.shutdown()
@@ -124,10 +125,10 @@ class TestTaskSubmissionPerformance:
         # Assert performance targets
         assert (
             p95_latency < 10
-        ), f"P95 latency {p95_latency:.3f}ms exceeds target of 10ms"  # noqa: E501
+        ), f"P95 latency {p95_latency:.3f}ms exceeds target of 10ms"
         assert (
             avg_latency < 5
-        ), f"Average latency {avg_latency:.3f}ms exceeds target of 5ms"  # noqa: E501
+        ), f"Average latency {avg_latency:.3f}ms exceeds target of 5ms"
 
         # Cleanup
         await task_manager.shutdown()
@@ -183,7 +184,7 @@ class TestTaskExecutionPerformance:
         # Assert performance target
         assert (
             throughput > 100
-        ), f"Processing throughput {throughput:.1f} is below target of 100 tasks/second"  # noqa: E501
+        ), f"Processing throughput {throughput:.1f} is below target of 100 tasks/second"
 
         # Cleanup
         await task_manager.shutdown()
@@ -227,7 +228,7 @@ class TestTaskExecutionPerformance:
             if time.time() - wait_start > max_wait:
                 logger.warning(
                     f"Timeout waiting for tasks to complete. Stats: {stats}"
-                )  # noqa: E501
+                )
                 break
             await asyncio.sleep(0.01)
 
@@ -247,7 +248,7 @@ class TestTaskExecutionPerformance:
         # Assert overhead is acceptable
         assert (
             overhead_percentage < 20
-        ), f"Overhead {overhead_percentage:.1f}% exceeds target of 20%"  # noqa: E501
+        ), f"Overhead {overhead_percentage:.1f}% exceeds target of 20%"
 
         # Cleanup - ensure proper shutdown
         try:
@@ -318,7 +319,7 @@ class TestMemoryPerformance:
         # Assert memory usage is reasonable
         assert (
             memory_growth < 100
-        ), f"Memory growth {memory_growth:.1f}MB exceeds target of 100MB"  # noqa: E501
+        ), f"Memory growth {memory_growth:.1f}MB exceeds target of 100MB"
 
         # Cleanup
         await task_manager.shutdown()
@@ -383,7 +384,7 @@ class TestConcurrencyPerformance:
         # Assert performance target
         assert (
             duration < 100
-        ), f"Query duration {duration:.1f}ms exceeds target of 100ms"  # noqa: E501
+        ), f"Query duration {duration:.1f}ms exceeds target of 100ms"
 
         # Cleanup
         await task_manager.shutdown()
@@ -441,7 +442,7 @@ class TestConcurrencyPerformance:
         # Assert performance target
         assert (
             duration < 1.0
-        ), f"Duration {duration:.3f}s exceeds target of 1.0s"  # noqa: E501
+        ), f"Duration {duration:.3f}s exceeds target of 1.0s"
 
         # Verify final state
         stats = task_manager.get_stats()
@@ -495,7 +496,7 @@ class TestScalabilityPerformance:
         # Assert performance target
         assert (
             queue_time < 2.0
-        ), f"Queue time {queue_time:.3f}s exceeds target of 2.0s"  # noqa: E501
+        ), f"Queue time {queue_time:.3f}s exceeds target of 2.0s"
         assert queue_size > 0, "Queue should have pending tasks"
 
         # Cleanup
@@ -550,10 +551,10 @@ class TestScalabilityPerformance:
         # Assert performance target
         assert (
             duration < 1.0
-        ), f"Duration {duration:.3f}s exceeds target of 1.0s"  # noqa: E501
+        ), f"Duration {duration:.3f}s exceeds target of 1.0s"
         assert (
             len(dlq) == num_tasks
-        ), f"DLQ should contain all {num_tasks} failed tasks"  # noqa: E501
+        ), f"DLQ should contain all {num_tasks} failed tasks"
 
         # Cleanup
         await task_manager.shutdown()
@@ -628,7 +629,7 @@ class TestProgressTrackingPerformance:
         # Assert overhead is acceptable
         assert (
             overhead_percentage < 15
-        ), f"Progress overhead {overhead_percentage:.1f}% exceeds target of 15%"  # noqa: E501
+        ), f"Progress overhead {overhead_percentage:.1f}% exceeds target of 15%"
 
         # Cleanup
         await task_manager.shutdown()

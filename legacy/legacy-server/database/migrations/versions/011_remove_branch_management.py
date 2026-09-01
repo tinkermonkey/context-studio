@@ -1,8 +1,8 @@
 """Migration 011: Remove Branch Management System"""
 
-from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

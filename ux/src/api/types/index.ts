@@ -625,6 +625,109 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/classes/{class_id}/attribute-definitions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Class Attribute Definitions
+     * @description Retrieve attribute definitions for a class with pagination.
+     *
+     *     Args:
+     *         class_id: The ID of the class
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing attribute definitions for the class
+     *
+     *     Raises:
+     *         HTTPException: 404 if class not found
+     */
+    get: operations["list_class_attribute_definitions_api_classes__class_id__attribute_definitions_get"];
+    put?: never;
+    /**
+     * Create Attribute Definition
+     * @description Create a new attribute definition scoped to a class.
+     *
+     *     Args:
+     *         class_id: The ID of the parent class
+     *         request: AttributeDefinitionCreateRequest with identifier, title, and datatype
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created AttributeDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if class not found, 409 if identifier exists in class
+     */
+    post: operations["create_attribute_definition_api_classes__class_id__attribute_definitions_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/attribute-definitions/{attribute_definition_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Attribute Definition
+     * @description Retrieve an attribute definition by ID.
+     *
+     *     Args:
+     *         attribute_definition_id: The attribute definition ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         AttributeDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_attribute_definition_api_attribute_definitions__attribute_definition_id__get"];
+    /**
+     * Update Attribute Definition
+     * @description Update an attribute definition (partial update).
+     *
+     *     Args:
+     *         attribute_definition_id: The attribute definition ID
+     *         request: AttributeDefinitionUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated AttributeDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_attribute_definition_api_attribute_definitions__attribute_definition_id__put"];
+    post?: never;
+    /**
+     * Delete Attribute Definition
+     * @description Delete an attribute definition.
+     *
+     *     Args:
+     *         attribute_definition_id: The attribute definition ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_attribute_definition_api_attribute_definitions__attribute_definition_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/individuals": {
     parameters: {
       query?: never;
@@ -3678,6 +3781,186 @@ export interface components {
       recognized_individual_ids?: string[];
     };
     /**
+     * AttributeDefinitionCreateRequest
+     * @description Request to create a new attribute definition.
+     */
+    AttributeDefinitionCreateRequest: {
+      /**
+       * Identifier
+       * @description Machine-readable identifier
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name for the attribute
+       */
+      title: string;
+      /**
+       * Datatype
+       * @description Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')
+       */
+      datatype: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+      /**
+       * Is Required
+       * @description Whether attribute is required on instances
+       * @default false
+       */
+      is_required: boolean;
+      /**
+       * Allowed Values
+       * @description Optional enum constraint
+       */
+      allowed_values?: string[] | null;
+      /**
+       * Default Value
+       * @description Optional default value
+       */
+      default_value?: string | null;
+      /**
+       * Sort Order
+       * @description Display order within the class's attribute list
+       * @default 0
+       */
+      sort_order: number;
+    };
+    /**
+     * AttributeDefinitionResponse
+     * @description Response containing attribute definition data.
+     */
+    AttributeDefinitionResponse: {
+      /**
+       * Id
+       * @description Unique identifier (UUID)
+       */
+      id: string;
+      /**
+       * Class Id
+       * @description Parent class ID
+       */
+      class_id: string;
+      /**
+       * Identifier
+       * @description Machine-readable identifier
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Datatype
+       * @description Data type (e.g. 'string', 'integer', 'boolean')
+       */
+      datatype: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Is Required
+       * @description Whether this attribute is required
+       * @default false
+       */
+      is_required: boolean;
+      /**
+       * Allowed Values
+       * @description Optional enum constraint
+       */
+      allowed_values?: string[] | null;
+      /**
+       * Default Value
+       * @description Optional default value
+       */
+      default_value?: string | null;
+      /**
+       * Sort Order
+       * @description Display order within the class's attributes
+       * @default 0
+       */
+      sort_order: number;
+      /**
+       * External References
+       * @description References to external knowledge bases
+       */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+      /**
+       * Status
+       * @description Publication status (draft or published)
+       * @default draft
+       * @enum {string}
+       */
+      status: "draft" | "published";
+      /**
+       * Source Run Id
+       * @description ID of the pipeline run that created or last modified this entity
+       */
+      source_run_id?: string | null;
+    };
+    /**
+     * AttributeDefinitionUpdateRequest
+     * @description Request to update an attribute definition (partial update).
+     */
+    AttributeDefinitionUpdateRequest: {
+      /**
+       * Title
+       * @description New title
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+      /**
+       * Datatype
+       * @description New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')
+       */
+      datatype?: string | null;
+      /**
+       * Is Required
+       * @description Update required flag
+       */
+      is_required?: boolean | null;
+      /**
+       * Allowed Values
+       * @description Update enum constraint; pass [] to clear
+       */
+      allowed_values?: string[] | null;
+      /**
+       * Default Value
+       * @description Update default value; pass empty string to clear
+       */
+      default_value?: string | null;
+      /**
+       * Sort Order
+       * @description Update display order
+       */
+      sort_order?: number | null;
+    };
+    /**
      * AutoResolveConflictsRequest
      * @description Request to automatically resolve conflicts in a proposal
      */
@@ -5437,6 +5720,29 @@ export interface components {
        * @description Type of sense
        */
       sense_type: string;
+    };
+    /** ListResponse[AttributeDefinitionResponse] */
+    ListResponse_AttributeDefinitionResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["AttributeDefinitionResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
     };
     /** ListResponse[ClassResponse] */
     ListResponse_ClassResponse_: {
@@ -8177,6 +8483,172 @@ export interface operations {
       header?: never;
       path: {
         property_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_class_attribute_definitions_api_classes__class_id__attribute_definitions_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_AttributeDefinitionResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_attribute_definition_api_classes__class_id__attribute_definitions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AttributeDefinitionCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AttributeDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_attribute_definition_api_attribute_definitions__attribute_definition_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        attribute_definition_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AttributeDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_attribute_definition_api_attribute_definitions__attribute_definition_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        attribute_definition_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AttributeDefinitionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AttributeDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_attribute_definition_api_attribute_definitions__attribute_definition_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        attribute_definition_id: string;
       };
       cookie?: never;
     };

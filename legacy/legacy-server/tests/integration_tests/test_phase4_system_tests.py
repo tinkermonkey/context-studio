@@ -7,18 +7,18 @@ Test Cases:
 - TC-S003: API contract validation
 """
 
-import pytest
-import tempfile
 import os
-import numpy as np
-from fastapi.testclient import TestClient
+import tempfile
+from datetime import date
 from unittest.mock import patch
+from uuid import uuid4
 
+import numpy as np
+import pytest
+from fastapi.testclient import TestClient
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 from reference_db.models import ReferenceLink
-from uuid import uuid4
-from datetime import date
 
 
 @pytest.fixture(scope="module")
@@ -63,7 +63,7 @@ def test_database_with_schema_org():
         title_embedding=create_embedding("Thing", 0.3),
         definition_embedding=create_embedding(
             "The most generic type of item.", 0.3
-        ),  # noqa: E501
+        ),
         embedding_dims=384,
     )
 
@@ -205,7 +205,7 @@ def test_database_with_schema_org():
         "givenName": {
             "id": given_name_prop.id,
             "title": given_name_prop.title,
-        },  # noqa: E501
+        },
     }
 
     manager.close()
@@ -220,7 +220,7 @@ def test_database_with_schema_org():
 @pytest.fixture
 def app_client(test_database_with_schema_org):
     """Create FastAPI test client with test database."""
-    db_path, nodes = test_database_with_schema_org
+    db_path, _nodes = test_database_with_schema_org
 
     # Patch the reference_manager_context to use our test database
 
@@ -267,7 +267,7 @@ class TestTC_S001_EndToEndWorkflow:
         3. Retrieve links for Person
         4. Verify expected properties (name, givenName) via domainIncludes
         """
-        db_path, nodes = test_database_with_schema_org
+        _db_path, _nodes = test_database_with_schema_org
 
         # Mock embedding generation
         def mock_embedding(text: str) -> bytes:
@@ -297,7 +297,7 @@ class TestTC_S001_EndToEndWorkflow:
         assert search_data["total_results"] > 0, "No results found"
         person_results = [
             r for r in search_data["results"] if r["title"] == "Person"
-        ]  # noqa: E501
+        ]
         assert len(person_results) > 0, "Person entity not found in results"
 
         person_result = person_results[0]
@@ -334,13 +334,13 @@ class TestTC_S001_EndToEndWorkflow:
         for prop_id in property_ids:
             prop_response = app_client.get(
                 f"/api/reference/ref-db/nodes/{prop_id}"
-            )  # noqa: E501
+            )
             if prop_response.status_code == 200:
                 property_titles.append(prop_response.json()["title"])
 
         assert (
             "name" in property_titles
-        ), "name property not found via domainIncludes"  # noqa: E501
+        ), "name property not found via domainIncludes"
         assert (
             "givenName" in property_titles
         ), "givenName property not found via domainIncludes"
@@ -365,7 +365,7 @@ class TestTC_S002_HealthCheck:
 
         assert (
             response.status_code == 200
-        ), f"Health check failed: {response.text}"  # noqa: E501
+        ), f"Health check failed: {response.text}"
         data = response.json()
 
         # Validate schema
@@ -413,18 +413,18 @@ class TestTC_S002_HealthCheck:
         ), f"Health check took {execution_time}ms, expected <200ms"
 
     def test_health_check_missing_database(self):
-        """Verify health check reports 'missing' when database doesn't exist."""  # noqa: E501
+        """Verify health check reports 'missing' when database doesn't exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
             non_existent_db = os.path.join(tmpdir, "nonexistent.db")
 
             # Use a manager with non-existent DB
             config = ReferenceConfig()
 
-            # Directly test the manager's get_status method with a non-existent database  # noqa: E501
+            # Directly test the manager's get_status method with a non-existent database
             # This is more direct than trying to patch the API
             status = ReferenceManager(
                 config, db_path=non_existent_db
-            ).get_status()  # noqa: E501
+            ).get_status()
 
             assert (
                 status["status"] == "missing"
@@ -452,7 +452,7 @@ class TestTC_S003_APIContractValidation:
         ):
             response = app_client.get(
                 "/api/reference/ref-db/search",
-                params={"query": "test", "limit": 10},  # noqa: E501
+                params={"query": "test", "limit": 10},
             )
 
         assert response.status_code == 200
@@ -478,9 +478,9 @@ class TestTC_S003_APIContractValidation:
 
     def test_node_retrieval_api_schema(
         self, app_client, test_database_with_schema_org
-    ):  # noqa: E501
+    ):
         """Verify node retrieval API returns expected schema."""
-        db_path, nodes = test_database_with_schema_org
+        _db_path, nodes = test_database_with_schema_org
         person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(f"/api/reference/ref-db/nodes/{person_id}")
@@ -499,9 +499,9 @@ class TestTC_S003_APIContractValidation:
 
     def test_links_api_response_schema(
         self, app_client, test_database_with_schema_org
-    ):  # noqa: E501
+    ):
         """Verify links API returns expected response schema."""
-        db_path, nodes = test_database_with_schema_org
+        _db_path, nodes = test_database_with_schema_org
         person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(

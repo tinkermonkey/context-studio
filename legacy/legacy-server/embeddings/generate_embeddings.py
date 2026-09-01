@@ -1,7 +1,8 @@
-from sentence_transformers import SentenceTransformer
-import numpy as np
 import threading
 import time
+
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
 # Module-level singleton for thread-safe model access
 _model = None

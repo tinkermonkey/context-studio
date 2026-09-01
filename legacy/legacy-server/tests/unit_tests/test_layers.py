@@ -1,12 +1,13 @@
 # Unit tests for cosine_similarity and layer API endpoints
 import math
-import numpy as np
-import sys
 import os
+import sys
 import uuid
 
+import numpy as np
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from utils.vector import cosine_similarity  # noqa: E402
+from utils.vector import cosine_similarity
 
 
 # Vector similarity tests

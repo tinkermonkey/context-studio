@@ -4,11 +4,12 @@ Measures time to create 100 layers, domains, and terms (with vectors).
 Uses a temporary database for each run.
 """
 
-import sys
+import logging
 import os
+import sys
 import time
 import uuid
-import logging
+
 import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -93,12 +94,12 @@ def test_throughput_performance(client):
         layer = layers[i % num_layers]
         domain = create_domain(
             client, layer_id=layer["id"], title=f"PerfDomain_{i}"
-        )  # noqa: E501
+        )
         domains.append(domain)
         if (i + 1) % 10 == 0 or (i + 1) == num_domains:
             logger.info(
                 f"[THROUGHPUT] Created {i + 1}/{num_domains} domains..."
-            )  # noqa: E501
+            )
     timings["domains"] = time.time()
     print_mem_usage("After domains")
 
@@ -116,15 +117,15 @@ def test_throughput_performance(client):
     # Performance summary
     logger.info("\n[THROUGHPUT] Performance Summary:")
     logger.info(
-        f"  Layers creation:   {timings['layers'] - timings['start']:.2f}s  ({1000*(timings['layers']-timings['start'])/num_layers:.1f} ms/op)"  # noqa: E501
+        f"  Layers creation:   {timings['layers'] - timings['start']:.2f}s  ({1000*(timings['layers']-timings['start'])/num_layers:.1f} ms/op)"
     )
     logger.info(
-        f"  Domains creation:  {timings['domains'] - timings['layers']:.2f}s  ({1000*(timings['domains']-timings['layers'])/num_domains:.1f} ms/op)"  # noqa: E501
+        f"  Domains creation:  {timings['domains'] - timings['layers']:.2f}s  ({1000*(timings['domains']-timings['layers'])/num_domains:.1f} ms/op)"
     )
     logger.info(
-        f"  Terms creation:    {timings['terms'] - timings['domains']:.2f}s  ({1000*(timings['terms']-timings['domains'])/num_terms:.1f} ms/op)"  # noqa: E501
+        f"  Terms creation:    {timings['terms'] - timings['domains']:.2f}s  ({1000*(timings['terms']-timings['domains'])/num_terms:.1f} ms/op)"
     )
     logger.info(
         f"  Total:             {timings['terms'] - timings['start']:.2f}s\n"
-    )  # noqa: E501
+    )
     logger.info("[THROUGHPUT] Throughput test completed.")

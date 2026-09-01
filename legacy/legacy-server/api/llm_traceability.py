@@ -1,16 +1,16 @@
 """API endpoints for LLM traceability and selection tracking."""
 
-from fastapi import APIRouter, HTTPException, Query, status
-from typing import Dict, Any, Optional
+from typing import Any
 
+from fastapi import APIRouter, HTTPException, Query, status
 from llm.execution_tracker import ExecutionTracker
 from llm.models import (
-    RecordSelectionRequest,
-    SelectionResponse,
-    PipelineType,
     ExecutionHistoryResponse,
     FlavorAnalyticsResponse,
-)  # noqa: E501
+    PipelineType,
+    RecordSelectionRequest,
+    SelectionResponse,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -44,8 +44,8 @@ async def record_selection(request: RecordSelectionRequest):
 
 @router.get("/execution-analytics")
 async def get_execution_analytics(
-    pipeline_type: Optional[PipelineType] = None, days_back: int = 30
-) -> Dict[str, Any]:
+    pipeline_type: PipelineType | None = None, days_back: int = 30
+) -> dict[str, Any]:
     """Get analytics for LLM executions."""
 
     try:
@@ -58,7 +58,7 @@ async def get_execution_analytics(
             "filters": {
                 "pipeline_type": (
                     pipeline_type.value if pipeline_type else "all"
-                ),  # noqa: E501
+                ),
                 "days_back": days_back,
             },
         }
@@ -72,7 +72,7 @@ async def get_execution_analytics(
 
 
 @router.get("/execution-details/{execution_id}")
-async def get_execution_details(execution_id: str) -> Dict[str, Any]:
+async def get_execution_details(execution_id: str) -> dict[str, Any]:
     """Get detailed information about a specific execution."""
 
     try:
@@ -101,10 +101,10 @@ async def get_execution_details(execution_id: str) -> Dict[str, Any]:
 async def get_execution_history(
     flavor_id: str = Query(
         ..., description="Flavor ID to get execution history for"
-    ),  # noqa: E501
+    ),
     limit: int = Query(
         100, description="Maximum number of executions to return"
-    ),  # noqa: E501
+    ),
 ) -> ExecutionHistoryResponse:
     """Get execution history for a specific flavor."""
 
@@ -134,7 +134,7 @@ async def get_execution_history(
 
 @router.get(
     "/flavor-analytics/{flavor_id}", response_model=FlavorAnalyticsResponse
-)  # noqa: E501
+)
 async def get_flavor_analytics(
     flavor_id: str,
     days_back: int = Query(30, description="Number of days of data to include"),
@@ -166,7 +166,7 @@ async def get_flavor_analytics(
 
 
 @router.get("/health")
-async def traceability_health() -> Dict[str, Any]:
+async def traceability_health() -> dict[str, Any]:
     """Health check endpoint for LLM traceability service."""
 
     try:
@@ -178,7 +178,7 @@ async def traceability_health() -> Dict[str, Any]:
             "status": "healthy",
             "service": "llm_traceability",
             "database_accessible": "error" not in analytics,
-            "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp in production  # noqa: E501
+            "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp in production
         }
 
     except Exception as e:

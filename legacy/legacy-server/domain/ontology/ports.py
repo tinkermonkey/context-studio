@@ -5,25 +5,26 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
 
-from typing import Protocol, Optional, Sequence, Callable, Any
+from collections.abc import Callable, Sequence
+from typing import Any, Protocol
 
 from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
     Class,
+    ConceptScheme,
     Individual,
-    Relationship,
     PropertyDefinition,
+    Relationship,
+    Taxonomy,
 )
-from domain.ontology.value_objects import SearchCriteria
 from domain.ontology.events import DomainEvent
+from domain.ontology.value_objects import SearchCriteria
 
 
 class OntologyRepository(Protocol):
     """Repository port for managing ontology entities (Taxonomy, ConceptScheme, Class, etc.)."""
 
     # Taxonomy operations
-    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
+    def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
         """Retrieve a taxonomy by ID."""
         ...
 
@@ -40,12 +41,12 @@ class OntologyRepository(Protocol):
         ...
 
     # ConceptScheme operations
-    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+    def get_concept_scheme(self, scheme_id: str) -> ConceptScheme | None:
         """Retrieve a concept scheme by ID."""
         ...
 
     def list_concept_schemes(
-        self, taxonomy_id: Optional[str] = None
+        self, taxonomy_id: str | None = None
     ) -> Sequence[ConceptScheme]:
         """List all concept schemes, optionally filtered by taxonomy."""
         ...
@@ -59,14 +60,14 @@ class OntologyRepository(Protocol):
         ...
 
     # Class operations
-    def get_class(self, class_id: str) -> Optional[Class]:
+    def get_class(self, class_id: str) -> Class | None:
         """Retrieve a class by ID."""
         ...
 
     def list_classes(
         self,
-        scheme_id: Optional[str] = None,
-        parent_class_id: Optional[str] = None,
+        scheme_id: str | None = None,
+        parent_class_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> Sequence[Class]:
@@ -77,7 +78,7 @@ class OntologyRepository(Protocol):
         """Search classes based on search criteria."""
         ...
 
-    def count_classes(self, scheme_id: Optional[str] = None) -> int:
+    def count_classes(self, scheme_id: str | None = None) -> int:
         """Count the number of classes, optionally filtered by scheme."""
         ...
 
@@ -90,15 +91,15 @@ class OntologyRepository(Protocol):
         ...
 
     # Relationship operations
-    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
+    def get_relationship(self, relationship_id: str) -> Relationship | None:
         """Retrieve a relationship by ID."""
         ...
 
     def list_relationships(
         self,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
-        property_id: Optional[str] = None,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
     ) -> Sequence[Relationship]:
         """List relationships with optional filtering by source, target, or property."""
         ...
@@ -112,18 +113,18 @@ class OntologyRepository(Protocol):
         ...
 
     # PropertyDefinition operations
-    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """Retrieve a property definition by ID."""
         ...
 
     def get_property_definition_by_identifier(
         self, identifier: str
-    ) -> Optional[PropertyDefinition]:
+    ) -> PropertyDefinition | None:
         """Retrieve a property definition by its identifier string."""
         ...
 
     def list_property_definitions(
-        self, is_relevant: Optional[bool] = None
+        self, is_relevant: bool | None = None
     ) -> Sequence[PropertyDefinition]:
         """List all property definitions, optionally filtered by relevance."""
         ...
@@ -137,7 +138,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Individual operations - NOT IMPLEMENTED until a future phase
-    def get_individual(self, individual_id: str) -> Optional[Individual]:
+    def get_individual(self, individual_id: str) -> Individual | None:
         """Retrieve an individual by ID.
 
         NOT IMPLEMENTED: This method is reserved for a future phase.
@@ -145,7 +146,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_individuals(self, class_id: Optional[str] = None) -> Sequence[Individual]:
+    def list_individuals(self, class_id: str | None = None) -> Sequence[Individual]:
         """List individuals, optionally filtered by class.
 
         NOT IMPLEMENTED: This method is reserved for a future phase.

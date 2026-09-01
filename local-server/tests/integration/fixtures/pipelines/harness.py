@@ -8,7 +8,7 @@ Provides `run_pipeline_against_fixture`: a helper that:
 """
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 
@@ -100,6 +100,7 @@ async def run_pipeline_against_fixture(
 
     from adapters.persistence.sqlite.models import Base
     from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+    from domain.ontology.ports import OntologyRepository
     from domain.pipelines.entities import PipelineType
     from domain.pipelines.orchestration.base import PipelineState
     from domain.pipelines.orchestration.noop import NoOpPipelineState
@@ -169,7 +170,7 @@ async def run_pipeline_against_fixture(
                 )
                 repo.save_class(cls)
 
-        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=cast(OntologyRepository, repo))
         if hasattr(orchestrator, "_traversal") and orchestrator._traversal is None:
             orchestrator._traversal = traversal
         state = ConnectionRefinementState(
@@ -215,7 +216,7 @@ async def run_pipeline_against_fixture(
                 )
                 repo.save_class(cls)
 
-        traversal = SchemaNeighborhoodTraversal(ontology_repo=repo)
+        traversal = SchemaNeighborhoodTraversal(ontology_repo=cast(OntologyRepository, repo))
         if hasattr(orchestrator, "_traversal") and orchestrator._traversal is None:
             orchestrator._traversal = traversal
         state = DefinitionRefinementState(

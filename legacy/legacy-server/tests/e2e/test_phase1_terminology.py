@@ -11,7 +11,6 @@ All tests are marked with @pytest.mark.e2e and require the E2E test harness (con
 
 import pytest
 from sqlalchemy import text
-
 from tests.e2e.helpers import create_test_hierarchy, create_test_hierarchy_new_api
 
 pytestmark = pytest.mark.e2e
@@ -197,7 +196,7 @@ class TestDatabaseMigrationDataIntegrity:
         taxonomy_id, scheme_id, class_ids = create_test_hierarchy_new_api(e2e_client)
 
         # Unpack e2e_app tuple to get app, engine, and session_local
-        app, engine, session_local = e2e_app
+        _app, engine, _session_local = e2e_app
 
         # Verify old table names no longer exist
         with engine.connect() as conn:
@@ -296,7 +295,7 @@ class TestMigrationRollback:
         from database.migrations.migration_manager import MigrationManager
 
         # Unpack e2e_app tuple to get app, engine, and session_local
-        app, engine, session_local = e2e_app
+        _app, engine, _session_local = e2e_app
 
         # Get the database file path - we'll need to derive it from the engine URL
         # For SQLite, the database path is in the connection URL
@@ -310,7 +309,7 @@ class TestMigrationRollback:
             pytest.skip("Could not determine database path from engine URL")
 
         # Create test data via new API first
-        taxonomy_id, scheme_id, class_ids = create_test_hierarchy_new_api(e2e_client)
+        taxonomy_id, _scheme_id, _class_ids = create_test_hierarchy_new_api(e2e_client)
 
         # Initialize migration manager
         migration_mgr = MigrationManager(db_path)
@@ -384,7 +383,7 @@ class TestDualTerminologyCoexistence:
         6. Verify both are in the same database table
         """
         # Create taxonomy via new API
-        taxonomy_id, scheme_id, class_ids = create_test_hierarchy_new_api(e2e_client)
+        taxonomy_id, _scheme_id, _class_ids = create_test_hierarchy_new_api(e2e_client)
 
         # Read taxonomy via old API
         tax_via_old = e2e_client.get(f"/api/structure_nodes/{taxonomy_id}")

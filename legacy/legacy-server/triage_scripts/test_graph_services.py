@@ -5,15 +5,16 @@ This script shows how to use the combined graph services for various
 graph operations on the Context Studio data.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import json
 
 from database.utils import get_engine, get_session_local, init_db
 from graph.graph_service import GraphService
 from utils.logger import get_logger
-import json
 
 logger = get_logger(__name__)
 
@@ -166,8 +167,8 @@ def test_individual_services():
         SessionLocal = get_session_local(engine)
         session = SessionLocal()
 
-        from graph.sparql_service import SPARQLService
         from graph.network_service import NetworkService
+        from graph.sparql_service import SPARQLService
 
         # Test SPARQL service
         logger.info("Testing SPARQL service...")

@@ -5,24 +5,24 @@ Tests end-to-end workflows from user registration through changeset merging,
 including identity management, proposal voting, and CRDT conflict resolution.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )  # noqa: E501
+    )
 )
 
-import pytest  # noqa: E402
-from sqlalchemy import text  # noqa: E402
-from unittest.mock import patch  # noqa: E402
+from unittest.mock import patch
 
-from services.service_factory import ServiceFactory  # noqa: E402
+import pytest
 from services.collaboration_models import (
     ChangesetState,
     ProposalStatus,
-)  # noqa: E402, E501
+)
+from services.service_factory import ServiceFactory
+from sqlalchemy import text
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def test_complete_collaboration_workflow(
     identity_manager,
     changeset_manager,
     proposal_manager,
-    crdt_merge_engine,  # noqa: E501
+    crdt_merge_engine,
 ):
     """Test complete end-to-end collaboration workflow."""
 
@@ -94,7 +94,7 @@ def test_complete_collaboration_workflow(
     assert identity_manager.trust_user(user2_id, user3_id) is True
     assert (
         identity_manager.trust_user(user3_id, user2_id) is True
-    )  # user3 trusts user2  # noqa: E501
+    )  # user3 trusts user2
 
     # Verify trust levels increased
     user2 = identity_manager.get_user(user2_id)
@@ -105,30 +105,29 @@ def test_complete_collaboration_workflow(
     # Step 4: Create changesets with mocked working tree
     with patch.object(
         changeset_manager.working_tree, "get_staged_changes"
-    ) as mock_staged:
-        with patch.object(
-            changeset_manager.working_tree, "capture_version_snapshot"
-        ) as mock_snapshot:
-            mock_staged.return_value = [
-                {
-                    "version_id": "v1",
-                    "change_type": "create",
-                    "entity_type": "node",
-                }  # noqa: E501
-            ]
-            mock_snapshot.return_value = "snapshot123"
+    ) as mock_staged, patch.object(
+        changeset_manager.working_tree, "capture_version_snapshot"
+    ) as mock_snapshot:
+        mock_staged.return_value = [
+            {
+                "version_id": "v1",
+                "change_type": "create",
+                "entity_type": "node",
+            }
+        ]
+        mock_snapshot.return_value = "snapshot123"
 
-            changeset1 = changeset_manager.create_changeset(
-                title="Feature A Implementation",
-                description="Implementing feature A with new nodes",
-                author_id=user1_id,
-            )
+        changeset1 = changeset_manager.create_changeset(
+            title="Feature A Implementation",
+            description="Implementing feature A with new nodes",
+            author_id=user1_id,
+        )
 
-            changeset2 = changeset_manager.create_changeset(
-                title="Feature B Implementation",
-                description="Implementing feature B with updates",
-                author_id=user2_id,
-            )
+        changeset2 = changeset_manager.create_changeset(
+            title="Feature B Implementation",
+            description="Implementing feature B with updates",
+            author_id=user2_id,
+        )
 
     assert changeset1.state == ChangesetState.DRAFT
     assert changeset2.state == ChangesetState.DRAFT
@@ -260,7 +259,7 @@ def test_collaboration_workflow_with_conflicts(
     identity_manager,
     changeset_manager,
     proposal_manager,
-    crdt_merge_engine,  # noqa: E501
+    crdt_merge_engine,
 ):
     """Test collaboration workflow with CRDT conflict resolution."""
 
@@ -277,26 +276,25 @@ def test_collaboration_workflow_with_conflicts(
     # Create conflicting changesets
     with patch.object(
         changeset_manager.working_tree, "get_staged_changes"
-    ) as mock_staged:
-        with patch.object(
-            changeset_manager.working_tree, "capture_version_snapshot"
-        ) as mock_snapshot:
-            mock_staged.return_value = [
-                {"version_id": "v1", "change_type": "update"}
-            ]  # noqa: E501
-            mock_snapshot.return_value = "snapshot123"
+    ) as mock_staged, patch.object(
+        changeset_manager.working_tree, "capture_version_snapshot"
+    ) as mock_snapshot:
+        mock_staged.return_value = [
+            {"version_id": "v1", "change_type": "update"}
+        ]
+        mock_snapshot.return_value = "snapshot123"
 
-            changeset1 = changeset_manager.create_changeset(
-                title="Update Title to A",
-                description="First update",
-                author_id=user1_id,
-            )
+        changeset1 = changeset_manager.create_changeset(
+            title="Update Title to A",
+            description="First update",
+            author_id=user1_id,
+        )
 
-            changeset2 = changeset_manager.create_changeset(
-                title="Update Title to B",
-                description="Second update",
-                author_id=user2_id,
-            )
+        changeset2 = changeset_manager.create_changeset(
+            title="Update Title to B",
+            description="Second update",
+            author_id=user2_id,
+        )
 
     # Create and approve proposals
     proposal1 = proposal_manager.create_proposal(
@@ -354,10 +352,10 @@ def test_collaboration_workflow_rejection(
     user1_result = identity_manager.register_user("author@test.com", "Author")
     user2_result = identity_manager.register_user(
         "reviewer1@test.com", "Reviewer 1"
-    )  # noqa: E501
+    )
     user3_result = identity_manager.register_user(
         "reviewer2@test.com", "Reviewer 2"
-    )  # noqa: E501
+    )
 
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
@@ -371,20 +369,19 @@ def test_collaboration_workflow_rejection(
     # Create changeset
     with patch.object(
         changeset_manager.working_tree, "get_staged_changes"
-    ) as mock_staged:
-        with patch.object(
-            changeset_manager.working_tree, "capture_version_snapshot"
-        ) as mock_snapshot:
-            mock_staged.return_value = [
-                {"version_id": "v1", "change_type": "create"}
-            ]  # noqa: E501
-            mock_snapshot.return_value = "snapshot123"
+    ) as mock_staged, patch.object(
+        changeset_manager.working_tree, "capture_version_snapshot"
+    ) as mock_snapshot:
+        mock_staged.return_value = [
+            {"version_id": "v1", "change_type": "create"}
+        ]
+        mock_snapshot.return_value = "snapshot123"
 
-            changeset = changeset_manager.create_changeset(
-                title="Questionable Feature",
-                description="This might not be good",
-                author_id=user1_id,
-            )
+        changeset = changeset_manager.create_changeset(
+            title="Questionable Feature",
+            description="This might not be good",
+            author_id=user1_id,
+        )
 
     # Create proposal requiring 2 approvals
     proposal = proposal_manager.create_proposal(
@@ -427,10 +424,10 @@ def test_collaboration_workflow_vote_updates(
     # Setup
     user1_result = identity_manager.register_user(
         "user1@update.com", "User One"
-    )  # noqa: E501
+    )
     user2_result = identity_manager.register_user(
         "user2@update.com", "User Two"
-    )  # noqa: E501
+    )
 
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
@@ -441,20 +438,19 @@ def test_collaboration_workflow_vote_updates(
     # Create changeset and proposal
     with patch.object(
         changeset_manager.working_tree, "get_staged_changes"
-    ) as mock_staged:
-        with patch.object(
-            changeset_manager.working_tree, "capture_version_snapshot"
-        ) as mock_snapshot:
-            mock_staged.return_value = [
-                {"version_id": "v1", "change_type": "create"}
-            ]  # noqa: E501
-            mock_snapshot.return_value = "snapshot123"
+    ) as mock_staged, patch.object(
+        changeset_manager.working_tree, "capture_version_snapshot"
+    ) as mock_snapshot:
+        mock_staged.return_value = [
+            {"version_id": "v1", "change_type": "create"}
+        ]
+        mock_snapshot.return_value = "snapshot123"
 
-            changeset = changeset_manager.create_changeset(
-                title="Feature X",
-                description="Implementation of feature X",
-                author_id=user1_id,
-            )
+        changeset = changeset_manager.create_changeset(
+            title="Feature X",
+            description="Implementation of feature X",
+            author_id=user1_id,
+        )
 
     proposal = proposal_manager.create_proposal(
         changeset_id=changeset.id,
@@ -511,7 +507,7 @@ def test_migration_008_creates_collaboration_tables(db_session):
     for table_name in tables_to_check:
         result = db_session.execute(
             text(
-                f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"  # noqa: E501
+                f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
             )
         ).fetchone()
         assert (
@@ -548,4 +544,4 @@ def test_migration_008_creates_collaboration_tables(db_session):
     ).fetchall()
     assert (
         len(foreign_keys) > 0
-    ), "Proposals table should have foreign key constraints"  # noqa: E501
+    ), "Proposals table should have foreign key constraints"

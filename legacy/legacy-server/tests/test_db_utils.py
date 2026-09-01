@@ -6,22 +6,21 @@ managing database cleanup, and supporting both in-memory and file-based
 test database configurations.
 """
 
-import tempfile
 import shutil
-from pathlib import Path
-from typing import Tuple, Optional, List, Union, cast
+import tempfile
 from contextlib import contextmanager
+from pathlib import Path
+from typing import cast
 
-from sqlalchemy import text
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, Session
-
+from database.migrations.migration_manager import MigrationManager
 from database.utils import (
     get_engine,
     get_session_local,
     init_db,
 )
-from database.migrations.migration_manager import MigrationManager
+from sqlalchemy import text
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class TestDatabaseManager:
@@ -32,7 +31,7 @@ class TestDatabaseManager:
     with complete isolation and automatic cleanup.
     """
 
-    def __init__(self, temp_dir: Optional[str] = None):
+    def __init__(self, temp_dir: str | None = None):
         """
         Initialize test database manager.
 
@@ -42,11 +41,11 @@ class TestDatabaseManager:
         """
         self.temp_dir = (
             Path(temp_dir) if temp_dir else Path(tempfile.mkdtemp())
-        )  # noqa: E501
-        self.created_databases: List[Path] = []
-        self.active_engines: List[Engine] = []
+        )
+        self.created_databases: list[Path] = []
+        self.active_engines: list[Engine] = []
 
-    def create_in_memory_database(self) -> Tuple[Engine, sessionmaker]:
+    def create_in_memory_database(self) -> tuple[Engine, sessionmaker]:
         """
         Create an in-memory SQLite database for testing.
 
@@ -69,8 +68,8 @@ class TestDatabaseManager:
         return engine, session_local
 
     def create_file_database(
-        self, db_name: Optional[str] = None
-    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+        self, db_name: str | None = None
+    ) -> tuple[Engine, sessionmaker, Path]:
         """
         Create a file-based SQLite database for testing.
 
@@ -103,8 +102,8 @@ class TestDatabaseManager:
         return engine, session_local, db_path
 
     def create_migrated_database(
-        self, db_name: Optional[str] = None
-    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+        self, db_name: str | None = None
+    ) -> tuple[Engine, sessionmaker, Path]:
         """
         Create a file-based database with all migrations applied.
 
@@ -125,11 +124,11 @@ class TestDatabaseManager:
         if not success:
             raise RuntimeError(
                 f"Failed to apply migrations to test database: {db_path}"
-            )  # noqa: E501
+            )
 
         return engine, session_local, db_path
 
-    def cleanup_database(self, db_path: Union[str, Path]) -> None:
+    def cleanup_database(self, db_path: str | Path) -> None:
         """
         Clean up a specific database file and related artifacts.
 
@@ -184,7 +183,7 @@ class TestDatabaseManager:
 
 
 @contextmanager
-def isolated_database(db_type: str = "file", temp_dir: Optional[str] = None):
+def isolated_database(db_type: str = "file", temp_dir: str | None = None):
     """
     Context manager for creating isolated test databases.
 
@@ -211,7 +210,7 @@ def isolated_database(db_type: str = "file", temp_dir: Optional[str] = None):
 
 
 @contextmanager
-def isolated_session(db_type: str = "memory", temp_dir: Optional[str] = None):
+def isolated_session(db_type: str = "memory", temp_dir: str | None = None):
     """
     Context manager for creating isolated database sessions.
 
@@ -226,7 +225,7 @@ def isolated_session(db_type: str = "memory", temp_dir: Optional[str] = None):
         if db_type == "memory":
             engine, session_local = db_result
         else:
-            engine, session_local, _ = db_result
+            _engine, session_local, _ = db_result
 
         session = session_local()
         try:
@@ -236,8 +235,8 @@ def isolated_session(db_type: str = "memory", temp_dir: Optional[str] = None):
 
 
 def clean_database_tables(
-    session: Session, exclude_tables: Optional[List[str]] = None
-) -> None:  # noqa: E501
+    session: Session, exclude_tables: list[str] | None = None
+) -> None:
     """
     Clean all data from database tables while preserving schema.
 
@@ -297,7 +296,7 @@ def verify_database_isolation(test_func):
 
             if new_files:
                 raise AssertionError(
-                    f"Test created database files in root directory: {new_files}"  # noqa: E501
+                    f"Test created database files in root directory: {new_files}"
                 )
 
             return result
@@ -316,19 +315,19 @@ def verify_database_isolation(test_func):
 
 
 # Convenience functions for common test patterns
-def create_test_database_in_memory() -> Tuple[Engine, sessionmaker]:
+def create_test_database_in_memory() -> tuple[Engine, sessionmaker]:
     """Create an in-memory test database with schema."""
     with TestDatabaseManager() as manager:
         return cast(
-            Tuple[Engine, sessionmaker], manager.create_in_memory_database()
-        )  # noqa: E501
+            tuple[Engine, sessionmaker], manager.create_in_memory_database()
+        )
 
 
 def create_test_database_with_migrations(
-    temp_dir: Optional[str] = None,
-) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+    temp_dir: str | None = None,
+) -> tuple[Engine, sessionmaker, Path]:
     """Create a file-based test database with all migrations applied."""
     with TestDatabaseManager(temp_dir) as manager:
         return cast(
-            Tuple[Engine, sessionmaker, Path], manager.create_migrated_database()
-        )  # noqa: E501
+            tuple[Engine, sessionmaker, Path], manager.create_migrated_database()
+        )

@@ -1,19 +1,20 @@
 # mypy: ignore-errors
 import os
 import sqlite3
-import sqlite_vec
 import threading
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, Any, Generator, List
-from sqlalchemy import create_engine, event, text, Engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool, NullPool, StaticPool
-from fastapi import HTTPException
+from typing import Any
 
+import sqlite_vec
+from fastapi import HTTPException
+from sqlalchemy import Engine, create_engine, event, text
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool, QueuePool, StaticPool
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -57,7 +58,7 @@ class PoolConfiguration:
     pool_timeout: int = 30
     pool_recycle: int = 3600
     pool_pre_ping: bool = True
-    connect_args: Dict[str, Any] = field(default_factory=dict)
+    connect_args: dict[str, Any] = field(default_factory=dict)
 
 
 class DatabaseManager:
@@ -74,13 +75,13 @@ class DatabaseManager:
 
     def __init__(self):
         self.metrics = ConnectionMetrics()
-        self._engines: Dict[str, Engine] = {}
-        self._session_locals: Dict[str, sessionmaker] = {}
+        self._engines: dict[str, Engine] = {}
+        self._session_locals: dict[str, sessionmaker] = {}
         self._lock = threading.RLock()
         self._health_check_interval = 30  # seconds
         self._last_health_check = datetime.now()
-        self._loaded_connections: Dict[int, bool] = {}
-        self._connection_lifecycles: Dict[int, datetime] = {}
+        self._loaded_connections: dict[int, bool] = {}
+        self._connection_lifecycles: dict[int, datetime] = {}
         self._cached_health_status = {}
 
         logger.info("Database Manager initialized")
@@ -123,9 +124,9 @@ class DatabaseManager:
         self,
         database_url: str,  # noqa: E128
         engine_id: str = "default",  # noqa: E128
-        custom_config: Optional[PoolConfiguration] = None,
-    ) -> Engine:  # noqa: E501, E128
-        """Create a database engine based on environment and requirements."""  # noqa: E501
+        custom_config: PoolConfiguration | None = None,
+    ) -> Engine:
+        """Create a database engine based on environment and requirements."""
 
         with self._lock:
             # Check if engine already exists
@@ -138,10 +139,10 @@ class DatabaseManager:
 
             logger.info(
                 f"Creating engine '{engine_id}' with {strategy.value} pooling"
-            )  # noqa: E501
+            )
             logger.debug(
                 f"Pool config: size={config.pool_size}, overflow={config.max_overflow}, timeout={config.pool_timeout}"
-            )  # noqa: E501
+            )
 
             # Create engine with optimized settings
             engine_kwargs = {
@@ -201,7 +202,7 @@ class DatabaseManager:
 
                 logger.info(
                     f"Engine '{engine_id}' created successfully in {creation_time:.2f}ms"
-                )  # noqa: E501
+                )
                 return engine
 
             except Exception as e:
@@ -210,7 +211,7 @@ class DatabaseManager:
                 raise
 
     def _setup_engine_listeners(self, engine: Engine, engine_id: str):
-        """Set up SQLAlchemy event listeners for monitoring and optimization."""  # noqa: E501
+        """Set up SQLAlchemy event listeners for monitoring and optimization."""
 
         @event.listens_for(engine, "connect")
         def receive_connect(dbapi_connection, connection_record):
@@ -227,11 +228,11 @@ class DatabaseManager:
                         self._loaded_connections[connection_id] = True
                         logger.debug(
                             f"SQLite extensions loaded for connection {connection_id}"
-                        )  # noqa: E501
+                        )
                     except Exception as e:
                         logger.warning(
                             f"Failed to load SQLite extensions: {e}"
-                        )  # noqa: E501
+                        )
                     finally:
                         dbapi_connection.enable_load_extension(False)
 
@@ -245,7 +246,7 @@ class DatabaseManager:
         @event.listens_for(engine, "checkout")
         def receive_checkout(
             dbapi_connection, connection_record, connection_proxy
-        ):  # noqa: E501
+        ):
             # Pool hit
             with self._lock:
                 self.metrics.pool_hits += 1
@@ -262,22 +263,22 @@ class DatabaseManager:
             with self._lock:
                 self.metrics.active_connections = max(
                     0, self.metrics.active_connections - 1
-                )  # noqa: E501
+                )
 
         @event.listens_for(engine, "before_cursor_execute")
         def receive_before_cursor_execute(
             conn, cursor, statement, parameters, context, executemany
-        ):  # noqa: E501
+        ):
             context._query_start_time = time.time()
 
         @event.listens_for(engine, "after_cursor_execute")
         def receive_after_cursor_execute(
             conn, cursor, statement, parameters, context, executemany
-        ):  # noqa: E501
+        ):
             if hasattr(context, "_query_start_time"):
                 execution_time = (
                     time.time() - context._query_start_time
-                ) * 1000  # noqa: E501
+                ) * 1000
 
                 with self._lock:
                     self.metrics.total_queries_executed += 1
@@ -286,17 +287,17 @@ class DatabaseManager:
                         self.metrics.avg_query_time_ms
                         * (self.metrics.total_queries_executed - 1)
                         + execution_time
-                    )  # noqa: E501, E128
+                    )
                     self.metrics.avg_query_time_ms = (
                         total_time / self.metrics.total_queries_executed
-                    )  # noqa: E501
+                    )
 
     @contextmanager
     def get_session(
         self,
         engine_id: str = "default",  # noqa: E128
-        database_url: Optional[str] = None,
-    ) -> Generator[Session, None, None]:  # noqa: E501, E128
+        database_url: str | None = None,
+    ) -> Generator[Session, None, None]:
         """
         Get a database session with automatic lifecycle management.
 
@@ -306,14 +307,14 @@ class DatabaseManager:
             if database_url is None:
                 raise ValueError(
                     f"Engine '{engine_id}' not found and no database_url provided"
-                )  # noqa: E501
+                )
             self.create_managed_engine(database_url, engine_id)
 
         session_local = self._session_locals.get(engine_id)
         if session_local is None:
             raise ValueError(
                 f"No session factory available for engine '{engine_id}'"
-            )  # noqa: E501
+            )
 
         session = session_local()
 
@@ -329,7 +330,7 @@ class DatabaseManager:
                     self.metrics.avg_connection_time_ms
                     * self.metrics.total_connections_created
                     + session_time
-                )  # noqa: E501, E128
+                )
                 self.metrics.avg_connection_time_ms = total_time / (
                     self.metrics.total_connections_created + 1
                 )
@@ -343,16 +344,16 @@ class DatabaseManager:
 
     def get_session_factory(
         self, engine_id: str = "default"
-    ) -> Optional[sessionmaker]:  # noqa: E501
+    ) -> sessionmaker | None:
         """Get the session factory for a specific engine."""
         return self._session_locals.get(engine_id)
 
-    def perform_health_check(self) -> Dict[str, Any]:
+    def perform_health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check on all engines."""
         current_time = datetime.now()
         if (
             current_time - self._last_health_check
-        ).seconds < self._health_check_interval and self._cached_health_status:  # noqa: E501
+        ).seconds < self._health_check_interval and self._cached_health_status:
             return self._cached_health_status
 
         health_status = {
@@ -367,14 +368,14 @@ class DatabaseManager:
         with self._lock:
             for engine_id, engine in self._engines.items():
                 engine_health = self._check_engine_health(engine_id, engine)
-                health_status["engines"][engine_id] = engine_health  # type: ignore  # noqa: E501
+                health_status["engines"][engine_id] = engine_health  # type: ignore
 
                 if engine_health["status"] != "healthy":
                     health_status["overall_status"] = "degraded"
                     if engine_health["status"] == "error":
-                        health_status["errors"].append(f"Engine {engine_id}: {engine_health.get('error', 'Unknown error')}")  # type: ignore  # noqa: E501
+                        health_status["errors"].append(f"Engine {engine_id}: {engine_health.get('error', 'Unknown error')}")  # type: ignore
                     else:
-                        health_status["warnings"].append(f"Engine {engine_id}: {engine_health.get('warning', 'Performance issue')}")  # type: ignore  # noqa: E501
+                        health_status["warnings"].append(f"Engine {engine_id}: {engine_health.get('warning', 'Performance issue')}")  # type: ignore
 
         self._last_health_check = current_time
         self._cached_health_status = health_status
@@ -382,7 +383,7 @@ class DatabaseManager:
 
     def _check_engine_health(
         self, engine_id: str, engine: Engine
-    ) -> Dict[str, Any]:  # noqa: E501
+    ) -> dict[str, Any]:
         """Check the health of a specific engine."""
         try:
             start_time = time.time()
@@ -423,11 +424,11 @@ class DatabaseManager:
                 "last_check": datetime.now().isoformat(),
             }
 
-    def _get_metrics_summary(self) -> Dict[str, Any]:
+    def _get_metrics_summary(self) -> dict[str, Any]:
         """Get summary of connection metrics."""
         with self._lock:
             return {
-                "total_connections_created": self.metrics.total_connections_created,  # noqa: E501
+                "total_connections_created": self.metrics.total_connections_created,
                 "active_connections": self.metrics.active_connections,
                 "peak_connections": self.metrics.peak_connections,
                 "pool_hits": self.metrics.pool_hits,
@@ -435,25 +436,25 @@ class DatabaseManager:
                 "connection_errors": self.metrics.connection_errors,
                 "avg_connection_time_ms": round(
                     self.metrics.avg_connection_time_ms, 2
-                ),  # noqa: E501
+                ),
                 "total_queries_executed": self.metrics.total_queries_executed,
                 "avg_query_time_ms": round(self.metrics.avg_query_time_ms, 2),
                 "uptime_seconds": int(
                     (datetime.now() - self.metrics.last_reset_time).total_seconds()
-                ),  # noqa: E501
+                ),
                 "pool_efficiency_percent": round(
                     (
                         self.metrics.pool_hits
                         / max(1, self.metrics.pool_hits + self.metrics.pool_misses)
                     )
                     * 100,
-                    2,  # noqa: E501
+                    2,
                 ),
             }
 
     def configure_for_workload(
         self, workload_type: str = "mixed"
-    ) -> Dict[str, Any]:  # noqa: E501
+    ) -> dict[str, Any]:
         """Optimize database configurations for specific workload types."""
         optimizations = []
 
@@ -464,21 +465,21 @@ class DatabaseManager:
                     # Increase pool size for read operations
                     optimizations.append(
                         f"Increased read pool size for {engine_id}"
-                    )  # noqa: E501
+                    )
 
         elif workload_type == "write_heavy":
             # Optimize for write-heavy workloads
             for engine_id, engine in self._engines.items():
-                # Reduce connection recycling time to avoid long-held connections  # noqa: E501
+                # Reduce connection recycling time to avoid long-held connections
                 optimizations.append(
                     f"Optimized write connections for {engine_id}"
-                )  # noqa: E501
+                )
 
         elif workload_type == "analytics":
             # Optimize for analytical workloads
             optimizations.append(
                 "Configured for long-running analytical queries"
-            )  # noqa: E501
+            )
 
         return {
             "workload_type": workload_type,
@@ -507,7 +508,7 @@ class DatabaseManager:
 
             logger.info("Database Manager: Resource cleanup complete")
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Generate a comprehensive performance report."""
         health = self.perform_health_check()
 
@@ -519,7 +520,7 @@ class DatabaseManager:
             "recommendations": self._generate_performance_recommendations(),
         }
 
-    def _generate_performance_recommendations(self) -> List[str]:
+    def _generate_performance_recommendations(self) -> list[str]:
         """Generate performance recommendations based on current metrics."""
         recommendations = []
         metrics = self._get_metrics_summary()
@@ -528,25 +529,25 @@ class DatabaseManager:
         if metrics["pool_efficiency_percent"] < 80:
             recommendations.append(
                 "Consider increasing pool size or reducing connection churn"
-            )  # noqa: E501
+            )
 
         # Response time recommendations
         if metrics["avg_connection_time_ms"] > 100:
             recommendations.append(
                 "High average connection time - check database performance"
-            )  # noqa: E501
+            )
 
         # Connection count recommendations
         if metrics["peak_connections"] > 50:
             recommendations.append(
                 "High peak connections - consider connection pooling optimization"
-            )  # noqa: E501
+            )
 
         # Query performance recommendations
         if metrics["avg_query_time_ms"] > 50:
             recommendations.append(
                 "High average query time - consider query optimization or indexing"
-            )  # noqa: E501
+            )
 
         if not recommendations:
             recommendations.append("Database performance is optimal")
@@ -560,7 +561,7 @@ class DatabaseManager:
 _current_engine = None
 _current_session_local = None
 _dataset_manager = None
-_database_manager: Optional[DatabaseManager] = None
+_database_manager: DatabaseManager | None = None
 _manager_lock = threading.Lock()
 
 # Global tracking of loaded extensions to prevent duplicates
@@ -586,18 +587,18 @@ def create_managed_engine(
     database_url: str,
     engine_id: str = "default",  # noqa: E128
     custom_config: PoolConfiguration = None,
-) -> Engine:  # noqa: E128, E501
+) -> Engine:
     """Create a database engine using the database manager."""
     manager = get_database_manager()
     return manager.create_managed_engine(
         database_url, engine_id, custom_config
-    )  # noqa: E501
+    )
 
 
 @contextmanager
 def managed_session(
-    database_url: Optional[str] = None, engine_id: str = "default"
-) -> Generator[Session, None, None]:  # noqa: E501, E128
+    database_url: str | None = None, engine_id: str = "default"
+) -> Generator[Session, None, None]:
     """Context manager for managed database sessions."""
     manager = get_database_manager()
     with manager.get_session(engine_id, database_url) as session:
@@ -606,7 +607,7 @@ def managed_session(
 
 def cleanup_database_resources():
     """Clean up enhanced database manager resources and legacy resources."""
-    global _database_manager, _current_engine, _current_session_local, _loaded_connections, _initialized_engines  # noqa: E501, F824
+    global _database_manager, _current_engine, _current_session_local, _loaded_connections, _initialized_engines
 
     logger.info("Cleaning up database resources...")
 
@@ -619,14 +620,14 @@ def cleanup_database_resources():
     # Clear connection tracking
     _loaded_connections.clear()
 
-    # Clear engine tracking (event listeners will be cleaned up automatically when engines are disposed)  # noqa: E501
+    # Clear engine tracking (event listeners will be cleaned up automatically when engines are disposed)
     _initialized_engines.clear()
 
     # Dispose of current engine
     if _current_engine:
         try:
-            # With NullPool, disposal should be clean since there are no persistent connections  # noqa: E501
-            # If there are any issues, they're likely harmless threading edge cases  # noqa: E501
+            # With NullPool, disposal should be clean since there are no persistent connections
+            # If there are any issues, they're likely harmless threading edge cases
             _current_engine.dispose()
             logger.info("Disposed current engine")
         except Exception as e:
@@ -649,30 +650,31 @@ def get_dataset_manager():
     """
     global _dataset_manager
     if _dataset_manager is None:
-        from dataset.manager import DatasetManager
-        from config import get_settings
         import os
+
+        from config import get_settings
+        from dataset.manager import DatasetManager
 
         # Check if datasets directory is configured and exists
         settings = get_settings()
         if settings.database.datasets_directory:
             datasets_dir = os.path.expanduser(
                 settings.database.datasets_directory
-            )  # noqa: E501
+            )
             if os.path.exists(datasets_dir):
                 logger.info(
                     f"Initializing dataset manager with directory: {datasets_dir}"
-                )  # noqa: E501
+                )
                 _dataset_manager = DatasetManager()
             else:
                 logger.info(
                     f"Datasets directory does not exist: {datasets_dir}. Dataset manager disabled."
-                )  # noqa: E501
+                )
                 return None
         else:
             logger.info(
                 "No datasets_directory configured. Dataset manager disabled."
-            )  # noqa: E501
+            )
             return None
 
     return _dataset_manager
@@ -709,7 +711,7 @@ def get_current_engine():
             settings = get_settings()
             logger.info(
                 "Dataset manager disabled, creating engine from default_url"
-            )  # noqa: E501
+            )
             _current_engine = get_engine(settings.database.default_url)
     return _current_engine
 
@@ -729,10 +731,10 @@ def get_current_session_local():
             engine = get_current_engine()
             _current_session_local = sessionmaker(
                 autocommit=False, autoflush=False, bind=engine
-            )  # noqa: E501
+            )
             logger.info(
                 "Dataset manager disabled, created session from default_url"
-            )  # noqa: E501
+            )
     return _current_session_local
 
 
@@ -760,7 +762,7 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
 
     url = database_url or os.getenv(
         "DATABASE_URL", settings.database.default_url
-    )  # noqa: E501
+    )
 
     # Try to use the optimized DatabaseManager approach
     try:
@@ -772,7 +774,7 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
             logger.info(
                 "Using custom connect_args: %s",
                 connect_args or "default with static pool",
-            )  # noqa: E501
+            )
 
             # Use provided connect_args or default optimized ones
             final_connect_args = connect_args or {
@@ -800,12 +802,12 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
                 "check_same_thread": settings.database.check_same_thread,
                 # Add SQLite threading and connection configuration
                 "timeout": 30,
-                "isolation_level": None,  # Autocommit mode for better thread handling  # noqa: E501
+                "isolation_level": None,  # Autocommit mode for better thread handling
             }
         else:
             logger.info("Using custom connect_args: %s", connect_args)
 
-        # For SQLite databases, use optimized configuration to avoid threading issues  # noqa: E501
+        # For SQLite databases, use optimized configuration to avoid threading issues
         if url.startswith("sqlite://"):
             if use_static_pool and url.startswith("sqlite:///:memory:"):
                 # In-memory databases need StaticPool
@@ -818,15 +820,15 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
                 )
             else:
                 # For file-based SQLite, use NullPool to avoid threading issues
-                # This creates a new connection per request, eliminating pool-related thread conflicts  # noqa: E501
+                # This creates a new connection per request, eliminating pool-related thread conflicts
                 return create_engine(
                     url,
                     connect_args=connect_args,
-                    poolclass=NullPool,  # No pooling - avoids thread affinity issues  # noqa: E501
+                    poolclass=NullPool,  # No pooling - avoids thread affinity issues
                     pool_pre_ping=False,  # Not needed with NullPool
                 )
         else:
-            # For other databases (PostgreSQL, MySQL, etc.), use standard pooling  # noqa: E501
+            # For other databases (PostgreSQL, MySQL, etc.), use standard pooling
             return create_engine(
                 url,
                 connect_args=connect_args,
@@ -840,7 +842,7 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
 def get_session_local(engine):
     return sessionmaker(
         autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
-    )  # noqa: E501
+    )
 
 
 def init_db(engine=None, database_url=None, connect_args=None):
@@ -848,14 +850,14 @@ def init_db(engine=None, database_url=None, connect_args=None):
     if engine is None:
         engine = get_engine(
             database_url=database_url, connect_args=connect_args
-        )  # noqa: E501
+        )
 
     # Check if this engine already has our listeners to avoid duplicates
     engine_id = id(engine)
     if engine_id in _initialized_engines:
         logger.debug(
             f"Engine {engine_id} already has event listeners, skipping"
-        )  # noqa: E501
+        )
         return engine
 
     def receive_connect(dbapi_connection, connection_record):
@@ -864,7 +866,7 @@ def init_db(engine=None, database_url=None, connect_args=None):
         if connection_id in _loaded_connections:
             logger.debug(
                 f"Extension already loaded for connection {connection_id}"
-            )  # noqa: E501
+            )
             return
 
         try:
@@ -885,7 +887,7 @@ def init_db(engine=None, database_url=None, connect_args=None):
         _loaded_connections.discard(connection_id)
         logger.debug(
             f"Cleaned up extension tracking for connection {connection_id}"
-        )  # noqa: E501
+        )
 
     # Attach event listeners
     event.listen(engine, "connect", receive_connect)
@@ -899,7 +901,7 @@ def init_db(engine=None, database_url=None, connect_args=None):
     # Do not create tables here; rely on migration manager for schema creation
     logger.info(
         "init_db complete (no tables created, use migration manager for schema)"
-    )  # noqa: E501
+    )
     return engine
 
 
@@ -933,8 +935,8 @@ def get_db_for_current_dataset():
 
 # Advanced FastAPI dependency functions using DatabaseManager
 def get_managed_db_session(
-    database_url: Optional[str] = None, engine_id: str = "default"
-):  # noqa: E501
+    database_url: str | None = None, engine_id: str = "default"
+):
     """FastAPI dependency for managed database sessions."""
     manager = get_database_manager()
 
@@ -950,7 +952,7 @@ def get_managed_db_session(
     if not session_local:
         raise RuntimeError(
             f"No session factory available for engine '{engine_id}'"
-        )  # noqa: E501
+        )
 
     session = session_local()
     try:
@@ -960,7 +962,7 @@ def get_managed_db_session(
 
 
 def get_managed_db_for_current_dataset():
-    """FastAPI dependency for managed database sessions using current dataset."""  # noqa: E501
+    """FastAPI dependency for managed database sessions using current dataset."""
     # First try to get the current session from dataset manager
     session_local = get_current_session_local()
     if session_local is None:

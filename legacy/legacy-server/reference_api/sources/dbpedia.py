@@ -1,12 +1,12 @@
 # mypy: ignore-errors
 """DBpedia source implementation"""
 
-from .base import BaseReferenceSource
 from ..models import (
     DBpediaResourceResponse,
     DBpediaSearchResponse,
     DBpediaSparqlResponse,
 )
+from .base import BaseReferenceSource
 
 
 class DBpediaSource(BaseReferenceSource):

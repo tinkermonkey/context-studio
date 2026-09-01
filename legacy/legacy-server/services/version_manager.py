@@ -7,14 +7,14 @@ handling version creation, tracking, and retrieval with SQLite storage.
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any, cast
-from datetime import datetime, timezone
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
-from sqlalchemy.orm import Session
+from typing import Any, cast
+
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorResult
-
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -40,13 +40,13 @@ class EntityVersion:
     entity_type: str
     entity_id: str
     version_number: int
-    content: Dict[str, Any]
+    content: dict[str, Any]
     state: ChangeState
-    parent_version_id: Optional[str]
-    changeset_id: Optional[str]
+    parent_version_id: str | None
+    changeset_id: str | None
     author_id: str
     created_at: datetime
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class VersionManager:
@@ -66,12 +66,12 @@ class VersionManager:
         self,
         entity_type: str,
         entity_id: str,
-        content: Dict[str, Any],
+        content: dict[str, Any],
         author_id: str,
         state: ChangeState = ChangeState.WORKING,
-        parent_version_id: Optional[str] = None,
-        changeset_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        parent_version_id: str | None = None,
+        changeset_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> EntityVersion:
         """
         Create a new version of an entity.
@@ -178,7 +178,7 @@ class VersionManager:
 
     def get_entity_versions(
         self, entity_type: str, entity_id: str
-    ) -> List[EntityVersion]:
+    ) -> list[EntityVersion]:
         """
         Get all versions of an entity ordered by version number.
 
@@ -203,7 +203,7 @@ class VersionManager:
                 {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchall()
 
-            versions: List[EntityVersion] = []
+            versions: list[EntityVersion] = []
             for row in results:
                 versions.append(self._row_to_entity_version(row))
 
@@ -220,7 +220,7 @@ class VersionManager:
 
     def get_version_by_number(
         self, entity_type: str, entity_id: str, version_number: int
-    ) -> Optional[EntityVersion]:
+    ) -> EntityVersion | None:
         """
         Get a specific version of an entity by version number.
 
@@ -268,7 +268,7 @@ class VersionManager:
 
     def get_current_version(
         self, entity_type: str, entity_id: str
-    ) -> Optional[EntityVersion]:
+    ) -> EntityVersion | None:
         """
         Get the latest version of an entity.
 
@@ -402,7 +402,7 @@ class VersionManager:
             logger.error(f"Failed to update version {version_id} state: {e}")
             raise RuntimeError(f"Database error during state update: {e}") from e
 
-    def get_versions_by_state(self, state: ChangeState) -> List[EntityVersion]:
+    def get_versions_by_state(self, state: ChangeState) -> list[EntityVersion]:
         """
         Get all versions with a specific state.
 
@@ -426,7 +426,7 @@ class VersionManager:
                 {"state": state.value},
             ).fetchall()
 
-            versions: List[EntityVersion] = []
+            versions: list[EntityVersion] = []
             for row in results:
                 versions.append(self._row_to_entity_version(row))
 
@@ -451,8 +451,8 @@ class VersionManager:
 
     def _row_to_entity_version(self, row: Any) -> EntityVersion:
         """Convert database row to EntityVersion instance."""
-        content: Dict[str, Any] = json.loads(row[4]) if row[4] else {}
-        metadata: Optional[Dict[str, Any]] = json.loads(row[10]) if row[10] else None
+        content: dict[str, Any] = json.loads(row[4]) if row[4] else {}
+        metadata: dict[str, Any] | None = json.loads(row[10]) if row[10] else None
 
         return EntityVersion(
             id=row[0],

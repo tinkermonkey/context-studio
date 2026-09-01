@@ -6,26 +6,28 @@ the local database (for predicates) and reference database (for external
 predicates and links).
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import Mock  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-import json  # noqa: E402
+import json
+from unittest.mock import Mock
 
-from database.models import Base, Predicate  # noqa: E402
+import pytest
+from database.models import Base, Predicate
+from reference_db.manager import ReferenceManager
 from reference_db.models import (
     Base as ReferenceBase,
-    ReferenceNode,
-    ReferenceLink,
+)
+from reference_db.models import (
     ExternalPredicate,
-)  # noqa: E402, E501
-from reference_db.manager import ReferenceManager  # noqa: E402
-from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
+    ReferenceLink,
+    ReferenceNode,
+)
+from services.reference_filter_service import ReferenceFilterService
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.fixture
@@ -79,7 +81,7 @@ def filter_service(local_db_session, mock_ref_manager):
 
 def test_filter_service_with_real_database_interaction(
     local_db_session, ref_db_session, mock_ref_manager
-):  # noqa: E501
+):
     """Test filter service with actual database reads."""
     # Create global predicate with mapping
     predicate = Predicate(
@@ -159,7 +161,7 @@ def test_filter_service_with_real_database_interaction(
 
 def test_filter_service_handles_database_errors_gracefully(
     local_db_session, mock_ref_manager
-):  # noqa: E501
+):
     """Test that database errors are handled gracefully."""
     from unittest.mock import patch
 
@@ -172,7 +174,7 @@ def test_filter_service_handles_database_errors_gracefully(
     # Mock the _build_relevance_sets method to raise an exception
     with patch.object(
         service, "_build_relevance_sets", side_effect=Exception("Database error")
-    ):  # noqa: E501
+    ):
         # Should handle error and return unfiltered links
         filtered_links, stats = service.filter_links([link])
 
@@ -185,7 +187,7 @@ def test_filter_service_handles_database_errors_gracefully(
 
 def test_filter_statistics_with_real_predicates(
     local_db_session, mock_ref_manager
-):  # noqa: E501
+):
     """Test filter statistics calculation with real database predicates."""
     # Create various predicates
     predicates = [
@@ -241,7 +243,7 @@ def test_filter_statistics_with_real_predicates(
 
 def test_cache_behavior_with_database_updates(
     local_db_session, mock_ref_manager
-):  # noqa: E501
+):
     """Test that cache is properly used and invalidated."""
     # Create initial predicate
     predicate = Predicate(
@@ -280,7 +282,7 @@ def test_cache_behavior_with_database_updates(
 
 def test_batch_predicate_fetch_optimization(
     local_db_session, ref_db_session, mock_ref_manager
-):  # noqa: E501
+):
     """Test that batch fetching optimizes database queries."""
     from datetime import date
 
@@ -341,8 +343,8 @@ def test_filter_mode_determination_logic(local_db_session, mock_ref_manager):
 
 def test_filter_service_with_null_relevance_values(
     local_db_session, mock_ref_manager
-):  # noqa: E501
-    """Test that predicates with null is_relevant values don't affect filtering."""  # noqa: E501
+):
+    """Test that predicates with null is_relevant values don't affect filtering."""
     # Create predicates with various relevance states
     predicates = [
         Predicate(

@@ -10,7 +10,6 @@ No framework or external dependencies - pure Python only.
 class OntologyError(Exception):
     """Base exception for all ontology domain errors."""
 
-    pass
 
 
 class EntityNotFoundError(OntologyError):
@@ -32,10 +31,8 @@ class EntityNotFoundError(OntologyError):
 class CircularReferenceError(OntologyError):
     """Raised when an operation would create a circular reference."""
 
-    pass
 
 
 class DuplicateEntityError(OntologyError):
     """Raised when attempting to create an entity that already exists."""
 
-    pass

@@ -5,13 +5,13 @@ This module provides a simple health check endpoint that can be used to verify
 the server is running and responding to requests.
 """
 
+
 from fastapi import APIRouter
-from typing import Dict
 
 router = APIRouter()
 
 
-@router.get("/health", response_model=Dict[str, str])
+@router.get("/health", response_model=dict[str, str])
 async def health_check():
     """
     Health check endpoint.

@@ -7,8 +7,9 @@ the /datafiles/ directory before attempting to create or access database files.
 
 import os
 import tempfile
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 class TestPipelineDatabaseManager:
@@ -95,8 +96,8 @@ class TestReferenceDatabaseManager:
             assert not os.path.exists(db_dir)
 
             # Import and initialize reference manager
-            from reference_db.manager import ReferenceManager
             from reference_db.config import ReferenceConfig
+            from reference_db.manager import ReferenceManager
 
             config = ReferenceConfig()
             manager = ReferenceManager(config, db_path=db_path)
@@ -120,8 +121,8 @@ class TestReferenceDatabaseManager:
             db_path = os.path.join(db_dir, "reference.db")
 
             # Import and initialize reference manager
-            from reference_db.manager import ReferenceManager
             from reference_db.config import ReferenceConfig
+            from reference_db.manager import ReferenceManager
 
             config = ReferenceConfig()
             manager = ReferenceManager(config, db_path=db_path)
@@ -247,8 +248,8 @@ class TestFreshInstallation:
 
             # Initialize all managers that use datafiles
             from pipeline.manager import PipelineDatabaseManager
-            from reference_db.manager import ReferenceManager
             from reference_db.config import ReferenceConfig
+            from reference_db.manager import ReferenceManager
 
             # Create pipeline manager
             operations_db_path = os.path.join(datafiles_dir, "operations.db")

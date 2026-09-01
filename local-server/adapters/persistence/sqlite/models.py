@@ -457,6 +457,123 @@ class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
         return f"<PropertyDefinition(id={self.id}, identifier={self.identifier})>"
 
 
+class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
+    """
+    Defines the type-level (TBox) declaration of an attribute on a Class (OWL DatatypeProperty).
+
+    Represents schema metadata about a graph node: "Class X has an attribute named Y of type Z
+    with these constraints", scoped to a single class. Unlike instances with data property values
+    (DataPropertyValue), AttributeDefinitions are schema-level declarations that define the
+    structure and constraints of attributes on class instances.
+
+    Stored in a dedicated table (not STI) because AttributeDefinition is schema metadata,
+    not a graph node.
+
+    Attributes:
+        id: UUID as string, primary key
+        class_id: ID of the class this attribute is scoped to (required; FK with CASCADE)
+        identifier: Machine-readable identifier for the attribute within its class
+        title: Display name for the attribute
+        datatype: The data type (string, integer, boolean, array, object, etc.)
+        description: Optional longer description
+        is_required: Whether this attribute must be present on instances
+        allowed_values: Enum constraint; a list of allowed string values, or None
+        default_value: Optional default value (as string)
+        sort_order: Display order within the class's attribute list
+        external_references: JSON list of external knowledge base links (e.g., DR provenance)
+        created_at: Timestamp of creation (UTC, auto-set)
+        last_modified: Timestamp of last modification (UTC, auto-set)
+        version: Version number for optimistic concurrency control
+        status: Publication status (draft or published, default draft)
+        source_run_id: ID of the pipeline run that created or last modified this entity
+    """
+
+    __tablename__ = "attribute_definitions"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    class_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Class this attribute is scoped to (required, with cascade delete)",
+    )
+    identifier = Column(
+        String(255),
+        nullable=False,
+        doc="Machine-readable identifier for the attribute within its class",
+    )
+    title = Column(String(255), nullable=False, index=True)
+    datatype = Column(
+        String(50),
+        nullable=False,
+        doc="Data type: string, integer, boolean, array, object, etc.",
+    )
+    description = Column(Text, nullable=True)
+    is_required = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="Whether this attribute must be present on instances",
+    )
+    allowed_values = Column(
+        JSON,
+        nullable=True,
+        doc="Enum constraint: list of allowed string values, or None if unconstrained",
+    )
+    default_value = Column(String(255), nullable=True, doc="Optional default value")
+    sort_order = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Display order within the class's attribute list",
+    )
+    external_references = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {source, identifier, uri, metadata}",
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of creation",
+    )
+    last_modified = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of last modification",
+    )
+    version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
+    status = Column(
+        String(20),
+        nullable=False,
+        default="draft",
+        index=True,
+        doc="Publication status: draft or published",
+    )
+    source_run_id = Column(
+        String(36),
+        nullable=True,
+        index=True,
+        doc="ID of the pipeline run that created or last modified this entity",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("class_id", "identifier", name="uk_attribute_class_identifier"),
+        Index("idx_class_id_sort_order", "class_id", "sort_order"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AttributeDefinition(id={self.id}, class_id={self.class_id},"
+            f" identifier={self.identifier})>"
+        )
+
+
 class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     """
     Audit trail of all changes to ontology entities.

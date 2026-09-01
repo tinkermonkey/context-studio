@@ -2,22 +2,23 @@
 Unit tests for LLM error handling strategy
 """
 
-import pytest
-import sys
 import os
+import sys
 from unittest.mock import patch
+
+import pytest
 
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm.exceptions import (  # noqa: E402
+from api.llm import handle_llm_error
+from fastapi import HTTPException, status
+from llm.exceptions import (
     LLMConfigurationError,
     LLMProcessingError,
-    LLMTimeoutError,
     LLMQuotaExceededError,
+    LLMTimeoutError,
 )
-from api.llm import handle_llm_error  # noqa: E402
-from fastapi import HTTPException, status  # noqa: E402
 
 
 class TestLLMErrorHandling:
@@ -118,8 +119,9 @@ class TestLLMErrorHandling:
     @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
     def test_service_timeout_implementation(self):
         """Test that service implements timeout handling"""
-        from llm.service import LLMService
         import inspect
+
+        from llm.service import LLMService
 
         # Check that execute_pipeline_flavor method has timeout handling
         source_code = inspect.getsource(LLMService.execute_pipeline_flavor)

@@ -8,7 +8,6 @@ as a whole. They import only from Python stdlib.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -110,7 +109,7 @@ class KnowledgeGraph:
     taxonomy_id: str
     nodes: tuple[str, ...] = ()
     edges: tuple[str, ...] = ()
-    metrics: Optional[GraphMetrics] = None
+    metrics: GraphMetrics | None = None
 
     def __post_init__(self) -> None:
         """Validate knowledge graph invariants."""

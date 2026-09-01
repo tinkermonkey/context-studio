@@ -6,20 +6,20 @@ and TF-IDF filtering to reduce noise.
 """
 
 # mypy: ignore-errors
-from typing import List
-from collections import Counter
 import math
+from collections import Counter
 
-from rag.processors.models import (
-    ProcessorInput,
-    SpaCyGapOutput,
-    GapConcept,
-    GapPriority,
-    LLMExtractionOutput,
-    KGContextOutput,
-)
 from nlp.pipeline import get_pipeline
 from utils.logger import get_logger
+
+from rag.processors.models import (
+    GapConcept,
+    GapPriority,
+    KGContextOutput,
+    LLMExtractionOutput,
+    ProcessorInput,
+    SpaCyGapOutput,
+)
 
 logger = get_logger(__name__)
 
@@ -251,8 +251,8 @@ class SpaCyGapProcessor:
             return GapPriority.CONTEXTUAL
 
     def _apply_tfidf_filtering(
-        self, gaps: List[GapConcept], doc
-    ) -> tuple[List[GapConcept], int]:
+        self, gaps: list[GapConcept], doc
+    ) -> tuple[list[GapConcept], int]:
         """
         Apply TF-IDF filtering to distinguish domain-specific terms from common terms.
 
@@ -273,9 +273,8 @@ class SpaCyGapProcessor:
                 hasattr(token, "lemma_")
                 and hasattr(token, "is_stop")
                 and hasattr(token, "is_alpha")
-            ):
-                if not token.is_stop and token.is_alpha:
-                    doc_terms.append(token.lemma_.lower())
+            ) and not token.is_stop and token.is_alpha:
+                doc_terms.append(token.lemma_.lower())
 
         term_freq = Counter(doc_terms)
         doc_length = len(doc_terms)

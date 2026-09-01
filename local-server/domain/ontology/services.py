@@ -17,6 +17,7 @@ from uuid import uuid4
 from domain.ports import EventPublisher
 
 from .entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -25,6 +26,9 @@ from .entities import (
     Taxonomy,
 )
 from .events import (
+    AttributeDefinitionCreated,
+    AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -59,7 +63,13 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
-from .value_objects import DataPropertyValue, ExternalReference, Status
+from .value_objects import (
+    DataPropertyValue,
+    DataType,
+    ExternalReference,
+    Status,
+    validate_default_value_against_allowed_values,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -1135,9 +1145,7 @@ class OntologyService:
         # connection.py), so the declared ondelete="SET NULL" never fires —
         # deleting without this check would leave dangling domain_class_id/
         # range_class_id references instead.
-        referencing_count = self._repository.count_property_definitions_referencing_class(
-            class_id
-        )
+        referencing_count = self._repository.count_property_definitions_referencing_class(class_id)
         if referencing_count:
             raise OntologyError(
                 f"Cannot delete class {class_id}: it is referenced as domain/range by "
@@ -1166,6 +1174,31 @@ class OntologyService:
                     " (relationship_id=%s): %s. Relationship is deleted but audit trail"
                     " may have gaps.",
                     relationship.id,
+                    handler_names,
+                )
+
+        # Find and delete all attribute definitions belonging to this class
+        orphaned_attribute_definitions = self._repository.list_attribute_definitions(
+            class_id=class_id, limit=None
+        )
+
+        for attr_def in orphaned_attribute_definitions:
+            self._repository.delete_attribute_definition(attr_def.id)
+            failures = self._event_publisher.publish(
+                AttributeDefinitionDeleted(
+                    attribute_definition_id=attr_def.id,
+                    class_id=attr_def.class_id,
+                    identifier=attr_def.identifier,
+                    title=attr_def.title,
+                )
+            )
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for AttributeDefinitionDeleted"
+                    " (attribute_definition_id=%s): %s. Attribute definition is deleted but"
+                    " audit trail may have gaps.",
+                    attr_def.id,
                     handler_names,
                 )
 
@@ -2355,9 +2388,7 @@ class OntologyService:
         individual.last_modified = datetime.now(timezone.utc)
 
         individual = self._repository.save_individual(individual)
-        self._sync_individual_index(
-            individual_id, individual.title, individual.description
-        )
+        self._sync_individual_index(individual_id, individual.title, individual.description)
         self._sync_vector_index(individual_id, individual.title, individual.description)
 
         # Emit IndividualUpdated event
@@ -2754,3 +2785,326 @@ class OntologyService:
                     seen_property_names.add(prop.property_identifier)
 
         return deduplicated_properties
+
+    # AttributeDefinition operations
+
+    def create_attribute_definition(
+        self,
+        class_id: str,
+        identifier: str,
+        title: str,
+        datatype: str,
+        description: str | None = None,
+        is_required: bool = False,
+        allowed_values: list[str] | None = None,
+        default_value: str | None = None,
+        sort_order: int = 0,
+        external_references: list[ExternalReference] | None = None,
+    ) -> AttributeDefinition:
+        """
+        Create a new attribute definition (TBox data property declaration).
+
+        Validates that:
+        - The class_id references an existing Class
+        - The identifier is unique within the class scope (different classes
+          can share the same identifier)
+
+        Args:
+            class_id: ID of the class this attribute is scoped to (required)
+            identifier: Machine-readable identifier for the attribute
+            title: Display name for the attribute
+            datatype: The data type (e.g. "string", "integer", "boolean", "array", "object")
+            description: Optional longer description
+            is_required: Whether this attribute must be present on class instances
+            allowed_values: Optional enum constraint (list of allowed string values)
+            default_value: Optional default value (as string)
+            sort_order: Display order within the class's attribute list
+            external_references: Optional list of references to external knowledge bases
+
+        Returns:
+            The created AttributeDefinition
+
+        Raises:
+            EntityNotFoundError: If class_id does not reference an existing Class
+            DuplicateEntityError: If an attribute with this identifier already exists
+                in the same class
+            ValueError: If identifier, title, or datatype is empty
+        """
+        if not class_id or not class_id.strip():
+            raise ValueError("Class ID cannot be empty")
+        if not identifier or not identifier.strip():
+            raise ValueError("Identifier cannot be empty")
+        if not title or not title.strip():
+            raise ValueError("Title cannot be empty")
+        if not datatype or not datatype.strip():
+            raise ValueError("Datatype cannot be empty")
+
+        # Validate cross-field constraint: default_value must be in allowed_values
+        validate_default_value_against_allowed_values(default_value, allowed_values)
+
+        # Verify class exists
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        # Check for duplicate identifier within this class
+        existing_attrs = self._repository.list_attribute_definitions(class_id=class_id, limit=None)
+        if any(a.identifier == identifier for a in existing_attrs):
+            raise DuplicateEntityError(
+                f"AttributeDefinition with identifier '{identifier}' already exists in class "
+                f"{class_id}"
+            )
+
+        attribute_definition_id = str(uuid4())
+        now = datetime.now(timezone.utc)
+        attr_def = AttributeDefinition(
+            id=attribute_definition_id,
+            class_id=class_id,
+            identifier=identifier,
+            title=title,
+            datatype=DataType(datatype),
+            description=description,
+            is_required=is_required,
+            allowed_values=allowed_values,
+            default_value=default_value,
+            sort_order=sort_order,
+            external_references=external_references or [],
+            created_at=now,
+            last_modified=now,
+        )
+        attr_def = self._repository.save_attribute_definition(attr_def)
+
+        failures = self._event_publisher.publish(
+            AttributeDefinitionCreated(
+                attribute_definition_id=attribute_definition_id,
+                class_id=class_id,
+                identifier=identifier,
+                title=title,
+            )
+        )
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for AttributeDefinitionCreated (attribute_definition_id=%s):"
+                " %s. Attribute definition is created but audit trail may have gaps.",
+                attribute_definition_id,
+                handler_names,
+            )
+
+        return attr_def
+
+    def get_attribute_definition(self, attribute_definition_id: str) -> AttributeDefinition:
+        """
+        Retrieve an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition
+
+        Returns:
+            The AttributeDefinition
+
+        Raises:
+            EntityNotFoundError: If the attribute definition does not exist
+        """
+        attr_def = self._repository.get_attribute_definition(attribute_definition_id)
+        if attr_def is None:
+            raise EntityNotFoundError("AttributeDefinition", attribute_definition_id)
+        return attr_def
+
+    def list_attribute_definitions(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[AttributeDefinition]:
+        """
+        Retrieve attribute definitions with optional filtering and pagination.
+
+        Args:
+            class_id: Optional class ID to filter by (filter to this class's attributes)
+            limit: Maximum number of results to return; None means no limit
+            offset: Number of results to skip
+
+        Returns:
+            List of AttributeDefinition entities
+        """
+        return self._repository.list_attribute_definitions(
+            class_id=class_id, limit=limit, offset=offset
+        )
+
+    def update_attribute_definition(
+        self,
+        attribute_definition_id: str,
+        title: str | None = None,
+        description: str | None = None,
+        datatype: str | None = None,
+        is_required: bool | None = None,
+        allowed_values: list[str] | None = None,
+        default_value: str | None = None,
+        sort_order: int | None = None,
+    ) -> AttributeDefinition:
+        """
+        Update an attribute definition (partial update).
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition
+            title: New title (or None to leave unchanged)
+            description: New description (or None to leave unchanged)
+            datatype: New datatype (or None to leave unchanged)
+            is_required: New required flag (or None to leave unchanged)
+            allowed_values: New allowed values list (or None to leave unchanged; pass [] to clear)
+            default_value: New default value (or None to leave unchanged; pass "" to clear)
+            sort_order: New sort order (or None to leave unchanged)
+
+        Returns:
+            The updated AttributeDefinition
+
+        Raises:
+            EntityNotFoundError: If the attribute definition does not exist
+            ValueError: If an updated field is empty/invalid
+        """
+        attr_def = self._repository.get_attribute_definition(attribute_definition_id)
+        if attr_def is None:
+            raise EntityNotFoundError("AttributeDefinition", attribute_definition_id)
+
+        # Track changes for event
+        changed_fields: list[str] = []
+        old_values: dict[str, object] = {}
+        new_values: dict[str, object] = {}
+
+        if title is not None:
+            if not title.strip():
+                raise ValueError("Title cannot be empty")
+            if title != attr_def.title:
+                changed_fields.append("title")
+                old_values["title"] = attr_def.title
+                new_values["title"] = title
+                attr_def.title = title
+
+        if description is not None and description != attr_def.description:
+            changed_fields.append("description")
+            old_values["description"] = attr_def.description
+            new_values["description"] = description
+            attr_def.description = description
+
+        if datatype is not None:
+            if not datatype.strip():
+                raise ValueError("Datatype cannot be empty")
+            try:
+                validated_datatype = DataType(datatype.strip())
+            except ValueError:
+                raise ValueError(
+                    f"Invalid datatype '{datatype}'. Must be one of: "
+                    f"{', '.join(dt.value for dt in DataType)}"
+                )
+            if validated_datatype != attr_def.datatype:
+                changed_fields.append("datatype")
+                old_values["datatype"] = attr_def.datatype
+                new_values["datatype"] = validated_datatype
+                attr_def.datatype = validated_datatype
+
+        if is_required is not None and is_required != attr_def.is_required:
+            changed_fields.append("is_required")
+            old_values["is_required"] = attr_def.is_required
+            new_values["is_required"] = is_required
+            attr_def.is_required = is_required
+
+        # Handle allowed_values: None means "don't change", [] means "clear"
+        if allowed_values is not None:
+            new_allowed_values = None if allowed_values == [] else allowed_values
+            if new_allowed_values != attr_def.allowed_values:
+                changed_fields.append("allowed_values")
+                old_values["allowed_values"] = attr_def.allowed_values
+                new_values["allowed_values"] = new_allowed_values
+                attr_def.allowed_values = new_allowed_values
+
+        # Handle default_value: None means "don't change", "" means "clear"
+        if default_value is not None:
+            new_default_value = None if default_value == "" else default_value
+            if new_default_value != attr_def.default_value:
+                changed_fields.append("default_value")
+                old_values["default_value"] = attr_def.default_value
+                new_values["default_value"] = new_default_value
+                attr_def.default_value = new_default_value
+
+        if sort_order is not None and sort_order != attr_def.sort_order:
+            changed_fields.append("sort_order")
+            old_values["sort_order"] = attr_def.sort_order
+            new_values["sort_order"] = sort_order
+            attr_def.sort_order = sort_order
+
+        # Validate cross-field constraint after all updates are applied
+        validate_default_value_against_allowed_values(
+            attr_def.default_value, attr_def.allowed_values
+        )
+
+        # Update last_modified timestamp if any changes were made
+        if changed_fields:
+            attr_def.last_modified = datetime.now(timezone.utc)
+            attr_def = self._repository.save_attribute_definition(attr_def)
+
+            # Emit event
+            failures = self._event_publisher.publish(
+                AttributeDefinitionUpdated(
+                    attribute_definition_id=attribute_definition_id,
+                    changed_fields=tuple(changed_fields),
+                    old_values=old_values,
+                    new_values=new_values,
+                )
+            )
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for AttributeDefinitionUpdated "
+                    "(attribute_definition_id=%s): %s. Attribute definition is updated but "
+                    "audit trail may have gaps.",
+                    attribute_definition_id,
+                    handler_names,
+                )
+
+        return attr_def
+
+    def delete_attribute_definition(self, attribute_definition_id: str) -> None:
+        """
+        Delete an attribute definition by ID.
+
+        Args:
+            attribute_definition_id: The ID of the attribute definition to delete
+
+        Raises:
+            EntityNotFoundError: If the attribute definition does not exist
+        """
+        attr_def = self._repository.get_attribute_definition(attribute_definition_id)
+        if attr_def is None:
+            raise EntityNotFoundError("AttributeDefinition", attribute_definition_id)
+
+        self._repository.delete_attribute_definition(attribute_definition_id)
+
+        failures = self._event_publisher.publish(
+            AttributeDefinitionDeleted(
+                attribute_definition_id=attribute_definition_id,
+                class_id=attr_def.class_id,
+                identifier=attr_def.identifier,
+                title=attr_def.title,
+            )
+        )
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for AttributeDefinitionDeleted (attribute_definition_id=%s):"
+                " %s. Attribute definition is deleted but audit trail may have gaps.",
+                attribute_definition_id,
+                handler_names,
+            )
+
+    def count_attribute_definitions(self, class_id: str | None = None) -> int:
+        """
+        Count attribute definitions, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to count attributes within
+
+        Returns:
+            Total count of attribute definitions
+        """
+        return self._repository.count_attribute_definitions(class_id=class_id)

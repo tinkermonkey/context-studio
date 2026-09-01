@@ -9,7 +9,6 @@ fragile string matching in error handlers.
 class ServiceError(Exception):
     """Base exception for all service-layer errors."""
 
-    pass
 
 
 class NotFoundError(ServiceError):
@@ -31,13 +30,11 @@ class NotFoundError(ServiceError):
 class ValidationError(ServiceError):
     """Raised when validation fails (invalid input, constraint violations, etc.)."""
 
-    pass
 
 
 class ConflictError(ServiceError):
     """Raised when an operation conflicts with existing state (e.g., uniqueness violations)."""
 
-    pass
 
 
 class ReferenceNotFoundError(NotFoundError):
@@ -61,10 +58,8 @@ class ReferenceNotFoundError(NotFoundError):
 class CircularReferenceError(ValidationError):
     """Raised when an operation would create a circular reference."""
 
-    pass
 
 
 class InvalidHierarchyError(ValidationError):
     """Raised when a hierarchy constraint is violated (e.g., wrong parent type)."""
 
-    pass

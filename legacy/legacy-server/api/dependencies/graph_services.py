@@ -5,14 +5,13 @@ This module provides optimized dependency injection for all graph-related servic
 using the service factory pattern for better performance.
 """
 
-from fastapi import Depends
-from sqlalchemy.orm import Session
-
 from database.utils import get_db
-from services.service_factory import get_service_factory
+from fastapi import Depends
 from graph.graph_service import GraphService
 from graph.network_service import NetworkService
 from graph.sparql_service import SPARQLService
+from services.service_factory import get_service_factory
+from sqlalchemy.orm import Session
 
 
 def get_graph_service(db: Session = Depends(get_db)) -> GraphService:

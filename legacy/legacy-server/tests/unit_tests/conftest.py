@@ -3,9 +3,10 @@ Pytest configuration and shared fixtures for unit tests.
 Ensures proper test isolation by managing singletons and shared state.
 """
 
-import pytest
-import sys
 import os
+import sys
+
+import pytest
 
 # Add the project root to the path
 sys.path.append(

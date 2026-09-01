@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Dict, Any
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class PipelineType(str, Enum):
@@ -19,17 +20,17 @@ class LLMConfig(BaseModel):
     temperature: float = Field(
         default=0.0, ge=0.0, le=2.0, description="Sampling temperature"
     )
-    top_p: Optional[float] = Field(
+    top_p: float | None = Field(
         default=None, ge=0.0, le=1.0, description="Top-p sampling"
     )
-    top_k: Optional[int] = Field(default=None, gt=0, description="Top-k sampling")
-    max_tokens: Optional[int] = Field(
+    top_k: int | None = Field(default=None, gt=0, description="Top-k sampling")
+    max_tokens: int | None = Field(
         default=None, gt=0, description="Maximum output tokens"
     )
-    frequency_penalty: Optional[float] = Field(
+    frequency_penalty: float | None = Field(
         default=None, ge=-2.0, le=2.0, description="Frequency penalty"
     )
-    presence_penalty: Optional[float] = Field(
+    presence_penalty: float | None = Field(
         default=None, ge=-2.0, le=2.0, description="Presence penalty"
     )
 
@@ -78,19 +79,19 @@ class CreatePipelineFlavorRequest(BaseModel):
 class UpdatePipelineFlavorRequest(BaseModel):
     """Request model for updating a pipeline flavor"""
 
-    title: Optional[str] = Field(
+    title: str | None = Field(
         None, min_length=1, max_length=200, description="Flavor title"
     )
-    llm_provider: Optional[str] = Field(None, description="LLM provider identifier")
-    llm_model: Optional[str] = Field(None, description="LLM model name")
-    llm_config: Optional[LLMConfig] = Field(None, description="LLM configuration")
-    system_prompt: Optional[str] = Field(
+    llm_provider: str | None = Field(None, description="LLM provider identifier")
+    llm_model: str | None = Field(None, description="LLM model name")
+    llm_config: LLMConfig | None = Field(None, description="LLM configuration")
+    system_prompt: str | None = Field(
         None, min_length=1, description="System prompt template"
     )
-    user_prompt: Optional[str] = Field(
+    user_prompt: str | None = Field(
         None, min_length=1, description="User prompt template"
     )
-    enabled: Optional[bool] = Field(None, description="Whether flavor is enabled")
+    enabled: bool | None = Field(None, description="Whether flavor is enabled")
 
     @field_validator("title")
     @classmethod
@@ -103,20 +104,20 @@ class UpdatePipelineFlavorRequest(BaseModel):
 class PipelineFlavorListResponse(BaseModel):
     """Response model for listing pipeline flavors"""
 
-    flavors: List[PipelineFlavor] = Field(..., description="List of pipeline flavors")
+    flavors: list[PipelineFlavor] = Field(..., description="List of pipeline flavors")
     total_count: int = Field(..., description="Total number of flavors")
 
 
 class StreamingLLMResponse(BaseModel):
     """Model for streaming LLM response chunks"""
 
-    token: Optional[str] = Field(None, description="Token content")
+    token: str | None = Field(None, description="Token content")
     done: bool = Field(default=False, description="Whether streaming is complete")
     flavor_id: str = Field(..., description="ID of the flavor generating this response")
-    execution_id: Optional[str] = Field(
+    execution_id: str | None = Field(
         None, description="Execution ID (set when streaming starts)"
     )
-    error: Optional[str] = Field(None, description="Error message if any")
+    error: str | None = Field(None, description="Error message if any")
 
 
 class SelectedRelation(BaseModel):
@@ -125,17 +126,17 @@ class SelectedRelation(BaseModel):
     predicate: str = Field(..., description="The relation predicate")
     object: str = Field(..., description="The target object of the relation")
     weight: float = Field(..., description="The weight/confidence of the relation")
-    text: Optional[str] = Field(None, description="Text representation of the relation")
+    text: str | None = Field(None, description="Text representation of the relation")
 
 
 class ComponentTerm(BaseModel):
     """A component term with its selected definitions and relations"""
 
     text: str = Field(..., description="The term text")
-    selected_definitions: List[str] = Field(
+    selected_definitions: list[str] = Field(
         default_factory=list, description="Selected sense definitions"
     )
-    selected_relations: List[SelectedRelation] = Field(
+    selected_relations: list[SelectedRelation] = Field(
         default_factory=list, description="Selected ConceptNet relations"
     )
 
@@ -144,7 +145,7 @@ class LLMHealthResponse(BaseModel):
     """Health check response for LLM service"""
 
     status: str = Field(..., description="Service status")
-    model_info: Dict[str, Any] = Field(
+    model_info: dict[str, Any] = Field(
         ..., description="Information about the current model"
     )
     timestamp: str = Field(..., description="Timestamp of the health check")
@@ -157,7 +158,7 @@ class LLMErrorResponse(BaseModel):
     success: bool = Field(False, description="Always false for error responses")
     error: str = Field(..., description="Error message")
     error_type: str = Field(..., description="Type of error")
-    details: Optional[str] = Field(None, description="Additional error details")
+    details: str | None = Field(None, description="Additional error details")
 
 
 class RecordSelectionRequest(BaseModel):
@@ -185,7 +186,7 @@ class SelectionResponse(BaseModel):
 class ExecutionHistoryResponse(BaseModel):
     """Response model for execution history by flavor"""
 
-    executions: List[Dict[str, Any]] = Field(
+    executions: list[dict[str, Any]] = Field(
         ..., description="List of executions for the flavor"
     )
     total_count: int = Field(..., description="Total number of executions")
@@ -196,7 +197,7 @@ class FlavorAnalyticsResponse(BaseModel):
     """Response model for flavor-specific analytics"""
 
     flavor_id: str = Field(..., description="Flavor ID")
-    analytics: Dict[str, Any] = Field(..., description="Analytics data for the flavor")
+    analytics: dict[str, Any] = Field(..., description="Analytics data for the flavor")
     time_range_days: int = Field(..., description="Number of days of data included")
 
 
@@ -204,7 +205,7 @@ class ModelCapabilitiesResponse(BaseModel):
     """Response model for model capabilities information"""
 
     model_name: str = Field(..., description="Model name")
-    capabilities: Dict[str, Any] = Field(
+    capabilities: dict[str, Any] = Field(
         ..., description="Model capabilities and constraints"
     )
 
@@ -212,7 +213,7 @@ class ModelCapabilitiesResponse(BaseModel):
 class SupportedModelsResponse(BaseModel):
     """Response model for listing supported models"""
 
-    models: List[ModelCapabilitiesResponse] = Field(
+    models: list[ModelCapabilitiesResponse] = Field(
         ..., description="List of supported models with capabilities"
     )
     total_count: int = Field(..., description="Total number of supported models")
@@ -223,7 +224,7 @@ class PipelineExecutionRequest(BaseModel):
 
     flavor_id: str = Field(..., description="ID of the pipeline flavor to use")
     pipeline_type: PipelineType = Field(..., description="Type of pipeline to execute")
-    context_data: Dict[str, Any] = Field(
+    context_data: dict[str, Any] = Field(
         ..., description="Arbitrary context data for template rendering"
     )
 
@@ -241,10 +242,10 @@ class StructuredOutputDefinition(BaseModel):
     """Structured output model for pipeline responses with definition, reasoning, and discrepancies"""
 
     definition: str = Field(..., description="The generated definition")
-    reasoning: Optional[str] = Field(
+    reasoning: str | None = Field(
         None, description="Brief reasoning explaining the definitional choices"
     )
-    discrepancies: Optional[str] = Field(
+    discrepancies: str | None = Field(
         None, description="Any noted discrepancies between sources"
     )
 
@@ -261,7 +262,7 @@ class ExtractedEntitySchema(BaseModel):
     sentence_index: int = Field(
         ..., description="Index of sentence where entity was found"
     )
-    reasoning: Optional[str] = Field(None, description="Brief reasoning for extraction")
+    reasoning: str | None = Field(None, description="Brief reasoning for extraction")
 
 
 # Structured output model for entity extraction
@@ -270,7 +271,7 @@ class StructuredOutputEntities(BaseModel):
 
     model_config = {"extra": "forbid"}  # Forbid additional properties
 
-    entities: List[ExtractedEntitySchema] = Field(
+    entities: list[ExtractedEntitySchema] = Field(
         default_factory=list, description="List of extracted entities with properties"
     )
 
@@ -294,9 +295,9 @@ class PipelineExecutionResponse(BaseModel):
         ..., description="ID of the flavor that generated this response"
     )
     pipeline_type: str = Field(..., description="Type of pipeline that was executed")
-    token_usage: Optional[Dict[str, int]] = Field(
+    token_usage: dict[str, int] | None = Field(
         None, description="Token usage statistics if available"
     )
-    structured_output: Optional[Dict[str, Any]] = Field(
+    structured_output: dict[str, Any] | None = Field(
         None, description="Structured output data parsed from LLM response"
     )

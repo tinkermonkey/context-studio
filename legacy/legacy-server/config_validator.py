@@ -7,12 +7,12 @@ Provides comprehensive validation of the configuration system implementation
 to ensure correctness and completeness of migration.
 """
 
+import importlib.util
+import json
 import os
 import sys
-import json
-import importlib.util
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -31,16 +31,16 @@ class ValidationResult:
     category: str
     test_name: str
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
 
 class ConfigurationValidator:
     """Comprehensive configuration system validator"""
 
     def __init__(self):
-        self.results: List[ValidationResult] = []
+        self.results: list[ValidationResult] = []
 
-    def run_all_validations(self) -> List[ValidationResult]:
+    def run_all_validations(self) -> list[ValidationResult]:
         """Run all validation tests"""
         self.results.clear()
 
@@ -63,7 +63,7 @@ class ConfigurationValidator:
         category: str,
         test_name: str,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         """Add validation result"""
         self.results.append(
@@ -696,4 +696,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

@@ -1,17 +1,18 @@
 # mypy: ignore-errors
 """WordNet source implementation using NLTK"""
 
-from typing import Optional, List
+import logging
+
 import nltk
 from nltk.corpus import wordnet as wn
-from .base import BaseReferenceSource
+
 from ..models import (
-    WordNetSearchResponse,
-    WordNetRelationsResponse,
-    WordNetSynset,
     WordNetRelation,
+    WordNetRelationsResponse,
+    WordNetSearchResponse,
+    WordNetSynset,
 )
-import logging
+from .base import BaseReferenceSource
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class WordNetSource(BaseReferenceSource):
         return "wordnet"
 
     async def search_synsets(
-        self, word: str, pos: Optional[str] = None, lang: str = "eng", limit: int = 20
+        self, word: str, pos: str | None = None, lang: str = "eng", limit: int = 20
     ) -> WordNetSearchResponse:
         """Search for synsets of a word"""
         try:
@@ -77,7 +78,7 @@ class WordNetSource(BaseReferenceSource):
             )
 
     async def get_synset_relations(
-        self, synset_name: str, relation_types: Optional[List[str]] = None
+        self, synset_name: str, relation_types: list[str] | None = None
     ) -> WordNetRelationsResponse:
         """Get semantic relations for a synset"""
         try:

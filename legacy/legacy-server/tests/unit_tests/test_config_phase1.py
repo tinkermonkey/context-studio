@@ -3,17 +3,18 @@ Unit tests for Phase 1: schema_org_path removal
 Tests configuration changes without requiring full app dependencies
 """
 
-import sys
 import json
-import tempfile
 import os
+import sys
+import tempfile
 from pathlib import Path
+
 import pytest
 
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, DatabaseConfig, ConfigurationManager  # noqa: E402
+from config import ConfigurationManager, DatabaseConfig, Settings
 
 
 class TestSchemaOrgPathRemoval:

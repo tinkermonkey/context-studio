@@ -4,12 +4,12 @@ Integration tests for Reference Link Validation endpoints.
 Tests the validation API endpoints for checking reference link integrity.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from uuid import uuid4  # noqa: E402
+from uuid import uuid4
 
 
 def create_layer(shared_client):
@@ -72,7 +72,7 @@ def test_validate_node_reference_links_no_existence_check(shared_client):
 
     # Validate the node without existence check
     resp = shared_client.post(
-        f"/api/structure_nodes/{domain_id}/reference_links/validate?check_existence=false"  # noqa: E501
+        f"/api/structure_nodes/{domain_id}/reference_links/validate?check_existence=false"
     )
     assert resp.status_code == 200
 
@@ -141,7 +141,7 @@ def test_validate_all_reference_links_with_limit(shared_client):
     assert resp.status_code == 200
 
     data = resp.json()
-    # Should check at most 3 nodes with links (may be less if not all have links)  # noqa: E501
+    # Should check at most 3 nodes with links (may be less if not all have links)
     assert data["total_nodes_checked"] <= 3
 
 
@@ -149,7 +149,7 @@ def test_validate_all_reference_links_no_existence_check(shared_client):
     """Test bulk validation without checking existence."""
     # Run bulk validation without existence check
     resp = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?check_existence=false&limit=10"  # noqa: E501
+        "/api/structure_nodes/reference_links/validate?check_existence=false&limit=10"
     )
     assert resp.status_code == 200
 
@@ -222,4 +222,4 @@ def test_bulk_validation_with_excessive_limit_rejected(shared_client):
     )
     assert (
         resp.status_code == 422
-    )  # FastAPI validation error (exceeds max of 10000)  # noqa: E501
+    )  # FastAPI validation error (exceeds max of 10000)

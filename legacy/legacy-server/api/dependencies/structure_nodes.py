@@ -5,14 +5,14 @@ This module provides dependency injection functions for the structure_nodes endp
 using the optimized service factory pattern for better performance.
 """
 
-from fastapi import Depends
-from sqlalchemy.orm import Session
 from database.utils import get_db
-from services.service_factory import get_service_factory
-from services.node_service import NodeService
+from fastapi import Depends
 from services.node_link_service import NodeLinkService
+from services.node_service import NodeService
 from services.reference_link_service import ReferenceLinkService
+from services.service_factory import get_service_factory
 from services.word_sense_service import WordSenseService
+from sqlalchemy.orm import Session
 
 
 def get_node_service(db: Session = Depends(get_db)) -> NodeService:
@@ -45,7 +45,7 @@ def get_node_service_simple(db: Session = Depends(get_db)) -> NodeService:
     # Create NodeService directly without expensive dependencies
     return NodeService(
         db, graph_service=None, version_manager=None, working_tree_manager=None
-    )  # noqa: E501
+    )
 
 
 def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
@@ -64,7 +64,7 @@ def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
 
 def get_reference_link_service(
     db: Session = Depends(get_db),
-) -> ReferenceLinkService:  # noqa: E501
+) -> ReferenceLinkService:
     """
     Dependency injection for ReferenceLinkService.
 

@@ -8,14 +8,15 @@ graph operations on the Context Studio data.
 Updated for Great Normalization - works with unified structure_nodes table.
 """
 
-from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
+from typing import Any
+
+from database.models import StructureNode, StructureNodeLink
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
 
 from .network_service import NetworkService
 from .sparql_service import SPARQLService
-from database.models import StructureNode, StructureNodeLink
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -40,8 +41,8 @@ class GraphService:
         # Initialize services only once with shared graph building
         self.network_service = NetworkService(db_session)
         self.sparql_service = SPARQLService(db_session)
-        self.structure_nodes: Dict[Any, Dict[str, Any]] = {}
-        self.edges: Dict[Any, List[Dict[str, Any]]] = {}
+        self.structure_nodes: dict[Any, dict[str, Any]] = {}
+        self.edges: dict[Any, list[dict[str, Any]]] = {}
 
         # Build graph data once and share it between services
         self._build_graph()
@@ -114,7 +115,7 @@ class GraphService:
         return False
 
     def check_title_uniqueness_in_domain(
-        self, domain_id: str, title: str, exclude_id: Optional[str] = None
+        self, domain_id: str, title: str, exclude_id: str | None = None
     ) -> bool:
         """
         Check if title is unique within domain using graph traversal.
@@ -142,7 +143,7 @@ class GraphService:
 
         return False
 
-    def _get_domain_subtree(self, domain_id: str) -> List[str]:
+    def _get_domain_subtree(self, domain_id: str) -> list[str]:
         """
         Get all structure_nodes in a domain's subtree.
 
@@ -173,7 +174,7 @@ class GraphService:
         # Rebuild our internal graph structure for cycle detection and uniqueness checking
         self._build_graph()
 
-    def get_comprehensive_stats(self) -> Dict[str, Any]:
+    def get_comprehensive_stats(self) -> dict[str, Any]:
         """
         Get comprehensive statistics from both graph representations.
 
@@ -202,7 +203,7 @@ class GraphService:
         return stats
 
     # SPARQL-based operations (temporarily disabled)
-    def sparql_query(self, query: str, **kwargs) -> List[Dict[str, Any]]:
+    def sparql_query(self, query: str, **kwargs) -> list[dict[str, Any]]:
         """Execute a SPARQL query."""
         if not self.sparql_service:
             return [
@@ -214,13 +215,13 @@ class GraphService:
 
     def find_terms_by_title(
         self, title: str, exact: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Find terms by title using SPARQL."""
         return self.sparql_service.find_terms_by_title(title, exact)
 
     def get_domain_hierarchy(
-        self, layer_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, layer_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """Get domain hierarchy using SPARQL."""
         return self.sparql_service.get_domain_hierarchy(layer_id)
 
@@ -229,7 +230,7 @@ class GraphService:
         return self.sparql_service.serialize(format)
 
     # NetworkX-based operations
-    def calculate_centrality(self, method: str = "pagerank") -> Dict[str, float]:
+    def calculate_centrality(self, method: str = "pagerank") -> dict[str, float]:
         """Calculate structure_node centrality using NetworkX."""
         return self.network_service.calculate_centrality(method)
 
@@ -239,7 +240,7 @@ class GraphService:
         target_id: str,
         source_type: str = "term",
         target_type: str = "term",
-    ) -> Optional[List[str]]:
+    ) -> list[str] | None:
         """Find shortest path between structure_nodes using NetworkX."""
         return self.network_service.find_shortest_path(
             source_id, target_id, source_type, target_type
@@ -251,31 +252,31 @@ class GraphService:
         entity_type: str = "term",
         depth: int = 1,
         direction: str = "both",
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """Get neighbors using NetworkX."""
         return self.network_service.get_neighbors(
             entity_id, entity_type, depth, direction
         )
 
-    def detect_communities(self, method: str = "louvain") -> List[List[str]]:
+    def detect_communities(self, method: str = "louvain") -> list[list[str]]:
         """Detect communities using NetworkX."""
         communities = self.network_service.detect_communities(method)
         return [list(community) for community in communities]
 
-    def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
+    def get_term_hierarchy(self, term_id: str) -> dict[str, Any]:
         """Get term hierarchy using NetworkX."""
         return self.network_service.get_term_hierarchy(term_id)
 
     def get_node_info(
         self, entity_id: str, entity_type: str = "term"
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Get detailed structure_node information using NetworkX."""
         return self.network_service.get_node_info(entity_id, entity_type)
 
     # Combined operations that leverage both services
     def find_related_terms_comprehensive(
         self, term_id: str, max_depth: int = 2
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Find related terms using both SPARQL and NetworkX for comprehensive results.
 
@@ -307,7 +308,7 @@ class GraphService:
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
-    def analyze_domain_structure(self, domain_id: str) -> Dict[str, Any]:
+    def analyze_domain_structure(self, domain_id: str) -> dict[str, Any]:
         """
         Comprehensive analysis of a domain's structure using both services.
 
@@ -359,7 +360,7 @@ class GraphService:
 
     def search_and_analyze(
         self, search_term: str, analysis_depth: int = 1
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search for terms and provide comprehensive analysis.
 
@@ -397,7 +398,7 @@ class GraphService:
             "search_timestamp": datetime.now().isoformat(),
         }
 
-    def get_layer_analytics(self, layer_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_layer_analytics(self, layer_id: str | None = None) -> dict[str, Any]:
         """
         Get comprehensive analytics for a layer or all layers.
 
@@ -425,7 +426,7 @@ class GraphService:
             terms_in_layer = []
 
             for structure_node in self.network_service.graph.nodes(data=True):  # type: ignore
-                node_id, node_data = structure_node
+                _node_id, node_data = structure_node
                 if (
                     node_data.get("type") == "domain"
                     and node_data.get("layer_id") == layer_id
@@ -453,7 +454,7 @@ class GraphService:
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
-    def export_graph_data(self, format: str = "json") -> Union[str, Dict[str, Any]]:
+    def export_graph_data(self, format: str = "json") -> str | dict[str, Any]:
         """
         Export comprehensive graph data in various formats.
 
@@ -477,8 +478,8 @@ class GraphService:
             return self.sparql_service.serialize("turtle")
         elif format == "graphml":
             # This would need to be saved to a file
-            import tempfile
             import os
+            import tempfile
 
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".graphml", delete=False

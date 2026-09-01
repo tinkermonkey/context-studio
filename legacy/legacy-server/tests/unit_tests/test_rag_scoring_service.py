@@ -5,14 +5,14 @@ Tests span-based matching, overlap calculation, and metric computation
 including edge cases like no matches, partial overlaps, and multiple entities.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan  # noqa: E402, E501
-from rag.models import ExtractedEntity  # noqa: E402
+import pytest
+from rag.models import ExtractedEntity
+from rag.test_scoring import AnnotationSpan, RAGTestScoringService
 
 
 class TestRAGScoringService:

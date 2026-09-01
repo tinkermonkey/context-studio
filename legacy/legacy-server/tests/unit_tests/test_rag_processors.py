@@ -4,27 +4,27 @@ Unit tests for RAG processors.
 Tests each of the four processor layers with mocked dependencies.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-from unittest.mock import Mock, patch  # noqa: E402
-import numpy as np  # noqa: E402
+from unittest.mock import Mock, patch
 
-from rag.processors.models import (  # noqa: E402
-    ProcessorInput,
-    KGContextOutput,
-    LLMExtractionOutput,
-    SpaCyGapOutput,
+import numpy as np
+import pytest
+from rag.processors.models import (
     ConceptResolutionOutput,
-    KGNode,
     GapConcept,
     GapPriority,
+    KGContextOutput,
+    KGNode,
+    LLMExtractionOutput,
+    ProcessorInput,
     ResolutionMethod,
+    SpaCyGapOutput,
 )
 
 

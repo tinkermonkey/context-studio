@@ -5,22 +5,22 @@ Tests validate invariant enforcement, enum usage, and immutability of
 system health, background task, and application configuration entities.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import types
-import pytest
 
-from domain.admin.entities import SystemHealth, BackgroundTask, AppConfiguration
+import pytest
+from domain.admin.entities import AppConfiguration, BackgroundTask, SystemHealth
 from domain.admin.enums import (
-    SystemHealthStatus,
     BackgroundTaskStatus,
     BackgroundTaskType,
     LogLevel,
+    SystemHealthStatus,
 )
 
 

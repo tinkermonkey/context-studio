@@ -1,16 +1,17 @@
 # mypy: ignore-errors
 """Abstract base class for reference API sources"""
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
 import asyncio
-import aiohttp
-from datetime import datetime, UTC
 import logging
+from abc import ABC, abstractmethod
+from datetime import UTC, datetime
+from typing import Any
 
+import aiohttp
 from config import SourceConfig, SourceType
-from ..exceptions import SourceError, SourceTimeoutError, SourceUnavailableError
 from nlp.proxy_manager import get_proxy_manager
+
+from ..exceptions import SourceError, SourceTimeoutError, SourceUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class BaseReferenceSource(ABC):
     def __init__(self, source_type: SourceType, config: SourceConfig):
         self.source_type = source_type
         self.config = config
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         self.session = aiohttp.ClientSession(
@@ -54,7 +55,7 @@ class BaseReferenceSource(ABC):
     def _get_proxy_domain_key(self) -> str:
         pass
 
-    async def _make_request(self, method: str, url: str, **kwargs) -> Dict[str, Any]:
+    async def _make_request(self, method: str, url: str, **kwargs) -> dict[str, Any]:
         last_error = None
         for attempt in range(getattr(self.config, "max_retries", 0) + 1):
             try:
@@ -83,7 +84,7 @@ class BaseReferenceSource(ABC):
 
             except asyncio.TimeoutError as e:
                 last_error = SourceTimeoutError(
-                    f"Request timeout for {self.source_type}: {str(e)}"
+                    f"Request timeout for {self.source_type}: {e!s}"
                 )
                 if attempt < getattr(self.config, "max_retries", 0):
                     await asyncio.sleep(2**attempt)
@@ -91,7 +92,7 @@ class BaseReferenceSource(ABC):
 
             except aiohttp.ClientError as e:
                 last_error = SourceUnavailableError(
-                    f"Connection error for {self.source_type}: {str(e)}"
+                    f"Connection error for {self.source_type}: {e!s}"
                 )
                 if attempt < getattr(self.config, "max_retries", 0):
                     await asyncio.sleep(2**attempt)
@@ -99,15 +100,15 @@ class BaseReferenceSource(ABC):
 
             except Exception as e:
                 last_error = SourceError(
-                    f"Unexpected error for {self.source_type}: {str(e)}"
+                    f"Unexpected error for {self.source_type}: {e!s}"
                 )
                 break
 
         raise last_error or SourceError(f"Request failed for {self.source_type}")
 
     def _create_base_response(
-        self, success: bool = True, error: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, success: bool = True, error: str | None = None
+    ) -> dict[str, Any]:
         return {
             "success": success,
             "source": self.source_type.value,

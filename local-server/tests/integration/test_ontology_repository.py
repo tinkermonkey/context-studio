@@ -568,6 +568,8 @@ class TestPropertyDefinitionCRUD:
 
     def test_property_definition_unique_identifier(self, repo):
         """Test that property definition identifiers must be unique."""
+        from domain.ontology.exceptions import IdentifierConflictError
+
         repo.save_property_definition(
             PropertyDefinition(
                 id="prop-1",
@@ -576,7 +578,7 @@ class TestPropertyDefinitionCRUD:
             )
         )
 
-        with pytest.raises(ValueError, match="already exists"):
+        with pytest.raises(IdentifierConflictError):
             repo.save_property_definition(
                 PropertyDefinition(
                     id="prop-2",

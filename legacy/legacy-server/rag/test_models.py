@@ -5,9 +5,10 @@ These models handle request validation and response serialization
 for the RAG experimentation endpoints.
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== Request Models ====================
 
@@ -18,7 +19,7 @@ class CreateTestParagraphRequest(BaseModel):
     text: str = Field(
         ..., min_length=1, description="Text content of the test paragraph"
     )
-    notes: Optional[str] = Field(
+    notes: str | None = Field(
         None, description="Optional notes about this test paragraph"
     )
 
@@ -37,8 +38,8 @@ class CreateTestParagraphRequest(BaseModel):
 class UpdateTestParagraphRequest(BaseModel):
     """Request model for updating a test paragraph."""
 
-    text: Optional[str] = Field(None, min_length=1, description="Updated text content")
-    notes: Optional[str] = Field(None, description="Updated notes")
+    text: str | None = Field(None, min_length=1, description="Updated text content")
+    notes: str | None = Field(None, description="Updated notes")
 
     @field_validator("text", "notes")
     @classmethod
@@ -85,10 +86,10 @@ class CreateAnnotationRequest(BaseModel):
 class RunPipelineTestRequest(BaseModel):
     """Request model for executing pipeline tests."""
 
-    paragraph_ids: List[str] = Field(
+    paragraph_ids: list[str] = Field(
         ..., min_length=1, description="List of test paragraph IDs to test"
     )
-    pipeline_names: List[str] = Field(
+    pipeline_names: list[str] = Field(
         ..., min_length=1, description="List of pipeline class names to execute"
     )
     enable_trace: bool = Field(False, description="Enable detailed trace logging")
@@ -162,9 +163,9 @@ class TestParagraphResponse(BaseModel):
 
     id: str = Field(..., description="Test paragraph ID")
     text: str = Field(..., description="Paragraph text")
-    notes: Optional[str] = Field(None, description="Optional notes")
+    notes: str | None = Field(None, description="Optional notes")
     created_at: datetime = Field(..., description="Creation timestamp")
-    annotations: List[AnnotationResponse] = Field(
+    annotations: list[AnnotationResponse] = Field(
         default_factory=list, description="List of annotations"
     )
 
@@ -186,7 +187,7 @@ class TestParagraphResponse(BaseModel):
 class TestParagraphListResponse(BaseModel):
     """Response model for list of test paragraphs."""
 
-    paragraphs: List[TestParagraphResponse] = Field(
+    paragraphs: list[TestParagraphResponse] = Field(
         ..., description="List of test paragraphs"
     )
     total_count: int = Field(..., description="Total count of paragraphs returned")
@@ -211,24 +212,24 @@ class PipelineRunResultResponse(BaseModel):
     run_id: str = Field(..., description="Pipeline run ID")
     pipeline_name: str = Field(..., description="Pipeline class name")
     paragraph_id: str = Field(..., description="Test paragraph ID")
-    execution_time_ms: Optional[int] = Field(
+    execution_time_ms: int | None = Field(
         None, description="Execution time in milliseconds"
     )
-    entities_extracted: Optional[int] = Field(
+    entities_extracted: int | None = Field(
         None, description="Number of entities extracted"
     )
-    scoring: Optional[ScoringDetailsResponse] = Field(
+    scoring: ScoringDetailsResponse | None = Field(
         None, description="Scoring details"
     )
     executed_at: str = Field(..., description="Execution timestamp (ISO format)")
-    error: Optional[str] = Field(None, description="Error message if pipeline failed")
-    error_type: Optional[str] = Field(None, description="Error type if pipeline failed")
+    error: str | None = Field(None, description="Error message if pipeline failed")
+    error_type: str | None = Field(None, description="Error type if pipeline failed")
 
 
 class RunPipelineTestResponse(BaseModel):
     """Response model for pipeline test execution."""
 
-    results: List[PipelineRunResultResponse] = Field(
+    results: list[PipelineRunResultResponse] = Field(
         ..., description="List of pipeline run results"
     )
     total_runs: int = Field(..., description="Total number of runs completed")
@@ -241,11 +242,11 @@ class PipelineComparisonItem(BaseModel):
 
     pipeline_name: str = Field(..., description="Pipeline class name")
     run_id: str = Field(..., description="Most recent run ID")
-    f1_score: Optional[int] = Field(None, description="F1 score as percentage (0-100)")
-    precision_score: Optional[int] = Field(
+    f1_score: int | None = Field(None, description="F1 score as percentage (0-100)")
+    precision_score: int | None = Field(
         None, description="Precision score as percentage (0-100)"
     )
-    recall_score: Optional[int] = Field(
+    recall_score: int | None = Field(
         None, description="Recall score as percentage (0-100)"
     )
     entities_extracted: int = Field(..., description="Number of entities extracted")
@@ -257,10 +258,10 @@ class PipelineComparisonSummary(BaseModel):
     """Summary statistics for pipeline comparison."""
 
     total_pipelines: int = Field(..., description="Number of pipelines compared")
-    best_pipeline: Optional[str] = Field(
+    best_pipeline: str | None = Field(
         None, description="Name of best performing pipeline"
     )
-    best_f1_score: Optional[int] = Field(
+    best_f1_score: int | None = Field(
         None, description="Best F1 score as percentage"
     )
 
@@ -269,7 +270,7 @@ class PipelineComparisonResponse(BaseModel):
     """Response model for pipeline comparison results."""
 
     paragraph_id: str = Field(..., description="Test paragraph ID")
-    runs: List[PipelineComparisonItem] = Field(
+    runs: list[PipelineComparisonItem] = Field(
         ..., description="Pipeline comparison results"
     )
     summary: PipelineComparisonSummary = Field(..., description="Comparison summary")
@@ -284,11 +285,11 @@ class PipelineRunDetailsResponse(BaseModel):
     executed_at: str = Field(..., description="Execution timestamp (ISO format)")
     execution_time_ms: int = Field(..., description="Execution time in milliseconds")
     entities_extracted: int = Field(..., description="Number of entities extracted")
-    precision_score: Optional[int] = Field(
+    precision_score: int | None = Field(
         None, description="Precision score as percentage"
     )
-    recall_score: Optional[int] = Field(None, description="Recall score as percentage")
-    f1_score: Optional[int] = Field(None, description="F1 score as percentage")
-    result_data: Dict[str, Any] = Field(
+    recall_score: int | None = Field(None, description="Recall score as percentage")
+    f1_score: int | None = Field(None, description="F1 score as percentage")
+    result_data: dict[str, Any] = Field(
         ..., description="Full result data including entities and scoring details"
     )

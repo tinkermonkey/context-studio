@@ -6,10 +6,9 @@ These defaults are available regardless of the current dataset and cannot be mod
 Users who want custom configurations should create new flavors.
 """
 
-from typing import Dict
 from datetime import datetime, timezone
 
-from .models import PipelineFlavor, PipelineType, LLMConfig
+from .models import LLMConfig, PipelineFlavor, PipelineType
 from .prompts import DefinitionPromptTemplate
 
 
@@ -55,7 +54,7 @@ class DefaultFlavorProvider:
         )
 
     @staticmethod
-    def get_all_default_flavors() -> Dict[PipelineType, PipelineFlavor]:
+    def get_all_default_flavors() -> dict[PipelineType, PipelineFlavor]:
         """Get all default flavors as a dictionary"""
         return {
             pipeline_type: DefaultFlavorProvider.get_default_flavor(pipeline_type)

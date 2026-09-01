@@ -9,20 +9,20 @@ removed as they are not suitable for CI/CD. These tests require generating embed
 validation should be done with pre-populated databases in dedicated benchmarking environments.  # noqa: E501
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 import time
 
+import pytest
+from embeddings.generate_embeddings import generate_embedding
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 from services.predicate_similarity import PredicateSimilarityService
-from embeddings.generate_embeddings import generate_embedding
 
 # Skip if embeddings not available
 pytest.importorskip(
     "embeddings.generate_embeddings", reason="embeddings module not available"
-)  # noqa: E501
+)
 
 
 @pytest.fixture(scope="module")
@@ -50,7 +50,7 @@ def large_external_predicates_dataset():
     for source, count in sources.items():
         for i in range(count):
             title = f"{source}_predicate_{i}"
-            definition = f"A predicate from {source} with index {i}. Used for relationship modeling."  # noqa: E501
+            definition = f"A predicate from {source} with index {i}. Used for relationship modeling."
 
             # Generate real embeddings
             title_emb = generate_embedding(title)
@@ -85,7 +85,7 @@ class TestClusteringPerformance:
 
         Clustering should be reasonably fast for small predicate sets.
         """
-        manager, db_path = large_external_predicates_dataset
+        manager, _db_path = large_external_predicates_dataset
         service = PredicateSimilarityService(manager)
 
         # Create 10 test predicates
@@ -109,17 +109,17 @@ class TestClusteringPerformance:
         # Clustering should complete in reasonable time
         assert (
             elapsed < 5000
-        ), f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"  # noqa: E501
+        ), f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"
 
     def test_clustering_100_predicates(
         self, large_external_predicates_dataset
-    ):  # noqa: E501
+    ):
         """
         Test clustering performance with 100 predicates.
 
         This is a more realistic workload for clustering operations.
         """
-        manager, db_path = large_external_predicates_dataset
+        manager, _db_path = large_external_predicates_dataset
         service = PredicateSimilarityService(manager)
 
         # Create 100 test predicates with some semantic groupings
@@ -150,4 +150,4 @@ class TestClusteringPerformance:
         # Allow more time for 100 predicates (10x the data)
         assert (
             elapsed < 30000
-        ), f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"  # noqa: E501
+        ), f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"

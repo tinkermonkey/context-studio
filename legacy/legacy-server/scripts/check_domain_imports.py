@@ -69,11 +69,10 @@ def check_file(filepath: Path, repo_root: Path) -> list:
                 top = alias.name.split(".")[0]
                 if top in FORBIDDEN_MODULES:
                     violations.append((relative, node.lineno, alias.name))
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                top = node.module.split(".")[0]
-                if top in FORBIDDEN_MODULES:
-                    violations.append((relative, node.lineno, node.module))
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            top = node.module.split(".")[0]
+            if top in FORBIDDEN_MODULES:
+                violations.append((relative, node.lineno, node.module))
 
     return violations
 

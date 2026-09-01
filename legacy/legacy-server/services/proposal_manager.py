@@ -6,24 +6,25 @@ This service handles the creation and management of proposals for collaborative 
 and voting on changesets in the change management workflow.
 """
 
-import uuid
 import json
-from typing import List, Optional, Dict, Any
+import uuid
 from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from typing import Any
 
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
+
+from services.changeset_manager import ChangesetManager
 from services.collaboration_models import (
+    ChangesetState,
     Proposal,
     ProposalStatus,
     ProposalVote,
-    ChangesetState,
     row_to_proposal,
     row_to_vote,
 )
-from services.changeset_manager import ChangesetManager
 from services.s3_sync_manager import S3SyncManager
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -126,7 +127,7 @@ class ProposalManager:
             raise RuntimeError(f"Failed to create proposal: {e}")
 
     def vote_on_proposal(
-        self, proposal_id: str, user_id: str, vote: str, comment: Optional[str] = None
+        self, proposal_id: str, user_id: str, vote: str, comment: str | None = None
     ) -> ProposalVote:
         """
         Cast vote on a proposal.
@@ -197,7 +198,7 @@ class ProposalManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to record vote: {e}")
 
-    def get_proposal(self, proposal_id: str) -> Optional[Proposal]:
+    def get_proposal(self, proposal_id: str) -> Proposal | None:
         """
         Retrieve proposal by ID.
 
@@ -227,11 +228,11 @@ class ProposalManager:
 
     def list_proposals(
         self,
-        status: Optional[ProposalStatus] = None,
-        created_by: Optional[str] = None,
-        changeset_id: Optional[str] = None,
+        status: ProposalStatus | None = None,
+        created_by: str | None = None,
+        changeset_id: str | None = None,
         limit: int = 100,
-    ) -> List[Proposal]:
+    ) -> list[Proposal]:
         """
         List proposals with optional filtering.
 
@@ -277,7 +278,7 @@ class ProposalManager:
             logger.error(f"Failed to list proposals: {e}")
             return []
 
-    def get_proposal_votes(self, proposal_id: str) -> List[ProposalVote]:
+    def get_proposal_votes(self, proposal_id: str) -> list[ProposalVote]:
         """
         Get all votes for a proposal.
 
@@ -307,7 +308,7 @@ class ProposalManager:
             logger.error(f"Failed to get votes for proposal {proposal_id}: {e}")
             return []
 
-    def get_user_vote(self, proposal_id: str, user_id: str) -> Optional[ProposalVote]:
+    def get_user_vote(self, proposal_id: str, user_id: str) -> ProposalVote | None:
         """
         Get a specific user's vote on a proposal.
 
@@ -332,7 +333,7 @@ class ProposalManager:
             logger.error(f"Failed to get user vote: {e}")
             return None
 
-    def get_vote_summary(self, proposal_id: str) -> Dict[str, Any]:
+    def get_vote_summary(self, proposal_id: str) -> dict[str, Any]:
         """
         Get vote summary for a proposal.
 

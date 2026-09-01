@@ -2,13 +2,13 @@
 Debug script to investigate hierarchy issues
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database.utils import get_db_for_current_dataset
 from database.models import StructureNode
+from database.utils import get_db_for_current_dataset
 from graph.network_service import NetworkService
 
 # Term ID to debug

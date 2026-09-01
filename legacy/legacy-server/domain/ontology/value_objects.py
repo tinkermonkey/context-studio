@@ -15,7 +15,6 @@ from __future__ import annotations
 import types
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class NodeType(str, Enum):
@@ -170,10 +169,10 @@ class SearchCriteria:
     """
 
     query: str
-    node_type: Optional[NodeType] = None
-    taxonomy_id: Optional[str] = None
-    scheme_id: Optional[str] = None
-    parent_id: Optional[str] = None
+    node_type: NodeType | None = None
+    taxonomy_id: str | None = None
+    scheme_id: str | None = None
+    parent_id: str | None = None
     use_semantic_search: bool = False
     limit: int = 20
     offset: int = 0

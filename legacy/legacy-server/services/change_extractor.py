@@ -1,11 +1,12 @@
-from datetime import datetime
-import pandas as pd
-import uuid
 import json
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any
+
+import pandas as pd
 from database.models import ChangeEvent
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,12 +20,12 @@ class ChangeRecord:
     event_type: str  # create, update, delete
     record_type: str  # structure_node, structure_node_link, predicate
     record_id: str
-    old_data: Optional[Dict[str, Any]]
-    new_data: Optional[Dict[str, Any]]
+    old_data: dict[str, Any] | None
+    new_data: dict[str, Any] | None
     timestamp: str  # ISO timestamp
     batch_id: str
-    author_id: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    author_id: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class ChangeExtractor:
@@ -34,8 +35,8 @@ class ChangeExtractor:
         self.db_session = db_session
 
     def extract_pending_changes(
-        self, since: Optional[datetime] = None
-    ) -> List[ChangeRecord]:
+        self, since: datetime | None = None
+    ) -> list[ChangeRecord]:
         """Extract changes that need to be synchronized to S3."""
 
         query = self.db_session.query(ChangeEvent).filter(~ChangeEvent.processed)
@@ -71,7 +72,7 @@ class ChangeExtractor:
         logger.info(f"Extracted {len(changes)} pending changes")
         return changes
 
-    def create_change_dataframe(self, changes: List[ChangeRecord]) -> pd.DataFrame:
+    def create_change_dataframe(self, changes: list[ChangeRecord]) -> pd.DataFrame:
         """Convert change records to pandas DataFrame for Parquet serialization."""
 
         if not changes:
@@ -93,7 +94,7 @@ class ChangeExtractor:
 
         return df
 
-    def mark_changes_processed(self, changes: List[ChangeRecord]):
+    def mark_changes_processed(self, changes: list[ChangeRecord]):
         """Mark changes as processed in local database."""
 
         change_ids = [int(change.change_id) for change in changes]

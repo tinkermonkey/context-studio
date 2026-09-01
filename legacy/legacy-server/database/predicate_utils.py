@@ -1,11 +1,13 @@
 """Utility functions for predicate management."""
 
-import re
-import json
 import datetime
-from typing import List, Optional, cast
+import json
+import re
+from typing import cast
 from uuid import uuid4
+
 from sqlalchemy.orm import Session
+
 from database.models import Predicate
 
 
@@ -15,7 +17,7 @@ def generate_identifier_from_title(title: str) -> str:
     Converts CamelCase to underscore_lowercase and handles spaces/special chars.  # noqa: E501
     """
     # First, convert CamelCase to underscore_case
-    # Insert underscore before uppercase letters that follow lowercase letters or digits  # noqa: E501
+    # Insert underscore before uppercase letters that follow lowercase letters or digits
     identifier = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", title)
     # Convert to lowercase
     identifier = identifier.lower()
@@ -28,7 +30,7 @@ def generate_identifier_from_title(title: str) -> str:
     return identifier
 
 
-def import_conceptnet_predicates(db: Session) -> List[Predicate]:
+def import_conceptnet_predicates(db: Session) -> list[Predicate]:
     """
     Import ConceptNet relations as predicates with proper mapping.
     """
@@ -74,7 +76,7 @@ def import_conceptnet_predicates(db: Session) -> List[Predicate]:
 
 def get_conceptnet_relation_for_predicate(
     predicate: Predicate,
-) -> Optional[str]:  # noqa: E501
+) -> str | None:
     """
     Extract ConceptNet relation from predicate mapping.
     """
@@ -84,8 +86,8 @@ def get_conceptnet_relation_for_predicate(
     try:
         mapping = json.loads(predicate.mapping)  # type: ignore
         return cast(
-            Optional[str], mapping.get("conceptnet", {}).get("relation")
-        )  # noqa: E501
+            str | None, mapping.get("conceptnet", {}).get("relation")
+        )
     except (json.JSONDecodeError, KeyError):
         return None
 
@@ -94,7 +96,7 @@ def validate_term_relationship_predicate(
     subject_domain_id: str,
     object_domain_id: str,
     predicate_id: str,
-    db: Session,  # noqa: E501
+    db: Session,
 ) -> bool:
     """
     Validate predicate usage for term relationships based on domain predicate sets.  # noqa: E501
@@ -116,8 +118,8 @@ def validate_term_relationship_predicate(
 
 
 def validate_predicate_identifier(
-    identifier: str, predicate_id: Optional[str], db: Session
-) -> bool:  # noqa: E501
+    identifier: str, predicate_id: str | None, db: Session
+) -> bool:
     """
     Validate that a predicate identifier is unique.
 

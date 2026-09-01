@@ -25,6 +25,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from adapters.web.dependencies import get_ontology_service
 from adapters.web.schemas.ontology import (
+    AttributeDefinitionCreateRequest,
+    AttributeDefinitionResponse,
+    AttributeDefinitionUpdateRequest,
     ClassCreateRequest,
     ClassMoveRequest,
     ClassResponse,
@@ -1022,6 +1025,195 @@ async def delete_property_definition(
     """
     try:
         service.delete_property_definition(property_id)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== AttributeDefinition Endpoints ====================
+
+
+@router.post(
+    "/classes/{class_id}/attribute-definitions",
+    response_model=AttributeDefinitionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_attribute_definition(
+    class_id: str,
+    request: AttributeDefinitionCreateRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> AttributeDefinitionResponse:
+    """
+    Create a new attribute definition scoped to a class.
+
+    Args:
+        class_id: The ID of the parent class
+        request: AttributeDefinitionCreateRequest with identifier, title, and datatype
+        service: OntologyService from dependency injection
+
+    Returns:
+        Created AttributeDefinitionResponse
+
+    Raises:
+        HTTPException: 400 if invalid, 404 if class not found, 409 if identifier exists in class
+    """
+    try:
+        attr_def = service.create_attribute_definition(
+            class_id=class_id,
+            identifier=request.identifier,
+            title=request.title,
+            datatype=request.datatype,
+            description=request.description,
+            is_required=request.is_required,
+            allowed_values=request.allowed_values,
+            default_value=request.default_value,
+            sort_order=request.sort_order,
+        )
+        return AttributeDefinitionResponse.model_validate(attr_def)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get(
+    "/classes/{class_id}/attribute-definitions",
+    response_model=ListResponse[AttributeDefinitionResponse],
+)
+async def list_class_attribute_definitions(
+    class_id: str,
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    service: OntologyService = Depends(get_ontology_service),
+) -> ListResponse[AttributeDefinitionResponse]:
+    """
+    Retrieve attribute definitions for a class with pagination.
+
+    Args:
+        class_id: The ID of the class
+        limit: Maximum number of results (1-1000, default 100)
+        offset: Number of results to skip (default 0)
+        service: OntologyService from dependency injection
+
+    Returns:
+        ListResponse containing attribute definitions for the class
+
+    Raises:
+        HTTPException: 404 if class not found
+    """
+    try:
+        # First verify the class exists
+        await run_sync_in_executor(service.get_class, class_id)
+
+        attr_defs = await run_sync_in_executor(
+            service.list_attribute_definitions,
+            class_id=class_id,
+            limit=limit,
+            offset=offset,
+        )
+        total = await run_sync_in_executor(
+            service.count_attribute_definitions,
+            class_id=class_id,
+        )
+        return ListResponse(
+            items=[AttributeDefinitionResponse.model_validate(a) for a in attr_defs],
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get(
+    "/attribute-definitions/{attribute_definition_id}",
+    response_model=AttributeDefinitionResponse,
+)
+async def get_attribute_definition(
+    attribute_definition_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> AttributeDefinitionResponse:
+    """
+    Retrieve an attribute definition by ID.
+
+    Args:
+        attribute_definition_id: The attribute definition ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        AttributeDefinitionResponse
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        attr_def = service.get_attribute_definition(attribute_definition_id)
+        return AttributeDefinitionResponse.model_validate(attr_def)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.put(
+    "/attribute-definitions/{attribute_definition_id}",
+    response_model=AttributeDefinitionResponse,
+)
+async def update_attribute_definition(
+    attribute_definition_id: str,
+    request: AttributeDefinitionUpdateRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> AttributeDefinitionResponse:
+    """
+    Update an attribute definition (partial update).
+
+    Args:
+        attribute_definition_id: The attribute definition ID
+        request: AttributeDefinitionUpdateRequest with optional fields to update
+        service: OntologyService from dependency injection
+
+    Returns:
+        Updated AttributeDefinitionResponse
+
+    Raises:
+        HTTPException: 400 if invalid, 404 if not found
+    """
+    try:
+        attr_def = service.update_attribute_definition(
+            attribute_definition_id=attribute_definition_id,
+            title=request.title,
+            description=request.description,
+            datatype=request.datatype,
+            is_required=request.is_required,
+            allowed_values=request.allowed_values,
+            default_value=request.default_value,
+            sort_order=request.sort_order,
+        )
+        return AttributeDefinitionResponse.model_validate(attr_def)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.delete(
+    "/attribute-definitions/{attribute_definition_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_attribute_definition(
+    attribute_definition_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> None:
+    """
+    Delete an attribute definition.
+
+    Args:
+        attribute_definition_id: The attribute definition ID
+        service: OntologyService from dependency injection
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        service.delete_attribute_definition(attribute_definition_id)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -1,11 +1,12 @@
 import threading
+
 import spacy
 import spacy.tokens
-from typing import Optional
-from config import get_settings, get_config_manager
+from config import get_config_manager, get_settings
 from utils.logger import get_logger
-from nlp.proxy_manager import get_proxy_manager
+
 from nlp.model_downloader import get_model_downloader
+from nlp.proxy_manager import get_proxy_manager
 
 logger = get_logger(__name__)
 
@@ -223,13 +224,13 @@ class NLPPipeline:
 
         return self.nlp(text)
 
-    def get_nlp(self) -> Optional[spacy.language.Language]:
+    def get_nlp(self) -> spacy.language.Language | None:
         """
         Return the spaCy nlp object if initialized, else None.
         """
         return self.nlp if self._initialized else None
 
-    def get_error(self) -> Optional[str]:
+    def get_error(self) -> str | None:
         """
         Return error message if initialization failed.
         """
@@ -284,7 +285,7 @@ class NLPPipeline:
         self.proxy_manager.stop_proxy()
 
 
-_pipeline_instance: Optional[NLPPipeline] = None
+_pipeline_instance: NLPPipeline | None = None
 _pipeline_lock = threading.Lock()
 
 

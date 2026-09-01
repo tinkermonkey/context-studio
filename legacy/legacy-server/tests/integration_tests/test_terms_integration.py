@@ -1,5 +1,6 @@
-import pytest
 import uuid
+
+import pytest
 
 # Fixtures for test database and client are now provided by conftest.py
 
@@ -36,7 +37,7 @@ def create_term(
     layer_id,
     title=None,
     definition=None,
-    parent_term_id=None,  # noqa: E501
+    parent_term_id=None,
 ):
     unique_title = title if title else f"Test Term {uuid.uuid4()}"
     payload = {
@@ -127,7 +128,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     parent = create_term(client, domain_id, layer_id)
     child = create_term(
         client, domain_id, layer_id, parent_term_id=parent["id"]
-    )  # noqa: E501
+    )
 
     # Parent must exist and be in same domain
     client.post(
@@ -146,7 +147,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # Circular reference test - may not be applicable in current API
     client.put(
         f"/api/structure_nodes/{parent['id']}",
-        json={"parent_term_id": child["id"]},  # noqa: E501
+        json={"parent_term_id": child["id"]},
     )
     # Note: This may succeed if parent_term_id is not validated
 
@@ -198,10 +199,10 @@ def test_update_term_not_found(client):
     create_layer(client)
     resp = client.put(
         "/api/structure_nodes/nonexistent-id", json={"title": "Updated"}
-    )  # noqa: E501
+    )
     assert (
         resp.status_code == 422
-    )  # FastAPI returns 422 for invalid UUID format  # noqa: E501
+    )  # FastAPI returns 422 for invalid UUID format
 
 
 @pytest.mark.skip_suite
@@ -223,7 +224,7 @@ def test_delete_term_not_found(client):
     resp = client.delete("/api/structure_nodes/nonexistent-id")
     assert (
         resp.status_code == 422
-    )  # FastAPI returns 422 for invalid UUID format  # noqa: E501
+    )  # FastAPI returns 422 for invalid UUID format
 
 
 @pytest.mark.skip_suite
@@ -267,13 +268,13 @@ def test_terms_pagination(client):
             client,
             domain_id,
             layer_id,
-            title=f"Term {chr(65+i)} {unique_suffix}",  # noqa: E501
+            title=f"Term {chr(65+i)} {unique_suffix}",
         )  # Term A, B, C, D, E with unique suffix
         terms.append(term)
 
     # Test first page
     resp = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&limit=2&sort_by=title"  # noqa: E501
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&limit=2&sort_by=title"
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -282,7 +283,7 @@ def test_terms_pagination(client):
 
     # Test second page
     resp2 = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=2&limit=2&sort_by=title"  # noqa: E501
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=2&limit=2&sort_by=title"
     )
     assert resp2.status_code == 200
     data2 = resp2.json()
@@ -290,7 +291,7 @@ def test_terms_pagination(client):
 
     # Test last page
     resp3 = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=4&limit=2&sort_by=title"  # noqa: E501
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=4&limit=2&sort_by=title"
     )
     assert resp3.status_code == 200
     data3 = resp3.json()

@@ -4,20 +4,20 @@ Performance tests for vector search functionality.
 Tests that vector search meets performance requirements (TC-P002, TC-S003).
 """
 
-import pytest
-import tempfile
 import os
-import time
 import statistics
+import tempfile
+import time
 from typing import cast
 
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
 # Skip if embeddings not available
 pytest.importorskip(
     "embeddings.generate_embeddings", reason="embeddings module not available"
-)  # noqa: E501
+)
 
 
 @pytest.fixture(scope="module")
@@ -82,7 +82,7 @@ def large_dataset_manager():
         "NutritionInformation",
         "Diet",
         "ExercisePlan",
-        "PhysicalActivity",  # noqa: E501
+        "PhysicalActivity",
         "Vehicle",
         "Car",
         "Motorcycle",
@@ -92,22 +92,22 @@ def large_dataset_manager():
         "TVEpisode",
         "RadioSeries",
         "RadioEpisode",
-        "PodcastSeries",  # noqa: E501
+        "PodcastSeries",
         "JobPosting",
         "Occupation",
         "EducationalOccupationalCredential",
         "WorkersUnion",
-        "ProfessionalService",  # noqa: E501
+        "ProfessionalService",
         "GovernmentOrganization",
         "NGO",
         "Corporation",
         "LegalService",
-        "PerformingGroup",  # noqa: E501
+        "PerformingGroup",
         "MusicGroup",
         "DanceGroup",
         "TheaterGroup",
         "SportsTeam",
-        "SportsOrganization",  # noqa: E501
+        "SportsOrganization",
         "Airline",
         "Consortium",
         "FundingScheme",
@@ -122,7 +122,7 @@ def large_dataset_manager():
         "State",
         "City",
         "AdministrativeArea",
-        "LandmarksOrHistoricalBuildings",  # noqa: E501
+        "LandmarksOrHistoricalBuildings",
         "Park",
         "Beach",
         "Mountain",
@@ -182,7 +182,7 @@ class TestVectorSearchLatency:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = large_dataset_manager
+        manager, _db_path = large_dataset_manager
 
         def embedding_gen(text: str) -> bytes:
             return cast(bytes, generate_embedding(text))
@@ -244,14 +244,14 @@ class TestVectorSearchLatency:
         min_time = min(search_times)
         p95_time = statistics.quantiles(search_times, n=20)[
             18
-        ]  # 95th percentile  # noqa: E501
+        ]  # 95th percentile
 
         print(f"\n{'='*60}")
         print("Vector Search Performance Test Results (TC-P002, TC-S003)")
         print(f"{'='*60}")
         print(
             f"Dataset size: {len(test_queries)} queries against {90}+ entities"
-        )  # noqa: E501
+        )
         print("Search limit: 20 results")
         print("\nLatency Statistics:")
         print(f"  Average:    {avg_time:6.2f} ms")
@@ -280,7 +280,7 @@ class TestVectorSearchLatency:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = large_dataset_manager
+        manager, _db_path = large_dataset_manager
 
         query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
@@ -320,13 +320,13 @@ class TestVectorSearchLatency:
 
         print(
             f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"
-        )  # noqa: E501
+        )
         print(f"Efficiency: {'GOOD' if time_ratio < limit_ratio else 'POOR'}")
 
         # Time should not scale worse than linearly
         assert (
             time_ratio < limit_ratio * 1.5
-        ), f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"  # noqa: E501
+        ), f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"
 
     def test_threshold_filtering_performance(self, large_dataset_manager):
         """
@@ -336,7 +336,7 @@ class TestVectorSearchLatency:
         """
         from embeddings.generate_embeddings import generate_embedding
 
-        manager, db_path = large_dataset_manager
+        manager, _db_path = large_dataset_manager
 
         query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
@@ -375,15 +375,15 @@ class TestVectorSearchLatency:
         print(f"  With threshold (0.8): {avg_with_threshold:6.2f} ms")
         print(
             f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms"
-        )  # noqa: E501
+        )
 
         # Threshold filtering should not add significant overhead
         overhead_pct = (
             (avg_with_threshold - avg_no_threshold) / avg_no_threshold
-        ) * 100  # noqa: E501
+        ) * 100
 
         print(f"  Overhead %:           {overhead_pct:6.2f}%")
 
         assert (
             overhead_pct < 20.0
-        ), f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"  # noqa: E501
+        ), f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"

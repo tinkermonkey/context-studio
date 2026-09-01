@@ -12,21 +12,20 @@ Tests:
 - test_baseline_predicate_management: Predicate definition and relationships
 """
 
-import sys
 import os
+import sys
 from datetime import datetime
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)  # noqa: E501
+)
 
-import pytest  # noqa: E402
-
-from tests.e2e.helpers import poll_until, create_test_hierarchy  # noqa: E402
-from tests.e2e.test_data import (  # noqa: E402
-    STABLE_TAXONOMY,
+import pytest
+from tests.e2e.helpers import create_test_hierarchy, poll_until
+from tests.e2e.test_data import (
     STABLE_PREDICATES,
     STABLE_RELATIONSHIPS,
+    STABLE_TAXONOMY,
 )
 
 
@@ -131,13 +130,13 @@ class TestPhase0BaselineTests:
             )
             assert (
                 link_response.status_code == 201
-            ), f"Failed to create link from {source_title} to {target_title}: {link_response.text}"  # noqa: E501
+            ), f"Failed to create link from {source_title} to {target_title}: {link_response.text}"
             link = link_response.json()
             link_ids.append(link["id"])
 
         # Step 6: Verify list-links endpoint
         list_links_response = e2e_client.get(
-            f"/api/structure_nodes/links?source_node_id={term_ids['Relational Database']}"  # noqa: E501
+            f"/api/structure_nodes/links?source_node_id={term_ids['Relational Database']}"
         )
         assert list_links_response.status_code == 200
         links_data = list_links_response.json()
@@ -147,7 +146,7 @@ class TestPhase0BaselineTests:
         assert isinstance(links_data["data"], list), "Response 'data' should be a list"
         assert (
             len(links_data["data"]) >= 1
-        ), "Should have at least one link from Relational Database"  # noqa: E501
+        ), "Should have at least one link from Relational Database"
 
         # Step 7: Verify semantic search returns "Database" in top results
         search_data = {
@@ -322,7 +321,7 @@ class TestPhase0BaselineTests:
             title_emb = node.get("title_embedding")
             assert isinstance(
                 title_emb, list
-            ), f"Term '{term_title}' title_embedding must be a list, got {type(title_emb)}"  # noqa: E501
+            ), f"Term '{term_title}' title_embedding must be a list, got {type(title_emb)}"
             assert len(title_emb) > 0, f"Term '{term_title}' title_embedding is empty"
             # Verify it contains actual float values (not zeros)
             assert any(
@@ -336,7 +335,7 @@ class TestPhase0BaselineTests:
             def_emb = node.get("definition_embedding")
             assert isinstance(
                 def_emb, list
-            ), f"Term '{term_title}' definition_embedding must be a list, got {type(def_emb)}"  # noqa: E501
+            ), f"Term '{term_title}' definition_embedding must be a list, got {type(def_emb)}"
             assert (
                 len(def_emb) > 0
             ), f"Term '{term_title}' definition_embedding is empty"
@@ -388,7 +387,7 @@ class TestPhase0BaselineTests:
         data_store_pos = search_titles.index("Data Store")
         assert (
             data_store_pos < 5
-        ), f"'Data Store' should appear in top 5 results, found at position {data_store_pos}"  # noqa: E501
+        ), f"'Data Store' should appear in top 5 results, found at position {data_store_pos}"
 
         # Step 5: Verify embedding regeneration on title update
         # Get the original title_embedding
@@ -608,9 +607,9 @@ class TestPhase0BaselineTests:
         ]
 
         # Get unique record IDs (to account for possible duplicates)
-        unique_structure_node_ids = set(e["record_id"] for e in structure_node_events)
-        unique_predicate_ids = set(e["record_id"] for e in predicate_events)
-        unique_link_ids = set(e["record_id"] for e in link_events)
+        unique_structure_node_ids = {e["record_id"] for e in structure_node_events}
+        unique_predicate_ids = {e["record_id"] for e in predicate_events}
+        unique_link_ids = {e["record_id"] for e in link_events}
 
         # Verify correct number of unique entities (regardless of duplicate events)
         assert len(unique_structure_node_ids) == 5, (

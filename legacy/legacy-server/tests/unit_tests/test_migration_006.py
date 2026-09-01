@@ -6,20 +6,19 @@ Tests the migration from layers/domains/terms to the unified structure_nodes tab
 including data integrity, parent-child relationships, and rollback functionality.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-import tempfile  # noqa: E402
-from typing import Dict, List  # noqa: E402
-from sqlalchemy import create_engine, text  # noqa: E402
+import tempfile
 
-from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
-from database.utils import init_db  # noqa: E402
+import pytest
+from database.migrations.migration_manager import MigrationManager
+from database.utils import init_db
+from sqlalchemy import create_engine, text
 
 
 class MigrationTestHarness:
@@ -127,13 +126,13 @@ class MigrationTestHarness:
 
             conn.commit()
 
-        except Exception as e:
+        except Exception:
             conn.rollback()
-            raise e
+            raise
         finally:
             cursor.close()
 
-    def get_pre_migration_counts(self) -> Dict[str, int]:
+    def get_pre_migration_counts(self) -> dict[str, int]:
         """Get counts of records before migration."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -160,7 +159,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def get_post_migration_counts(self) -> Dict[str, int]:
+    def get_post_migration_counts(self) -> dict[str, int]:
         """Get counts of records after migration."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -238,11 +237,10 @@ class MigrationTestHarness:
         if not migration_006:
             raise RuntimeError("Migration 006 not found")
 
-        with self.engine.connect() as conn:
-            with conn.begin():
-                migration_006.down(conn)
-                # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 6"))
+        with self.engine.connect() as conn, conn.begin():
+            migration_006.down(conn)
+            # Remove from schema_history
+            conn.execute(text("DELETE FROM schema_history WHERE version = 6"))
 
         # Update current version
         self.migration_manager.current_version = 5
@@ -311,7 +309,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def create_database_snapshot(self) -> Dict[str, List[Dict]]:
+    def create_database_snapshot(self) -> dict[str, list[dict]]:
         """Create a snapshot of the database state."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -339,7 +337,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def database_matches_snapshot(self, snapshot: Dict[str, List[Dict]]) -> bool:
+    def database_matches_snapshot(self, snapshot: dict[str, list[dict]]) -> bool:
         """Check if current database matches the provided snapshot."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -374,7 +372,7 @@ class MigrationTestHarness:
 
                 # Sort both for comparison (by first column usually ID)
                 if expected_rows:
-                    first_col = list(expected_rows[0].keys())[0]
+                    first_col = next(iter(expected_rows[0].keys()))
                     expected_sorted = sorted(
                         expected_rows, key=lambda x: str(x[first_col])
                     )

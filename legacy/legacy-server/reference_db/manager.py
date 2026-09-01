@@ -6,25 +6,25 @@ This module provides the ReferenceManager class for managing reference nodes and
 including schema version detection, database rebuild, and embedding operations.
 """
 
+import logging
 import os
 import shutil
-import logging
+import sqlite3
 import threading
 from datetime import date
-from typing import Optional, List, Dict, Any, Literal
+from typing import Any, Literal
 from uuid import uuid4
-import sqlite3
 
+from database.sql_builders import build_max_similarity_case_when
+from database.utils import init_db
+from embeddings.generate_embeddings import generate_embedding
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from database.utils import init_db
-from database.sql_builders import build_max_similarity_case_when
-from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
-from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
-from embeddings.generate_embeddings import generate_embedding
+from reference_db.config import REFERENCE_SCHEMA_VERSION, ReferenceConfig
+from reference_db.models import Base, ExternalPredicate, ReferenceLink, ReferenceNode
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -315,7 +315,7 @@ class ReferenceManager:
 
                 except Exception as e:
                     raise RuntimeError(
-                        f"Failed to create database backup: {str(e)}"
+                        f"Failed to create database backup: {e!s}"
                     ) from e
             else:
                 logger.info(
@@ -451,7 +451,7 @@ class ReferenceManager:
         definition: str,
         source: str,
         external_id: str,
-        attributes: Dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
         title_embedding: bytes | None = None,
         definition_embedding: bytes | None = None,
         embedding_dims: int = EMBEDDING_DIMENSION,  # Use constant from config
@@ -527,7 +527,7 @@ class ReferenceManager:
         subject_node: str,
         predicate: str,
         object_node: str,
-        attributes: Dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> ReferenceLink:
         """
         Add a new reference link to the database.
@@ -608,7 +608,7 @@ class ReferenceManager:
 
     def list_reference_nodes(
         self, source: str | None = None, limit: int | None = None
-    ) -> List[ReferenceNode]:
+    ) -> list[ReferenceNode]:
         """
         List reference nodes, optionally filtered by source.
 
@@ -667,7 +667,7 @@ class ReferenceManager:
         limit: int = 20,
         threshold: float = 0.7,
         embedding_generator=None,
-    ) -> List[tuple[ReferenceNode, float]]:
+    ) -> list[tuple[ReferenceNode, float]]:
         """
         Search for reference nodes by semantic similarity.
 
@@ -834,7 +834,7 @@ class ReferenceManager:
         direction: Literal["inbound", "outbound", "both"] = "both",
         predicate: str | None = None,
         limit: int | None = None,
-    ) -> List[ReferenceLink]:
+    ) -> list[ReferenceLink]:
         """
         Retrieve links connected to a reference node.
 
@@ -899,7 +899,7 @@ class ReferenceManager:
         definition: str,
         source: str,
         external_id: str,
-        attributes: Dict[str, Any] | None = None,
+        attributes: dict[str, Any] | None = None,
         title_embedding: bytes | None = None,
         definition_embedding: bytes | None = None,
         embedding_dims: int = EMBEDDING_DIMENSION,
@@ -1009,7 +1009,7 @@ class ReferenceManager:
 
     def list_external_predicates(
         self, source: str | None = None, limit: int | None = None
-    ) -> List[ExternalPredicate]:
+    ) -> list[ExternalPredicate]:
         """
         List external predicates, optionally filtered by source.
 
@@ -1040,7 +1040,7 @@ class ReferenceManager:
         limit: int = 20,
         threshold: float = 0.7,
         embedding_generator=None,
-    ) -> List[tuple[ExternalPredicate, float]]:
+    ) -> list[tuple[ExternalPredicate, float]]:
         """
         Search for external predicates by semantic similarity.
 
@@ -1212,7 +1212,7 @@ class ReferenceManager:
             logger.error(f"Vector search failed: {e}")
             raise RuntimeError(f"Vector search failed: {e}") from e
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Get comprehensive status of the reference database.
 
@@ -1243,7 +1243,7 @@ class ReferenceManager:
             >>> print(status['node_count'])  # 1000
         """
         import os
-        from datetime import datetime, UTC
+        from datetime import UTC, datetime
 
         # Constants for version checking
         EXPECTED_SCHEMA_VERSION = REFERENCE_SCHEMA_VERSION
@@ -1275,7 +1275,7 @@ class ReferenceManager:
         except Exception as e:
             logger.warning(f"Could not get database size: {e}")
             status["status"] = "error"
-            status["error"] = f"Unable to read database file: {str(e)}"
+            status["error"] = f"Unable to read database file: {e!s}"
             status["remediation"] = "Check file system permissions and disk health."
             return status
 
@@ -1317,7 +1317,7 @@ class ReferenceManager:
                 except Exception as e:
                     logger.warning(f"Could not get node count: {e}")
                     status["status"] = "error"
-                    status["error"] = f"Unable to query reference_nodes: {str(e)}"
+                    status["error"] = f"Unable to query reference_nodes: {e!s}"
                     status["remediation"] = (
                         "Verify database schema integrity. May need to rebuild database."
                     )
@@ -1383,12 +1383,12 @@ class ReferenceManager:
 
 
 # Singleton pattern for application-wide reference manager
-_reference_manager_instance: Optional[ReferenceManager] = None
+_reference_manager_instance: ReferenceManager | None = None
 _reference_manager_lock = threading.Lock()
 
 
 def get_reference_manager(
-    config: Optional[ReferenceConfig] = None, force_new: bool = False
+    config: ReferenceConfig | None = None, force_new: bool = False
 ) -> ReferenceManager:
     """
     Get or create a singleton ReferenceManager instance.

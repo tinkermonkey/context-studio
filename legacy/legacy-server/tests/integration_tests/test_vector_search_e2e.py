@@ -7,12 +7,12 @@ Tests complete user workflows including:
 3. Error recovery scenarios
 """
 
-import pytest
-import tempfile
 import os
-import numpy as np
+import tempfile
 from unittest.mock import patch
 
+import numpy as np
+import pytest
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
@@ -25,13 +25,13 @@ def check_sqlite_vec():
     except ImportError:
         pytest.skip(
             "sqlite-vec not available (expected in Docker environment)"
-        )  # noqa: E501
+        )
 
     # Also verify that vec functions are actually available in SQLite
     test_db_path = None
     try:
-        from sqlalchemy import create_engine, text
         from database.utils import init_db
+        from sqlalchemy import create_engine, text
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             test_db_path = tf.name
@@ -45,7 +45,7 @@ def check_sqlite_vec():
                 conn.execute(
                     text(
                         "SELECT vec_distance_cosine(x'00000000', x'00000000')"
-                    )  # noqa: E501
+                    )
                 )
             except Exception as e:
                 pytest.skip(f"sqlite-vec extension not properly loaded: {e}")
@@ -67,14 +67,14 @@ def e2e_test_database():
     manager = ReferenceManager(config, db_path=db_path)
 
     # Create embeddings helper that creates distinct vectors
-    # Use a seed based on the value to get reproducible but different embeddings  # noqa: E501
+    # Use a seed based on the value to get reproducible but different embeddings
     def create_embedding(value: float) -> bytes:
         rng = np.random.RandomState(seed=int(value * 1000))
         vec = rng.randn(384).astype(np.float32)
         vec = vec / np.linalg.norm(vec)
         return vec.tobytes()
 
-    # Build a small knowledge graph: Person → memberOf → Organization → locatedIn → Place  # noqa: E501
+    # Build a small knowledge graph: Person → memberOf → Organization → locatedIn → Place
     person_node = manager.add_reference_node(
         title="Person",
         definition="An individual human being",
@@ -122,9 +122,10 @@ def e2e_test_database():
 
     # Create hierarchical relationships using direct session operations
     # (workaround for transaction conflict issue)
-    from reference_db.models import ReferenceLink
-    from uuid import uuid4
     from datetime import date
+    from uuid import uuid4
+
+    from reference_db.models import ReferenceLink
 
     person_subclass_link = ReferenceLink(
         id=str(uuid4()),
@@ -233,6 +234,7 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -259,7 +261,7 @@ class TestSemanticDiscoveryWorkflow:
                         "query": "human being",
                         "limit": 5,
                         "threshold": 0.0,
-                    },  # noqa: E501
+                    },
                 )
 
                 assert search_response.status_code == 200
@@ -269,7 +271,7 @@ class TestSemanticDiscoveryWorkflow:
                 # Find the Person node in results
                 person_result = next(
                     (r for r in search_data["results"] if r["title"] == "Person"),
-                    None,  # noqa: E501
+                    None,
                 )
                 assert (
                     person_result is not None
@@ -279,7 +281,7 @@ class TestSemanticDiscoveryWorkflow:
                 node_id = person_result["id"]
                 node_response = client.get(
                     f"/api/reference/ref-db/nodes/{node_id}"
-                )  # noqa: E501
+                )
 
                 assert node_response.status_code == 200
                 node_data = node_response.json()
@@ -294,13 +296,13 @@ class TestSemanticDiscoveryWorkflow:
                 assert links_response.status_code == 200
                 links_data = links_response.json()
 
-                # Person should have 2 outbound links (subClassOf Thing, memberOf Organization)  # noqa: E501
+                # Person should have 2 outbound links (subClassOf Thing, memberOf Organization)
                 assert links_data["total_links"] == 2
 
                 # Verify relationship types
                 predicates = [
                     link["predicate"] for link in links_data["links"]
-                ]  # noqa: E501
+                ]
                 assert "subClassOf" in predicates
                 assert "memberOf" in predicates
 
@@ -317,6 +319,7 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -349,7 +352,7 @@ class TestSemanticDiscoveryWorkflow:
             # Step 2: Get Organization node details
             org_response = client.get(
                 f"/api/reference/ref-db/nodes/{returned_org_id}"
-            )  # noqa: E501
+            )
             assert org_response.status_code == 200
             assert org_response.json()["title"] == "Organization"
 
@@ -388,6 +391,7 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -411,7 +415,7 @@ class TestSemanticDiscoveryWorkflow:
             assert links_response.status_code == 200
             links_data = links_response.json()
 
-            # Thing should have 3 inbound subClassOf links (Person, Organization, Place)  # noqa: E501
+            # Thing should have 3 inbound subClassOf links (Person, Organization, Place)
             assert links_data["total_links"] == 3
 
             # Verify all are subClassOf relationships
@@ -422,7 +426,7 @@ class TestSemanticDiscoveryWorkflow:
             # Extract subject nodes (the subclasses)
             subclass_ids = [
                 link["subject_node"] for link in links_data["links"]
-            ]  # noqa: E501
+            ]
 
             # Verify we found all three subclasses
             expected_subclasses = {
@@ -447,6 +451,7 @@ class TestErrorRecoveryWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -460,35 +465,35 @@ class TestErrorRecoveryWorkflows:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):
-            with patch(
-                "embeddings.generate_embeddings.generate_embedding"
-            ) as mock_embed:
-                # Use an embedding very different from existing nodes
-                mock_embed.return_value = create_embedding(0.99)
+        ), patch(
+            "embeddings.generate_embeddings.generate_embedding"
+        ) as mock_embed:
+            # Use an embedding very different from existing nodes
+            mock_embed.return_value = create_embedding(0.99)
 
-                response = client.get(
-                    "/api/reference/ref-db/search",
-                    params={
-                        "query": "completely unrelated concept",
-                        "limit": 5,
-                        "threshold": 0.95,  # High threshold
-                    },
-                )
+            response = client.get(
+                "/api/reference/ref-db/search",
+                params={
+                    "query": "completely unrelated concept",
+                    "limit": 5,
+                    "threshold": 0.95,  # High threshold
+                },
+            )
 
-                assert response.status_code == 200
-                data = response.json()
+            assert response.status_code == 200
+            data = response.json()
 
-                # Should return empty results, not error
-                assert data["total_results"] == 0
-                assert data["results"] == []
+            # Should return empty results, not error
+            assert data["total_results"] == 0
+            assert data["results"] == []
 
     def test_invalid_node_id_graceful_failure(self, client, e2e_test_database):
         """Test that invalid node IDs return proper 404 errors."""
-        db_path, data = e2e_test_database
+        db_path, _data = e2e_test_database
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -506,7 +511,7 @@ class TestErrorRecoveryWorkflows:
             # Try to get non-existent node
             response = client.get(
                 "/api/reference/ref-db/nodes/invalid-node-id"
-            )  # noqa: E501
+            )
             assert response.status_code == 404
             assert "not found" in response.json()["detail"].lower()
 
@@ -524,6 +529,7 @@ class TestErrorRecoveryWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
@@ -592,6 +598,7 @@ class TestPerformanceWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -605,34 +612,33 @@ class TestPerformanceWorkflows:
         with patch(
             "reference_db.dependencies.reference_manager_context",
             side_effect=test_reference_manager_context,
-        ):
-            with patch(
-                "embeddings.generate_embeddings.generate_embedding"
-            ) as mock_embed:
-                mock_embed.return_value = create_embedding(0.8)
+        ), patch(
+            "embeddings.generate_embeddings.generate_embedding"
+        ) as mock_embed:
+            mock_embed.return_value = create_embedding(0.8)
 
-                import time
+            import time
 
-                start = time.perf_counter()
+            start = time.perf_counter()
 
-                response = client.get(
-                    "/api/reference/ref-db/search",
-                    params={
-                        "query": "test query",
-                        "limit": 20,
-                        "threshold": 0.0,
-                    },  # noqa: E501
-                )
+            response = client.get(
+                "/api/reference/ref-db/search",
+                params={
+                    "query": "test query",
+                    "limit": 20,
+                    "threshold": 0.0,
+                },
+            )
 
-                elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
+            elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
 
-                assert response.status_code == 200
+            assert response.status_code == 200
 
-                # Search should complete in <500ms (generous limit for E2E test)  # noqa: E501
-                # Note: This includes API overhead, not just vector search
-                assert (
-                    elapsed < 500
-                ), f"Search took {elapsed:.2f}ms, expected <500ms"  # noqa: E501
+            # Search should complete in <500ms (generous limit for E2E test)
+            # Note: This includes API overhead, not just vector search
+            assert (
+                elapsed < 500
+            ), f"Search took {elapsed:.2f}ms, expected <500ms"
 
     def test_link_retrieval_performance(self, client, e2e_test_database):
         """Test that link retrieval completes in reasonable time."""
@@ -641,6 +647,7 @@ class TestPerformanceWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
+
         from reference_db.manager import ReferenceManager
 
         @contextmanager

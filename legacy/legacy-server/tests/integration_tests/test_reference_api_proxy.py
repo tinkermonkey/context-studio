@@ -2,14 +2,15 @@
 Integration tests for Reference API Proxy functionality.
 """
 
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest  # noqa: E402
-from unittest.mock import patch, Mock  # noqa: E402
-from nlp.proxy_manager import get_proxy_manager  # noqa: E402
+from unittest.mock import Mock, patch
+
+import pytest
+from nlp.proxy_manager import get_proxy_manager
 
 
 class TestReferenceAPIProxyIntegration:
@@ -80,7 +81,7 @@ class TestReferenceAPIProxyIntegration:
                     "domain_limits": {
                         "conceptnet": 3600,
                         "dbpedia_spotlight": 3600,
-                    }  # noqa: E501
+                    }
                 },
             }
             mock_get_settings.return_value = mock_settings
@@ -150,7 +151,7 @@ class TestReferenceAPIProxyIntegration:
                 proxy_manager, "start_proxy", return_value=True
             ) as mock_start, patch.object(
                 proxy_manager, "stop_proxy"
-            ) as mock_stop:  # noqa: E501
+            ) as mock_stop:
 
                 result = proxy_manager.restart_proxy()
 
@@ -180,7 +181,7 @@ class TestReferenceAPIProxyIntegration:
                     "domain_limits": {
                         "conceptnet": 3600,
                         "dbpedia_spotlight": 3600,
-                    }  # noqa: E501
+                    }
                 },
             }
             mock_get_settings.return_value = mock_settings
@@ -190,7 +191,7 @@ class TestReferenceAPIProxyIntegration:
             # Test import error handling
             with patch(
                 "builtins.__import__", side_effect=ImportError("No module")
-            ):  # noqa: E501
+            ):
                 result = proxy_manager.start_proxy()
                 assert result is False
                 assert not proxy_manager.is_running

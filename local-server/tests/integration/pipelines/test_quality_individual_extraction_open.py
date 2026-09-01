@@ -26,9 +26,11 @@ import sys
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
+from pathlib import Path
+
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from functools import lru_cache
 from pathlib import Path

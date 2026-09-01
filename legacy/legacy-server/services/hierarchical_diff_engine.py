@@ -8,12 +8,12 @@ for enterprise-scale change management and collaboration.
 
 import hashlib
 import time
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
-from sqlalchemy.orm import Session
+from typing import Any
 
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -27,12 +27,12 @@ class ConflictDescriptor:
     path: str
     local_value: Any
     remote_value: Any
-    base_value: Optional[Any]
-    resolution_suggestions: List[Dict[str, Any]]
-    severity: Optional[str] = None
+    base_value: Any | None
+    resolution_suggestions: list[dict[str, Any]]
+    severity: str | None = None
     conflict_id: str = ""
     confidence_score: float = 0.0
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
 
 class HierarchicalDiffEngine:
@@ -44,15 +44,15 @@ class HierarchicalDiffEngine:
         self.nlp_service = nlp_service
         self.diff_cache: dict[str, Any] = {}
         self.semantic_analyzers: dict[str, Any] = {}
-        self.performance_metrics: list[Dict[str, Any]] = []
+        self.performance_metrics: list[dict[str, Any]] = []
 
         logger.info(
             "HierarchicalDiffEngine initialized with advanced diff capabilities"
         )
 
     def compute_hierarchical_diff(
-        self, before: Dict[str, Any], after: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, before: dict[str, Any], after: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compute hierarchical diff with structural awareness."""
 
         start_time = time.time()
@@ -185,7 +185,7 @@ class HierarchicalDiffEngine:
             "semantic_analysis": semantic_analysis,
         }
 
-    def _has_circular_references(self, obj: Any, visited: Optional[set] = None) -> bool:
+    def _has_circular_references(self, obj: Any, visited: set | None = None) -> bool:
         """Detect circular references to prevent infinite recursion."""
         if visited is None:
             visited = set()
@@ -214,7 +214,7 @@ class HierarchicalDiffEngine:
         return False
 
     def _break_circular_references(
-        self, obj: Any, visited: Optional[set] = None
+        self, obj: Any, visited: set | None = None
     ) -> Any:
         """Break circular references by replacing them with placeholders."""
         if visited is None:
@@ -243,10 +243,10 @@ class HierarchicalDiffEngine:
 
     def _compute_semantic_analysis_for_operations(
         self,
-        operations: List[Dict[str, Any]],
-        before: Dict[str, Any],
-        after: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        operations: list[dict[str, Any]],
+        before: dict[str, Any],
+        after: dict[str, Any],
+    ) -> dict[str, Any]:
         """Compute semantic analysis for the operations."""
         semantic_analysis = {"content_similarity": 0.0, "semantic_changes": {}}
 
@@ -304,7 +304,7 @@ class HierarchicalDiffEngine:
         return semantic_analysis
 
     def _calculate_complexity_score(
-        self, operations: List[Dict[str, Any]], max_depth: int
+        self, operations: list[dict[str, Any]], max_depth: int
     ) -> float:
         """Calculate complexity score based on operations and depth."""
         if not operations:
@@ -317,7 +317,7 @@ class HierarchicalDiffEngine:
         depth_complexity = max_depth * 0.2
 
         # Add complexity for different operation types
-        operation_types = set(op["operation"] for op in operations)
+        operation_types = {op["operation"] for op in operations}
         type_complexity = len(operation_types) * 0.1
 
         total_complexity = operation_complexity + depth_complexity + type_complexity
@@ -329,7 +329,7 @@ class HierarchicalDiffEngine:
         self,
         operation_type: str,
         execution_time_ms: float,
-        operations: List[Dict[str, Any]],
+        operations: list[dict[str, Any]],
         before: Any,
         after: Any,
     ):
@@ -353,7 +353,7 @@ class HierarchicalDiffEngine:
 
     def _analyze_semantic_conflict(
         self, path: str, base_value: Any, local_value: Any, remote_value: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze semantic conflicts between different values."""
 
         # Calculate semantic similarities
@@ -427,8 +427,8 @@ class HierarchicalDiffEngine:
         }
 
     def compute_three_way_diff(
-        self, base: Dict[str, Any], local: Dict[str, Any], remote: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, base: dict[str, Any], local: dict[str, Any], remote: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compute three-way diff for merge conflict detection."""
 
         start_time = time.time()
@@ -459,7 +459,7 @@ class HierarchicalDiffEngine:
 
         # Identify mergeable changes (non-conflicting operations)
         mergeable_changes = []
-        conflict_paths = set(c["path"] for c in conflicts_dict)
+        conflict_paths = {c["path"] for c in conflicts_dict}
 
         # Add non-conflicting local changes
         for operation in local_diff["operations"]:
@@ -485,11 +485,11 @@ class HierarchicalDiffEngine:
         return result
 
     def _compute_structural_diff(
-        self, before: Dict[str, Any], after: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, before: dict[str, Any], after: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compute structural differences between two objects."""
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "added_keys": set(after.keys()) - set(before.keys()),
             "removed_keys": set(before.keys()) - set(after.keys()),
             "common_keys": set(before.keys()) & set(after.keys()),
@@ -546,15 +546,15 @@ class HierarchicalDiffEngine:
         return result
 
     def _compute_list_diff(
-        self, before_list: List[Any], after_list: List[Any]
-    ) -> Dict[str, Any]:
+        self, before_list: list[Any], after_list: list[Any]
+    ) -> dict[str, Any]:
         """Compute differences between two lists."""
 
         # Use sequence matching for list differences
         matcher = SequenceMatcher(None, before_list, after_list)
         opcodes = matcher.get_opcodes()
 
-        list_changes: Dict[str, Any] = {
+        list_changes: dict[str, Any] = {
             "operations": [],
             "added_items": [],
             "removed_items": [],
@@ -612,10 +612,10 @@ class HierarchicalDiffEngine:
 
     def _detect_moved_elements(
         self,
-        before: Dict[str, Any],
-        after: Dict[str, Any],
-        structural_diff: Dict[str, Any],
-    ) -> List[Dict[str, Any]]:
+        before: dict[str, Any],
+        after: dict[str, Any],
+        structural_diff: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """Detect elements that were moved rather than added/removed."""
 
         moved_elements = []
@@ -649,14 +649,13 @@ class HierarchicalDiffEngine:
                 )
 
                 # Remove from added/removed to avoid duplicate processing
-                if best_match in removed_values:
-                    del removed_values[best_match]
+                removed_values.pop(best_match, None)
 
         return moved_elements
 
     def _compute_semantic_changes(
-        self, structural_diff: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, structural_diff: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compute semantic similarity scores for changes."""
 
         semantic_changes = {}
@@ -681,8 +680,8 @@ class HierarchicalDiffEngine:
         return semantic_changes
 
     def _identify_three_way_conflicts(
-        self, local_diff: Dict[str, Any], remote_diff: Dict[str, Any]
-    ) -> List[ConflictDescriptor]:
+        self, local_diff: dict[str, Any], remote_diff: dict[str, Any]
+    ) -> list[ConflictDescriptor]:
         """Identify conflicts in three-way merge using operations-based structure."""
 
         conflicts = []
@@ -823,11 +822,11 @@ class HierarchicalDiffEngine:
 
     def _generate_merge_result(
         self,
-        base: Dict[str, Any],
-        local_diff: Dict[str, Any],
-        remote_diff: Dict[str, Any],
-        conflicts: List[ConflictDescriptor],
-    ) -> Dict[str, Any]:
+        base: dict[str, Any],
+        local_diff: dict[str, Any],
+        remote_diff: dict[str, Any],
+        conflicts: list[ConflictDescriptor],
+    ) -> dict[str, Any]:
         """Generate suggested merge result."""
 
         merge_result = base.copy()
@@ -881,11 +880,11 @@ class HierarchicalDiffEngine:
         return merge_result
 
     def _analyze_change_patterns(
-        self, structural_diff: Dict[str, Any], moved_elements: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, structural_diff: dict[str, Any], moved_elements: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Analyze patterns in the changes."""
 
-        patterns: Dict[str, Any] = {
+        patterns: dict[str, Any] = {
             "bulk_operations": [],
             "refactoring_indicators": [],
             "schema_changes": [],
@@ -936,8 +935,8 @@ class HierarchicalDiffEngine:
         return patterns
 
     def _analyze_conflict_patterns(
-        self, conflicts: List[ConflictDescriptor]
-    ) -> Dict[str, Any]:
+        self, conflicts: list[ConflictDescriptor]
+    ) -> dict[str, Any]:
         """Analyze patterns in conflicts."""
 
         if not conflicts:
@@ -968,8 +967,8 @@ class HierarchicalDiffEngine:
         }
 
     def _generate_resolution_suggestions(
-        self, conflicts: List[ConflictDescriptor], conflict_analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, conflicts: list[ConflictDescriptor], conflict_analysis: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Generate intelligent resolution suggestions."""
 
         suggestions = []
@@ -1095,16 +1094,14 @@ class HierarchicalDiffEngine:
             return "complete_replacement"
 
     def _assess_change_impact(
-        self, key: str, change: Dict[str, Any], similarity_score: float
+        self, key: str, change: dict[str, Any], similarity_score: float
     ) -> str:
         """Assess the impact level of a change."""
 
         # Simple impact assessment based on key patterns and similarity
         critical_patterns = ["id", "key", "name", "type", "status"]
 
-        if any(pattern in key.lower() for pattern in critical_patterns):
-            return "high"
-        elif similarity_score < 0.5:
+        if any(pattern in key.lower() for pattern in critical_patterns) or similarity_score < 0.5:
             return "high"
         elif similarity_score < 0.8:
             return "medium"
@@ -1164,7 +1161,7 @@ class HierarchicalDiffEngine:
             return 1.0 if val1 == val2 else 0.0
 
     def _changes_are_equivalent(
-        self, change1: Dict[str, Any], change2: Dict[str, Any]
+        self, change1: dict[str, Any], change2: dict[str, Any]
     ) -> bool:
         """Check if two changes are equivalent."""
 
@@ -1174,7 +1171,7 @@ class HierarchicalDiffEngine:
 
         return self._values_semantically_equal(after1, after2)
 
-    def _extract_change_value(self, change: Dict[str, Any], key: str) -> Any:
+    def _extract_change_value(self, change: dict[str, Any], key: str) -> Any:
         """Extract value from a change object."""
 
         if isinstance(change, dict):
@@ -1183,7 +1180,7 @@ class HierarchicalDiffEngine:
             return change
 
     def _classify_conflict_type(
-        self, local_change: Dict[str, Any], remote_change: Dict[str, Any]
+        self, local_change: dict[str, Any], remote_change: dict[str, Any]
     ) -> str:
         """Classify the type of conflict."""
 
@@ -1207,7 +1204,7 @@ class HierarchicalDiffEngine:
             return "value_conflict"
 
     def _calculate_conflict_confidence(
-        self, local_change: Dict[str, Any], remote_change: Dict[str, Any]
+        self, local_change: dict[str, Any], remote_change: dict[str, Any]
     ) -> float:
         """Calculate confidence score for conflict detection."""
 
@@ -1221,8 +1218,8 @@ class HierarchicalDiffEngine:
         return 1.0 - similarity
 
     def _generate_conflict_resolution_suggestions(
-        self, conflict: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, conflict: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Generate suggestions for resolving a specific conflict."""
 
         local_value = conflict.get("local_value")
@@ -1281,7 +1278,7 @@ class HierarchicalDiffEngine:
         )
 
         # Sort by confidence (highest first)
-        def get_confidence(item: Dict[str, Any]) -> float:
+        def get_confidence(item: dict[str, Any]) -> float:
             confidence = item.get("confidence", 0.0)
             return float(confidence) if isinstance(confidence, (int, float)) else 0.0
 
@@ -1289,7 +1286,7 @@ class HierarchicalDiffEngine:
 
         return suggestions
 
-    def _calculate_diff_metadata(self, diff_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_diff_metadata(self, diff_result: dict[str, Any]) -> dict[str, Any]:
         """Calculate metadata for the diff result."""
 
         structural = diff_result.get("structural", {})
@@ -1318,7 +1315,7 @@ class HierarchicalDiffEngine:
         }
 
     def _calculate_change_depth(
-        self, modified_values: Dict[str, Any], current_depth: int = 0
+        self, modified_values: dict[str, Any], current_depth: int = 0
     ) -> int:
         """Calculate the maximum depth of changes."""
 
@@ -1333,7 +1330,7 @@ class HierarchicalDiffEngine:
 
         return max_depth
 
-    def _calculate_change_complexity(self, diff_result: Dict[str, Any]) -> float:
+    def _calculate_change_complexity(self, diff_result: dict[str, Any]) -> float:
         """Calculate a complexity score for the changes."""
 
         structural = diff_result.get("structural", {})
@@ -1359,7 +1356,7 @@ class HierarchicalDiffEngine:
         # Normalize to 0-1 scale (approximately)
         return min(1.0, total_complexity / 10.0)
 
-    def get_performance_statistics(self) -> Dict[str, Any]:
+    def get_performance_statistics(self) -> dict[str, Any]:
         """Get performance statistics for the diff engine."""
 
         if not self.performance_metrics:

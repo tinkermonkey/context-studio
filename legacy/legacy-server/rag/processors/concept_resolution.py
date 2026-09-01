@@ -6,26 +6,26 @@ This processor resolves unrecognized concepts through knowledge graph matching
 and strategic web search with rate limiting.
 """
 
-from typing import Dict, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-import numpy as np
 
+import numpy as np
 from database.sql_builders import build_max_similarity_case_when
+from embeddings.generate_embeddings import get_model
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from utils.logger import get_logger
+
 from rag.processors.models import (
-    ProcessorInput,
     ConceptResolutionOutput,
-    ResolvedConcept,
     GapConcept,
-    KGNode,
     KGContextOutput,
-    SpaCyGapOutput,
-    ResolutionMethod,
+    KGNode,
     LLMExtractionOutput,
+    ProcessorInput,
+    ResolutionMethod,
+    ResolvedConcept,
+    SpaCyGapOutput,
 )
 from rag.processors.web_search import RateLimitedWebSearchClient
-from embeddings.generate_embeddings import get_model
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -49,7 +49,7 @@ class ConceptResolutionProcessor:
     def __init__(
         self,
         db_session: Session,
-        web_search_client: Optional[RateLimitedWebSearchClient] = None,
+        web_search_client: RateLimitedWebSearchClient | None = None,
         similarity_threshold: float = 0.4,
     ):
         """
@@ -199,7 +199,7 @@ class ConceptResolutionProcessor:
 
     def _build_phrase_kg_map(
         self, kg_context: KGContextOutput, enable_trace: bool
-    ) -> Dict[str, tuple]:
+    ) -> dict[str, tuple]:
         """
         Build a mapping of phrase embeddings to their best-matching KG nodes from Layer 0.
 
@@ -275,10 +275,10 @@ class ConceptResolutionProcessor:
     def _try_phrase_match(
         self,
         gap: GapConcept,
-        phrase_kg_map: Dict[str, tuple],
+        phrase_kg_map: dict[str, tuple],
         kg_context: KGContextOutput,
-        resolution_trace: Optional[Dict],
-    ) -> Optional[ResolvedConcept]:
+        resolution_trace: dict | None,
+    ) -> ResolvedConcept | None:
         """
         Try to resolve gap by matching it to Layer 0 phrases using vector similarity.
 
@@ -384,8 +384,8 @@ class ConceptResolutionProcessor:
         return None
 
     def _try_full_kg(
-        self, gap: GapConcept, resolution_trace: Optional[Dict]
-    ) -> Optional[ResolvedConcept]:
+        self, gap: GapConcept, resolution_trace: dict | None
+    ) -> ResolvedConcept | None:
         """
         Try to resolve gap using full KG vector search with SQLite-vec.
 
@@ -497,14 +497,11 @@ class ConceptResolutionProcessor:
             return False
 
         # Check TF-IDF significance
-        if gap.tf_idf_score is not None and gap.tf_idf_score < 0.15:
-            return False
-
-        return True
+        return not (gap.tf_idf_score is not None and gap.tf_idf_score < 0.15)
 
     def _try_web_search(
-        self, gap: GapConcept, domain_context: str, resolution_trace: Optional[Dict]
-    ) -> Optional[ResolvedConcept]:
+        self, gap: GapConcept, domain_context: str, resolution_trace: dict | None
+    ) -> ResolvedConcept | None:
         """
         Try to resolve gap using web search.
 
@@ -577,8 +574,8 @@ class ConceptResolutionProcessor:
     def _calculate_confidence(
         self,
         method: ResolutionMethod,
-        similarity: Optional[float] = None,
-        snippet_length: Optional[int] = None,
+        similarity: float | None = None,
+        snippet_length: int | None = None,
     ) -> float:
         """
         Calculate confidence score based on resolution method and quality indicators.

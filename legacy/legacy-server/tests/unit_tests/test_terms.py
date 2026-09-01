@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import uuid
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -86,7 +86,7 @@ def test_term_duplicate_title_within_domain(shared_client):
 
 
 def test_term_invalid_domain_or_layer(shared_client):
-    layer_id, domain_id = create_layer_and_domain(shared_client)
+    _layer_id, _domain_id = create_layer_and_domain(shared_client)
     bad_uuid = str(uuid.uuid4())
     # Invalid parent node
     resp = shared_client.post(

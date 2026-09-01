@@ -6,19 +6,19 @@ This service handles incremental synchronization using partitioned queries, opti
 sync strategies, and parallel processing for enterprise-scale collaborative workflows.
 """
 
-import uuid
 import json
 import time
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-
+import uuid
 from dataclasses import dataclass
-from services.duckdb_service import DuckDBService
-from services.version_manager import VersionManager
-from services.version_manager import ChangeState
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from utils.logger import get_logger
+
+from services.duckdb_service import DuckDBService
+from services.version_manager import ChangeState, VersionManager
 
 logger = get_logger(__name__)
 
@@ -30,10 +30,10 @@ class SyncOperation:
     id: str
     operation_type: str
     started_at: datetime
-    completed_at: Optional[datetime]
+    completed_at: datetime | None
     entity_count: int
     sync_strategy: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 def row_to_sync_operation(row) -> SyncOperation:
@@ -57,7 +57,7 @@ class IncrementalSyncEngine:
         db: Session,
         duckdb_service: DuckDBService,
         version_manager: VersionManager,
-        s3_config: Dict[str, str],
+        s3_config: dict[str, str],
     ):
         """
         Initialize the incremental sync engine.
@@ -77,10 +77,10 @@ class IncrementalSyncEngine:
     def sync_incremental(
         self,
         since: datetime,
-        until: Optional[datetime] = None,
-        entity_types: Optional[List[str]] = None,
+        until: datetime | None = None,
+        entity_types: list[str] | None = None,
         sync_strategy: str = "auto",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform incremental sync for specified time range and entity types.
 
@@ -179,7 +179,7 @@ class IncrementalSyncEngine:
 
     def get_optimal_sync_strategy(
         self, target_entity_count: int, time_range_days: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Determine optimal sync strategy based on data volume.
 
@@ -220,7 +220,7 @@ class IncrementalSyncEngine:
             ),
         }
 
-    def get_sync_history(self, limit: int = 50) -> List[SyncOperation]:
+    def get_sync_history(self, limit: int = 50) -> list[SyncOperation]:
         """
         Get history of sync operations.
 
@@ -251,7 +251,7 @@ class IncrementalSyncEngine:
             logger.error(f"Failed to get sync history: {e}")
             return []
 
-    def get_sync_statistics(self, days: int = 30) -> Dict[str, Any]:
+    def get_sync_statistics(self, days: int = 30) -> dict[str, Any]:
         """
         Get sync operation statistics.
 
@@ -307,7 +307,7 @@ class IncrementalSyncEngine:
 
     def _generate_time_partitions(
         self, since: datetime, until: datetime
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Generate time-based partition queries for efficient S3 access."""
         logger.debug(f"Generating time partitions from {since} to {until}")
 
@@ -331,8 +331,8 @@ class IncrementalSyncEngine:
         return partitions
 
     def _sync_partitions_sequential(
-        self, partitions: List[Dict[str, Any]], entity_types: Optional[List[str]]
-    ) -> Dict[str, Any]:
+        self, partitions: list[dict[str, Any]], entity_types: list[str] | None
+    ) -> dict[str, Any]:
         """Sync partitions sequentially."""
         logger.debug(f"Syncing {len(partitions)} partitions sequentially")
 
@@ -367,8 +367,8 @@ class IncrementalSyncEngine:
         return results
 
     def _sync_partitions_parallel(
-        self, partitions: List[Dict[str, Any]], entity_types: Optional[List[str]]
-    ) -> Dict[str, Any]:
+        self, partitions: list[dict[str, Any]], entity_types: list[str] | None
+    ) -> dict[str, Any]:
         """Sync partitions in parallel (simplified implementation)."""
         logger.debug(f"Syncing {len(partitions)} partitions in parallel")
 
@@ -410,8 +410,8 @@ class IncrementalSyncEngine:
         return results
 
     def _sync_partition(
-        self, partition: Dict[str, Any], entity_types: Optional[List[str]]
-    ) -> Dict[str, Any]:
+        self, partition: dict[str, Any], entity_types: list[str] | None
+    ) -> dict[str, Any]:
         """Sync specific time partition."""
         logger.debug(f"Syncing partition for {partition['date']}")
 
@@ -446,7 +446,7 @@ class IncrementalSyncEngine:
                 return {"changes_count": 0, "new_entities": 0, "updated_entities": 0}
             raise
 
-    def _apply_changes_locally(self, changes_df) -> Dict[str, Any]:
+    def _apply_changes_locally(self, changes_df) -> dict[str, Any]:
         """Apply remote changes to local SQLite database."""
         logger.debug(f"Applying {len(changes_df)} changes locally")
 
@@ -573,8 +573,8 @@ class IncrementalSyncEngine:
     def _create_sync_operation(
         self,
         since: datetime,
-        until: Optional[datetime],
-        entity_types: Optional[List[str]],
+        until: datetime | None,
+        entity_types: list[str] | None,
     ) -> SyncOperation:
         """Create sync operation record."""
         operation = SyncOperation(
@@ -626,7 +626,7 @@ class IncrementalSyncEngine:
         self.db.commit()
 
     def _complete_sync_operation(
-        self, operation_id: str, results: Dict[str, Any]
+        self, operation_id: str, results: dict[str, Any]
     ) -> None:
         """Complete sync operation with results."""
         self.db.execute(
@@ -653,7 +653,7 @@ class IncrementalSyncEngine:
         self.db.commit()
 
     def _fail_sync_operation(
-        self, operation_id: str, errors: List[Dict[str, Any]]
+        self, operation_id: str, errors: list[dict[str, Any]]
     ) -> None:
         """Mark sync operation as failed."""
         self.db.execute(
@@ -670,7 +670,7 @@ class IncrementalSyncEngine:
         )
         self.db.commit()
 
-    def _get_empty_sync_stats(self) -> Dict[str, Any]:
+    def _get_empty_sync_stats(self) -> dict[str, Any]:
         """Return empty sync statistics."""
         return {
             "total_syncs": 0,
@@ -681,7 +681,7 @@ class IncrementalSyncEngine:
             "success_rate": 0,
         }
 
-    def get_sync_system_status(self) -> Dict[str, Any]:
+    def get_sync_system_status(self) -> dict[str, Any]:
         """
         Get current sync system status.
 
@@ -756,7 +756,7 @@ class IncrementalSyncEngine:
                 "sync_health_score": 1.0,
             }
 
-    def get_sync_performance_metrics(self, days: int = 7) -> Dict[str, Any]:
+    def get_sync_performance_metrics(self, days: int = 7) -> dict[str, Any]:
         """
         Get sync performance metrics.
 
@@ -817,7 +817,7 @@ class IncrementalSyncEngine:
                 },
             }
 
-    def get_sync_system_health(self) -> Dict[str, Any]:
+    def get_sync_system_health(self) -> dict[str, Any]:
         """
         Get sync system health status.
 

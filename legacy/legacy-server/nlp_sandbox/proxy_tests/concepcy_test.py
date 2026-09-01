@@ -4,10 +4,11 @@
 Simple test to verify concepCy requests can be made through a proxy.
 """
 
-import spacy
 import os
-import urllib3
 import ssl
+
+import spacy
+import urllib3
 
 # Set proxy BEFORE importing any libraries
 os.environ["HTTP_PROXY"] = "http://localhost:8080"

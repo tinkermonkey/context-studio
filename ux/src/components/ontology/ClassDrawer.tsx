@@ -47,9 +47,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const { data: schemesResponse } = useSchemes();
   const schemes = schemesResponse?.items || [];
   const { data: classesResponse } = useClasses();
-  const allClasses = classesResponse?.items || [];
   const { data: propertiesResponse } = useProperties();
-  const properties = propertiesResponse?.items || [];
   const {
     data: individualsResponse,
     error: individualsError,
@@ -105,6 +103,8 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     });
   };
 
+  const allClasses = useMemo(() => classesResponse?.items || [], [classesResponse]);
+  const properties = useMemo(() => propertiesResponse?.items || [], [propertiesResponse]);
   const classMap = useMemo(() => new Map(allClasses.map((c) => [c.id, c.title])), [allClasses]);
   const propertyMap = useMemo(() => new Map(properties.map((p) => [p.id, p.identifier])), [properties]);
 

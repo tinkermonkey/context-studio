@@ -5,31 +5,31 @@ These models replace the old "Predicate" terminology with "PropertyDefinition"
 while maintaining the same database structure.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PropertyDefinitionBase(BaseModel):
     """Base model for property definition fields."""
 
     title: str = Field(..., min_length=1, max_length=255)
-    definition: Optional[str] = None
-    mapping: Optional[dict] = None
+    definition: str | None = None
+    mapping: dict | None = None
 
 
 class PropertyDefinitionCreate(PropertyDefinitionBase):
     """Model for creating a new property definition."""
 
-    identifier: Optional[str] = None
+    identifier: str | None = None
 
 
 class PropertyDefinitionUpdate(BaseModel):
     """Model for updating a property definition."""
 
-    title: Optional[str] = None
-    definition: Optional[str] = None
-    mapping: Optional[dict] = None
-    identifier: Optional[str] = None
+    title: str | None = None
+    definition: str | None = None
+    mapping: dict | None = None
+    identifier: str | None = None
 
 
 class PropertyDefinitionOut(PropertyDefinitionBase):
@@ -46,7 +46,7 @@ class PropertyDefinitionOut(PropertyDefinitionBase):
 class PaginatedPropertyDefinitionsResponse(BaseModel):
     """Model for paginated property definitions response."""
 
-    data: List[PropertyDefinitionOut]
+    data: list[PropertyDefinitionOut]
     total: int
     skip: int
     limit: int

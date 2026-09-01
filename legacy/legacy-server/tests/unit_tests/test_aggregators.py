@@ -1,20 +1,19 @@
 """Unit tests for reference aggregators."""
 
-import sys
 import os
+import sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest  # noqa: E402
-
-from reference_api.aggregators import ResultAggregator  # noqa: E402
-from reference_api.models import (  # noqa: E402
-    SourceType,
-    SearchNode,
-    SearchLink,
+import pytest
+from reference_api.aggregators import ResultAggregator
+from reference_api.models import (
     MultiSourceSearchResponse,
+    SearchLink,
+    SearchNode,
+    SourceType,
 )
 
 

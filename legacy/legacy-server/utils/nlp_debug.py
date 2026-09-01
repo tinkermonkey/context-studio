@@ -1,14 +1,15 @@
 # mypy: ignore-errors
-import sys
-import os
 import json
+import os
+import sys
 
 # Disable proxy for debugging to avoid proxy conflicts
 use_proxy = False
 
 if use_proxy:
-    import urllib3
     import ssl
+
+    import urllib3
 
     # Set proxy BEFORE importing any libraries
     os.environ["HTTP_PROXY"] = "http://localhost:8080"
@@ -33,8 +34,8 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(f"Adding {parent_dir} to sys.path")
 sys.path.insert(0, parent_dir)
 
-from nlp.pipeline import get_pipeline  # noqa: E402
-from nlp.processors import process_nlp_result  # noqa: E402
+from nlp.pipeline import get_pipeline
+from nlp.processors import process_nlp_result
 
 
 def main():
@@ -49,15 +50,13 @@ def main():
     doc = pipeline(text)
     result = process_nlp_result(text, doc)
     # Convert Pydantic model to dict (use model_dump for Pydantic v2)
-    if hasattr(result, "model_dump"):
-        result_dict = result.model_dump()
-    elif hasattr(result, "dict"):
+    if hasattr(result, "model_dump") or hasattr(result, "dict"):
         result_dict = result.model_dump()
     else:
         result_dict = result
     logs_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
-    )  # noqa: E501
+    )
     os.makedirs(logs_dir, exist_ok=True)
     output_path = os.path.join(logs_dir, "debug.json")
     with open(output_path, "w") as f:
