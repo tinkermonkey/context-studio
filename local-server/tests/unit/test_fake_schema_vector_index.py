@@ -45,6 +45,7 @@ class TestFakeSchemaVectorIndexConfigurable:
                 score=0.95,
                 matched_field="title",
                 external_id="technology.node",
+                identifier="node",
             ),
             SchemaMatch(
                 entity_id="class_2",
@@ -53,6 +54,7 @@ class TestFakeSchemaVectorIndexConfigurable:
                 score=0.85,
                 matched_field="title",
                 external_id="technology.technology",
+                identifier="technology",
             ),
             SchemaMatch(
                 entity_id="prop_1",
@@ -61,6 +63,7 @@ class TestFakeSchemaVectorIndexConfigurable:
                 score=0.90,
                 matched_field="definition",
                 external_id="technology.navigates_to",
+                identifier="navigates_to",
                 predicate="navigates-to",
             ),
         ]

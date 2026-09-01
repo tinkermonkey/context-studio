@@ -176,6 +176,7 @@ class SqliteSchemaVectorIndex:
                     OntologyEntity.title_embedding,
                     OntologyEntity.definition_embedding,
                     OntologyEntity.external_references,
+                    OntologyEntity.identifier,
                     OntologyEntity.canonical_predicate,
                 ).filter(
                     OntologyEntity.node_type.in_(entity_kinds),
@@ -189,6 +190,7 @@ class SqliteSchemaVectorIndex:
                     title_blob,
                     def_blob,
                     ext_refs,
+                    identifier,
                     canonical_predicate,
                 ) in entity_query.all():
                     match = self._build_match(
@@ -200,6 +202,7 @@ class SqliteSchemaVectorIndex:
                         def_blob,
                         threshold,
                         ext_refs,
+                        identifier,
                         canonical_predicate,
                     )
                     if match is not None:
@@ -215,6 +218,7 @@ class SqliteSchemaVectorIndex:
                         OntologyEntity.title_embedding,
                         OntologyEntity.definition_embedding,
                         OntologyEntity.external_references,
+                        OntologyEntity.identifier,
                         OntologyEntity.canonical_predicate,
                     )
                     .join(
@@ -230,6 +234,7 @@ class SqliteSchemaVectorIndex:
                     title_blob,
                     def_blob,
                     ext_refs,
+                    identifier,
                     canonical_predicate,
                 ) in relationship_query.all():
                     match = self._build_match(
@@ -241,6 +246,7 @@ class SqliteSchemaVectorIndex:
                         def_blob,
                         threshold,
                         ext_refs,
+                        identifier,
                         canonical_predicate,
                     )
                     if match is not None:
@@ -281,6 +287,7 @@ class SqliteSchemaVectorIndex:
         def_blob: bytes | None,
         threshold: float,
         external_references: list | None = None,
+        identifier: str | None = None,
         canonical_predicate: str | None = None,
     ) -> SchemaMatch | None:
         """Score one candidate's best field; None if below threshold or unembedded."""
@@ -297,6 +304,7 @@ class SqliteSchemaVectorIndex:
             score=score,
             matched_field=matched_field,
             external_id=_first_external_identifier(external_references),
+            identifier=identifier,
             predicate=canonical_predicate,
         )
 

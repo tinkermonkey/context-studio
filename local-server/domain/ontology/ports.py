@@ -680,6 +680,9 @@ class SchemaMatch:
             node id "motivation.goal"), or None if the entity has no external
             reference. Lets grounding emit the identifier the source ontology
             uses rather than only the human-readable title.
+        identifier: The entity's machine-readable identifier (e.g. "web_server"),
+            or None. Used as fallback when external_id is None to ensure catalog
+            refs match the canonical class reference vocabulary.
         predicate: For a property_definition/relationship match, the bare
             relation verb (e.g. "navigates-to") — the canonical predicate token
             the ground truth uses, distinct from `external_id` (a dotted
@@ -700,6 +703,7 @@ class SchemaMatch:
     score: float
     matched_field: MatchedField
     external_id: str | None = None
+    identifier: str | None = None
     predicate: str | None = None
 
     def __post_init__(self) -> None:

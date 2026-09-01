@@ -79,23 +79,24 @@ _TYPE_PREDICATE_LABELS = frozenset(
 # the full-catalog cap (_MAX_CATALOG_CLASSES = 300, used as fallback). When
 # retrieval yields more than this count, the top-K are used; retrieval's top-k
 # is independently configurable.
-_RELEVANT_CATALOG_TOP_K = 50
+_CATALOG_RETRIEVAL_TOP_K = 50
 
 # Search score threshold: minimum similarity score for a class to be included in
-# retrieval results. Set to 0.0 to accept all results from the vector index.
-_RELEVANT_CATALOG_THRESHOLD = 0.0
+# retrieval results. Set to 0.10 to filter classes with near-zero semantic
+# similarity while allowing weak matches through (top-K is the primary limiter).
+_CATALOG_RETRIEVAL_THRESHOLD = 0.10
 
 # Minimum number of results the retrieval must produce to be accepted; below this,
 # fallback to the full catalog. Retrieval on tiny ontologies or poor query/embedding
 # matches may yield empty or near-empty result sets; a minimum threshold guards
 # against prompting with a near-empty catalog when the full catalog is available.
-_RELEVANT_CATALOG_MIN_RESULTS = 5
+_CATALOG_RETRIEVAL_MIN_RESULTS = 5
 
 # Small-ontology skip threshold: if a taxonomy's total class count is at or below
 # this, retrieval is skipped entirely (no embed/search call is made) and the full
 # catalog is returned directly. Retrieval introduces latency; on small ontologies,
 # the full catalog is already bounded and there is no efficiency gain.
-_RELEVANT_CATALOG_SKIP_THRESHOLD = 50
+_CATALOG_RETRIEVAL_SKIP_THRESHOLD = 50
 
 
 def _canonical_class_ref(cls) -> str:
@@ -196,9 +197,10 @@ class ExtractionService:
                 Defaults to 0.85. Entities with normalized label similarity >= this value
                 are considered duplicates.
             schema_index: Optional vector index over ontology class/predicate
-                titles + definitions. Required by the ``nlp_grounded`` extraction
-                mode (used to retrieve candidate classes for extracted noun
-                chunks); unused by ``llm_two_pass``.
+                titles + definitions. Used by the ``llm_two_pass`` extraction
+                mode (to retrieve semantically relevant classes for pass-1 grounding
+                via ``_relevant_class_catalog``) and required by the ``nlp_grounded``
+                mode (to retrieve candidate classes for extracted noun chunks).
             extraction_mode: Which triple-extraction pipeline ``extract_triples``
                 runs — ``"llm_two_pass"`` (the LLM identifies+types then relates)
                 or ``"nlp_grounded"`` (spaCy extracts noun chunks, the vector
@@ -655,10 +657,10 @@ class ExtractionService:
         2. Taxonomy at/below skip threshold: returns full catalog (no embed/search call)
         3. Embedding the source text raises an exception: returns full catalog
         4. Search raises an exception: returns full catalog
-        5. Returned results below minimum threshold: returns full catalog
+        5. Returned results below minimum threshold (after deduplication): returns full catalog
 
         Retrieved results are then deduplicated by class reference and capped at
-        _RELEVANT_CATALOG_TOP_K. Preserves the `_ontology_class_catalog` behavior:
+        _CATALOG_RETRIEVAL_TOP_K. Preserves the `_ontology_class_catalog` behavior:
         canonicalized class refs matched with titles, pooled across concept schemes,
         but now subset by semantic relevance. The full catalog remains unchanged and
         is used as both fallback and for downstream canonicalization
@@ -690,7 +692,7 @@ class ExtractionService:
             )
 
         # Skip retrieval on small ontologies: return full catalog directly
-        if total_class_count <= _RELEVANT_CATALOG_SKIP_THRESHOLD:
+        if total_class_count <= _CATALOG_RETRIEVAL_SKIP_THRESHOLD:
             return self._ontology_class_catalog(ontology)
 
         # Embed the source text
@@ -707,8 +709,8 @@ class ExtractionService:
             matches = self._schema_index.search(
                 embedding,
                 kinds=["class"],
-                top_k=_RELEVANT_CATALOG_TOP_K,
-                threshold=_RELEVANT_CATALOG_THRESHOLD,
+                top_k=_CATALOG_RETRIEVAL_TOP_K,
+                threshold=_CATALOG_RETRIEVAL_THRESHOLD,
                 taxonomy_id=str(taxonomy_id),
             )
         except Exception as exc:
@@ -717,24 +719,25 @@ class ExtractionService:
             )
             return self._ontology_class_catalog(ontology)
 
-        # Enforce minimum results threshold; below it, fallback to full catalog
-        if len(matches) < _RELEVANT_CATALOG_MIN_RESULTS:
-            _logger.debug(
-                f"Retrieved only {len(matches)} classes (below minimum "
-                f"{_RELEVANT_CATALOG_MIN_RESULTS}); falling back to full catalog"
-            )
-            return self._ontology_class_catalog(ontology)
-
-        # Convert SchemaMatch objects to (class_ref, title) tuples, deduplicating refs
+        # Convert SchemaMatch objects to (class_ref, title) tuples, deduplicating refs.
+        # Use external_id (e.g., DR spec node id) if available, else identifier (e.g.,
+        # "web_server"), else empty string. This matches _canonical_class_ref behavior.
         catalog: list[tuple[str, str]] = []
         seen_refs: set[str] = set()
         for match in matches:
-            # Use external_id (e.g., DR spec node id) if available, else label
-            class_ref = match.external_id or match.label
+            class_ref = match.external_id or match.identifier or ""
             if not class_ref or class_ref in seen_refs:
                 continue
             seen_refs.add(class_ref)
             catalog.append((class_ref, match.label or class_ref))
+
+        # Enforce minimum results threshold after deduplication; below it, fallback
+        if len(catalog) < _CATALOG_RETRIEVAL_MIN_RESULTS:
+            _logger.debug(
+                f"Retrieved only {len(catalog)} unique classes after deduplication "
+                f"(below minimum {_CATALOG_RETRIEVAL_MIN_RESULTS}); falling back to full catalog"
+            )
+            return self._ontology_class_catalog(ontology)
 
         return catalog
 

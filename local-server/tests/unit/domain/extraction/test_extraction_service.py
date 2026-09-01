@@ -669,6 +669,7 @@ class _OneMatchIndex:
             SchemaMatch(
                 entity_id="cls-1", kind="class", label="System Software", score=0.5,
                 matched_field="definition", external_id="technology.systemsoftware",
+                identifier="systemsoftware",
             )
         ]
 

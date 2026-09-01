@@ -173,6 +173,7 @@ class TestRelevantClassCatalog:
                 score=0.9 - (i * 0.1),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(3)
         ]
@@ -199,6 +200,7 @@ class TestRelevantClassCatalog:
                 score=0.95 - (idx * 0.01),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for idx, i in enumerate(retrieved_indices)
         ]
@@ -213,10 +215,12 @@ class TestRelevantClassCatalog:
             assert f"external.{i}" in refs
 
     def test_deduplicates_class_references(self, service, ontology_repo, schema_index):
-        """Deduplicates retrieved classes by reference."""
+        """Deduplicates retrieved classes by reference; falls back if post-dedup count too low."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
-        # Configure schema index with duplicate references (same external_id, different titles)
+        # Configure schema index with enough matches (10) to pass minimum before dedup,
+        # and 8 unique refs after dedup (passes 5-item minimum after dedup).
+        # Test shows that dedup happens and minimum check runs on deduplicated result.
         matches = [
             SchemaMatch(
                 entity_id="class_1",
@@ -225,14 +229,16 @@ class TestRelevantClassCatalog:
                 score=0.95,
                 matched_field="title",
                 external_id="external.1",
+                identifier="ref_1",
             ),
             SchemaMatch(
                 entity_id="class_2",
                 kind="class",
-                label="Class Uno",  # Different title, same external_id
+                label="Class Uno",  # Same external_id, different title
                 score=0.94,
                 matched_field="title",
-                external_id="external.1",  # Duplicate reference!
+                external_id="external.1",  # Duplicate — will be filtered
+                identifier="ref_2",
             ),
             SchemaMatch(
                 entity_id="class_3",
@@ -241,6 +247,7 @@ class TestRelevantClassCatalog:
                 score=0.93,
                 matched_field="title",
                 external_id="external.3",
+                identifier="ref_3",
             ),
             SchemaMatch(
                 entity_id="class_4",
@@ -249,6 +256,7 @@ class TestRelevantClassCatalog:
                 score=0.92,
                 matched_field="title",
                 external_id="external.4",
+                identifier="ref_4",
             ),
             SchemaMatch(
                 entity_id="class_5",
@@ -257,22 +265,53 @@ class TestRelevantClassCatalog:
                 score=0.91,
                 matched_field="title",
                 external_id="external.5",
+                identifier="ref_5",
+            ),
+            SchemaMatch(
+                entity_id="class_6",
+                kind="class",
+                label="Class Six",
+                score=0.90,
+                matched_field="title",
+                external_id="external.6",
+                identifier="ref_6",
+            ),
+            SchemaMatch(
+                entity_id="class_7",
+                kind="class",
+                label="Class Seven",
+                score=0.89,
+                matched_field="title",
+                external_id="external.7",
+                identifier="ref_7",
+            ),
+            SchemaMatch(
+                entity_id="class_8",
+                kind="class",
+                label="Class Eight",
+                score=0.88,
+                matched_field="title",
+                external_id="external.8",
+                identifier="ref_8",
             ),
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
         result = service._relevant_class_catalog("test text", taxonomy)
 
-        # Should have 4 unique references (external.1 is deduplicated)
-        assert len(result) == 4
+        # Should have 7 unique references (external.1 is deduplicated, so 8-1=7 remain)
+        assert len(result) == 7
         refs = [ref for ref, _ in result]
         assert refs.count("external.1") == 1
         assert "external.3" in refs
         assert "external.4" in refs
         assert "external.5" in refs
+        assert "external.6" in refs
+        assert "external.7" in refs
+        assert "external.8" in refs
 
     def test_respects_relevant_catalog_top_k_limit(self, service, ontology_repo, schema_index):
-        """Caps retrieved classes at _RELEVANT_CATALOG_TOP_K."""
+        """Caps retrieved classes at _CATALOG_RETRIEVAL_TOP_K."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 200)
 
         # Configure schema index to return 100 results (more than top_k of 50)
@@ -284,6 +323,7 @@ class TestRelevantClassCatalog:
                 score=0.99 - (i * 0.001),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(100)
         ]
@@ -291,7 +331,7 @@ class TestRelevantClassCatalog:
 
         result = service._relevant_class_catalog("test text", taxonomy)
 
-        # Should return only top 50 (the _RELEVANT_CATALOG_TOP_K limit)
+        # Should return only top 50 (the _CATALOG_RETRIEVAL_TOP_K limit)
         assert len(result) <= 50
 
     def test_scopes_search_strictly_to_taxonomy(self, service, ontology_repo, schema_index):
@@ -308,6 +348,7 @@ class TestRelevantClassCatalog:
                 score=0.95 - (i * 0.01),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(6)
         ]
@@ -320,6 +361,7 @@ class TestRelevantClassCatalog:
                 score=0.98 - (i * 0.01),
                 matched_field="title",
                 external_id=f"external.other.{i}",
+                identifier=f"ref_other_{i}",
             )
             for i in range(10)
         ]
@@ -355,6 +397,7 @@ class TestRelevantClassCatalog:
                 score=0.95 - (i * 0.01),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(10)
         ]
@@ -378,6 +421,7 @@ class TestRelevantClassCatalog:
                 score=0.95 - (i * 0.01),
                 matched_field="title",
                 external_id=f"external.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(10)
         ]
@@ -395,10 +439,10 @@ class TestRelevantClassCatalog:
             assert len(title) > 0
 
     def test_uses_external_id_as_ref_when_available(self, service, ontology_repo, schema_index):
-        """Prefers external_id over label as class reference."""
+        """Prefers external_id, then identifier, over label as class reference."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
-        # Some matches with external_id, some without
+        # Some matches with external_id, some without; all with identifier as fallback
         matches = [
             SchemaMatch(
                 entity_id="class_1",
@@ -407,6 +451,7 @@ class TestRelevantClassCatalog:
                 score=0.95,
                 matched_field="title",
                 external_id="tech.component",  # Should use this
+                identifier="ref_1",
             ),
             SchemaMatch(
                 entity_id="class_2",
@@ -414,7 +459,8 @@ class TestRelevantClassCatalog:
                 label="Second Class",
                 score=0.94,
                 matched_field="title",
-                external_id=None,  # Should use label
+                external_id=None,  # Should use identifier
+                identifier="ref_2",
             ),
             SchemaMatch(
                 entity_id="class_3",
@@ -423,6 +469,7 @@ class TestRelevantClassCatalog:
                 score=0.93,
                 matched_field="title",
                 external_id="proc.activity",  # Should use this
+                identifier="ref_3",
             ),
             SchemaMatch(
                 entity_id="class_4",
@@ -431,6 +478,7 @@ class TestRelevantClassCatalog:
                 score=0.92,
                 matched_field="title",
                 external_id="org.unit",  # Should use this
+                identifier="ref_4",
             ),
             SchemaMatch(
                 entity_id="class_5",
@@ -438,7 +486,8 @@ class TestRelevantClassCatalog:
                 label="Fifth Class",
                 score=0.91,
                 matched_field="title",
-                external_id=None,  # Should use label
+                external_id=None,  # Should use identifier
+                identifier="ref_5",
             ),
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
@@ -447,10 +496,10 @@ class TestRelevantClassCatalog:
 
         refs = [ref for ref, _ in result]
         assert "tech.component" in refs
-        assert "Second Class" in refs  # Label used when no external_id
+        assert "ref_2" in refs  # Identifier used when no external_id
         assert "proc.activity" in refs
         assert "org.unit" in refs
-        assert "Fifth Class" in refs  # Label used when no external_id
+        assert "ref_5" in refs  # Identifier used when no external_id
 
     def test_multiple_schemes_in_taxonomy(self, service, ontology_repo, schema_index):
         """Handles taxonomies with multiple concept schemes."""
@@ -488,6 +537,7 @@ class TestRelevantClassCatalog:
                 score=0.95 - (i * 0.001),
                 matched_field="title",
                 external_id=f"external.1.{i}",
+                identifier=f"ref_{i}",
             )
             for i in range(6)
         ] + [
@@ -498,6 +548,7 @@ class TestRelevantClassCatalog:
                 score=0.94 - (i * 0.001),
                 matched_field="title",
                 external_id=f"external.2.{i}",
+                identifier=f"ref_2_{i}",
             )
             for i in range(4)
         ]
@@ -510,3 +561,36 @@ class TestRelevantClassCatalog:
         refs = [ref for ref, _ in result]
         assert any("external.1" in ref for ref in refs)
         assert any("external.2" in ref for ref in refs)
+
+    def test_fallback_when_post_dedup_count_below_minimum(
+        self, service, ontology_repo, schema_index
+    ):
+        """Post-dedup count below minimum triggers fallback (issue #1138 fix)."""
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
+
+        # Configure schema index to return 6 matches that deduplicate to only 1 unique ref
+        # (below the minimum of 5). The old code would NOT fall back because it checked
+        # the count before dedup (6 >= 5). The new code correctly checks after dedup
+        # (1 < 5) and falls back to full catalog.
+        matches = [
+            SchemaMatch(
+                entity_id=f"dup_class_{i}",
+                kind="class",
+                label=f"Duplicate Class {i}",
+                score=0.95 - (i * 0.01),
+                matched_field="title",
+                external_id="technology.duplicate",  # All 6 have same external_id!
+                identifier=f"duplicate_{i}",
+            )
+            for i in range(6)
+        ]
+        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
+
+        result = service._relevant_class_catalog("test text", taxonomy)
+
+        # Should return full catalog (100 items), not the deduplicated 1 retrieval result
+        assert len(result) == 100
+        # Verify it's the full catalog by checking an entity not in the retrieval result
+        refs = [ref for ref, _ in result]
+        # Check that full catalog classes are included
+        assert any("external.0" in ref or "external." in ref for ref in refs)

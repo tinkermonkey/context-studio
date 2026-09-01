@@ -352,6 +352,7 @@ class _StubSchemaIndex:
                 score=0.9,
                 matched_field="title",
                 external_id="application.consensus-algorithm",
+                identifier="consensus_algorithm",
             )
         ]
 
@@ -442,6 +443,7 @@ class _SelectiveSchemaIndex:
                     score=0.9,
                     matched_field="title",
                     external_id="application.consensus-algorithm",
+                    identifier="consensus_algorithm",
                 )
             ]
         return []
@@ -500,6 +502,7 @@ class _StubPredicateIndex:
                 score=0.9,
                 matched_field="title",
                 external_id="a.b.c",
+                identifier="abc",
                 predicate=self._mapping[phrase],
             )
         ]
