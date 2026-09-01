@@ -74,6 +74,25 @@ _TYPE_PREDICATE_LABELS = frozenset(
     {"is a", "is_a", "isa", "type", "rdf type", "instance of", "subclass of"}
 )
 
+# Retrieval-based class catalog bounds (phase 1138 pass-1 retrieval)
+# Maximum number of retrieved classes to inject into pass-1 prompt; distinct from
+# the full-catalog cap (_MAX_CATALOG_CLASSES = 300, used as fallback). When
+# retrieval yields more than this count, the top-K are used; retrieval's top-k
+# is independently configurable.
+_RELEVANT_CATALOG_TOP_K = 50
+
+# Minimum number of results the retrieval must produce to be accepted; below this,
+# fallback to the full catalog. Retrieval on tiny ontologies or poor query/embedding
+# matches may yield empty or near-empty result sets; a minimum threshold guards
+# against prompting with a near-empty catalog when the full catalog is available.
+_RELEVANT_CATALOG_MIN_RESULTS = 5
+
+# Small-ontology skip threshold: if a taxonomy's total class count is at or below
+# this, retrieval is skipped entirely (no embed/search call is made) and the full
+# catalog is returned directly. Retrieval introduces latency; on small ontologies,
+# the full catalog is already bounded and there is no efficiency gain.
+_RELEVANT_CATALOG_SKIP_THRESHOLD = 50
+
 
 def _canonical_class_ref(cls) -> str:
     """
@@ -617,6 +636,100 @@ class ExtractionService:
                 catalog.append((class_ref, cls.title or class_ref))
                 if len(catalog) >= _MAX_CATALOG_CLASSES:
                     return catalog
+        return catalog
+
+    def _relevant_class_catalog(self, text: str, ontology) -> list[tuple[str, str]]:
+        """
+        Retrieve semantically relevant classes from the ontology's catalog, with fallback.
+
+        Uses the vector index to embed the source text and retrieve ontology classes
+        whose title/definition embeddings match that text's semantic content, scoped
+        strictly to the taxonomy associated with the extraction request. Implements
+        graceful degradation across multiple fallback scenarios:
+
+        1. Index not configured (`schema_index is None`): returns full catalog
+        2. Taxonomy at/below skip threshold: returns full catalog (no embed/search call)
+        3. Search raises an exception: returns full catalog
+        4. Returned results below minimum threshold: returns full catalog
+        5. Deduplicates class references and caps at _RELEVANT_CATALOG_TOP_K
+
+        Preserves the `_ontology_class_catalog` behavior: canonicalized class refs
+        matched with titles, pooled across concept schemes, but now subset by semantic
+        relevance. The full catalog remains unchanged and is used as both fallback
+        and for downstream canonicalization (`_canonicalize_triples_against_ontology`).
+
+        Args:
+            text: Source text to embed and query against
+            ontology: The target ontology for scoping
+
+        Returns:
+            List of (class_ref, title) tuples, same shape as _ontology_class_catalog
+        """
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            return []
+
+        # Vector index is not available: fall back to full catalog
+        if self._schema_index is None:
+            return self._ontology_class_catalog(ontology)
+
+        # Count the total classes in the taxonomy for skip-threshold check
+        total_class_count = 0
+        schemes = self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(taxonomy_id), limit=None
+        )
+        for scheme in schemes:
+            total_class_count += self._ontology_repo.count_classes(
+                concept_scheme_id=scheme.id
+            )
+
+        # Skip retrieval on small ontologies: return full catalog directly
+        if total_class_count <= _RELEVANT_CATALOG_SKIP_THRESHOLD:
+            return self._ontology_class_catalog(ontology)
+
+        # Embed the source text
+        try:
+            embedding = self._embedding_service.embed(text)
+        except Exception as exc:
+            _logger.warning(
+                f"Failed to embed text for class retrieval: {exc}; falling back to full catalog"
+            )
+            return self._ontology_class_catalog(ontology)
+
+        # Query the schema vector index for relevant classes
+        try:
+            matches = self._schema_index.search(
+                embedding,
+                kinds=["class"],
+                top_k=_RELEVANT_CATALOG_TOP_K,
+                threshold=0.0,
+                taxonomy_id=str(taxonomy_id),
+            )
+        except Exception as exc:
+            _logger.warning(
+                f"Schema index search failed: {exc}; falling back to full catalog"
+            )
+            return self._ontology_class_catalog(ontology)
+
+        # Enforce minimum results threshold; below it, fallback to full catalog
+        if len(matches) < _RELEVANT_CATALOG_MIN_RESULTS:
+            _logger.debug(
+                f"Retrieved only {len(matches)} classes (below minimum {_RELEVANT_CATALOG_MIN_RESULTS}); "
+                "falling back to full catalog"
+            )
+            return self._ontology_class_catalog(ontology)
+
+        # Convert SchemaMatch objects to (class_ref, title) tuples, deduplicating refs
+        catalog: list[tuple[str, str]] = []
+        seen_refs: set[str] = set()
+        for match in matches:
+            # Use external_id (e.g., DR spec node id) if available, else label
+            class_ref = match.external_id or match.label
+            if not class_ref or class_ref in seen_refs:
+                continue
+            seen_refs.add(class_ref)
+            catalog.append((class_ref, match.label or class_ref))
+
         return catalog
 
     def _extract_triples_two_pass(
@@ -1210,7 +1323,7 @@ individuals in this step.
 
 Return only valid JSON. If no individuals can be extracted, return {"triples": []}."""
 
-        catalog = self._ontology_class_catalog(ontology)
+        catalog = self._relevant_class_catalog(text, ontology)
         ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
 
         if catalog:
