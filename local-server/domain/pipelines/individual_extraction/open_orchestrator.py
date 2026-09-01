@@ -564,7 +564,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                         "subject": {"label": label, "kind": "individual"},
                         "predicate": {"label": "is_a", "kind": "property"},
                         "object": {
-                            "label": match.external_id or match.label,
+                            "label": match.external_id or match.identifier or match.label,
                             "kind": "class",
                         },
                         "confidence": round(match.score, 4),
