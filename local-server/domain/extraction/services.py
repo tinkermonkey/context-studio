@@ -74,12 +74,16 @@ _TYPE_PREDICATE_LABELS = frozenset(
     {"is a", "is_a", "isa", "type", "rdf type", "instance of", "subclass of"}
 )
 
-# Retrieval-based class catalog bounds (phase 1138 pass-1 retrieval)
+# Retrieval-based class catalog bounds for pass-1 individual extraction
 # Maximum number of retrieved classes to inject into pass-1 prompt; distinct from
 # the full-catalog cap (_MAX_CATALOG_CLASSES = 300, used as fallback). When
 # retrieval yields more than this count, the top-K are used; retrieval's top-k
 # is independently configurable.
 _RELEVANT_CATALOG_TOP_K = 50
+
+# Search score threshold: minimum similarity score for a class to be included in
+# retrieval results. Set to 0.0 to accept all results from the vector index.
+_RELEVANT_CATALOG_THRESHOLD = 0.0
 
 # Minimum number of results the retrieval must produce to be accepted; below this,
 # fallback to the full catalog. Retrieval on tiny ontologies or poor query/embedding
@@ -649,14 +653,16 @@ class ExtractionService:
 
         1. Index not configured (`schema_index is None`): returns full catalog
         2. Taxonomy at/below skip threshold: returns full catalog (no embed/search call)
-        3. Search raises an exception: returns full catalog
-        4. Returned results below minimum threshold: returns full catalog
-        5. Deduplicates class references and caps at _RELEVANT_CATALOG_TOP_K
+        3. Embedding the source text raises an exception: returns full catalog
+        4. Search raises an exception: returns full catalog
+        5. Returned results below minimum threshold: returns full catalog
 
-        Preserves the `_ontology_class_catalog` behavior: canonicalized class refs
-        matched with titles, pooled across concept schemes, but now subset by semantic
-        relevance. The full catalog remains unchanged and is used as both fallback
-        and for downstream canonicalization (`_canonicalize_triples_against_ontology`).
+        Retrieved results are then deduplicated by class reference and capped at
+        _RELEVANT_CATALOG_TOP_K. Preserves the `_ontology_class_catalog` behavior:
+        canonicalized class refs matched with titles, pooled across concept schemes,
+        but now subset by semantic relevance. The full catalog remains unchanged and
+        is used as both fallback and for downstream canonicalization
+        (`_canonicalize_triples_against_ontology`).
 
         Args:
             text: Source text to embed and query against
@@ -702,7 +708,7 @@ class ExtractionService:
                 embedding,
                 kinds=["class"],
                 top_k=_RELEVANT_CATALOG_TOP_K,
-                threshold=0.0,
+                threshold=_RELEVANT_CATALOG_THRESHOLD,
                 taxonomy_id=str(taxonomy_id),
             )
         except Exception as exc:
@@ -1278,14 +1284,15 @@ class ExtractionService:
         """
         Build the pass-1 prompt: identify and ground individuals only (design doc §7).
 
-        The user prompt is grounded, RAG-style, in the ontology's class catalog
-        (`_ontology_class_catalog`): the classes the taxonomy defines are listed
+        The user prompt is grounded, RAG-style, in a retrieval-based class catalog
+        (`_relevant_class_catalog`): semantically relevant classes are retrieved and listed
         so the model types each extracted individual with an ``is_a`` triple
         whose object is a real class reference, instead of trusting the model to
-        guess the ontology's vocabulary. When the ontology exposes no classes the
-        catalog block is omitted and the prompt degrades to a plain extraction
-        instruction. Relationships between individuals are deliberately NOT
-        requested here — they are the job of the second pass.
+        guess the ontology's vocabulary. Retrieval falls back to the full catalog
+        gracefully (vector index unavailable, embedding failed, too few results, etc.).
+        When the ontology exposes no classes the catalog block is omitted and the prompt
+        degrades to a plain extraction instruction. Relationships between individuals
+        are deliberately NOT requested here — they are the job of the second pass.
 
         Args:
             text: Source text to extract from

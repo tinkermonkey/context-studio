@@ -1,147 +1,23 @@
 """
-Unit tests for ExtractionService._relevant_class_catalog (phase 1138 pass-1 retrieval).
+Unit tests for ExtractionService._relevant_class_catalog.
 
 Tests the retrieval-based class catalog with fallback guards, embedding, vector
 search, and deduplication logic. Uses FakeSchemaVectorIndex and FakeEmbeddingService
 to avoid real embeddings or database operations.
 """
 
-from dataclasses import dataclass
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
-from domain.ontology.ports import SchemaKind, SchemaMatch
-
-
-@dataclass
-class MockClass:
-    """Mock class entity for testing."""
-    id: str
-    title: str
-    external_references: list | None = None
-
-    def __init__(self, id: str, title: str, external_id: str | None = None):
-        self.id = id
-        self.title = title
-        self.identifier = id.replace("class_", "")
-        self.external_references = []
-        if external_id:
-            mock_ref = Mock()
-            mock_ref.identifier = external_id
-            self.external_references.append(mock_ref)
-
-
-@dataclass
-class MockScheme:
-    """Mock concept scheme for testing."""
-    id: str
-    taxonomy_id: str | None = None
-
-
-@dataclass
-class MockTaxonomy:
-    """Mock taxonomy for testing."""
-    id: str
-    title: str
-
-
-class FakeOntologyRepository:
-    """Fake ontology repository for testing."""
-
-    def __init__(self):
-        self.classes_by_scheme: dict[str, list[MockClass]] = {}
-        self.schemes: list[MockScheme] = []
-        self.class_counts: dict[str, int] = {}
-
-    def add_scheme(self, scheme_id: str, taxonomy_id: str | None = None):
-        scheme = MockScheme(id=scheme_id, taxonomy_id=taxonomy_id)
-        self.schemes.append(scheme)
-        self.classes_by_scheme[scheme_id] = []
-
-    def add_class_to_scheme(self, scheme_id: str, class_id: str, title: str, external_id: str | None = None):
-        cls = MockClass(id=class_id, title=title, external_id=external_id)
-        self.classes_by_scheme[scheme_id].append(cls)
-
-    def set_class_count(self, scheme_id: str, count: int):
-        self.class_counts[scheme_id] = count
-
-    def list_concept_schemes(self, taxonomy_id: str | None = None, **kwargs):
-        return [s for s in self.schemes if taxonomy_id is None or s.taxonomy_id == taxonomy_id]
-
-    def list_classes(self, concept_scheme_id: str | None = None, **kwargs):
-        return self.classes_by_scheme.get(concept_scheme_id, [])
-
-    def count_classes(self, concept_scheme_id: str | None = None, **kwargs):
-        return self.class_counts.get(concept_scheme_id, len(self.classes_by_scheme.get(concept_scheme_id, [])))
-
-    def get_class(self, class_id: str):
-        for classes in self.classes_by_scheme.values():
-            for cls in classes:
-                if cls.id == class_id:
-                    return cls
-        return None
-
-
-class FakeEmbeddingService:
-    """Fake embedding service that returns predictable embeddings."""
-
-    def __init__(self):
-        self.embeddings: dict[str, list[float]] = {}
-        self.embed_calls = []
-
-    def set_embedding(self, text: str, embedding: list[float]):
-        self.embeddings[text] = embedding
-
-    def embed(self, text: str) -> list[float]:
-        self.embed_calls.append(text)
-        return self.embeddings.get(text, [0.0] * 384)
-
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        return [self.embed(text) for text in texts]
-
-    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
-        return 0.95
-
-
-class FakeSchemaVectorIndex:
-    """Fake schema vector index for testing."""
-
-    def __init__(self):
-        self.search_results: list[tuple[SchemaMatch, str | None]] = []
-
-    def index_entity(self, entity_id: str, title: str, description: str | None = None):
-        pass
-
-    def set_search_results(self, results: list[SchemaMatch], taxonomies: dict[str, str | None] | None = None):
-        if taxonomies is None:
-            taxonomies = {match.entity_id: None for match in results}
-        self.search_results = [(match, taxonomies.get(match.entity_id)) for match in results]
-
-    def search(
-        self,
-        query_embedding,
-        kinds: list[SchemaKind],
-        top_k: int = 20,
-        threshold: float = 0.0,
-        taxonomy_id: str | None = None,
-    ) -> list[SchemaMatch]:
-        filtered = []
-        for match, match_taxonomy_id in self.search_results:
-            if match.kind not in kinds:
-                continue
-            if taxonomy_id is not None and match_taxonomy_id != taxonomy_id:
-                continue
-            filtered.append(match)
-        return filtered[:top_k]
-
-
-class MockEventPublisher:
-    """Mock event publisher."""
-    def publish(self, event):
-        return []
+from domain.ontology.ports import SchemaMatch
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
 
 
 class TestRelevantClassCatalog:
@@ -171,11 +47,44 @@ class TestRelevantClassCatalog:
             llm=Mock(),
             nlp=Mock(),
             reference_sources=[],
-            event_publisher=MockEventPublisher(),
+            event_publisher=FakeEventPublisher(),
             extraction_repo=Mock(),
             extraction_run_repo=Mock(),
             schema_index=schema_index,
         )
+
+    def _setup_taxonomy_with_classes(self, ontology_repo, taxonomy_id: str, scheme_id: str, num_classes: int):
+        """Helper to set up a taxonomy, concept scheme, and classes in the ontology repository."""
+        taxonomy = Taxonomy(
+            id=taxonomy_id,
+            identifier=f"tax_{taxonomy_id}",
+            title=f"Test Taxonomy {taxonomy_id}",
+            description="Test taxonomy for unit testing",
+        )
+        ontology_repo.save_taxonomy(taxonomy)
+
+        scheme = ConceptScheme(
+            id=scheme_id,
+            taxonomy_id=taxonomy_id,
+            identifier=f"scheme_{scheme_id}",
+            title=f"Test Scheme {scheme_id}",
+            description="Test concept scheme for unit testing",
+        )
+        ontology_repo.save_concept_scheme(scheme)
+
+        for i in range(num_classes):
+            cls = Class(
+                id=f"class_{i}",
+                concept_scheme_id=scheme_id,
+                taxonomy_id=taxonomy_id,
+                identifier=f"ref_{i}",
+                title=f"Class {i}",
+                description=f"Class {i} description",
+                external_references=[Mock(identifier=f"external.{i}")],
+            )
+            ontology_repo.save_class(cls)
+
+        return taxonomy
 
     def test_returns_empty_list_for_missing_taxonomy_id(self, service):
         """When ontology has no id, method returns empty list."""
@@ -190,107 +99,63 @@ class TestRelevantClassCatalog:
     def test_fallback_to_full_catalog_when_index_not_configured(self, service, ontology_repo):
         """When schema_index is None, falls back to full catalog."""
         service._schema_index = None
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 2)
 
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        ontology_repo.add_class_to_scheme("scheme_1", "class_1", "Class One", "external.one")
-        ontology_repo.add_class_to_scheme("scheme_1", "class_2", "Class Two", "external.two")
-
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         assert len(result) == 2
-        assert ("external.one", "Class One") in result
-        assert ("external.two", "Class Two") in result
+        assert any(ref == "external.0" for ref, _ in result)
+        assert any(ref == "external.1" for ref, _ in result)
 
     def test_fallback_to_full_catalog_when_taxonomy_at_skip_threshold(self, service, ontology_repo):
         """When class count equals skip threshold, returns full catalog without search."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 50)
 
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add exactly 50 classes (at skip threshold)
-        for i in range(50):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 50)
-
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         assert len(result) == 50
-        # Verify embed was NOT called (would be in embed_calls)
         assert len(service._embedding_service.embed_calls) == 0
 
     def test_fallback_to_full_catalog_when_taxonomy_below_skip_threshold(self, service, ontology_repo):
         """When class count is below skip threshold, returns full catalog without search."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 30)
 
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add 30 classes (below skip threshold of 50)
-        for i in range(30):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 30)
-
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         assert len(result) == 30
-        # Verify embed was NOT called
         assert len(service._embedding_service.embed_calls) == 0
 
     def test_fallback_to_full_catalog_when_embedding_fails(self, service, ontology_repo, embedding_service):
         """When embedding raises exception, falls back to full catalog."""
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
+
+        original_embed = embedding_service.embed
         embedding_service.embed = Mock(side_effect=RuntimeError("Embedding failed"))
 
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add 100 classes (above skip threshold)
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
-
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         assert len(result) == 100
-        # Verify embed was called once (and failed)
         assert len(embedding_service.embed.call_args_list) == 1
+
+        embedding_service.embed = original_embed
 
     def test_fallback_to_full_catalog_when_search_fails(self, service, ontology_repo, schema_index):
         """When schema index search raises exception, falls back to full catalog."""
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
+
+        original_search = schema_index.search
         schema_index.search = Mock(side_effect=RuntimeError("Search failed"))
 
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add 100 classes (above skip threshold)
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
-
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         assert len(result) == 100
-        # Verify search was called once
         assert schema_index.search.call_count == 1
+
+        schema_index.search = original_search
 
     def test_fallback_to_full_catalog_when_results_below_minimum(self, service, ontology_repo, schema_index):
         """When search returns fewer than minimum results, falls back to full catalog."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add 100 classes (above skip threshold)
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         # Configure schema index to return only 3 results (below minimum of 5)
         matches = [
@@ -306,22 +171,14 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should return full catalog instead of the 3 retrieved classes
         assert len(result) == 100
 
     def test_retrieval_produces_subset_different_from_full_catalog(self, service, ontology_repo, schema_index):
         """When retrieval succeeds, returns relevant subset different from full catalog."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        # Add 100 classes
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         # Configure schema index to return only 8 specific classes (above minimum of 5)
         retrieved_indices = [5, 15, 25, 35, 45, 55, 65, 75]
@@ -338,7 +195,7 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should return only the 8 retrieved classes, not the full 100
         assert len(result) == 8
@@ -348,14 +205,7 @@ class TestRelevantClassCatalog:
 
     def test_deduplicates_class_references(self, service, ontology_repo, schema_index):
         """Deduplicates retrieved classes by reference."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         # Configure schema index with duplicate references (same external_id, different titles)
         matches = [
@@ -402,7 +252,7 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should have 4 unique references (external.1 is deduplicated)
         assert len(result) == 4
@@ -414,14 +264,7 @@ class TestRelevantClassCatalog:
 
     def test_respects_relevant_catalog_top_k_limit(self, service, ontology_repo, schema_index):
         """Caps retrieved classes at _RELEVANT_CATALOG_TOP_K."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(200):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 200)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 200)
 
         # Configure schema index to return 100 results (more than top_k of 50)
         matches = [
@@ -437,21 +280,28 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        # Configure schema index to return 100 results (more than top_k of 50)
+        matches = [
+            SchemaMatch(
+                entity_id=f"class_{i}",
+                kind="class",
+                label=f"Class {i}",
+                score=0.99 - (i * 0.001),
+                matched_field="title",
+                external_id=f"external.{i}",
+            )
+            for i in range(100)
+        ]
+        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
+
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should return only top 50 (the _RELEVANT_CATALOG_TOP_K limit)
         assert len(result) <= 50
 
     def test_scopes_search_strictly_to_taxonomy(self, service, ontology_repo, schema_index):
         """Ensures search is scoped to the target taxonomy_id."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         # Configure schema index with matches from different taxonomies
         # tax_1 matches (should be included)
@@ -483,7 +333,7 @@ class TestRelevantClassCatalog:
         taxonomies = {m.entity_id: ("tax_1" if m.entity_id.startswith("tax1_") else "tax_2") for m in all_matches}
         schema_index.set_search_results(all_matches, taxonomies)
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should only include tax_1 matches
         assert len(result) == 6
@@ -496,14 +346,21 @@ class TestRelevantClassCatalog:
 
     def test_embeds_source_text(self, service, ontology_repo, embedding_service, schema_index):
         """Verifies that source text is embedded."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        # Configure enough results to pass minimum threshold
+        matches = [
+            SchemaMatch(
+                entity_id=f"class_{i}",
+                kind="class",
+                label=f"Class {i}",
+                score=0.95 - (i * 0.01),
+                matched_field="title",
+                external_id=f"external.{i}",
+            )
+            for i in range(10)
+        ]
+        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
         # Configure enough results to pass minimum threshold
         matches = [
@@ -520,21 +377,14 @@ class TestRelevantClassCatalog:
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
         source_text = "test extraction text"
-        service._relevant_class_catalog(source_text, ontology)
+        service._relevant_class_catalog(source_text, taxonomy)
 
         # Verify the exact text was embedded
         assert source_text in embedding_service.embed_calls
 
     def test_prompt_format_preserved_ref_title_pairs(self, service, ontology_repo, schema_index):
         """Verifies returned format is (ref, title) tuples matching _ontology_class_catalog format."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         matches = [
             SchemaMatch(
@@ -549,7 +399,7 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Verify format: list of (ref, title) tuples
         assert isinstance(result, list)
@@ -562,14 +412,7 @@ class TestRelevantClassCatalog:
 
     def test_uses_external_id_as_ref_when_available(self, service, ontology_repo, schema_index):
         """Prefers external_id over label as class reference."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
-
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        for i in range(100):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_{i}", f"Class {i}", f"external.{i}")
-        ontology_repo.set_class_count("scheme_1", 100)
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
 
         # Some matches with external_id, some without
         matches = [
@@ -616,7 +459,7 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         refs = [ref for ref, _ in result]
         assert "tech.component" in refs
@@ -627,26 +470,35 @@ class TestRelevantClassCatalog:
 
     def test_multiple_schemes_in_taxonomy(self, service, ontology_repo, schema_index):
         """Handles taxonomies with multiple concept schemes."""
-        ontology = Mock()
-        ontology.id = "tax_1"
-        ontology.title = "Test"
+        # Create taxonomy and first scheme
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 50)
 
-        # Add multiple schemes to same taxonomy
-        ontology_repo.add_scheme("scheme_1", "tax_1")
-        ontology_repo.add_scheme("scheme_2", "tax_1")
+        # Add second scheme to same taxonomy
+        scheme2 = ConceptScheme(
+            id="scheme_2",
+            taxonomy_id="tax_1",
+            identifier="scheme_2",
+            title="Test Scheme 2",
+            description="Test concept scheme 2",
+        )
+        ontology_repo.save_concept_scheme(scheme2)
 
-        for i in range(50):
-            ontology_repo.add_class_to_scheme("scheme_1", f"class_1_{i}", f"Scheme1 Class {i}", f"external.1.{i}")
         for i in range(60):
-            ontology_repo.add_class_to_scheme("scheme_2", f"class_2_{i}", f"Scheme2 Class {i}", f"external.2.{i}")
-
-        ontology_repo.set_class_count("scheme_1", 50)
-        ontology_repo.set_class_count("scheme_2", 60)
+            cls = Class(
+                id=f"class_2_{i}",
+                concept_scheme_id="scheme_2",
+                taxonomy_id="tax_1",
+                identifier=f"ref_2_{i}",
+                title=f"Scheme2 Class {i}",
+                description=f"Scheme2 Class {i} description",
+                external_references=[Mock(identifier=f"external.2.{i}")],
+            )
+            ontology_repo.save_class(cls)
 
         # Configure schema index to return classes from both schemes
         matches = [
             SchemaMatch(
-                entity_id=f"class_1_{i}",
+                entity_id=f"class_{i}",
                 kind="class",
                 label=f"Scheme1 Class {i}",
                 score=0.95 - (i * 0.001),
@@ -667,7 +519,7 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        result = service._relevant_class_catalog("test text", ontology)
+        result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should include classes from both schemes
         assert len(result) >= 10
