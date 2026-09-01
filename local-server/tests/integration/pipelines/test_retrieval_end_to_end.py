@@ -301,7 +301,9 @@ class TestRetrievalEndToEnd:
 
         # Should return a subset, not full catalog
         full_catalog = extraction_service._ontology_class_catalog(taxonomy)
-        assert len(result1) < len(full_catalog), "Retrieved subset should be smaller than full catalog"
+        assert len(result1) < len(full_catalog), (
+            "Retrieved subset should be smaller than full catalog"
+        )
 
     def test_small_ontology_skips_retrieval(
         self, extraction_service, ontology_repo, schema_index
