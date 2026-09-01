@@ -7,7 +7,6 @@ to avoid real embeddings or database operations.
 """
 
 from unittest.mock import Mock
-from uuid import uuid4
 
 import pytest
 
@@ -280,20 +279,6 @@ class TestRelevantClassCatalog:
         ]
         schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
-        # Configure schema index to return 100 results (more than top_k of 50)
-        matches = [
-            SchemaMatch(
-                entity_id=f"class_{i}",
-                kind="class",
-                label=f"Class {i}",
-                score=0.99 - (i * 0.001),
-                matched_field="title",
-                external_id=f"external.{i}",
-            )
-            for i in range(100)
-        ]
-        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
-
         result = service._relevant_class_catalog("test text", taxonomy)
 
         # Should return only top 50 (the _RELEVANT_CATALOG_TOP_K limit)
@@ -347,20 +332,6 @@ class TestRelevantClassCatalog:
     def test_embeds_source_text(self, service, ontology_repo, embedding_service, schema_index):
         """Verifies that source text is embedded."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
-
-        # Configure enough results to pass minimum threshold
-        matches = [
-            SchemaMatch(
-                entity_id=f"class_{i}",
-                kind="class",
-                label=f"Class {i}",
-                score=0.95 - (i * 0.01),
-                matched_field="title",
-                external_id=f"external.{i}",
-            )
-            for i in range(10)
-        ]
-        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
 
         # Configure enough results to pass minimum threshold
         matches = [
