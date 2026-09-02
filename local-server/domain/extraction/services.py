@@ -881,6 +881,11 @@ class ExtractionService:
 
         taxonomy_id = getattr(ontology, "id", None)
         if not taxonomy_id:
+            _logger.warning(
+                "Cannot type concept-objects or stamp property_definition_id: "
+                "ontology.id is falsy (None or empty). "
+                "Relationship triples will be returned unchanged with no property_definition_id."
+            )
             return relationship_triples
 
         pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
@@ -954,7 +959,10 @@ class ExtractionService:
         Build a normalized_predicate_label -> PropertyDefinition index.
 
         Follows the local-index pattern: built within the method from
-        list_property_definitions, not cached.
+        list_property_definitions, not cached. When multiple PropertyDefinitions
+        normalize to the same label (e.g., "relates_to" and "relates-to" both
+        become "relates to"), the first one encountered is kept and a warning
+        is logged about the collision.
         """
         index: dict[str, Any] = {}
         for prop_def in self._ontology_repo.list_property_definitions(limit=None):
@@ -962,7 +970,21 @@ class ExtractionService:
             if not predicate:
                 continue
             normalized = _normalize_predicate_label(predicate)
-            index[normalized] = prop_def
+            if normalized in index:
+                existing = index[normalized]
+                _logger.warning(
+                    "PropertyDefinition collision: both '%s' (id=%s) and '%s' (id=%s) "
+                    "normalize to '%s'. Keeping the first definition (id=%s); "
+                    "triples matching the second will be stamped with the wrong property_definition_id.",
+                    existing.canonical_predicate or existing.title or "",
+                    existing.id,
+                    predicate,
+                    prop_def.id,
+                    normalized,
+                    existing.id,
+                )
+            else:
+                index[normalized] = prop_def
         return index
 
     def _is_concept_object(
@@ -978,12 +1000,14 @@ class ExtractionService:
         A concept-object has:
         - kind == "individual"
         - no id
-        - label (lowercased) not in pass-1 individual labels
+        - non-empty label (lowercased) not in pass-1 individual labels
         """
+        obj_label_stripped = str(obj_label).strip()
         return (
             obj_kind == "individual"
             and not obj_id
-            and obj_label.lower() not in pass_1_individual_labels
+            and obj_label_stripped
+            and obj_label_stripped.lower() not in pass_1_individual_labels
         )
 
     def _make_concept_object_typing_triple(
@@ -997,7 +1021,10 @@ class ExtractionService:
         relationship triple.
         """
         range_class_id = str(range_class.id)
-        range_class_ref = _canonical_class_ref(range_class) or range_class_id
+        range_class_ref = _canonical_class_ref(range_class)
+        if not range_class_ref:
+            fallback_title = getattr(range_class, "title", None)
+            range_class_ref = fallback_title or range_class_id
         return {
             "subject": {
                 "kind": "individual",
