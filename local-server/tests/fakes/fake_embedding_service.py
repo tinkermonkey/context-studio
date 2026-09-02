@@ -9,9 +9,13 @@ class FakeEmbeddingService:
 
     Returns embeddings as fixed-length lists of floats, matching the
     EmbeddingService Protocol specification (BA spec FR-1.15 and FR-1.22).
+    Tracks all embed calls for testing purposes via embed_calls list.
     """
 
     EMBEDDING_DIMENSION = 8  # 8 float values per embedding
+
+    def __init__(self) -> None:
+        self.embed_calls: list[str] = []
 
     def embed(self, text: str) -> list[float]:
         """
@@ -27,6 +31,7 @@ class FakeEmbeddingService:
         Returns:
             Deterministic embedding as a list of 8 floats in [0, 1)
         """
+        self.embed_calls.append(text)
         hash_bytes = hashlib.sha256(text.encode()).digest()
         # Convert 32 bytes into 8 float values by taking 4-byte chunks
         embedding = []
