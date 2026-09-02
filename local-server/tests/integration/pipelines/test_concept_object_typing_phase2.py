@@ -309,12 +309,25 @@ class TestConceptObjectTypingFullPipeline:
             None,
         )
         assert typing_triple_after is not None
+        # Verify typing triple retained synthetic properties through recognition
+        assert typing_triple_after["predicate"]["label"] == "is_a"
+        assert typing_triple_after["subject"]["label"] == "readability"
+        assert typing_triple_after["subject"]["class_ids"] == [str(quality_class.id)]
+        assert typing_triple_after["object"]["id"] == str(quality_class.id)
 
         relationship_triple_after = next(
             (t for t in recognized_triples if t["predicate"]["label"] == "improves"),
             None,
         )
         assert relationship_triple_after is not None
+        # Verify relationship triple retained property definition through recognition
+        assert relationship_triple_after["predicate"]["label"] == "improves"
+        assert (
+            relationship_triple_after["predicate"]["property_definition_id"]
+            == str(improves_prop.id)
+        )
+        assert relationship_triple_after["subject"]["label"] == "Decorator Pattern"
+        assert relationship_triple_after["object"]["label"] == "readability"
 
         # Pattern should be resolved (id will be assigned during create)
         pattern_after = next(
