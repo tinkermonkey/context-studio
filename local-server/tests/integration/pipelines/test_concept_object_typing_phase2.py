@@ -15,10 +15,10 @@ import sys
 import os
 from pathlib import Path
 from uuid import uuid4
+import logging
+import inspect
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -48,6 +48,21 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+
+
+def normalize_triples(triples):
+    """
+    Normalize triples to have class_ids (plural) instead of class_id (singular).
+    """
+    normalized = []
+    for triple in triples:
+        norm = dict(triple)
+        subject = dict(norm.get("subject", {}))
+        if "class_id" in subject:
+            subject["class_ids"] = [subject.pop("class_id")]
+        norm["subject"] = subject
+        normalized.append(norm)
+    return normalized
 
 
 @pytest.fixture
@@ -305,18 +320,6 @@ class TestConceptObjectTypingFullPipeline:
         typing_triples = [t for t in recognized_triples if t["predicate"]["label"] == "is_a"]
         relationship_triples_from_recognized = [t for t in recognized_triples if t["predicate"]["label"] != "is_a"]
 
-        # Normalize triples to have class_ids (plural) instead of class_id (singular)
-        def normalize_triples(triples):
-            normalized = []
-            for triple in triples:
-                norm = dict(triple)
-                subject = dict(norm.get("subject", {}))
-                if "class_id" in subject:
-                    subject["class_ids"] = [subject.pop("class_id")]
-                norm["subject"] = subject
-                normalized.append(norm)
-            return normalized
-
         normalized_typing_triples = normalize_triples(typing_triples)
 
         run_id = str(uuid4())
@@ -471,17 +474,6 @@ class TestConceptObjectTypingFullPipeline:
         typing_triples = [t for t in recognized_triples if t["predicate"]["label"] == "is_a"]
         relationship_triples_from_recognized = [t for t in recognized_triples if t["predicate"]["label"] != "is_a"]
 
-        def normalize_triples(triples):
-            normalized = []
-            for triple in triples:
-                norm = dict(triple)
-                subject = dict(norm.get("subject", {}))
-                if "class_id" in subject:
-                    subject["class_ids"] = [subject.pop("class_id")]
-                norm["subject"] = subject
-                normalized.append(norm)
-            return normalized
-
         normalized_typing = normalize_triples(typing_triples)
 
         # Apply typing triples (create individuals)
@@ -606,7 +598,6 @@ class TestConceptObjectTypingFullPipeline:
         ]
 
         # Type concept objects - should NOT emit is_a for "relates"
-        import logging
         with caplog.at_level(logging.INFO):
             all_relationship_triples = extraction_service._type_concept_objects(
                 relationship_triples, pattern_individual_triples, tax
@@ -617,7 +608,7 @@ class TestConceptObjectTypingFullPipeline:
         assert all_relationship_triples[0]["predicate"]["label"] == "relates"
 
         # Verify log message indicates no range_class_id
-        assert "no range_class_id" in caplog.text or "relates" in caplog.text
+        assert "declares no range_class_id" in caplog.text
 
         # Verify property_definition_id was still stamped
         assert all_relationship_triples[0]["predicate"]["property_definition_id"] == str(relates_prop.id)
@@ -669,7 +660,6 @@ class TestConceptObjectTypingFullPipeline:
         ]
 
         # Type concept objects - should NOT emit is_a
-        import logging
         with caplog.at_level(logging.INFO):
             all_relationship_triples = extraction_service._type_concept_objects(
                 relationship_triples, pattern_individual_triples, tax
@@ -680,7 +670,7 @@ class TestConceptObjectTypingFullPipeline:
         assert all_relationship_triples[0]["predicate"]["label"] == "unknown_predicate"
 
         # Verify log message indicates PropertyDefinition not found
-        assert "PropertyDefinition not found" in caplog.text or "unknown_predicate" in caplog.text
+        assert "PropertyDefinition not found" in caplog.text
 
         # property_definition_id should NOT be stamped (no property found)
         assert not all_relationship_triples[0]["predicate"].get("property_definition_id")
@@ -693,15 +683,23 @@ class TestConceptObjectTypingFullPipeline:
         exhibit identical concept-object behavior.
 
         This test verifies that both call sites use the same insertion point
-        (_type_concept_objects) and therefore produce identical results.
+        (_type_concept_objects) and therefore produce identical results by
+        inspecting their source code for the shared call.
         """
+        # Structural test: Verify both extraction modes call _type_concept_objects
+        two_pass_source = inspect.getsource(extraction_service._extract_triples_two_pass)
+        nlp_grounded_source = inspect.getsource(extraction_service._extract_triples_nlp_grounded)
+
+        # Both methods must contain the _type_concept_objects call
+        assert "_type_concept_objects" in two_pass_source, \
+            "_extract_triples_two_pass must call _type_concept_objects"
+        assert "_type_concept_objects" in nlp_grounded_source, \
+            "_extract_triples_nlp_grounded must call _type_concept_objects"
+
+        # Behavioral test: Verify shared _type_concept_objects produces correct output
         tax = ontology_with_properties["taxonomy"]
         pattern_class = ontology_with_properties["pattern_class"]
-        quality_class = ontology_with_properties["quality_class"]
         improves_prop = ontology_with_properties["improves_prop"]
-
-        # Verify that both methods call _type_concept_objects
-        # (This is more of a code-inspection test, but we can verify the shared behavior)
 
         pattern_individual_triples = [
             {
@@ -742,10 +740,6 @@ class TestConceptObjectTypingFullPipeline:
         assert result[1]["predicate"]["label"] == "is_a"
         assert result[1]["subject"]["label"] == "readability"
         assert result[0]["predicate"]["property_definition_id"] == str(improves_prop.id)
-
-        # Verify this is the shared behavior by checking the method name
-        assert hasattr(extraction_service, "_extract_triples_two_pass")
-        assert hasattr(extraction_service, "_extract_triples_nlp_grounded")
 
 
 if __name__ == "__main__":
