@@ -1016,7 +1016,7 @@ class TestTypeConceptObjects:
         """Test that a concept-object with a resolvable range emits a synthetic is_a triple."""
         service = extraction_service_for_typing["service"]
         ontology = extraction_service_for_typing["ontology"]
-        quality_class = extraction_service_for_typing["quality_class"]
+        extraction_service_for_typing["quality_class"]
 
         individual_triples = [
             {
@@ -1054,7 +1054,8 @@ class TestTypeConceptObjects:
         assert typing_triple["confidence"] == 0.85
         assert typing_triple["provenance"] == "test"
 
-        assert relationship_triples[0]["predicate"]["property_definition_id"] == self.PROPERTY_DEF_ID
+        prop_def_id = relationship_triples[0]["predicate"]["property_definition_id"]
+        assert prop_def_id == self.PROPERTY_DEF_ID
 
     def test_concept_object_property_definition_id_stamped(self, extraction_service_for_typing):
         """Test that property_definition_id is stamped on all relationship triples."""
@@ -1191,7 +1192,7 @@ class TestTypeConceptObjects:
         assert result[0] == relationship_triples[0]
 
     def test_multiple_concept_objects_same_label_deduplicated(self, extraction_service_for_typing):
-        """Test that multiple triples referencing the same concept-object produce only one is_a triple."""
+        """Test that multiple concept-object references produce only one is_a triple."""
         service = extraction_service_for_typing["service"]
         ontology = extraction_service_for_typing["ontology"]
 
@@ -1226,7 +1227,11 @@ class TestTypeConceptObjects:
             relationship_triples, individual_triples, ontology
         )
 
-        typing_triples = [t for t in result if t.get("predicate", {}).get("label") == "is_a" and t.get("subject", {}).get("label") == "readability"]
+        typing_triples = [
+            t for t in result
+            if t.get("predicate", {}).get("label") == "is_a"
+            and t.get("subject", {}).get("label") == "readability"
+        ]
         assert len(typing_triples) == 1
 
     def test_empty_relationship_triples_returns_empty(self, extraction_service_for_typing):
@@ -1256,8 +1261,10 @@ class TestTypeConceptObjects:
         result = service._type_concept_objects(relationship_triples, [], ontology)
         assert result == relationship_triples
 
-    def test_range_class_id_present_but_class_not_in_ontology(self, extraction_service_for_typing, caplog):
-        """Test that a concept-object with non-existent range_class_id logs INFO and skips synthetic triple."""
+    def test_range_class_id_present_but_class_not_in_ontology(
+        self, extraction_service_for_typing, caplog
+    ):
+        """Test that a concept-object with non-existent range_class_id skips."""
         from domain.ontology.entities import PropertyDefinition
 
         service = extraction_service_for_typing["service"]
@@ -1311,7 +1318,8 @@ class TestTypeConceptObjects:
         # Verify property_definition_id was stamped
         assert result[0]["predicate"]["property_definition_id"] == "prop-bad-range-id"
         # Verify the specific log message appears
-        assert "has range_class_id=non-existent-class-id, but class not found in ontology" in caplog.text
+        expected_msg = "has range_class_id=non-existent-class-id, but class not found in ontology"
+        assert expected_msg in caplog.text
 
     def _is_typing_triple(self, triple):
         """Helper to identify typing triples."""
