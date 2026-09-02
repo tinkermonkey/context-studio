@@ -1108,7 +1108,7 @@ class TestTypeConceptObjects:
             )
 
         assert len(result) == 1
-        assert "something" not in [t.get("subject", {}).get("label") for t in result if self._is_typing_triple(t)]
+        assert not any(t.get("predicate", {}).get("label") == "is_a" for t in result)
         assert "no range_class_id" in caplog.text or "relates" in caplog.text
 
     def test_concept_object_predicate_not_found(self, extraction_service_for_typing, caplog):
@@ -1165,7 +1165,7 @@ class TestTypeConceptObjects:
         )
 
         assert len(result) == 1
-        assert all(t.get("subject", {}).get("label") != "Caching" or t.get("predicate", {}).get("label") != "is_a" for t in result if len(result) > 1)
+        assert result[0]["predicate"]["label"] != "is_a"
 
     def test_class_object_not_treated_as_concept_object(self, extraction_service_for_typing):
         """Test that objects with kind='class' are not treated as concept-objects."""
@@ -1255,6 +1255,63 @@ class TestTypeConceptObjects:
 
         result = service._type_concept_objects(relationship_triples, [], ontology)
         assert result == relationship_triples
+
+    def test_range_class_id_present_but_class_not_in_ontology(self, extraction_service_for_typing, caplog):
+        """Test that a concept-object with non-existent range_class_id logs INFO and skips synthetic triple."""
+        from domain.ontology.entities import PropertyDefinition
+
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Create a property with range_class_id pointing to non-existent class
+        bad_range_property = PropertyDefinition(
+            id="prop-bad-range-id",
+            identifier="references",
+            title="references",
+            canonical_predicate="references",
+            ontology_mapping=None,
+            domain_class_id=None,
+            range_class_id="non-existent-class-id",
+            external_references=[],
+        )
+
+        # Get the original properties
+        original_props = [
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[0],
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[1],
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[2],
+        ]
+
+        # Modify the mock to include the bad range property
+        def mock_list_property_definitions(limit=None):
+            return original_props + [bad_range_property]
+
+        ontology_repo.list_property_definitions = mock_list_property_definitions
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "SomePattern"},
+                "predicate": {"property_definition_id": None, "label": "references"},
+                "object": {"kind": "individual", "label": "concept_object"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        with caplog.at_level("INFO"):
+            result = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        # Verify only original triple is returned (no synthetic triple)
+        assert len(result) == 1
+        assert result[0] == relationship_triples[0]
+        # Verify property_definition_id was stamped
+        assert result[0]["predicate"]["property_definition_id"] == "prop-bad-range-id"
+        # Verify the specific log message appears
+        assert "has range_class_id=non-existent-class-id, but class not found in ontology" in caplog.text
 
     def _is_typing_triple(self, triple):
         """Helper to identify typing triples."""

@@ -864,8 +864,8 @@ class ExtractionService:
         Additionally, this step stamps property_definition_id on all relationship
         triples (not just those introducing concept-objects) by resolving their
         predicates to PropertyDefinition entities. This is a prerequisite for
-        the apply service guard at line 232 (which requires property_definition_id
-        to be truthy).
+        the apply service guard in IndividualExtractionApplyService._apply_triples
+        (which requires property_definition_id to be truthy).
 
         Args:
             relationship_triples: Pass-2 output (relationship triples only)
@@ -886,7 +886,7 @@ class ExtractionService:
         pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
 
         prop_index = self._property_definition_index()
-        by_alias, by_id = self._class_index(ontology)
+        _, by_id = self._class_index(ontology)
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()
