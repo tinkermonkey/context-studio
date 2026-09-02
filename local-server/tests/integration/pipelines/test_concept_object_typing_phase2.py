@@ -49,21 +49,6 @@ from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
 
-def normalize_triples(triples):
-    """
-    Normalize triples to have class_ids (plural) instead of class_id (singular).
-    """
-    normalized = []
-    for triple in triples:
-        norm = dict(triple)
-        subject = dict(norm.get("subject", {}))
-        if "class_id" in subject:
-            subject["class_ids"] = [subject.pop("class_id")]
-        norm["subject"] = subject
-        normalized.append(norm)
-    return normalized
-
-
 @pytest.fixture
 def temp_db():
     """Create a temporary in-memory SQLite database for integration tests."""
@@ -262,7 +247,7 @@ class TestConceptObjectTypingFullPipeline:
                     "kind": "individual",
                     "id": None,
                     "label": "Decorator Pattern",
-                    "class_id": str(pattern_class.id),
+                    "class_ids": [str(pattern_class.id)],
                 },
                 "predicate": {"property_definition_id": None, "label": "is_a"},
                 "object": {
@@ -292,15 +277,15 @@ class TestConceptObjectTypingFullPipeline:
         )
 
         assert len(all_relationship_triples) == 2, (
-            "Should have relationship + synthetic is_a"
+            "Should have synthetic is_a + relationship"
         )
-        relationship_triple = all_relationship_triples[0]
-        typing_triple = all_relationship_triples[1]
+        typing_triple = all_relationship_triples[0]
+        relationship_triple = all_relationship_triples[1]
 
         # Verify synthetic is_a triple was emitted
         assert typing_triple["predicate"]["label"] == "is_a"
         assert typing_triple["subject"]["label"] == "readability"
-        assert typing_triple["subject"]["class_id"] == str(quality_class.id)
+        assert typing_triple["subject"]["class_ids"] == [str(quality_class.id)]
         assert typing_triple["object"]["id"] == str(quality_class.id)
 
         # Verify property_definition_id was stamped on relationship
@@ -314,7 +299,7 @@ class TestConceptObjectTypingFullPipeline:
         recognized_triples = extraction_service._recognize_individuals(combined_triples, tax)
 
         # Find the typing and relationship triples after recognition
-        next(
+        typing_triple_after = next(
             (
                 t
                 for t in recognized_triples
@@ -323,10 +308,13 @@ class TestConceptObjectTypingFullPipeline:
             ),
             None,
         )
-        next(
+        assert typing_triple_after is not None
+
+        relationship_triple_after = next(
             (t for t in recognized_triples if t["predicate"]["label"] == "improves"),
             None,
         )
+        assert relationship_triple_after is not None
 
         # Pattern should be resolved (id will be assigned during create)
         pattern_after = next(
@@ -341,26 +329,12 @@ class TestConceptObjectTypingFullPipeline:
         assert pattern_after is not None
         assert pattern_after["subject"]["id"] is None  # Not yet resolved (no existing individual)
 
-        # Step 3a: Create individuals first
-        # Separate typing triples from relationship triples
-        typing_triples = [
-            t
-            for t in recognized_triples
-            if t["predicate"]["label"] == "is_a"
-        ]
-        relationship_triples_from_recognized = [
-            t
-            for t in recognized_triples
-            if t["predicate"]["label"] != "is_a"
-        ]
-
-        normalized_typing_triples = normalize_triples(typing_triples)
-
+        # Step 3: Apply all triples in a single call (synthetic triples come first)
         run_id = str(uuid4())
         set_batch_run_context(run_id)
 
         try:
-            # First apply: create all individuals from typing triples
+            # Single apply call with all recognized triples
             run = IndividualExtractionRun(
                 id=run_id,
                 batch_run_id=run_id,
@@ -368,55 +342,18 @@ class TestConceptObjectTypingFullPipeline:
                 configuration_slug="extraction-default",
                 configuration_version=1,
                 status=PipelineRunStatus.COMPLETED,
-                output_summary={"triples": normalized_typing_triples},
+                output_summary={"triples": recognized_triples},
             )
 
             apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
-            apply_result_1 = apply_service.apply(run)
+            apply_result = apply_service.apply(run)
 
-            # Verify individuals were created
-            assert apply_result_1.individuals_created >= 2, (
-                "Pattern and readability individuals created"
+            # Verify both individuals and relationships were created
+            assert apply_result.individuals_created >= 2, (
+                f"Pattern and readability individuals created (result: {apply_result})"
             )
-
-            # Step 3b: Now create relationships with the individual ids resolved
-            # Build a label -> id map from created individuals
-            all_individuals = ontology_repo.list_individuals(limit=None)
-            label_to_id = {ind.title: ind.id for ind in all_individuals}
-
-            # Update relationship triples to have object ids
-            relationship_triples_with_ids = []
-            for triple in relationship_triples_from_recognized:
-                rel_triple = dict(triple)
-                obj = dict(rel_triple.get("object", {}))
-                obj_label = obj.get("label", "").strip()
-                if obj_label and obj_label in label_to_id:
-                    obj["id"] = label_to_id[obj_label]
-                rel_triple["object"] = obj
-
-                # Ensure subject also has proper structure
-                subject = dict(rel_triple.get("subject", {}))
-                subject_label = subject.get("label", "").strip()
-                if subject_label and subject_label in label_to_id and not subject.get("id"):
-                    subject["id"] = label_to_id[subject_label]
-                rel_triple["subject"] = subject
-
-                relationship_triples_with_ids.append(rel_triple)
-
-            # Second apply: create relationships
-            run2 = IndividualExtractionRun(
-                id=str(uuid4()),
-                batch_run_id=run_id,
-                implementation_id="default",
-                configuration_slug="extraction-default",
-                configuration_version=1,
-                status=PipelineRunStatus.COMPLETED,
-                output_summary={"triples": relationship_triples_with_ids},
-            )
-
-            apply_result_2 = apply_service.apply(run2)
-            assert apply_result_2.relationships_created >= 1, (
-                f"Relationship created (result: {apply_result_2})"
+            assert apply_result.relationships_created >= 1, (
+                f"Relationship created (result: {apply_result})"
             )
 
             # Verify relationship was created with correct property
@@ -472,7 +409,7 @@ class TestConceptObjectTypingFullPipeline:
                     "kind": "individual",
                     "id": None,
                     "label": "Caching",
-                    "class_id": str(pattern_class.id),
+                    "class_ids": [str(pattern_class.id)],
                 },
                 "predicate": {"property_definition_id": None, "label": "is_a"},
                 "object": {
@@ -524,21 +461,7 @@ class TestConceptObjectTypingFullPipeline:
         # Count existing individuals
         individuals_before = len(ontology_repo.list_individuals(limit=None))
 
-        # Separate typing from relationship triples
-        typing_triples = [
-            t
-            for t in recognized_triples
-            if t["predicate"]["label"] == "is_a"
-        ]
-        relationship_triples_from_recognized = [
-            t
-            for t in recognized_triples
-            if t["predicate"]["label"] != "is_a"
-        ]
-
-        normalized_typing = normalize_triples(typing_triples)
-
-        # Apply typing triples (create individuals)
+        # Apply all triples in a single call (synthetic triples come first)
         run_id = str(uuid4())
         set_batch_run_context(run_id)
 
@@ -550,11 +473,11 @@ class TestConceptObjectTypingFullPipeline:
                 configuration_slug="extraction-default",
                 configuration_version=1,
                 status=PipelineRunStatus.COMPLETED,
-                output_summary={"triples": normalized_typing},
+                output_summary={"triples": recognized_triples},
             )
 
             apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
-            apply_service.apply(run)
+            apply_result = apply_service.apply(run)
 
             individuals_after = len(ontology_repo.list_individuals(limit=None))
 
@@ -565,40 +488,6 @@ class TestConceptObjectTypingFullPipeline:
                 f"Only pattern individual created, readability reused "
                 f"(got {new_individuals} new)"
             )
-
-            # Now create relationships with resolved ids
-            all_individuals = ontology_repo.list_individuals(limit=None)
-            label_to_id = {ind.title: ind.id for ind in all_individuals}
-
-            relationship_triples_with_ids = []
-            for triple in relationship_triples_from_recognized:
-                rel_triple = dict(triple)
-                obj = dict(rel_triple.get("object", {}))
-                obj_label = obj.get("label", "").strip()
-                if obj_label and obj_label in label_to_id:
-                    obj["id"] = label_to_id[obj_label]
-                rel_triple["object"] = obj
-
-                subject = dict(rel_triple.get("subject", {}))
-                subject_label = subject.get("label", "").strip()
-                if subject_label and subject_label in label_to_id and not subject.get("id"):
-                    subject["id"] = label_to_id[subject_label]
-                rel_triple["subject"] = subject
-
-                relationship_triples_with_ids.append(rel_triple)
-
-            # Apply relationships
-            run2 = IndividualExtractionRun(
-                id=str(uuid4()),
-                batch_run_id=run_id,
-                implementation_id="default",
-                configuration_slug="extraction-default",
-                configuration_version=1,
-                status=PipelineRunStatus.COMPLETED,
-                output_summary={"triples": relationship_triples_with_ids},
-            )
-
-            apply_service.apply(run2)
 
             # Verify relationship was created with existing readability
             relationships = ontology_repo.list_relationships(limit=None)
@@ -795,7 +684,7 @@ class TestConceptObjectTypingFullPipeline:
                     "kind": "individual",
                     "id": None,
                     "label": "DecoratorPattern",
-                    "class_id": str(pattern_class.id),
+                    "class_ids": [str(pattern_class.id)],
                 },
                 "predicate": {"property_definition_id": None, "label": "is_a"},
                 "object": {
@@ -824,10 +713,11 @@ class TestConceptObjectTypingFullPipeline:
         )
 
         # Both modes should produce the same output
+        # With new triple ordering: synthetic is_a triples come first
         assert len(result) == 2
-        assert result[1]["predicate"]["label"] == "is_a"
-        assert result[1]["subject"]["label"] == "readability"
-        assert result[0]["predicate"]["property_definition_id"] == str(improves_prop.id)
+        assert result[0]["predicate"]["label"] == "is_a"
+        assert result[0]["subject"]["label"] == "readability"
+        assert result[1]["predicate"]["property_definition_id"] == str(improves_prop.id)
 
 
 if __name__ == "__main__":

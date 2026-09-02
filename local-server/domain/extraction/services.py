@@ -915,6 +915,7 @@ class ExtractionService:
                                 obj_label, range_class, triple
                             )
                             synthetic_triples.append(synthetic_triple)
+                        obj["class_ids"] = [str(prop_def.range_class_id)]
                     else:
                         _logger.info(
                             f"Concept-object '{obj_label}': PropertyDefinition "
@@ -932,7 +933,7 @@ class ExtractionService:
                         f"for predicate '{predicate_label}'"
                     )
 
-        return relationship_triples + synthetic_triples
+        return synthetic_triples + relationship_triples
 
     def _pass_1_individual_labels(self, individual_triples: list[dict]) -> set[str]:
         """
@@ -1002,7 +1003,7 @@ class ExtractionService:
                 "kind": "individual",
                 "id": None,
                 "label": obj_label,
-                "class_id": range_class_id,
+                "class_ids": [range_class_id],
             },
             "predicate": {"property_definition_id": None, "label": "is_a"},
             "object": {

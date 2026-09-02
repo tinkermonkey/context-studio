@@ -1043,11 +1043,11 @@ class TestTypeConceptObjects:
         )
 
         assert len(result) == 2
-        typing_triple = result[1]
+        typing_triple = result[0]
 
         assert typing_triple["subject"]["kind"] == "individual"
         assert typing_triple["subject"]["label"] == "readability"
-        assert typing_triple["subject"]["class_id"] == self.QUALITY_CLASS_ID
+        assert typing_triple["subject"]["class_ids"] == [self.QUALITY_CLASS_ID]
         assert typing_triple["predicate"]["label"] == "is_a"
         assert typing_triple["object"]["kind"] == "class"
         assert typing_triple["object"]["id"] == self.QUALITY_CLASS_ID
@@ -1084,8 +1084,13 @@ class TestTypeConceptObjects:
             relationship_triples, individual_triples, ontology
         )
 
-        assert result[0]["predicate"]["property_definition_id"] == self.PROPERTY_DEF_ID
-        assert result[1]["predicate"]["property_definition_id"] == "prop-produces-id"
+        # With new triple ordering: synthetic is_a triples come first (2), then relationship triples (2)
+        # Find the relationship triples with property_definition_id stamped
+        improves_triple = next(t for t in result if t["predicate"]["label"] == "improves")
+        produces_triple = next(t for t in result if t["predicate"]["label"] == "produces")
+
+        assert improves_triple["predicate"]["property_definition_id"] == self.PROPERTY_DEF_ID
+        assert produces_triple["predicate"]["property_definition_id"] == "prop-produces-id"
 
     def test_concept_object_predicate_no_range(self, extraction_service_for_typing, caplog):
         """Test that a concept-object with a predicate having no range logs INFO and skips."""
