@@ -162,7 +162,7 @@ class SQLiteDatasetRepository:
         try:
             with self.session_factory() as session:
                 row = session.execute(
-                    select(DatasetModel).where(DatasetModel.is_active)
+                    select(DatasetModel).where(DatasetModel.is_active == True)
                 ).scalar_one_or_none()
                 return self._to_domain(row) if row else None
         except SQLAlchemyError as e:
@@ -187,7 +187,9 @@ class SQLiteDatasetRepository:
             with self.session_factory() as session:
                 # Deactivate all other datasets
                 session.execute(
-                    update(DatasetModel).where(DatasetModel.is_active).values(is_active=False)
+                    update(DatasetModel)
+                    .where(DatasetModel.is_active == True)
+                    .values(is_active=False)
                 )
                 # Activate the target dataset
                 dataset_row = session.execute(

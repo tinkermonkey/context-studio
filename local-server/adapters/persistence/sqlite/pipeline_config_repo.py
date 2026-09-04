@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -105,8 +106,10 @@ class PipelineConfigurationRepository:
                 return (
                     session.query(PipelineConfiguration)
                     .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        and_(
+                            PipelineConfiguration.id == config_id,
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )
@@ -122,17 +125,17 @@ class PipelineConfigurationRepository:
                 return (
                     session.query(PipelineConfiguration)
                     .filter(
-                        PipelineConfiguration.pipeline_type == pipeline_type,
-                        PipelineConfiguration.implementation_id == implementation_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        and_(
+                            PipelineConfiguration.pipeline_type == pipeline_type,
+                            PipelineConfiguration.implementation_id == implementation_id,
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .order_by(PipelineConfiguration.created_at)
                     .all()
                 )
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to list pipeline configurations: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to list pipeline configurations: {exc}") from exc
 
     def list_all(self) -> list[PipelineConfiguration]:
         """List all non-deleted user configurations (for startup registry loading)."""
@@ -168,8 +171,10 @@ class PipelineConfigurationRepository:
                 record = (
                     session.query(PipelineConfiguration)
                     .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        and_(
+                            PipelineConfiguration.id == config_id,
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )
@@ -193,9 +198,7 @@ class PipelineConfigurationRepository:
                 session.refresh(record)
                 return record
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to update pipeline configuration: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to update pipeline configuration: {exc}") from exc
 
     def list_known_config_refs(self, pipeline_type: str, implementation_id: str) -> set[str]:
         """Return all config_refs for a type+impl (including deleted), for deduplication."""
@@ -211,9 +214,7 @@ class PipelineConfigurationRepository:
                 )
                 return {row[0] for row in rows}
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to list config refs: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to list config refs: {exc}") from exc
 
     def soft_delete(self, config_id: str) -> bool:
         """Soft-delete a configuration. Returns True if deleted, False if not found."""
@@ -222,8 +223,10 @@ class PipelineConfigurationRepository:
                 record = (
                     session.query(PipelineConfiguration)
                     .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        and_(
+                            PipelineConfiguration.id == config_id,
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )
@@ -234,6 +237,4 @@ class PipelineConfigurationRepository:
                 session.commit()
                 return True
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to delete pipeline configuration: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to delete pipeline configuration: {exc}") from exc
