@@ -628,13 +628,9 @@ class ExtractionService:
 
         catalog: list[tuple[str, str]] = []
         seen_refs: set[str] = set()
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 class_ref = _canonical_class_ref(cls)
                 if not class_ref or class_ref in seen_refs:
                     continue
@@ -683,13 +679,9 @@ class ExtractionService:
 
         # Count the total classes in the taxonomy for skip-threshold check
         total_class_count = 0
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            total_class_count += self._ontology_repo.count_classes(
-                concept_scheme_id=scheme.id
-            )
+            total_class_count += self._ontology_repo.count_classes(concept_scheme_id=scheme.id)
 
         # Skip retrieval on small ontologies: return full catalog directly
         if total_class_count <= _CATALOG_RETRIEVAL_SKIP_THRESHOLD:
@@ -1006,7 +998,7 @@ class ExtractionService:
         return (
             obj_kind == "individual"
             and not obj_id
-            and obj_label_stripped
+            and bool(obj_label_stripped)
             and obj_label_stripped.lower() not in pass_1_individual_labels
         )
 
@@ -1189,8 +1181,7 @@ class ExtractionService:
         user_prompt = (
             f'Phrase: "{label}"\n'
             f'Sentence: "{sentence}"\n\n'
-            "Candidate classes (reference (title): definition):\n"
-            + "\n".join(lines)
+            "Candidate classes (reference (title): definition):\n" + "\n".join(lines)
         )
         response = self._llm.complete(
             system_prompt=system_prompt,
@@ -1413,9 +1404,7 @@ class ExtractionService:
         for scheme in self._ontology_repo.list_concept_schemes(
             taxonomy_id=str(taxonomy_id), limit=None
         ):
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 by_id[str(cls.id)] = cls
                 for alias in _class_reference_aliases(cls):
                     by_alias.setdefault(alias.strip().lower(), cls)
@@ -1668,9 +1657,7 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
                 for predicate, range_title in preds:
                     if budget <= 0:
                         break
-                    rendered.append(
-                        f"{predicate} (-> {range_title})" if range_title else predicate
-                    )
+                    rendered.append(f"{predicate} (-> {range_title})" if range_title else predicate)
                     budget -= 1
                 if rendered:
                     lines.append(f"- From a {class_title}: " + ", ".join(rendered))
@@ -1679,8 +1666,7 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
             allowed = (
                 "\n\nAllowed relations by the SUBJECT individual's class (choose "
                 "predicate.label from the list matching the subject's class; the arrow "
-                "shows the predicate's expected target class as a hint):\n"
-                + "\n".join(lines)
+                "shows the predicate's expected target class as a hint):\n" + "\n".join(lines)
             )
         elif vocabulary:
             predicate_block = "\n".join(f"- {predicate}" for predicate in vocabulary)
@@ -1706,9 +1692,7 @@ Identified individuals:
 
         return system_prompt, user_prompt
 
-    def _canonicalize_triples_against_ontology(
-        self, triples: list[dict], ontology
-    ) -> list[dict]:
+    def _canonicalize_triples_against_ontology(self, triples: list[dict], ontology) -> list[dict]:
         """
         Canonicalize typing triples whose object resolves to an ontology class.
 
@@ -1744,13 +1728,9 @@ Identified individuals:
             return triples
 
         alias_to_canonical: dict[str, str] = {}
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 for alias in _class_reference_aliases(cls):
                     alias_to_canonical.setdefault(alias.strip().lower(), alias)
 

@@ -490,7 +490,7 @@ class TestConceptObjectTypingFullPipeline:
             )
 
             apply_service = IndividualExtractionApplyService(ontology_service, ontology_repo)
-            apply_result = apply_service.apply(run)
+            apply_service.apply(run)
 
             individuals_after = len(ontology_repo.list_individuals(limit=None))
 
