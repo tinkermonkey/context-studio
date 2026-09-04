@@ -6,7 +6,8 @@ the ontology entities.
 """
 
 import logging
-from typing import Optional, Sequence
+from datetime import datetime
+from typing import Optional, Sequence, cast
 
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import SQLAlchemyError
@@ -162,7 +163,7 @@ class SQLiteDatasetRepository:
         try:
             with self.session_factory() as session:
                 row = session.execute(
-                    select(DatasetModel).where(DatasetModel.is_active == True)
+                    select(DatasetModel).where(DatasetModel.is_active)
                 ).scalar_one_or_none()
                 return self._to_domain(row) if row else None
         except SQLAlchemyError as e:
@@ -187,9 +188,7 @@ class SQLiteDatasetRepository:
             with self.session_factory() as session:
                 # Deactivate all other datasets
                 session.execute(
-                    update(DatasetModel)
-                    .where(DatasetModel.is_active == True)
-                    .values(is_active=False)
+                    update(DatasetModel).where(DatasetModel.is_active).values(is_active=False)
                 )
                 # Activate the target dataset
                 dataset_row = session.execute(
@@ -270,20 +269,20 @@ class SQLiteDatasetRepository:
     def _to_domain(self, row: DatasetModel) -> Dataset:
         """Convert ORM model to domain entity."""
         return Dataset(
-            id=row.id,
-            title=row.title,
-            filename=row.filename,
-            description=row.description,
-            created_at=row.created_at,
-            last_accessed=row.last_accessed or row.created_at,
-            schema_version=row.schema_version,
+            id=cast(str, row.id),
+            title=cast(str, row.title),
+            filename=cast(str, row.filename),
+            description=cast(str | None, row.description),
+            created_at=cast(datetime, row.created_at),
+            last_accessed=cast(datetime, row.last_accessed) or cast(datetime, row.created_at),
+            schema_version=cast(str, row.schema_version),
             metrics=DatasetMetrics(
-                layers_count=row.layers_count,
-                domains_count=row.domains_count,
-                terms_count=row.terms_count,
-                relationships_count=row.relationships_count,
-                individuals_count=row.individuals_count,
+                layers_count=cast(int, row.layers_count),
+                domains_count=cast(int, row.domains_count),
+                terms_count=cast(int, row.terms_count),
+                relationships_count=cast(int, row.relationships_count),
+                individuals_count=cast(int, row.individuals_count),
             ),
-            is_active=row.is_active,
-            version=row.version,
+            is_active=cast(bool, row.is_active),
+            version=cast(int, row.version),
         )

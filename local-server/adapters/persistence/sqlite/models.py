@@ -18,7 +18,7 @@ property_definitions (optimized queries)
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 from sqlalchemy import (
     JSON,
