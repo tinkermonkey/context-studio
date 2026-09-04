@@ -457,17 +457,17 @@ async def update_grounding_workflow(
         )
 
     if request.title is not None:
-        workflow.title = request.title
+        workflow.title = request.title  # type: ignore[assignment]
     if request.description is not None:
-        workflow.description = request.description
+        workflow.description = request.description  # type: ignore[assignment]
     if request.source is not None:
-        workflow.source = request.source
+        workflow.source = request.source  # type: ignore[assignment]
     if request.class_scope is not None:
-        workflow.class_scope = request.class_scope
+        workflow.class_scope = request.class_scope  # type: ignore[assignment]
     if request.status is not None:
-        workflow.status = request.status
+        workflow.status = request.status  # type: ignore[assignment]
 
-    workflow.updated_at = datetime.now(timezone.utc)
+    workflow.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
     db.commit()
     db.refresh(workflow)
     return _workflow_to_response(workflow)
@@ -541,8 +541,8 @@ async def run_grounding_workflow(
     db.add(run)
 
     # Update last_run on the workflow
-    workflow.last_run = run.timestamp
-    workflow.updated_at = datetime.now(timezone.utc)
+    workflow.last_run = run.timestamp  # type: ignore[assignment]
+    workflow.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
 
     db.commit()
     db.refresh(run)
