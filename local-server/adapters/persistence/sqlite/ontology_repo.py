@@ -183,7 +183,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
@@ -375,7 +375,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
@@ -1051,7 +1051,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
