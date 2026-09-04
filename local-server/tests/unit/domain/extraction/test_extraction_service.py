@@ -648,16 +648,33 @@ class _OneChunkNLP:
         from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
 
         tok = OpenToken(
-            index=0, text=self._chunk_text, lemma=self._chunk_text.lower(), pos="PROPN",
-            tag="NNP", dep="nsubj", head_index=0, start=0, end=len(self._chunk_text),
-            sentence_index=0, is_stop=False, is_alpha=True,
+            index=0,
+            text=self._chunk_text,
+            lemma=self._chunk_text.lower(),
+            pos="PROPN",
+            tag="NNP",
+            dep="nsubj",
+            head_index=0,
+            start=0,
+            end=len(self._chunk_text),
+            sentence_index=0,
+            is_stop=False,
+            is_alpha=True,
         )
         chunk = NounChunkSpan(
-            text=self._chunk_text, start_token=0, end_token=1, root_index=0,
-            start=0, end=len(self._chunk_text), sentence_index=0,
+            text=self._chunk_text,
+            start_token=0,
+            end_token=1,
+            root_index=0,
+            start=0,
+            end=len(self._chunk_text),
+            sentence_index=0,
         )
         return OpenExtractionResult(
-            tokens=(tok,), noun_chunks=(chunk,), sentence_count=1, language="en",
+            tokens=(tok,),
+            noun_chunks=(chunk,),
+            sentence_count=1,
+            language="en",
         )
 
 
@@ -667,8 +684,12 @@ class _OneMatchIndex:
 
         return [
             SchemaMatch(
-                entity_id="cls-1", kind="class", label="System Software", score=0.5,
-                matched_field="definition", external_id="technology.systemsoftware",
+                entity_id="cls-1",
+                kind="class",
+                label="System Software",
+                score=0.5,
+                matched_field="definition",
+                external_id="technology.systemsoftware",
                 identifier="systemsoftware",
             )
         ]
@@ -679,8 +700,11 @@ class _RepoWithClass:
         from domain.ontology.entities import Class
 
         return Class(
-            id=class_id, concept_scheme_id="cs", taxonomy_id="onto-1",
-            title="System Software", identifier="systemsoftware",
+            id=class_id,
+            concept_scheme_id="cs",
+            taxonomy_id="onto-1",
+            title="System Software",
+            identifier="systemsoftware",
             description="Software that provides a runtime environment.",
         )
 
@@ -695,8 +719,12 @@ class _ConfirmingLLM:
         from domain.pipelines.ports import LLMResponse
 
         return LLMResponse(
-            content=_json.dumps({"class": self._choice}), model=model,
-            tokens_in=5, tokens_out=5, duration_ms=1.0, finish_reason="stop",
+            content=_json.dumps({"class": self._choice}),
+            model=model,
+            tokens_in=5,
+            tokens_out=5,
+            duration_ms=1.0,
+            finish_reason="stop",
         )
 
 
@@ -712,8 +740,8 @@ class TestRecognition:
     CLASS_DB = "cls-datastore"
     _VEC = {
         "Kubernetes": [1.0, 0.0, 0.0],
-        "K8s": [0.98, 0.02, 0.0],           # ~1.0 cos to Kubernetes
-        "Nextflow": [0.0, 1.0, 0.0],        # orthogonal
+        "K8s": [0.98, 0.02, 0.0],  # ~1.0 cos to Kubernetes
+        "Nextflow": [0.0, 1.0, 0.0],  # orthogonal
         "Container Orchestrator": [0.6, 0.8, 0.0],  # ~0.6 cos -> below threshold
         "borderline": [0.93, 0.3676, 0.0],  # ~0.93 cos: passes long bar, fails acronym bar
         "Docker Swarm": [0.97, 0.243, 0.0],  # ~0.97 cos -> close to Kubernetes (ambiguity)
@@ -852,7 +880,9 @@ class _RecogRepo:
 
         return [
             Class(
-                id=TestRecognition.CLASS_SW, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                id=TestRecognition.CLASS_SW,
+                concept_scheme_id="scheme-1",
+                taxonomy_id="onto-1",
                 title="System Software",
                 external_references=[
                     ExternalReference(
@@ -861,7 +891,9 @@ class _RecogRepo:
                 ],
             ),
             Class(
-                id=TestRecognition.CLASS_DB, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                id=TestRecognition.CLASS_DB,
+                concept_scheme_id="scheme-1",
+                taxonomy_id="onto-1",
                 title="Data Object",
                 external_references=[
                     ExternalReference(
@@ -905,9 +937,7 @@ class TestTypeConceptObjects:
             title="Outcome",
             identifier="outcome",
             external_references=[
-                ExternalReference(
-                    source="dr", identifier="quality.outcome", uri=None, metadata={}
-                )
+                ExternalReference(source="dr", identifier="quality.outcome", uri=None, metadata={})
             ],
         )
 
@@ -1038,9 +1068,7 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(
-            relationship_triples, individual_triples, ontology
-        )
+        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         assert len(result) == 2
         typing_triple = result[0]
@@ -1080,12 +1108,11 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result = service._type_concept_objects(
-            relationship_triples, individual_triples, ontology
-        )
+        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
-        # With new triple ordering: synthetic is_a triples come first (2), then relationship triples (2)
-        # Find the relationship triples with property_definition_id stamped
+        # With new triple ordering: synthetic is_a triples come first (2),
+        # then relationship triples (2). Find the relationship triples with
+        # property_definition_id stamped
         improves_triple = next(t for t in result if t["predicate"]["label"] == "improves")
         produces_triple = next(t for t in result if t["predicate"]["label"] == "produces")
 
@@ -1166,9 +1193,7 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(
-            relationship_triples, individual_triples, ontology
-        )
+        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         assert len(result) == 1
         assert result[0]["predicate"]["label"] != "is_a"
@@ -1189,9 +1214,7 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(
-            relationship_triples, individual_triples, ontology
-        )
+        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         assert len(result) == 1
         assert result[0] == relationship_triples[0]
@@ -1228,12 +1251,11 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result = service._type_concept_objects(
-            relationship_triples, individual_triples, ontology
-        )
+        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         typing_triples = [
-            t for t in result
+            t
+            for t in result
             if t.get("predicate", {}).get("label") == "is_a"
             and t.get("subject", {}).get("label") == "readability"
         ]

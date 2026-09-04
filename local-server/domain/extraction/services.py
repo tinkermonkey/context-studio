@@ -967,7 +967,8 @@ class ExtractionService:
                 _logger.warning(
                     "PropertyDefinition collision: both '%s' (id=%s) and '%s' (id=%s) "
                     "normalize to '%s'. Keeping the first definition (id=%s); "
-                    "triples matching the second will be stamped with the wrong property_definition_id.",
+                    "triples matching the second will be stamped with the wrong "
+                    "property_definition_id.",
                     existing.canonical_predicate or existing.title or "",
                     existing.id,
                     predicate,
