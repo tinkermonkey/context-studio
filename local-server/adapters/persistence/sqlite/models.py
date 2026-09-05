@@ -18,7 +18,7 @@ property_definitions (optimized queries)
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 from sqlalchemy import (
     JSON,
@@ -1465,7 +1465,7 @@ class SchemaConnectionRefinementRun(PipelineRun):
         return f"<SchemaConnectionRefinementRun(id={self.id}, status={self.status})>"
 
 
-class GroundingWorkflow(Base):  # type: ignore[valid-type,misc,assignment]
+class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
     """
     Configuration record for a grounding workflow.
 
@@ -1487,39 +1487,39 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc,assignment]
 
     __tablename__ = "grounding_workflows"
 
-    id: str = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
-    title: str = Column(String(255), nullable=False, index=True)  # type: ignore[assignment]
-    description: Optional[str] = Column(Text, nullable=True)  # type: ignore[assignment]
-    source: str = Column(String(255), nullable=False)  # type: ignore[assignment]
-    class_scope: list[str] = Column(  # type: ignore[assignment]
+    id = Column(String(36), primary_key=True, nullable=False)
+    title = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    source = Column(String(255), nullable=False)
+    class_scope = Column(
         JSON,
         nullable=False,
         default=list,
         doc="JSON list of class IDs or names to scope enrichment",
     )
-    status: str = Column(  # type: ignore[assignment]
+    status = Column(
         String(20),
         nullable=False,
         default="inactive",
         index=True,
         doc="Workflow status: active, inactive, error",
     )
-    last_run: Optional[datetime] = Column(  # type: ignore[assignment]
+    last_run = Column(
         DateTime(timezone=True),
         nullable=True,
         doc="UTC timestamp of most recent run",
     )
-    last_run_record_count: Optional[int] = Column(  # type: ignore[assignment]
+    last_run_record_count = Column(
         Integer,
         nullable=True,
         doc="Record count from most recent run",
     )
-    created_at: datetime = Column(  # type: ignore[assignment]
+    created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
-    updated_at: datetime = Column(  # type: ignore[assignment]
+    updated_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
@@ -1537,7 +1537,7 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc,assignment]
         return f"<GroundingWorkflow(id={self.id}, title={self.title}," f" status={self.status})>"
 
 
-class WorkflowRun(Base):  # type: ignore[valid-type,misc,assignment]
+class WorkflowRun(Base):  # type: ignore[valid-type,misc]
     """
     Record of a single execution of a grounding workflow.
 
@@ -1552,35 +1552,35 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc,assignment]
 
     __tablename__ = "workflow_runs"
 
-    id: str = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
-    workflow_id: str = Column(  # type: ignore[assignment]
+    id = Column(String(36), primary_key=True, nullable=False)
+    workflow_id = Column(
         String(36),
         ForeignKey("grounding_workflows.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         doc="Parent grounding workflow",
     )
-    status: str = Column(  # type: ignore[assignment]
+    status = Column(
         String(20),
         nullable=False,
         default="running",
         index=True,
         doc="Run status: running, success, failed",
     )
-    record_count: int = Column(  # type: ignore[assignment]
+    record_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Number of records processed",
     )
-    timestamp: datetime = Column(  # type: ignore[assignment]
+    timestamp = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
         doc="UTC timestamp when the run was initiated",
     )
-    error_message: Optional[str] = Column(Text, nullable=True)  # type: ignore[assignment]
+    error_message = Column(Text, nullable=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -1620,65 +1620,65 @@ class Dataset(Base):  # type: ignore[valid-type,misc]
 
     __tablename__ = "datasets"
 
-    id: str = Column(String(36), primary_key=True, nullable=False)  # type: ignore[assignment]
-    title: str = Column(String(255), nullable=False, index=True)  # type: ignore[assignment]
-    filename: str = Column(String(255), nullable=False)  # type: ignore[assignment]
-    description: Optional[str] = Column(Text, nullable=True)  # type: ignore[assignment]
-    created_at: datetime = Column(  # type: ignore[assignment]
+    id = Column(String(36), primary_key=True, nullable=False)
+    title = Column(String(255), nullable=False, index=True)
+    filename = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="Timestamp of creation",
     )
-    last_accessed: Optional[datetime] = Column(  # type: ignore[assignment]
+    last_accessed = Column(
         DateTime(timezone=True),
         nullable=True,
         doc="Timestamp of last activation/import",
     )
-    schema_version: str = Column(  # type: ignore[assignment]
+    schema_version = Column(
         String(20),
         nullable=False,
         default="1.0",
         doc="Database schema version",
     )
-    layers_count: int = Column(  # type: ignore[assignment]
+    layers_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Cached count of taxonomies",
     )
-    domains_count: int = Column(  # type: ignore[assignment]
+    domains_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Cached count of concept schemes",
     )
-    terms_count: int = Column(  # type: ignore[assignment]
+    terms_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Cached count of classes",
     )
-    relationships_count: int = Column(  # type: ignore[assignment]
+    relationships_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Cached count of relationships",
     )
-    individuals_count: int = Column(  # type: ignore[assignment]
+    individuals_count = Column(
         Integer,
         nullable=False,
         default=0,
         doc="Cached count of individuals",
     )
-    is_active: bool = Column(  # type: ignore[assignment]
+    is_active = Column(
         Boolean,
         nullable=False,
         default=False,
         index=True,
         doc="Whether this is the active dataset",
     )
-    version: int = Column(  # type: ignore[assignment]
+    version = Column(
         Integer,
         nullable=False,
         default=1,

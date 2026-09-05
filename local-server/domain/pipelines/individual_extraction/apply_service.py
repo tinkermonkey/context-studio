@@ -221,6 +221,8 @@ class IndividualExtractionApplyService:
                     for cid in valid_class_ids:
                         key = (subject_label.lower(), cid)
                         individual_key_to_id[key] = resolved_id
+                    # Also store label-only entry for lookup by label alone
+                    individual_key_to_id[(subject_label.lower(), "")] = resolved_id
                 else:
                     individual_key_to_id[(subject_label.lower(), "")] = resolved_id
 
@@ -228,6 +230,22 @@ class IndividualExtractionApplyService:
             property_definition_id = predicate.get("property_definition_id", "")
             obj_kind = obj.get("kind", "")
             obj_id = obj.get("id", "")
+
+            # If object ID is not set but object is an individual with class_ids,
+            # try to look it up in the created individuals cache
+            if not obj_id and obj_kind == "individual":
+                obj_label = (obj.get("label") or "").strip()
+                obj_class_ids = obj.get("class_ids") or []
+                if obj_label and obj_class_ids:
+                    for cid in obj_class_ids:
+                        key = (obj_label.lower(), cid)
+                        if key in individual_key_to_id:
+                            obj_id = individual_key_to_id[key]
+                            break
+                elif obj_label:
+                    key = (obj_label.lower(), "")
+                    if key in individual_key_to_id:
+                        obj_id = individual_key_to_id[key]
 
             if property_definition_id and obj_kind in ("individual", "class") and obj_id:
                 self._apply_relationship(

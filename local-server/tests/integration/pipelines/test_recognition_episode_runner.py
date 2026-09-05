@@ -204,7 +204,7 @@ def dr_ontology_dir() -> Path:
     spec_dir = _find_dr_spec_dir()
     if spec_dir is None:
         pytest.skip("DR spec checkout not available")
-    return spec_dir
+    return cast(Path, spec_dir)
 
 
 class TestRunFullPipelineEpisode:

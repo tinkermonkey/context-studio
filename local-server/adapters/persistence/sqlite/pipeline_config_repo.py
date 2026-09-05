@@ -130,9 +130,7 @@ class PipelineConfigurationRepository:
                     .all()
                 )
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to list pipeline configurations: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to list pipeline configurations: {exc}") from exc
 
     def list_all(self) -> list[PipelineConfiguration]:
         """List all non-deleted user configurations (for startup registry loading)."""
@@ -193,9 +191,7 @@ class PipelineConfigurationRepository:
                 session.refresh(record)
                 return record
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to update pipeline configuration: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to update pipeline configuration: {exc}") from exc
 
     def list_known_config_refs(self, pipeline_type: str, implementation_id: str) -> set[str]:
         """Return all config_refs for a type+impl (including deleted), for deduplication."""
@@ -211,9 +207,7 @@ class PipelineConfigurationRepository:
                 )
                 return {row[0] for row in rows}
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to list config refs: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to list config refs: {exc}") from exc
 
     def soft_delete(self, config_id: str) -> bool:
         """Soft-delete a configuration. Returns True if deleted, False if not found."""
@@ -234,6 +228,4 @@ class PipelineConfigurationRepository:
                 session.commit()
                 return True
         except SQLAlchemyError as exc:
-            raise PipelineStorageError(
-                f"Failed to delete pipeline configuration: {exc}"
-            ) from exc
+            raise PipelineStorageError(f"Failed to delete pipeline configuration: {exc}") from exc

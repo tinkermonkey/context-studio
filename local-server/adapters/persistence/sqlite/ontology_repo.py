@@ -15,7 +15,7 @@ Key responsibilities:
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional, cast
 
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -141,10 +141,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == taxonomy_id,
-                        OntologyEntity.node_type == NodeType.TAXONOMY,
-                    )
+                    OntologyEntity.id == taxonomy_id,
+                    OntologyEntity.node_type == NodeType.TAXONOMY,
                 )
                 .first()
             )
@@ -183,7 +181,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
@@ -239,10 +237,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == taxonomy.id,
-                        OntologyEntity.node_type == NodeType.TAXONOMY,
-                    )
+                    OntologyEntity.id == taxonomy.id,
+                    OntologyEntity.node_type == NodeType.TAXONOMY,
                 )
                 .first()
             )
@@ -287,10 +283,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == taxonomy_id,
-                        OntologyEntity.node_type == NodeType.TAXONOMY,
-                    )
+                    OntologyEntity.id == taxonomy_id,
+                    OntologyEntity.node_type == NodeType.TAXONOMY,
                 )
                 .first()
             )
@@ -326,10 +320,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == concept_scheme_id,
-                        OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
-                    )
+                    OntologyEntity.id == concept_scheme_id,
+                    OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
                 )
                 .first()
             )
@@ -375,7 +367,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
@@ -444,10 +436,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == scheme.id,
-                        OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
-                    )
+                    OntologyEntity.id == scheme.id,
+                    OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
                 )
                 .first()
             )
@@ -493,10 +483,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == concept_scheme_id,
-                        OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
-                    )
+                    OntologyEntity.id == concept_scheme_id,
+                    OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
                 )
                 .first()
             )
@@ -530,10 +518,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == class_id,
-                        OntologyEntity.node_type == NodeType.CLASS,
-                    )
+                    OntologyEntity.id == class_id,
+                    OntologyEntity.node_type == NodeType.CLASS,
                 )
                 .first()
             )
@@ -659,10 +645,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == cls.id,
-                        OntologyEntity.node_type == NodeType.CLASS,
-                    )
+                    OntologyEntity.id == cls.id,
+                    OntologyEntity.node_type == NodeType.CLASS,
                 )
                 .first()
             )
@@ -711,10 +695,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == class_id,
-                        OntologyEntity.node_type == NodeType.CLASS,
-                    )
+                    OntologyEntity.id == class_id,
+                    OntologyEntity.node_type == NodeType.CLASS,
                 )
                 .first()
             )
@@ -747,8 +729,8 @@ class SQLiteOntologyRepository:
                 search_term = f"%{criteria.query}%"
                 query = query.filter(
                     or_(
-                        OntologyEntity.title.ilike(search_term),
-                        OntologyEntity.description.ilike(search_term),
+                    OntologyEntity.title.ilike(search_term),
+                    OntologyEntity.description.ilike(search_term),
                     )
                 )
 
@@ -800,10 +782,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == individual_id,
-                        OntologyEntity.node_type == NodeType.INDIVIDUAL,
-                    )
+                    OntologyEntity.id == individual_id,
+                    OntologyEntity.node_type == NodeType.INDIVIDUAL,
                 )
                 .first()
             )
@@ -887,10 +867,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == individual.id,
-                        OntologyEntity.node_type == NodeType.INDIVIDUAL,
-                    )
+                    OntologyEntity.id == individual.id,
+                    OntologyEntity.node_type == NodeType.INDIVIDUAL,
                 )
                 .first()
             )
@@ -935,9 +913,9 @@ class SQLiteOntologyRepository:
                 # Add updated memberships
                 for position, class_id in enumerate(individual.class_ids):
                     membership = IndividualClass(
-                        individual_id=individual.id,
-                        class_id=class_id,
-                        position=position,
+                    individual_id=individual.id,
+                    class_id=class_id,
+                    position=position,
                     )
                     session.add(membership)
 
@@ -963,10 +941,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == individual_id,
-                        OntologyEntity.node_type == NodeType.INDIVIDUAL,
-                    )
+                    OntologyEntity.id == individual_id,
+                    OntologyEntity.node_type == NodeType.INDIVIDUAL,
                 )
                 .first()
             )
@@ -1002,10 +978,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == property_id,
-                        OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
-                    )
+                    OntologyEntity.id == property_id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
                 .first()
             )
@@ -1051,7 +1025,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.title.like(f"%{query}%"))
 
             if sort_by == "title":
-                col = OntologyEntity.title
+                col: Any = OntologyEntity.title
             elif sort_by == "created_at":
                 col = OntologyEntity.created_at
             elif sort_by == "last_modified":
@@ -1112,8 +1086,8 @@ class SQLiteOntologyRepository:
                 .filter(
                     OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                     or_(
-                        OntologyEntity.domain_class_id == class_id,
-                        OntologyEntity.range_class_id == class_id,
+                    OntologyEntity.domain_class_id == class_id,
+                    OntologyEntity.range_class_id == class_id,
                     ),
                 )
                 .count()
@@ -1136,12 +1110,10 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.identifier == identifier,
-                        OntologyEntity.node_type.in_(
-                            (NodeType.TAXONOMY, NodeType.CONCEPT_SCHEME, NodeType.CLASS)
-                        ),
-                    )
+                    OntologyEntity.identifier == identifier,
+                    OntologyEntity.node_type.in_(
+                    (NodeType.TAXONOMY, NodeType.CONCEPT_SCHEME, NodeType.CLASS)
+                    ),
                 )
                 .first()
             )
@@ -1168,10 +1140,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.identifier == identifier,
-                        OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
-                    )
+                    OntologyEntity.identifier == identifier,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
                 .first()
             )
@@ -1204,11 +1174,9 @@ class SQLiteOntologyRepository:
             existing = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.identifier == prop.identifier,
-                        OntologyEntity.id != prop.id,
-                        OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
-                    )
+                    OntologyEntity.identifier == prop.identifier,
+                    OntologyEntity.id != prop.id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
                 .first()
             )
@@ -1218,10 +1186,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == prop.id,
-                        OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
-                    )
+                    OntologyEntity.id == prop.id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
                 .first()
             )
@@ -1330,10 +1296,8 @@ class SQLiteOntologyRepository:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
-                    and_(
-                        OntologyEntity.id == property_id,
-                        OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
-                    )
+                    OntologyEntity.id == property_id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
                 .first()
             )
@@ -1639,11 +1603,9 @@ class SQLiteOntologyRepository:
             existing = (
                 session.query(AttributeDefinitionORM)
                 .filter(
-                    and_(
-                        AttributeDefinitionORM.class_id == attr_def.class_id,
-                        AttributeDefinitionORM.identifier == attr_def.identifier,
-                        AttributeDefinitionORM.id != attr_def.id,
-                    )
+                    AttributeDefinitionORM.class_id == attr_def.class_id,
+                    AttributeDefinitionORM.identifier == attr_def.identifier,
+                    AttributeDefinitionORM.id != attr_def.id,
                 )
                 .first()
             )

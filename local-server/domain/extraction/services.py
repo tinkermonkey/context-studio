@@ -537,15 +537,24 @@ class ExtractionService:
                 # LLM typing with spaCy noun-chunk extraction + vector retrieval +
                 # LLM confirmation, then reuses the same relationship derivation.
                 if self._extraction_mode == "nlp_grounded":
-                    extracted_triples, tokens_used = self._extract_triples_nlp_grounded(
+                    (
+                        extracted_triples,
+                        tokens_used,
+                        extraction_warnings,
+                    ) = self._extract_triples_nlp_grounded(
                         text, ontology, ontology_id, model, temperature
                     )
                 else:
-                    extracted_triples, tokens_used = self._extract_triples_two_pass(
+                    (
+                        extracted_triples,
+                        tokens_used,
+                        extraction_warnings,
+                    ) = self._extract_triples_two_pass(
                         text, ontology, ontology_id, model, temperature
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
+                warnings.extend(extraction_warnings)
 
             except Exception as exc:
                 _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
@@ -628,13 +637,9 @@ class ExtractionService:
 
         catalog: list[tuple[str, str]] = []
         seen_refs: set[str] = set()
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 class_ref = _canonical_class_ref(cls)
                 if not class_ref or class_ref in seen_refs:
                     continue
@@ -683,13 +688,9 @@ class ExtractionService:
 
         # Count the total classes in the taxonomy for skip-threshold check
         total_class_count = 0
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            total_class_count += self._ontology_repo.count_classes(
-                concept_scheme_id=scheme.id
-            )
+            total_class_count += self._ontology_repo.count_classes(concept_scheme_id=scheme.id)
 
         # Skip retrieval on small ontologies: return full catalog directly
         if total_class_count <= _CATALOG_RETRIEVAL_SKIP_THRESHOLD:
@@ -745,7 +746,7 @@ class ExtractionService:
 
     def _extract_triples_two_pass(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
 
@@ -768,7 +769,7 @@ class ExtractionService:
         adopts that node's canonical title instead of being re-created.
 
         Returns:
-            Tuple of (combined typing + relationship triples, total tokens used).
+            Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
         individual_system, individual_user = self._build_individual_extraction_prompt(
             text, ontology
@@ -795,10 +796,13 @@ class ExtractionService:
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
-        combined = self._post_process_triples(
-            individual_triples + relationship_triples, ontology
+        all_relationship_triples, typing_warnings = self._type_concept_objects(
+            relationship_triples, individual_triples, ontology
         )
-        return combined, tokens_used
+        combined = self._post_process_triples(
+            individual_triples + all_relationship_triples, ontology
+        )
+        return combined, tokens_used, typing_warnings
 
     def _derive_relationships(
         self, text, ontology, individuals, ontology_id, model, temperature
@@ -840,9 +844,227 @@ class ExtractionService:
         """Recognition step, shared by both modes."""
         return self._recognize_individuals(triples, ontology)
 
+    def _type_concept_objects(
+        self,
+        relationship_triples: list[dict],
+        individual_triples: list[dict],
+        ontology,
+    ) -> tuple[list[dict], list[str]]:
+        """
+        Type pass-2 concept-objects via PropertyDefinition range inference.
+
+        Pass-2 relationship extraction may emit concept-objects: relationship
+        triple objects with kind=="individual", no id, and labels not seen in
+        pass-1 individuals (e.g., "readability", "loose coupling"). These are
+        untyped and invisible to recognition.
+
+        This step emits synthetic is_a triples that ground each concept-object
+        in the ontology via the relationship's PropertyDefinition.range_class_id,
+        making them visible to downstream recognition and materialization.
+
+        Additionally, this step stamps property_definition_id on all relationship
+        triples (not just those introducing concept-objects) by resolving their
+        predicates to PropertyDefinition entities. This is a prerequisite for
+        the apply service guard in IndividualExtractionApplyService.apply()
+        (which requires property_definition_id to be truthy for relationship creation).
+
+        Args:
+            relationship_triples: Pass-2 output (relationship triples only)
+            individual_triples: Pass-1 output (typing triples)
+            ontology: Target ontology
+
+        Returns:
+            Tuple of (relationship_triples with property_definition_id stamped +
+            synthetic is_a triples for concept-objects, warnings list)
+        """
+        warnings: list[str] = []
+
+        if not relationship_triples:
+            return relationship_triples, warnings
+
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            warning_msg = (
+                "Cannot type concept-objects or stamp property_definition_id: "
+                "ontology.id is falsy (None or empty). "
+                "Relationship triples will be returned without property_definition_id "
+                "and will be silently dropped during apply (apply service requires "
+                "property_definition_id to be truthy)."
+            )
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
+            return relationship_triples, warnings
+
+        pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
+
+        try:
+            prop_index = self._property_definition_index()
+            _, by_id = self._class_index(ontology)
+        except (TypeError, AttributeError, KeyError, IndexError):
+            raise
+        except Exception as exc:
+            warning_msg = (
+                f"Concept-object typing step failed (database access error): {exc}. "
+                "Returning untyped relationship triples. Relationships will be dropped "
+                "during apply since property_definition_id will not be stamped."
+            )
+            _logger.error(warning_msg, exc_info=exc)
+            warnings.append(warning_msg)
+            return relationship_triples, warnings
+
+        synthetic_triples: list[dict] = []
+        concept_object_labels_typed: set[str] = set()
+
+        for triple in relationship_triples:
+            predicate_label = str(triple.get("predicate", {}).get("label", "")).strip()
+            normalized_label = _normalize_predicate_label(predicate_label)
+
+            prop_def = prop_index.get(normalized_label)
+            if prop_def:
+                triple["predicate"]["property_definition_id"] = str(prop_def.id)
+
+            obj = triple.get("object", {})
+            obj_kind = obj.get("kind", "")
+            obj_label = str(obj.get("label", "")).strip()
+            obj_id = obj.get("id")
+
+            if self._is_concept_object(obj_kind, obj_id, obj_label, pass_1_individual_labels):
+                if prop_def and prop_def.range_class_id:
+                    range_class = by_id.get(str(prop_def.range_class_id))
+                    if range_class:
+                        obj_label_lower = obj_label.lower()
+                        if obj_label_lower not in concept_object_labels_typed:
+                            concept_object_labels_typed.add(obj_label_lower)
+                            synthetic_triple = self._make_concept_object_typing_triple(
+                                obj_label, range_class, triple
+                            )
+                            synthetic_triples.append(synthetic_triple)
+                        obj["class_ids"] = [str(prop_def.range_class_id)]
+                    else:
+                        _logger.info(
+                            f"Concept-object '{obj_label}': PropertyDefinition "
+                            f"'{predicate_label}' has range_class_id="
+                            f"{prop_def.range_class_id}, but class not found in ontology"
+                        )
+                elif prop_def:
+                    _logger.info(
+                        f"Concept-object '{obj_label}': PropertyDefinition "
+                        f"'{predicate_label}' declares no range_class_id"
+                    )
+                else:
+                    _logger.info(
+                        f"Concept-object '{obj_label}': PropertyDefinition not found "
+                        f"for predicate '{predicate_label}'"
+                    )
+
+        return synthetic_triples + relationship_triples, warnings
+
+    def _pass_1_individual_labels(self, individual_triples: list[dict]) -> set[str]:
+        """
+        Extract pass-1 individual labels (lowercased) from typing triples.
+
+        Reads individual labels from the subjects of is_a typing triples.
+        """
+        labels: set[str] = set()
+        for triple in individual_triples:
+            if self._is_typing_triple(triple):
+                label = str(triple.get("subject", {}).get("label", "")).strip()
+                if label:
+                    labels.add(label.lower())
+        return labels
+
+    def _property_definition_index(self) -> dict[str, Any]:
+        """
+        Build a normalized_predicate_label -> PropertyDefinition index.
+
+        Follows the local-index pattern: built within the method from
+        list_property_definitions, not cached. When multiple PropertyDefinitions
+        normalize to the same label (e.g., "relates_to" and "relates-to" both
+        become "relates to"), the first one encountered is kept and a warning
+        is logged about the collision.
+        """
+        index: dict[str, Any] = {}
+        for prop_def in self._ontology_repo.list_property_definitions(limit=None):
+            predicate = (prop_def.canonical_predicate or prop_def.title or "").strip()
+            if not predicate:
+                continue
+            normalized = _normalize_predicate_label(predicate)
+            if normalized in index:
+                existing = index[normalized]
+                _logger.warning(
+                    "PropertyDefinition collision: both '%s' (id=%s) and '%s' (id=%s) "
+                    "normalize to '%s'. Keeping the first definition (id=%s); "
+                    "triples matching the second will be stamped with the wrong "
+                    "property_definition_id.",
+                    existing.canonical_predicate or existing.title or "",
+                    existing.id,
+                    predicate,
+                    prop_def.id,
+                    normalized,
+                    existing.id,
+                )
+            else:
+                index[normalized] = prop_def
+        return index
+
+    def _is_concept_object(
+        self,
+        obj_kind: str,
+        obj_id: Any,
+        obj_label: str,
+        pass_1_individual_labels: set[str],
+    ) -> bool:
+        """
+        Check if an object is a pass-2 concept-object.
+
+        A concept-object has:
+        - kind == "individual"
+        - no id
+        - non-empty label (lowercased) not in pass-1 individual labels
+        """
+        obj_label_stripped = str(obj_label).strip()
+        return (
+            obj_kind == "individual"
+            and not obj_id
+            and bool(obj_label_stripped)
+            and obj_label_stripped.lower() not in pass_1_individual_labels
+        )
+
+    def _make_concept_object_typing_triple(
+        self, obj_label: str, range_class, originating_triple: dict
+    ) -> dict:
+        """
+        Create a synthetic is_a triple for a concept-object.
+
+        The subject is the concept-object itself, the object is the range class,
+        and the confidence/provenance are inherited from the originating
+        relationship triple.
+        """
+        range_class_id = str(range_class.id)
+        range_class_ref = _canonical_class_ref(range_class)
+        if not range_class_ref:
+            fallback_title = getattr(range_class, "title", None)
+            range_class_ref = fallback_title or range_class_id
+        return {
+            "subject": {
+                "kind": "individual",
+                "id": None,
+                "label": obj_label,
+                "class_ids": [range_class_id],
+            },
+            "predicate": {"property_definition_id": None, "label": "is_a"},
+            "object": {
+                "kind": "class",
+                "id": range_class_id,
+                "label": range_class_ref,
+            },
+            "confidence": originating_triple.get("confidence"),
+            "provenance": originating_triple.get("provenance"),
+        }
+
     def _extract_triples_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
 
@@ -865,6 +1087,9 @@ class ExtractionService:
         individual to an EXISTING specific individual — a specific-to-specific
         match) rather than typing (specific instance -> generic class). See
         `_recognize_individuals` (#1137).
+
+        Returns:
+            Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
         individual_triples, tokens_used = self._type_individuals_nlp_grounded(
             text, ontology, ontology_id, model, temperature
@@ -877,10 +1102,13 @@ class ExtractionService:
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
-        combined = self._post_process_triples(
-            individual_triples + relationship_triples, ontology
+        all_relationship_triples, typing_warnings = self._type_concept_objects(
+            relationship_triples, individual_triples, ontology
         )
-        return combined, tokens_used
+        combined = self._post_process_triples(
+            individual_triples + all_relationship_triples, ontology
+        )
+        return combined, tokens_used, typing_warnings
 
     def _type_individuals_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
@@ -984,8 +1212,7 @@ class ExtractionService:
         user_prompt = (
             f'Phrase: "{label}"\n'
             f'Sentence: "{sentence}"\n\n'
-            "Candidate classes (reference (title): definition):\n"
-            + "\n".join(lines)
+            "Candidate classes (reference (title): definition):\n" + "\n".join(lines)
         )
         response = self._llm.complete(
             system_prompt=system_prompt,
@@ -1208,9 +1435,7 @@ class ExtractionService:
         for scheme in self._ontology_repo.list_concept_schemes(
             taxonomy_id=str(taxonomy_id), limit=None
         ):
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 by_id[str(cls.id)] = cls
                 for alias in _class_reference_aliases(cls):
                     by_alias.setdefault(alias.strip().lower(), cls)
@@ -1463,9 +1688,7 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
                 for predicate, range_title in preds:
                     if budget <= 0:
                         break
-                    rendered.append(
-                        f"{predicate} (-> {range_title})" if range_title else predicate
-                    )
+                    rendered.append(f"{predicate} (-> {range_title})" if range_title else predicate)
                     budget -= 1
                 if rendered:
                     lines.append(f"- From a {class_title}: " + ", ".join(rendered))
@@ -1474,8 +1697,7 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
             allowed = (
                 "\n\nAllowed relations by the SUBJECT individual's class (choose "
                 "predicate.label from the list matching the subject's class; the arrow "
-                "shows the predicate's expected target class as a hint):\n"
-                + "\n".join(lines)
+                "shows the predicate's expected target class as a hint):\n" + "\n".join(lines)
             )
         elif vocabulary:
             predicate_block = "\n".join(f"- {predicate}" for predicate in vocabulary)
@@ -1501,9 +1723,7 @@ Identified individuals:
 
         return system_prompt, user_prompt
 
-    def _canonicalize_triples_against_ontology(
-        self, triples: list[dict], ontology
-    ) -> list[dict]:
+    def _canonicalize_triples_against_ontology(self, triples: list[dict], ontology) -> list[dict]:
         """
         Canonicalize typing triples whose object resolves to an ontology class.
 
@@ -1539,13 +1759,9 @@ Identified individuals:
             return triples
 
         alias_to_canonical: dict[str, str] = {}
-        schemes = self._ontology_repo.list_concept_schemes(
-            taxonomy_id=str(taxonomy_id), limit=None
-        )
+        schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
-            for cls in self._ontology_repo.list_classes(
-                concept_scheme_id=scheme.id, limit=None
-            ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 for alias in _class_reference_aliases(cls):
                     alias_to_canonical.setdefault(alias.strip().lower(), alias)
 

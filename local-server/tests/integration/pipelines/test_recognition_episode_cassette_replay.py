@@ -50,6 +50,7 @@ def dr_ontology_dir() -> Path:
     spec_dir = _find_dr_spec_dir()
     if spec_dir is None:
         pytest.skip("DR spec checkout not available")
+    assert spec_dir is not None
     return spec_dir
 
 

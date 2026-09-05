@@ -648,16 +648,33 @@ class _OneChunkNLP:
         from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
 
         tok = OpenToken(
-            index=0, text=self._chunk_text, lemma=self._chunk_text.lower(), pos="PROPN",
-            tag="NNP", dep="nsubj", head_index=0, start=0, end=len(self._chunk_text),
-            sentence_index=0, is_stop=False, is_alpha=True,
+            index=0,
+            text=self._chunk_text,
+            lemma=self._chunk_text.lower(),
+            pos="PROPN",
+            tag="NNP",
+            dep="nsubj",
+            head_index=0,
+            start=0,
+            end=len(self._chunk_text),
+            sentence_index=0,
+            is_stop=False,
+            is_alpha=True,
         )
         chunk = NounChunkSpan(
-            text=self._chunk_text, start_token=0, end_token=1, root_index=0,
-            start=0, end=len(self._chunk_text), sentence_index=0,
+            text=self._chunk_text,
+            start_token=0,
+            end_token=1,
+            root_index=0,
+            start=0,
+            end=len(self._chunk_text),
+            sentence_index=0,
         )
         return OpenExtractionResult(
-            tokens=(tok,), noun_chunks=(chunk,), sentence_count=1, language="en",
+            tokens=(tok,),
+            noun_chunks=(chunk,),
+            sentence_count=1,
+            language="en",
         )
 
 
@@ -667,8 +684,12 @@ class _OneMatchIndex:
 
         return [
             SchemaMatch(
-                entity_id="cls-1", kind="class", label="System Software", score=0.5,
-                matched_field="definition", external_id="technology.systemsoftware",
+                entity_id="cls-1",
+                kind="class",
+                label="System Software",
+                score=0.5,
+                matched_field="definition",
+                external_id="technology.systemsoftware",
                 identifier="systemsoftware",
             )
         ]
@@ -679,8 +700,11 @@ class _RepoWithClass:
         from domain.ontology.entities import Class
 
         return Class(
-            id=class_id, concept_scheme_id="cs", taxonomy_id="onto-1",
-            title="System Software", identifier="systemsoftware",
+            id=class_id,
+            concept_scheme_id="cs",
+            taxonomy_id="onto-1",
+            title="System Software",
+            identifier="systemsoftware",
             description="Software that provides a runtime environment.",
         )
 
@@ -695,8 +719,12 @@ class _ConfirmingLLM:
         from domain.pipelines.ports import LLMResponse
 
         return LLMResponse(
-            content=_json.dumps({"class": self._choice}), model=model,
-            tokens_in=5, tokens_out=5, duration_ms=1.0, finish_reason="stop",
+            content=_json.dumps({"class": self._choice}),
+            model=model,
+            tokens_in=5,
+            tokens_out=5,
+            duration_ms=1.0,
+            finish_reason="stop",
         )
 
 
@@ -712,8 +740,8 @@ class TestRecognition:
     CLASS_DB = "cls-datastore"
     _VEC = {
         "Kubernetes": [1.0, 0.0, 0.0],
-        "K8s": [0.98, 0.02, 0.0],           # ~1.0 cos to Kubernetes
-        "Nextflow": [0.0, 1.0, 0.0],        # orthogonal
+        "K8s": [0.98, 0.02, 0.0],  # ~1.0 cos to Kubernetes
+        "Nextflow": [0.0, 1.0, 0.0],  # orthogonal
         "Container Orchestrator": [0.6, 0.8, 0.0],  # ~0.6 cos -> below threshold
         "borderline": [0.93, 0.3676, 0.0],  # ~0.93 cos: passes long bar, fails acronym bar
         "Docker Swarm": [0.97, 0.243, 0.0],  # ~0.97 cos -> close to Kubernetes (ambiguity)
@@ -852,7 +880,9 @@ class _RecogRepo:
 
         return [
             Class(
-                id=TestRecognition.CLASS_SW, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                id=TestRecognition.CLASS_SW,
+                concept_scheme_id="scheme-1",
+                taxonomy_id="onto-1",
                 title="System Software",
                 external_references=[
                     ExternalReference(
@@ -861,7 +891,9 @@ class _RecogRepo:
                 ],
             ),
             Class(
-                id=TestRecognition.CLASS_DB, concept_scheme_id="scheme-1", taxonomy_id="onto-1",
+                id=TestRecognition.CLASS_DB,
+                concept_scheme_id="scheme-1",
+                taxonomy_id="onto-1",
                 title="Data Object",
                 external_references=[
                     ExternalReference(
@@ -870,3 +902,548 @@ class _RecogRepo:
                 ],
             ),
         ]
+
+
+class TestTypeConceptObjects:
+    """Test the _type_concept_objects method for pass-2 concept-object typing."""
+
+    QUALITY_CLASS_ID = "quality-class-id"
+    PROPERTY_DEF_ID = "prop-def-id"
+    OUTCOME_CLASS_ID = "outcome-class-id"
+
+    @pytest.fixture
+    def ontology_with_classes_and_properties(self):
+        """Create a mock ontology with classes and property definitions."""
+        from domain.ontology.entities import Class, PropertyDefinition
+        from domain.ontology.value_objects import ExternalReference
+
+        quality_class = Class(
+            id=self.QUALITY_CLASS_ID,
+            concept_scheme_id="scheme-1",
+            taxonomy_id="onto-1",
+            title="Quality Attribute",
+            identifier="quality",
+            external_references=[
+                ExternalReference(
+                    source="dr", identifier="quality.attribute", uri=None, metadata={}
+                )
+            ],
+        )
+
+        outcome_class = Class(
+            id=self.OUTCOME_CLASS_ID,
+            concept_scheme_id="scheme-1",
+            taxonomy_id="onto-1",
+            title="Outcome",
+            identifier="outcome",
+            external_references=[
+                ExternalReference(source="dr", identifier="quality.outcome", uri=None, metadata={})
+            ],
+        )
+
+        improves_property = PropertyDefinition(
+            id=self.PROPERTY_DEF_ID,
+            identifier="improves",
+            title="improves",
+            canonical_predicate="improves",
+            ontology_mapping=None,
+            domain_class_id=None,
+            range_class_id=self.QUALITY_CLASS_ID,
+            external_references=[],
+        )
+
+        produces_property = PropertyDefinition(
+            id="prop-produces-id",
+            identifier="produces",
+            title="produces",
+            canonical_predicate="produces",
+            ontology_mapping=None,
+            domain_class_id=None,
+            range_class_id=self.OUTCOME_CLASS_ID,
+            external_references=[],
+        )
+
+        no_range_property = PropertyDefinition(
+            id="prop-no-range-id",
+            identifier="relates",
+            title="relates",
+            canonical_predicate="relates",
+            ontology_mapping=None,
+            domain_class_id=None,
+            range_class_id=None,
+            external_references=[],
+        )
+
+        ontology = Mock()
+        ontology.id = "onto-1"
+
+        return {
+            "ontology": ontology,
+            "quality_class": quality_class,
+            "outcome_class": outcome_class,
+            "improves_property": improves_property,
+            "produces_property": produces_property,
+            "no_range_property": no_range_property,
+        }
+
+    @pytest.fixture
+    def extraction_service_for_typing(self, ontology_with_classes_and_properties):
+        """Create an ExtractionService configured for concept-object typing tests."""
+        ontology_repo = Mock()
+        embedding_service = Mock()
+        llm = Mock()
+        nlp = Mock()
+        event_publisher = Mock()
+        extraction_repo = Mock()
+        extraction_run_repo = Mock()
+
+        ontology_data = ontology_with_classes_and_properties
+
+        def mock_list_property_definitions(limit=None):
+            return [
+                ontology_data["improves_property"],
+                ontology_data["produces_property"],
+                ontology_data["no_range_property"],
+            ]
+
+        ontology_repo.list_property_definitions = mock_list_property_definitions
+
+        def mock_list_concept_schemes(taxonomy_id=None, limit=None):
+            scheme = Mock()
+            scheme.id = "scheme-1"
+            return [scheme]
+
+        def mock_list_classes(concept_scheme_id=None, limit=None):
+            return [
+                ontology_data["quality_class"],
+                ontology_data["outcome_class"],
+            ]
+
+        ontology_repo.list_concept_schemes = mock_list_concept_schemes
+        ontology_repo.list_classes = mock_list_classes
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=[],
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+            similarity_threshold=0.85,
+        )
+
+        return {
+            "service": service,
+            "ontology": ontology_data["ontology"],
+            "ontology_repo": ontology_repo,
+            "quality_class": ontology_data["quality_class"],
+            "outcome_class": ontology_data["outcome_class"],
+        }
+
+    def test_concept_object_with_resolvable_range(self, extraction_service_for_typing):
+        """Test that a concept-object with a resolvable range emits a synthetic is_a triple."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        extraction_service_for_typing["quality_class"]
+
+        individual_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Caching"},
+                "predicate": {"property_definition_id": None, "label": "is_a"},
+                "object": {"kind": "class", "id": "cache-class-id", "label": "Pattern"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Caching"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "readability"},
+                "confidence": 0.85,
+                "provenance": "test",
+            }
+        ]
+
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
+
+        assert len(result_triples) == 2
+        assert warnings == []
+        typing_triple = result_triples[0]
+
+        assert typing_triple["subject"]["kind"] == "individual"
+        assert typing_triple["subject"]["label"] == "readability"
+        assert typing_triple["subject"]["class_ids"] == [self.QUALITY_CLASS_ID]
+        assert typing_triple["predicate"]["label"] == "is_a"
+        assert typing_triple["object"]["kind"] == "class"
+        assert typing_triple["object"]["id"] == self.QUALITY_CLASS_ID
+        assert typing_triple["confidence"] == 0.85
+        assert typing_triple["provenance"] == "test"
+
+        prop_def_id = relationship_triples[0]["predicate"]["property_definition_id"]
+        assert prop_def_id == self.PROPERTY_DEF_ID
+
+    def test_concept_object_property_definition_id_stamped(self, extraction_service_for_typing):
+        """Test that property_definition_id is stamped on all relationship triples."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "System"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "performance"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+            {
+                "subject": {"kind": "individual", "label": "Module"},
+                "predicate": {"property_definition_id": None, "label": "produces"},
+                "object": {"kind": "individual", "label": "result"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+        ]
+
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
+
+        # With new triple ordering: synthetic is_a triples come first (2),
+        # then relationship triples (2). Find the relationship triples with
+        # property_definition_id stamped
+        improves_triple = next(t for t in result_triples if t["predicate"]["label"] == "improves")
+        produces_triple = next(t for t in result_triples if t["predicate"]["label"] == "produces")
+
+        assert improves_triple["predicate"]["property_definition_id"] == self.PROPERTY_DEF_ID
+        assert produces_triple["predicate"]["property_definition_id"] == "prop-produces-id"
+
+    def test_concept_object_predicate_no_range(self, extraction_service_for_typing, caplog):
+        """Test that a concept-object with a predicate having no range logs INFO and skips."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Item"},
+                "predicate": {"property_definition_id": None, "label": "relates"},
+                "object": {"kind": "individual", "label": "something"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        with caplog.at_level("INFO"):
+            result_triples, warnings = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        assert len(result_triples) == 1
+        assert not any(t.get("predicate", {}).get("label") == "is_a" for t in result_triples)
+        assert "no range_class_id" in caplog.text or "relates" in caplog.text
+
+    def test_concept_object_predicate_not_found(self, extraction_service_for_typing, caplog):
+        """Test that a concept-object whose predicate doesn't resolve logs INFO and skips."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Item"},
+                "predicate": {"property_definition_id": None, "label": "unknown_verb"},
+                "object": {"kind": "individual", "label": "something"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        with caplog.at_level("INFO"):
+            result_triples, warnings = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        assert len(result_triples) == 1
+        assert "PropertyDefinition not found" in caplog.text or "unknown_verb" in caplog.text
+
+    def test_pass_1_individual_not_treated_as_concept_object(self, extraction_service_for_typing):
+        """Test that pass-1 individuals are not treated as concept-objects."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Caching"},
+                "predicate": {"property_definition_id": None, "label": "is_a"},
+                "object": {"kind": "class", "id": "cache-class-id", "label": "Pattern"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Caching"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "Caching"},
+                "confidence": 0.85,
+                "provenance": "test",
+            }
+        ]
+
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
+
+        assert len(result_triples) == 1
+        assert result_triples[0]["predicate"]["label"] != "is_a"
+
+    def test_class_object_not_treated_as_concept_object(self, extraction_service_for_typing):
+        """Test that objects with kind='class' are not treated as concept-objects."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Caching"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "class", "id": "quality-class-id", "label": "Quality Attribute"},
+                "confidence": 0.85,
+                "provenance": "test",
+            }
+        ]
+
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
+
+        assert len(result_triples) == 1
+        assert result_triples[0] == relationship_triples[0]
+
+    def test_multiple_concept_objects_same_label_deduplicated(self, extraction_service_for_typing):
+        """Test that multiple concept-object references produce only one is_a triple."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        individual_triples = [
+            {
+                "subject": {"kind": "individual", "label": "CacheLayer"},
+                "predicate": {"property_definition_id": None, "label": "is_a"},
+                "object": {"kind": "class", "id": "pattern-class-id", "label": "Pattern"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "CacheLayer"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "readability"},
+                "confidence": 0.85,
+                "provenance": "test",
+            },
+            {
+                "subject": {"kind": "individual", "label": "OptimizedCode"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "readability"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+        ]
+
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
+
+        typing_triples = [
+            t
+            for t in result_triples
+            if t.get("predicate", {}).get("label") == "is_a"
+            and t.get("subject", {}).get("label") == "readability"
+        ]
+        assert len(typing_triples) == 1
+
+    def test_empty_relationship_triples_returns_empty(self, extraction_service_for_typing):
+        """Test that empty relationship triples returns empty."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+
+        result_triples, warnings = service._type_concept_objects([], [], ontology)
+        assert result_triples == []
+        assert warnings == []
+
+    def test_no_ontology_id_returns_unchanged(self, extraction_service_for_typing):
+        """Test that ontology without id returns relationship_triples unchanged and adds warning."""
+        service = extraction_service_for_typing["service"]
+        ontology = Mock()
+        ontology.id = None
+
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "Test"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "readability"},
+                "confidence": 0.85,
+                "provenance": "test",
+            }
+        ]
+
+        result_triples, warnings = service._type_concept_objects(relationship_triples, [], ontology)
+        assert result_triples == relationship_triples
+        assert len(warnings) == 1
+        assert "ontology.id is falsy" in warnings[0]
+
+    def test_range_class_id_present_but_class_not_in_ontology(
+        self, extraction_service_for_typing, caplog
+    ):
+        """Test that a concept-object with non-existent range_class_id skips."""
+        from domain.ontology.entities import PropertyDefinition
+
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Create a property with range_class_id pointing to non-existent class
+        bad_range_property = PropertyDefinition(
+            id="prop-bad-range-id",
+            identifier="references",
+            title="references",
+            canonical_predicate="references",
+            ontology_mapping=None,
+            domain_class_id=None,
+            range_class_id="non-existent-class-id",
+            external_references=[],
+        )
+
+        # Get the original properties
+        original_props = [
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[0],
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[1],
+            extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[2],
+        ]
+
+        # Modify the mock to include the bad range property
+        def mock_list_property_definitions(limit=None):
+            return original_props + [bad_range_property]
+
+        ontology_repo.list_property_definitions = mock_list_property_definitions
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "SomePattern"},
+                "predicate": {"property_definition_id": None, "label": "references"},
+                "object": {"kind": "individual", "label": "concept_object"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        with caplog.at_level("INFO"):
+            result_triples, warnings = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        # Verify only original triple is returned (no synthetic triple)
+        assert len(result_triples) == 1
+        assert result_triples[0] == relationship_triples[0]
+        # Verify property_definition_id was stamped
+        assert result_triples[0]["predicate"]["property_definition_id"] == "prop-bad-range-id"
+        # Verify the specific log message appears
+        expected_msg = "has range_class_id=non-existent-class-id, but class not found in ontology"
+        assert expected_msg in caplog.text
+
+    def _is_typing_triple(self, triple):
+        """Helper to identify typing triples."""
+        return triple.get("object", {}).get("kind") == "class"
+
+    def test_database_access_failure_returns_untyped_triples(
+        self, extraction_service_for_typing, caplog
+    ):
+        """Test that database access failures return untyped relationship triples unchanged."""
+        import logging
+
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Configure mock to raise exception on list_property_definitions
+        ontology_repo.list_property_definitions = Mock(
+            side_effect=RuntimeError("transient SQLite error")
+        )
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "System"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "performance"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+            {
+                "subject": {"kind": "individual", "label": "Module"},
+                "predicate": {"property_definition_id": None, "label": "produces"},
+                "object": {"kind": "individual", "label": "result"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+        ]
+
+        with caplog.at_level(logging.ERROR):
+            result_triples, warnings = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        # Assert original triples are returned unchanged
+        assert result_triples == relationship_triples
+        assert len(result_triples) == 2
+
+        # Assert no synthetic is_a triples are appended
+        typing_triples = [
+            t for t in result_triples if t.get("predicate", {}).get("label") == "is_a"
+        ]
+        assert len(typing_triples) == 0
+
+        # Assert warning is returned
+        assert len(warnings) == 1
+        assert "database access error" in warnings[0]
+
+        # Assert ERROR-level log is emitted
+        assert "Concept-object typing step failed" in caplog.text
+        assert "database access error" in caplog.text or "transient SQLite error" in caplog.text
+
+    def test_programming_error_is_reraised(self, extraction_service_for_typing):
+        """Test that programming errors (TypeError, etc.) are re-raised, not caught."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Configure mock to raise TypeError (a programming error, not a database error)
+        ontology_repo.list_property_definitions = Mock(
+            side_effect=TypeError("unexpected type error")
+        )
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "System"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "performance"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        # Programming errors should be re-raised, not caught
+        with pytest.raises(TypeError, match="unexpected type error"):
+            service._type_concept_objects(relationship_triples, individual_triples, ontology)

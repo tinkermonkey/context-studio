@@ -1,0 +1,3 @@
+This directory is a Tauri v2 scaffold that is not yet integrated with the main application.
+See CLAUDE.md for details on the integration roadmap.
+Rust toolchain is not available in this environment, and development here is not active.
