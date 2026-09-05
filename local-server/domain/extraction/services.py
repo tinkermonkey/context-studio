@@ -888,7 +888,7 @@ class ExtractionService:
             prop_index = self._property_definition_index()
             _, by_id = self._class_index(ontology)
         except Exception as exc:
-            _logger.warning(
+            _logger.error(
                 "Concept-object typing step failed (database access error): %s. "
                 "Returning untyped relationship triples. Relationships will be dropped "
                 "during apply since property_definition_id will not be stamped.",
