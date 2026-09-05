@@ -272,13 +272,14 @@ class TestConceptObjectTypingFullPipeline:
         ]
 
         # Step 1: Type concept objects - emits synthetic is_a triple
-        all_relationship_triples = extraction_service._type_concept_objects(
+        all_relationship_triples, warnings = extraction_service._type_concept_objects(
             relationship_triples, pattern_individual_triples, tax
         )
 
         assert len(all_relationship_triples) == 2, (
             "Should have synthetic is_a + relationship"
         )
+        assert warnings == []
         typing_triple = all_relationship_triples[0]
         relationship_triple = all_relationship_triples[1]
 
@@ -447,7 +448,7 @@ class TestConceptObjectTypingFullPipeline:
         ]
 
         # Type concept objects
-        all_relationship_triples = extraction_service._type_concept_objects(
+        all_relationship_triples, warnings = extraction_service._type_concept_objects(
             relationship_triples, pattern_individual_triples, tax
         )
 
@@ -575,7 +576,7 @@ class TestConceptObjectTypingFullPipeline:
 
         # Type concept objects - should NOT emit is_a for "relates"
         with caplog.at_level(logging.INFO):
-            all_relationship_triples = extraction_service._type_concept_objects(
+            all_relationship_triples, warnings = extraction_service._type_concept_objects(
                 relationship_triples, pattern_individual_triples, tax
             )
 
@@ -645,7 +646,7 @@ class TestConceptObjectTypingFullPipeline:
 
         # Type concept objects - should NOT emit is_a
         with caplog.at_level(logging.INFO):
-            all_relationship_triples = extraction_service._type_concept_objects(
+            all_relationship_triples, warnings = extraction_service._type_concept_objects(
                 relationship_triples, pattern_individual_triples, tax
             )
 
@@ -721,16 +722,16 @@ class TestConceptObjectTypingFullPipeline:
         ]
 
         # Call _type_concept_objects as both modes do
-        result = extraction_service._type_concept_objects(
+        result_triples, warnings = extraction_service._type_concept_objects(
             relationship_triples, pattern_individual_triples, tax
         )
 
         # Both modes should produce the same output
         # With new triple ordering: synthetic is_a triples come first
-        assert len(result) == 2
-        assert result[0]["predicate"]["label"] == "is_a"
-        assert result[0]["subject"]["label"] == "readability"
-        assert result[1]["predicate"]["property_definition_id"] == str(improves_prop.id)
+        assert len(result_triples) == 2
+        assert result_triples[0]["predicate"]["label"] == "is_a"
+        assert result_triples[0]["subject"]["label"] == "readability"
+        assert result_triples[1]["predicate"]["property_definition_id"] == str(improves_prop.id)
 
 
 if __name__ == "__main__":

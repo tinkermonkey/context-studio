@@ -537,15 +537,16 @@ class ExtractionService:
                 # LLM typing with spaCy noun-chunk extraction + vector retrieval +
                 # LLM confirmation, then reuses the same relationship derivation.
                 if self._extraction_mode == "nlp_grounded":
-                    extracted_triples, tokens_used = self._extract_triples_nlp_grounded(
+                    extracted_triples, tokens_used, extraction_warnings = self._extract_triples_nlp_grounded(
                         text, ontology, ontology_id, model, temperature
                     )
                 else:
-                    extracted_triples, tokens_used = self._extract_triples_two_pass(
+                    extracted_triples, tokens_used, extraction_warnings = self._extract_triples_two_pass(
                         text, ontology, ontology_id, model, temperature
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
+                warnings.extend(extraction_warnings)
 
             except Exception as exc:
                 _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
@@ -737,7 +738,7 @@ class ExtractionService:
 
     def _extract_triples_two_pass(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
 
@@ -760,7 +761,7 @@ class ExtractionService:
         adopts that node's canonical title instead of being re-created.
 
         Returns:
-            Tuple of (combined typing + relationship triples, total tokens used).
+            Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
         individual_system, individual_user = self._build_individual_extraction_prompt(
             text, ontology
@@ -787,13 +788,13 @@ class ExtractionService:
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
-        all_relationship_triples = self._type_concept_objects(
+        all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology
         )
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        return combined, tokens_used
+        return combined, tokens_used, typing_warnings
 
     def _derive_relationships(
         self, text, ontology, individuals, ontology_id, model, temperature
@@ -840,7 +841,7 @@ class ExtractionService:
         relationship_triples: list[dict],
         individual_triples: list[dict],
         ontology,
-    ) -> list[dict]:
+    ) -> tuple[list[dict], list[str]]:
         """
         Type pass-2 concept-objects via PropertyDefinition range inference.
 
@@ -865,37 +866,43 @@ class ExtractionService:
             ontology: Target ontology
 
         Returns:
-            relationship_triples with property_definition_id stamped + synthetic
-            is_a triples for concept-objects
+            Tuple of (relationship_triples with property_definition_id stamped +
+            synthetic is_a triples for concept-objects, warnings list)
         """
+        warnings: list[str] = []
+
         if not relationship_triples:
-            return relationship_triples
+            return relationship_triples, warnings
 
         taxonomy_id = getattr(ontology, "id", None)
         if not taxonomy_id:
-            _logger.error(
+            warning_msg = (
                 "Cannot type concept-objects or stamp property_definition_id: "
                 "ontology.id is falsy (None or empty). "
                 "Relationship triples will be returned without property_definition_id "
                 "and will be silently dropped during apply (apply service requires "
                 "property_definition_id to be truthy)."
             )
-            return relationship_triples
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
+            return relationship_triples, warnings
 
         pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
 
         try:
             prop_index = self._property_definition_index()
             _, by_id = self._class_index(ontology)
+        except (TypeError, AttributeError, KeyError, IndexError):
+            raise
         except Exception as exc:
-            _logger.error(
-                "Concept-object typing step failed (database access error): %s. "
+            warning_msg = (
+                f"Concept-object typing step failed (database access error): {exc}. "
                 "Returning untyped relationship triples. Relationships will be dropped "
-                "during apply since property_definition_id will not be stamped.",
-                exc,
-                exc_info=exc,
+                "during apply since property_definition_id will not be stamped."
             )
-            return relationship_triples
+            _logger.error(warning_msg, exc_info=exc)
+            warnings.append(warning_msg)
+            return relationship_triples, warnings
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()
@@ -942,7 +949,7 @@ class ExtractionService:
                         f"for predicate '{predicate_label}'"
                     )
 
-        return synthetic_triples + relationship_triples
+        return synthetic_triples + relationship_triples, warnings
 
     def _pass_1_individual_labels(self, individual_triples: list[dict]) -> set[str]:
         """
@@ -1049,7 +1056,7 @@ class ExtractionService:
 
     def _extract_triples_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
 
@@ -1072,6 +1079,9 @@ class ExtractionService:
         individual to an EXISTING specific individual — a specific-to-specific
         match) rather than typing (specific instance -> generic class). See
         `_recognize_individuals` (#1137).
+
+        Returns:
+            Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
         individual_triples, tokens_used = self._type_individuals_nlp_grounded(
             text, ontology, ontology_id, model, temperature
@@ -1084,13 +1094,13 @@ class ExtractionService:
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
-        all_relationship_triples = self._type_concept_objects(
+        all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology
         )
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        return combined, tokens_used
+        return combined, tokens_used, typing_warnings
 
     def _type_individuals_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float

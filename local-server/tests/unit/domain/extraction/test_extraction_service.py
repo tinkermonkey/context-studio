@@ -1068,10 +1068,11 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
-        assert len(result) == 2
-        typing_triple = result[0]
+        assert len(result_triples) == 2
+        assert warnings == []
+        typing_triple = result_triples[0]
 
         assert typing_triple["subject"]["kind"] == "individual"
         assert typing_triple["subject"]["label"] == "readability"
@@ -1108,13 +1109,13 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         # With new triple ordering: synthetic is_a triples come first (2),
         # then relationship triples (2). Find the relationship triples with
         # property_definition_id stamped
-        improves_triple = next(t for t in result if t["predicate"]["label"] == "improves")
-        produces_triple = next(t for t in result if t["predicate"]["label"] == "produces")
+        improves_triple = next(t for t in result_triples if t["predicate"]["label"] == "improves")
+        produces_triple = next(t for t in result_triples if t["predicate"]["label"] == "produces")
 
         assert improves_triple["predicate"]["property_definition_id"] == self.PROPERTY_DEF_ID
         assert produces_triple["predicate"]["property_definition_id"] == "prop-produces-id"
@@ -1136,12 +1137,12 @@ class TestTypeConceptObjects:
         ]
 
         with caplog.at_level("INFO"):
-            result = service._type_concept_objects(
+            result_triples, warnings = service._type_concept_objects(
                 relationship_triples, individual_triples, ontology
             )
 
-        assert len(result) == 1
-        assert not any(t.get("predicate", {}).get("label") == "is_a" for t in result)
+        assert len(result_triples) == 1
+        assert not any(t.get("predicate", {}).get("label") == "is_a" for t in result_triples)
         assert "no range_class_id" in caplog.text or "relates" in caplog.text
 
     def test_concept_object_predicate_not_found(self, extraction_service_for_typing, caplog):
@@ -1161,11 +1162,11 @@ class TestTypeConceptObjects:
         ]
 
         with caplog.at_level("INFO"):
-            result = service._type_concept_objects(
+            result_triples, warnings = service._type_concept_objects(
                 relationship_triples, individual_triples, ontology
             )
 
-        assert len(result) == 1
+        assert len(result_triples) == 1
         assert "PropertyDefinition not found" in caplog.text or "unknown_verb" in caplog.text
 
     def test_pass_1_individual_not_treated_as_concept_object(self, extraction_service_for_typing):
@@ -1193,10 +1194,10 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
-        assert len(result) == 1
-        assert result[0]["predicate"]["label"] != "is_a"
+        assert len(result_triples) == 1
+        assert result_triples[0]["predicate"]["label"] != "is_a"
 
     def test_class_object_not_treated_as_concept_object(self, extraction_service_for_typing):
         """Test that objects with kind='class' are not treated as concept-objects."""
@@ -1214,10 +1215,10 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
-        assert len(result) == 1
-        assert result[0] == relationship_triples[0]
+        assert len(result_triples) == 1
+        assert result_triples[0] == relationship_triples[0]
 
     def test_multiple_concept_objects_same_label_deduplicated(self, extraction_service_for_typing):
         """Test that multiple concept-object references produce only one is_a triple."""
@@ -1251,11 +1252,11 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
         typing_triples = [
             t
-            for t in result
+            for t in result_triples
             if t.get("predicate", {}).get("label") == "is_a"
             and t.get("subject", {}).get("label") == "readability"
         ]
@@ -1266,11 +1267,12 @@ class TestTypeConceptObjects:
         service = extraction_service_for_typing["service"]
         ontology = extraction_service_for_typing["ontology"]
 
-        result = service._type_concept_objects([], [], ontology)
-        assert result == []
+        result_triples, warnings = service._type_concept_objects([], [], ontology)
+        assert result_triples == []
+        assert warnings == []
 
     def test_no_ontology_id_returns_unchanged(self, extraction_service_for_typing):
-        """Test that ontology without id returns relationship_triples unchanged."""
+        """Test that ontology without id returns relationship_triples unchanged and adds warning."""
         service = extraction_service_for_typing["service"]
         ontology = Mock()
         ontology.id = None
@@ -1285,8 +1287,10 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result = service._type_concept_objects(relationship_triples, [], ontology)
-        assert result == relationship_triples
+        result_triples, warnings = service._type_concept_objects(relationship_triples, [], ontology)
+        assert result_triples == relationship_triples
+        assert len(warnings) == 1
+        assert "ontology.id is falsy" in warnings[0]
 
     def test_range_class_id_present_but_class_not_in_ontology(
         self, extraction_service_for_typing, caplog
@@ -1335,15 +1339,15 @@ class TestTypeConceptObjects:
         ]
 
         with caplog.at_level("INFO"):
-            result = service._type_concept_objects(
+            result_triples, warnings = service._type_concept_objects(
                 relationship_triples, individual_triples, ontology
             )
 
         # Verify only original triple is returned (no synthetic triple)
-        assert len(result) == 1
-        assert result[0] == relationship_triples[0]
+        assert len(result_triples) == 1
+        assert result_triples[0] == relationship_triples[0]
         # Verify property_definition_id was stamped
-        assert result[0]["predicate"]["property_definition_id"] == "prop-bad-range-id"
+        assert result_triples[0]["predicate"]["property_definition_id"] == "prop-bad-range-id"
         # Verify the specific log message appears
         expected_msg = "has range_class_id=non-existent-class-id, but class not found in ontology"
         assert expected_msg in caplog.text
@@ -1386,20 +1390,48 @@ class TestTypeConceptObjects:
         ]
 
         with caplog.at_level(logging.ERROR):
-            result = service._type_concept_objects(
+            result_triples, warnings = service._type_concept_objects(
                 relationship_triples, individual_triples, ontology
             )
 
         # Assert original triples are returned unchanged
-        assert result == relationship_triples
-        assert len(result) == 2
+        assert result_triples == relationship_triples
+        assert len(result_triples) == 2
 
         # Assert no synthetic is_a triples are appended
         typing_triples = [
-            t for t in result if t.get("predicate", {}).get("label") == "is_a"
+            t for t in result_triples if t.get("predicate", {}).get("label") == "is_a"
         ]
         assert len(typing_triples) == 0
+
+        # Assert warning is returned
+        assert len(warnings) == 1
+        assert "database access error" in warnings[0]
 
         # Assert ERROR-level log is emitted
         assert "Concept-object typing step failed" in caplog.text
         assert "database access error" in caplog.text or "transient SQLite error" in caplog.text
+
+    def test_programming_error_is_reraised(self, extraction_service_for_typing):
+        """Test that programming errors (TypeError, etc.) are re-raised, not caught."""
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Configure mock to raise TypeError (a programming error, not a database error)
+        ontology_repo.list_property_definitions = Mock(side_effect=TypeError("unexpected type error"))
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "System"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "performance"},
+                "confidence": 0.9,
+                "provenance": "test",
+            }
+        ]
+
+        # Programming errors should be re-raised, not caught
+        with pytest.raises(TypeError, match="unexpected type error"):
+            service._type_concept_objects(relationship_triples, individual_triples, ontology)
