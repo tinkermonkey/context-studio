@@ -873,17 +873,29 @@ class ExtractionService:
 
         taxonomy_id = getattr(ontology, "id", None)
         if not taxonomy_id:
-            _logger.warning(
+            _logger.error(
                 "Cannot type concept-objects or stamp property_definition_id: "
                 "ontology.id is falsy (None or empty). "
-                "Relationship triples will be returned unchanged with no property_definition_id."
+                "Relationship triples will be returned without property_definition_id "
+                "and will be silently dropped during apply (apply service requires "
+                "property_definition_id to be truthy)."
             )
             return relationship_triples
 
         pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
 
-        prop_index = self._property_definition_index()
-        _, by_id = self._class_index(ontology)
+        try:
+            prop_index = self._property_definition_index()
+            _, by_id = self._class_index(ontology)
+        except Exception as exc:
+            _logger.warning(
+                "Concept-object typing step failed (database access error): %s. "
+                "Returning untyped relationship triples. Relationships will be dropped "
+                "during apply since property_definition_id will not be stamped.",
+                exc,
+                exc_info=exc,
+            )
+            return relationship_triples
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()
