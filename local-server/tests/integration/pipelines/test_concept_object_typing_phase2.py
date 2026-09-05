@@ -4,7 +4,8 @@ Phase 2: End-to-end verification of concept-object typing through recognition an
 Verifies that a pass-2-introduced concept-object survives the full pipeline:
 - typed via range-class inference (`_type_concept_objects`)
 - resolved or minted through the existing recognition cascade (`_recognize_individuals`)
-- persisted as a relationship through the unmodified apply service
+- persisted as a relationship through the apply service (with label-only cache and
+  object-ID resolution from in-pass individual cache)
 - including cross-document/cross-run deduplication behavior
 
 Tests cover both extraction modes (`_extract_triples_two_pass` and
@@ -536,9 +537,10 @@ class TestConceptObjectTypingFullPipeline:
         Scenario:
         1. PropertyDefinition "relates" has no range_class_id
         2. Pass-2 emits concept-object with predicate "relates"
-        3. _type_concept_objects does NOT emit is_a triple (no range)
+        3. _type_concept_objects does NOT emit is_a triple (no range_class_id to ground it)
         4. Concept-object stays untyped and invisible to recognition
-        5. apply() skips the relationship (no property_definition_id check) or logs it
+        5. apply() stamps property_definition_id but the relationship persists unresolved
+           since the concept-object is never grounded to an ontology class
         """
         tax = ontology_with_properties["taxonomy"]
         pattern_class = ontology_with_properties["pattern_class"]

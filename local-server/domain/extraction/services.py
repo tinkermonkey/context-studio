@@ -865,8 +865,8 @@ class ExtractionService:
         Additionally, this step stamps property_definition_id on all relationship
         triples (not just those introducing concept-objects) by resolving their
         predicates to PropertyDefinition entities. This is a prerequisite for
-        the apply service guard in IndividualExtractionApplyService._apply_triples
-        (which requires property_definition_id to be truthy).
+        the apply service guard in IndividualExtractionApplyService.apply()
+        (which requires property_definition_id to be truthy for relationship creation).
 
         Args:
             relationship_triples: Pass-2 output (relationship triples only)
