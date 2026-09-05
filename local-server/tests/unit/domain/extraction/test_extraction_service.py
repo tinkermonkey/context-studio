@@ -1351,3 +1351,55 @@ class TestTypeConceptObjects:
     def _is_typing_triple(self, triple):
         """Helper to identify typing triples."""
         return triple.get("object", {}).get("kind") == "class"
+
+    def test_database_access_failure_returns_untyped_triples(
+        self, extraction_service_for_typing, caplog
+    ):
+        """Test that database access failures return untyped relationship triples unchanged."""
+        import logging
+
+        service = extraction_service_for_typing["service"]
+        ontology = extraction_service_for_typing["ontology"]
+        ontology_repo = extraction_service_for_typing["ontology_repo"]
+
+        # Configure mock to raise exception on list_property_definitions
+        ontology_repo.list_property_definitions = Mock(
+            side_effect=RuntimeError("transient SQLite error")
+        )
+
+        individual_triples = []
+        relationship_triples = [
+            {
+                "subject": {"kind": "individual", "label": "System"},
+                "predicate": {"property_definition_id": None, "label": "improves"},
+                "object": {"kind": "individual", "label": "performance"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+            {
+                "subject": {"kind": "individual", "label": "Module"},
+                "predicate": {"property_definition_id": None, "label": "produces"},
+                "object": {"kind": "individual", "label": "result"},
+                "confidence": 0.9,
+                "provenance": "test",
+            },
+        ]
+
+        with caplog.at_level(logging.ERROR):
+            result = service._type_concept_objects(
+                relationship_triples, individual_triples, ontology
+            )
+
+        # Assert original triples are returned unchanged
+        assert result == relationship_triples
+        assert len(result) == 2
+
+        # Assert no synthetic is_a triples are appended
+        typing_triples = [
+            t for t in result if t.get("predicate", {}).get("label") == "is_a"
+        ]
+        assert len(typing_triples) == 0
+
+        # Assert ERROR-level log is emitted
+        assert "Concept-object typing step failed" in caplog.text
+        assert "database access error" in caplog.text or "transient SQLite error" in caplog.text
