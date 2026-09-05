@@ -662,3 +662,302 @@ class TestRecognitionStageBothOrchestrators:
         assert result.individuals_created == 1
         titles = {i.title for i in repo.list_individuals(class_id=CLASS_ID, limit=None)}
         assert titles == {"Kubernetes", "Carol"}
+
+
+# ---------------------------------------------------------------------------
+# Concept-object cache lookup
+# ---------------------------------------------------------------------------
+
+
+class TestConceptObjectCacheLookup:
+    """Unit tests for concept-object ID resolution via cache lookup.
+
+    When a relationship object carries no explicit ID but is an individual with
+    class_ids or a label, the apply service attempts to resolve it via the
+    in-pass cache of created/resolved individuals, supporting two paths:
+    1. By (label, class_id) when class_ids are present
+    2. By (label, "") as fallback for classless/untyped individuals
+    """
+
+    def test_object_lookup_by_label_and_class_id(self, svc, repo):
+        """Object without explicit ID is resolved via (label, class_id) cache key."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+
+        run = _make_run(
+            triples=[
+                # Create Alice (subject, establishes cache entry)
+                _make_triple("Alice"),
+                # Create relationship where object is Alice but has no explicit ID
+                # — relies on cache lookup by (label, class_id)
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",  # No explicit ID — must use cache
+                        "label": "Alice",
+                        "class_ids": [CLASS_ID],  # Same class, enables cache lookup
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2
+        assert result.relationships_created == 1
+        # Verify relationship was created with correct IDs
+        alice = repo.list_individuals(class_id=CLASS_ID, limit=None)[0]
+        bob = repo.list_individuals(class_id=CLASS_ID, limit=None)[1]
+        rels = repo.list_relationships(source_id=bob.id, property_id="prop-knows")
+        assert len(rels) == 1
+        assert rels[0].target_id == alice.id
+
+    def test_object_lookup_case_insensitive(self, svc, repo):
+        """Object label lookup is case-insensitive (uses .lower())."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+
+        run = _make_run(
+            triples=[
+                # Create "Alice" (lowercase in cache)
+                _make_triple("Alice"),
+                # Look it up as "ALICE" (different case)
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "ALICE",  # Different case
+                        "class_ids": [CLASS_ID],
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2
+        assert result.relationships_created == 1
+
+    def test_object_lookup_fallback_to_label_only_when_no_class_ids(self, svc, repo):
+        """When object has label but no class_ids, fallback to (label, '') lookup."""
+        prop = PropertyDefinition(id="prop-related", identifier="related", title="Related")
+        repo.save_property_definition(prop)
+
+        # Within a single apply() call, the cache is live and shared across triples.
+        # First triple creates an individual that will be cached with (label.lower(), class_id).
+        # Second triple creates another individual and relates it to the first via
+        # a cache lookup without class_ids on the object side (fallback to "" key).
+        run = _make_run(
+            triples=[
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "untyped_thing",
+                        "class_ids": [CLASS_ID],  # Must have class for subject to be created
+                    },
+                    "confidence": 0.9,
+                },
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Alice",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-related",
+                        "label": "related",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "untyped_thing",
+                        "class_ids": [],  # No class — fallback to "" key lookup
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2  # Both created in single run
+        assert result.relationships_created == 1  # Relationship created via cache fallback lookup
+
+    def test_object_lookup_first_class_id_match_wins(self, svc, repo):
+        """When object has multiple class_ids, first match in cache is used."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+        # Create a second class for multi-class testing
+        class2 = Class(
+            id="cls-org",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="cls_org",
+            title="Org",
+        )
+        repo.save_class(class2)
+
+        run = _make_run(
+            triples=[
+                # Create Alice scoped to CLASS_ID first
+                _make_triple("Alice", class_ids=[CLASS_ID]),
+                # Create relationship where object is Alice with multiple class_ids
+                # The first one (CLASS_ID) should match in cache, not second one
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Alice",
+                        "class_ids": [CLASS_ID, "cls-org"],  # Multiple class_ids
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2
+        assert result.relationships_created == 1
+
+    def test_object_lookup_skip_when_no_id_and_no_label(self, svc, repo):
+        """Object without ID and without label is skipped (no relationship created)."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+
+        run = _make_run(
+            triples=[
+                _make_triple("Alice"),
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "",  # No label, no lookup possible
+                        "class_ids": [CLASS_ID],
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2  # Both Alice and Bob created as subjects
+        assert result.relationships_created == 0  # Relationship skipped (no obj_id resolved)
+
+    def test_object_lookup_skip_when_not_in_cache_and_no_explicit_id(self, svc, repo):
+        """Object not in cache and with no explicit ID means relationship cannot be created."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+
+        run = _make_run(
+            triples=[
+                _make_triple("Alice"),
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Unknown",  # Not created in this run, not in cache
+                        "class_ids": [CLASS_ID],
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2  # Alice and Bob created
+        assert result.relationships_created == 0  # Relationship skipped (Unknown not in cache)
+
+    def test_object_lookup_with_explicit_id_bypasses_cache(self, svc, repo):
+        """Object with explicit ID uses it directly, bypasses cache lookup."""
+        prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
+        repo.save_property_definition(prop)
+        # Create a pre-existing individual
+        existing = Individual(id="ind-existing", class_ids=[CLASS_ID], title="ExistingPerson")
+        repo.save_individual(existing)
+
+        run = _make_run(
+            triples=[
+                _make_triple("Alice"),
+                {
+                    "subject": {
+                        "kind": "individual",
+                        "id": "",
+                        "label": "Bob",
+                        "class_ids": [CLASS_ID],
+                    },
+                    "predicate": {
+                        "property_definition_id": "prop-knows",
+                        "label": "knows",
+                    },
+                    "object": {
+                        "kind": "individual",
+                        "id": "ind-existing",  # Explicit ID provided
+                        "label": "SomeLabel",  # Label is ignored
+                        "class_ids": [CLASS_ID],
+                    },
+                    "confidence": 0.9,
+                },
+            ]
+        )
+        result = svc.apply(run)
+
+        assert result.individuals_created == 2  # Alice and Bob created
+        assert result.relationships_created == 1  # Relationship created with explicit ID
+        # Find Bob by title
+        individuals = repo.list_individuals(class_id=CLASS_ID, limit=None)
+        bob = next((i for i in individuals if i.title == "Bob"), None)
+        assert bob is not None
+        rels = repo.list_relationships(source_id=bob.id, property_id="prop-knows")
+        assert len(rels) == 1
+        assert rels[0].target_id == "ind-existing"
