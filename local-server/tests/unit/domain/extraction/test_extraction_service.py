@@ -1068,7 +1068,9 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
 
         assert len(result_triples) == 2
         assert warnings == []
@@ -1109,7 +1111,9 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
 
         # With new triple ordering: synthetic is_a triples come first (2),
         # then relationship triples (2). Find the relationship triples with
@@ -1194,7 +1198,9 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
 
         assert len(result_triples) == 1
         assert result_triples[0]["predicate"]["label"] != "is_a"
@@ -1215,7 +1221,9 @@ class TestTypeConceptObjects:
             }
         ]
 
-        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
 
         assert len(result_triples) == 1
         assert result_triples[0] == relationship_triples[0]
@@ -1252,7 +1260,9 @@ class TestTypeConceptObjects:
             },
         ]
 
-        result_triples, warnings = service._type_concept_objects(relationship_triples, individual_triples, ontology)
+        result_triples, warnings = service._type_concept_objects(
+            relationship_triples, individual_triples, ontology
+        )
 
         typing_triples = [
             t
@@ -1419,7 +1429,9 @@ class TestTypeConceptObjects:
         ontology_repo = extraction_service_for_typing["ontology_repo"]
 
         # Configure mock to raise TypeError (a programming error, not a database error)
-        ontology_repo.list_property_definitions = Mock(side_effect=TypeError("unexpected type error"))
+        ontology_repo.list_property_definitions = Mock(
+            side_effect=TypeError("unexpected type error")
+        )
 
         individual_triples = []
         relationship_triples = [

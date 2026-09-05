@@ -537,11 +537,19 @@ class ExtractionService:
                 # LLM typing with spaCy noun-chunk extraction + vector retrieval +
                 # LLM confirmation, then reuses the same relationship derivation.
                 if self._extraction_mode == "nlp_grounded":
-                    extracted_triples, tokens_used, extraction_warnings = self._extract_triples_nlp_grounded(
+                    (
+                        extracted_triples,
+                        tokens_used,
+                        extraction_warnings,
+                    ) = self._extract_triples_nlp_grounded(
                         text, ontology, ontology_id, model, temperature
                     )
                 else:
-                    extracted_triples, tokens_used, extraction_warnings = self._extract_triples_two_pass(
+                    (
+                        extracted_triples,
+                        tokens_used,
+                        extraction_warnings,
+                    ) = self._extract_triples_two_pass(
                         text, ontology, ontology_id, model, temperature
                     )
                 triples_extracted = len(extracted_triples)
