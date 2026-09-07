@@ -676,7 +676,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 continue
 
             seen.add(label.lower())
-            typing_triple = self._make_typing_triple(label, chosen)
+            typing_triple = self._make_typing_triple(label, chosen, chunk)
             typing_triples.append(typing_triple)
 
         return triples + typing_triples
@@ -777,14 +777,19 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             return None
 
     @staticmethod
-    def _make_typing_triple(label: str, match: Any) -> dict[str, Any]:
-        """Build an ``is_a`` typing triple from a confirmed class match."""
+    def _make_typing_triple(label: str, match: Any, chunk: Any) -> dict[str, Any]:
+        """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk."""
         class_ref = match.external_id or match.identifier or match.label
         return {
             "subject": {"label": label, "kind": "individual"},
             "predicate": {"label": "is_a", "kind": "property"},
             "object": {"label": class_ref, "kind": "class"},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 4),
+            "provenance": {
+                "text_offset_start": chunk.start,
+                "text_offset_end": chunk.end,
+                "raw": chunk.text,
+            },
         }
 
 
