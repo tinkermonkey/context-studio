@@ -9,6 +9,7 @@ quality suite; these tests pin the deterministic logic in isolation.
 
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
@@ -20,6 +21,8 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
 def _triple(subj, pred, obj):
@@ -125,3 +128,48 @@ async def test_request_canonical_labels_swallows_bad_json():
     orch = _orchestrator(_CannedProvider("not json at all"))
     mapping = await orch._request_canonical_labels({"foo": "Bar"}, "text")
     assert mapping == {}
+
+
+class TestNLPGroundedTypingWithoutLLMProvider:
+    """Test NLP-grounded typing edge case: config flag enabled but LLM provider missing."""
+
+    @pytest.mark.asyncio
+    async def test_nlp_grounded_typing_with_none_llm_provider_does_not_crash(self):
+        """
+        nlp_grounded_typing=True with llm_provider=None should not crash.
+
+        The _type_individuals_nlp_grounded() method internally calls _call_llm(),
+        which would raise RuntimeError if self._llm_provider is None. The guard
+        on line 133 of open_orchestrator.py prevents this. This test verifies
+        the guard exists and is not accidentally removed: when nlp_grounded_typing
+        is enabled but the LLM provider is missing, the stage should be skipped
+        gracefully, not crash with AttributeError.
+
+        If the None guard is accidentally removed, _type_individuals_nlp_grounded()
+        will be called with a None provider, eventually hitting _call_llm() which
+        raises RuntimeError("LLM provider not initialized") at base.py:132.
+        """
+        from domain.pipelines.individual_extraction.orchestrator import (
+            IndividualExtractionState,
+        )
+        from domain.pipelines.entities import PipelineType
+
+        cfg = {**get_open_v1_config(), "nlp_grounded_typing": True}
+        orch = OpenIndividualExtractionOrchestrator(
+            llm_provider=None,
+            nlp_processor=FakeNLPProcessor(),
+            embedding_service=FakeEmbeddingService(),
+            schema_index=None,
+            config=cfg,
+        )
+
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data={"text": "John works at ACME Corp"},
+        )
+
+        result_state = await orch.execute(state)
+        assert result_state is not None
+        assert result_state.current_status == "completed"
+        assert isinstance(result_state.extracted_triples, list)
