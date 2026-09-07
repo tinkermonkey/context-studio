@@ -128,6 +128,34 @@ _INDIVIDUAL_SPACE: dict[str, list] = {
     "predicate_similarity_threshold": [0.55, 0.65],
 }
 
+# Search space for the NLP-grounded typing variant. Every tunable key in the
+# variant's base_config must appear here so coordinate_ascent's wholesale
+# config replacement (on restart jitter) can never silently drop a knob.
+# The knob space covers the NLP-grounded typing knobs (nlp_typing_top_k,
+# nlp_typing_threshold, nlp_typing_matching_mode) plus the shared downstream
+# knobs present in the base_config (ground_predicates, predicate_similarity_threshold,
+# coverage_completion). Note: nlp_grounded_typing itself is NOT a tunable knob
+# (it is hardcoded True in the variant's base_config), and ground_to_schema /
+# require_schema_match are mutually exclusive with nlp_grounded_typing
+# (enforced by the config validator).
+_GROUNDED_SPACE: dict[str, list] = {
+    "predicate_form": ["surface", "lemma"],
+    "relation_confidence": [0.3, 0.5, 0.7],
+    "similarity_threshold": [0.35, 0.45, 0.55, 0.65],
+    "kinds_to_search": [
+        ["class"],
+        ["class", "property_definition"],
+        ["class", "property_definition", "relationship"],
+    ],
+    "llm_canonicalization": [False, True],
+    "ground_predicates": [False, True],
+    "coverage_completion": [False, True],
+    "predicate_similarity_threshold": [0.55, 0.65],
+    "nlp_typing_top_k": [5, 8, 10],
+    "nlp_typing_threshold": [0.1, 0.2, 0.3],
+    "nlp_typing_matching_mode": [None, "max", "definition_preferred"],
+}
+
 
 def _mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
