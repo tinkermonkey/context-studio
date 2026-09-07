@@ -45,7 +45,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, cast
 from uuid import uuid4
 
 from adapters.embedding.caching_embedding_service import CachingEmbeddingService
@@ -74,6 +74,7 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
+from domain.pipelines.ports import LLMProvider
 from scripts.default_pipeline_ontology import (
     DefaultPipelineOntologyResolver,
     dr_spec_available,
@@ -81,7 +82,6 @@ from scripts.default_pipeline_ontology import (
 from scripts.eval_ontology import build_eval_ontology
 from scripts.eval_ontology_definition_coverage import check_definition_coverage
 from scripts.quality_loop import (
-    _GROUNDED_SPACE,
     _INDIVIDUAL_SPACE,
     _METRICS_DIR,
     _make_embed_fn,
@@ -408,13 +408,14 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
         cassette_provider = _grounded_cassette_provider(scenario)
+        assert cassette_provider is not None, f"Cassette not found for scenario {scenario}"
         engine = create_local_db_engine("sqlite:///:memory:")
         Base.metadata.create_all(engine)
         session_factory = create_session_factory(engine)
         extraction_service = ExtractionService(
             ontology_repo=eval_repo,
             embedding_service=embedding,
-            llm=cassette_provider,
+            llm=cast(LLMProvider, cassette_provider),
             nlp=nlp,
             reference_sources=[FakeReferenceSource()],
             event_publisher=InProcessEventPublisher(),
@@ -425,7 +426,7 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
             extraction_mode="nlp_grounded",
         )
         orch = IndividualExtractionOrchestrator(
-            llm_provider=cassette_provider,
+            llm_provider=cast(LLMProvider, cassette_provider),
             extraction_service=extraction_service,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
