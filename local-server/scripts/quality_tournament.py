@@ -205,7 +205,7 @@ _RECOGNITION_EPISODES_DIR = (
 _RECOGNITION_PIPELINE_TAG = "individual_recognition"
 
 # A/B Evaluation promotion criteria for grounded_v1 vs default baseline (Phase 4).
-# grounded_v1 must exceed the baseline on BOTH metrics to be promoted.
+# grounded_v1 must meet or exceed the threshold on BOTH metrics to be promoted.
 _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD = 0.941
 _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD = 0.952
 
@@ -855,11 +855,9 @@ def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, 
     - "comparison": dict — side-by-side comparison with thresholds (if found)
     """
     grounded_result = next((r for r in results if r["variant"] == "grounded_v1"), None)
-    default_result = next((r for r in results if r["variant"] == "default"), None)
 
     decision_dict = {
         "grounded_v1_found": grounded_result is not None,
-        "default_found": default_result is not None,
         "decision": "INCOMPLETE",
         "reason": "",
         "grounded_v1_metrics": {},
@@ -1070,8 +1068,13 @@ def _render_scoreboard_digest(
     run_id: str,
     results: list[dict[str, Any]],
     recognition_reports: dict[str, RecognitionMetrics],
-) -> str:
-    """Markdown scoreboard: variants ranked by dev soft-F1, diagnostics alongside (§4.2)."""
+) -> tuple[str, dict[str, Any]]:
+    """Markdown scoreboard: variants ranked by dev soft-F1, diagnostics alongside (§4.2).
+
+    Returns:
+        tuple of (digest_markdown, promotion_decision) where promotion_decision contains
+        the A/B evaluation result for grounded_v1 vs default.
+    """
     lines = [f"# Individual extraction variant tournament — {run_id}", ""]
     lines.append(
         "Ranked by mean dev soft-F1 (the Loop A/B hill-climbing signal, §3.1). "
@@ -1215,7 +1218,7 @@ def _render_scoreboard_digest(
         )
     lines.append("")
 
-    return "\n".join(lines)
+    return "\n".join(lines), promotion_decision
 
 
 async def _amain(args) -> int:
@@ -1347,13 +1350,12 @@ async def _amain(args) -> int:
         )
 
     run_id = f"tournament_{generate_run_id()}"
-    digest = _render_scoreboard_digest(run_id, results, recognition_reports)
+    digest, promotion_decision = _render_scoreboard_digest(run_id, results, recognition_reports)
     digest_path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}.md"
     digest_path.parent.mkdir(parents=True, exist_ok=True)
     digest_path.write_text(digest)
 
     # A/B Evaluation: Print promotion decision (Phase 4)
-    promotion_decision = _evaluate_grounded_v1_promotion(results)
     print("\n══ A/B EVALUATION: grounded_v1 vs default ══")
     print(f"Decision: {promotion_decision['decision']}")
     print(f"Reason: {promotion_decision['reason']}")

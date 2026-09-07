@@ -28,7 +28,6 @@ from scripts.quality_tournament import (  # noqa: E402
     _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
     _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
     _GROUNDED_REPLAY_SCENARIOS,
-    _evaluate_grounded_v1_promotion,
     _grounded_cassettes_present,
     build_registry,
 )
@@ -175,7 +174,7 @@ def main() -> int:
     print(f"grounded_v1 will be promoted to default status if:")
     print(f"  - Strict-F1 ≥ {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f} AND")
     print(f"  - Soft-F1 ≥ {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}")
-    print(f"\nPromotion decision logic: {_evaluate_grounded_v1_promotion.__name__}()")
+    print(f"\nPromotion decision logic: _evaluate_grounded_v1_promotion()")
 
     if all_passed:
         print("\n" + "=" * 70)

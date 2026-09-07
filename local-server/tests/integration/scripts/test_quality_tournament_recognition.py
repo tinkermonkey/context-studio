@@ -324,7 +324,7 @@ class TestEmitRecognitionMetrics:
 class TestRecognitionScoreboardSection:
     def test_digest_includes_recognition_diagnostics_section(self):
         results = [_fake_result("default", 0.7)]
-        digest = _render_scoreboard_digest("run-1", results, _fake_reports())
+        digest, _ = _render_scoreboard_digest("run-1", results, _fake_reports())
 
         assert "## Recognition diagnostics" in digest
         assert "surface_variants" in digest
@@ -342,7 +342,7 @@ class TestRecognitionScoreboardSection:
 
     def test_digest_reports_skip_note_when_recognition_unavailable(self):
         results = [_fake_result("default", 0.7)]
-        digest = _render_scoreboard_digest("run-1", results, {})
+        digest, _ = _render_scoreboard_digest("run-1", results, {})
 
         assert "## Recognition diagnostics" in digest
         assert "Skipped" in digest
