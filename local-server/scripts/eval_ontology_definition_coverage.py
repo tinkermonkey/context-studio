@@ -23,8 +23,10 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, local_server)
 
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
-from scripts.eval_ontology import build_eval_ontology
+from adapters.embedding.sentence_transformer import (  # noqa: E402
+    SentenceTransformerEmbedding,
+)
+from scripts.eval_ontology import build_eval_ontology  # noqa: E402
 
 
 def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
@@ -114,7 +116,8 @@ def check_definition_coverage() -> dict[str, int | float]:
             embedding_available = True
     except Exception as e:
         print(
-            f"\nNote: Embedding computation unavailable ({type(e).__name__}), skipping distinctiveness check"
+            f"\nNote: Embedding computation unavailable ({type(e).__name__}), "
+            "skipping distinctiveness check"
         )
         embedding_available = False
 
@@ -176,10 +179,12 @@ def check_definition_coverage() -> dict[str, int | float]:
     if embedding_available:
         print("\n=== Embedding Distinctiveness ===\n")
         print(
-            f"Average pairwise definition embedding similarity: {results['avg_embedding_similarity']:.3f}"
+            "Average pairwise definition embedding similarity: "
+            f"{results['avg_embedding_similarity']:.3f}"
         )
         print(
-            f"Fraction of definition pairs with low similarity (<0.7): {results['embedding_distinctiveness']:.1%}"
+            "Fraction of definition pairs with low similarity (<0.7): "
+            f"{results['embedding_distinctiveness']:.1%}"
         )
     else:
         print("\n=== Embedding Distinctiveness ===")
@@ -199,11 +204,12 @@ def check_definition_coverage() -> dict[str, int | float]:
         elif coverage_ok and not distinctiveness_ok:
             print("⚠ WARNING: Adequate coverage but low definition distinctiveness")
             print(
-                "  Many definitions are too similar; definition-preferred matching may be ineffective."
+                "  Many definitions are too similar; definition-preferred "
+                "matching may be ineffective."
             )
         elif not coverage_ok and distinctiveness_ok:
             print("⚠ WARNING: Adequate distinctiveness but insufficient coverage")
-            print("  Too many classes lack definitions for reliable definition-based matching.")
+            print("  Too many classes lack definitions for reliable " "definition-based matching.")
         else:
             print("✗ FAIL: Insufficient coverage and low distinctiveness")
             print("  Definitions are not suitable for disambiguation.")
@@ -211,13 +217,18 @@ def check_definition_coverage() -> dict[str, int | float]:
         # Embedding not available; assess based on coverage alone
         if coverage_ok:
             print("✓ PASS: Sufficient class definition coverage")
-            print("  (Embedding distinctiveness check skipped - model unavailable in offline mode)")
             print(
-                "  Grounded_v1 can use definitions for typing, but distinctiveness cannot be verified."
+                "  (Embedding distinctiveness check skipped - model unavailable " "in offline mode)"
+            )
+            print(
+                "  Grounded_v1 can use definitions for typing, but "
+                "distinctiveness cannot be verified."
             )
         else:
             print("✗ FAIL: Insufficient class definition coverage")
-            print("  (Embedding distinctiveness check skipped - model unavailable in offline mode)")
+            print(
+                "  (Embedding distinctiveness check skipped - model unavailable " "in offline mode)"
+            )
 
     if results["coverage_percent"] >= 80.0:
         print("\n✓ BONUS: High definition coverage (≥80%)")

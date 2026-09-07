@@ -23,7 +23,7 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, local_server)
 
-from scripts.quality_tournament import (
+from scripts.quality_tournament import (  # noqa: E402
     _GROUNDED_CASSETTE_DIR,
     _GROUNDED_REPLAY_SCENARIOS,
     _grounded_cassettes_present,
@@ -134,7 +134,10 @@ def main() -> int:
         "--full",
         action="store_true",
         default=False,
-        help="Run full validation including model loading (slower). Default is lightweight file check.",
+        help=(
+            "Run full validation including model loading (slower). "
+            "Default is lightweight file check."
+        ),
     )
     args = parser.parse_args()
 
