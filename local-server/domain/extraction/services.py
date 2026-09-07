@@ -1130,7 +1130,8 @@ class ExtractionService:
         """
         if self._schema_index is None:
             _logger.warning(
-                "nlp_grounded typing requested but schema_index is None; no typing triples will be produced"
+                "nlp_grounded typing requested but schema_index is None; "
+                "no typing triples will be produced"
             )
             return [], 0
 
