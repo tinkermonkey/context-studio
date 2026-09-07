@@ -23,11 +23,11 @@ per file.
 SAFETY: the default behavior (no flag, or `--dry-run`) makes ZERO live LLM
 calls. It only prints which scenarios and cassette paths would be recorded, the
 model id, and the total call count. Live recording -- which spends real money --
-requires the explicit `--record` flag. The per-chunk confirm calls use the same
-model as the quality suite fixtures (claude-opus-4-7), not the phase-1 default;
-unlike the `default` variant's LLM calls (which use Gemini Flash via OpenRouter),
-grounded typing's confirm calls use the pinned fixture model so the cassette
-keys match when replayed.
+requires the explicit `--record` flag. The per-chunk confirm calls use the model
+specified in the base_config dict (google/gemini-3-flash-preview by default).
+Unlike the cassette recording for the quality suite, which uses a pinned fixture
+model, this script records using the configured default model so the cassette
+keys match the actual pipeline configuration.
 
 Usage (from local-server/, venv active):
     python scripts/record_grounded_cassettes.py            # dry run (default, no calls)
@@ -114,7 +114,7 @@ def print_plan(scenarios: list[str]) -> None:
         f"\nWould record {len(scenarios)} scenario(s) "
         f"= ~{len(scenarios)} live LLM call(s) (one or more confirm calls per scenario)."
     )
-    print("Model: claude-opus-4-7 (fixture-pinned model, same as quality suite).")
+    print("Model: google/gemini-3-flash-preview (from IndividualOpenV1Config default).")
 
 
 def record_all(scenarios: list[str]) -> int:

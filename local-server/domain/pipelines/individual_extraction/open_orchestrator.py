@@ -71,8 +71,9 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
     Injected ports keep the domain pure: an NLP processor (open extraction), an
     embedding service (grounding queries), and an optional SchemaVectorIndex
-    (semantic search over existing schema nodes). The LLM provider is only used
-    by the optional disambiguation pass.
+    (semantic search over existing schema nodes). The LLM provider is used by two
+    optional stages: llm_canonicalization (rewriting entity labels to canonical
+    forms) and nlp_grounded_typing (confirming noun chunk types via LLM).
     """
 
     def __init__(
