@@ -647,6 +647,8 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
         typing_triples: list[dict[str, Any]] = []
         seen: set[str] = set()
+        chunks_with_results = 0
+        chunks_with_llm_errors = 0
 
         for chunk in open_result.noun_chunks:
             root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
@@ -672,13 +674,24 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if not results:
                 continue
 
-            chosen = await self._confirm_class_for_chunk(label, sentence, results)
+            chunks_with_results += 1
+            chosen, had_llm_error = await self._confirm_class_for_chunk(label, sentence, results)
+            if had_llm_error:
+                chunks_with_llm_errors += 1
             if chosen is None:
                 continue
 
             seen.add(label.lower())
             typing_triple = self._make_typing_triple(label, chosen, chunk)
             typing_triples.append(typing_triple)
+
+        if chunks_with_results > 0 and chunks_with_llm_errors == chunks_with_results:
+            _logger.error(
+                "NLP-grounded typing: all %d chunks with search results failed with LLM errors. "
+                "This indicates a systemic LLM provider issue. Check availability, rate limits, "
+                "authentication, and network connectivity.",
+                chunks_with_results,
+            )
 
         return triples + typing_triples
 
@@ -693,14 +706,15 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
     async def _confirm_class_for_chunk(
         self, label: str, sentence: str, matches: list[Any]
-    ) -> Any | None:
+    ) -> tuple[Any | None, bool]:
         """
         Ask the LLM which retrieved candidate class the noun chunk instantiates.
 
         The LLM's only job is disambiguation-in-context: it picks the best-fitting
         candidate (by its exact external_id/identifier/label) or "none" — it never
-        invents a class. Returns the chosen SchemaMatch or None if no match is
-        accepted or all candidates lack a valid reference.
+        invents a class. Returns a tuple of (chosen SchemaMatch or None, had_llm_error).
+        had_llm_error indicates whether an LLM provider error occurred (True) or the
+        LLM was successfully called (False).
         """
         candidates: list[tuple[str, Any]] = []
         lines: list[str] = []
@@ -719,7 +733,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             lines.append(f"- {ref} ({title})" + (f": {definition}" if definition else ""))
 
         if not candidates:
-            return None
+            return None, False
 
         system_prompt = (
             "You are a knowledge-graph typing assistant. Given a phrase from a "
@@ -758,13 +772,13 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                     choice = ""
 
             if not choice or choice.lower() == "none":
-                return None
+                return None, False
 
             choice_lower = choice.lower()
             for ref, match in candidates:
                 if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
-                    return match
-            return None
+                    return match, False
+            return None, False
         except Exception as exc:  # noqa: BLE001 - distinguish LLM provider errors
             error_type = type(exc).__name__
             _logger.error(
@@ -775,7 +789,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 exc,
                 exc_info=True,
             )
-            return None
+            return None, True
 
     @staticmethod
     def _make_typing_triple(label: str, match: Any, chunk: Any) -> dict[str, Any]:

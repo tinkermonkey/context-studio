@@ -255,12 +255,13 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk(
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
             "technology", "Technology drives innovation.", matches
         )
 
-        assert result is not None
-        assert result.external_id == "technology.node"
+        assert chosen is not None
+        assert chosen.external_id == "technology.node"
+        assert had_error is False
 
     @pytest.mark.asyncio
     async def test_confirm_class_returns_none_for_none_choice(self):
@@ -283,11 +284,12 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk(
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
             "random", "This is a random word.", matches
         )
 
-        assert result is None
+        assert chosen is None
+        assert had_error is False
 
     @pytest.mark.asyncio
     async def test_confirm_class_returns_none_for_empty_candidates(self):
@@ -310,9 +312,10 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk("test", "Test sentence.", matches)
+        chosen, had_error = await orchestrator._confirm_class_for_chunk("test", "Test sentence.", matches)
 
-        assert result is None
+        assert chosen is None
+        assert had_error is False
 
     @pytest.mark.asyncio
     async def test_confirm_class_handles_llm_failure_gracefully(self):
@@ -340,9 +343,10 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk("technology", "Test.", matches)
+        chosen, had_error = await orchestrator._confirm_class_for_chunk("technology", "Test.", matches)
 
-        assert result is None
+        assert chosen is None
+        assert had_error is True
 
     @pytest.mark.asyncio
     async def test_confirm_class_rejects_fabricated_class_reference(self):
@@ -372,11 +376,12 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk(
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
             "unknown", "The unknown fabricated class.", matches
         )
 
-        assert result is None
+        assert chosen is None
+        assert had_error is False
 
 
 class TestNLPGroundedTyping:

@@ -1220,37 +1220,50 @@ class ExtractionService:
             f'Sentence: "{sentence}"\n\n'
             "Candidate classes (reference (title): definition):\n" + "\n".join(lines)
         )
-        response = self._llm.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=200,
-            response_format="json",
-        )
-        tokens = response.tokens_in + response.tokens_out
 
-        choice = ""
-        payload = re.search(r"\{.*\}", response.content or "", re.S)
-        if payload:
-            try:
-                choice = str(json.loads(payload.group(0)).get("class", "")).strip()
-            except (ValueError, TypeError) as exc:
-                _logger.error(
-                    "Failed to parse LLM JSON response for chunk '%s' in nlp_grounded typing: %s. "
-                    "Response content: %s",
-                    label,
-                    exc,
-                    response.content[:500] if response.content else "empty",
-                )
-                choice = ""
-        if not choice or choice.lower() == "none":
+        try:
+            response = self._llm.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=200,
+                response_format="json",
+            )
+            tokens = response.tokens_in + response.tokens_out
+
+            choice = ""
+            payload = re.search(r"\{.*\}", response.content or "", re.S)
+            if payload:
+                try:
+                    choice = str(json.loads(payload.group(0)).get("class", "")).strip()
+                except (ValueError, TypeError) as exc:
+                    _logger.error(
+                        "Failed to parse LLM JSON response for chunk '%s' in nlp_grounded typing: %s. "
+                        "Response content: %s",
+                        label,
+                        exc,
+                        response.content[:500] if response.content else "empty",
+                    )
+                    choice = ""
+            if not choice or choice.lower() == "none":
+                return None, tokens
+            choice_lower = choice.lower()
+            for ref, match in candidates:
+                if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
+                    return match, tokens
             return None, tokens
-        choice_lower = choice.lower()
-        for ref, match in candidates:
-            if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
-                return match, tokens
-        return None, tokens
+        except Exception as exc:
+            error_type = type(exc).__name__
+            _logger.error(
+                "LLM provider error during NLP-grounded typing for chunk '%s': %s: %s. "
+                "Check LLM availability, rate limits, authentication, and network connectivity.",
+                label,
+                error_type,
+                exc,
+                exc_info=True,
+            )
+            return None, 0
 
     @staticmethod
     def _make_typing_triple(label: str, match, chunk) -> dict:
