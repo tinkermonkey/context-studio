@@ -848,7 +848,6 @@ def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, 
 
     Returns a dict with:
     - "grounded_v1_found": bool — whether grounded_v1 is in results
-    - "default_found": bool — whether default is in results
     - "decision": str — "PROMOTE", "STAY", or "INCOMPLETE"
     - "reason": str — explanation of the decision
     - "grounded_v1_metrics": dict — grounded_v1's dev metrics (if found)
