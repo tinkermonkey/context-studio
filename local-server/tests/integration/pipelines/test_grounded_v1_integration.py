@@ -174,9 +174,15 @@ class TestGroundedV1Integration:
             assert isinstance(confidence, (int, float)), "Confidence must be numeric"
             assert 0.0 <= confidence <= 1.0, f"Confidence must be in [0, 1], got {confidence}"
 
-    @pytest.mark.skip(reason="Config validation tested in test_nlp_grounded_typing_orchestrator.py::test_config_validation_prevents_conflicting_flags")
+    @pytest.mark.skip(
+        reason=(
+            "Config validation tested in "
+            "test_nlp_grounded_typing_orchestrator.py::"
+            "test_config_validation_prevents_conflicting_flags"
+        )
+    )
     def test_grounded_v1_config_validation(self):
-        """Config validation is tested by test_config_validation_prevents_conflicting_flags in existing test file."""
+        """Config validation is tested elsewhere."""
         pass
 
     @pytest.mark.asyncio

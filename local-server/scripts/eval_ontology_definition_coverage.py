@@ -44,6 +44,9 @@ def check_definition_coverage() -> dict[str, int | float]:
     definition_lengths = []
     classes_by_length = defaultdict(list)
 
+    def get_class_title(cls):
+        return cls.title if hasattr(cls, 'title') else "unknown"
+
     concept_schemes = ontology_repo.list_concept_schemes(limit=None)
     for scheme in concept_schemes:
         classes = ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
@@ -56,16 +59,21 @@ def check_definition_coverage() -> dict[str, int | float]:
                 definition_lengths.append(def_len)
 
                 # Categorize by length
+                class_title = get_class_title(cls)
                 if def_len < 50:
-                    classes_by_length["<50 chars"].append(cls.title if hasattr(cls, 'title') else "unknown")
+                    classes_by_length["<50 chars"].append(class_title)
                 elif def_len < 100:
-                    classes_by_length["50-100 chars"].append(cls.title if hasattr(cls, 'title') else "unknown")
+                    classes_by_length["50-100 chars"].append(class_title)
                 elif def_len < 200:
-                    classes_by_length["100-200 chars"].append(cls.title if hasattr(cls, 'title') else "unknown")
+                    classes_by_length["100-200 chars"].append(class_title)
                 else:
-                    classes_by_length[">200 chars"].append(cls.title if hasattr(cls, 'title') else "unknown")
+                    classes_by_length[">200 chars"].append(class_title)
 
-    avg_def_length = sum(definition_lengths) / len(definition_lengths) if definition_lengths else 0.0
+    avg_def_length = (
+        sum(definition_lengths) / len(definition_lengths)
+        if definition_lengths
+        else 0.0
+    )
 
     results = {
         "total_classes": total_classes,
