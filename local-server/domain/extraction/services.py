@@ -1239,8 +1239,8 @@ class ExtractionService:
                     choice = str(json.loads(payload.group(0)).get("class", "")).strip()
                 except (ValueError, TypeError) as exc:
                     _logger.error(
-                        "Failed to parse LLM JSON response for chunk '%s' in nlp_grounded typing: %s. "
-                        "Response content: %s",
+                        "Failed to parse LLM JSON response for chunk '%s' "
+                        "in nlp_grounded typing: %s. Response content: %s",
                         label,
                         exc,
                         response.content[:500] if response.content else "empty",

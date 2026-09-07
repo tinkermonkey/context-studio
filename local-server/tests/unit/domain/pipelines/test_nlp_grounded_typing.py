@@ -312,7 +312,9 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        chosen, had_error = await orchestrator._confirm_class_for_chunk("test", "Test sentence.", matches)
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
+            "test", "Test sentence.", matches
+        )
 
         assert chosen is None
         assert had_error is False
@@ -343,7 +345,9 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        chosen, had_error = await orchestrator._confirm_class_for_chunk("technology", "Test.", matches)
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
+            "technology", "Test.", matches
+        )
 
         assert chosen is None
         assert had_error is True
