@@ -394,27 +394,39 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
     """
     Build the `grounded_v1` variant: the NLP-grounded typing individual extraction pipeline.
 
-    Runs the OpenIndividualExtractionOrchestrator with nlp_grounded_typing=True,
-    which enables chunk typing via vector retrieval + LLM confirmation (mutually
-    exclusive with ground_to_schema / require_schema_match). Replays entirely
-    from recorded cassettes for the per-chunk LLM confirm calls so the variant
-    can be evaluated offline without live LLM calls (Loop A/B constraint).
+    Uses ExtractionService with extraction_mode="nlp_grounded", which replaces the
+    LLM pass-1 identification with spaCy noun chunks + vector retrieval + LLM
+    confirmation for typing, while reusing the shared LLM pass-2 relationship
+    extraction (design §1141, issue #1141). Replays entirely from recorded
+    cassettes for both per-chunk typing confirms and pass-2 relationship calls,
+    so the variant can be evaluated offline without live LLM calls (Loop A/B constraint).
 
     `eval_repo`/`eval_index` wire the imported ontology (scripts/eval_ontology.py)
-    into the grounding stage; grounding self-skips per scenario when the ontology
-    can't be resolved.
+    into the typing stage for candidate class retrieval; typing self-skips per
+    scenario when the ontology can't be resolved.
     """
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
-        # Set up cassette provider for the per-chunk confirm LLM calls
         cassette_provider = _grounded_cassette_provider(scenario)
-        orch = OpenIndividualExtractionOrchestrator(
-            llm_provider=cassette_provider,
-            nlp_processor=nlp,
-            embedding_service=embedding,
-            schema_index=eval_index,
-            config=config,
+        engine = create_local_db_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session_factory = create_session_factory(engine)
+        extraction_service = ExtractionService(
             ontology_repo=eval_repo,
+            embedding_service=embedding,
+            llm=cassette_provider,
+            nlp=nlp,
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=SQLiteExtractionRepository(session_factory),
+            extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
+            similarity_threshold=config.get("similarity_threshold", 0.85),
+            schema_index=eval_index,
+            extraction_mode="nlp_grounded",
+        )
+        orch = IndividualExtractionOrchestrator(
+            llm_provider=cassette_provider,
+            extraction_service=extraction_service,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
         state = IndividualExtractionState(
@@ -425,19 +437,12 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
         result_state = await orch.execute(state)
         return (result_state.result or {}).get("triples", [])
 
-    # Enable nlp_grounded_typing in the base config; force all schema-grounding
-    # knobs to False (mutually exclusive per config validation). Every key in
-    # base_config appears in _GROUNDED_SPACE (knob_space) so coordinate_ascent's
-    # restart jitter can never drop a knob.
-    grounded_base_config = dict(get_open_v1_config())
-    grounded_base_config.update(
-        {
-            "nlp_grounded_typing": True,
-            "ground_to_schema": False,
-            "require_schema_match": False,
-            "llm_canonicalization": True,
-        }
-    )
+    # Base config for nlp_grounded mode: no knobs (all single-valued in knob_space)
+    # Every key appears in _GROUNDED_SPACE so coordinate_ascent's restart jitter
+    # can never drop a key.
+    grounded_base_config = {
+        "similarity_threshold": 0.85,
+    }
 
     return Variant(
         name="grounded_v1",

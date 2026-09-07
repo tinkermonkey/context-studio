@@ -1140,10 +1140,21 @@ class ExtractionService:
             )
             return [], 0, warnings
 
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            warning_msg = (
+                "Cannot type individuals via NLP-grounded typing: "
+                "ontology.id is falsy (None or empty). "
+                "No typing triples will be produced. Verify that the ontology "
+                "object has a valid id attribute."
+            )
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
+            return [], 0, warnings
+
         result = self._nlp.process_open(text)
         tokens = list(result.tokens)
         sentences = self._sentence_texts(text, tokens)
-        taxonomy_id = str(getattr(ontology, "id", "") or "") or None
 
         triples: list[dict] = []
         tokens_used = 0
