@@ -115,9 +115,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             # stages). Needs the spaCy structure + SVO relations to find
             # unconsumed chunks and derive their relations.
             if self._cfg.coverage_completion:
-                triples = self._complete_coverage(
-                    triples, open_result, relations, ontology_id
-                )
+                triples = self._complete_coverage(triples, open_result, relations, ontology_id)
 
             # Runs before _ground_to_schema so it only sees relation triples (no
             # is_a type triples exist yet), and after canonicalization since that
@@ -272,8 +270,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         new_triples = self._build_triples(open_result, wider)
         merged = list(triples)
         seen = {
-            (t["subject"]["label"], t["predicate"]["label"], t["object"]["label"])
-            for t in triples
+            (t["subject"]["label"], t["predicate"]["label"], t["object"]["label"]) for t in triples
         }
         for triple in new_triples:
             key = (
@@ -317,9 +314,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         if taxonomy is None:
             return triples
 
-        mentions = sorted(
-            {t[role]["label"] for t in triples for role in ("subject", "object")}
-        )
+        mentions = sorted({t[role]["label"] for t in triples for role in ("subject", "object")})
         type_hints: dict[str, str] = {}
         for mention in mentions:
             query = self._embedding.embed(mention.replace("_", " "))
@@ -356,15 +351,13 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         hallucinated name. Returns an empty map on any LLM or JSON failure, which
         the caller treats as "leave the labels unchanged".
         """
-        lines = [
-            f'- "{mention}" (a {type_hints[mention]})' for mention in sorted(type_hints)
-        ]
+        lines = [f'- "{mention}" (a {type_hints[mention]})' for mention in sorted(type_hints)]
         mention_block = "\n".join(lines)
         system_prompt = (
             "You canonicalize extracted entity labels. Each snake_case mention is "
             "tagged with its ontology type. For each mention, return its canonical "
             "name exactly as it appears in the source text, using the original "
-            "capitalization and spacing (e.g. \"technician_route\" -> "
+            'capitalization and spacing (e.g. "technician_route" -> '
             '"Technician Route"). If the mention is not a distinct named entity in '
             "the text, keep it unchanged. Never invent a name that is not present "
             "in the source text. Return ONLY a JSON object mapping each mention to "
@@ -619,7 +612,8 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
         if taxonomy is None:
             _logger.debug(
-                "nlp_grounded_typing: ontology_id '%s' not found in repository; typing stage skipped",
+                "nlp_grounded_typing: ontology_id '%s' not found in repository; "
+                "typing stage skipped",
                 ontology_id,
             )
             return triples
@@ -737,8 +731,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                     choice = str(json.loads(payload.group(0)).get("class", "")).strip()
                 except (ValueError, TypeError) as exc:
                     _logger.error(
-                        "Failed to parse LLM JSON response for chunk '%s': %s. "
-                        "Response: %s",
+                        "Failed to parse LLM JSON response for chunk '%s': %s. " "Response: %s",
                         label,
                         exc,
                         response.content[:500] if response.content else "empty",

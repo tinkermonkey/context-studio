@@ -1428,11 +1428,12 @@ class TestTypeConceptObjects:
 
         # Assert warning is returned
         assert len(warnings) == 1
-        assert "database access error" in warnings[0]
+        assert "Concept-object typing step failed" in warnings[0]
+        assert "transient SQLite error" in warnings[0]
 
         # Assert ERROR-level log is emitted
         assert "Concept-object typing step failed" in caplog.text
-        assert "database access error" in caplog.text or "transient SQLite error" in caplog.text
+        assert "transient SQLite error" in caplog.text
 
     def test_programming_error_is_reraised(self, extraction_service_for_typing):
         """Test that programming errors (TypeError, etc.) are re-raised, not caught."""
