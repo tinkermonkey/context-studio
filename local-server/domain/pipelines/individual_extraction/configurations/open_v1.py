@@ -9,9 +9,9 @@ threshold, and confidence calibration.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal, cast
+from typing import Any, cast
 
-from domain.ontology.ports import SchemaKind
+from domain.ontology.ports import MatchingMode, SchemaKind
 from domain.pipelines.exceptions import PipelineInputError
 
 _PREDICATE_FORMS = {"lemma", "surface"}
@@ -45,7 +45,7 @@ class IndividualOpenV1Config:
     nlp_grounded_typing: bool
     nlp_typing_top_k: int
     nlp_typing_threshold: float
-    nlp_typing_matching_mode: Literal["max", "definition_preferred"] | None
+    nlp_typing_matching_mode: MatchingMode | None
 
     @classmethod
     def from_dict(cls, config: dict[str, Any]) -> "IndividualOpenV1Config":
@@ -103,7 +103,7 @@ class IndividualOpenV1Config:
                 f"nlp_typing_threshold must be within [0, 1], got {nlp_typing_threshold}"
             )
 
-        nlp_typing_matching_mode: Literal["max", "definition_preferred"] | None = None
+        nlp_typing_matching_mode: MatchingMode | None = None
         if config.get("nlp_typing_matching_mode") is not None:
             matching_mode_str = str(config.get("nlp_typing_matching_mode"))
             if matching_mode_str not in {"max", "definition_preferred"}:
@@ -111,9 +111,7 @@ class IndividualOpenV1Config:
                     f"nlp_typing_matching_mode must be 'max' or 'definition_preferred', "
                     f"got {matching_mode_str!r}"
                 )
-            nlp_typing_matching_mode = cast(
-                Literal["max", "definition_preferred"], matching_mode_str
-            )
+            nlp_typing_matching_mode = cast(MatchingMode, matching_mode_str)
 
         return cls(
             relation_confidence=relation_confidence,

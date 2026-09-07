@@ -31,6 +31,7 @@ from adapters.persistence.sqlite.models import Relationship as RelationshipORM
 from domain.ontology.ports import (
     EmbeddingService,
     MatchedField,
+    MatchingMode,
     SchemaKind,
     SchemaMatch,
     SchemaVectorIndex,
@@ -42,15 +43,14 @@ logger = get_logger(__name__)
 # SchemaKind values that map directly to ontology_entities.node_type rows.
 _ENTITY_KINDS = ("class", "property_definition", "individual")
 
-# How a candidate's title-similarity and definition-similarity combine into its
-# single reported score. This is an adapter-level knob only — the domain port is
-# indifferent to it.
+# MatchingMode values control how a candidate's title-similarity and
+# definition-similarity combine into its single reported score. This is an
+# adapter-level knob only — the domain port is indifferent to it.
 #   "max"                 — the higher of title/definition similarity wins
 #                           (default; preserves prior behavior).
 #   "definition_preferred" — the curated definition drives the match: when a
 #                           usable definition embedding exists, its similarity is
 #                           the score; otherwise fall back to the title.
-MatchingMode = Literal["max", "definition_preferred"]
 
 # One-time guard so a fully-stale index (every stored vector a different
 # dimension after an embedding-model swap) surfaces a WARNING instead of

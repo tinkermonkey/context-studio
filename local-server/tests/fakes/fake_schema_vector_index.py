@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from domain.ontology.ports import SchemaKind, SchemaMatch, SchemaVectorIndex
+from domain.ontology.ports import MatchingMode, SchemaKind, SchemaMatch, SchemaVectorIndex
 
 
 class FakeSchemaVectorIndex(SchemaVectorIndex):
@@ -51,7 +51,7 @@ class FakeSchemaVectorIndex(SchemaVectorIndex):
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
-        matching_mode: str | None = None,
+        matching_mode: MatchingMode | None = None,
     ) -> list[SchemaMatch]:
         """
         Return configured search results, filtered by taxonomy_id and kinds.
