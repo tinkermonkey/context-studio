@@ -11,7 +11,6 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 
 from scripts.quality_tournament import _evaluate_grounded_v1_promotion
 

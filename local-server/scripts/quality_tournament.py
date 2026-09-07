@@ -1360,7 +1360,7 @@ async def _amain(args) -> int:
     print(f"Reason: {promotion_decision['reason']}")
     if promotion_decision["grounded_v1_found"]:
         comparison = promotion_decision["comparison"]
-        print(f"\nMetrics:")
+        print("\nMetrics:")
         print(f"  Strict-F1: {comparison['strict_f1']['value']:.3f} (threshold: {comparison['strict_f1']['threshold']:.3f}) — {'PASS' if comparison['strict_f1']['meets_threshold'] else 'FAIL'}")
         print(f"  Soft-F1:   {comparison['soft_f1']['value']:.3f} (threshold: {comparison['soft_f1']['threshold']:.3f}) — {'PASS' if comparison['soft_f1']['meets_threshold'] else 'FAIL'}")
 
