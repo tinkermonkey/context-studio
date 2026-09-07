@@ -14,26 +14,26 @@ Usage (from local-server/, venv active):
 import os
 import sys
 from collections import defaultdict
+from math import sqrt
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
-# Ensure local-server config takes precedence over /app/config
+# Ensure local-server config takes precedence
 local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, local_server)
-sys.path = [p for p in sys.path if '/app' not in p]
-
-import numpy as np
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from scripts.eval_ontology import build_eval_ontology
 
 
 def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
-    """Compute cosine similarity between two embedding vectors."""
-    a = np.array(vec1)
-    b = np.array(vec2)
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-10))
+    """Compute cosine similarity between two embedding vectors without numpy."""
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    norm_a = sqrt(sum(a * a for a in vec1))
+    norm_b = sqrt(sum(b * b for b in vec2))
+    denominator = norm_a * norm_b + 1e-10
+    return float(dot_product / denominator)
 
 
 def check_definition_coverage() -> dict[str, int | float]:
@@ -122,13 +122,13 @@ def check_definition_coverage() -> dict[str, int | float]:
         else 0.0
     )
 
-    # Compute embedding distinctiveness: measure pairwise similarity
+    # Compute embedding distinctiveness: measure full pairwise similarity
     embedding_similarities: list[float] = []
     avg_embedding_similarity = 0.0
     embedding_distinctiveness = 0.0
     if embedding_available and len(definition_embeddings) > 1:
         for i in range(len(definition_embeddings)):
-            for j in range(i + 1, min(i + 10, len(definition_embeddings))):
+            for j in range(i + 1, len(definition_embeddings)):
                 sim = _cosine_similarity(definition_embeddings[i], definition_embeddings[j])
                 embedding_similarities.append(sim)
 

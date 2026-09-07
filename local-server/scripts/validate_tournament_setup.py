@@ -2,15 +2,17 @@
 """
 Validate that the A/B tournament infrastructure for grounded_v1 is ready.
 
-This script verifies:
-1. All tournament variants (including grounded_v1) are registered
-2. Synthetic cassettes for grounded_v1 are present for all required scenarios
-3. The tournament can instantiate without errors
+This script has two modes:
+1. Lightweight (default): Verifies cassette files exist and are valid JSON
+2. Full (--full): Additionally validates variants are registered and models work
 
 Usage (from local-server/, venv active):
-    python scripts/validate_tournament_setup.py
+    python scripts/validate_tournament_setup.py           # lightweight file check
+    python scripts/validate_tournament_setup.py --full    # full integration check
 """
 
+import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -18,8 +20,9 @@ from pathlib import Path
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path = [p for p in sys.path if '/app' not in p]
+# Ensure local-server config takes precedence
+local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, local_server)
 
 from scripts.quality_tournament import (
     _grounded_cassettes_present,
@@ -28,14 +31,11 @@ from scripts.quality_tournament import (
     build_registry,
     registered_variants,
 )
-from adapters.nlp.spacy_processor import SpacyNLPProcessor
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
-from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 
 
-def validate_cassettes() -> bool:
-    """Validate that all grounded_v1 cassettes are present."""
-    print("\n=== Cassette Validation ===\n")
+def validate_cassettes_lightweight() -> bool:
+    """Lightweight: Verify cassette files exist and contain valid JSON."""
+    print("\n=== Cassette File Validation (Lightweight) ===\n")
 
     if not _GROUNDED_CASSETTE_DIR.exists():
         print(f"✗ Cassette directory missing: {_GROUNDED_CASSETTE_DIR}")
@@ -45,25 +45,53 @@ def validate_cassettes() -> bool:
     print(f"Required scenarios: {len(_GROUNDED_REPLAY_SCENARIOS)}")
 
     missing = []
+    invalid_json = []
     for scenario in _GROUNDED_REPLAY_SCENARIOS:
         cassette_file = _GROUNDED_CASSETTE_DIR / f"individual_grounded_typing_{scenario}.json"
-        if cassette_file.exists():
-            print(f"  ✓ {scenario}")
-        else:
+        if not cassette_file.exists():
             print(f"  ✗ {scenario} (missing)")
             missing.append(scenario)
+        else:
+            try:
+                with open(cassette_file) as f:
+                    json.load(f)
+                print(f"  ✓ {scenario}")
+            except json.JSONDecodeError as e:
+                print(f"  ✗ {scenario} (invalid JSON: {e})")
+                invalid_json.append(scenario)
 
     if missing:
         print(f"\nMissing {len(missing)} cassettes")
         return False
 
-    print(f"\n✓ All {len(_GROUNDED_REPLAY_SCENARIOS)} cassettes present")
+    if invalid_json:
+        print(f"\nInvalid JSON in {len(invalid_json)} cassettes")
+        return False
+
+    print(f"\n✓ All {len(_GROUNDED_REPLAY_SCENARIOS)} cassettes present and valid")
     return True
 
 
-def validate_variants() -> bool:
-    """Validate that all tournament variants are registered."""
-    print("\n=== Variant Registration ===\n")
+def validate_cassettes_full() -> bool:
+    """Full validation: cassettes exist, valid JSON, and replay can register."""
+    if not validate_cassettes_lightweight():
+        return False
+
+    # Also verify _grounded_cassettes_present() agrees
+    if not _grounded_cassettes_present():
+        print("\n✗ Cassettes present but _grounded_cassettes_present() returned False")
+        return False
+
+    return True
+
+
+def validate_variants_full() -> bool:
+    """Full validation: Load models and verify all tournament variants are registered."""
+    print("\n=== Variant Registration (Full) ===\n")
+
+    from adapters.nlp.spacy_processor import SpacyNLPProcessor
+    from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+    from adapters.embedding.caching_embedding_service import CachingEmbeddingService
 
     nlp = SpacyNLPProcessor()
     if not nlp.is_ready():
@@ -100,32 +128,34 @@ def validate_variants() -> bool:
     return True
 
 
-def validate_grounded_specific() -> bool:
-    """Validate grounded_v1 specific capabilities."""
-    print("\n=== grounded_v1 Specific Validation ===\n")
-
-    cassettes_present = _grounded_cassettes_present()
-    print(f"Cassettes present for grounded_v1: {cassettes_present}")
-
-    if cassettes_present:
-        print("✓ grounded_v1 can be registered and evaluated offline")
-    else:
-        print("✗ grounded_v1 cannot be registered (missing cassettes)")
-        return False
-
-    return True
-
-
 def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate A/B tournament infrastructure for grounded_v1"
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        default=False,
+        help="Run full validation including model loading (slower). Default is lightweight file check.",
+    )
+    args = parser.parse_args()
+
     print("=" * 70)
-    print("A/B TOURNAMENT SETUP VALIDATION")
+    if args.full:
+        print("A/B TOURNAMENT SETUP VALIDATION (FULL)")
+    else:
+        print("A/B TOURNAMENT SETUP VALIDATION (LIGHTWEIGHT)")
     print("=" * 70)
 
-    results = {
-        "Cassettes": validate_cassettes(),
-        "Variants": validate_variants(),
-        "Grounded-specific": validate_grounded_specific(),
-    }
+    if args.full:
+        results = {
+            "Cassettes": validate_cassettes_full(),
+            "Variants": validate_variants_full(),
+        }
+    else:
+        results = {
+            "Cassettes": validate_cassettes_lightweight(),
+        }
 
     print("\n" + "=" * 70)
     print("VALIDATION SUMMARY")
@@ -140,15 +170,20 @@ def main() -> int:
         print("\n" + "=" * 70)
         print("✓ SUCCESS: Tournament infrastructure is ready")
         print("=" * 70)
-        print("\nYou can now run the tournament with:")
-        print("  python scripts/quality_tournament.py --pipeline individual")
-        print("\nThe tournament will evaluate all 4 variants:")
-        print("  - open_v1: Rule-based spaCy triple extraction")
-        print("  - default: LLM-based extraction (phase-1 model via OpenRouter)")
-        print("  - default+grounding: LLM + soft-match dedup")
-        print("  - grounded_v1: NLP-grounded typing with LLM confirmation")
-        print("\nVariants will be ranked by dev soft-F1, with promotion decisions")
-        print("based on meeting strict-F1 floor and soft-F1 improvement criteria.")
+        if args.full:
+            print("\nYou can now run the tournament with:")
+            print("  python scripts/quality_tournament.py --pipeline individual")
+            print("\nThe tournament will evaluate all 4 variants:")
+            print("  - open_v1: Rule-based spaCy triple extraction")
+            print("  - default: LLM-based extraction (phase-1 model via OpenRouter)")
+            print("  - default+grounding: LLM + soft-match dedup")
+            print("  - grounded_v1: NLP-grounded typing with LLM confirmation")
+            print("\nVariants will be ranked by dev soft-F1, with promotion decisions")
+            print("based on meeting strict-F1 floor and soft-F1 improvement criteria.")
+        else:
+            print("\nCassettes are in place for grounded_v1 variant.")
+            print("Run with --full flag to validate variants and models can load:")
+            print("  python scripts/validate_tournament_setup.py --full")
         return 0
     else:
         print("\n" + "=" * 70)
