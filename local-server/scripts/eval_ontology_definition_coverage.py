@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Check class-definition coverage for the evaluation ontology (Phase 4).
+Check class-definition coverage for the evaluation ontology.
 
 Verifies that classes in the evaluation ontology have definitions distinctive
 enough for embedding similarity to separate specific instances. This check
@@ -44,9 +44,9 @@ def check_definition_coverage() -> dict[str, int | float]:
     definition_lengths = []
     classes_by_length = defaultdict(list)
 
-    taxonomies = ontology_repo.list_taxonomies(limit=None)
-    for taxonomy in taxonomies:
-        classes = ontology_repo.list_classes(limit=None)
+    concept_schemes = ontology_repo.list_concept_schemes(limit=None)
+    for scheme in concept_schemes:
+        classes = ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
         for cls in classes:
             total_classes += 1
             definition = getattr(cls, "description", None) or getattr(cls, "definition", None)

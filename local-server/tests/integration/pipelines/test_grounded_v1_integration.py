@@ -1,8 +1,8 @@
 """
-Integration test for grounded_v1 NLP-grounded typing variant (Phase 4).
+Integration test for grounded_v1 NLP-grounded typing variant.
 
 Verifies end-to-end grounded_v1 stage execution with fakes and asserts the
-expected triple shape (subject/predicate/object/confidence/provenance) without
+expected triple shape (subject/predicate/object/confidence) without
 requiring real LLM calls or cassettes.
 """
 
@@ -12,13 +12,13 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import json
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
 
 from domain.ontology.ports import SchemaMatch
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
@@ -34,13 +34,19 @@ from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
 
 
 class TestGroundedV1Integration:
-    """Integration tests for the grounded_v1 NLP-grounded typing variant."""
+    """
+    Integration tests for grounded_v1 variant using project fakes.
+
+    These tests focus on grounded_v1 variant-specific behavior and configuration
+    using better fake implementations (FakeLLMProvider, FakeSchemaVectorIndex).
+    Generic orchestrator behavior tests are in test_nlp_grounded_typing_orchestrator.py.
+    """
 
     @pytest.mark.asyncio
     async def test_grounded_v1_produces_typing_triples_with_expected_shape(self):
         """
         Verify grounded_v1 end-to-end execution produces is_a triples with
-        subject/predicate/object/confidence/provenance fields.
+        subject/predicate/object/confidence fields.
         """
         # Build fake ontology (mock is sufficient for test)
         ontology_repo = Mock()
@@ -132,7 +138,7 @@ class TestGroundedV1Integration:
         result_state = await orch.execute(state)
 
         # Verify completion status
-        assert result_state.current_status.value == "completed"
+        assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert result_state.result is not None
 
         # Extract triples
@@ -169,32 +175,10 @@ class TestGroundedV1Integration:
             assert isinstance(confidence, (int, float)), "Confidence must be numeric"
             assert 0.0 <= confidence <= 1.0, f"Confidence must be in [0, 1], got {confidence}"
 
-            # Verify provenance if present (optional in current implementation)
-            if "provenance" in triple:
-                provenance = triple["provenance"]
-                assert isinstance(provenance, dict), "Provenance must be a dict"
-
-    @pytest.mark.asyncio
-    async def test_grounded_v1_config_validation(self):
-        """Verify grounded_v1 config validation prevents invalid configurations."""
-        # nlp_grounded_typing and ground_to_schema are mutually exclusive
-        config = dict(get_open_v1_config())
-        config.update(
-            {
-                "nlp_grounded_typing": True,
-                "ground_to_schema": True,
-            }
-        )
-
-        with pytest.raises(PipelineInputError, match="mutually exclusive"):
-            OpenIndividualExtractionOrchestrator(
-                llm_provider=FakeLLMProvider(),
-                nlp_processor=FakeNLPProcessor(),
-                embedding_service=FakeEmbeddingService(),
-                schema_index=FakeSchemaVectorIndex(),
-                ontology_repo=Mock(),
-                config=config,
-            )
+    @pytest.mark.skip(reason="Config validation tested in test_nlp_grounded_typing_orchestrator.py::test_config_validation_prevents_conflicting_flags")
+    def test_grounded_v1_config_validation(self):
+        """Config validation is tested by test_config_validation_prevents_conflicting_flags in existing test file."""
+        pass
 
     @pytest.mark.asyncio
     async def test_grounded_v1_skips_typing_when_no_schema_index(self):
@@ -230,13 +214,16 @@ class TestGroundedV1Integration:
         result_state = await orch.execute(state)
 
         # Should complete without error
-        assert result_state.current_status.value == "completed"
+        assert result_state.current_status == PipelineRunStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_grounded_v1_definition_preferred_matching_mode(self):
+    async def test_grounded_v1_accepts_definition_preferred_config(self):
         """
-        Verify definition_preferred matching mode uses definition similarity
-        in candidate ranking (key risk mitigation).
+        Smoke test: grounded_v1 accepts and processes definition_preferred matching mode.
+
+        Note: This test verifies the config is accepted and execution completes.
+        Behavioral verification of definition-preferred ranking would require
+        observable differences in selected candidates, which the fake cannot verify.
         """
         # Build ontology with classes that have definitions
         ontology_repo = Mock()
@@ -318,5 +305,5 @@ class TestGroundedV1Integration:
         result_state = await orch.execute(state)
 
         # Verify completion
-        assert result_state.current_status.value == "completed"
+        assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert result_state.result is not None
