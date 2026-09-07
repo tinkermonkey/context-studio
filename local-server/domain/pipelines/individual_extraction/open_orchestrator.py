@@ -130,14 +130,15 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if self._cfg.ground_predicates:
                 triples = self._ground_predicates(triples, ontology_id)
 
+            warnings: list[str] = []
             if self._cfg.nlp_grounded_typing and self._llm_provider is not None:
-                triples = await self._type_individuals_nlp_grounded(
+                triples, nlp_typing_warnings = await self._type_individuals_nlp_grounded(
                     triples, text, ontology_id, open_result
                 )
+                warnings.extend(nlp_typing_warnings)
             elif self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples, ontology_id)
 
-            warnings: list[str] = []
             metadata: dict[str, Any] = {
                 "implementation": "open_v1",
                 "relation_count": len(relations),
@@ -597,7 +598,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         text: str,
         ontology_id: str | None,
         open_result: OpenExtractionResult,
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], list[str]]:
         """
         Typing via spaCy noun chunks + vector retrieval + LLM confirmation.
 
@@ -614,20 +615,24 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         index, no repository, no tokens from the NLP processor, or the ontology
         id does not resolve to a known taxonomy — mirroring how grounding stages
         degrade.
+
+        Returns (triples, warnings).
         """
+        warnings: list[str] = []
+
         if self._schema_index is None:
             _logger.warning(
                 "nlp_grounded_typing requested but schema_index is None; typing stage skipped"
             )
-            return triples
+            return triples, warnings
         if self._ontology_repo is None:
             _logger.warning(
                 "nlp_grounded_typing requested but ontology_repo is None; typing stage skipped"
             )
-            return triples
+            return triples, warnings
         if not ontology_id:
             _logger.debug("nlp_grounded_typing: ontology_id is None; typing stage skipped")
-            return triples
+            return triples, warnings
 
         taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
         if taxonomy is None:
@@ -636,11 +641,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 "typing stage skipped",
                 ontology_id,
             )
-            return triples
+            return triples, warnings
 
         if not open_result.tokens:
             _logger.debug("nlp_grounded_typing: no tokens from NLP processor; typing stage skipped")
-            return triples
+            return triples, warnings
 
         tokens = list(open_result.tokens)
         sentences = self._sentence_texts(text, tokens)
@@ -687,14 +692,15 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             typing_triples.append(typing_triple)
 
         if chunks_with_results > 0 and chunks_with_llm_errors == chunks_with_results:
-            _logger.error(
-                "NLP-grounded typing: all %d chunks with search results failed with LLM errors. "
-                "This indicates a systemic LLM provider issue. Check availability, rate limits, "
-                "authentication, and network connectivity.",
-                chunks_with_results,
+            warning_msg = (
+                f"NLP-grounded typing: all {chunks_with_results} chunks with search results "
+                "failed with LLM errors. This indicates a systemic LLM provider issue. "
+                "Check availability, rate limits, authentication, and network connectivity."
             )
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
 
-        return triples + typing_triples
+        return triples + typing_triples, warnings
 
     @staticmethod
     def _sentence_texts(text: str, tokens: list) -> dict[int, str]:

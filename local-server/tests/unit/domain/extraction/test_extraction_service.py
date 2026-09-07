@@ -609,14 +609,14 @@ class TestNlpGroundedTyping:
 
     def test_degrades_to_no_typing_without_a_schema_index(self):
         service = self._service(schema_index=None)
-        triples, tokens = service._type_individuals_nlp_grounded(
+        triples, tokens, warnings = service._type_individuals_nlp_grounded(
             "Kubernetes runs pods.", object(), "onto", "m", 0.0
         )
-        assert triples == [] and tokens == 0
+        assert triples == [] and tokens == 0 and warnings == []
 
     def test_confirmed_match_becomes_an_is_a_triple_typed_to_the_matched_class(self):
         service = self._service(schema_index=_OneMatchIndex())
-        triples, _ = service._type_individuals_nlp_grounded(
+        triples, _, warnings = service._type_individuals_nlp_grounded(
             "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
         )
         assert len(triples) == 1
@@ -628,7 +628,7 @@ class TestNlpGroundedTyping:
 
     def test_llm_declining_all_candidates_yields_no_triple(self):
         service = self._service(schema_index=_OneMatchIndex(), llm=_ConfirmingLLM("none"))
-        triples, _ = service._type_individuals_nlp_grounded(
+        triples, _, warnings = service._type_individuals_nlp_grounded(
             "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
         )
         assert triples == []
