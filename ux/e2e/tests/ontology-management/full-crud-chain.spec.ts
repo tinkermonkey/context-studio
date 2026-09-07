@@ -33,9 +33,9 @@ test.describe("Ontology Management Full CRUD Chain", () => {
     // Taxonomy appears.
     await page.goto("/app/schema/taxonomies");
     await page.waitForLoadState("networkidle");
-    await expect(
-      page.getByTestId("selectable-table").getByText("Full Chain Taxonomy"),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("selectable-table").getByText("Full Chain Taxonomy")).toBeVisible(
+      { timeout: 5000 },
+    );
 
     // Scheme appears.
     await page.goto("/app/schema/schemes");

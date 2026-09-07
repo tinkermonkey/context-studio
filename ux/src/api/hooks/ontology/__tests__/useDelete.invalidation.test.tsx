@@ -33,7 +33,11 @@ describe("delete mutation error-path invalidation", () => {
 
   it("useDeleteClass invalidates the class and scheme lists when the delete is rejected", async () => {
     vi.spyOn(ontologyService, "deleteClass").mockRejectedValue(
-      new ApiError("Cannot delete: it has 2 subclass(es)", 409, "Cannot delete: it has 2 subclass(es)"),
+      new ApiError(
+        "Cannot delete: it has 2 subclass(es)",
+        409,
+        "Cannot delete: it has 2 subclass(es)",
+      ),
     );
     const { wrapper, invalidateSpy } = createWrapper();
 

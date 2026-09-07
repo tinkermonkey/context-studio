@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { TextArea as Textarea } from "@tinkermonkey/heimdall-ui";
 import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun, usePipelineCandidates, type CandidateResponse } from "@/api/hooks/pipeline/usePipelineRuns";
+import {
+  usePipelineRun,
+  usePipelineCandidates,
+  type CandidateResponse,
+} from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
 import "./Suggesters.css";
 
@@ -14,7 +18,14 @@ interface SuggestFieldProps {
   testId?: string;
 }
 
-export function SuggestField({ entityId, value, onChange, placeholder, rows = 4, testId }: SuggestFieldProps) {
+export function SuggestField({
+  entityId,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+  testId,
+}: SuggestFieldProps) {
   const [runId, setRunId] = useState<string | null>(null);
   const [dismissedIndices, setDismissedIndices] = useState<Set<number>>(new Set());
 
@@ -23,10 +34,7 @@ export function SuggestField({ entityId, value, onChange, placeholder, rows = 4,
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning =
-    runMutation.isPending ||
-    run?.status === "PENDING" ||
-    run?.status === "RUNNING";
+  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
   const isFailed = run?.status === "FAILED";
 
@@ -54,7 +62,9 @@ export function SuggestField({ entityId, value, onChange, placeholder, rows = 4,
     }
   };
 
-  const applyCandidate = async (candidate: CandidateResponse & { originalIdx: number }): Promise<boolean> => {
+  const applyCandidate = async (
+    candidate: CandidateResponse & { originalIdx: number },
+  ): Promise<boolean> => {
     if (!runId) return false;
     try {
       await applyMutation.mutateAsync({
@@ -96,10 +106,7 @@ export function SuggestField({ entityId, value, onChange, placeholder, rows = 4,
   };
 
   return (
-    <div
-      className="suggest-field-wrapper"
-      data-testid={testId ? `${testId}-wrapper` : undefined}
-    >
+    <div className="suggest-field-wrapper" data-testid={testId ? `${testId}-wrapper` : undefined}>
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}

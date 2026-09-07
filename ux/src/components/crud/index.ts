@@ -5,6 +5,11 @@ export type { BulkBarAction } from "./BulkBar";
 export { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 export type { CascadeImpactData } from "./CascadeDeleteDialog";
 export { EntitySurface } from "./EntitySurface";
-export type { EntitySurfaceHandle, EntitySurfaceBulkAction, EntityType, FormValues } from "./EntitySurface";
+export type {
+  EntitySurfaceHandle,
+  EntitySurfaceBulkAction,
+  EntityType,
+  FormValues,
+} from "./EntitySurface";
 export { CreateDrawer } from "./CreateDrawer";
 export type { CreateDrawerProps } from "./CreateDrawer";

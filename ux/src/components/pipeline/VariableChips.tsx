@@ -6,7 +6,9 @@ interface VariableChipsProps {
 }
 
 export function VariableChips({ template, onInsert }: VariableChipsProps) {
-  const vars = [...new Set((template ?? "").match(/\{\{(\w+)\}\}/g)?.map((m) => m.slice(2, -2)) ?? [])];
+  const vars = [
+    ...new Set((template ?? "").match(/\{\{(\w+)\}\}/g)?.map((m) => m.slice(2, -2)) ?? []),
+  ];
   if (vars.length === 0) return null;
 
   return (

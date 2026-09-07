@@ -12,9 +12,9 @@ function fulfilled(value: unknown = undefined): PromiseFulfilledResult<unknown> 
 describe("firstRejectionDetail", () => {
   it("returns the backend detail from an ApiError", () => {
     const detail = "Cannot delete class X: it has 1 subclass(es)";
-    expect(firstRejectionDetail([rejected(new ApiError("Unprocessable Entity", 422, detail))])).toBe(
-      detail,
-    );
+    expect(
+      firstRejectionDetail([rejected(new ApiError("Unprocessable Entity", 422, detail))]),
+    ).toBe(detail);
   });
 
   it("falls back to a plain Error message", () => {
@@ -37,7 +37,9 @@ describe("firstRejectionDetail", () => {
 
 describe("deleteFailureMessage", () => {
   it("returns just the detail when nothing succeeded", () => {
-    const results = [rejected(new ApiError("Unprocessable Entity", 422, "Cannot delete: it has 2 class(es)"))];
+    const results = [
+      rejected(new ApiError("Unprocessable Entity", 422, "Cannot delete: it has 2 class(es)")),
+    ];
     expect(deleteFailureMessage(results, 1)).toBe("Cannot delete: it has 2 class(es)");
   });
 

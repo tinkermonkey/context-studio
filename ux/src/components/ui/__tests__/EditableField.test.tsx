@@ -32,9 +32,7 @@ describe("EditableField", () => {
     });
 
     it("shows em-dash when value is empty and no placeholder provided", () => {
-      render(
-        <EditableField label="Name" value="" onSave={vi.fn()} data-testid="name-field" />,
-      );
+      render(<EditableField label="Name" value="" onSave={vi.fn()} data-testid="name-field" />);
       expect(screen.getByTestId("name-field-view")).toHaveTextContent("—");
     });
 
@@ -222,14 +220,7 @@ describe("EditableField", () => {
     it("calls onSave with trimmed value when field loses focus", async () => {
       const onSave = vi.fn().mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(
-        <EditableField
-          label="Name"
-          value="Alice"
-          onSave={onSave}
-          data-testid="name-field"
-        />,
-      );
+      render(<EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />);
       await user.click(screen.getByTestId("name-field-view"));
       const input = screen.getByTestId("name-field-input");
       await user.clear(input);
@@ -243,14 +234,7 @@ describe("EditableField", () => {
     it("does not call onSave when value is unchanged after blur", async () => {
       const onSave = vi.fn();
       const user = userEvent.setup();
-      render(
-        <EditableField
-          label="Name"
-          value="Alice"
-          onSave={onSave}
-          data-testid="name-field"
-        />,
-      );
+      render(<EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />);
       await user.click(screen.getByTestId("name-field-view"));
       fireEvent.blur(screen.getByTestId("name-field-input"));
       await waitFor(() => {
@@ -355,14 +339,7 @@ describe("EditableField", () => {
   describe("save status", () => {
     it("shows Saved indicator after successful save", async () => {
       const onSave = vi.fn().mockResolvedValue(undefined);
-      render(
-        <EditableField
-          label="Name"
-          value="Alice"
-          onSave={onSave}
-          data-testid="name-field"
-        />,
-      );
+      render(<EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />);
       fireEvent.click(screen.getByTestId("name-field-view"));
       fireEvent.change(screen.getByTestId("name-field-input"), { target: { value: "Bob" } });
       fireEvent.blur(screen.getByTestId("name-field-input"));
@@ -385,12 +362,7 @@ describe("EditableField", () => {
       try {
         const onSave = vi.fn().mockResolvedValue(undefined);
         render(
-          <EditableField
-            label="Name"
-            value="Alice"
-            onSave={onSave}
-            data-testid="name-field"
-          />,
+          <EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />,
         );
         fireEvent.click(screen.getByTestId("name-field-view"));
         fireEvent.change(screen.getByTestId("name-field-input"), { target: { value: "Bob" } });
@@ -408,14 +380,7 @@ describe("EditableField", () => {
 
     it("shows error message and re-enters edit mode when save fails", async () => {
       const onSave = vi.fn().mockRejectedValue(new Error("Network error"));
-      render(
-        <EditableField
-          label="Name"
-          value="Alice"
-          onSave={onSave}
-          data-testid="name-field"
-        />,
-      );
+      render(<EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />);
       fireEvent.click(screen.getByTestId("name-field-view"));
       fireEvent.change(screen.getByTestId("name-field-input"), { target: { value: "Bob" } });
       fireEvent.blur(screen.getByTestId("name-field-input"));
@@ -474,9 +439,7 @@ describe("EditableField", () => {
     it("triggers save on Enter for TextInput", async () => {
       const onSave = vi.fn().mockResolvedValue(undefined);
       const user = userEvent.setup();
-      render(
-        <EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />,
-      );
+      render(<EditableField label="Name" value="Alice" onSave={onSave} data-testid="name-field" />);
       await user.click(screen.getByTestId("name-field-view"));
       await user.clear(screen.getByTestId("name-field-input"));
       await user.type(screen.getByTestId("name-field-input"), "Bob");
