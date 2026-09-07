@@ -242,6 +242,9 @@ def record_all(scenarios: list[str]) -> int:
             skipped += 1
 
     print(f"\nDone. Recorded {recorded} cassette(s); skipped/failed {skipped}.")
+    if recorded == 0:
+        print("ERROR: No cassettes were successfully recorded.")
+        return 1
     return 0
 
 

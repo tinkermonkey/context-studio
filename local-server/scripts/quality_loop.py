@@ -157,7 +157,7 @@ _GROUNDED_SPACE: dict[str, list] = {
     "predicate_similarity_threshold": [0.55, 0.65],
     "nlp_typing_top_k": [5, 8, 10],
     "nlp_typing_threshold": [0.1, 0.2, 0.3],
-    "nlp_typing_matching_mode": [None, "max", "definition_preferred"],
+    "nlp_typing_matching_mode": ["max", "definition_preferred"],
 }
 
 

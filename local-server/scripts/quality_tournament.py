@@ -79,6 +79,7 @@ from scripts.default_pipeline_ontology import (
     dr_spec_available,
 )
 from scripts.eval_ontology import build_eval_ontology
+from scripts.eval_ontology_definition_coverage import check_definition_coverage
 from scripts.quality_loop import (
     _GROUNDED_SPACE,
     _INDIVIDUAL_SPACE,
@@ -1261,6 +1262,10 @@ async def _amain(args) -> int:
     embed_fn = _make_embed_fn(embedding)
 
     eval_repo, eval_index = build_eval_ontology(embedding)
+
+    print("\n══ Class Definition Coverage Check (grounded_v1 readiness) ══")
+    coverage_results = check_definition_coverage()
+
     registry = build_registry(nlp, embedding, eval_repo, eval_index)
     if not registry:
         print("ERROR: no variants registered")
