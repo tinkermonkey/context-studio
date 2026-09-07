@@ -168,7 +168,7 @@ def get_open_v1_config() -> dict:
         # metric (relation_not_derived jumps). Off by default; self-skips with no
         # index / no repo / unresolvable ontology.
         "coverage_completion": False,
-        # --- NLP-grounded typing (Phase 2: issue #1141) ---
+        # --- NLP-grounded typing ---
         # Noun chunks are typed via vector retrieval + LLM confirmation, restricted
         # to picking from retrieved candidate classes only (never generating labels).
         # Mutually exclusive with ground_to_schema / require_schema_match. Off by

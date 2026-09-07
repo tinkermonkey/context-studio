@@ -1,7 +1,7 @@
 """
 Unit tests for NLP-grounded typing in the open individual-extraction orchestrator.
 
-Tests the noun-chunk → vector-retrieve → LLM-confirm pipeline (Phase 2, issue #1141).
+Tests the noun-chunk → vector-retrieve → LLM-confirm pipeline.
 """
 
 from unittest.mock import AsyncMock, Mock, patch
@@ -337,6 +337,40 @@ class TestConfirmClassForChunk:
 
         assert result is None
 
+    @pytest.mark.asyncio
+    async def test_confirm_class_rejects_fabricated_class_reference(self):
+        """LLM choosing a fabricated class reference returns None (safety guarantee)."""
+        orchestrator = OpenIndividualExtractionOrchestrator(
+            llm_provider=FakeLLMProvider(['{"class": "invented.fabricated_class"}']),
+            nlp_processor=Mock(),
+            embedding_service=Mock(),
+            schema_index=Mock(),
+            ontology_repo=Mock(),
+        )
+
+        matches = [
+            Mock(
+                external_id="technology.node",
+                identifier="tech_node",
+                label="Technology",
+                entity_id="id1",
+                score=0.85,
+            ),
+            Mock(
+                external_id="methodology.node",
+                identifier="method_node",
+                label="Methodology",
+                entity_id="id2",
+                score=0.60,
+            ),
+        ]
+
+        result = await orchestrator._confirm_class_for_chunk(
+            "unknown", "The unknown fabricated class.", matches
+        )
+
+        assert result is None
+
 
 class TestNLPGroundedTyping:
     """Test the full NLP-grounded typing pipeline."""
@@ -353,8 +387,14 @@ class TestNLPGroundedTyping:
         )
 
         triples = [{"subject": {"label": "test"}, "predicate": {"label": "test"}}]
+        open_result = OpenExtractionResult(
+            tokens=(),
+            noun_chunks=(),
+            sentence_count=0,
+            language="en",
+        )
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Test text.", None
+            triples, "Test text.", None, open_result
         )
 
         assert result == triples
@@ -371,8 +411,14 @@ class TestNLPGroundedTyping:
         )
 
         triples = [{"subject": {"label": "test"}, "predicate": {"label": "test"}}]
+        open_result = OpenExtractionResult(
+            tokens=(),
+            noun_chunks=(),
+            sentence_count=0,
+            language="en",
+        )
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Test text.", None
+            triples, "Test text.", None, open_result
         )
 
         assert result == triples
@@ -389,8 +435,14 @@ class TestNLPGroundedTyping:
         )
 
         triples = [{"subject": {"label": "test"}, "predicate": {"label": "test"}}]
+        open_result = OpenExtractionResult(
+            tokens=(),
+            noun_chunks=(),
+            sentence_count=0,
+            language="en",
+        )
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Test text.", None
+            triples, "Test text.", None, open_result
         )
 
         assert result == triples
@@ -410,8 +462,14 @@ class TestNLPGroundedTyping:
         )
 
         triples = [{"subject": {"label": "test"}, "predicate": {"label": "test"}}]
+        open_result = OpenExtractionResult(
+            tokens=(),
+            noun_chunks=(),
+            sentence_count=0,
+            language="en",
+        )
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Test text.", "unknown_ontology"
+            triples, "Test text.", "unknown_ontology", open_result
         )
 
         assert result == triples
@@ -477,9 +535,11 @@ class TestNLPGroundedTyping:
             ontology_repo=ontology_repo,
         )
 
+        open_result = nlp_processor.process_open.return_value
+
         triples = []
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Technology drives innovation. technology is important.", "ontology_id"
+            triples, "Technology drives innovation. technology is important.", "ontology_id", open_result
         )
 
         typing_triples = [
@@ -530,9 +590,11 @@ class TestNLPGroundedTyping:
             ontology_repo=ontology_repo,
         )
 
+        open_result = nlp_processor.process_open.return_value
+
         triples = []
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Very quickly.", "ontology_id"
+            triples, "Very quickly.", "ontology_id", open_result
         )
 
         typing_triples = [
@@ -582,9 +644,11 @@ class TestNLPGroundedTyping:
             ontology_repo=ontology_repo,
         )
 
+        open_result = nlp_processor.process_open.return_value
+
         triples = []
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "the dog", "ontology_id"
+            triples, "the dog", "ontology_id", open_result
         )
 
         typing_triples = [

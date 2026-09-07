@@ -127,7 +127,7 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
             if self._cfg.nlp_grounded_typing and self._llm_provider is not None:
                 triples = await self._type_individuals_nlp_grounded(
-                    triples, text, ontology_id
+                    triples, text, ontology_id, open_result
                 )
             elif self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples, ontology_id)
@@ -584,9 +584,10 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         triples: list[dict[str, Any]],
         text: str,
         ontology_id: str | None,
+        open_result: OpenExtractionResult,
     ) -> list[dict[str, Any]]:
         """
-        Phase-2 typing via spaCy noun chunks + vector retrieval + LLM confirmation.
+        Typing via spaCy noun chunks + vector retrieval + LLM confirmation.
 
         For each noun chunk spaCy finds (headed by a NOUN/PROPN, non-stopword),
         the chunk plus its sentence is embedded and the vector index retrieves
@@ -610,13 +611,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         if taxonomy is None:
             return triples
 
-        open_result = self._nlp.process_open(text)
         if not open_result.tokens:
             return triples
 
         tokens = list(open_result.tokens)
         sentences = self._sentence_texts(text, tokens)
-        taxonomy_id = str(getattr(taxonomy, "id", "") or "") or None
+        taxonomy_id = str(taxonomy.id)
 
         typing_triples: list[dict[str, Any]] = []
         seen: set[str] = set()
