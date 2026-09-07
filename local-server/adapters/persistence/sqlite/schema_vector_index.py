@@ -16,7 +16,7 @@ format (struct little-endian) is already byte-compatible with sqlite-vec's
 
 from __future__ import annotations
 
-from typing import Literal, cast
+from typing import cast
 
 import numpy as np
 from sqlalchemy import or_
