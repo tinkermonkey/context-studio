@@ -341,7 +341,15 @@ class _StubSchemaIndex(SchemaVectorIndex):
     def index_entity(self, entity_id, title, description):  # pragma: no cover - unused
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
+    def search(
+        self,
+        query_embedding,
+        kinds,
+        top_k=20,
+        threshold=0.0,
+        taxonomy_id=None,
+        matching_mode=None,
+    ):
         if self._empty:
             return []
         return [
@@ -433,7 +441,15 @@ class _SelectiveSchemaIndex(SchemaVectorIndex):
     def index_entity(self, *a):
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
+    def search(
+        self,
+        query_embedding,
+        kinds,
+        top_k=20,
+        threshold=0.0,
+        taxonomy_id=None,
+        matching_mode=None,
+    ):
         if query_embedding and query_embedding[0] == 1.0:
             return [
                 SchemaMatch(

@@ -746,7 +746,7 @@ class SchemaVectorIndex(Protocol):
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
-        matching_mode: str | None = None,
+        matching_mode: Literal["max", "definition_preferred"] | None = None,
     ) -> list[SchemaMatch]:
         """
         Find schema entities whose title or definition is similar to the query.

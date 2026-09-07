@@ -683,7 +683,15 @@ class _OneMatchIndex(SchemaVectorIndex):
     def index_entity(self, entity_id, title, description):
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
+    def search(
+        self,
+        query_embedding,
+        kinds,
+        top_k=20,
+        threshold=0.0,
+        taxonomy_id=None,
+        matching_mode=None,
+    ):
         from domain.ontology.ports import SchemaMatch
 
         return [
