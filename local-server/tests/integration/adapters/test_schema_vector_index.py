@@ -105,9 +105,7 @@ def test_reindex_all_counts_entities():
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
         with factory() as session:
-            session.add(
-                OntologyEntity(id=CLASS_A, node_type="class", title="Microservice")
-            )
+            session.add(OntologyEntity(id=CLASS_A, node_type="class", title="Microservice"))
             session.commit()
         idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
         assert idx.reindex_all() == 1
@@ -250,9 +248,7 @@ def test_stale_dimension_vector_is_skipped_not_raised(index_with_factory, caplog
     matches = idx.search([1.0, 0.0, 0.0], kinds=["class"])
     # No exception, and the stale (title) field simply did not contribute a
     # title match for Class A.
-    assert all(
-        not (m.entity_id == CLASS_A and m.matched_field == "title") for m in matches
-    )
+    assert all(not (m.entity_id == CLASS_A and m.matched_field == "title") for m in matches)
     assert any("stale dimension" in r.message for r in caplog.records)
 
 
@@ -454,14 +450,14 @@ def two_taxonomy_index():
 
 
 def test_taxonomy_id_scopes_class_matches(two_taxonomy_index):
-    matches = two_taxonomy_index.search(
-        [1.0, 0.0, 0.0], kinds=["class"], taxonomy_id=TAXONOMY_A
-    )
+    matches = two_taxonomy_index.search([1.0, 0.0, 0.0], kinds=["class"], taxonomy_id=TAXONOMY_A)
     ids = {m.entity_id for m in matches}
     assert ids == {CLASS_A}
 
 
-def test_taxonomy_id_scopes_property_definition_matches_via_domain_class(two_taxonomy_index):
+def test_taxonomy_id_scopes_property_definition_matches_via_domain_class(
+    two_taxonomy_index,
+):
     # Property definitions carry no taxonomy_id of their own — scoping must
     # follow the domain_class_id join to the owning taxonomy's class.
     matches = two_taxonomy_index.search(
@@ -630,3 +626,68 @@ def test_definition_preferred_falls_back_to_title_when_no_definition():
         assert match.entity_id == CLASS_A
         assert match.matched_field == "title"
         assert match.score > 0.99
+
+
+def test_per_call_matching_mode_overrides_instance_default_max_to_definition_preferred():
+    # Instance is configured with "max" (default), but a specific search call
+    # passes matching_mode="definition_preferred", which should override the
+    # instance default for that call only.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        factory = _seed_matching_mode_factory(tmpdir)
+        idx = SqliteSchemaVectorIndex(factory, FakeEmbedding(), matching_mode="max")
+        idx.reindex_all()
+
+        # Without override: "max" mode picks the title (score 1.0, field "title")
+        max_match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert max_match.matched_field == "title"
+        assert max_match.score > 0.99
+
+        # With override: "definition_preferred" mode picks the definition
+        # (score 0.0, field "definition")
+        def_match = idx.search(
+            [1.0, 0.0, 0.0], kinds=["class"], matching_mode="definition_preferred"
+        )[0]
+        assert def_match.matched_field == "definition"
+        assert def_match.score == 0.0
+
+
+def test_per_call_matching_mode_overrides_instance_default_definition_preferred_to_max():
+    # Instance is configured with "definition_preferred", but a specific search
+    # call passes matching_mode="max", which should override the instance default.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        factory = _seed_matching_mode_factory(tmpdir)
+        idx = SqliteSchemaVectorIndex(
+            factory, FakeEmbedding(), matching_mode="definition_preferred"
+        )
+        idx.reindex_all()
+
+        # Without override: "definition_preferred" mode picks the definition
+        # (score 0.0, field "definition")
+        def_match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert def_match.matched_field == "definition"
+        assert def_match.score == 0.0
+
+        # With override: "max" mode picks the title (score 1.0, field "title")
+        max_match = idx.search([1.0, 0.0, 0.0], kinds=["class"], matching_mode="max")[0]
+        assert max_match.matched_field == "title"
+        assert max_match.score > 0.99
+
+
+def test_per_call_matching_mode_none_uses_instance_default():
+    # When passing matching_mode=None (explicitly or by omitting it), the
+    # instance's configured default should apply.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        factory = _seed_matching_mode_factory(tmpdir)
+        idx = SqliteSchemaVectorIndex(
+            factory, FakeEmbedding(), matching_mode="definition_preferred"
+        )
+        idx.reindex_all()
+
+        # Explicit None: should use instance default
+        match_explicit_none = idx.search([1.0, 0.0, 0.0], kinds=["class"], matching_mode=None)[0]
+        assert match_explicit_none.matched_field == "definition"
+
+        # Implicit None (omitted): should use instance default
+        match_implicit_none = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
+        assert match_implicit_none.matched_field == "definition"
+        assert match_implicit_none.score == match_explicit_none.score

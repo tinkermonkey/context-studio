@@ -77,7 +77,14 @@ def _write_node_schema(spec_dir, layer, type_name, title, description):
 
 
 def _write_relationship_schema(
-    spec_dir, source_layer, source_type, predicate, dest_layer, dest_type, title, description
+    spec_dir,
+    source_layer,
+    source_type,
+    predicate,
+    dest_layer,
+    dest_type,
+    title,
+    description,
 ):
     rel_dir = spec_dir / "schemas" / "relationships" / source_layer
     rel_dir.mkdir(parents=True, exist_ok=True)
@@ -169,10 +176,17 @@ class TestImportDrOntologyRowCounts:
 
         with session_factory() as session:
             counts = {
-                node_type: session.query(OntologyEntity)
-                .filter(OntologyEntity.node_type == node_type)
-                .count()
-                for node_type in ("taxonomy", "concept_scheme", "class", "property_definition")
+                node_type: (
+                    session.query(OntologyEntity)
+                    .filter(OntologyEntity.node_type == node_type)
+                    .count()
+                )
+                for node_type in (
+                    "taxonomy",
+                    "concept_scheme",
+                    "class",
+                    "property_definition",
+                )
             }
 
         assert counts == {

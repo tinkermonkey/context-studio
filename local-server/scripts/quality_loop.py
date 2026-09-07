@@ -53,7 +53,9 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from domain.pipelines.schema_extraction.configurations.open_v1 import (
     get_open_v1_config as get_schema_open_config,
 )
@@ -71,7 +73,9 @@ from tests.integration.pipelines._harness.metrics import (
     soft_precision_recall_f1,
 )
 from tests.integration.pipelines._harness.report import MetricsEmitter, read_scoreboard
-from tests.integration.pipelines.test_quality_individual_extraction import extract_triple_key
+from tests.integration.pipelines.test_quality_individual_extraction import (
+    extract_triple_key,
+)
 from tests.integration.pipelines.test_quality_schema_extraction import (
     QUALITY_SCENARIOS as SCHEMA_SCENARIOS,
 )
@@ -128,6 +132,34 @@ _INDIVIDUAL_SPACE: dict[str, list] = {
     "predicate_similarity_threshold": [0.55, 0.65],
 }
 
+# Search space for the NLP-grounded typing variant. Every tunable key in the
+# variant's base_config must appear here so coordinate_ascent's wholesale
+# config replacement (on restart jitter) can never silently drop a knob.
+# The knob space covers the NLP-grounded typing knobs (nlp_typing_top_k,
+# nlp_typing_threshold, nlp_typing_matching_mode) plus the shared downstream
+# knobs present in the base_config (ground_predicates, predicate_similarity_threshold,
+# coverage_completion). Note: nlp_grounded_typing itself is NOT a tunable knob
+# (it is hardcoded True in the variant's base_config), and ground_to_schema /
+# require_schema_match are mutually exclusive with nlp_grounded_typing
+# (enforced by the config validator).
+_GROUNDED_SPACE: dict[str, list] = {
+    "predicate_form": ["surface", "lemma"],
+    "relation_confidence": [0.3, 0.5, 0.7],
+    "similarity_threshold": [0.35, 0.45, 0.55, 0.65],
+    "kinds_to_search": [
+        ["class"],
+        ["class", "property_definition"],
+        ["class", "property_definition", "relationship"],
+    ],
+    "llm_canonicalization": [False, True],
+    "ground_predicates": [False, True],
+    "coverage_completion": [False, True],
+    "predicate_similarity_threshold": [0.55, 0.65],
+    "nlp_typing_top_k": [5, 8, 10],
+    "nlp_typing_threshold": [0.1, 0.2, 0.3],
+    "nlp_typing_matching_mode": [None, "max", "definition_preferred"],
+}
+
 
 def _mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
@@ -155,7 +187,10 @@ async def evaluate_schema(orchestrator_ports, config) -> dict[str, float]:
             input_data=fixture,
         )
         result_state = await orch.execute(state)
-        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        actual = {
+            "status": result_state.current_status.value,
+            "result": result_state.result or {},
+        }
         metrics = schema_metrics(load_expected_output("schema_extraction", scenario), actual)
         for k in keys:
             acc[k].append(metrics[k])
@@ -378,7 +413,14 @@ async def coordinate_ascent(
         mode="offline",
         source="closed_loop",
     )
-    return best_config, baseline_metrics, best_metrics, baseline_primary, best_primary, evals
+    return (
+        best_config,
+        baseline_metrics,
+        best_metrics,
+        baseline_primary,
+        best_primary,
+        evals,
+    )
 
 
 def _fmt(metrics: dict[str, float]) -> str:
@@ -402,7 +444,11 @@ async def _amain(args) -> int:
     if args.pipeline == "schema":
         evaluate = lambda cfg: evaluate_schema(ports, cfg)  # noqa: E731
         base = get_schema_open_config()
-        space, primary, tag = _SCHEMA_SPACE, "class_jaccard", "quality_loop_schema_extraction"
+        space, primary, tag = (
+            _SCHEMA_SPACE,
+            "class_jaccard",
+            "quality_loop_schema_extraction",
+        )
         floor_key = primary
         restarts = 1
     else:
@@ -412,7 +458,11 @@ async def _amain(args) -> int:
             ports, cfg, embed_fn, eval_repo, eval_index
         )
         base = get_individual_open_config()
-        space, primary, tag = _INDIVIDUAL_SPACE, "soft_f1", "quality_loop_individual_extraction"
+        space, primary, tag = (
+            _INDIVIDUAL_SPACE,
+            "soft_f1",
+            "quality_loop_individual_extraction",
+        )
         # Never trade the floor metric away (karpathy_loop_design.md §4.1): the
         # objective is soft-F1(dev), but a candidate is only ever accepted if
         # strict-F1(dev) hasn't regressed below the incumbent.
@@ -461,7 +511,10 @@ def main() -> int:
         help="random restarts for the individual pipeline's coordinate ascent (ignored for schema)",
     )
     parser.add_argument(
-        "--seed", type=int, default=0, help="RNG seed for restart shuffling/jitter (determinism)"
+        "--seed",
+        type=int,
+        default=0,
+        help="RNG seed for restart shuffling/jitter (determinism)",
     )
     args = parser.parse_args()
     return asyncio.run(_amain(args))

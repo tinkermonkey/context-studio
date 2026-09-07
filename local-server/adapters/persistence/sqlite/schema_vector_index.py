@@ -16,7 +16,7 @@ format (struct little-endian) is already byte-compatible with sqlite-vec's
 
 from __future__ import annotations
 
-from typing import Literal, cast
+from typing import cast
 
 import numpy as np
 from sqlalchemy import or_
@@ -28,7 +28,14 @@ from adapters.persistence.sqlite.mappers import (
 )
 from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.models import Relationship as RelationshipORM
-from domain.ontology.ports import EmbeddingService, MatchedField, SchemaKind, SchemaMatch
+from domain.ontology.ports import (
+    EmbeddingService,
+    MatchedField,
+    MatchingMode,
+    SchemaKind,
+    SchemaMatch,
+    SchemaVectorIndex,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -36,15 +43,14 @@ logger = get_logger(__name__)
 # SchemaKind values that map directly to ontology_entities.node_type rows.
 _ENTITY_KINDS = ("class", "property_definition", "individual")
 
-# How a candidate's title-similarity and definition-similarity combine into its
-# single reported score. This is an adapter-level knob only — the domain port is
-# indifferent to it.
+# MatchingMode values control how a candidate's title-similarity and
+# definition-similarity combine into its single reported score. This is an
+# adapter-level knob only — the domain port is indifferent to it.
 #   "max"                 — the higher of title/definition similarity wins
 #                           (default; preserves prior behavior).
 #   "definition_preferred" — the curated definition drives the match: when a
 #                           usable definition embedding exists, its similarity is
 #                           the score; otherwise fall back to the title.
-MatchingMode = Literal["max", "definition_preferred"]
 
 # One-time guard so a fully-stale index (every stored vector a different
 # dimension after an embedding-model swap) surfaces a WARNING instead of
@@ -69,7 +75,7 @@ def _first_external_identifier(external_references: list | None) -> str | None:
     return None
 
 
-class SqliteSchemaVectorIndex:
+class SqliteSchemaVectorIndex(SchemaVectorIndex):
     """
     Persistence-layer vector index over schema entities (ClusteringPort sibling).
 
@@ -156,6 +162,7 @@ class SqliteSchemaVectorIndex:
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
+        matching_mode: MatchingMode | None = None,
     ) -> list[SchemaMatch]:
         """Find schema entities whose title or definition is similar to the query."""
         query = np.asarray(query_embedding, dtype=np.float32)
@@ -204,6 +211,7 @@ class SqliteSchemaVectorIndex:
                         ext_refs,
                         identifier,
                         canonical_predicate,
+                        matching_mode,
                     )
                     if match is not None:
                         matches.append(match)
@@ -248,6 +256,7 @@ class SqliteSchemaVectorIndex:
                         ext_refs,
                         identifier,
                         canonical_predicate,
+                        matching_mode,
                     )
                     if match is not None:
                         matches.append(match)
@@ -289,9 +298,11 @@ class SqliteSchemaVectorIndex:
         external_references: list | None = None,
         identifier: str | None = None,
         canonical_predicate: str | None = None,
+        matching_mode: MatchingMode | None = None,
     ) -> SchemaMatch | None:
         """Score one candidate's best field; None if below threshold or unembedded."""
-        scored = self._best_score(query_norm, title_blob, def_blob, self._matching_mode)
+        mode = matching_mode or self._matching_mode
+        scored = self._best_score(query_norm, title_blob, def_blob, mode)
         if scored is None:
             return None
         score, matched_field = scored

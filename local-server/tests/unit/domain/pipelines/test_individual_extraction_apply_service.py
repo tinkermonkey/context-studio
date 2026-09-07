@@ -16,7 +16,13 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.extraction.ports import RecognitionMatch
-from domain.ontology.entities import Class, ConceptScheme, Individual, PropertyDefinition, Taxonomy
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Taxonomy,
+)
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
@@ -407,7 +413,8 @@ class TestRecognitionStageMatch:
         existing = Individual(id="ind-kubernetes", class_ids=[CLASS_ID], title="Kubernetes")
         repo.save_individual(existing)
         recognizer.add_match(
-            "kubernetes", RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector")
+            "kubernetes",
+            RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector"),
         )
 
         run = _make_run(triples=[_make_open_v1_triple("kubernetes")])
@@ -429,14 +436,20 @@ class TestRecognitionStageMatch:
         prop = PropertyDefinition(id="prop-knows", identifier="knows", title="Knows")
         repo.save_property_definition(prop)
         target_cls = Class(
-            id="cls-org", concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title="Org"
+            id="cls-org",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            title="Org",
         )
         repo.save_class(target_cls)
 
         run = _make_run(
             triples=[
                 _make_triple(
-                    "K8s", predicate_prop_id="prop-knows", obj_id="cls-org", obj_kind="class"
+                    "K8s",
+                    predicate_prop_id="prop-knows",
+                    obj_id="cls-org",
+                    obj_kind="class",
                 )
             ]
         )
@@ -550,7 +563,8 @@ class TestClasslessRecognitionCache:
         existing = Individual(id="ind-kubernetes", class_ids=[CLASS_ID], title="Kubernetes")
         repo.save_individual(existing)
         recognizer.add_match(
-            "kubernetes", RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector")
+            "kubernetes",
+            RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector"),
         )
 
         run = _make_run(
@@ -574,10 +588,10 @@ class TestSameRunMergingGuard:
     to a vector index shared with OntologyService (mirroring the shared
     instance wiring in app.py), the same setup that surfaced the bug."""
 
-    def test_recognizer_match_pointing_at_individual_created_this_run_is_ignored(
-        self, repo
-    ):
-        from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
+    def test_recognizer_match_pointing_at_individual_created_this_run_is_ignored(self, repo):
+        from adapters.recognition.individual_recognizer import (
+            CascadeIndividualRecognizer,
+        )
         from tests.fakes.fake_event_publisher import FakeEventPublisher
         from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
 
@@ -599,9 +613,7 @@ class TestSameRunMergingGuard:
         # a candidate's score by its stored title, so "Order Service" (the
         # first mention, once created) must resolve to the same vector the
         # constant embedding service returns for any query.
-        shared_index = FakeIndividualVectorIndex(
-            vectors={"Order Service": [1.0, 0.0]}, repo=repo
-        )
+        shared_index = FakeIndividualVectorIndex(vectors={"Order Service": [1.0, 0.0]}, repo=repo)
         embedding_service = _ConstantEmbeddingService()
         ontology_service = OntologyService(
             repository=repo,
@@ -645,7 +657,8 @@ class TestRecognitionStageBothOrchestrators:
             "K8s", RecognitionMatch("ind-kubernetes", "Kubernetes", 0.95, "vector")
         )
         recognizer.add_match(
-            "kubernetes", RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector")
+            "kubernetes",
+            RecognitionMatch("ind-kubernetes", "Kubernetes", 0.93, "vector"),
         )
 
         run = _make_run(

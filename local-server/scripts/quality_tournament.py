@@ -57,7 +57,9 @@ from adapters.persistence.sqlite.connection import (
     create_session_factory,
 )
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import EmbeddingService
@@ -78,6 +80,7 @@ from scripts.default_pipeline_ontology import (
 )
 from scripts.eval_ontology import build_eval_ontology
 from scripts.quality_loop import (
+    _GROUNDED_SPACE,
     _INDIVIDUAL_SPACE,
     _METRICS_DIR,
     _make_embed_fn,
@@ -87,7 +90,10 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
-from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider, CassetteStaleError
+from tests.integration.pipelines._harness.cassettes import (
+    CassetteLLMProvider,
+    CassetteStaleError,
+)
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
@@ -209,6 +215,36 @@ def _canon_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
     path = _canon_cassette_path(scenario)
     return CassetteLLMProvider(path) if path.exists() else None
 
+
+# Cassette location for the `grounded_v1` NLP-grounded typing variant's per-chunk
+# confirm calls. One file per scenario named `individual_grounded_typing_<scenario>.json`,
+# recorded by scripts/record_grounded_cassettes.py against the eval ontology this
+# tournament grounds against. The per-chunk typing prompt is built only from scenario-fixed
+# inputs (spaCy chunks + their vector-retrieved candidate titles), so one recording per
+# scenario replays across the whole knob sweep. When a scenario has no cassette the
+# provider is None and the grounded typing stage self-skips.
+_GROUNDED_CASSETTE_DIR = (
+    Path(__file__).parent.parent
+    / "tests"
+    / "integration"
+    / "fixtures"
+    / "cassettes"
+    / "individual_grounded_typing"
+)
+_GROUNDED_CASSETTE_PREFIX = "individual_grounded_typing_"
+
+
+def _grounded_cassette_path(scenario: str) -> Path:
+    """Return the recorded-cassette path for one `grounded_v1` scenario."""
+    return _GROUNDED_CASSETTE_DIR / f"{_GROUNDED_CASSETTE_PREFIX}{scenario}.json"
+
+
+def _grounded_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
+    """Cassette provider for a scenario's grounded typing calls, or None if unrecorded."""
+    path = _grounded_cassette_path(scenario)
+    return CassetteLLMProvider(path) if path.exists() else None
+
+
 # Every scenario the `default` variant is asked to replay across a full
 # tournament run: the dev/holdout corpus plus the always-reported Wave 1
 # bootstrap and Wave 4 informal diagnostic groups (see `_run_variant`). The
@@ -216,6 +252,14 @@ def _canon_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
 # every one of these, so an admitted variant can never crash mid-tournament on
 # a missing recording.
 _DEFAULT_REPLAY_SCENARIOS = (
+    list(INDIVIDUAL_EXTRACTION_SCENARIOS)
+    + list(DR_BOOTSTRAP_SCENARIOS)
+    + list(WAVE4_INFORMAL_SCENARIOS)
+    + list(RELABELED_ARXIV_SCENARIOS)
+)
+
+# Every scenario the `grounded_v1` variant is asked to replay (identical to default).
+_GROUNDED_REPLAY_SCENARIOS = (
     list(INDIVIDUAL_EXTRACTION_SCENARIOS)
     + list(DR_BOOTSTRAP_SCENARIOS)
     + list(WAVE4_INFORMAL_SCENARIOS)
@@ -240,6 +284,20 @@ def _default_cassettes_present() -> bool:
     `open_v1` — the guard is what keeps today's behavior unchanged.
     """
     return all(_default_cassette_path(scenario).exists() for scenario in _DEFAULT_REPLAY_SCENARIOS)
+
+
+def _grounded_cassettes_present() -> bool:
+    """
+    Report whether the `grounded_v1` NLP-grounded typing variant can be replayed fully offline.
+
+    True only when a recorded cassette exists for every scenario the variant
+    would replay (`_GROUNDED_REPLAY_SCENARIOS`). The guard in `build_registry`
+    admits `grounded_v1` only once cassettes exist for all scenarios, so an
+    admitted variant can never crash mid-tournament on a missing recording.
+    """
+    return all(
+        _grounded_cassette_path(scenario).exists() for scenario in _GROUNDED_REPLAY_SCENARIOS
+    )
 
 
 @dataclass(frozen=True)
@@ -322,6 +380,63 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
         name="open_v1",
         base_config={**get_open_v1_config(), "llm_canonicalization": True},
         knob_space=dict(_INDIVIDUAL_SPACE),
+        run_scenario=run_scenario,
+    )
+
+
+def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Variant:
+    """
+    Build the `grounded_v1` variant: the NLP-grounded typing individual extraction pipeline.
+
+    Runs the OpenIndividualExtractionOrchestrator with nlp_grounded_typing=True,
+    which enables chunk typing via vector retrieval + LLM confirmation (mutually
+    exclusive with ground_to_schema / require_schema_match). Replays entirely
+    from recorded cassettes for the per-chunk LLM confirm calls so the variant
+    can be evaluated offline without live LLM calls (Loop A/B constraint).
+
+    `eval_repo`/`eval_index` wire the imported ontology (scripts/eval_ontology.py)
+    into the grounding stage; grounding self-skips per scenario when the ontology
+    can't be resolved.
+    """
+
+    async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
+        # Set up cassette provider for the per-chunk confirm LLM calls
+        cassette_provider = _grounded_cassette_provider(scenario)
+        orch = OpenIndividualExtractionOrchestrator(
+            llm_provider=cassette_provider,
+            nlp_processor=nlp,
+            embedding_service=embedding,
+            schema_index=eval_index,
+            config=config,
+            ontology_repo=eval_repo,
+        )
+        fixture = dict(load_fixture("individual_extraction", scenario))
+        state = IndividualExtractionState(
+            run_id=str(uuid4()),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            input_data=fixture,
+        )
+        result_state = await orch.execute(state)
+        return (result_state.result or {}).get("triples", [])
+
+    # Enable nlp_grounded_typing in the base config; force all schema-grounding
+    # knobs to False (mutually exclusive per config validation). Every key in
+    # base_config appears in _GROUNDED_SPACE (knob_space) so coordinate_ascent's
+    # restart jitter can never drop a knob.
+    grounded_base_config = dict(get_open_v1_config())
+    grounded_base_config.update(
+        {
+            "nlp_grounded_typing": True,
+            "ground_to_schema": False,
+            "require_schema_match": False,
+            "llm_canonicalization": True,
+        }
+    )
+
+    return Variant(
+        name="grounded_v1",
+        base_config=grounded_base_config,
+        knob_space=dict(_GROUNDED_SPACE),
         run_scenario=run_scenario,
     )
 
@@ -432,6 +547,13 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
       in the prompt (`ExtractionService._build_individual_extraction_prompt`),
       not in these knobs.
 
+    - 'grounded_v1': the NLP-grounded typing variant
+      (`OpenIndividualExtractionOrchestrator` with `nlp_grounded_typing=True`),
+      admitted under a GUARD. The variant replays entirely from cassettes for
+      the per-chunk LLM confirm calls, so no live LLM calls are made (Loop A/B
+      constraint). Registered only when cassettes exist for all replay scenarios
+      and the DR spec checkout is present (same guard as `default`).
+
     Cassettes are now recorded under `_DEFAULT_CASSETTE_DIR`, so the guard is
     open and `default`/`default+grounding` register whenever the DR spec
     checkout is present. The two-pass RAG-grounded `default` is the tournament
@@ -466,6 +588,26 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
             "nothing for this offline tournament to replay. Record them via "
             "`pytest --refresh-cassettes -k test_quality_scenario_with_metrics` "
             "and the 'default'/'default+grounding' variants register automatically."
+        )
+
+    if _grounded_cassettes_present() and dr_spec_available():
+        # Register the grounded_v1 variant under the same guard as default:
+        # cassettes must exist for all replay scenarios AND the DR spec checkout
+        # must be present (grounded_v1's replay set includes DR scenarios).
+        register_variant(_make_grounded_v1_variant(nlp, embedding, eval_repo, eval_index))
+    elif _grounded_cassettes_present():
+        print(
+            "note: 'grounded_v1' NLP-grounded typing variant has recorded cassettes "
+            "but the DR spec checkout is absent, so its DR-context replay scenarios "
+            "cannot be rebuilt — not registering 'grounded_v1'."
+        )
+    else:
+        print(
+            "note: 'grounded_v1' NLP-grounded typing variant not registered — no "
+            f"recorded cassettes found under {_GROUNDED_CASSETTE_DIR} for all "
+            f"{len(_GROUNDED_REPLAY_SCENARIOS)} replay scenarios. Record them via "
+            "`scripts/record_grounded_cassettes.py --record` "
+            "and the 'grounded_v1' variant registers automatically."
         )
 
     return registered_variants()
@@ -721,7 +863,9 @@ def _aggregate_recognition(reports: dict[str, RecognitionMetrics]) -> dict[str, 
     }
 
 
-def _emit_recognition_metrics(recognition_reports: dict[str, RecognitionMetrics]) -> None:
+def _emit_recognition_metrics(
+    recognition_reports: dict[str, RecognitionMetrics],
+) -> None:
     """Emit each episode's RecognitionMetrics to _metrics/individual_recognition.jsonl."""
     emitter = MetricsEmitter(_METRICS_DIR)
     for episode, metrics in recognition_reports.items():
@@ -924,9 +1068,7 @@ def _render_scoreboard_digest(
         lines.append(f"| {result['variant']} | {wave4['strict_f1']:.3f} | {wave4['soft_f1']:.3f} |")
     lines.append("")
 
-    lines.append(
-        "## Relabeled-arxiv diagnostics (always reported, never gates accept/reject)"
-    )
+    lines.append("## Relabeled-arxiv diagnostics (always reported, never gates accept/reject)")
     lines.append("")
     lines.append(
         f"Difficulty check only over {len(RELABELED_ARXIV_SCENARIOS)} scenario(s) -- real "
@@ -1125,13 +1267,19 @@ def main() -> int:
     )
     parser.add_argument("--pipeline", choices=["individual"], default="individual")
     parser.add_argument(
-        "--passes", type=int, default=2, help="Loop A coordinate-ascent passes per variant"
+        "--passes",
+        type=int,
+        default=2,
+        help="Loop A coordinate-ascent passes per variant",
     )
     parser.add_argument(
         "--restarts", type=int, default=3, help="Loop A random restarts per variant"
     )
     parser.add_argument(
-        "--seed", type=int, default=0, help="RNG seed for Loop A restart shuffling/jitter"
+        "--seed",
+        type=int,
+        default=0,
+        help="RNG seed for Loop A restart shuffling/jitter",
     )
     args = parser.parse_args()
     return asyncio.run(_amain(args))

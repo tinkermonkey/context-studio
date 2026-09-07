@@ -12,6 +12,7 @@ import pytest
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
 from domain.extraction.exceptions import ExtractionError
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import SchemaVectorIndex
 
 
 class FakeOntologyRepository:
@@ -645,7 +646,11 @@ class _OneChunkNLP:
         self._chunk_text = chunk_text
 
     def process_open(self, text):
-        from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
+        from domain.extraction.ports import (
+            NounChunkSpan,
+            OpenExtractionResult,
+            OpenToken,
+        )
 
         tok = OpenToken(
             index=0,
@@ -678,8 +683,19 @@ class _OneChunkNLP:
         )
 
 
-class _OneMatchIndex:
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+class _OneMatchIndex(SchemaVectorIndex):
+    def index_entity(self, entity_id, title, description):
+        pass
+
+    def search(
+        self,
+        query_embedding,
+        kinds,
+        top_k=20,
+        threshold=0.0,
+        taxonomy_id=None,
+        matching_mode=None,
+    ):
         from domain.ontology.ports import SchemaMatch
 
         return [
@@ -743,8 +759,16 @@ class TestRecognition:
         "K8s": [0.98, 0.02, 0.0],  # ~1.0 cos to Kubernetes
         "Nextflow": [0.0, 1.0, 0.0],  # orthogonal
         "Container Orchestrator": [0.6, 0.8, 0.0],  # ~0.6 cos -> below threshold
-        "borderline": [0.93, 0.3676, 0.0],  # ~0.93 cos: passes long bar, fails acronym bar
-        "Docker Swarm": [0.97, 0.243, 0.0],  # ~0.97 cos -> close to Kubernetes (ambiguity)
+        "borderline": [
+            0.93,
+            0.3676,
+            0.0,
+        ],  # ~0.93 cos: passes long bar, fails acronym bar
+        "Docker Swarm": [
+            0.97,
+            0.243,
+            0.0,
+        ],  # ~0.97 cos -> close to Kubernetes (ambiguity)
     }
 
     def _service(self, index):
@@ -886,7 +910,10 @@ class _RecogRepo:
                 title="System Software",
                 external_references=[
                     ExternalReference(
-                        source="dr", identifier="technology.systemsoftware", uri=None, metadata={}
+                        source="dr",
+                        identifier="technology.systemsoftware",
+                        uri=None,
+                        metadata={},
                     )
                 ],
             ),
@@ -897,7 +924,10 @@ class _RecogRepo:
                 title="Data Object",
                 external_references=[
                     ExternalReference(
-                        source="dr", identifier="application.dataobject", uri=None, metadata={}
+                        source="dr",
+                        identifier="application.dataobject",
+                        uri=None,
+                        metadata={},
                     )
                 ],
             ),
@@ -1215,7 +1245,11 @@ class TestTypeConceptObjects:
             {
                 "subject": {"kind": "individual", "label": "Caching"},
                 "predicate": {"property_definition_id": None, "label": "improves"},
-                "object": {"kind": "class", "id": "quality-class-id", "label": "Quality Attribute"},
+                "object": {
+                    "kind": "class",
+                    "id": "quality-class-id",
+                    "label": "Quality Attribute",
+                },
                 "confidence": 0.85,
                 "provenance": "test",
             }
@@ -1237,7 +1271,11 @@ class TestTypeConceptObjects:
             {
                 "subject": {"kind": "individual", "label": "CacheLayer"},
                 "predicate": {"property_definition_id": None, "label": "is_a"},
-                "object": {"kind": "class", "id": "pattern-class-id", "label": "Pattern"},
+                "object": {
+                    "kind": "class",
+                    "id": "pattern-class-id",
+                    "label": "Pattern",
+                },
                 "confidence": 0.9,
                 "provenance": "test",
             }
@@ -1416,11 +1454,12 @@ class TestTypeConceptObjects:
 
         # Assert warning is returned
         assert len(warnings) == 1
-        assert "database access error" in warnings[0]
+        assert "Concept-object typing step failed" in warnings[0]
+        assert "transient SQLite error" in warnings[0]
 
         # Assert ERROR-level log is emitted
         assert "Concept-object typing step failed" in caplog.text
-        assert "database access error" in caplog.text or "transient SQLite error" in caplog.text
+        assert "transient SQLite error" in caplog.text
 
     def test_programming_error_is_reraised(self, extraction_service_for_typing):
         """Test that programming errors (TypeError, etc.) are re-raised, not caught."""

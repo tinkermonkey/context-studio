@@ -151,7 +151,9 @@ class TestBuildRecognitionReports:
             )
 
         monkeypatch.setattr(
-            quality_tournament, "run_full_pipeline_episode", fake_run_full_pipeline_episode
+            quality_tournament,
+            "run_full_pipeline_episode",
+            fake_run_full_pipeline_episode,
         )
 
         reports = await _build_recognition_reports(embedding=None)
@@ -182,7 +184,9 @@ class TestBuildRecognitionReports:
             raise RuntimeError("WAL contention while reloading individual after save")
 
         monkeypatch.setattr(
-            quality_tournament, "run_full_pipeline_episode", fake_run_full_pipeline_episode
+            quality_tournament,
+            "run_full_pipeline_episode",
+            fake_run_full_pipeline_episode,
         )
 
         with pytest.raises(RuntimeError):
@@ -235,7 +239,9 @@ class TestBuildRecognitionReports:
             )
 
         monkeypatch.setattr(
-            quality_tournament, "run_full_pipeline_episode", fake_run_full_pipeline_episode
+            quality_tournament,
+            "run_full_pipeline_episode",
+            fake_run_full_pipeline_episode,
         )
 
         reports = await _build_recognition_reports(embedding=None)

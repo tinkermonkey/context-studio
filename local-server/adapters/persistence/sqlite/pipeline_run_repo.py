@@ -392,9 +392,11 @@ class PipelineRepository:
                 q = q.filter(PipelineRun.created_at <= end_date)
 
             if applied is not None:
-                subquery = session.query(ChangeEvent).filter(
-                    ChangeEvent.batch_run_id == PipelineRun.batch_id
-                ).exists()
+                subquery = (
+                    session.query(ChangeEvent)
+                    .filter(ChangeEvent.batch_run_id == PipelineRun.batch_id)
+                    .exists()
+                )
                 if applied:
                     q = q.filter(subquery)
                 else:

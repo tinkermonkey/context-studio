@@ -22,7 +22,9 @@
     background: rgb(var(--canvas-bg));
     cursor: pointer;
     text-align: left;
-    transition: background 0.1s, border-color 0.1s;
+    transition:
+      background 0.1s,
+      border-color 0.1s;
     width: 100%;
   }
 
@@ -96,7 +98,12 @@
   }
 
   @keyframes skeleton-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 }

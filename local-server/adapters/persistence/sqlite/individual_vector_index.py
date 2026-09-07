@@ -26,7 +26,11 @@ from adapters.persistence.sqlite.mappers import (
     _serialize_embedding,
 )
 from adapters.persistence.sqlite.models import IndividualClass, OntologyEntity
-from domain.ontology.ports import EmbeddingService, IndividualMatch
+from domain.ontology.ports import (
+    EmbeddingService,
+    IndividualMatch,
+    IndividualVectorIndex,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,7 +38,7 @@ logger = get_logger(__name__)
 _INDIVIDUAL = "individual"
 
 
-class SqliteIndividualVectorIndex:
+class SqliteIndividualVectorIndex(IndividualVectorIndex):
     """SQLite adapter implementing the IndividualVectorIndex port."""
 
     def __init__(self, session_factory, embedding_service: EmbeddingService) -> None:
@@ -71,9 +75,7 @@ class SqliteIndividualVectorIndex:
         count = 0
         with self._session_factory() as session:
             rows = (
-                session.query(OntologyEntity)
-                .filter(OntologyEntity.node_type == _INDIVIDUAL)
-                .all()
+                session.query(OntologyEntity).filter(OntologyEntity.node_type == _INDIVIDUAL).all()
             )
             for row in rows:
                 vec = self._embedding.embed(row.title) if row.title and row.title.strip() else None
@@ -113,7 +115,8 @@ class SqliteIndividualVectorIndex:
             if class_ids:
                 entity_query = (
                     entity_query.join(
-                        IndividualClass, IndividualClass.individual_id == OntologyEntity.id
+                        IndividualClass,
+                        IndividualClass.individual_id == OntologyEntity.id,
                     )
                     .filter(IndividualClass.class_id.in_(class_ids))
                     .distinct()

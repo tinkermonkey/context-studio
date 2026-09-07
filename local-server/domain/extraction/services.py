@@ -874,8 +874,8 @@ class ExtractionService:
             ontology: Target ontology
 
         Returns:
-            Tuple of (relationship_triples with property_definition_id stamped +
-            synthetic is_a triples for concept-objects, warnings list)
+            Tuple of (synthetic is_a triples for concept-objects +
+            relationship_triples with property_definition_id stamped, warnings list)
         """
         warnings: list[str] = []
 
@@ -903,12 +903,14 @@ class ExtractionService:
         except (TypeError, AttributeError, KeyError, IndexError):
             raise
         except Exception as exc:
+            error_type = type(exc).__name__
             warning_msg = (
-                f"Concept-object typing step failed (database access error): {exc}. "
+                f"Concept-object typing step failed ({error_type}): {exc}. "
                 "Returning untyped relationship triples. Relationships will be dropped "
-                "during apply since property_definition_id will not be stamped."
+                "during apply since property_definition_id will not be stamped. "
+                "Verify database connectivity, schema integrity, and repository state."
             )
-            _logger.error(warning_msg, exc_info=exc)
+            _logger.error(warning_msg, exc_info=True)
             warnings.append(warning_msg)
             return relationship_triples, warnings
 
@@ -1127,6 +1129,10 @@ class ExtractionService:
         no typing.
         """
         if self._schema_index is None:
+            _logger.warning(
+                "nlp_grounded typing requested but schema_index is None; "
+                "no typing triples will be produced"
+            )
             return [], 0
 
         result = self._nlp.process_open(text)
@@ -1229,7 +1235,14 @@ class ExtractionService:
         if payload:
             try:
                 choice = str(json.loads(payload.group(0)).get("class", "")).strip()
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as exc:
+                _logger.error(
+                    "Failed to parse LLM JSON response for chunk '%s' in nlp_grounded typing: %s. "
+                    "Response content: %s",
+                    label,
+                    exc,
+                    response.content[:500] if response.content else "empty",
+                )
                 choice = ""
         if not choice or choice.lower() == "none":
             return None, tokens
@@ -1300,7 +1313,10 @@ class ExtractionService:
             if not mention or mention.lower() in mention_class:
                 continue
             cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
-            mention_class[mention.lower()] = (mention, str(cls.id) if cls is not None else None)
+            mention_class[mention.lower()] = (
+                mention,
+                str(cls.id) if cls is not None else None,
+            )
 
         resolution: dict[str, tuple[str, str]] = {}
         for key, (mention, class_id) in mention_class.items():

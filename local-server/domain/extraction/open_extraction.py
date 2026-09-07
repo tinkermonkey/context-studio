@@ -99,9 +99,7 @@ class OpenExtractionParams:
         if self.min_chunk_chars < 0:
             raise ValueError(f"min_chunk_chars must be >= 0, got {self.min_chunk_chars}")
         if self.tf_idf_threshold < 0.0:
-            raise ValueError(
-                f"tf_idf_threshold must be >= 0.0, got {self.tf_idf_threshold}"
-            )
+            raise ValueError(f"tf_idf_threshold must be >= 0.0, got {self.tf_idf_threshold}")
 
 
 @dataclass(frozen=True)
@@ -137,9 +135,7 @@ class ConceptCandidate:
         if self.start < 0:
             raise ValueError(f"start must be >= 0, got {self.start}")
         if self.end < self.start:
-            raise ValueError(
-                f"end must be >= start, got start={self.start}, end={self.end}"
-            )
+            raise ValueError(f"end must be >= start, got start={self.start}, end={self.end}")
         if self.root_index < 0:
             raise ValueError(f"root_index must be >= 0, got {self.root_index}")
         if self.sentence_index < 0:
@@ -365,9 +361,7 @@ def build_concept_candidates(
                 score=_tfidf_score(stripped, term_freq, doc_length),
                 root_index=chunk.root_index,
                 sentence_index=chunk.sentence_index,
-                connected_verb=find_connected_verb(
-                    tokens, chunk.root_index, params.max_verb_depth
-                ),
+                connected_verb=find_connected_verb(tokens, chunk.root_index, params.max_verb_depth),
                 start=chunk.start,
                 end=chunk.end,
                 label_lemmas=_chunk_label_lemmas(tokens, chunk),
@@ -395,9 +389,7 @@ def build_concept_candidates(
                     score=_tfidf_score(text, term_freq, doc_length),
                     root_index=tok.index,
                     sentence_index=tok.sentence_index,
-                    connected_verb=find_connected_verb(
-                        tokens, tok.index, params.max_verb_depth
-                    ),
+                    connected_verb=find_connected_verb(tokens, tok.index, params.max_verb_depth),
                     start=tok.start,
                     end=tok.end,
                     label_lemmas=(tok.lemma.lower(),),
@@ -458,24 +450,18 @@ def build_relation_candidates(result: OpenExtractionResult) -> list[RelationCand
         if verb.pos != "VERB":
             continue
 
-        subjects = [
-            t for t in tokens if t.head_index == verb.index and t.dep in _CRITICAL_DEPS
-        ]
+        subjects = [t for t in tokens if t.head_index == verb.index and t.dep in _CRITICAL_DEPS]
         if not subjects:
             continue
 
         # Direct objects / attributes / datives governed by the verb.
         objects = [
-            t
-            for t in tokens
-            if t.head_index == verb.index and t.dep in {"dobj", "attr", "dative"}
+            t for t in tokens if t.head_index == verb.index and t.dep in {"dobj", "attr", "dative"}
         ]
         # Prepositional objects: pobj -> prep(head) -> verb.
         for prep in tokens:
             if prep.head_index == verb.index and prep.dep == "prep":
-                objects.extend(
-                    t for t in tokens if t.head_index == prep.index and t.dep == "pobj"
-                )
+                objects.extend(t for t in tokens if t.head_index == prep.index and t.dep == "pobj")
 
         for subj in subjects:
             for obj in objects:
@@ -615,25 +601,19 @@ def build_wider_relation_candidates(
         if verb.pos != "VERB":
             continue
 
-        subjpass = [
-            t for t in tokens if t.head_index == verb.index and t.dep == "nsubjpass"
-        ]
+        subjpass = [t for t in tokens if t.head_index == verb.index and t.dep == "nsubjpass"]
         if subjpass:
             agents: list[int] = []
             for prep in tokens:
                 if prep.head_index == verb.index and prep.dep in _AGENT_DEPS:
                     agents.extend(
-                        t.index
-                        for t in tokens
-                        if t.head_index == prep.index and t.dep == "pobj"
+                        t.index for t in tokens if t.head_index == prep.index and t.dep == "pobj"
                     )
             for agent_index in agents:
                 for subj in subjpass:
                     out.append(make(agent_index, verb.index, subj.index))
 
-        subjects = [
-            t for t in tokens if t.head_index == verb.index and t.dep in _CRITICAL_DEPS
-        ]
+        subjects = [t for t in tokens if t.head_index == verb.index and t.dep in _CRITICAL_DEPS]
 
         # Clausal complements: the inner verb's own subject, else the matrix
         # subject (control), paired with the inner verb's objects.
@@ -655,9 +635,7 @@ def build_wider_relation_candidates(
             for prep in tokens:
                 if prep.head_index == comp.index and prep.dep == "prep":
                     inner_objects.extend(
-                        t.index
-                        for t in tokens
-                        if t.head_index == prep.index and t.dep == "pobj"
+                        t.index for t in tokens if t.head_index == prep.index and t.dep == "pobj"
                     )
             for subj in inner_subjects:
                 for obj_index in inner_objects:
@@ -671,13 +649,18 @@ def build_wider_relation_candidates(
             for prep in tokens:
                 if prep.head_index == acomp.index and prep.dep == "prep":
                     acomp_objects.extend(
-                        t.index
-                        for t in tokens
-                        if t.head_index == prep.index and t.dep == "pobj"
+                        t.index for t in tokens if t.head_index == prep.index and t.dep == "pobj"
                     )
             for subj in subjects:
                 for obj_index in acomp_objects:
-                    out.append(make(subj.index, verb.index, obj_index, predicate_index=acomp.index))
+                    out.append(
+                        make(
+                            subj.index,
+                            verb.index,
+                            obj_index,
+                            predicate_index=acomp.index,
+                        )
+                    )
 
     # Keep only relations that surface one of the requested heads.
     if restrict_to_heads is not None:

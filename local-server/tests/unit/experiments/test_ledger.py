@@ -342,7 +342,9 @@ class TestEntriesSinceLastBaselineReset:
         )
         append_entry(_entry(experiment_id="2-a"), ledger_path=ledger_path)
         append_baseline_reset(
-            reason="second reset", ontology_context="dr_spec_v2", ledger_path=ledger_path
+            reason="second reset",
+            ontology_context="dr_spec_v2",
+            ledger_path=ledger_path,
         )
         append_entry(_entry(experiment_id="3-a"), ledger_path=ledger_path)
 
@@ -382,7 +384,9 @@ class TestLatestBaselineReset:
     def test_filters_by_ontology_context(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
         append_baseline_reset(
-            reason="placeholder reset", ontology_context="placeholder", ledger_path=ledger_path
+            reason="placeholder reset",
+            ontology_context="placeholder",
+            ledger_path=ledger_path,
         )
         append_baseline_reset(
             reason="dr reset",
@@ -601,7 +605,13 @@ class TestCli:
         ledger_path = tmp_path / "ledger.jsonl"
 
         exit_code = ledger_cli(
-            ["--ledger-path", str(ledger_path), "baseline-reset", "--ontology-context", "dr_spec"]
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "baseline-reset",
+                "--ontology-context",
+                "dr_spec",
+            ]
         )
 
         assert exit_code == 1

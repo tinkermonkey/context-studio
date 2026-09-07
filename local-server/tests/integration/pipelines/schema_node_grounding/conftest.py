@@ -36,10 +36,7 @@ def http_cassette_path(request) -> Path:
     # Quality tests use a shared HTTP cassette for all scenarios
     if test_file.stem == "test_quality_schema_node_grounding":
         cassette_dir = (
-            test_file.parent.parent.parent
-            / "fixtures"
-            / "cassettes"
-            / "schema_node_grounding"
+            test_file.parent.parent.parent / "fixtures" / "cassettes" / "schema_node_grounding"
         )
         cassette_dir.mkdir(parents=True, exist_ok=True)
         return cassette_dir / "schema_node_grounding_http.json"
@@ -95,8 +92,7 @@ async def http_client(
             )
         # Quality tests use URL-based matching for multi-scenario cassettes
         transport = ReplayHTTPTransport(
-            cassette_path=http_cassette_path,
-            match_by_url=is_quality_test
+            cassette_path=http_cassette_path, match_by_url=is_quality_test
         )
         client = httpx.AsyncClient(transport=transport)
     else:

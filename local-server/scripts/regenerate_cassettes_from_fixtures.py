@@ -241,7 +241,13 @@ async def regenerate_connection_cassettes():
             ontology_repo.save_concept_scheme(scheme)
 
             # Create default properties
-            for prop_label in ["inherits_from", "implements", "uses", "depends_on", "related_to"]:
+            for prop_label in [
+                "inherits_from",
+                "implements",
+                "uses",
+                "depends_on",
+                "related_to",
+            ]:
                 prop = PropertyDefinition(
                     id=str(uuid4()),
                     identifier=prop_label,

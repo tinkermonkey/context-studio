@@ -117,12 +117,10 @@ def test_file_engine_handles_concurrent_writes_without_locking():
             # Allow up to 2 lock errors (transient under high concurrency is acceptable)
             # but the majority should succeed.
             assert lock_errors <= 2, (
-                f"Too many lock errors: {lock_errors} "
-                f"(successful: {successful_writes})"
+                f"Too many lock errors: {lock_errors} " f"(successful: {successful_writes})"
             )
             assert successful_writes >= 35, (
-                f"Not enough successful writes: {successful_writes} "
-                f"(expected ≥35 out of 40)"
+                f"Not enough successful writes: {successful_writes} " f"(expected ≥35 out of 40)"
             )
             with engine.connect() as conn:
                 count = conn.execute(text("SELECT COUNT(*) FROM t")).scalar()

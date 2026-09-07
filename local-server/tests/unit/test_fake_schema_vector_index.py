@@ -145,10 +145,7 @@ class TestFakeSchemaVectorIndexConfigurable:
             taxonomy_id="tax_tech",
         )
         assert len(result) == 2
-        assert all(
-            match.entity_id in ["class_1", "prop_1"]
-            for match in result
-        )
+        assert all(match.entity_id in ["class_1", "prop_1"] for match in result)
 
         # Filter to tax_bio
         result = fake.search(
@@ -218,10 +215,7 @@ class TestFakeSchemaVectorIndexConfigurable:
             ),
         ]
         fake = FakeSchemaVectorIndex()
-        fake.set_search_results(
-            matches,
-            taxonomies={"class_1": "tax_a", "class_2": None}
-        )
+        fake.set_search_results(matches, taxonomies={"class_1": "tax_a", "class_2": None})
 
         # class_1 matches tax_a
         result = fake.search(
@@ -239,3 +233,31 @@ class TestFakeSchemaVectorIndexConfigurable:
             taxonomy_id="tax_b",
         )
         assert len(result) == 0
+
+    def test_matching_mode_parameter_accepted_for_protocol_compatibility(self, sample_matches):
+        """search() accepts matching_mode parameter for protocol compliance."""
+        fake = FakeSchemaVectorIndex(search_results=sample_matches)
+
+        # Test that matching_mode parameter is accepted without error
+        result_with_mode = fake.search(
+            query_embedding=[0.1] * 8,
+            kinds=["class"],
+            matching_mode="max",
+        )
+        assert len(result_with_mode) == 2
+
+        # Test that matching_mode parameter can be None
+        result_with_none = fake.search(
+            query_embedding=[0.1] * 8,
+            kinds=["class"],
+            matching_mode=None,
+        )
+        assert len(result_with_none) == 2
+
+        # Test with definition_preferred mode
+        result_with_def_pref = fake.search(
+            query_embedding=[0.1] * 8,
+            kinds=["class"],
+            matching_mode="definition_preferred",
+        )
+        assert len(result_with_def_pref) == 2

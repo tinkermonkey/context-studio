@@ -26,9 +26,7 @@ class TestClassifyStage:
 
     def test_relation_not_derived(self):
         """Both entities appear somewhere, but never paired together."""
-        stage, nearest = classify_stage(
-            ("a", "p", "b"), [("a", "q", "c"), ("d", "r", "b")]
-        )
+        stage, nearest = classify_stage(("a", "p", "b"), [("a", "q", "c"), ("d", "r", "b")])
         assert stage == RELATION_NOT_DERIVED
         assert nearest is None
 

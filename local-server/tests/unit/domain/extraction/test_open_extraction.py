@@ -83,9 +83,7 @@ def _kafka_doc():
         _tok(3, ".", "PUNCT", "punct", 1, lemma=".", is_alpha=False),
     ]
     chunks = [_chunk("Kafka", 0, 1, 0), _chunk("events", 2, 3, 2)]
-    return OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    return OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
 
 
 # ---------------------------------------------------------------------------
@@ -168,9 +166,7 @@ def test_build_concept_candidates_standalone_token():
         _tok(3, ".", "PUNCT", "punct", 2, lemma=".", is_alpha=False),
     ]
     chunks = [_chunk("Systems", 0, 1, 0)]
-    doc = OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    doc = OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
     cands = build_concept_candidates(doc, OpenExtractionParams(tf_idf_threshold=0.0))
     lemmas = {c.lemma for c in cands}
     assert "scalable" in lemmas  # standalone ADJ surfaced
@@ -184,9 +180,7 @@ def test_build_concept_candidates_prefilters_short_and_stopword_chunks():
     ]
     # All-stopword chunk + a too-short chunk both get skipped.
     chunks = [_chunk("it", 1, 2, 1), _chunk("of", 0, 1, 0)]
-    doc = OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    doc = OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
     cands = build_concept_candidates(
         doc, OpenExtractionParams(tf_idf_threshold=0.0, include_standalone=False)
     )
@@ -206,9 +200,7 @@ def test_critical_bypasses_threshold_others_filtered():
         _chunk("system", 0, 1, 0),  # nsubj -> CRITICAL
         _chunk("cache", 2, 3, 2),  # compound -> CONTEXTUAL
     ]
-    doc = OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    doc = OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
     # Very high threshold filters everything except CRITICAL.
     cands = build_concept_candidates(
         doc, OpenExtractionParams(tf_idf_threshold=999.0, include_standalone=False)
@@ -243,9 +235,7 @@ def test_build_relation_candidates_prepositional_object():
         _tok(4, ".", "PUNCT", "punct", 1, lemma=".", is_alpha=False),
     ]
     chunks = [_chunk("Data", 0, 1, 0), _chunk("pipelines", 3, 4, 3)]
-    doc = OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    doc = OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
     rels = build_relation_candidates(doc)
     assert len(rels) == 1
     assert rels[0].subject == "Data"
@@ -260,7 +250,10 @@ def test_build_relation_candidates_none_without_subject():
         _tok(1, "tests", "NOUN", "dobj", 0, lemma="test"),
     ]
     doc = OpenExtractionResult(
-        tokens=tokens, noun_chunks=[_chunk("tests", 1, 2, 1)], sentence_count=1, language="en"
+        tokens=tokens,
+        noun_chunks=[_chunk("tests", 1, 2, 1)],
+        sentence_count=1,
+        language="en",
     )
     assert build_relation_candidates(doc) == []
 
@@ -346,9 +339,7 @@ def _conjunct_doc():
         _chunk("routes", 3, 4, 3),
         _chunk("jobs", 5, 6, 5),
     ]
-    return OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    return OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
 
 
 def _passive_agent_doc():
@@ -364,9 +355,7 @@ def _passive_agent_doc():
         _tok(7, ".", "PUNCT", "punct", 3, lemma=".", is_alpha=False),
     ]
     chunks = [_chunk("The route", 0, 2, 1), _chunk("the technician", 5, 7, 6)]
-    return OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    return OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
 
 
 def _xcomp_doc():
@@ -380,9 +369,7 @@ def _xcomp_doc():
         _tok(5, ".", "PUNCT", "punct", 1, lemma=".", is_alpha=False),
     ]
     chunks = [_chunk("Users", 0, 1, 0), _chunk("routes", 4, 5, 4)]
-    return OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    return OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
 
 
 def test_unconsumed_noun_chunk_heads_reports_only_unconsumed():

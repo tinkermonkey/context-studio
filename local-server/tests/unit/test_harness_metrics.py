@@ -306,9 +306,7 @@ class TestRankingPrecisionAtK:
 
     def test_perfect_top3(self):
         """All expected items in top 3."""
-        precision = ranking_precision_at_k(
-            ["a", "b", "c"], ["a", "b", "c", "d", "e"], k=3
-        )
+        precision = ranking_precision_at_k(["a", "b", "c"], ["a", "b", "c", "d", "e"], k=3)
         assert precision == 1.0
 
     def test_partial_top3(self):
@@ -576,7 +574,12 @@ class TestRecognitionMetrics:
     """Pairwise coreference metrics for cross-document recognition (#1142)."""
 
     def _m(self, entity, node, title="X", canonical="X"):
-        return {"entity_key": entity, "canonical_title": canonical, "node_id": node, "title": title}
+        return {
+            "entity_key": entity,
+            "canonical_title": canonical,
+            "node_id": node,
+            "title": title,
+        }
 
     def test_perfect_clustering(self):
         from tests.integration.pipelines._harness.metrics import recognition_metrics
@@ -608,8 +611,10 @@ class TestRecognitionMetrics:
 
         # correctly resolved, but node titled with a variant, not the canonical
         r = recognition_metrics(
-            [self._m("K", "k", title="Kubernetes", canonical="Kubernetes"),
-             self._m("K", "k", title="K8s", canonical="Kubernetes")]
+            [
+                self._m("K", "k", title="Kubernetes", canonical="Kubernetes"),
+                self._m("K", "k", title="K8s", canonical="Kubernetes"),
+            ]
         )
         assert r.dedup_precision == 1.0
         assert r.canonical_label_accuracy == 0.5

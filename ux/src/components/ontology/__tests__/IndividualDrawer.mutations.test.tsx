@@ -95,7 +95,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
 
       await user.click(screen.getByTestId("individual-drawer-name-field-view"));
 
-      const titleInput = screen.getByTestId("individual-drawer-name-field-input") as HTMLInputElement;
+      const titleInput = screen.getByTestId(
+        "individual-drawer-name-field-input",
+      ) as HTMLInputElement;
       await user.clear(titleInput);
       await user.type(titleInput, "Updated Title");
       await user.tab();
@@ -248,7 +250,9 @@ describe("IndividualDrawer - Mutation Workflows", () => {
       setupDefaultHandlers();
       server.use(
         http.get("*/api/individuals", () => HttpResponse.json(singleClassIndividual)),
-        http.get("*/api/individuals/ind-001", () => HttpResponse.json(singleClassIndividual.items[0])),
+        http.get("*/api/individuals/ind-001", () =>
+          HttpResponse.json(singleClassIndividual.items[0]),
+        ),
         http.delete(/.*\/api\/individuals\/.*\/classes\/.*/, () => {
           return HttpResponse.json({ detail: "Cannot remove last class" }, { status: 400 });
         }),

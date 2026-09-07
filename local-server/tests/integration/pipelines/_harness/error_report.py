@@ -30,7 +30,11 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from tests.integration.pipelines._harness.metrics import EmbedFn, Triple, label_match_tier
+from tests.integration.pipelines._harness.metrics import (
+    EmbedFn,
+    Triple,
+    label_match_tier,
+)
 
 CANDIDATE_MISSING = "candidate_missing"
 RELATION_NOT_DERIVED = "relation_not_derived"

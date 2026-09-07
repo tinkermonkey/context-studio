@@ -16,7 +16,11 @@ import re
 from typing import Literal, Sequence
 
 from domain.extraction.ports import RecognitionMatch
-from domain.ontology.ports import EmbeddingService, IndividualMatch, IndividualVectorIndex
+from domain.ontology.ports import (
+    EmbeddingService,
+    IndividualMatch,
+    IndividualVectorIndex,
+)
 from domain.pipelines.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)

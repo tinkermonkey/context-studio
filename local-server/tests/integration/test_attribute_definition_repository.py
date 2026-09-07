@@ -417,9 +417,7 @@ class TestAttributeDefinitionCascadeDelete:
         retrieved = repo.get_attribute_definition(saved.id)
         assert retrieved is None
 
-    def test_multiple_attribute_definitions_cascade_delete(
-        self, repo, sample_class
-    ):
+    def test_multiple_attribute_definitions_cascade_delete(self, repo, sample_class):
         """Test that cascade deletion works for multiple attribute definitions."""
         attr_defs = []
         for i in range(3):
