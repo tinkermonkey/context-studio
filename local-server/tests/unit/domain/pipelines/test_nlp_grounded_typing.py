@@ -409,11 +409,12 @@ class TestNLPGroundedTyping:
             sentence_count=0,
             language="en",
         )
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "Test text.", None, open_result
         )
 
-        assert result == triples
+        assert result_triples == triples
+        assert warnings == []
 
     @pytest.mark.asyncio
     async def test_skip_when_no_ontology_repo(self):
@@ -433,11 +434,12 @@ class TestNLPGroundedTyping:
             sentence_count=0,
             language="en",
         )
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "Test text.", None, open_result
         )
 
-        assert result == triples
+        assert result_triples == triples
+        assert warnings == []
 
     @pytest.mark.asyncio
     async def test_skip_when_no_ontology_id(self):
@@ -457,11 +459,12 @@ class TestNLPGroundedTyping:
             sentence_count=0,
             language="en",
         )
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "Test text.", None, open_result
         )
 
-        assert result == triples
+        assert result_triples == triples
+        assert warnings == []
 
     @pytest.mark.asyncio
     async def test_skip_when_ontology_not_found(self):
@@ -484,11 +487,12 @@ class TestNLPGroundedTyping:
             sentence_count=0,
             language="en",
         )
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "Test text.", "unknown_ontology", open_result
         )
 
-        assert result == triples
+        assert result_triples == triples
+        assert warnings == []
         ontology_repo.get_by_identifier.assert_called_once_with("unknown_ontology")
 
     @pytest.mark.asyncio
@@ -582,16 +586,17 @@ class TestNLPGroundedTyping:
         open_result = nlp_processor.process_open.return_value
 
         triples = []
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples,
             "Technology drives innovation. technology is important.",
             "ontology_id",
             open_result,
         )
 
-        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
+        typing_triples = [t for t in result_triples if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 1
         assert typing_triples[0]["subject"]["label"] == "Technology"
+        assert warnings == []
 
     @pytest.mark.asyncio
     async def test_filters_chunk_not_rooted_in_noun_propn(self):
@@ -661,12 +666,13 @@ class TestNLPGroundedTyping:
         open_result = nlp_processor.process_open.return_value
 
         triples = []
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "Very quickly.", "ontology_id", open_result
         )
 
-        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
+        typing_triples = [t for t in result_triples if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 0
+        assert warnings == []
 
     @pytest.mark.asyncio
     async def test_filters_stopword_roots(self):
@@ -736,9 +742,10 @@ class TestNLPGroundedTyping:
         open_result = nlp_processor.process_open.return_value
 
         triples = []
-        result = await orchestrator._type_individuals_nlp_grounded(
+        result_triples, warnings = await orchestrator._type_individuals_nlp_grounded(
             triples, "the dog", "ontology_id", open_result
         )
 
-        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
+        typing_triples = [t for t in result_triples if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 0
+        assert warnings == []

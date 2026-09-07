@@ -625,6 +625,7 @@ class TestNlpGroundedTyping:
         assert t["predicate"]["label"] == "is_a"
         assert t["object"]["kind"] == "class"
         assert t["object"]["label"] == "technology.systemsoftware"
+        assert warnings == []
 
     def test_llm_declining_all_candidates_yields_no_triple(self):
         service = self._service(schema_index=_OneMatchIndex(), llm=_ConfirmingLLM("none"))
@@ -632,6 +633,21 @@ class TestNlpGroundedTyping:
             "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
         )
         assert triples == []
+        assert warnings == []
+
+    def test_aggregate_llm_error_warning_when_all_chunks_fail(self):
+        """When all chunks fail with LLM errors, an aggregate warning is returned."""
+        class FailingLLM:
+            def complete(self, system_prompt, user_prompt, model, **kwargs):
+                raise RuntimeError("LLM service unavailable")
+
+        service = self._service(schema_index=_OneMatchIndex(), llm=FailingLLM())
+        triples, _, warnings = service._type_individuals_nlp_grounded(
+            "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
+        )
+        assert triples == []
+        assert len(warnings) == 1
+        assert "aggregate LLM error" in warnings[0].lower() or "llm" in warnings[0].lower()
 
 
 class _Ontology:
