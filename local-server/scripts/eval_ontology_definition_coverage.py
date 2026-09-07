@@ -20,8 +20,8 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.eval_ontology import build_eval_ontology
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from scripts.eval_ontology import build_eval_ontology
 
 
 def check_definition_coverage() -> dict[str, int | float]:

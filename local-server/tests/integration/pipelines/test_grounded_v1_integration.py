@@ -19,7 +19,6 @@ import pytest
 
 from domain.ontology.ports import SchemaMatch
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
 )
