@@ -1264,7 +1264,7 @@ async def _amain(args) -> int:
     eval_repo, eval_index = build_eval_ontology(embedding)
 
     print("\n══ Class Definition Coverage Check (grounded_v1 readiness) ══")
-    coverage_results = check_definition_coverage()
+    coverage_results = check_definition_coverage(embedding=embedding, ontology_repo=eval_repo)
 
     registry = build_registry(nlp, embedding, eval_repo, eval_index)
     if not registry:

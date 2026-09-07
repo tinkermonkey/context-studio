@@ -38,7 +38,9 @@ def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     return float(dot_product / denominator)
 
 
-def check_definition_coverage() -> dict[str, int | float]:
+def check_definition_coverage(
+    embedding=None, ontology_repo=None
+) -> dict[str, int | float]:
     """
     Check class-definition coverage in the evaluation ontology.
 
@@ -47,6 +49,12 @@ def check_definition_coverage() -> dict[str, int | float]:
     2. Distinctiveness: pairwise embedding similarity of definitions,
        ensuring they are sufficiently diverse for the NLP-grounded typing
        variant to use them for disambiguation.
+
+    Args:
+        embedding: Optional pre-built SentenceTransformerEmbedding instance.
+                   If None, a new instance is created.
+        ontology_repo: Optional pre-built ontology repository.
+                       If None, build_eval_ontology() is called.
 
     Returns:
         Dict with coverage metrics:
@@ -58,8 +66,10 @@ def check_definition_coverage() -> dict[str, int | float]:
         - embedding_distinctiveness: Fraction of definition pairs with low similarity (<0.7)
     """
     try:
-        embedding = SentenceTransformerEmbedding()
-        ontology_repo, schema_index = build_eval_ontology(embedding)
+        if embedding is None:
+            embedding = SentenceTransformerEmbedding()
+        if ontology_repo is None:
+            ontology_repo, _ = build_eval_ontology(embedding)
     except Exception as e:
         print(f"\nERROR initializing ontology ({type(e).__name__}): {e}")
         print("This typically occurs when embedding models are not cached in offline mode.")

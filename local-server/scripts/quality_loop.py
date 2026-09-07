@@ -155,9 +155,9 @@ _GROUNDED_SPACE: dict[str, list] = {
     "ground_predicates": [False, True],
     "coverage_completion": [False, True],
     "predicate_similarity_threshold": [0.55, 0.65],
-    "nlp_typing_top_k": [5, 8, 10],
-    "nlp_typing_threshold": [0.1, 0.2, 0.3],
-    "nlp_typing_matching_mode": ["max", "definition_preferred"],
+    "nlp_typing_top_k": [8],
+    "nlp_typing_threshold": [0.2],
+    "nlp_typing_matching_mode": ["max"],
 }
 
 

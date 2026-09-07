@@ -239,11 +239,18 @@ def record_all(scenarios: list[str]) -> int:
             recorded += 1
         except Exception as exc:
             print(f"  ERROR {scenario:<35} ({type(exc).__name__}: {exc})")
+            # Remove any stale cassette file from a previous run
+            if cassette_path.exists():
+                cassette_path.unlink()
+                print(f"         (removed stale cassette file)")
             skipped += 1
 
     print(f"\nDone. Recorded {recorded} cassette(s); skipped/failed {skipped}.")
-    if recorded == 0:
-        print("ERROR: No cassettes were successfully recorded.")
+    if recorded == 0 or skipped > 0:
+        if recorded == 0:
+            print("ERROR: No cassettes were successfully recorded.")
+        else:
+            print("ERROR: Some cassettes failed to record; inconsistent cassette set detected.")
         return 1
     return 0
 
