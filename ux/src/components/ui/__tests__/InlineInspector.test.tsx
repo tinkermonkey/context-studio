@@ -48,12 +48,20 @@ describe("InlineInspector", () => {
 
   describe("view mode actions", () => {
     it("shows edit button", () => {
-      render(<InlineInspector {...defaultProps} mode="view">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="view">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.getByTestId("inline-inspector-edit-button")).toBeInTheDocument();
     });
 
     it("shows row menu", () => {
-      render(<InlineInspector {...defaultProps} mode="view">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="view">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.getByTestId("inline-inspector-row-menu")).toBeInTheDocument();
     });
 
@@ -117,7 +125,11 @@ describe("InlineInspector", () => {
 
   describe("edit mode actions", () => {
     it("shows Done button", () => {
-      render(<InlineInspector {...defaultProps} mode="edit">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="edit">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.getByTestId("inline-inspector-done-button")).toBeInTheDocument();
     });
 
@@ -134,22 +146,32 @@ describe("InlineInspector", () => {
     });
 
     it("does not show inline edit button in edit mode", () => {
-      render(<InlineInspector {...defaultProps} mode="edit">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="edit">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.queryByTestId("inline-inspector-edit-button")).not.toBeInTheDocument();
     });
 
     it("does not show row menu in edit mode", () => {
-      render(<InlineInspector {...defaultProps} mode="edit">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="edit">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.queryByTestId("inline-inspector-row-menu")).not.toBeInTheDocument();
     });
   });
 
   describe("edit note", () => {
     it("shows default edit note in edit mode", () => {
-      render(<InlineInspector {...defaultProps} mode="edit">Content</InlineInspector>);
-      expect(screen.getByRole("note")).toHaveTextContent(
-        "Editing — fields save automatically",
+      render(
+        <InlineInspector {...defaultProps} mode="edit">
+          Content
+        </InlineInspector>,
       );
+      expect(screen.getByRole("note")).toHaveTextContent("Editing — fields save automatically");
     });
 
     it("shows custom editNote in edit mode", () => {
@@ -171,14 +193,22 @@ describe("InlineInspector", () => {
     });
 
     it("does not show edit note in view mode", () => {
-      render(<InlineInspector {...defaultProps} mode="view">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="view">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.queryByRole("note")).not.toBeInTheDocument();
     });
   });
 
   describe("autosave status", () => {
     it("renders autosave status container in edit mode", () => {
-      render(<InlineInspector {...defaultProps} mode="edit">Content</InlineInspector>);
+      render(
+        <InlineInspector {...defaultProps} mode="edit">
+          Content
+        </InlineInspector>,
+      );
       expect(screen.getByTestId("inspector-autosave-status")).toBeInTheDocument();
     });
 
@@ -194,12 +224,7 @@ describe("InlineInspector", () => {
     it("shows saved text when autosaveStatus is saved with a timestamp", () => {
       const savedAt = new Date(Date.now() - 5000);
       render(
-        <InlineInspector
-          {...defaultProps}
-          mode="edit"
-          autosaveStatus="saved"
-          lastSavedAt={savedAt}
-        >
+        <InlineInspector {...defaultProps} mode="edit" autosaveStatus="saved" lastSavedAt={savedAt}>
           Content
         </InlineInspector>,
       );

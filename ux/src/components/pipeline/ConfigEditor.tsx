@@ -72,7 +72,7 @@ function makeDraft(config: PipelineConfigurationResponse | null): DraftConfig {
     name: config.name ?? "",
     description: config.description ?? "",
     provider: config.provider ?? "openai",
-    model: config.model ?? (MODELS[config.provider ?? "openai"]?.[0] ?? ""),
+    model: config.model ?? MODELS[config.provider ?? "openai"]?.[0] ?? "",
     system_prompt: config.system_prompt ?? "",
     user_prompt_template: config.user_prompt_template ?? "",
     parameters: config.parameters ?? { ...DEFAULT_PARAMS },
@@ -127,12 +127,13 @@ export function ConfigEditor({
   const displayProvider = isCreate ? draft.provider : (config?.provider ?? "openai");
   const displayModel = isCreate ? draft.model : (config?.model ?? "");
   const displaySystemPrompt = isCreate ? draft.system_prompt : (config?.system_prompt ?? "");
-  const displayUserPrompt = isCreate ? draft.user_prompt_template : (config?.user_prompt_template ?? "");
+  const displayUserPrompt = isCreate
+    ? draft.user_prompt_template
+    : (config?.user_prompt_template ?? "");
   const displayEnabled = isCreate ? draft.enabled : (config?.enabled ?? true);
   const displayParams = isCreate ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
 
-  const setField = (k: keyof DraftConfig, v: unknown) =>
-    setDraft((d) => ({ ...d, [k]: v }));
+  const setField = (k: keyof DraftConfig, v: unknown) => setDraft((d) => ({ ...d, [k]: v }));
 
   const setParam = (k: keyof PipelineConfigurationParameters, v: number) =>
     setDraft((d) => ({ ...d, parameters: { ...d.parameters, [k]: v } }));
@@ -299,7 +300,9 @@ export function ConfigEditor({
                   <TextInput
                     value={isCreate ? draft.name : (config?.name ?? "")}
                     onChange={(e) => setField("name", e.target.value)}
-                    onBlur={(e) => { void handleSaveField({ name: e.target.value }); }}
+                    onBlur={(e) => {
+                      void handleSaveField({ name: e.target.value });
+                    }}
                     placeholder="Configuration name"
                     autoFocus={isCreate}
                     data-testid="config-name-input"
@@ -313,7 +316,9 @@ export function ConfigEditor({
                   <TextArea
                     value={isCreate ? draft.description : (config?.description ?? "")}
                     onChange={(e) => setField("description", e.target.value)}
-                    onBlur={(e) => { void handleSaveField({ description: e.target.value }); }}
+                    onBlur={(e) => {
+                      void handleSaveField({ description: e.target.value });
+                    }}
                     placeholder="Optional description"
                     rows={2}
                     data-testid="config-description-input"
@@ -331,7 +336,9 @@ export function ConfigEditor({
                       data-testid="config-provider-select"
                     >
                       {PROVIDERS.map((p) => (
-                        <Select.Item key={p.value} value={p.value}>{p.label}</Select.Item>
+                        <Select.Item key={p.value} value={p.value}>
+                          {p.label}
+                        </Select.Item>
                       ))}
                     </Select>
                   ) : (
@@ -349,7 +356,9 @@ export function ConfigEditor({
                       data-testid="config-model-select"
                     >
                       {modelOptions.map((m) => (
-                        <Select.Item key={m} value={m}>{m}</Select.Item>
+                        <Select.Item key={m} value={m}>
+                          {m}
+                        </Select.Item>
                       ))}
                     </Select>
                   ) : (
@@ -393,7 +402,9 @@ export function ConfigEditor({
                     value={isCreate ? draft.system_prompt : (config?.system_prompt ?? "")}
                     rows={3}
                     onChange={(e) => setField("system_prompt", e.target.value)}
-                    onBlur={(e) => { void handleSaveField({ system_prompt: e.target.value }); }}
+                    onBlur={(e) => {
+                      void handleSaveField({ system_prompt: e.target.value });
+                    }}
                     data-testid="config-system-prompt-input"
                   />
                 ) : (
@@ -405,10 +416,14 @@ export function ConfigEditor({
                   <TextArea
                     className="cfg-prompt"
                     mono
-                    value={isCreate ? draft.user_prompt_template : (config?.user_prompt_template ?? "")}
+                    value={
+                      isCreate ? draft.user_prompt_template : (config?.user_prompt_template ?? "")
+                    }
                     rows={4}
                     onChange={(e) => setField("user_prompt_template", e.target.value)}
-                    onBlur={(e) => { void handleSaveField({ user_prompt_template: e.target.value }); }}
+                    onBlur={(e) => {
+                      void handleSaveField({ user_prompt_template: e.target.value });
+                    }}
                     data-testid="config-user-prompt-input"
                   />
                 ) : (
@@ -474,7 +489,9 @@ export function ConfigEditor({
             <div className="cfg-create-actions">
               <Button
                 variant="primary"
-                onClick={() => { void handleCreate(); }}
+                onClick={() => {
+                  void handleCreate();
+                }}
                 disabled={!validNew || createMutation.isPending}
                 data-testid="config-create-btn"
               >
@@ -499,7 +516,9 @@ export function ConfigEditor({
         <ConfirmDialog
           isOpen
           onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={() => { void handleDelete(); }}
+          onConfirm={() => {
+            void handleDelete();
+          }}
           variant="danger"
           title={`Delete "${config.name}"?`}
           subtitle="This configuration will be removed. Pipeline runs already executed with it keep their records."

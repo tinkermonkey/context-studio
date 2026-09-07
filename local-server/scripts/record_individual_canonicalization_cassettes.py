@@ -44,11 +44,15 @@ from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from config import get_settings
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.configurations.open_v1 import (
+    get_open_v1_config,
+)
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from scripts.eval_ontology import build_eval_ontology
 from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
@@ -79,9 +83,7 @@ def _real_llm_provider() -> LLMProviderRouter:
     """Build the live provider router from configured API keys, or exit if none set."""
     llm_config = get_settings().llm
     if not (
-        llm_config.openai_api_key
-        or llm_config.anthropic_api_key
-        or llm_config.openrouter_api_key
+        llm_config.openai_api_key or llm_config.anthropic_api_key or llm_config.openrouter_api_key
     ):
         print(
             "ERROR: no LLM API key configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, "

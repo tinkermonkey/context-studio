@@ -103,11 +103,25 @@ class TestIterElementsAndLoadRelationships:
             tmp_path,
             "01_motivation",
             "goal.yaml",
-            [_element("motivation.goal.a", "A", "motivation.goal", "extracted", ["README.md"])],
+            [
+                _element(
+                    "motivation.goal.a",
+                    "A",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
+                )
+            ],
         )
         _write_relationships(
             tmp_path,
-            [{"source": "motivation.goal.a", "target": "motivation.goal.a", "predicate": "self"}],
+            [
+                {
+                    "source": "motivation.goal.a",
+                    "target": "motivation.goal.a",
+                    "predicate": "self",
+                }
+            ],
         )
         elements = iter_elements(tmp_path)
         assert [el["path"] for el in elements] == ["motivation.goal.a"]
@@ -120,9 +134,7 @@ class TestIterElementsAndLoadRelationships:
         with pytest.raises(FileNotFoundError, match="documentation-robotics"):
             iter_elements(tmp_path)
 
-    def test_load_relationships_missing_model_dir_raises_instead_of_returning_empty(
-        self, tmp_path
-    ):
+    def test_load_relationships_missing_model_dir_raises_instead_of_returning_empty(self, tmp_path):
         with pytest.raises(FileNotFoundError, match="documentation-robotics"):
             load_relationships(tmp_path)
 
@@ -247,10 +259,18 @@ class TestBuildScenarios:
             "goal.yaml",
             [
                 _element(
-                    "motivation.goal.a", "Goal A", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.a",
+                    "Goal A",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 ),
                 _element(
-                    "motivation.goal.b", "Goal B", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.b",
+                    "Goal B",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 ),
             ],
         )
@@ -276,10 +296,18 @@ class TestBuildScenarios:
             "goal.yaml",
             [
                 _element(
-                    "motivation.goal.a", "Goal A", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.a",
+                    "Goal A",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 ),
                 _element(
-                    "motivation.goal.b", "Goal B", "motivation.goal", "inferred", ["README.md"]
+                    "motivation.goal.b",
+                    "Goal B",
+                    "motivation.goal",
+                    "inferred",
+                    ["README.md"],
                 ),
             ],
         )
@@ -321,10 +349,18 @@ class TestBuildScenarios:
             "goal.yaml",
             [
                 _element(
-                    "motivation.goal.a", "Goal A", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.a",
+                    "Goal A",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 ),
                 _element(
-                    "motivation.goal.b", "Goal B", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.b",
+                    "Goal B",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 ),
             ],
         )
@@ -349,7 +385,10 @@ class TestBuildScenarios:
         broken_element = {
             "name": "Goal A",
             "spec_node_id": "motivation.goal",
-            "source_reference": {"provenance": "extracted", "locations": [{"file": "README.md"}]},
+            "source_reference": {
+                "provenance": "extracted",
+                "locations": [{"file": "README.md"}],
+            },
         }
         (layer_dir / "goal.yaml").write_text(yaml.safe_dump({"broken-key": broken_element}))
         _write_relationships(tmp_path, [])
@@ -373,7 +412,11 @@ class TestScenarioTriples:
             source_file="README.md",
             individuals=[
                 _element(
-                    "motivation.goal.a", "Goal A", "motivation.goal", "extracted", ["README.md"]
+                    "motivation.goal.a",
+                    "Goal A",
+                    "motivation.goal",
+                    "extracted",
+                    ["README.md"],
                 )
             ],
             relationships=[],

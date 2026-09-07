@@ -4,9 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
 import { BulkBar } from "../BulkBar";
 
-const defaultActions = [
-  { id: "delete", label: "Delete", danger: true, icon: "trash" as const },
-];
+const defaultActions = [{ id: "delete", label: "Delete", danger: true, icon: "trash" as const }];
 
 describe("BulkBar", () => {
   describe("visibility", () => {

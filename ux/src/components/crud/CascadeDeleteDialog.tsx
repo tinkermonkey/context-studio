@@ -19,11 +19,7 @@ interface CascadeDeleteDialogProps {
   isFetching?: boolean;
 }
 
-function getDialogTitle(
-  target?: { label: string },
-  ids?: string[],
-  entityType?: string,
-): string {
+function getDialogTitle(target?: { label: string }, ids?: string[], entityType?: string): string {
   if (ids && ids.length > 1) {
     return `Delete ${ids.length} ${pluralize(entityType ?? "item", ids.length)}?`;
   }

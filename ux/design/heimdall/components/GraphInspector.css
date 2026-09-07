@@ -172,7 +172,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: border-color 0.1s, background 0.1s;
+  transition:
+    border-color 0.1s,
+    background 0.1s;
 }
 
 .graph-inspector__rel-target:hover {
@@ -195,15 +197,15 @@
   flex: none;
 }
 
-.graph-inspector__rel-target[data-domain='life'] .graph-inspector__rel-swatch {
+.graph-inspector__rel-target[data-domain="life"] .graph-inspector__rel-swatch {
   background: rgb(var(--dom-life));
 }
 
-.graph-inspector__rel-target[data-domain='climate'] .graph-inspector__rel-swatch {
+.graph-inspector__rel-target[data-domain="climate"] .graph-inspector__rel-swatch {
   background: rgb(var(--dom-climate));
 }
 
-.graph-inspector__rel-target[data-domain='software'] .graph-inspector__rel-swatch {
+.graph-inspector__rel-target[data-domain="software"] .graph-inspector__rel-swatch {
   background: rgb(var(--dom-software));
 }
 

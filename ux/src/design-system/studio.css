@@ -1350,7 +1350,9 @@ body.dark-canvas .diff-added {
   font-size: var(--text-sm);
   color: rgb(var(--canvas-fg-1));
   cursor: pointer;
-  transition: border-color 120ms, background 120ms;
+  transition:
+    border-color 120ms,
+    background 120ms;
   display: flex;
   align-items: center;
 }

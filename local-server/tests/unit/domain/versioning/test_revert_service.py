@@ -1012,14 +1012,22 @@ def test_revert_with_summary_mixed_entity_types(ontology_repo, change_repo, reve
         entity_id="cls-mixed",
         entity_type="class",
         operation=ChangeOperation.CREATE,
-        new_state={"id": "cls-mixed", "concept_scheme_id": "scheme-1", "title": "Class Mixed"},
+        new_state={
+            "id": "cls-mixed",
+            "concept_scheme_id": "scheme-1",
+            "title": "Class Mixed",
+        },
         batch_run_id="run-mixed",
     )
     change_repo.record_change(
         entity_id="ind-mixed",
         entity_type="individual",
         operation=ChangeOperation.CREATE,
-        new_state={"id": "ind-mixed", "class_ids": ["cls-mixed"], "title": "Individual Mixed"},
+        new_state={
+            "id": "ind-mixed",
+            "class_ids": ["cls-mixed"],
+            "title": "Individual Mixed",
+        },
         batch_run_id="run-mixed",
     )
 

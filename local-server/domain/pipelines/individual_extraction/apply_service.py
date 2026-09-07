@@ -93,7 +93,7 @@ class IndividualExtractionApplyService:
         _logger.info(
             "individual extraction apply run=%s: recognition stage %s",
             run.id,
-            "active" if self._recognizer is not None else "no-op (no recognizer configured)",
+            ("active" if self._recognizer is not None else "no-op (no recognizer configured)"),
         )
 
         # Track individuals created in this apply pass: (title_lower, class_id) → entity_id.
@@ -152,7 +152,11 @@ class IndividualExtractionApplyService:
                 # before treating it as new. Runs for every orchestrator's output —
                 # this apply() is the single funnel both share.
                 match = self._recognize_individual(
-                    subject_label, valid_class_ids, taxonomy_id, triple, recognition_threshold
+                    subject_label,
+                    valid_class_ids,
+                    taxonomy_id,
+                    triple,
+                    recognition_threshold,
                 )
 
                 if match is not None and match.individual_id in created_this_run:

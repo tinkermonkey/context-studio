@@ -19,7 +19,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from adapters.persistence.sqlite.operations.models import OperationsBase
-from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
+from adapters.persistence.sqlite.pipeline_config_repo import (
+    PipelineConfigurationRepository,
+)
 from adapters.web.pipelines_routes import config_router, router
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -61,8 +63,9 @@ def config_registry():
 def impl_registry():
     reg = PipelineImplementationRegistry()
     reg.register_impl(
-        __import__("domain.pipelines.entities", fromlist=["PipelineType"])
-        .PipelineType.INDIVIDUAL_EXTRACTION,
+        __import__(
+            "domain.pipelines.entities", fromlist=["PipelineType"]
+        ).PipelineType.INDIVIDUAL_EXTRACTION,
         "default",
         object,  # placeholder — CRUD routes don't invoke it
     )
@@ -181,26 +184,32 @@ class TestGetConfiguration:
 class TestUpdateConfiguration:
     def test_update_returns_200(self, client):
         created = _create_config(client).json()
-        update_body = {**_CREATE_BODY, "name": "Updated", "parameters": _CREATE_BODY["parameters"]}
-        response = client.put(
-            f"/api/pipeline_configurations/{created['id']}", json=update_body
-        )
+        update_body = {
+            **_CREATE_BODY,
+            "name": "Updated",
+            "parameters": _CREATE_BODY["parameters"],
+        }
+        response = client.put(f"/api/pipeline_configurations/{created['id']}", json=update_body)
         assert response.status_code == status.HTTP_200_OK
 
     def test_update_increments_version(self, client):
         created = _create_config(client).json()
-        update_body = {**_CREATE_BODY, "name": "Updated", "parameters": _CREATE_BODY["parameters"]}
-        response = client.put(
-            f"/api/pipeline_configurations/{created['id']}", json=update_body
-        )
+        update_body = {
+            **_CREATE_BODY,
+            "name": "Updated",
+            "parameters": _CREATE_BODY["parameters"],
+        }
+        response = client.put(f"/api/pipeline_configurations/{created['id']}", json=update_body)
         assert response.json()["version"] == 2
 
     def test_update_persists_new_name(self, client):
         created = _create_config(client).json()
-        update_body = {**_CREATE_BODY, "name": "New Name", "parameters": _CREATE_BODY["parameters"]}
-        response = client.put(
-            f"/api/pipeline_configurations/{created['id']}", json=update_body
-        )
+        update_body = {
+            **_CREATE_BODY,
+            "name": "New Name",
+            "parameters": _CREATE_BODY["parameters"],
+        }
+        response = client.put(f"/api/pipeline_configurations/{created['id']}", json=update_body)
         assert response.json()["name"] == "New Name"
 
     def test_update_nonexistent_returns_404(self, client):
@@ -219,9 +228,7 @@ class TestUpdateConfiguration:
     def test_update_missing_required_field_returns_422(self, client):
         created = _create_config(client).json()
         bad_body = {"name": "x"}  # missing provider, model, user_prompt_template, parameters
-        response = client.put(
-            f"/api/pipeline_configurations/{created['id']}", json=bad_body
-        )
+        response = client.put(f"/api/pipeline_configurations/{created['id']}", json=bad_body)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 

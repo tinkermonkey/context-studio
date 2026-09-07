@@ -42,7 +42,11 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.dr_bootstrap_loader import BootstrapScenario, build_scenarios, scenario_triples
+from scripts.dr_bootstrap_loader import (
+    BootstrapScenario,
+    build_scenarios,
+    scenario_triples,
+)
 
 DR_ONTOLOGY_ID = "dr_spec"
 FIXTURE_MODEL = "claude-opus-4-7"
@@ -136,7 +140,10 @@ def _write_scenario(scenario: BootstrapScenario, text: str, output_dir: Path) ->
 
 
 def generate_corpus(
-    viewer_dir: Path, output_dir: Path, prose_extensions: list[str], include_files: list[str] | None
+    viewer_dir: Path,
+    output_dir: Path,
+    prose_extensions: list[str],
+    include_files: list[str] | None,
 ) -> tuple[list[str], list[str]]:
     """
     Build and write all qualifying scenarios.

@@ -5,6 +5,7 @@ Revises: c41e519a8e61
 Create Date: 2026-07-07 19:34:02.318547
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -19,10 +20,14 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("domain_class_id", sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column("range_class_id", sa.String(length=36), nullable=True))
         batch_op.create_index(
-            op.f("ix_ontology_entities_domain_class_id"), ["domain_class_id"], unique=False
+            op.f("ix_ontology_entities_domain_class_id"),
+            ["domain_class_id"],
+            unique=False,
         )
         batch_op.create_index(
-            op.f("ix_ontology_entities_range_class_id"), ["range_class_id"], unique=False
+            op.f("ix_ontology_entities_range_class_id"),
+            ["range_class_id"],
+            unique=False,
         )
         batch_op.create_foreign_key(
             "fk_ontology_entities_domain_class_id",
@@ -43,10 +48,14 @@ def upgrade() -> None:
         batch_op.add_column(sa.Column("domain_class_id", sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column("range_class_id", sa.String(length=36), nullable=True))
         batch_op.create_index(
-            op.f("ix_property_definitions_domain_class_id"), ["domain_class_id"], unique=False
+            op.f("ix_property_definitions_domain_class_id"),
+            ["domain_class_id"],
+            unique=False,
         )
         batch_op.create_index(
-            op.f("ix_property_definitions_range_class_id"), ["range_class_id"], unique=False
+            op.f("ix_property_definitions_range_class_id"),
+            ["range_class_id"],
+            unique=False,
         )
         batch_op.create_foreign_key(
             "fk_property_definitions_domain_class_id",

@@ -139,7 +139,9 @@ def append_entry(entry: dict[str, Any], ledger_path: Optional[Union[Path, str]] 
         f.write(json.dumps(entry) + "\n")
 
 
-def read_entries(ledger_path: Optional[Union[Path, str]] = None) -> list[dict[str, Any]]:
+def read_entries(
+    ledger_path: Optional[Union[Path, str]] = None,
+) -> list[dict[str, Any]]:
     """
     Read every entry in the ledger, in file order. Returns [] if the ledger doesn't exist yet.
 
@@ -161,7 +163,10 @@ def read_entries(ledger_path: Optional[Union[Path, str]] = None) -> list[dict[st
                 entries.append(json.loads(line))
             except json.JSONDecodeError as exc:
                 logger.warning(
-                    "skipping corrupted ledger line %d in %s: %s", line_number, path, exc
+                    "skipping corrupted ledger line %d in %s: %s",
+                    line_number,
+                    path,
+                    exc,
                 )
     return entries
 
@@ -344,13 +349,19 @@ def _main(argv: Optional[list[str]] = None) -> int:
         "baseline-reset", help="Append a baseline-reset checkpoint entry"
     )
     baseline_reset_parser.add_argument(
-        "--ontology-context", required=True, help="Identifier for the new baseline, e.g. 'dr_spec'"
+        "--ontology-context",
+        required=True,
+        help="Identifier for the new baseline, e.g. 'dr_spec'",
     )
     baseline_reset_parser.add_argument(
-        "--spec-version", default=None, help="External spec version pinned by this baseline, if any"
+        "--spec-version",
+        default=None,
+        help="External spec version pinned by this baseline, if any",
     )
     baseline_reset_parser.add_argument(
-        "--base-commit", default="unknown", help="Repository commit this reset was recorded against"
+        "--base-commit",
+        default="unknown",
+        help="Repository commit this reset was recorded against",
     )
     baseline_reset_parser.add_argument("--iteration", type=int, default=0)
     baseline_reset_parser.add_argument("--agent", default="system")

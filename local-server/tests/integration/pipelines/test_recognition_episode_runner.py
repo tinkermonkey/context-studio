@@ -26,7 +26,10 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -46,7 +49,10 @@ from tests.integration.pipelines._harness.episode_runner import (
     NOT_MATERIALIZED,
     run_full_pipeline_episode,
 )
-from tests.integration.pipelines._harness.metrics import entity_key_clusters, recognition_metrics
+from tests.integration.pipelines._harness.metrics import (
+    entity_key_clusters,
+    recognition_metrics,
+)
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
@@ -88,8 +94,12 @@ class _ScriptedExtractionLLM:
         is_relationship_pass = "already-identified individuals" in system_prompt.lower()
         content = json.dumps({"triples": []}) if is_relationship_pass else self._pass1_content
         return LLMResponse(
-            content=content, tokens_in=1, tokens_out=1, duration_ms=0.0,
-            finish_reason="stop", model=model,
+            content=content,
+            tokens_in=1,
+            tokens_out=1,
+            duration_ms=0.0,
+            finish_reason="stop",
+            model=model,
         )
 
     async def complete_async(self, **kwargs) -> LLMResponse:
@@ -105,7 +115,10 @@ class _ScriptedExtractionLLM:
 
 
 async def _record_cassette(
-    dr_ontology_dir: Path, doc_fixture: dict, pass1_triples: list[dict], cassette_path: Path
+    dr_ontology_dir: Path,
+    doc_fixture: dict,
+    pass1_triples: list[dict],
+    cassette_path: Path,
 ) -> None:
     """Record one document's cassette by running the real orchestrator against a scripted LLM."""
     engine = create_local_db_engine("sqlite:///:memory:")
@@ -114,8 +127,10 @@ async def _record_cassette(
     repo = SQLiteOntologyRepository(session_factory)
     embedding = FakeEmbeddingService()
     ontology_service = OntologyService(
-        repository=cast(OntologyRepository, repo), embedding_service=embedding,
-        event_publisher=InProcessEventPublisher(), schema_index=None,
+        repository=cast(OntologyRepository, repo),
+        embedding_service=embedding,
+        event_publisher=InProcessEventPublisher(),
+        schema_index=None,
     )
     import_dr_ontology(ontology_service, cast(OntologyRepository, repo), dr_ontology_dir)
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
@@ -191,7 +206,11 @@ async def _record_episode_cassettes(
         triples = [
             _typing_triple(
                 m["surface"],
-                _UNRESOLVABLE_CLASS_REF if bad_class_ref == (doc, m["surface"]) else m["class_ref"],
+                (
+                    _UNRESOLVABLE_CLASS_REF
+                    if bad_class_ref == (doc, m["surface"])
+                    else m["class_ref"]
+                ),
             )
             for m in mentions_by_doc.get(doc, [])
             if omit is None or (doc, m["surface"]) != omit

@@ -83,16 +83,9 @@ export function InlineInspector({
         {autosaveStatus === "saved" && lastSavedAt && (
           <span className="autosave-icon-saved">Saved {formatTimeAgo(lastSavedAt)}</span>
         )}
-        {autosaveStatus === "error" && (
-          <AlertCircle size={14} className="autosave-icon-error" />
-        )}
+        {autosaveStatus === "error" && <AlertCircle size={14} className="autosave-icon-error" />}
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onDone}
-        data-testid="inline-inspector-done-button"
-      >
+      <Button variant="ghost" size="sm" onClick={onDone} data-testid="inline-inspector-done-button">
         Done
       </Button>
     </>

@@ -27,7 +27,9 @@ from adapters.persistence.sqlite.connection import (
     create_local_db_engine,
     create_session_factory,
 )
-from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -277,9 +279,7 @@ class TestConceptObjectTypingFullPipeline:
             relationship_triples, pattern_individual_triples, tax
         )
 
-        assert len(all_relationship_triples) == 2, (
-            "Should have synthetic is_a + relationship"
-        )
+        assert len(all_relationship_triples) == 2, "Should have synthetic is_a + relationship"
         assert warnings == []
         typing_triple = all_relationship_triples[0]
         relationship_triple = all_relationship_triples[1]
@@ -291,10 +291,7 @@ class TestConceptObjectTypingFullPipeline:
         assert typing_triple["object"]["id"] == str(quality_class.id)
 
         # Verify property_definition_id was stamped on relationship
-        assert (
-            relationship_triple["predicate"]["property_definition_id"]
-            == str(improves_prop.id)
-        )
+        assert relationship_triple["predicate"]["property_definition_id"] == str(improves_prop.id)
 
         # Step 2: Recognition step
         combined_triples = pattern_individual_triples + all_relationship_triples
@@ -305,8 +302,7 @@ class TestConceptObjectTypingFullPipeline:
             (
                 t
                 for t in recognized_triples
-                if t["predicate"]["label"] == "is_a"
-                and t["subject"]["label"] == "readability"
+                if t["predicate"]["label"] == "is_a" and t["subject"]["label"] == "readability"
             ),
             None,
         )
@@ -324,9 +320,8 @@ class TestConceptObjectTypingFullPipeline:
         assert relationship_triple_after is not None
         # Verify relationship triple retained property definition through recognition
         assert relationship_triple_after["predicate"]["label"] == "improves"
-        assert (
-            relationship_triple_after["predicate"]["property_definition_id"]
-            == str(improves_prop.id)
+        assert relationship_triple_after["predicate"]["property_definition_id"] == str(
+            improves_prop.id
         )
         assert relationship_triple_after["subject"]["label"] == "Decorator Pattern"
         assert relationship_triple_after["object"]["label"] == "readability"
@@ -364,12 +359,12 @@ class TestConceptObjectTypingFullPipeline:
             apply_result = apply_service.apply(run)
 
             # Verify both individuals and relationships were created
-            assert apply_result.individuals_created >= 2, (
-                f"Pattern and readability individuals created (result: {apply_result})"
-            )
-            assert apply_result.relationships_created >= 1, (
-                f"Relationship created (result: {apply_result})"
-            )
+            assert (
+                apply_result.individuals_created >= 2
+            ), f"Pattern and readability individuals created (result: {apply_result})"
+            assert (
+                apply_result.relationships_created >= 1
+            ), f"Relationship created (result: {apply_result})"
 
             # Verify relationship was created with correct property
             created_relationships = ontology_repo.list_relationships(limit=None)
@@ -413,9 +408,7 @@ class TestConceptObjectTypingFullPipeline:
             title="readability",
         )
         ontology_repo.save_individual(existing_readability)
-        individual_index.index_individual(
-            existing_readability.id, existing_readability.title, None
-        )
+        individual_index.index_individual(existing_readability.id, existing_readability.title, None)
 
         # Pattern individual in pass-1
         pattern_individual_triples = [
@@ -462,8 +455,7 @@ class TestConceptObjectTypingFullPipeline:
             (
                 t
                 for t in recognized_triples
-                if t["predicate"]["label"] == "is_a"
-                and t["subject"]["label"] == "readability"
+                if t["predicate"]["label"] == "is_a" and t["subject"]["label"] == "readability"
             ),
             None,
         )
@@ -507,17 +499,15 @@ class TestConceptObjectTypingFullPipeline:
             # Verify relationship was created with existing readability
             relationships = ontology_repo.list_relationships(limit=None)
             improves_relationships = [
-                r
-                for r in relationships
-                if r.property_definition_id == str(improves_prop.id)
+                r for r in relationships if r.property_definition_id == str(improves_prop.id)
             ]
             assert len(improves_relationships) >= 1, "improves relationship created"
 
             # Verify relationship points to existing node
             improves_rel = improves_relationships[0]
-            assert improves_rel.target_id == existing_readability.id, (
-                "Relationship points to existing readability individual"
-            )
+            assert (
+                improves_rel.target_id == existing_readability.id
+            ), "Relationship points to existing readability individual"
 
         finally:
             set_batch_run_context(None)
@@ -590,9 +580,8 @@ class TestConceptObjectTypingFullPipeline:
         assert "declares no range_class_id" in caplog.text
 
         # Verify property_definition_id was still stamped
-        assert (
-            all_relationship_triples[0]["predicate"]["property_definition_id"]
-            == str(relates_prop.id)
+        assert all_relationship_triples[0]["predicate"]["property_definition_id"] == str(
+            relates_prop.id
         )
 
     def test_concept_object_unresolved_predicate_skipped(
@@ -639,7 +628,10 @@ class TestConceptObjectTypingFullPipeline:
         relationship_triples = [
             {
                 "subject": {"kind": "individual", "label": "Pattern"},
-                "predicate": {"property_definition_id": None, "label": "unknown_predicate"},
+                "predicate": {
+                    "property_definition_id": None,
+                    "label": "unknown_predicate",
+                },
                 "object": {"kind": "individual", "label": "unknown_entity"},
                 "confidence": 0.85,
                 "provenance": {"raw": "test"},
@@ -674,20 +666,16 @@ class TestConceptObjectTypingFullPipeline:
         inspecting their source code for the shared call.
         """
         # Structural test: Verify both extraction modes call _type_concept_objects
-        two_pass_source = inspect.getsource(
-            extraction_service._extract_triples_two_pass
-        )
-        nlp_grounded_source = inspect.getsource(
-            extraction_service._extract_triples_nlp_grounded
-        )
+        two_pass_source = inspect.getsource(extraction_service._extract_triples_two_pass)
+        nlp_grounded_source = inspect.getsource(extraction_service._extract_triples_nlp_grounded)
 
         # Both methods must contain the _type_concept_objects call
-        assert "_type_concept_objects" in two_pass_source, (
-            "_extract_triples_two_pass must call _type_concept_objects"
-        )
-        assert "_type_concept_objects" in nlp_grounded_source, (
-            "_extract_triples_nlp_grounded must call _type_concept_objects"
-        )
+        assert (
+            "_type_concept_objects" in two_pass_source
+        ), "_extract_triples_two_pass must call _type_concept_objects"
+        assert (
+            "_type_concept_objects" in nlp_grounded_source
+        ), "_extract_triples_nlp_grounded must call _type_concept_objects"
 
         # Behavioral test: Verify shared _type_concept_objects produces correct output
         tax = ontology_with_properties["taxonomy"]

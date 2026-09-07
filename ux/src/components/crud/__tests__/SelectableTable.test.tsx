@@ -115,15 +115,11 @@ describe("SelectableTable", () => {
 
     it("clamps page when data shrinks", async () => {
       const user = userEvent.setup();
-      const { rerender } = render(
-        <SelectableTable columns={columns} data={makeRows(20)} />,
-      );
+      const { rerender } = render(<SelectableTable columns={columns} data={makeRows(20)} />);
       await user.click(screen.getByTestId("selectable-table-next"));
       expect(screen.getByText("10–18 of 20")).toBeInTheDocument();
 
-      rerender(
-        <SelectableTable columns={columns} data={makeRows(9)} />,
-      );
+      rerender(<SelectableTable columns={columns} data={makeRows(9)} />);
       expect(screen.queryByTestId("selectable-table-prev")).not.toBeInTheDocument();
     });
   });
@@ -199,9 +195,7 @@ describe("SelectableTable", () => {
     it("calls onRowClick when a row is clicked", async () => {
       const user = userEvent.setup();
       const onRowClick = vi.fn();
-      render(
-        <SelectableTable columns={columns} data={makeRows(3)} onRowClick={onRowClick} />,
-      );
+      render(<SelectableTable columns={columns} data={makeRows(3)} onRowClick={onRowClick} />);
       const rows = screen.getAllByRole("row");
       await user.click(rows[1]);
       expect(onRowClick).toHaveBeenCalled();

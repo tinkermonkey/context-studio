@@ -18,7 +18,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from adapters.persistence.sqlite.operations.models import OperationsBase
-from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
+from adapters.persistence.sqlite.pipeline_config_repo import (
+    PipelineConfigurationRepository,
+)
 from domain.pipelines.exceptions import PipelineStorageError
 
 

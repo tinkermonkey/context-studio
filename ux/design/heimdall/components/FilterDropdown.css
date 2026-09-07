@@ -1,4 +1,4 @@
-@import './dropdown-base.css';
+@import "./dropdown-base.css";
 
 .filter-dropdown {
   position: relative;
@@ -25,7 +25,9 @@
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.08s, border-color 0.08s;
+  transition:
+    background 0.08s,
+    border-color 0.08s;
   outline: none;
 }
 
@@ -39,7 +41,7 @@
   pointer-events: none;
 }
 
-.filter-dropdown__trigger[aria-expanded='true'] {
+.filter-dropdown__trigger[aria-expanded="true"] {
   outline: none;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
 }

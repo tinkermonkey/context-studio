@@ -1,4 +1,4 @@
-@import './dropdown-base.css';
+@import "./dropdown-base.css";
 
 .select {
   position: relative;
@@ -21,7 +21,10 @@
   color: rgb(var(--canvas-fg-1));
   text-align: left;
   cursor: pointer;
-  transition: background-color 80ms ease-out, border-color 80ms ease-out, box-shadow 80ms ease-out;
+  transition:
+    background-color 80ms ease-out,
+    border-color 80ms ease-out,
+    box-shadow 80ms ease-out;
   outline: none;
 }
 
@@ -30,7 +33,7 @@
 }
 
 .select__trigger:focus-visible,
-.select__trigger[aria-expanded='true'] {
+.select__trigger[aria-expanded="true"] {
   background-color: rgb(var(--canvas-bg));
   border-color: rgb(var(--accent-primary));
   box-shadow: var(--focus-ring);
@@ -46,7 +49,7 @@
 }
 
 .select--error .select__trigger:focus-visible,
-.select--error .select__trigger[aria-expanded='true'] {
+.select--error .select__trigger[aria-expanded="true"] {
   box-shadow: 0 0 0 3px var(--status-rose-border-alpha);
 }
 

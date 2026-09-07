@@ -67,7 +67,9 @@ class TestBuildWave4Reports:
 
 @pytest.mark.asyncio
 class TestWave4ExclusionFromDevHoldout:
-    async def test_wave4_scenarios_never_appear_in_the_full_corpus_scenario_reports(self):
+    async def test_wave4_scenarios_never_appear_in_the_full_corpus_scenario_reports(
+        self,
+    ):
         """
         Phase 8 requirement: Loop B continues passing only the dev/holdout
         scenario lists to the aggregation that feeds the Loop C accept gate.

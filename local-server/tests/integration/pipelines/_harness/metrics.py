@@ -584,7 +584,10 @@ def label_accuracy(
         if not candidates:
             continue
         best_tier = max(
-            min(label_match_tier(subj, a_subj, embed_fn), label_match_tier(obj, a_obj, embed_fn))
+            min(
+                label_match_tier(subj, a_subj, embed_fn),
+                label_match_tier(obj, a_obj, embed_fn),
+            )
             for a_subj, a_obj in candidates
         )
         derived_tiers.append(best_tier)
@@ -611,12 +614,12 @@ class RecognitionMetrics:
     is the safety metric (1 - false-merge rate); selection is precision-first.
     """
 
-    dedup_precision: float          # of predicted same-node pairs, fraction truly same entity
-    dedup_recall: float             # of GT same-entity pairs, fraction co-clustered
-    dedup_f1: float                 # pairwise coreference F1
-    resolution_accuracy: float      # per-mention: landed in its majority-GT cluster
-    canonical_label_accuracy: float # of correctly-resolved mentions, node title == GT canonical
-    node_count_ratio: float         # predicted distinct nodes / GT distinct entities (1.0 ideal)
+    dedup_precision: float  # of predicted same-node pairs, fraction truly same entity
+    dedup_recall: float  # of GT same-entity pairs, fraction co-clustered
+    dedup_f1: float  # pairwise coreference F1
+    resolution_accuracy: float  # per-mention: landed in its majority-GT cluster
+    canonical_label_accuracy: float  # of correctly-resolved mentions, node title == GT canonical
+    node_count_ratio: float  # predicted distinct nodes / GT distinct entities (1.0 ideal)
     gt_entity_count: int
     predicted_node_count: int
 

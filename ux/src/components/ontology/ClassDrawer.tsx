@@ -13,7 +13,12 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
 import { TypeToConfirmDialog } from "@/components/ui/TypeToConfirmDialog";
-import { useUpdateClass, useDeleteClass, useMoveClass, useCreateClass } from "@/api/hooks/ontology/useClasses";
+import {
+  useUpdateClass,
+  useDeleteClass,
+  useMoveClass,
+  useCreateClass,
+} from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
@@ -106,7 +111,10 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const allClasses = useMemo(() => classesResponse?.items || [], [classesResponse]);
   const properties = useMemo(() => propertiesResponse?.items || [], [propertiesResponse]);
   const classMap = useMemo(() => new Map(allClasses.map((c) => [c.id, c.title])), [allClasses]);
-  const propertyMap = useMemo(() => new Map(properties.map((p) => [p.id, p.identifier])), [properties]);
+  const propertyMap = useMemo(
+    () => new Map(properties.map((p) => [p.id, p.identifier])),
+    [properties],
+  );
 
   if (!classData) return null;
 
@@ -123,7 +131,13 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
 
   const handleDuplicate = async () => {
     try {
-      await createMutation.mutateAsync({ schemeId: classData.concept_scheme_id, data: { title: `Copy of ${classData.title}`, description: classData.description ?? undefined } });
+      await createMutation.mutateAsync({
+        schemeId: classData.concept_scheme_id,
+        data: {
+          title: `Copy of ${classData.title}`,
+          description: classData.description ?? undefined,
+        },
+      });
       toast("success", "Class duplicated");
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to duplicate class";
@@ -155,7 +169,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
         onEdit={() => setMode("edit")}
         onDone={() => setMode("view")}
         onDelete={() => setShowDeleteConfirm(true)}
-        onDuplicate={() => { void handleDuplicate(); }}
+        onDuplicate={() => {
+          void handleDuplicate();
+        }}
         data-testid="class-inspector"
       >
         {mode === "view" ? (
@@ -185,7 +201,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Children">
               {childClasses.length === 0 ? (
-                <p className="drawer-empty-note" data-testid="class-children-empty">No subclasses</p>
+                <p className="drawer-empty-note" data-testid="class-children-empty">
+                  No subclasses
+                </p>
               ) : (
                 <div className="drawer-pill-row" data-testid="class-children-list">
                   {childClasses.map((c) => (
@@ -198,11 +216,17 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Individuals">
               {sampleIndividuals.length === 0 ? (
-                <p className="drawer-empty-note" data-testid="class-individuals-empty">No individuals</p>
+                <p className="drawer-empty-note" data-testid="class-individuals-empty">
+                  No individuals
+                </p>
               ) : (
                 <div className="stack" data-testid="class-individuals-list">
                   {sampleIndividuals.map((ind) => (
-                    <div key={ind.id} className="drawer-list-item" data-testid={`class-individual-${ind.id}`}>
+                    <div
+                      key={ind.id}
+                      className="drawer-list-item"
+                      data-testid={`class-individual-${ind.id}`}
+                    >
                       {ind.title}
                     </div>
                   ))}
@@ -221,14 +245,26 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Relationships">
               {classRelationships.length === 0 ? (
-                <p className="drawer-empty-note" data-testid="class-relationships-empty">No relationships</p>
+                <p className="drawer-empty-note" data-testid="class-relationships-empty">
+                  No relationships
+                </p>
               ) : (
                 <div className="stack" data-testid="class-relationships-list">
                   {classRelationships.slice(0, 10).map((rel: any) => (
-                    <div key={rel.id} className="drawer-triple" data-testid={`class-relationship-${rel.id}`}>
-                      <span className="drawer-triple-node">{classMap.get(rel.source_id) ?? "—"}</span>
-                      <span className="drawer-triple-predicate">{propertyMap.get(rel.property_definition_id) ?? "—"}</span>
-                      <span className="drawer-triple-node">{classMap.get(rel.target_id) ?? "—"}</span>
+                    <div
+                      key={rel.id}
+                      className="drawer-triple"
+                      data-testid={`class-relationship-${rel.id}`}
+                    >
+                      <span className="drawer-triple-node">
+                        {classMap.get(rel.source_id) ?? "—"}
+                      </span>
+                      <span className="drawer-triple-predicate">
+                        {propertyMap.get(rel.property_definition_id) ?? "—"}
+                      </span>
+                      <span className="drawer-triple-node">
+                        {classMap.get(rel.target_id) ?? "—"}
+                      </span>
                     </div>
                   ))}
                   {classRelationships.length > 10 && (
@@ -280,7 +316,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   onSave={async (v) => {
                     await updateMutation.mutateAsync({ id: classData.id, data: { title: v } });
                   }}
-                  validate={(v) => !v.trim() ? "Name is required" : undefined}
+                  validate={(v) => (!v.trim() ? "Name is required" : undefined)}
                   data-testid="class-drawer-name-field"
                 />
 

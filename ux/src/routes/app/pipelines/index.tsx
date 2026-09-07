@@ -16,15 +16,10 @@ export function PipelinesPage() {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
-  const {
-    data: types,
-    isLoading,
-    error,
-    refetch,
-  } = usePipelineTypes();
+  const { data: types, isLoading, error, refetch } = usePipelineTypes();
 
   const typeList = types ?? [];
-  const activeType = selectedType ?? (typeList[0]?.pipeline_type ?? null);
+  const activeType = selectedType ?? typeList[0]?.pipeline_type ?? null;
 
   if (error) {
     return (
@@ -56,10 +51,7 @@ export function PipelinesPage() {
         subtitle="Pipeline types are system-defined. Curate their configurations — provider, model, prompts, and parameters."
         actions={
           <>
-            <Button
-              variant="ghost"
-              onClick={() => navigate({ to: "/app/pipelines/runs" })}
-            >
+            <Button variant="ghost" onClick={() => navigate({ to: "/app/pipelines/runs" })}>
               All runs
             </Button>
           </>

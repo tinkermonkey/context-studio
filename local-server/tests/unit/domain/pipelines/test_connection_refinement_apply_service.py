@@ -496,7 +496,11 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
         mock_ontology_repo.get_property_definition_by_identifier.assert_called_with("depends_on")
 
     def test_unresolvable_class_skips_delta(
-        self, mock_ontology_repo, sample_classes, sample_property_definition, sample_scope_id
+        self,
+        mock_ontology_repo,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
     ):
         """Delta skipped if class cannot be resolved."""
 
@@ -641,7 +645,12 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
                 return [scope_class, class_in_scope, class_in_scope_2]
             elif concept_scheme_id == "other-scheme-id":
                 return [class_in_other_scheme]
-            return [scope_class, class_in_scope, class_in_scope_2, class_in_other_scheme]
+            return [
+                scope_class,
+                class_in_scope,
+                class_in_scope_2,
+                class_in_other_scheme,
+            ]
 
         mock_ontology_repo.list_classes.side_effect = list_classes_side_effect
 

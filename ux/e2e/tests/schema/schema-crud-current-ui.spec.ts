@@ -176,7 +176,10 @@ test.describe("Schema CRUD — current UI", () => {
   });
 
   test("property: inline-edit the description persists", async ({ page }) => {
-    await createPropertyDefinition(page, { identifier: "e2e_editable", title: "E2E Editable Prop" });
+    await createPropertyDefinition(page, {
+      identifier: "e2e_editable",
+      title: "E2E Editable Prop",
+    });
     await page.goto("/app/schema/properties");
     await page.waitForLoadState("networkidle");
 

@@ -119,9 +119,7 @@ def _gt_parts(gt_labels: list[str]) -> set[str]:
 def _scenarios(selected: str | None) -> list[str]:
     if selected:
         return [selected]
-    return sorted(
-        d.name for d in FIXTURES.iterdir() if d.is_dir() and (d / "input.json").exists()
-    )
+    return sorted(d.name for d in FIXTURES.iterdir() if d.is_dir() and (d / "input.json").exists())
 
 
 def run_synthesis(scenarios, nlp, tfidf, cluster_threshold, top_ns):
@@ -264,7 +262,10 @@ def main() -> int:
         "--top-ns", default="6,8,10,12", help="comma-separated top-N values to sweep"
     )
     parser.add_argument(
-        "--cluster-threshold", type=float, default=0.25, help="single cluster distance threshold"
+        "--cluster-threshold",
+        type=float,
+        default=0.25,
+        help="single cluster distance threshold",
     )
     args = parser.parse_args()
     thresholds = [float(t) for t in args.thresholds.split(",")]

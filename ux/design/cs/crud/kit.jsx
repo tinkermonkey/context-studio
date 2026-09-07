@@ -11,7 +11,15 @@ const domainColorOf = (d) => DOMAIN_COLOR[d] || "neutral";
 
 function DomainPill({ domain, label }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--font-mono)", fontSize: 11.5 }}>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        fontFamily: "var(--font-mono)",
+        fontSize: 11.5,
+      }}
+    >
       <span className="cs-domain-dot" style={{ background: `var(--dom-${domain || "default"})` }} />
       <span>{label}</span>
     </span>
@@ -38,13 +46,24 @@ function useSavedFlash() {
 // blocks the save while invalid.
 // -------------------------------------------------------------------------
 function EditableField({
-  active, value, onSave, onChangeLive, kind = "text", options = [],
-  placeholder = "—", mono = false, rows = 3, validate, autoFocus = false,
+  active,
+  value,
+  onSave,
+  onChangeLive,
+  kind = "text",
+  options = [],
+  placeholder = "—",
+  mono = false,
+  rows = 3,
+  validate,
+  autoFocus = false,
 }) {
   const [buf, setBuf] = useState(value ?? "");
   const [focused, setFocused] = useState(false);
   const flash = useSavedFlash();
-  useEffect(() => { if (!focused) setBuf(value ?? ""); }, [value, focused]);
+  useEffect(() => {
+    if (!focused) setBuf(value ?? "");
+  }, [value, focused]);
 
   const err = validate ? validate(buf) : null;
 
@@ -59,45 +78,89 @@ function EditableField({
     const empty = value === undefined || value === null || value === "";
     return (
       <span className={"ce-view"} style={{ cursor: "default" }}>
-        {empty ? <span className="ce-view__placeholder">{placeholder}</span>
-          : (mono ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{value}</span> : value)}
+        {empty ? (
+          <span className="ce-view__placeholder">{placeholder}</span>
+        ) : mono ? (
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{value}</span>
+        ) : (
+          value
+        )}
       </span>
     );
   }
 
-  const onChange = (v) => { setBuf(v); onChangeLive && onChangeLive(v); };
+  const onChange = (v) => {
+    setBuf(v);
+    onChangeLive && onChangeLive(v);
+  };
 
   let control;
   if (kind === "select") {
     control = (
-      <Select value={buf} placeholder={placeholder}
-        onChange={(v) => { setBuf(v); onChangeLive && onChangeLive(v); if (!(validate && validate(v))) { onSave && onSave(v); flash.fire(); } }}>
+      <Select
+        value={buf}
+        placeholder={placeholder}
+        onChange={(v) => {
+          setBuf(v);
+          onChangeLive && onChangeLive(v);
+          if (!(validate && validate(v))) {
+            onSave && onSave(v);
+            flash.fire();
+          }
+        }}
+      >
         {options.map((o) => (
-          <Select.Item key={o.value} value={o.value} description={o.description}>{o.label}</Select.Item>
+          <Select.Item key={o.value} value={o.value} description={o.description}>
+            {o.label}
+          </Select.Item>
         ))}
       </Select>
     );
   } else if (kind === "textarea") {
     control = (
-      <TextArea value={buf} rows={rows} error={!!err} autoFocus={autoFocus}
+      <TextArea
+        value={buf}
+        rows={rows}
+        error={!!err}
+        autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => { setFocused(false); commit(buf); }} />
+        onBlur={() => {
+          setFocused(false);
+          commit(buf);
+        }}
+      />
     );
   } else if (kind === "number") {
     control = (
-      <NumberInput mono value={buf} error={!!err} autoFocus={autoFocus}
+      <NumberInput
+        mono
+        value={buf}
+        error={!!err}
+        autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => { setFocused(false); commit(buf); }} />
+        onBlur={() => {
+          setFocused(false);
+          commit(buf);
+        }}
+      />
     );
   } else {
     control = (
-      <TextInput mono={mono || kind === "ident"} value={buf} error={!!err} autoFocus={autoFocus}
+      <TextInput
+        mono={mono || kind === "ident"}
+        value={buf}
+        error={!!err}
+        autoFocus={autoFocus}
         placeholder={placeholder === "—" ? "" : placeholder}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => { setFocused(false); commit(buf); }} />
+        onBlur={() => {
+          setFocused(false);
+          commit(buf);
+        }}
+      />
     );
   }
 
@@ -105,7 +168,11 @@ function EditableField({
     <div className="ce-field">
       <div className="ce-field__row">
         <div style={{ flex: 1, minWidth: 0 }}>{control}</div>
-        {flash.on && !err && <span className="ce-saved"><Icon name="check" size={10} /> saved</span>}
+        {flash.on && !err && (
+          <span className="ce-saved">
+            <Icon name="check" size={10} /> saved
+          </span>
+        )}
       </div>
       {err && <div className="ce-err">{err}</div>}
     </div>
@@ -117,20 +184,40 @@ function EditableField({
 // affordance. In view mode it renders the text. When active it shows the
 // editable textarea + a Suggest button that proposes copy (Replace / Append).
 // -------------------------------------------------------------------------
-function SuggestField({ active, value, onSave, onChangeLive, type, entityId, title, context, rows = 3 }) {
+function SuggestField({
+  active,
+  value,
+  onSave,
+  onChangeLive,
+  type,
+  entityId,
+  title,
+  context,
+  rows = 3,
+}) {
   const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState(null);
 
   const run = () => {
-    setBusy(true); setProposal(null);
+    setBusy(true);
+    setProposal(null);
     CSStore.suggest({ type, id: entityId, title, context }).then((text) => {
-      setBusy(false); setProposal(text);
+      setBusy(false);
+      setProposal(text);
     });
   };
 
   return (
     <div className="ce-field">
-      <EditableField active={active} value={value} onSave={onSave} onChangeLive={onChangeLive} kind="textarea" rows={rows} placeholder="No description yet." />
+      <EditableField
+        active={active}
+        value={value}
+        onSave={onSave}
+        onChangeLive={onChangeLive}
+        kind="textarea"
+        rows={rows}
+        placeholder="No description yet."
+      />
       {active && (
         <div style={{ display: "flex", marginTop: 6 }}>
           <button type="button" className="ce-suggest-btn" onClick={run} disabled={busy}>
@@ -141,16 +228,45 @@ function SuggestField({ active, value, onSave, onChangeLive, type, entityId, tit
       )}
       {active && (busy || proposal) && (
         <div className="ce-suggest-panel">
-          <div className="ce-suggest-panel__label"><Icon name="zap" size={11} /> AI suggestion</div>
+          <div className="ce-suggest-panel__label">
+            <Icon name="zap" size={11} /> AI suggestion
+          </div>
           {busy ? (
-            <><div className="ce-shimmer" style={{ width: "100%" }} /><div className="ce-shimmer" style={{ width: "92%" }} /><div className="ce-shimmer" style={{ width: "68%" }} /></>
+            <>
+              <div className="ce-shimmer" style={{ width: "100%" }} />
+              <div className="ce-shimmer" style={{ width: "92%" }} />
+              <div className="ce-shimmer" style={{ width: "68%" }} />
+            </>
           ) : (
             <>
               <div className="ce-suggest-panel__text">{proposal}</div>
               <div className="ce-suggest-panel__actions">
-                <Button variant="primary" size="sm" onClick={() => { onSave && onSave(proposal); onChangeLive && onChangeLive(proposal); setProposal(null); }}>Replace</Button>
-                <Button variant="ghost" size="sm" onClick={() => { const merged = (value ? value + " " : "") + proposal; onSave && onSave(merged); onChangeLive && onChangeLive(merged); setProposal(null); }}>Append</Button>
-                <Button variant="ghost" size="sm" onClick={() => setProposal(null)}>Dismiss</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    onSave && onSave(proposal);
+                    onChangeLive && onChangeLive(proposal);
+                    setProposal(null);
+                  }}
+                >
+                  Replace
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const merged = (value ? value + " " : "") + proposal;
+                    onSave && onSave(merged);
+                    onChangeLive && onChangeLive(merged);
+                    setProposal(null);
+                  }}
+                >
+                  Append
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setProposal(null)}>
+                  Dismiss
+                </Button>
               </div>
             </>
           )}
@@ -166,18 +282,34 @@ function SuggestField({ active, value, onSave, onChangeLive, type, entityId, tit
 // mode, a create footer, and a row menu (duplicate / delete).
 // -------------------------------------------------------------------------
 function InlineInspector({
-  mode, eyebrow, title, id, version, typeLabel,
-  onEdit, onDone, onDuplicate, onDelete, onCreate, onCancel, canCreate = true,
-  footerHint, children,
+  mode,
+  eyebrow,
+  title,
+  id,
+  version,
+  typeLabel,
+  onEdit,
+  onDone,
+  onDuplicate,
+  onDelete,
+  onCreate,
+  onCancel,
+  canCreate = true,
+  footerHint,
+  children,
 }) {
   const isEdit = mode === "edit";
   const isCreate = mode === "create";
 
   const actions = isCreate ? null : isEdit ? (
-    <Button variant="primary" size="sm" onClick={onDone}><Icon name="check" size={13} /> Done</Button>
+    <Button variant="primary" size="sm" onClick={onDone}>
+      <Icon name="check" size={13} /> Done
+    </Button>
   ) : (
     <div className="ce-inspector-actions">
-      <Button variant="ghost" size="sm" icon onClick={onEdit} title="Edit"><Icon name="edit" size={13} /></Button>
+      <Button variant="ghost" size="sm" icon onClick={onEdit} title="Edit">
+        <Icon name="edit" size={13} />
+      </Button>
       <RowMenu
         placement="bottom-end"
         actions={[
@@ -186,7 +318,11 @@ function InlineInspector({
           { type: "separator" },
           { id: "delete", label: "Delete…", icon: "trash", danger: true },
         ]}
-        onAction={(a) => { if (a === "edit") onEdit && onEdit(); if (a === "duplicate") onDuplicate && onDuplicate(); if (a === "delete") onDelete && onDelete(); }}
+        onAction={(a) => {
+          if (a === "edit") onEdit && onEdit();
+          if (a === "duplicate") onDuplicate && onDuplicate();
+          if (a === "delete") onDelete && onDelete();
+        }}
       />
     </div>
   );
@@ -208,12 +344,25 @@ function InlineInspector({
       {children}
       {isCreate && (
         <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
-          <Button variant="primary" onClick={onCreate} disabled={!canCreate}><Icon name="check" size={13} /> Create {typeLabel}</Button>
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button variant="primary" onClick={onCreate} disabled={!canCreate}>
+            <Icon name="check" size={13} /> Create {typeLabel}
+          </Button>
+          <Button variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
         </div>
       )}
       {footerHint && !isCreate && (
-        <div style={{ padding: "11px 16px 13px", fontFamily: "var(--font-mono)", fontSize: 11, color: "rgb(var(--canvas-fg-3))" }}>{footerHint}</div>
+        <div
+          style={{
+            padding: "11px 16px 13px",
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            color: "rgb(var(--canvas-fg-3))",
+          }}
+        >
+          {footerHint}
+        </div>
       )}
     </InspectorPanel>
   );
@@ -222,7 +371,9 @@ function InlineInspector({
 function EmptyInspector({ icon = "layout", title, sub }) {
   return (
     <div className="ce-empty">
-      <div className="ce-empty__icon"><Icon name={icon} size={22} /></div>
+      <div className="ce-empty__icon">
+        <Icon name={icon} size={22} />
+      </div>
       <div className="ce-empty__title">{title}</div>
       <div className="ce-empty__sub">{sub}</div>
     </div>
@@ -233,36 +384,73 @@ function EmptyInspector({ icon = "layout", title, sub }) {
 // SelectableTable — Heimdall Table + a leading checkbox column (with a
 // select-all header) and a trailing row-menu column.
 // -------------------------------------------------------------------------
-function SelectableTable({ columns, data, rowKey = "id", selectedId, onRowClick, selection, onToggle, onToggleAll, rowActions, onRowAction, pageSize = 9 }) {
+function SelectableTable({
+  columns,
+  data,
+  rowKey = "id",
+  selectedId,
+  onRowClick,
+  selection,
+  onToggle,
+  onToggleAll,
+  rowActions,
+  onRowAction,
+  pageSize = 9,
+}) {
   const allOn = data.length > 0 && data.every((r) => selection.has(r[rowKey]));
   const someOn = data.some((r) => selection.has(r[rowKey]));
 
   const [page, setPage] = useState(0);
   const pageCount = Math.max(1, Math.ceil(data.length / pageSize));
   // clamp page when the filtered dataset shrinks
-  useEffect(() => { if (page > pageCount - 1) setPage(pageCount - 1); }, [pageCount, page]);
+  useEffect(() => {
+    if (page > pageCount - 1) setPage(pageCount - 1);
+  }, [pageCount, page]);
   const safePage = Math.min(page, pageCount - 1);
   const start = safePage * pageSize;
   const pageData = data.slice(start, start + pageSize);
 
   const checkboxCol = {
-    key: "__sel", label: (
+    key: "__sel",
+    label: (
       <span className="csb-check" onClick={(e) => e.stopPropagation()}>
-        <TriState checked={allOn} indeterminate={!allOn && someOn} onChange={() => onToggleAll(!allOn)} aria-label="Select all" />
+        <TriState
+          checked={allOn}
+          indeterminate={!allOn && someOn}
+          onChange={() => onToggleAll(!allOn)}
+          aria-label="Select all"
+        />
       </span>
-    ), width: "40px",
+    ),
+    width: "40px",
     render: (_, row) => (
-      <span className="csb-check" onClick={(e) => { e.stopPropagation(); onToggle(row[rowKey]); }}>
-        <TriState checked={selection.has(row[rowKey])} readOnly aria-label={"Select " + row[rowKey]} />
+      <span
+        className="csb-check"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle(row[rowKey]);
+        }}
+      >
+        <TriState
+          checked={selection.has(row[rowKey])}
+          readOnly
+          aria-label={"Select " + row[rowKey]}
+        />
       </span>
     ),
   };
 
   const menuCol = {
-    key: "__menu", label: "", width: "44px",
+    key: "__menu",
+    label: "",
+    width: "44px",
     render: (_, row) => (
       <span className="csb-rowmenu" onClick={(e) => e.stopPropagation()}>
-        <RowMenu placement="bottom-end" actions={rowActions(row)} onAction={(a) => onRowAction(row, a)} />
+        <RowMenu
+          placement="bottom-end"
+          actions={rowActions(row)}
+          onAction={(a) => onRowAction(row, a)}
+        />
       </span>
     ),
   };
@@ -275,7 +463,11 @@ function SelectableTable({ columns, data, rowKey = "id", selectedId, onRowClick,
         rowKey={rowKey}
         selectedRows={selectedId ? [selectedId] : []}
         onRowClick={onRowClick}
-        emptyState={<div style={{ padding: 40, textAlign: "center", color: "rgb(var(--canvas-fg-3))" }}>Nothing matches these filters.</div>}
+        emptyState={
+          <div style={{ padding: 40, textAlign: "center", color: "rgb(var(--canvas-fg-3))" }}>
+            Nothing matches these filters.
+          </div>
+        }
       />
       {data.length > 0 && (
         <div className="cs-table-pager">
@@ -284,9 +476,29 @@ function SelectableTable({ columns, data, rowKey = "id", selectedId, onRowClick,
           </span>
           {pageCount > 1 && (
             <div className="cs-table-pager__nav">
-              <Button variant="ghost" size="sm" icon disabled={safePage === 0} onClick={() => setPage(safePage - 1)} title="Previous page"><Icon name="chevronLeft" size={14} /></Button>
-              <span className="cs-table-pager__page">Page {safePage + 1} of {pageCount}</span>
-              <Button variant="ghost" size="sm" icon disabled={safePage >= pageCount - 1} onClick={() => setPage(safePage + 1)} title="Next page"><Icon name="chevronRight" size={14} /></Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon
+                disabled={safePage === 0}
+                onClick={() => setPage(safePage - 1)}
+                title="Previous page"
+              >
+                <Icon name="chevronLeft" size={14} />
+              </Button>
+              <span className="cs-table-pager__page">
+                Page {safePage + 1} of {pageCount}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage(safePage + 1)}
+                title="Next page"
+              >
+                <Icon name="chevronRight" size={14} />
+              </Button>
             </div>
           )}
         </div>
@@ -308,13 +520,20 @@ function BulkBar({ count, label, actions, onAction, onClear }) {
       <div className="csb-bar__sep" />
       <div className="csb-bar__actions">
         {actions.map((a) => (
-          <Button key={a.id} variant={a.danger ? "danger" : "ghost"} size="sm" onClick={() => onAction(a.id)}>
+          <Button
+            key={a.id}
+            variant={a.danger ? "danger" : "ghost"}
+            size="sm"
+            onClick={() => onAction(a.id)}
+          >
             {a.icon && <Icon name={a.icon} size={13} />} {a.label}
           </Button>
         ))}
       </div>
       <div className="csb-bar__sep" />
-      <Button variant="ghost" size="sm" icon onClick={onClear} title="Clear selection"><Icon name="x" size={13} /></Button>
+      <Button variant="ghost" size="sm" icon onClick={onClear} title="Clear selection">
+        <Icon name="x" size={13} />
+      </Button>
     </div>
   );
 }
@@ -323,7 +542,15 @@ function BulkBar({ count, label, actions, onAction, onClear }) {
 // CascadeDeleteDialog — danger confirm that previews everything a delete
 // will cascade to (children, individuals, orphaned relationships).
 // -------------------------------------------------------------------------
-const TYPE_ICON = { scheme: "schema", class: "graph", individual: "data", relationship: "link", taxonomy: "schema", property: "component", configuration: "settings" };
+const TYPE_ICON = {
+  scheme: "schema",
+  class: "graph",
+  individual: "data",
+  relationship: "link",
+  taxonomy: "schema",
+  property: "component",
+  configuration: "settings",
+};
 
 function CascadeDeleteDialog({ open, type, target, ids, onClose, onConfirm }) {
   const data = useCS(); // re-read so cascade reflects current state
@@ -334,8 +561,10 @@ function CascadeDeleteDialog({ open, type, target, ids, onClose, onConfirm }) {
   let items = [];
   targets.forEach((tid) => {
     const imp = CSStore.cascade(type, tid);
-    merged.scheme += imp.counts.scheme; merged.class += imp.counts.class;
-    merged.individual += imp.counts.individual; merged.relationship += imp.counts.relationship;
+    merged.scheme += imp.counts.scheme;
+    merged.class += imp.counts.class;
+    merged.individual += imp.counts.individual;
+    merged.relationship += imp.counts.relationship;
     items = items.concat(imp.items);
   });
   // de-dup display list
@@ -344,11 +573,16 @@ function CascadeDeleteDialog({ open, type, target, ids, onClose, onConfirm }) {
   const total = merged.scheme + merged.class + merged.individual + merged.relationship;
 
   const nice = CSStore.NICE[type];
-  const subjectLabel = ids && ids.length > 1 ? `${ids.length} ${CSStore.pl(nice, ids.length)}` : `${nice} ${target ? (target.title || target.name || target.id) : ""}`;
+  const subjectLabel =
+    ids && ids.length > 1
+      ? `${ids.length} ${CSStore.pl(nice, ids.length)}`
+      : `${nice} ${target ? target.title || target.name || target.id : ""}`;
 
   const stats = [
-    ["concept scheme", merged.scheme], ["class", merged.class],
-    ["individual", merged.individual], ["relationship", merged.relationship],
+    ["concept scheme", merged.scheme],
+    ["class", merged.class],
+    ["individual", merged.individual],
+    ["relationship", merged.relationship],
   ].filter(([, n]) => n > 0);
 
   return (
@@ -356,23 +590,37 @@ function CascadeDeleteDialog({ open, type, target, ids, onClose, onConfirm }) {
       isOpen={open}
       onClose={onClose}
       title={`Delete ${subjectLabel}?`}
-      subtitle={total ? "This cascades through the graph. Review what will be removed." : "This action cannot be undone."}
+      subtitle={
+        total
+          ? "This cascades through the graph. Review what will be removed."
+          : "This action cannot be undone."
+      }
       size={total ? "lg" : "md"}
       hintFooter={`DELETE /${CSStore.collectionOf[type]}`}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm}><Icon name="trash" size={13} /> Delete{total ? ` + ${total} dependent${total === 1 ? "" : "s"}` : ""}</Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={onConfirm}>
+            <Icon name="trash" size={13} /> Delete
+            {total ? ` + ${total} dependent${total === 1 ? "" : "s"}` : ""}
+          </Button>
         </>
       }
     >
       <div className="ce-cascade">
         {total === 0 ? (
-          <FormCallout variant="warn" icon="alert">No dependents — this {nice} can be safely removed.</FormCallout>
+          <FormCallout variant="warn" icon="alert">
+            No dependents — this {nice} can be safely removed.
+          </FormCallout>
         ) : (
           <>
             <FormCallout variant="error" icon="alert">
-              Deleting {ids && ids.length > 1 ? "these" : "this"} {ids && ids.length > 1 ? CSStore.pl(nice, 2) : nice} will also remove {total} dependent node{total === 1 ? "" : "s"}. Orphaned relationships are deleted, not detached.
+              Deleting {ids && ids.length > 1 ? "these" : "this"}{" "}
+              {ids && ids.length > 1 ? CSStore.pl(nice, 2) : nice} will also remove {total}{" "}
+              dependent node{total === 1 ? "" : "s"}. Orphaned relationships are deleted, not
+              detached.
             </FormCallout>
             <div className="ce-cascade__summary">
               {stats.map(([k, n]) => (
@@ -409,8 +657,16 @@ function ParamSlider({ label, value, min, max, step, onChange, active, fmt = (v)
         <span className="ce-param__label">{label}</span>
         <span className="ce-param__val">{fmt(value)}</span>
       </div>
-      <input type="range" className="ce-range" min={min} max={max} step={step} value={value} disabled={!active}
-        onChange={(e) => onChange(parseFloat(e.target.value))} />
+      <input
+        type="range"
+        className="ce-range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={!active}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+      />
     </div>
   );
 }
@@ -421,22 +677,47 @@ function ParamSlider({ label, value, min, max, step, onChange, active, fmt = (v)
 function VariableChips({ template, onInsert }) {
   const vars = useMemo(() => {
     const set = [];
-    const re = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g; let m;
+    const re = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+    let m;
     while ((m = re.exec(template || "")) !== null) if (!set.includes(m[1])) set.push(m[1]);
     return set;
   }, [template]);
-  if (vars.length === 0) return <span style={{ fontSize: 11.5, color: "rgb(var(--canvas-fg-3))", fontStyle: "italic" }}>No variables — add e.g. {"{{concept}}"}.</span>;
+  if (vars.length === 0)
+    return (
+      <span style={{ fontSize: 11.5, color: "rgb(var(--canvas-fg-3))", fontStyle: "italic" }}>
+        No variables — add e.g. {"{{concept}}"}.
+      </span>
+    );
   return (
     <div className="ce-varchips">
       {vars.map((v) => (
-        <span key={v} className="ce-varchip" onClick={() => onInsert && onInsert(v)} title={onInsert ? "Insert into template" : undefined}>{"{{"}{v}{"}}"}</span>
+        <span
+          key={v}
+          className="ce-varchip"
+          onClick={() => onInsert && onInsert(v)}
+          title={onInsert ? "Insert into template" : undefined}
+        >
+          {"{{"}
+          {v}
+          {"}}"}
+        </span>
       ))}
     </div>
   );
 }
 
 Object.assign(window, {
-  DOMAIN_COLOR, domainColorOf, DomainPill, useSavedFlash,
-  EditableField, SuggestField, InlineInspector, EmptyInspector,
-  SelectableTable, BulkBar, CascadeDeleteDialog, ParamSlider, VariableChips,
+  DOMAIN_COLOR,
+  domainColorOf,
+  DomainPill,
+  useSavedFlash,
+  EditableField,
+  SuggestField,
+  InlineInspector,
+  EmptyInspector,
+  SelectableTable,
+  BulkBar,
+  CascadeDeleteDialog,
+  ParamSlider,
+  VariableChips,
 });

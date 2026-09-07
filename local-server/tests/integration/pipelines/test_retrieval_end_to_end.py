@@ -155,7 +155,11 @@ class TestRetrievalEndToEnd:
             ("dna", "DNA", "Molecule carrying genetic instructions"),
             ("rna", "RNA", "Messenger molecule involved in protein synthesis"),
             ("mitochondria", "Mitochondria", "Cellular powerhouse producing energy"),
-            ("photosynthesis", "Photosynthesis", "Process converting light to chemical energy"),
+            (
+                "photosynthesis",
+                "Photosynthesis",
+                "Process converting light to chemical energy",
+            ),
             ("metabolism", "Metabolism", "Chemical processes maintaining life"),
             ("homeostasis", "Homeostasis", "Maintenance of internal stability"),
         ]
@@ -194,7 +198,11 @@ class TestRetrievalEndToEnd:
             ("law", "Law", "System of rules enforced by government"),
             ("medicine", "Medicine", "Science of healing and health"),
             ("agriculture", "Agriculture", "Cultivation of plants and animals"),
-            ("engineering", "Engineering", "Application of science for practical purposes"),
+            (
+                "engineering",
+                "Engineering",
+                "Application of science for practical purposes",
+            ),
             ("astronomy", "Astronomy", "Study of celestial objects"),
             ("linguistics", "Linguistics", "Study of languages and communication"),
             ("anthropology", "Anthropology", "Study of human cultures"),
@@ -203,9 +211,7 @@ class TestRetrievalEndToEnd:
             ("zoology", "Zoology", "Study of animals"),
         ]
 
-        all_class_specs = (
-            tech_classes + bio_classes + geo_classes + other_classes
-        )
+        all_class_specs = tech_classes + bio_classes + geo_classes + other_classes
 
         for identifier, title, description in all_class_specs:
             cls = Class(
@@ -238,9 +244,7 @@ class TestRetrievalEndToEnd:
         when queried with topically relevant text.
         """
         taxonomy_id = str(uuid4())
-        taxonomy, all_classes = self._setup_ontology_with_classes(
-            ontology_repo, taxonomy_id
-        )
+        taxonomy, all_classes = self._setup_ontology_with_classes(ontology_repo, taxonomy_id)
 
         # Reindex all embeddings (this embeds all class titles and descriptions)
         reindexed_count = schema_index.reindex_all()
@@ -258,9 +262,7 @@ class TestRetrievalEndToEnd:
             "We monitor service health using observability systems."
         )
 
-        retrieved_catalog = extraction_service._relevant_class_catalog(
-            tech_source_text, taxonomy
-        )
+        retrieved_catalog = extraction_service._relevant_class_catalog(tech_source_text, taxonomy)
 
         # Verify we got a subset (not full catalog)
         assert len(retrieved_catalog) < len(full_catalog)
@@ -284,9 +286,7 @@ class TestRetrievalEndToEnd:
         works end-to-end with real schema index and consistent scoring.
         """
         taxonomy_id = str(uuid4())
-        taxonomy, all_classes = self._setup_ontology_with_classes(
-            ontology_repo, taxonomy_id
-        )
+        taxonomy, all_classes = self._setup_ontology_with_classes(ontology_repo, taxonomy_id)
 
         # Reindex all embeddings
         schema_index.reindex_all()
@@ -301,13 +301,11 @@ class TestRetrievalEndToEnd:
 
         # Should return a subset, not full catalog
         full_catalog = extraction_service._ontology_class_catalog(taxonomy)
-        assert len(result1) < len(full_catalog), (
-            "Retrieved subset should be smaller than full catalog"
-        )
+        assert len(result1) < len(
+            full_catalog
+        ), "Retrieved subset should be smaller than full catalog"
 
-    def test_small_ontology_skips_retrieval(
-        self, extraction_service, ontology_repo, schema_index
-    ):
+    def test_small_ontology_skips_retrieval(self, extraction_service, ontology_repo, schema_index):
         """
         Small ontologies (≤50 classes) should return full catalog without retrieval.
 
@@ -427,9 +425,7 @@ class TestRetrievalEndToEnd:
         downstream prompt building remains compatible.
         """
         taxonomy_id = str(uuid4())
-        taxonomy, _ = self._setup_ontology_with_classes(
-            ontology_repo, taxonomy_id
-        )
+        taxonomy, _ = self._setup_ontology_with_classes(ontology_repo, taxonomy_id)
 
         schema_index.reindex_all()
 

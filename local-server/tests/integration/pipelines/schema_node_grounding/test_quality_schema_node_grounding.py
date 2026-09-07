@@ -113,9 +113,23 @@ class TestQualitySchemaNodeGrounding:
         assert len(scenarios) >= 30, f"Expected ≥30 fixtures, got {len(scenarios)}"
 
         # Verify different domains represented
-        biology_classes = {"animal", "plant", "cell", "protein", "dna", "bacteria", "virus"}
+        biology_classes = {
+            "animal",
+            "plant",
+            "cell",
+            "protein",
+            "dna",
+            "bacteria",
+            "virus",
+        }
         technology_classes = {"software", "network", "algorithm", "database"}
-        social_classes = {"person", "organization", "artist", "university", "government"}
+        social_classes = {
+            "person",
+            "organization",
+            "artist",
+            "university",
+            "government",
+        }
 
         scenario_set = set(scenarios)
         assert len(scenario_set & biology_classes) >= 3, "Should have ≥3 biology classes"
@@ -145,7 +159,6 @@ class TestQualitySchemaNodeGrounding:
             assert (
                 has_sufficient_distractors
             ), f"Fixture {scenario} should have ≥3 distractors from at least one source"
-
 
     @pytest.mark.asyncio
     async def test_quality_metrics_computation_all_fixtures(
@@ -262,8 +275,7 @@ class TestQualitySchemaNodeGrounding:
 
         # Assert all scenarios succeeded (no silent failures)
         assert len(failed_scenarios) == 0, (
-            f"All {len(quality_scenarios)} fixtures must succeed. "
-            f"Failed: {failed_scenarios}"
+            f"All {len(quality_scenarios)} fixtures must succeed. " f"Failed: {failed_scenarios}"
         )
 
         # Compute aggregate metrics (mean across fixtures)

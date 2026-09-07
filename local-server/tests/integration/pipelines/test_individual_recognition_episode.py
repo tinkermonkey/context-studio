@@ -51,7 +51,9 @@ def _build_service_over_dr():
         create_local_db_engine,
         create_session_factory,
     )
-    from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
+    from adapters.persistence.sqlite.individual_vector_index import (
+        SqliteIndividualVectorIndex,
+    )
     from adapters.persistence.sqlite.models import Base
     from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
     from domain.extraction.services import ExtractionService
@@ -69,8 +71,10 @@ def _build_service_over_dr():
     session_factory = create_session_factory(engine)
     repo = SQLiteOntologyRepository(session_factory)
     ontology_service = OntologyService(
-        repository=repo, embedding_service=emb,
-        event_publisher=InProcessEventPublisher(), schema_index=None,
+        repository=repo,
+        embedding_service=emb,
+        event_publisher=InProcessEventPublisher(),
+        schema_index=None,
     )
     import_dr_ontology(ontology_service, repo, _find_dr_spec_dir())
     index = SqliteIndividualVectorIndex(session_factory, emb)
@@ -78,9 +82,15 @@ def _build_service_over_dr():
     from unittest.mock import Mock
 
     service = ExtractionService(
-        ontology_repo=repo, embedding_service=emb, llm=Mock(), nlp=Mock(),
-        reference_sources=[], event_publisher=Mock(), extraction_repo=Mock(),
-        extraction_run_repo=Mock(), individual_index=index,
+        ontology_repo=repo,
+        embedding_service=emb,
+        llm=Mock(),
+        nlp=Mock(),
+        reference_sources=[],
+        event_publisher=Mock(),
+        extraction_repo=Mock(),
+        extraction_run_repo=Mock(),
+        individual_index=index,
     )
     return service, repo, index, emb
 
@@ -112,12 +122,14 @@ def _run_episode(service, repo, index, episode):
                 )
                 index.index_individual(node_id, mention["surface"], None)
                 title = mention["surface"]
-            records.append({
-                "entity_key": entity["entity_key"],
-                "canonical_title": entity["canonical_title"],
-                "node_id": node_id,
-                "title": title,
-            })
+            records.append(
+                {
+                    "entity_key": entity["entity_key"],
+                    "canonical_title": entity["canonical_title"],
+                    "node_id": node_id,
+                    "title": title,
+                }
+            )
     metrics = recognition_metrics(records)
     print(
         f"\n── recognition ({episode}) ──  precision={metrics.dedup_precision} "
@@ -133,7 +145,7 @@ def test_recognition_solves_surface_variants():
     service, repo, index, _ = _build_service_over_dr()
     metrics = _run_episode(service, repo, index, "surface_variants")
     assert metrics.dedup_precision == 1.0  # no false merges
-    assert metrics.dedup_recall == 1.0     # every surface variant resolved
+    assert metrics.dedup_recall == 1.0  # every surface variant resolved
     assert metrics.node_count_ratio == 1.0  # one node per entity, no duplicates
 
 

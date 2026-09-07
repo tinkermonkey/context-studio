@@ -93,7 +93,12 @@ function DatasetInspector({ dataset, onActivate, isActivating }: DatasetInspecto
         <div className="stack">
           <div>
             <label className="form-group-label">Title</label>
-            <Input type="text" value={dataset.title} disabled data-testid="dataset-inspector-title" />
+            <Input
+              type="text"
+              value={dataset.title}
+              disabled
+              data-testid="dataset-inspector-title"
+            />
           </div>
           <div>
             <label className="form-group-label">Description</label>
@@ -236,9 +241,7 @@ export function DatasetsPage() {
       key: "created_at",
       label: "Imported",
       width: "120px",
-      render: (value) => (
-        <span className="muted">{toIsoDate(value as string | null)}</span>
-      ),
+      render: (value) => <span className="muted">{toIsoDate(value as string | null)}</span>,
     },
     {
       key: "id",
@@ -336,7 +339,11 @@ export function DatasetsPage() {
           title={datasetsCopy.pageTitle}
           idChip="/data/datasets"
           actions={
-            <Button variant="primary" data-testid="dataset-add-button" onClick={() => setShowCreateModal(true)}>
+            <Button
+              variant="primary"
+              data-testid="dataset-add-button"
+              onClick={() => setShowCreateModal(true)}
+            >
               New Dataset
             </Button>
           }
@@ -360,7 +367,11 @@ export function DatasetsPage() {
           title={datasetsCopy.pageTitle}
           idChip="/data/datasets"
           actions={
-            <Button variant="primary" data-testid="dataset-add-button" onClick={() => setShowCreateModal(true)}>
+            <Button
+              variant="primary"
+              data-testid="dataset-add-button"
+              onClick={() => setShowCreateModal(true)}
+            >
               New Dataset
             </Button>
           }
@@ -415,7 +426,10 @@ export function DatasetsPage() {
 
           {showFilteredEmpty ? (
             <div style={{ marginTop: "var(--space-6)" }}>
-              <EmptyState title="No datasets found" description="Try adjusting your search filter" />
+              <EmptyState
+                title="No datasets found"
+                description="Try adjusting your search filter"
+              />
             </div>
           ) : (
             <SchemaPageLayout

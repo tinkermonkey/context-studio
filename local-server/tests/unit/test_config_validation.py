@@ -11,7 +11,13 @@ Tests cover:
 import pytest
 from pydantic import ValidationError
 
-from config import DuckDBConfig, RecognitionConfig, S3Config, SyncAdapterType, SyncConfig
+from config import (
+    DuckDBConfig,
+    RecognitionConfig,
+    S3Config,
+    SyncAdapterType,
+    SyncConfig,
+)
 
 
 class TestSyncAdapterTypeEnum:

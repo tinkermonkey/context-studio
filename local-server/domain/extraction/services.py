@@ -874,8 +874,8 @@ class ExtractionService:
             ontology: Target ontology
 
         Returns:
-            Tuple of (relationship_triples with property_definition_id stamped +
-            synthetic is_a triples for concept-objects, warnings list)
+            Tuple of (synthetic is_a triples for concept-objects +
+            relationship_triples with property_definition_id stamped, warnings list)
         """
         warnings: list[str] = []
 
@@ -903,12 +903,14 @@ class ExtractionService:
         except (TypeError, AttributeError, KeyError, IndexError):
             raise
         except Exception as exc:
+            error_type = type(exc).__name__
             warning_msg = (
-                f"Concept-object typing step failed (database access error): {exc}. "
+                f"Concept-object typing step failed ({error_type}): {exc}. "
                 "Returning untyped relationship triples. Relationships will be dropped "
-                "during apply since property_definition_id will not be stamped."
+                "during apply since property_definition_id will not be stamped. "
+                "Verify database connectivity, schema integrity, and repository state."
             )
-            _logger.error(warning_msg, exc_info=exc)
+            _logger.error(warning_msg, exc_info=True)
             warnings.append(warning_msg)
             return relationship_triples, warnings
 
@@ -1091,7 +1093,7 @@ class ExtractionService:
         Returns:
             Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
-        individual_triples, tokens_used = self._type_individuals_nlp_grounded(
+        individual_triples, tokens_used, nlp_typing_warnings = self._type_individuals_nlp_grounded(
             text, ontology, ontology_id, model, temperature
         )
         individual_triples = self._canonicalize_triples_against_ontology(
@@ -1108,11 +1110,12 @@ class ExtractionService:
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        return combined, tokens_used, typing_warnings
+        all_warnings = nlp_typing_warnings + typing_warnings
+        return combined, tokens_used, all_warnings
 
     def _type_individuals_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         Phase-1 typing via spaCy noun chunks + vector retrieval + LLM confirmation (#1141).
 
@@ -1125,18 +1128,40 @@ class ExtractionService:
         the text and the type from the ontology, so nothing is LLM-generated.
         Requires a schema index; without one this mode can't retrieve and yields
         no typing.
+
+        Returns (triples, tokens_used, warnings).
         """
+        warnings: list[str] = []
+
         if self._schema_index is None:
-            return [], 0
+            _logger.warning(
+                "nlp_grounded typing requested but schema_index is None; "
+                "no typing triples will be produced"
+            )
+            return [], 0, warnings
+
+        taxonomy_id = getattr(ontology, "id", None)
+        if not taxonomy_id:
+            warning_msg = (
+                "Cannot type individuals via NLP-grounded typing: "
+                "ontology.id is falsy (None or empty). "
+                "No typing triples will be produced. Verify that the ontology "
+                "object has a valid id attribute."
+            )
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
+            return [], 0, warnings
 
         result = self._nlp.process_open(text)
         tokens = list(result.tokens)
         sentences = self._sentence_texts(text, tokens)
-        taxonomy_id = str(getattr(ontology, "id", "") or "") or None
 
         triples: list[dict] = []
         tokens_used = 0
         seen: set[str] = set()
+        chunks_with_results = 0
+        chunks_with_llm_errors = 0
+
         for chunk in result.noun_chunks:
             root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
             if root is None or root.pos not in ("NOUN", "PROPN") or root.is_stop:
@@ -1158,15 +1183,28 @@ class ExtractionService:
             if not matches:
                 continue
 
-            chosen, call_tokens = self._confirm_class_for_chunk(
+            chunks_with_results += 1
+            chosen, call_tokens, had_llm_error = self._confirm_class_for_chunk(
                 label, sentence, matches, model, temperature
             )
             tokens_used += call_tokens
+            if had_llm_error:
+                chunks_with_llm_errors += 1
             if chosen is None:
                 continue
             seen.add(label.lower())
             triples.append(self._make_typing_triple(label, chosen, chunk))
-        return triples, tokens_used
+
+        if chunks_with_results > 0 and chunks_with_llm_errors == chunks_with_results:
+            warning_msg = (
+                f"NLP-grounded typing: all {chunks_with_results} chunks with search results "
+                "failed with LLM errors. This indicates a systemic LLM provider issue. "
+                "Check availability, rate limits, authentication, and network connectivity."
+            )
+            _logger.error(warning_msg)
+            warnings.append(warning_msg)
+
+        return triples, tokens_used, warnings
 
     @staticmethod
     def _sentence_texts(text: str, tokens: list) -> dict[int, str]:
@@ -1179,13 +1217,14 @@ class ExtractionService:
 
     def _confirm_class_for_chunk(
         self, label: str, sentence: str, matches, model: str, temperature: float
-    ):
+    ) -> tuple[Any | None, int, bool]:
         """
         Ask the LLM which retrieved candidate class the noun chunk instantiates.
 
         The LLM's only job is disambiguation-in-context: it picks the best-fitting
         candidate (by its exact ontology reference) or "none" — it never invents a
-        class. Returns ``(chosen SchemaMatch | None, tokens_used)``.
+        class. Returns ``(chosen SchemaMatch | None, tokens_used, had_llm_error)``.
+        had_llm_error indicates whether an LLM provider error occurred.
         """
         candidates: list[tuple[str, Any]] = []
         lines: list[str] = []
@@ -1199,7 +1238,7 @@ class ExtractionService:
             candidates.append((ref, match))
             lines.append(f"- {ref} ({title})" + (f": {definition}" if definition else ""))
         if not candidates:
-            return None, 0
+            return None, 0, False
 
         system_prompt = (
             "You are a knowledge-graph typing assistant. Given a phrase from a "
@@ -1214,30 +1253,50 @@ class ExtractionService:
             f'Sentence: "{sentence}"\n\n'
             "Candidate classes (reference (title): definition):\n" + "\n".join(lines)
         )
-        response = self._llm.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=200,
-            response_format="json",
-        )
-        tokens = response.tokens_in + response.tokens_out
 
-        choice = ""
-        payload = re.search(r"\{.*\}", response.content or "", re.S)
-        if payload:
-            try:
-                choice = str(json.loads(payload.group(0)).get("class", "")).strip()
-            except (ValueError, TypeError):
-                choice = ""
-        if not choice or choice.lower() == "none":
-            return None, tokens
-        choice_lower = choice.lower()
-        for ref, match in candidates:
-            if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
-                return match, tokens
-        return None, tokens
+        try:
+            response = self._llm.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=200,
+                response_format="json",
+            )
+            tokens = response.tokens_in + response.tokens_out
+
+            choice = ""
+            payload = re.search(r"\{.*\}", response.content or "", re.S)
+            if payload:
+                try:
+                    choice = str(json.loads(payload.group(0)).get("class", "")).strip()
+                except (ValueError, TypeError) as exc:
+                    _logger.error(
+                        "Failed to parse LLM JSON response for chunk '%s' "
+                        "in nlp_grounded typing: %s. Response content: %s",
+                        label,
+                        exc,
+                        response.content[:500] if response.content else "empty",
+                    )
+                    choice = ""
+            if not choice or choice.lower() == "none":
+                return None, tokens, False
+            choice_lower = choice.lower()
+            for ref, match in candidates:
+                if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
+                    return match, tokens, False
+            return None, tokens, False
+        except Exception as exc:
+            error_type = type(exc).__name__
+            _logger.error(
+                "LLM provider error during NLP-grounded typing for chunk '%s': %s: %s. "
+                "Check LLM availability, rate limits, authentication, and network connectivity.",
+                label,
+                error_type,
+                exc,
+                exc_info=True,
+            )
+            return None, 0, True
 
     @staticmethod
     def _make_typing_triple(label: str, match, chunk) -> dict:
@@ -1300,7 +1359,10 @@ class ExtractionService:
             if not mention or mention.lower() in mention_class:
                 continue
             cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
-            mention_class[mention.lower()] = (mention, str(cls.id) if cls is not None else None)
+            mention_class[mention.lower()] = (
+                mention,
+                str(cls.id) if cls is not None else None,
+            )
 
         resolution: dict[str, tuple[str, str]] = {}
         for key, (mention, class_id) in mention_class.items():
