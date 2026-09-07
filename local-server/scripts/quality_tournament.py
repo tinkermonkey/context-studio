@@ -57,7 +57,9 @@ from adapters.persistence.sqlite.connection import (
     create_session_factory,
 )
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import EmbeddingService
@@ -88,7 +90,10 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
-from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider, CassetteStaleError
+from tests.integration.pipelines._harness.cassettes import (
+    CassetteLLMProvider,
+    CassetteStaleError,
+)
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_DEV_SCENARIOS,
@@ -858,7 +863,9 @@ def _aggregate_recognition(reports: dict[str, RecognitionMetrics]) -> dict[str, 
     }
 
 
-def _emit_recognition_metrics(recognition_reports: dict[str, RecognitionMetrics]) -> None:
+def _emit_recognition_metrics(
+    recognition_reports: dict[str, RecognitionMetrics],
+) -> None:
     """Emit each episode's RecognitionMetrics to _metrics/individual_recognition.jsonl."""
     emitter = MetricsEmitter(_METRICS_DIR)
     for episode, metrics in recognition_reports.items():
@@ -1260,13 +1267,19 @@ def main() -> int:
     )
     parser.add_argument("--pipeline", choices=["individual"], default="individual")
     parser.add_argument(
-        "--passes", type=int, default=2, help="Loop A coordinate-ascent passes per variant"
+        "--passes",
+        type=int,
+        default=2,
+        help="Loop A coordinate-ascent passes per variant",
     )
     parser.add_argument(
         "--restarts", type=int, default=3, help="Loop A random restarts per variant"
     )
     parser.add_argument(
-        "--seed", type=int, default=0, help="RNG seed for Loop A restart shuffling/jitter"
+        "--seed",
+        type=int,
+        default=0,
+        help="RNG seed for Loop A restart shuffling/jitter",
     )
     args = parser.parse_args()
     return asyncio.run(_amain(args))

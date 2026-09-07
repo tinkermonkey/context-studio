@@ -14,9 +14,7 @@ from domain.ontology.ports import SchemaKind, SchemaMatch, SchemaVectorIndex
 
 
 class FakeSchemaVectorIndex(SchemaVectorIndex):
-    def __init__(
-        self, search_results: list[SchemaMatch] | None = None
-    ) -> None:
+    def __init__(self, search_results: list[SchemaMatch] | None = None) -> None:
         # entity_id -> (title, description)
         self._entities: dict[str, tuple[str, str | None]] = {}
         # Configured search results: list of (match, taxonomy_id) tuples
@@ -29,7 +27,9 @@ class FakeSchemaVectorIndex(SchemaVectorIndex):
         self._entities[entity_id] = (title, description)
 
     def set_search_results(
-        self, results: list[SchemaMatch], taxonomies: dict[str, str | None] | None = None
+        self,
+        results: list[SchemaMatch],
+        taxonomies: dict[str, str | None] | None = None,
     ) -> None:
         """
         Configure the results that search() will return.

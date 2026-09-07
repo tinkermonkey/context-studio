@@ -48,7 +48,9 @@ def _empty_variant() -> Variant:
 
 @pytest.mark.asyncio
 class TestBuildBootstrapReports:
-    async def test_covers_every_bootstrap_scenario_tagged_with_the_bootstrap_split(self):
+    async def test_covers_every_bootstrap_scenario_tagged_with_the_bootstrap_split(
+        self,
+    ):
         reports = await _build_bootstrap_reports(_perfect_variant(), {}, embed_fn=None)
         assert {r.scenario for r in reports} == set(DR_BOOTSTRAP_SCENARIOS)
         assert all(r.split == "bootstrap" for r in reports)
@@ -67,7 +69,9 @@ class TestBuildBootstrapReports:
 
 @pytest.mark.asyncio
 class TestBootstrapExclusionFromDevHoldout:
-    async def test_bootstrap_scenarios_never_appear_in_the_full_corpus_scenario_reports(self):
+    async def test_bootstrap_scenarios_never_appear_in_the_full_corpus_scenario_reports(
+        self,
+    ):
         """
         Phase 5 requirement: Loop B continues passing only the dev/holdout
         scenario lists to the aggregation that feeds the Loop C accept gate.
@@ -80,7 +84,9 @@ class TestBootstrapExclusionFromDevHoldout:
         assert scenarios.isdisjoint(DR_BOOTSTRAP_SCENARIOS)
         assert all(r.split in ("dev", "holdout") for r in reports)
 
-    async def test_changing_bootstrap_scores_does_not_change_dev_holdout_aggregation(self):
+    async def test_changing_bootstrap_scores_does_not_change_dev_holdout_aggregation(
+        self,
+    ):
         """
         A candidate that is perfect on dev/holdout but empty on bootstrap (or
         vice versa) must score identically on dev/holdout either way -- the

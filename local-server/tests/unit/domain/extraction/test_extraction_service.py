@@ -646,7 +646,11 @@ class _OneChunkNLP:
         self._chunk_text = chunk_text
 
     def process_open(self, text):
-        from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
+        from domain.extraction.ports import (
+            NounChunkSpan,
+            OpenExtractionResult,
+            OpenToken,
+        )
 
         tok = OpenToken(
             index=0,
@@ -755,8 +759,16 @@ class TestRecognition:
         "K8s": [0.98, 0.02, 0.0],  # ~1.0 cos to Kubernetes
         "Nextflow": [0.0, 1.0, 0.0],  # orthogonal
         "Container Orchestrator": [0.6, 0.8, 0.0],  # ~0.6 cos -> below threshold
-        "borderline": [0.93, 0.3676, 0.0],  # ~0.93 cos: passes long bar, fails acronym bar
-        "Docker Swarm": [0.97, 0.243, 0.0],  # ~0.97 cos -> close to Kubernetes (ambiguity)
+        "borderline": [
+            0.93,
+            0.3676,
+            0.0,
+        ],  # ~0.93 cos: passes long bar, fails acronym bar
+        "Docker Swarm": [
+            0.97,
+            0.243,
+            0.0,
+        ],  # ~0.97 cos -> close to Kubernetes (ambiguity)
     }
 
     def _service(self, index):
@@ -898,7 +910,10 @@ class _RecogRepo:
                 title="System Software",
                 external_references=[
                     ExternalReference(
-                        source="dr", identifier="technology.systemsoftware", uri=None, metadata={}
+                        source="dr",
+                        identifier="technology.systemsoftware",
+                        uri=None,
+                        metadata={},
                     )
                 ],
             ),
@@ -909,7 +924,10 @@ class _RecogRepo:
                 title="Data Object",
                 external_references=[
                     ExternalReference(
-                        source="dr", identifier="application.dataobject", uri=None, metadata={}
+                        source="dr",
+                        identifier="application.dataobject",
+                        uri=None,
+                        metadata={},
                     )
                 ],
             ),
@@ -1227,7 +1245,11 @@ class TestTypeConceptObjects:
             {
                 "subject": {"kind": "individual", "label": "Caching"},
                 "predicate": {"property_definition_id": None, "label": "improves"},
-                "object": {"kind": "class", "id": "quality-class-id", "label": "Quality Attribute"},
+                "object": {
+                    "kind": "class",
+                    "id": "quality-class-id",
+                    "label": "Quality Attribute",
+                },
                 "confidence": 0.85,
                 "provenance": "test",
             }
@@ -1249,7 +1271,11 @@ class TestTypeConceptObjects:
             {
                 "subject": {"kind": "individual", "label": "CacheLayer"},
                 "predicate": {"property_definition_id": None, "label": "is_a"},
-                "object": {"kind": "class", "id": "pattern-class-id", "label": "Pattern"},
+                "object": {
+                    "kind": "class",
+                    "id": "pattern-class-id",
+                    "label": "Pattern",
+                },
                 "confidence": 0.9,
                 "provenance": "test",
             }

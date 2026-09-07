@@ -70,7 +70,9 @@ class TestNLPGroundedTypingConfig:
             IndividualOpenV1Config.from_dict(config)
         assert "mutually exclusive" in str(exc_info.value)
 
-    def test_config_nlp_grounded_typing_mutually_exclusive_with_require_schema_match(self):
+    def test_config_nlp_grounded_typing_mutually_exclusive_with_require_schema_match(
+        self,
+    ):
         """nlp_grounded_typing and require_schema_match are mutually exclusive."""
         config = {
             "nlp_grounded_typing": True,

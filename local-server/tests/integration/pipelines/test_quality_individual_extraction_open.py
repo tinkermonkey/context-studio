@@ -42,11 +42,15 @@ from domain.extraction.open_extraction import build_relation_candidates
 from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
 from domain.ontology.ports import SchemaMatch, SchemaVectorIndex
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.configurations.open_v1 import (
+    get_open_v1_config,
+)
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.dataset_split import split_for
 from tests.integration.pipelines._harness.error_report import (
@@ -248,7 +252,11 @@ async def test_open_v1_soft_metrics_and_error_report(open_orchestrator, embed_fn
                     "recall": strict["recall"],
                     "f1": strict["f1"],
                 },
-                soft={"precision": soft.precision, "recall": soft.recall, "f1": soft.f1},
+                soft={
+                    "precision": soft.precision,
+                    "recall": soft.recall,
+                    "f1": soft.f1,
+                },
                 candidate_recall=candidate_recall(expected_keys, actual_keys, embed_fn),
                 predicate_recall=predicate_recall(expected_keys, actual_keys, embed_fn),
                 label_accuracy=label_accuracy(expected_keys, actual_keys, embed_fn),
@@ -296,9 +304,9 @@ async def test_open_v1_soft_metrics_and_error_report(open_orchestrator, embed_fn
     # Soft-F1 is a hill-climbing signal, not a floor — but it must never score
     # below strict-F1, since every strict match is also a soft match (tier 1.0).
     for r in scenario_reports:
-        assert r.soft["f1"] >= r.strict["f1"] - 1e-9, (
-            f"{r.scenario}: soft F1 {r.soft['f1']} fell below strict F1 {r.strict['f1']}"
-        )
+        assert (
+            r.soft["f1"] >= r.strict["f1"] - 1e-9
+        ), f"{r.scenario}: soft F1 {r.soft['f1']} fell below strict F1 {r.strict['f1']}"
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +388,11 @@ def test_grounding_emits_is_a_triples():
         nlp_processor=None,
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(),
-        config={**get_open_v1_config(), "ground_to_schema": True, "require_schema_match": False},
+        config={
+            **get_open_v1_config(),
+            "ground_to_schema": True,
+            "require_schema_match": False,
+        },
         ontology_repo=_FakeOntologyRepo(),
     )
     triples = [_triple("consensus_algorithm", "ensures", "state_agreement")]
@@ -400,7 +412,11 @@ def test_grounding_skipped_when_ontology_unresolved():
         nlp_processor=None,
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(),
-        config={**get_open_v1_config(), "ground_to_schema": True, "require_schema_match": False},
+        config={
+            **get_open_v1_config(),
+            "ground_to_schema": True,
+            "require_schema_match": False,
+        },
         ontology_repo=_FakeOntologyRepo(),
     )
     triples = [_triple("consensus_algorithm", "ensures", "state_agreement")]
@@ -415,7 +431,11 @@ def test_require_schema_match_filters_unmatched():
         nlp_processor=None,
         embedding_service=_StubEmbedding(),
         schema_index=_StubSchemaIndex(empty=True),  # nothing matches
-        config={**get_open_v1_config(), "ground_to_schema": False, "require_schema_match": True},
+        config={
+            **get_open_v1_config(),
+            "ground_to_schema": False,
+            "require_schema_match": True,
+        },
         ontology_repo=_FakeOntologyRepo(),
     )
     triples = [_triple("foo", "bars", "baz")]
@@ -471,7 +491,11 @@ def test_require_schema_match_keeps_matched_drops_unmatched():
         nlp_processor=None,
         embedding_service=_SelectiveEmbedding(),
         schema_index=_SelectiveSchemaIndex(),
-        config={**get_open_v1_config(), "ground_to_schema": False, "require_schema_match": True},
+        config={
+            **get_open_v1_config(),
+            "ground_to_schema": False,
+            "require_schema_match": True,
+        },
         ontology_repo=_FakeOntologyRepo(),
     )
     triples = [
@@ -647,9 +671,7 @@ def _coverage_doc():
         _cchunk("routes", 3, 4, 3),
         _cchunk("jobs", 5, 6, 5),
     ]
-    return OpenExtractionResult(
-        tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en"
-    )
+    return OpenExtractionResult(tokens=tokens, noun_chunks=chunks, sentence_count=1, language="en")
 
 
 def _coverage_orch(schema_index, ontology_repo=None):
@@ -659,7 +681,7 @@ def _coverage_orch(schema_index, ontology_repo=None):
         embedding_service=_StubEmbedding(),
         schema_index=schema_index,
         config={**get_open_v1_config(), "coverage_completion": True},
-        ontology_repo=ontology_repo if ontology_repo is not None else _FakeOntologyRepo(),
+        ontology_repo=(ontology_repo if ontology_repo is not None else _FakeOntologyRepo()),
     )
 
 
@@ -689,9 +711,7 @@ def test_coverage_completion_dedups_existing_triple():
     relations = build_relation_candidates(doc)
     orch = _coverage_orch(_StubSchemaIndex())
     # The surfaced triple is already present → it must not be duplicated.
-    base = orch._build_triples(doc, relations) + [
-        _triple("technician", "navigates", "job")
-    ]
+    base = orch._build_triples(doc, relations) + [_triple("technician", "navigates", "job")]
     merged = orch._complete_coverage(base, doc, relations, "dr_spec")
     job_triples = [
         t
@@ -759,7 +779,10 @@ async def _run_coverage(enabled: bool):
     state = IndividualExtractionState(
         run_id=str(uuid4()),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-        input_data={"text": "The technician navigates routes and jobs.", "ontology_id": "dr_spec"},
+        input_data={
+            "text": "The technician navigates routes and jobs.",
+            "ontology_id": "dr_spec",
+        },
     )
     result_state = await orch.execute(state)
     return (result_state.result or {}).get("triples", [])

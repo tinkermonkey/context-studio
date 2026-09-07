@@ -81,7 +81,7 @@ def check_definition_coverage() -> dict[str, int | float]:
     classes_by_length = defaultdict(list)
 
     def get_class_title(cls):
-        return cls.title if hasattr(cls, 'title') else "unknown"
+        return cls.title if hasattr(cls, "title") else "unknown"
 
     concept_schemes = ontology_repo.list_concept_schemes(limit=None)
     for scheme in concept_schemes:
@@ -113,13 +113,13 @@ def check_definition_coverage() -> dict[str, int | float]:
             definition_embeddings = embedding.embed_batch(definition_texts)
             embedding_available = True
     except Exception as e:
-        print(f"\nNote: Embedding computation unavailable ({type(e).__name__}), skipping distinctiveness check")
+        print(
+            f"\nNote: Embedding computation unavailable ({type(e).__name__}), skipping distinctiveness check"
+        )
         embedding_available = False
 
     avg_def_length = (
-        sum(definition_lengths) / len(definition_lengths)
-        if definition_lengths
-        else 0.0
+        sum(definition_lengths) / len(definition_lengths) if definition_lengths else 0.0
     )
 
     # Compute embedding distinctiveness: measure full pairwise similarity
@@ -175,8 +175,12 @@ def check_definition_coverage() -> dict[str, int | float]:
     # Embedding distinctiveness metrics
     if embedding_available:
         print("\n=== Embedding Distinctiveness ===\n")
-        print(f"Average pairwise definition embedding similarity: {results['avg_embedding_similarity']:.3f}")
-        print(f"Fraction of definition pairs with low similarity (<0.7): {results['embedding_distinctiveness']:.1%}")
+        print(
+            f"Average pairwise definition embedding similarity: {results['avg_embedding_similarity']:.3f}"
+        )
+        print(
+            f"Fraction of definition pairs with low similarity (<0.7): {results['embedding_distinctiveness']:.1%}"
+        )
     else:
         print("\n=== Embedding Distinctiveness ===")
         print("(Skipped - embedding model unavailable in offline mode)")
@@ -194,7 +198,9 @@ def check_definition_coverage() -> dict[str, int | float]:
             print("  Grounded_v1 can reliably use definition matching for typing disambiguation.")
         elif coverage_ok and not distinctiveness_ok:
             print("⚠ WARNING: Adequate coverage but low definition distinctiveness")
-            print("  Many definitions are too similar; definition-preferred matching may be ineffective.")
+            print(
+                "  Many definitions are too similar; definition-preferred matching may be ineffective."
+            )
         elif not coverage_ok and distinctiveness_ok:
             print("⚠ WARNING: Adequate distinctiveness but insufficient coverage")
             print("  Too many classes lack definitions for reliable definition-based matching.")
@@ -206,7 +212,9 @@ def check_definition_coverage() -> dict[str, int | float]:
         if coverage_ok:
             print("✓ PASS: Sufficient class definition coverage")
             print("  (Embedding distinctiveness check skipped - model unavailable in offline mode)")
-            print("  Grounded_v1 can use definitions for typing, but distinctiveness cannot be verified.")
+            print(
+                "  Grounded_v1 can use definitions for typing, but distinctiveness cannot be verified."
+            )
         else:
             print("✗ FAIL: Insufficient class definition coverage")
             print("  (Embedding distinctiveness check skipped - model unavailable in offline mode)")

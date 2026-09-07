@@ -25,7 +25,9 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
@@ -269,9 +271,7 @@ class TestGroundedV1Integration:
             },
         )
 
-        llm_provider = FakeLLMProvider(
-            response_content=json.dumps({"class": "tech.system"})
-        )
+        llm_provider = FakeLLMProvider(response_content=json.dumps({"class": "tech.system"}))
         nlp_processor = FakeNLPProcessor()
         embedding = FakeEmbeddingService()
 

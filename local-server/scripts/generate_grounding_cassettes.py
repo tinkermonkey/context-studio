@@ -179,15 +179,12 @@ def main():
 
                 # ConceptNet interaction
                 conceptnet_uri = uris_by_source.get("ConceptNet")
-                label_slug = label.lower().replace(' ', '_')
+                label_slug = label.lower().replace(" ", "_")
                 interactions.append(
                     {
                         "request": {
                             "method": "GET",
-                            "url": (
-                                f"https://api.conceptnet.io/c/en/{label_slug}"
-                                f"?limit=10"
-                            ),
+                            "url": f"https://api.conceptnet.io/c/en/{label_slug}" f"?limit=10",
                             "headers": {},
                             "body": None,
                         },
@@ -229,8 +226,7 @@ def main():
         if failed_fixtures:
             num_failed = len(failed_fixtures)
             raise RuntimeError(
-                f"Failed to generate cassettes for {num_failed} fixture(s): "
-                f"{failed_fixtures}"
+                f"Failed to generate cassettes for {num_failed} fixture(s): " f"{failed_fixtures}"
             )
 
         # Write cassette

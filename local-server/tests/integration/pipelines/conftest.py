@@ -22,7 +22,10 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.persistence.sqlite.batch_repo import BatchRepository
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.operations.models import OperationsBase
@@ -387,6 +390,7 @@ def quality_llm_provider_factory(request):
 
         try:
             import json as _json
+
             with open(cassette_path, "r") as _f:
                 _data = _json.load(_f)
             if not _data:

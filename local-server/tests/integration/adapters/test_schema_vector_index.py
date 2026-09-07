@@ -105,9 +105,7 @@ def test_reindex_all_counts_entities():
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
         with factory() as session:
-            session.add(
-                OntologyEntity(id=CLASS_A, node_type="class", title="Microservice")
-            )
+            session.add(OntologyEntity(id=CLASS_A, node_type="class", title="Microservice"))
             session.commit()
         idx = SqliteSchemaVectorIndex(factory, FakeEmbedding())
         assert idx.reindex_all() == 1
@@ -250,9 +248,7 @@ def test_stale_dimension_vector_is_skipped_not_raised(index_with_factory, caplog
     matches = idx.search([1.0, 0.0, 0.0], kinds=["class"])
     # No exception, and the stale (title) field simply did not contribute a
     # title match for Class A.
-    assert all(
-        not (m.entity_id == CLASS_A and m.matched_field == "title") for m in matches
-    )
+    assert all(not (m.entity_id == CLASS_A and m.matched_field == "title") for m in matches)
     assert any("stale dimension" in r.message for r in caplog.records)
 
 
@@ -454,14 +450,14 @@ def two_taxonomy_index():
 
 
 def test_taxonomy_id_scopes_class_matches(two_taxonomy_index):
-    matches = two_taxonomy_index.search(
-        [1.0, 0.0, 0.0], kinds=["class"], taxonomy_id=TAXONOMY_A
-    )
+    matches = two_taxonomy_index.search([1.0, 0.0, 0.0], kinds=["class"], taxonomy_id=TAXONOMY_A)
     ids = {m.entity_id for m in matches}
     assert ids == {CLASS_A}
 
 
-def test_taxonomy_id_scopes_property_definition_matches_via_domain_class(two_taxonomy_index):
+def test_taxonomy_id_scopes_property_definition_matches_via_domain_class(
+    two_taxonomy_index,
+):
     # Property definitions carry no taxonomy_id of their own — scoping must
     # follow the domain_class_id join to the owning taxonomy's class.
     matches = two_taxonomy_index.search(
@@ -688,9 +684,7 @@ def test_per_call_matching_mode_none_uses_instance_default():
         idx.reindex_all()
 
         # Explicit None: should use instance default
-        match_explicit_none = idx.search(
-            [1.0, 0.0, 0.0], kinds=["class"], matching_mode=None
-        )[0]
+        match_explicit_none = idx.search([1.0, 0.0, 0.0], kinds=["class"], matching_mode=None)[0]
         assert match_explicit_none.matched_field == "definition"
 
         # Implicit None (omitted): should use instance default

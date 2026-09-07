@@ -729,8 +729,8 @@ class SQLiteOntologyRepository:
                 search_term = f"%{criteria.query}%"
                 query = query.filter(
                     or_(
-                    OntologyEntity.title.ilike(search_term),
-                    OntologyEntity.description.ilike(search_term),
+                        OntologyEntity.title.ilike(search_term),
+                        OntologyEntity.description.ilike(search_term),
                     )
                 )
 
@@ -913,9 +913,9 @@ class SQLiteOntologyRepository:
                 # Add updated memberships
                 for position, class_id in enumerate(individual.class_ids):
                     membership = IndividualClass(
-                    individual_id=individual.id,
-                    class_id=class_id,
-                    position=position,
+                        individual_id=individual.id,
+                        class_id=class_id,
+                        position=position,
                     )
                     session.add(membership)
 
@@ -1086,8 +1086,8 @@ class SQLiteOntologyRepository:
                 .filter(
                     OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                     or_(
-                    OntologyEntity.domain_class_id == class_id,
-                    OntologyEntity.range_class_id == class_id,
+                        OntologyEntity.domain_class_id == class_id,
+                        OntologyEntity.range_class_id == class_id,
                     ),
                 )
                 .count()
@@ -1112,7 +1112,7 @@ class SQLiteOntologyRepository:
                 .filter(
                     OntologyEntity.identifier == identifier,
                     OntologyEntity.node_type.in_(
-                    (NodeType.TAXONOMY, NodeType.CONCEPT_SCHEME, NodeType.CLASS)
+                        (NodeType.TAXONOMY, NodeType.CONCEPT_SCHEME, NodeType.CLASS)
                     ),
                 )
                 .first()

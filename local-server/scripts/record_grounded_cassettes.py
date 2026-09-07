@@ -108,10 +108,7 @@ def print_plan(scenarios: list[str]) -> None:
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
     for scenario in scenarios:
-        print(
-            f"  {scenario:<38}\n"
-            f"      -> {cassette_path_for(scenario)}"
-        )
+        print(f"  {scenario:<38}\n" f"      -> {cassette_path_for(scenario)}")
 
     print(
         f"\nWould record {len(scenarios)} scenario(s) "
@@ -139,7 +136,9 @@ def record_all(scenarios: list[str]) -> int:
     from domain.pipelines.individual_extraction.open_orchestrator import (
         OpenIndividualExtractionOrchestrator,
     )
-    from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+    from domain.pipelines.individual_extraction.orchestrator import (
+        IndividualExtractionState,
+    )
     from scripts.eval_ontology import build_eval_ontology
     from scripts.quality_tournament import (
         _grounded_cassette_path,
@@ -203,10 +202,7 @@ def record_all(scenarios: list[str]) -> int:
         "predicate_similarity_threshold": 0.45,
     }
 
-    print(
-        f"RECORDING {len(scenarios)} scenario(s) "
-        f"= ~{len(scenarios)} live LLM call(s)."
-    )
+    print(f"RECORDING {len(scenarios)} scenario(s) " f"= ~{len(scenarios)} live LLM call(s).")
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
     _CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
@@ -242,9 +238,7 @@ def record_all(scenarios: list[str]) -> int:
             print(f"  recorded {scenario:<38} -> {cassette_path}")
             recorded += 1
         except Exception as exc:
-            print(
-                f"  ERROR {scenario:<35} ({type(exc).__name__}: {exc})"
-            )
+            print(f"  ERROR {scenario:<35} ({type(exc).__name__}: {exc})")
             skipped += 1
 
     print(f"\nDone. Recorded {recorded} cassette(s); skipped/failed {skipped}.")

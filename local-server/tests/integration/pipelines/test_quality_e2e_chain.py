@@ -654,7 +654,11 @@ class TestQualityE2EChain:
                 final_relationship_tuples.add((source_label, property_label, target_label))
 
         expected_relationship_tuples = {
-            (r.get("subject_label", ""), r.get("predicate", ""), r.get("object_label", ""))
+            (
+                r.get("subject_label", ""),
+                r.get("predicate", ""),
+                r.get("object_label", ""),
+            )
             for r in expected_relationships
         }
 

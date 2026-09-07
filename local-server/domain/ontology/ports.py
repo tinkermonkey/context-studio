@@ -723,9 +723,7 @@ class SchemaVectorIndex(Protocol):
     embeddings. The backing adapter lives in adapters/persistence/sqlite/.
     """
 
-    def index_entity(
-        self, entity_id: str, title: str, description: str | None
-    ) -> None:
+    def index_entity(self, entity_id: str, title: str, description: str | None) -> None:
         """
         (Re)compute and persist the title and definition embeddings for one
         schema entity, keeping the vector index in sync with its text.

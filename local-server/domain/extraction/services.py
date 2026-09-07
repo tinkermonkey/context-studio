@@ -1313,7 +1313,10 @@ class ExtractionService:
             if not mention or mention.lower() in mention_class:
                 continue
             cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
-            mention_class[mention.lower()] = (mention, str(cls.id) if cls is not None else None)
+            mention_class[mention.lower()] = (
+                mention,
+                str(cls.id) if cls is not None else None,
+            )
 
         resolution: dict[str, tuple[str, str]] = {}
         for key, (mention, class_id) in mention_class.items():

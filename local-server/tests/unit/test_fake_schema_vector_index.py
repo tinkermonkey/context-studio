@@ -145,10 +145,7 @@ class TestFakeSchemaVectorIndexConfigurable:
             taxonomy_id="tax_tech",
         )
         assert len(result) == 2
-        assert all(
-            match.entity_id in ["class_1", "prop_1"]
-            for match in result
-        )
+        assert all(match.entity_id in ["class_1", "prop_1"] for match in result)
 
         # Filter to tax_bio
         result = fake.search(
@@ -218,10 +215,7 @@ class TestFakeSchemaVectorIndexConfigurable:
             ),
         ]
         fake = FakeSchemaVectorIndex()
-        fake.set_search_results(
-            matches,
-            taxonomies={"class_1": "tax_a", "class_2": None}
-        )
+        fake.set_search_results(matches, taxonomies={"class_1": "tax_a", "class_2": None})
 
         # class_1 matches tax_a
         result = fake.search(

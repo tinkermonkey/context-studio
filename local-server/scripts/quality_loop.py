@@ -53,7 +53,9 @@ from domain.pipelines.individual_extraction.configurations.open_v1 import (
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from domain.pipelines.schema_extraction.configurations.open_v1 import (
     get_open_v1_config as get_schema_open_config,
 )
@@ -71,7 +73,9 @@ from tests.integration.pipelines._harness.metrics import (
     soft_precision_recall_f1,
 )
 from tests.integration.pipelines._harness.report import MetricsEmitter, read_scoreboard
-from tests.integration.pipelines.test_quality_individual_extraction import extract_triple_key
+from tests.integration.pipelines.test_quality_individual_extraction import (
+    extract_triple_key,
+)
 from tests.integration.pipelines.test_quality_schema_extraction import (
     QUALITY_SCENARIOS as SCHEMA_SCENARIOS,
 )
@@ -183,7 +187,10 @@ async def evaluate_schema(orchestrator_ports, config) -> dict[str, float]:
             input_data=fixture,
         )
         result_state = await orch.execute(state)
-        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        actual = {
+            "status": result_state.current_status.value,
+            "result": result_state.result or {},
+        }
         metrics = schema_metrics(load_expected_output("schema_extraction", scenario), actual)
         for k in keys:
             acc[k].append(metrics[k])
@@ -406,7 +413,14 @@ async def coordinate_ascent(
         mode="offline",
         source="closed_loop",
     )
-    return best_config, baseline_metrics, best_metrics, baseline_primary, best_primary, evals
+    return (
+        best_config,
+        baseline_metrics,
+        best_metrics,
+        baseline_primary,
+        best_primary,
+        evals,
+    )
 
 
 def _fmt(metrics: dict[str, float]) -> str:
@@ -430,7 +444,11 @@ async def _amain(args) -> int:
     if args.pipeline == "schema":
         evaluate = lambda cfg: evaluate_schema(ports, cfg)  # noqa: E731
         base = get_schema_open_config()
-        space, primary, tag = _SCHEMA_SPACE, "class_jaccard", "quality_loop_schema_extraction"
+        space, primary, tag = (
+            _SCHEMA_SPACE,
+            "class_jaccard",
+            "quality_loop_schema_extraction",
+        )
         floor_key = primary
         restarts = 1
     else:
@@ -440,7 +458,11 @@ async def _amain(args) -> int:
             ports, cfg, embed_fn, eval_repo, eval_index
         )
         base = get_individual_open_config()
-        space, primary, tag = _INDIVIDUAL_SPACE, "soft_f1", "quality_loop_individual_extraction"
+        space, primary, tag = (
+            _INDIVIDUAL_SPACE,
+            "soft_f1",
+            "quality_loop_individual_extraction",
+        )
         # Never trade the floor metric away (karpathy_loop_design.md §4.1): the
         # objective is soft-F1(dev), but a candidate is only ever accepted if
         # strict-F1(dev) hasn't regressed below the incumbent.
@@ -489,7 +511,10 @@ def main() -> int:
         help="random restarts for the individual pipeline's coordinate ascent (ignored for schema)",
     )
     parser.add_argument(
-        "--seed", type=int, default=0, help="RNG seed for restart shuffling/jitter (determinism)"
+        "--seed",
+        type=int,
+        default=0,
+        help="RNG seed for restart shuffling/jitter (determinism)",
     )
     args = parser.parse_args()
     return asyncio.run(_amain(args))

@@ -38,8 +38,13 @@ from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontolog
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 from tests.integration.pipelines._harness.dataset_split import RECOGNITION_EPISODES
-from tests.integration.pipelines._harness.episode_runner import run_full_pipeline_episode
-from tests.integration.pipelines._harness.metrics import entity_key_clusters, recognition_metrics
+from tests.integration.pipelines._harness.episode_runner import (
+    run_full_pipeline_episode,
+)
+from tests.integration.pipelines._harness.metrics import (
+    entity_key_clusters,
+    recognition_metrics,
+)
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
@@ -124,7 +129,10 @@ class TestCassetteReplayAgainstLevel1:
         doc_03, exercising within-document discrimination."""
         cassette_dir = _EPISODES / "distractor_same_class" / "cassettes"
         result = await run_full_pipeline_episode(
-            "distractor_same_class", cassette_dir, dr_ontology_dir, real_embedding_service
+            "distractor_same_class",
+            cassette_dir,
+            dr_ontology_dir,
+            real_embedding_service,
         )
         assert not result.extraction_misses
 
@@ -145,7 +153,10 @@ class TestCassetteReplayAgainstLevel1:
         single node."""
         cassette_dir = _EPISODES / "cross_doc_convergence" / "cassettes"
         result = await run_full_pipeline_episode(
-            "cross_doc_convergence", cassette_dir, dr_ontology_dir, real_embedding_service
+            "cross_doc_convergence",
+            cassette_dir,
+            dr_ontology_dir,
+            real_embedding_service,
         )
         assert not result.extraction_misses
 

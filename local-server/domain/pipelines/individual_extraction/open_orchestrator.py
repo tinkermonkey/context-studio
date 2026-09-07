@@ -30,14 +30,20 @@ from domain.extraction.open_extraction import (
     unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
-from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
+from domain.ontology.ports import (
+    EmbeddingService,
+    OntologyRepository,
+    SchemaVectorIndex,
+)
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     IndividualOpenV1Config,
     get_open_v1_config,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 
@@ -254,7 +260,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         for root_index, phrase in heads:
             query = self._embedding.embed(phrase.replace("_", " "))
             results = self._schema_index.search(
-                query, kinds=["class"], top_k=1, threshold=threshold, taxonomy_id=taxonomy.id
+                query,
+                kinds=["class"],
+                top_k=1,
+                threshold=threshold,
+                taxonomy_id=taxonomy.id,
             )
             if results:
                 grounded_heads.add(root_index)
@@ -480,7 +490,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         for triple in triples:
             predicate = dict(triple["predicate"])
             predicate["label"] = mapping.get(predicate["label"], predicate["label"])
-            key = (triple["subject"]["label"], predicate["label"], triple["object"]["label"])
+            key = (
+                triple["subject"]["label"],
+                predicate["label"],
+                triple["object"]["label"],
+            )
             if key in seen:
                 continue
             seen.add(key)
@@ -530,7 +544,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         for label in individuals:
             query = self._embedding.embed(label.replace("_", " "))
             results = self._schema_index.search(
-                query, kinds=kinds, top_k=1, threshold=threshold, taxonomy_id=taxonomy.id
+                query,
+                kinds=kinds,
+                top_k=1,
+                threshold=threshold,
+                taxonomy_id=taxonomy.id,
             )
             if results:
                 matched[label] = results[0]

@@ -23,7 +23,11 @@ _VEC = {
     "K8s": [1.0, 0.0, 0.0],
     "kubernetes": [1.0, 0.0, 0.0],  # exact-match casing test query
     "Kubernetes": [0.96, 0.28, 0.0],  # cos(K8s, Kubernetes) = 0.96 -> clear winner
-    "Nextflow": [0.90, 0.4359, 0.0],  # cos(K8s, Nextflow) = 0.90 -> qualifies, not tied (gap 0.06)
+    "Nextflow": [
+        0.90,
+        0.4359,
+        0.0,
+    ],  # cos(K8s, Nextflow) = 0.90 -> qualifies, not tied (gap 0.06)
     "Ambiguous Mention": [1.0, 0.0, 0.0],
     "Docker Swarm": [0.97, 0.2431, 0.0],  # cos(Ambiguous Mention, .) = 0.97
     "OpenShift": [0.95, 0.3122, 0.0],  # cos = 0.95 -> tied with Docker Swarm (gap 0.02)
@@ -187,8 +191,18 @@ class TestLLMTiebreak:
     def test_tiebreak_prompt_includes_description_and_class_membership(self):
         llm = FakeLLMProvider(response_content=json.dumps({"individual_id": "swarm-id"}))
         idx = FakeIndividualVectorIndex(_VEC)
-        idx.add("swarm-id", "Docker Swarm", [CLASS_SW], description="A container orchestrator.")
-        idx.add("openshift-id", "OpenShift", [CLASS_SW], description="A Kubernetes distribution.")
+        idx.add(
+            "swarm-id",
+            "Docker Swarm",
+            [CLASS_SW],
+            description="A container orchestrator.",
+        )
+        idx.add(
+            "openshift-id",
+            "OpenShift",
+            [CLASS_SW],
+            description="A Kubernetes distribution.",
+        )
         recognizer = _recognizer(idx, llm=llm)
         recognizer.recognize(
             "Ambiguous Mention", context="a container platform", class_ids=[CLASS_SW]

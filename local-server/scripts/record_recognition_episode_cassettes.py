@@ -44,7 +44,10 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -88,7 +91,10 @@ def _typing_triple(surface: str, class_ref: str) -> dict:
 
 
 def _relationship_triple(
-    subject_label: str, predicate_label: str, object_label: str, confidence: float = 0.85
+    subject_label: str,
+    predicate_label: str,
+    object_label: str,
+    confidence: float = 0.85,
 ) -> dict:
     return {
         "subject": {"kind": "individual", "id": "", "label": subject_label},
@@ -334,7 +340,11 @@ async def _record_all() -> int:
             doc_fixture = json.loads((episode_dir / f"{doc}.json").read_text())
             cassette_path = cassette_dir / f"{doc}.json"
             n = await _record_document(
-                dr_ontology_dir, doc_fixture, calls["pass1"], calls["pass2"], cassette_path
+                dr_ontology_dir,
+                doc_fixture,
+                calls["pass1"],
+                calls["pass2"],
+                cassette_path,
             )
             print(f"  recorded {episode}/{doc} ({n} call(s)) -> {cassette_path}")
             total += 1

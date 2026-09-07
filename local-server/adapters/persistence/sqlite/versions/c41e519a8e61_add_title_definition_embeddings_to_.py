@@ -22,10 +22,12 @@ def upgrade() -> None:
     # The unrelated batch_runs.run_type drift autogenerate also detected is left
     # out of this migration — it belongs to its own change, not this one.
     op.add_column(
-        "ontology_entities", sa.Column("title_embedding", sa.LargeBinary(), nullable=True)
+        "ontology_entities",
+        sa.Column("title_embedding", sa.LargeBinary(), nullable=True),
     )
     op.add_column(
-        "ontology_entities", sa.Column("definition_embedding", sa.LargeBinary(), nullable=True)
+        "ontology_entities",
+        sa.Column("definition_embedding", sa.LargeBinary(), nullable=True),
     )
 
 

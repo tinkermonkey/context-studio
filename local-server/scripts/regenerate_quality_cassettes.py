@@ -24,7 +24,9 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+from adapters.persistence.sqlite.extraction_run_repo import (
+    SQLiteExtractionRunRepository,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
@@ -66,12 +68,10 @@ async def regenerate_individual_extraction_cassettes():
 
     base_path = Path(__file__).parent.parent
     cassettes_dir = (
-        base_path / "tests" / "integration" / "fixtures" / "cassettes"
-        / "individual_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "cassettes" / "individual_extraction"
     )
     fixtures_dir = (
-        base_path / "tests" / "integration" / "fixtures" / "pipelines"
-        / "individual_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "pipelines" / "individual_extraction"
     )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)
@@ -192,12 +192,10 @@ async def regenerate_schema_extraction_cassettes():
 
     base_path = Path(__file__).parent.parent
     cassettes_dir = (
-        base_path / "tests" / "integration" / "fixtures" / "cassettes"
-        / "schema_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "cassettes" / "schema_extraction"
     )
     fixtures_dir = (
-        base_path / "tests" / "integration" / "fixtures" / "pipelines"
-        / "schema_extraction"
+        base_path / "tests" / "integration" / "fixtures" / "pipelines" / "schema_extraction"
     )
 
     cassettes_dir.mkdir(parents=True, exist_ok=True)

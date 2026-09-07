@@ -45,7 +45,14 @@ def _write_node_schema(spec_dir, layer, type_name, title, description):
 
 
 def _write_relationship_schema(
-    spec_dir, source_layer, source_type, predicate, dest_layer, dest_type, title, description
+    spec_dir,
+    source_layer,
+    source_type,
+    predicate,
+    dest_layer,
+    dest_type,
+    title,
+    description,
 ):
     rel_dir = spec_dir / "schemas" / "relationships" / source_layer
     rel_dir.mkdir(parents=True, exist_ok=True)
@@ -230,7 +237,8 @@ class TestIterRelationshipSchemas:
         )
 
         with pytest.raises(
-            ValueError, match="stakeholder.associated-with.requirement.relationship.schema.json"
+            ValueError,
+            match="stakeholder.associated-with.requirement.relationship.schema.json",
         ) as exc_info:
             list(iter_relationship_schemas(tmp_path))
         assert "predicate" in str(exc_info.value)
@@ -242,7 +250,8 @@ class TestIterRelationshipSchemas:
         bad_path.write_text("{not valid json")
 
         with pytest.raises(
-            ValueError, match="stakeholder.associated-with.requirement.relationship.schema.json"
+            ValueError,
+            match="stakeholder.associated-with.requirement.relationship.schema.json",
         ):
             list(iter_relationship_schemas(tmp_path))
 
@@ -311,7 +320,11 @@ class TestCompressRelationshipIdentifiers:
     def test_all_identifiers_are_unique_and_within_length_cap(self):
         records = [
             self._record(
-                "motivation", "stakeholder", "associated-with", "motivation", "requirement"
+                "motivation",
+                "stakeholder",
+                "associated-with",
+                "motivation",
+                "requirement",
             ),
             self._record("ux", "view", "serves", "business", "businessservice"),
             self._record("data-store", "view", "serves", "business", "businessservice"),

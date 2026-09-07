@@ -15,7 +15,6 @@ import argparse
 import json
 import os
 import sys
-from pathlib import Path
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
@@ -25,11 +24,10 @@ local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, local_server)
 
 from scripts.quality_tournament import (
-    _grounded_cassettes_present,
-    _GROUNDED_REPLAY_SCENARIOS,
     _GROUNDED_CASSETTE_DIR,
+    _GROUNDED_REPLAY_SCENARIOS,
+    _grounded_cassettes_present,
     build_registry,
-    registered_variants,
 )
 
 
@@ -89,9 +87,9 @@ def validate_variants_full() -> bool:
     """Full validation: Load models and verify all tournament variants are registered."""
     print("\n=== Variant Registration (Full) ===\n")
 
-    from adapters.nlp.spacy_processor import SpacyNLPProcessor
-    from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
     from adapters.embedding.caching_embedding_service import CachingEmbeddingService
+    from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+    from adapters.nlp.spacy_processor import SpacyNLPProcessor
 
     nlp = SpacyNLPProcessor()
     if not nlp.is_ready():

@@ -47,25 +47,57 @@ class TestNLPGroundedTypingIntegration:
         nlp_processor.process_open.return_value = OpenExtractionResult(
             tokens=(
                 OpenToken(
-                    index=0, text="Technology", lemma="technology", pos="NOUN", tag="NN",
-                    dep="nsubj", head_index=2, start=0, end=10, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=0,
+                    text="Technology",
+                    lemma="technology",
+                    pos="NOUN",
+                    tag="NN",
+                    dep="nsubj",
+                    head_index=2,
+                    start=0,
+                    end=10,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
                 OpenToken(
-                    index=1, text="is", lemma="be", pos="AUX", tag="VBZ",
-                    dep="cop", head_index=2, start=11, end=13, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=1,
+                    text="is",
+                    lemma="be",
+                    pos="AUX",
+                    tag="VBZ",
+                    dep="cop",
+                    head_index=2,
+                    start=11,
+                    end=13,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
                 OpenToken(
-                    index=2, text="important", lemma="important", pos="ADJ", tag="JJ",
-                    dep="ROOT", head_index=2, start=14, end=23, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=2,
+                    text="important",
+                    lemma="important",
+                    pos="ADJ",
+                    tag="JJ",
+                    dep="ROOT",
+                    head_index=2,
+                    start=14,
+                    end=23,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
             ),
             noun_chunks=(
                 NounChunkSpan(
-                    text="Technology", start_token=0, end_token=1, root_index=0,
-                    start=0, end=10, sentence_index=0,
+                    text="Technology",
+                    start_token=0,
+                    end_token=1,
+                    root_index=0,
+                    start=0,
+                    end=10,
+                    sentence_index=0,
                 ),
             ),
             sentence_count=1,
@@ -100,7 +132,10 @@ class TestNLPGroundedTypingIntegration:
         state = PipelineState(
             run_id="run_123",
             pipeline_type="individual_extraction",
-            input_data={"text": "Technology is important.", "ontology_id": "ontology_id"},
+            input_data={
+                "text": "Technology is important.",
+                "ontology_id": "ontology_id",
+            },
             current_status=PipelineRunStatus.RUNNING,
         )
 
@@ -109,10 +144,7 @@ class TestNLPGroundedTypingIntegration:
         assert result.current_status == PipelineRunStatus.COMPLETED
         assert result.extracted_triples is not None
 
-        typing_triples = [
-            t for t in result.extracted_triples
-            if t["predicate"]["label"] == "is_a"
-        ]
+        typing_triples = [t for t in result.extracted_triples if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) > 0
         assert typing_triples[0]["subject"]["label"] == "Technology"
         assert typing_triples[0]["object"]["label"] == "technology.concept"
@@ -129,9 +161,18 @@ class TestNLPGroundedTypingIntegration:
         nlp_processor.process_open.return_value = OpenExtractionResult(
             tokens=(
                 OpenToken(
-                    index=0, text="Test", lemma="test", pos="NOUN", tag="NN",
-                    dep="nsubj", head_index=0, start=0, end=4, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=0,
+                    text="Test",
+                    lemma="test",
+                    pos="NOUN",
+                    tag="NN",
+                    dep="nsubj",
+                    head_index=0,
+                    start=0,
+                    end=4,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
             ),
             noun_chunks=(),

@@ -71,7 +71,12 @@ class TestSplitFor:
         # The software-arch legacy scenarios run against the throwaway placeholder
         # ontology (free-form concept extraction, not grounded identification) and
         # are eliminated from the scored corpus — the split is DR-grounded only.
-        for scenario in ("async_patterns", "clean_code", "design_patterns", "reactive_programming"):
+        for scenario in (
+            "async_patterns",
+            "clean_code",
+            "design_patterns",
+            "reactive_programming",
+        ):
             assert scenario not in INDIVIDUAL_EXTRACTION_SCENARIOS
             with pytest.raises(ValueError, match="not assigned to the dev/holdout split"):
                 split_for(scenario)
@@ -116,7 +121,9 @@ class TestOntologyContextFor:
         with pytest.raises(ValueError, match="no assigned ontology context"):
             ontology_context_for("not_a_real_scenario")
 
-    def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(self):
+    def test_scenario_ontology_keys_match_the_fixed_split_plus_bootstrap_scenarios(
+        self,
+    ):
         # SCENARIO_ONTOLOGY records every legacy scenario for the disposition
         # record, including the placeholder software-arch scenarios and the
         # retired arxiv scenarios that are NOT in the scored split. Only the

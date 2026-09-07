@@ -216,13 +216,10 @@ class OpenExtractionResult:
         token_count = len(self.tokens)
         for i, token in enumerate(self.tokens):
             if token.index != i:
-                raise ValueError(
-                    f"tokens[{i}].index must equal its position, got {token.index}"
-                )
+                raise ValueError(f"tokens[{i}].index must equal its position, got {token.index}")
             if not 0 <= token.head_index < token_count:
                 raise ValueError(
-                    f"tokens[{i}].head_index {token.head_index} out of range "
-                    f"[0, {token_count})"
+                    f"tokens[{i}].head_index {token.head_index} out of range " f"[0, {token_count})"
                 )
 
         for j, chunk in enumerate(self.noun_chunks):

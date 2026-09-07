@@ -14,7 +14,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 
-from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.configurations.open_v1 import (
+    get_open_v1_config,
+)
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
@@ -32,7 +34,10 @@ def _triple(subj, pred, obj):
 def test_apply_label_mapping_rewrites_subject_and_object():
     """Mapped labels replace both roles; unmapped labels are left untouched."""
     triples = [_triple("technician_route", "navigate", "job_detail_route")]
-    mapping = {"technician_route": "Technician Route", "job_detail_route": "Job Detail Route"}
+    mapping = {
+        "technician_route": "Technician Route",
+        "job_detail_route": "Job Detail Route",
+    }
     out = OpenIndividualExtractionOrchestrator._apply_label_mapping(triples, mapping)
     assert out[0]["subject"]["label"] == "Technician Route"
     assert out[0]["object"]["label"] == "Job Detail Route"

@@ -34,7 +34,9 @@ from adapters.factories.orchestrator_factory import (
     create_orchestrator,
     create_pipeline_state,
 )
-from adapters.persistence.sqlite.pipeline_config_repo import PipelineConfigurationRepository
+from adapters.persistence.sqlite.pipeline_config_repo import (
+    PipelineConfigurationRepository,
+)
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
@@ -282,6 +284,7 @@ def _system_config_to_response(
 
 def _db_config_to_response(record: Any) -> PipelineConfigurationResponse:
     """Convert a DB pipeline configuration record to a response schema."""
+
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
         if not s:
             return None
