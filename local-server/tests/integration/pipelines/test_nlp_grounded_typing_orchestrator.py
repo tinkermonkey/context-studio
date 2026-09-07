@@ -4,10 +4,12 @@ Integration tests for NLP-grounded typing in the open extraction orchestrator.
 Tests the complete flow from input text to is_a typing triples.
 """
 
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
 
 from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
+from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     IndividualOpenV1Config,
 )
@@ -15,7 +17,6 @@ from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
 from domain.pipelines.orchestration.base import PipelineState
-from domain.pipelines.entities import PipelineRunStatus
 
 
 class TestNLPGroundedTypingIntegration:

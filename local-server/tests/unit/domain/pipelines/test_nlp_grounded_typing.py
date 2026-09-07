@@ -4,12 +4,11 @@ Unit tests for NLP-grounded typing in the open individual-extraction orchestrato
 Tests the noun-chunk → vector-retrieve → LLM-confirm pipeline.
 """
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
 from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
-from domain.ontology.ports import SchemaMatch
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     IndividualOpenV1Config,
 )
