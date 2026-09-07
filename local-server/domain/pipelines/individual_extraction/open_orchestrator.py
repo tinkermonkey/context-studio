@@ -602,16 +602,30 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         index, no repository, no LLM provider, or the ontology id does not
         resolve to a known taxonomy — mirroring how grounding stages degrade.
         """
-        if self._schema_index is None or self._ontology_repo is None:
+        if self._schema_index is None:
+            _logger.warning(
+                "nlp_grounded_typing requested but schema_index is None; typing stage skipped"
+            )
+            return triples
+        if self._ontology_repo is None:
+            _logger.warning(
+                "nlp_grounded_typing requested but ontology_repo is None; typing stage skipped"
+            )
             return triples
         if not ontology_id:
+            _logger.debug("nlp_grounded_typing: ontology_id is None; typing stage skipped")
             return triples
 
         taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
         if taxonomy is None:
+            _logger.debug(
+                "nlp_grounded_typing: ontology_id '%s' not found in repository; typing stage skipped",
+                ontology_id,
+            )
             return triples
 
         if not open_result.tokens:
+            _logger.debug("nlp_grounded_typing: no tokens from NLP processor; typing stage skipped")
             return triples
 
         tokens = list(open_result.tokens)
@@ -721,7 +735,14 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if payload:
                 try:
                     choice = str(json.loads(payload.group(0)).get("class", "")).strip()
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as exc:
+                    _logger.error(
+                        "Failed to parse LLM JSON response for chunk '%s': %s. "
+                        "Response: %s",
+                        label,
+                        exc,
+                        response.content[:500] if response.content else "empty",
+                    )
                     choice = ""
 
             if not choice or choice.lower() == "none":
@@ -732,8 +753,16 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
                     return match
             return None
-        except Exception as exc:  # noqa: BLE001 - typing is best-effort
-            _logger.warning("nlp_grounded typing LLM call failed: %s", exc)
+        except Exception as exc:  # noqa: BLE001 - distinguish LLM provider errors
+            error_type = type(exc).__name__
+            _logger.error(
+                "LLM provider error during NLP-grounded typing for chunk '%s': %s: %s. "
+                "Check LLM availability, rate limits, authentication, and network connectivity.",
+                label,
+                error_type,
+                exc,
+                exc_info=True,
+            )
             return None
 
     @staticmethod
