@@ -52,6 +52,7 @@ from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
     INDIVIDUAL_EXTRACTION_SCENARIOS,
+    RELABELED_ARXIV_SCENARIOS,
     WAVE4_INFORMAL_SCENARIOS,
 )
 
@@ -72,11 +73,10 @@ def union_scenarios() -> list[str]:
     Return the ordered, de-duplicated union of every corpus scenario to record.
 
     Union of `INDIVIDUAL_EXTRACTION_SCENARIOS` (the dev/holdout split),
-    `DR_BOOTSTRAP_SCENARIOS` (Wave 1 diagnostics), and
-    `WAVE4_INFORMAL_SCENARIOS` (Wave 4 diagnostics) -- every scenario the Loop B
-    `grounded_v1` variant will be replayed against. Order preserved for stable
-    output; duplicates dropped (the three lists are disjoint today, but the
-    de-dup keeps this correct if that ever changes).
+    `DR_BOOTSTRAP_SCENARIOS` (Wave 1 diagnostics), `WAVE4_INFORMAL_SCENARIOS` (Wave 4 diagnostics),
+    and `RELABELED_ARXIV_SCENARIOS` -- every scenario the Loop B `grounded_v1` variant will be
+    replayed against. Order preserved for stable output; duplicates dropped (the lists are
+    disjoint today, but the de-dup keeps this correct if that ever changes).
     """
     seen: set[str] = set()
     ordered: list[str] = []
@@ -84,6 +84,7 @@ def union_scenarios() -> list[str]:
         list(INDIVIDUAL_EXTRACTION_SCENARIOS)
         + list(DR_BOOTSTRAP_SCENARIOS)
         + list(WAVE4_INFORMAL_SCENARIOS)
+        + list(RELABELED_ARXIV_SCENARIOS)
     ):
         if scenario not in seen:
             seen.add(scenario)
@@ -143,9 +144,6 @@ def record_all(scenarios: list[str]) -> int:
     from scripts.quality_tournament import (
         _grounded_cassette_path,
     )
-    from tests.fakes.fake_embedding_service import FakeEmbeddingService
-    from tests.fakes.fake_nlp_processor import FakeNLPProcessor
-    from tests.fakes.fake_reference_source import FakeReferenceSource
     from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 
     settings = get_settings()
