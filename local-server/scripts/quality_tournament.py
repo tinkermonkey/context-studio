@@ -204,6 +204,11 @@ _RECOGNITION_EPISODES_DIR = (
 # _metrics/<pipeline_type>.jsonl, so this determines the file name.
 _RECOGNITION_PIPELINE_TAG = "individual_recognition"
 
+# A/B Evaluation promotion criteria for grounded_v1 vs default baseline (Phase 4).
+# grounded_v1 must exceed the baseline on BOTH metrics to be promoted.
+_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD = 0.941
+_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD = 0.952
+
 
 def _canon_cassette_path(scenario: str) -> Path:
     """Return the recorded-cassette path for one `open_v1` canonicalization scenario."""
@@ -833,6 +838,82 @@ async def _build_recognition_reports(
     return reports
 
 
+def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """
+    Evaluate A/B promotion decision for grounded_v1 vs default baseline (Phase 4).
+
+    Compares grounded_v1 dev metrics against the promotion thresholds:
+    - strict-F1 ≥ 0.941 AND soft-F1 ≥ 0.952 → PROMOTE to default status
+    - Otherwise → STAY with current default
+
+    Returns a dict with:
+    - "grounded_v1_found": bool — whether grounded_v1 is in results
+    - "default_found": bool — whether default is in results
+    - "decision": str — "PROMOTE", "STAY", or "INCOMPLETE"
+    - "reason": str — explanation of the decision
+    - "grounded_v1_metrics": dict — grounded_v1's dev metrics (if found)
+    - "comparison": dict — side-by-side comparison with thresholds (if found)
+    """
+    grounded_result = next((r for r in results if r["variant"] == "grounded_v1"), None)
+    default_result = next((r for r in results if r["variant"] == "default"), None)
+
+    decision_dict = {
+        "grounded_v1_found": grounded_result is not None,
+        "default_found": default_result is not None,
+        "decision": "INCOMPLETE",
+        "reason": "",
+        "grounded_v1_metrics": {},
+        "comparison": {},
+    }
+
+    if not grounded_result:
+        decision_dict["reason"] = (
+            "grounded_v1 not in tournament results — "
+            "cassettes not recorded or DR spec checkout unavailable"
+        )
+        return decision_dict
+
+    grounded_metrics = grounded_result["dev"]
+    decision_dict["grounded_v1_metrics"] = grounded_metrics
+
+    strict_f1 = grounded_metrics.get("strict_f1", 0.0)
+    soft_f1 = grounded_metrics.get("soft_f1", 0.0)
+
+    decision_dict["comparison"] = {
+        "strict_f1": {
+            "value": strict_f1,
+            "threshold": _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
+            "meets_threshold": strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
+        },
+        "soft_f1": {
+            "value": soft_f1,
+            "threshold": _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
+            "meets_threshold": soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
+        },
+    }
+
+    if strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD and soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:
+        decision_dict["decision"] = "PROMOTE"
+        decision_dict["reason"] = (
+            f"grounded_v1 meets promotion criteria: "
+            f"strict-F1={strict_f1:.3f} (≥ {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}), "
+            f"soft-F1={soft_f1:.3f} (≥ {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f})"
+        )
+    else:
+        decision_dict["decision"] = "STAY"
+        missing_criteria = []
+        if strict_f1 < _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:
+            missing_criteria.append(f"strict-F1={strict_f1:.3f} < {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}")
+        if soft_f1 < _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:
+            missing_criteria.append(f"soft-F1={soft_f1:.3f} < {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}")
+        decision_dict["reason"] = (
+            f"grounded_v1 does not meet promotion criteria: {', '.join(missing_criteria)}. "
+            "Stay with current default pipeline."
+        )
+
+    return decision_dict
+
+
 def _aggregate_recognition(reports: dict[str, RecognitionMetrics]) -> dict[str, float]:
     """
     Mean dedup precision/recall/F1 + node-count ratio across recognition episodes.
@@ -999,6 +1080,23 @@ def _render_scoreboard_digest(
         "overfitting). The formerly-unreviewed arxiv holdout scenarios have "
         "since been retired from the scored split (see LEGACY_CORPUS_DISPOSITION.md)."
     )
+    lines.append("")
+
+    # Add A/B evaluation decision section
+    promotion_decision = _evaluate_grounded_v1_promotion(results)
+    lines.append("## A/B Evaluation: grounded_v1 vs default baseline")
+    lines.append("")
+    lines.append(f"**Decision**: {promotion_decision['decision']}")
+    lines.append("")
+    lines.append(f"**Reason**: {promotion_decision['reason']}")
+    lines.append("")
+    if promotion_decision["grounded_v1_found"]:
+        comparison = promotion_decision["comparison"]
+        lines.append("### Promotion Criteria")
+        lines.append("")
+        lines.append(f"- **Strict-F1**: {comparison['strict_f1']['value']:.3f} (threshold: {comparison['strict_f1']['threshold']:.3f}) — {'✓ PASS' if comparison['strict_f1']['meets_threshold'] else '✗ FAIL'}")
+        lines.append(f"- **Soft-F1**: {comparison['soft_f1']['value']:.3f} (threshold: {comparison['soft_f1']['threshold']:.3f}) — {'✓ PASS' if comparison['soft_f1']['meets_threshold'] else '✗ FAIL'}")
+        lines.append("")
     lines.append("")
     lines.append(
         "| rank | variant | dev strict-F1 | dev soft-F1 | candidate_recall | "
@@ -1253,6 +1351,17 @@ async def _amain(args) -> int:
     digest_path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}.md"
     digest_path.parent.mkdir(parents=True, exist_ok=True)
     digest_path.write_text(digest)
+
+    # A/B Evaluation: Print promotion decision (Phase 4)
+    promotion_decision = _evaluate_grounded_v1_promotion(results)
+    print("\n══ A/B EVALUATION: grounded_v1 vs default ══")
+    print(f"Decision: {promotion_decision['decision']}")
+    print(f"Reason: {promotion_decision['reason']}")
+    if promotion_decision["grounded_v1_found"]:
+        comparison = promotion_decision["comparison"]
+        print(f"\nMetrics:")
+        print(f"  Strict-F1: {comparison['strict_f1']['value']:.3f} (threshold: {comparison['strict_f1']['threshold']:.3f}) — {'PASS' if comparison['strict_f1']['meets_threshold'] else 'FAIL'}")
+        print(f"  Soft-F1:   {comparison['soft_f1']['value']:.3f} (threshold: {comparison['soft_f1']['threshold']:.3f}) — {'PASS' if comparison['soft_f1']['meets_threshold'] else 'FAIL'}")
 
     print("\n══ scoreboard (ranked by dev soft-F1) ══")
     print(digest)

@@ -25,7 +25,10 @@ sys.path.insert(0, local_server)
 
 from scripts.quality_tournament import (  # noqa: E402
     _GROUNDED_CASSETTE_DIR,
+    _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
+    _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
     _GROUNDED_REPLAY_SCENARIOS,
+    _evaluate_grounded_v1_promotion,
     _grounded_cassettes_present,
     build_registry,
 )
@@ -167,6 +170,13 @@ def main() -> int:
         status = "✓ PASS" if passed else "✗ FAIL"
         print(f"{status}: {check_name}")
 
+    # Validate A/B promotion decision infrastructure
+    print("\n=== A/B Evaluation Promotion Criteria ===\n")
+    print(f"grounded_v1 will be promoted to default status if:")
+    print(f"  - Strict-F1 ≥ {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f} AND")
+    print(f"  - Soft-F1 ≥ {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}")
+    print(f"\nPromotion decision logic: {_evaluate_grounded_v1_promotion.__name__}()")
+
     if all_passed:
         print("\n" + "=" * 70)
         print("✓ SUCCESS: Tournament infrastructure is ready")
@@ -179,8 +189,8 @@ def main() -> int:
             print("  - default: LLM-based extraction (phase-1 model via OpenRouter)")
             print("  - default+grounding: LLM + soft-match dedup")
             print("  - grounded_v1: NLP-grounded typing with LLM confirmation")
-            print("\nVariants will be ranked by dev soft-F1, with promotion decisions")
-            print("based on meeting strict-F1 floor and soft-F1 improvement criteria.")
+            print("\nVariants will be ranked by dev soft-F1, and grounded_v1 will be")
+            print("compared against promotion criteria for automatic A/B decision.")
         else:
             print("\nCassettes are in place for grounded_v1 variant.")
             print("Run with --full flag to validate variants and models can load:")
