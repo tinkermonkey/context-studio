@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import replace
 from typing import Any
 
@@ -124,7 +125,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             if self._cfg.ground_predicates:
                 triples = self._ground_predicates(triples, ontology_id)
 
-            if self._cfg.ground_to_schema or self._cfg.require_schema_match:
+            if self._cfg.nlp_grounded_typing and self._llm_provider is not None:
+                triples = await self._type_individuals_nlp_grounded(
+                    triples, text, ontology_id
+                )
+            elif self._cfg.ground_to_schema or self._cfg.require_schema_match:
                 triples = self._ground_to_schema(triples, ontology_id)
 
             warnings: list[str] = []
@@ -573,6 +578,174 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             kept = kept + type_triples
 
         return kept
+
+    async def _type_individuals_nlp_grounded(
+        self,
+        triples: list[dict[str, Any]],
+        text: str,
+        ontology_id: str | None,
+    ) -> list[dict[str, Any]]:
+        """
+        Phase-2 typing via spaCy noun chunks + vector retrieval + LLM confirmation.
+
+        For each noun chunk spaCy finds (headed by a NOUN/PROPN, non-stopword),
+        the chunk plus its sentence is embedded and the vector index retrieves
+        top-K candidate ontology classes; the LLM then confirms which candidate
+        the chunk instantiates in that sentence, or none. A confirmed chunk
+        becomes an ``is_a`` typing triple whose subject label is the chunk text
+        (verbatim, no transformation) and whose object is the matched class's
+        external reference. Labels are case-identical to source spans;
+        case-insensitive duplicate chunk text produces only one typing triple.
+
+        Self-skips (returns the triples untouched) when there is no schema
+        index, no repository, no LLM provider, or the ontology id does not
+        resolve to a known taxonomy — mirroring how grounding stages degrade.
+        """
+        if self._schema_index is None or self._ontology_repo is None:
+            return triples
+        if not ontology_id:
+            return triples
+
+        taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
+        if taxonomy is None:
+            return triples
+
+        open_result = self._nlp.process_open(text)
+        if not open_result.tokens:
+            return triples
+
+        tokens = list(open_result.tokens)
+        sentences = self._sentence_texts(text, tokens)
+        taxonomy_id = str(getattr(taxonomy, "id", "") or "") or None
+
+        typing_triples: list[dict[str, Any]] = []
+        seen: set[str] = set()
+
+        for chunk in open_result.noun_chunks:
+            root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
+            if root is None or root.pos not in ("NOUN", "PROPN") or root.is_stop:
+                continue
+
+            label = chunk.text.strip()
+            if not label or label.lower() in seen:
+                continue
+
+            sentence = sentences.get(chunk.sentence_index, "")
+            query_text = f"{label}. {sentence}".strip() if sentence else label
+            query_embedding = self._embedding.embed(query_text)
+
+            results = self._schema_index.search(
+                query_embedding,
+                kinds=["class"],
+                top_k=self._cfg.nlp_typing_top_k,
+                threshold=self._cfg.nlp_typing_threshold,
+                taxonomy_id=taxonomy_id,
+                matching_mode=self._cfg.nlp_typing_matching_mode,
+            )
+            if not results:
+                continue
+
+            chosen = await self._confirm_class_for_chunk(label, sentence, results)
+            if chosen is None:
+                continue
+
+            seen.add(label.lower())
+            typing_triple = self._make_typing_triple(label, chosen)
+            typing_triples.append(typing_triple)
+
+        return triples + typing_triples
+
+    @staticmethod
+    def _sentence_texts(text: str, tokens: list) -> dict[int, str]:
+        """Reconstruct each sentence's text (by ``sentence_index``) from token char spans."""
+        bounds: dict[int, tuple[int, int]] = {}
+        for tok in tokens:
+            start, end = bounds.get(tok.sentence_index, (tok.start, tok.end))
+            bounds[tok.sentence_index] = (min(start, tok.start), max(end, tok.end))
+        return {idx: text[start:end] for idx, (start, end) in bounds.items()}
+
+    async def _confirm_class_for_chunk(
+        self, label: str, sentence: str, matches: list[Any]
+    ) -> Any | None:
+        """
+        Ask the LLM which retrieved candidate class the noun chunk instantiates.
+
+        The LLM's only job is disambiguation-in-context: it picks the best-fitting
+        candidate (by its exact external_id/identifier/label) or "none" — it never
+        invents a class. Returns the chosen SchemaMatch or None if no match is
+        accepted or all candidates lack a valid reference.
+        """
+        candidates: list[tuple[str, Any]] = []
+        lines: list[str] = []
+
+        for match in matches:
+            ref = match.external_id or match.identifier or match.label
+            if not ref:
+                continue
+            definition = ""
+            if self._ontology_repo is not None:
+                cls = self._ontology_repo.get_class(match.entity_id)
+                if cls:
+                    definition = (getattr(cls, "description", None) or "").strip()
+            title = match.label or ref
+            candidates.append((ref, match))
+            lines.append(f"- {ref} ({title})" + (f": {definition}" if definition else ""))
+
+        if not candidates:
+            return None
+
+        system_prompt = (
+            "You are a knowledge-graph typing assistant. Given a phrase from a "
+            "text, its sentence, and a list of candidate ontology classes, decide "
+            "which single class the phrase is an INSTANCE of in that sentence. "
+            'Choose the exact reference of the best-fitting candidate, or "none" '
+            "if the phrase is not an instance of any of them. Do not invent "
+            'classes. Respond with only JSON: {"class": "<exact reference or none>"}.'
+        )
+        user_prompt = (
+            f'Phrase: "{label}"\n'
+            f'Sentence: "{sentence}"\n\n'
+            "Candidate classes (reference (title): definition):\n" + "\n".join(lines)
+        )
+
+        try:
+            response = await self._call_llm(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=self._cfg.model,
+                temperature=self._cfg.temperature,
+                max_tokens=200,
+            )
+            choice = ""
+            payload = re.search(r"\{.*\}", response.content or "", re.S)
+            if payload:
+                try:
+                    choice = str(json.loads(payload.group(0)).get("class", "")).strip()
+                except (ValueError, TypeError):
+                    choice = ""
+
+            if not choice or choice.lower() == "none":
+                return None
+
+            choice_lower = choice.lower()
+            for ref, match in candidates:
+                if ref.lower() == choice_lower or (match.label or "").lower() == choice_lower:
+                    return match
+            return None
+        except Exception as exc:  # noqa: BLE001 - typing is best-effort
+            _logger.warning("nlp_grounded typing LLM call failed: %s", exc)
+            return None
+
+    @staticmethod
+    def _make_typing_triple(label: str, match: Any) -> dict[str, Any]:
+        """Build an ``is_a`` typing triple from a confirmed class match."""
+        class_ref = match.external_id or match.identifier or match.label
+        return {
+            "subject": {"label": label, "kind": "individual"},
+            "predicate": {"label": "is_a", "kind": "property"},
+            "object": {"label": class_ref, "kind": "class"},
+            "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 4),
+        }
 
 
 def _snake(phrase: str) -> str:

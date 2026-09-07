@@ -42,6 +42,10 @@ class IndividualOpenV1Config:
     model: str
     temperature: float
     max_tokens: int
+    nlp_grounded_typing: bool
+    nlp_typing_top_k: int
+    nlp_typing_threshold: float
+    nlp_typing_matching_mode: str | None
 
     @classmethod
     def from_dict(cls, config: dict[str, Any]) -> "IndividualOpenV1Config":
@@ -80,11 +84,40 @@ class IndividualOpenV1Config:
                 "predicate_similarity_threshold must be within [0, 1], got "
                 f"{predicate_similarity_threshold}"
             )
+
+        nlp_grounded_typing = bool(config.get("nlp_grounded_typing", False))
+        ground_to_schema = bool(config.get("ground_to_schema", False))
+        require_schema_match = bool(config.get("require_schema_match", False))
+
+        if nlp_grounded_typing and (ground_to_schema or require_schema_match):
+            raise PipelineInputError(
+                "nlp_grounded_typing is mutually exclusive with ground_to_schema and require_schema_match"
+            )
+
+        nlp_typing_top_k = int(config.get("nlp_typing_top_k", 8))
+        if nlp_typing_top_k < 1:
+            raise PipelineInputError(f"nlp_typing_top_k must be >= 1, got {nlp_typing_top_k}")
+
+        nlp_typing_threshold = float(config.get("nlp_typing_threshold", 0.2))
+        if not 0.0 <= nlp_typing_threshold <= 1.0:
+            raise PipelineInputError(
+                f"nlp_typing_threshold must be within [0, 1], got {nlp_typing_threshold}"
+            )
+
+        nlp_typing_matching_mode = config.get("nlp_typing_matching_mode")
+        if nlp_typing_matching_mode is not None:
+            nlp_typing_matching_mode = str(nlp_typing_matching_mode)
+            if nlp_typing_matching_mode not in {"max", "definition_preferred"}:
+                raise PipelineInputError(
+                    f"nlp_typing_matching_mode must be 'max' or 'definition_preferred', "
+                    f"got {nlp_typing_matching_mode!r}"
+                )
+
         return cls(
             relation_confidence=relation_confidence,
             predicate_form=predicate_form,
-            ground_to_schema=bool(config.get("ground_to_schema", False)),
-            require_schema_match=bool(config.get("require_schema_match", False)),
+            ground_to_schema=ground_to_schema,
+            require_schema_match=require_schema_match,
             similarity_threshold=similarity_threshold,
             kinds_to_search=kinds_to_search,
             llm_canonicalization=bool(config.get("llm_canonicalization", False)),
@@ -94,6 +127,10 @@ class IndividualOpenV1Config:
             model=str(config.get("model", "google/gemini-3-flash-preview")),
             temperature=float(config.get("temperature", 0.0)),
             max_tokens=int(config.get("max_tokens", 1500)),
+            nlp_grounded_typing=nlp_grounded_typing,
+            nlp_typing_top_k=nlp_typing_top_k,
+            nlp_typing_threshold=nlp_typing_threshold,
+            nlp_typing_matching_mode=nlp_typing_matching_mode,
         )
 
 
@@ -131,6 +168,16 @@ def get_open_v1_config() -> dict:
         # metric (relation_not_derived jumps). Off by default; self-skips with no
         # index / no repo / unresolvable ontology.
         "coverage_completion": False,
+        # --- NLP-grounded typing (Phase 2: issue #1141) ---
+        # Noun chunks are typed via vector retrieval + LLM confirmation, restricted
+        # to picking from retrieved candidate classes only (never generating labels).
+        # Mutually exclusive with ground_to_schema / require_schema_match. Off by
+        # default; self-skips with no schema index / no LLM provider / unresolvable
+        # ontology. Runs in place of _ground_to_schema when enabled.
+        "nlp_grounded_typing": False,
+        "nlp_typing_top_k": 8,  # candidates retrieved per chunk
+        "nlp_typing_threshold": 0.2,  # minimum similarity for a candidate
+        "nlp_typing_matching_mode": None,  # override index's matching mode (max / definition_preferred)
         # --- confidence calibration (Brier knob) ---
         "relation_confidence": 0.7,
         # --- LLM label canonicalization (needs an LLM provider + cassettes) ---
