@@ -15,14 +15,22 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
 
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.ports import SchemaMatch
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
 )
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
 
 
 def _triple(subj, pred, obj):
@@ -138,35 +146,68 @@ class TestNLPGroundedTypingWithoutLLMProvider:
         """
         nlp_grounded_typing=True with llm_provider=None should not crash.
 
-        The _type_individuals_nlp_grounded() method internally calls _call_llm(),
-        which would raise RuntimeError if self._llm_provider is None. The guard
-        on line 133 of open_orchestrator.py prevents this. This test verifies
-        the guard exists and is not accidentally removed: when nlp_grounded_typing
-        is enabled but the LLM provider is missing, the stage should be skipped
-        gracefully, not crash with AttributeError.
-
-        If the None guard is accidentally removed, _type_individuals_nlp_grounded()
-        will be called with a None provider, eventually hitting _call_llm() which
-        raises RuntimeError("LLM provider not initialized") at base.py:132.
+        When nlp_grounded_typing is enabled but the LLM provider is missing,
+        execute() should skip the typing stage gracefully. The guard on the
+        config flag and provider availability prevents calling _type_individuals_nlp_grounded().
+        If the provider guard were accidentally removed, the method would attempt
+        LLM calls and crash with RuntimeError.
         """
-        from domain.pipelines.individual_extraction.orchestrator import (
-            IndividualExtractionState,
+        taxonomy_id = str(uuid4())
+        taxonomy = Taxonomy(
+            id=taxonomy_id,
+            identifier="test_taxonomy",
+            title="Test Taxonomy",
         )
-        from domain.pipelines.entities import PipelineType
+
+        ontology_repo = FakeOntologyRepository()
+        ontology_repo.save_taxonomy(taxonomy)
+
+        scheme_id = str(uuid4())
+        concept_scheme = ConceptScheme(
+            id=scheme_id,
+            taxonomy_id=taxonomy_id,
+            identifier="test_scheme",
+            title="Test Scheme",
+        )
+        ontology_repo.save_concept_scheme(concept_scheme)
+
+        class_id = str(uuid4())
+        test_class = Class(
+            id=class_id,
+            concept_scheme_id=scheme_id,
+            taxonomy_id=taxonomy_id,
+            identifier="test_class",
+            title="Test Class",
+        )
+        ontology_repo.save_class(test_class)
+
+        search_results = [
+            SchemaMatch(
+                entity_id=class_id,
+                kind="class",
+                label="Test Class",
+                matched_field="title",
+                score=0.9,
+            )
+        ]
+
+        schema_index = FakeSchemaVectorIndex(search_results=search_results)
+        schema_index.set_search_results(search_results, taxonomies={class_id: taxonomy_id})
 
         cfg = {**get_open_v1_config(), "nlp_grounded_typing": True}
         orch = OpenIndividualExtractionOrchestrator(
             llm_provider=None,
             nlp_processor=FakeNLPProcessor(),
             embedding_service=FakeEmbeddingService(),
-            schema_index=None,
+            schema_index=schema_index,
+            ontology_repo=ontology_repo,
             config=cfg,
         )
 
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data={"text": "John works at ACME Corp"},
+            input_data={"text": "John works at ACME Corp", "ontology_id": taxonomy_id},
         )
 
         result_state = await orch.execute(state)
