@@ -889,7 +889,10 @@ def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, 
         },
     }
 
-    if strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD and soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:
+    if (
+        strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD
+        and soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD
+    ):
         decision_dict["decision"] = "PROMOTE"
         decision_dict["reason"] = (
             f"grounded_v1 meets promotion criteria: "
@@ -900,9 +903,13 @@ def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, 
         decision_dict["decision"] = "STAY"
         missing_criteria = []
         if strict_f1 < _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:
-            missing_criteria.append(f"strict-F1={strict_f1:.3f} < {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}")
+            missing_criteria.append(
+                f"strict-F1={strict_f1:.3f} < {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}"
+            )
         if soft_f1 < _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:
-            missing_criteria.append(f"soft-F1={soft_f1:.3f} < {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}")
+            missing_criteria.append(
+                f"soft-F1={soft_f1:.3f} < {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}"
+            )
         decision_dict["reason"] = (
             f"grounded_v1 does not meet promotion criteria: {', '.join(missing_criteria)}. "
             "Stay with current default pipeline."
@@ -1096,8 +1103,16 @@ def _render_scoreboard_digest(
         comparison = promotion_decision["comparison"]
         lines.append("### Promotion Criteria")
         lines.append("")
-        lines.append(f"- **Strict-F1**: {comparison['strict_f1']['value']:.3f} (threshold: {comparison['strict_f1']['threshold']:.3f}) — {'✓ PASS' if comparison['strict_f1']['meets_threshold'] else '✗ FAIL'}")
-        lines.append(f"- **Soft-F1**: {comparison['soft_f1']['value']:.3f} (threshold: {comparison['soft_f1']['threshold']:.3f}) — {'✓ PASS' if comparison['soft_f1']['meets_threshold'] else '✗ FAIL'}")
+        strict_status = "✓ PASS" if comparison["strict_f1"]["meets_threshold"] else "✗ FAIL"
+        lines.append(
+            f"- **Strict-F1**: {comparison['strict_f1']['value']:.3f} "
+            f"(threshold: {comparison['strict_f1']['threshold']:.3f}) — {strict_status}"
+        )
+        soft_status = "✓ PASS" if comparison["soft_f1"]["meets_threshold"] else "✗ FAIL"
+        lines.append(
+            f"- **Soft-F1**: {comparison['soft_f1']['value']:.3f} "
+            f"(threshold: {comparison['soft_f1']['threshold']:.3f}) — {soft_status}"
+        )
         lines.append("")
     lines.append("")
     lines.append(
@@ -1361,8 +1376,16 @@ async def _amain(args) -> int:
     if promotion_decision["grounded_v1_found"]:
         comparison = promotion_decision["comparison"]
         print("\nMetrics:")
-        print(f"  Strict-F1: {comparison['strict_f1']['value']:.3f} (threshold: {comparison['strict_f1']['threshold']:.3f}) — {'PASS' if comparison['strict_f1']['meets_threshold'] else 'FAIL'}")
-        print(f"  Soft-F1:   {comparison['soft_f1']['value']:.3f} (threshold: {comparison['soft_f1']['threshold']:.3f}) — {'PASS' if comparison['soft_f1']['meets_threshold'] else 'FAIL'}")
+        strict_status = "PASS" if comparison["strict_f1"]["meets_threshold"] else "FAIL"
+        print(
+            f"  Strict-F1: {comparison['strict_f1']['value']:.3f} "
+            f"(threshold: {comparison['strict_f1']['threshold']:.3f}) — {strict_status}"
+        )
+        soft_status = "PASS" if comparison["soft_f1"]["meets_threshold"] else "FAIL"
+        print(
+            f"  Soft-F1:   {comparison['soft_f1']['value']:.3f} "
+            f"(threshold: {comparison['soft_f1']['threshold']:.3f}) — {soft_status}"
+        )
 
     print("\n══ scoreboard (ranked by dev soft-F1) ══")
     print(digest)
