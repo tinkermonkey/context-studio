@@ -12,10 +12,10 @@ from __future__ import annotations
 import math
 from typing import Sequence
 
-from domain.ontology.ports import IndividualMatch
+from domain.ontology.ports import IndividualMatch, IndividualVectorIndex
 
 
-class FakeIndividualVectorIndex:
+class FakeIndividualVectorIndex(IndividualVectorIndex):
     def __init__(self, vectors: dict[str, list[float]] | None = None, repo=None) -> None:
         # title -> vector, used to embed both stored titles and queries by title.
         self._vectors = vectors or {}

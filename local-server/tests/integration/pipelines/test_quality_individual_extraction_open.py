@@ -40,7 +40,7 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from domain.extraction.open_extraction import build_relation_candidates
 from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
-from domain.ontology.ports import SchemaMatch
+from domain.ontology.ports import SchemaMatch, SchemaVectorIndex
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
 from domain.pipelines.individual_extraction.open_orchestrator import (
@@ -332,7 +332,7 @@ class _FakeOntologyRepo:
         return self._taxonomy if identifier == "dr_spec" else None
 
 
-class _StubSchemaIndex:
+class _StubSchemaIndex(SchemaVectorIndex):
     """Returns a fixed class match for every query (or nothing when empty=True)."""
 
     def __init__(self, empty: bool = False):
@@ -341,7 +341,7 @@ class _StubSchemaIndex:
     def index_entity(self, entity_id, title, description):  # pragma: no cover - unused
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
         if self._empty:
             return []
         return [
@@ -427,13 +427,13 @@ class _SelectiveEmbedding:
         raise NotImplementedError
 
 
-class _SelectiveSchemaIndex:
+class _SelectiveSchemaIndex(SchemaVectorIndex):
     """Matches only the 'consensus' vector ([1,0,0])."""
 
     def index_entity(self, *a):
         pass
 
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
         if query_embedding and query_embedding[0] == 1.0:
             return [
                 SchemaMatch(

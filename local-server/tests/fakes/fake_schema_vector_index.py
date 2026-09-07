@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from domain.ontology.ports import SchemaKind, SchemaMatch
+from domain.ontology.ports import SchemaKind, SchemaMatch, SchemaVectorIndex
 
 
-class FakeSchemaVectorIndex:
+class FakeSchemaVectorIndex(SchemaVectorIndex):
     def __init__(
         self, search_results: list[SchemaMatch] | None = None
     ) -> None:

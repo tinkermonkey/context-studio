@@ -646,7 +646,8 @@ def test_per_call_matching_mode_overrides_instance_default_max_to_definition_pre
         assert max_match.matched_field == "title"
         assert max_match.score > 0.99
 
-        # With override: "definition_preferred" mode picks the definition (score 0.0, field "definition")
+        # With override: "definition_preferred" mode picks the definition
+        # (score 0.0, field "definition")
         def_match = idx.search(
             [1.0, 0.0, 0.0], kinds=["class"], matching_mode="definition_preferred"
         )[0]
@@ -664,7 +665,8 @@ def test_per_call_matching_mode_overrides_instance_default_definition_preferred_
         )
         idx.reindex_all()
 
-        # Without override: "definition_preferred" mode picks the definition (score 0.0, field "definition")
+        # Without override: "definition_preferred" mode picks the definition
+        # (score 0.0, field "definition")
         def_match = idx.search([1.0, 0.0, 0.0], kinds=["class"])[0]
         assert def_match.matched_field == "definition"
         assert def_match.score == 0.0

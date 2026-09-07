@@ -28,7 +28,13 @@ from adapters.persistence.sqlite.mappers import (
 )
 from adapters.persistence.sqlite.models import OntologyEntity
 from adapters.persistence.sqlite.models import Relationship as RelationshipORM
-from domain.ontology.ports import EmbeddingService, MatchedField, SchemaKind, SchemaMatch
+from domain.ontology.ports import (
+    EmbeddingService,
+    MatchedField,
+    SchemaKind,
+    SchemaMatch,
+    SchemaVectorIndex,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -69,7 +75,7 @@ def _first_external_identifier(external_references: list | None) -> str | None:
     return None
 
 
-class SqliteSchemaVectorIndex:
+class SqliteSchemaVectorIndex(SchemaVectorIndex):
     """
     Persistence-layer vector index over schema entities (ClusteringPort sibling).
 

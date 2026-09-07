@@ -12,6 +12,7 @@ import pytest
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
 from domain.extraction.exceptions import ExtractionError
 from domain.extraction.services import ExtractionService
+from domain.ontology.ports import SchemaVectorIndex
 
 
 class FakeOntologyRepository:
@@ -678,8 +679,11 @@ class _OneChunkNLP:
         )
 
 
-class _OneMatchIndex:
-    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None):
+class _OneMatchIndex(SchemaVectorIndex):
+    def index_entity(self, entity_id, title, description):
+        pass
+
+    def search(self, query_embedding, kinds, top_k=20, threshold=0.0, taxonomy_id=None, matching_mode=None):
         from domain.ontology.ports import SchemaMatch
 
         return [

@@ -26,7 +26,7 @@ from adapters.persistence.sqlite.mappers import (
     _serialize_embedding,
 )
 from adapters.persistence.sqlite.models import IndividualClass, OntologyEntity
-from domain.ontology.ports import EmbeddingService, IndividualMatch
+from domain.ontology.ports import EmbeddingService, IndividualMatch, IndividualVectorIndex
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 _INDIVIDUAL = "individual"
 
 
-class SqliteIndividualVectorIndex:
+class SqliteIndividualVectorIndex(IndividualVectorIndex):
     """SQLite adapter implementing the IndividualVectorIndex port."""
 
     def __init__(self, session_factory, embedding_service: EmbeddingService) -> None:
