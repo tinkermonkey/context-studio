@@ -156,6 +156,7 @@ class SqliteSchemaVectorIndex:
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
+        matching_mode: MatchingMode | None = None,
     ) -> list[SchemaMatch]:
         """Find schema entities whose title or definition is similar to the query."""
         query = np.asarray(query_embedding, dtype=np.float32)
@@ -204,6 +205,7 @@ class SqliteSchemaVectorIndex:
                         ext_refs,
                         identifier,
                         canonical_predicate,
+                        matching_mode,
                     )
                     if match is not None:
                         matches.append(match)
@@ -248,6 +250,7 @@ class SqliteSchemaVectorIndex:
                         ext_refs,
                         identifier,
                         canonical_predicate,
+                        matching_mode,
                     )
                     if match is not None:
                         matches.append(match)
@@ -289,9 +292,11 @@ class SqliteSchemaVectorIndex:
         external_references: list | None = None,
         identifier: str | None = None,
         canonical_predicate: str | None = None,
+        matching_mode: MatchingMode | None = None,
     ) -> SchemaMatch | None:
         """Score one candidate's best field; None if below threshold or unembedded."""
-        scored = self._best_score(query_norm, title_blob, def_blob, self._matching_mode)
+        mode = matching_mode or self._matching_mode
+        scored = self._best_score(query_norm, title_blob, def_blob, mode)
         if scored is None:
             return None
         score, matched_field = scored

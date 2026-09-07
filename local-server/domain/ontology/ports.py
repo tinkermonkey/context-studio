@@ -746,6 +746,7 @@ class SchemaVectorIndex(Protocol):
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
+        matching_mode: str | None = None,
     ) -> list[SchemaMatch]:
         """
         Find schema entities whose title or definition is similar to the query.
@@ -768,6 +769,9 @@ class SchemaVectorIndex(Protocol):
                 ontologies (e.g. the placeholder and an imported DR spec)
                 coexist in the same database without cross-contaminating
                 grounding results.
+            matching_mode: When provided, overrides the instance's configured
+                matching mode for this call only. When None, the instance
+                default applies. Values are "max" or "definition_preferred".
 
         Returns:
             SchemaMatch objects sorted by descending score (length <= top_k).

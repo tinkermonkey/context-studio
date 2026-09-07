@@ -51,6 +51,7 @@ class FakeSchemaVectorIndex:
         top_k: int = 20,
         threshold: float = 0.0,
         taxonomy_id: str | None = None,
+        matching_mode: str | None = None,
     ) -> list[SchemaMatch]:
         """
         Return configured search results, filtered by taxonomy_id and kinds.
@@ -61,6 +62,7 @@ class FakeSchemaVectorIndex:
             top_k: Maximum number of results to return
             threshold: Ignored (all configured results pass)
             taxonomy_id: Filter results to only include matches from this taxonomy
+            matching_mode: Ignored (not used by the fake; accepted for protocol compatibility)
 
         Returns:
             Filtered configured search results, up to top_k matches
