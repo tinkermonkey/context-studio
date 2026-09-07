@@ -874,8 +874,8 @@ class ExtractionService:
             ontology: Target ontology
 
         Returns:
-            Tuple of (relationship_triples with property_definition_id stamped +
-            synthetic is_a triples for concept-objects, warnings list)
+            Tuple of (synthetic is_a triples for concept-objects +
+            relationship_triples with property_definition_id stamped, warnings list)
         """
         warnings: list[str] = []
 

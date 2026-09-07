@@ -610,8 +610,9 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         case-insensitive duplicate chunk text produces only one typing triple.
 
         Self-skips (returns the triples untouched) when there is no schema
-        index, no repository, no LLM provider, or the ontology id does not
-        resolve to a known taxonomy — mirroring how grounding stages degrade.
+        index, no repository, no tokens from the NLP processor, or the ontology
+        id does not resolve to a known taxonomy — mirroring how grounding stages
+        degrade.
         """
         if self._schema_index is None:
             _logger.warning(
