@@ -242,7 +242,7 @@ def record_all(scenarios: list[str]) -> int:
             # Remove any stale cassette file from a previous run
             if cassette_path.exists():
                 cassette_path.unlink()
-                print(f"         (removed stale cassette file)")
+                print("         (removed stale cassette file)")
             skipped += 1
 
     print(f"\nDone. Recorded {recorded} cassette(s); skipped/failed {skipped}.")
