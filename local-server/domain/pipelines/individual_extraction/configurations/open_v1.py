@@ -9,7 +9,7 @@ threshold, and confidence calibration.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from domain.ontology.ports import SchemaKind
 from domain.pipelines.exceptions import PipelineInputError
@@ -45,7 +45,7 @@ class IndividualOpenV1Config:
     nlp_grounded_typing: bool
     nlp_typing_top_k: int
     nlp_typing_threshold: float
-    nlp_typing_matching_mode: str | None
+    nlp_typing_matching_mode: Literal["max", "definition_preferred"] | None
 
     @classmethod
     def from_dict(cls, config: dict[str, Any]) -> "IndividualOpenV1Config":
@@ -89,7 +89,8 @@ class IndividualOpenV1Config:
 
         if nlp_grounded_typing and (ground_to_schema or require_schema_match):
             raise PipelineInputError(
-                "nlp_grounded_typing is mutually exclusive with ground_to_schema and require_schema_match"
+                "nlp_grounded_typing is mutually exclusive with "
+                "ground_to_schema and require_schema_match"
             )
 
         nlp_typing_top_k = int(config.get("nlp_typing_top_k", 8))
@@ -102,14 +103,17 @@ class IndividualOpenV1Config:
                 f"nlp_typing_threshold must be within [0, 1], got {nlp_typing_threshold}"
             )
 
-        nlp_typing_matching_mode = config.get("nlp_typing_matching_mode")
-        if nlp_typing_matching_mode is not None:
-            nlp_typing_matching_mode = str(nlp_typing_matching_mode)
-            if nlp_typing_matching_mode not in {"max", "definition_preferred"}:
+        nlp_typing_matching_mode: Literal["max", "definition_preferred"] | None = None
+        if config.get("nlp_typing_matching_mode") is not None:
+            matching_mode_str = str(config.get("nlp_typing_matching_mode"))
+            if matching_mode_str not in {"max", "definition_preferred"}:
                 raise PipelineInputError(
                     f"nlp_typing_matching_mode must be 'max' or 'definition_preferred', "
-                    f"got {nlp_typing_matching_mode!r}"
+                    f"got {matching_mode_str!r}"
                 )
+            nlp_typing_matching_mode = cast(
+                Literal["max", "definition_preferred"], matching_mode_str
+            )
 
         return cls(
             relation_confidence=relation_confidence,
