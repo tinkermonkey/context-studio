@@ -437,9 +437,9 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
         result_state = await orch.execute(state)
         return (result_state.result or {}).get("triples", [])
 
-    # Base config for nlp_grounded mode: no knobs (all single-valued in knob_space)
-    # Every key appears in _GROUNDED_SPACE so coordinate_ascent's restart jitter
-    # can never drop a key.
+    # Base config for nlp_grounded mode.
+    # Every key appears in knob_space (as single-valued) so coordinate_ascent's
+    # restart jitter can never drop a key (see Variant.knob_space docstring).
     grounded_base_config = {
         "similarity_threshold": 0.85,
     }
@@ -447,7 +447,7 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
     return Variant(
         name="grounded_v1",
         base_config=grounded_base_config,
-        knob_space=dict(_GROUNDED_SPACE),
+        knob_space={key: [value] for key, value in grounded_base_config.items()},
         run_scenario=run_scenario,
     )
 
