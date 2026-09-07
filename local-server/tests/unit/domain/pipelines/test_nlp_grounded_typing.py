@@ -157,9 +157,7 @@ class TestMakeTypingTriple:
             label="Technology Node",
             score=0.85,
         )
-        triple = OpenIndividualExtractionOrchestrator._make_typing_triple(
-            "my_label", match
-        )
+        triple = OpenIndividualExtractionOrchestrator._make_typing_triple("my_label", match)
 
         assert triple["subject"]["label"] == "my_label"
         assert triple["subject"]["kind"] == "individual"
@@ -177,9 +175,7 @@ class TestMakeTypingTriple:
             label="Technology Node",
             score=0.75,
         )
-        triple = OpenIndividualExtractionOrchestrator._make_typing_triple(
-            "example", match
-        )
+        triple = OpenIndividualExtractionOrchestrator._make_typing_triple("example", match)
 
         assert triple["object"]["label"] == "tech_node"
 
@@ -191,9 +187,7 @@ class TestMakeTypingTriple:
             label="Technology",
             score=0.65,
         )
-        triple = OpenIndividualExtractionOrchestrator._make_typing_triple(
-            "test", match
-        )
+        triple = OpenIndividualExtractionOrchestrator._make_typing_triple("test", match)
 
         assert triple["object"]["label"] == "Technology"
         assert triple["confidence"] == 0.65
@@ -298,9 +292,7 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk(
-            "test", "Test sentence.", matches
-        )
+        result = await orchestrator._confirm_class_for_chunk("test", "Test sentence.", matches)
 
         assert result is None
 
@@ -330,9 +322,7 @@ class TestConfirmClassForChunk:
             ),
         ]
 
-        result = await orchestrator._confirm_class_for_chunk(
-            "technology", "Test.", matches
-        )
+        result = await orchestrator._confirm_class_for_chunk("technology", "Test.", matches)
 
         assert result is None
 
@@ -500,24 +490,52 @@ class TestNLPGroundedTyping:
         nlp_processor.process_open.return_value = OpenExtractionResult(
             tokens=(
                 OpenToken(
-                    index=0, text="Technology", lemma="technology", pos="NOUN", tag="NN",
-                    dep="nsubj", head_index=0, start=0, end=10, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=0,
+                    text="Technology",
+                    lemma="technology",
+                    pos="NOUN",
+                    tag="NN",
+                    dep="nsubj",
+                    head_index=0,
+                    start=0,
+                    end=10,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
                 OpenToken(
-                    index=1, text="drives", lemma="drive", pos="VERB", tag="VBZ",
-                    dep="ROOT", head_index=1, start=11, end=17, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=1,
+                    text="drives",
+                    lemma="drive",
+                    pos="VERB",
+                    tag="VBZ",
+                    dep="ROOT",
+                    head_index=1,
+                    start=11,
+                    end=17,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
             ),
             noun_chunks=(
                 NounChunkSpan(
-                    text="Technology", start_token=0, end_token=1, root_index=0,
-                    start=0, end=10, sentence_index=0,
+                    text="Technology",
+                    start_token=0,
+                    end_token=1,
+                    root_index=0,
+                    start=0,
+                    end=10,
+                    sentence_index=0,
                 ),
                 NounChunkSpan(
-                    text="technology", start_token=0, end_token=1, root_index=0,
-                    start=0, end=10, sentence_index=0,
+                    text="technology",
+                    start_token=0,
+                    end_token=1,
+                    root_index=0,
+                    start=0,
+                    end=10,
+                    sentence_index=0,
                 ),
             ),
             sentence_count=1,
@@ -538,12 +556,13 @@ class TestNLPGroundedTyping:
 
         triples = []
         result = await orchestrator._type_individuals_nlp_grounded(
-            triples, "Technology drives innovation. technology is important.", "ontology_id", open_result
+            triples,
+            "Technology drives innovation. technology is important.",
+            "ontology_id",
+            open_result,
         )
 
-        typing_triples = [
-            t for t in result if t["predicate"]["label"] == "is_a"
-        ]
+        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 1
         assert typing_triples[0]["subject"]["label"] == "Technology"
 
@@ -561,20 +580,43 @@ class TestNLPGroundedTyping:
         nlp_processor.process_open.return_value = OpenExtractionResult(
             tokens=(
                 OpenToken(
-                    index=0, text="Very", lemma="very", pos="ADV", tag="RB",
-                    dep="advmod", head_index=1, start=0, end=4, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=0,
+                    text="Very",
+                    lemma="very",
+                    pos="ADV",
+                    tag="RB",
+                    dep="advmod",
+                    head_index=1,
+                    start=0,
+                    end=4,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
                 OpenToken(
-                    index=1, text="quickly", lemma="quickly", pos="ADV", tag="RB",
-                    dep="ROOT", head_index=1, start=5, end=12, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=1,
+                    text="quickly",
+                    lemma="quickly",
+                    pos="ADV",
+                    tag="RB",
+                    dep="ROOT",
+                    head_index=1,
+                    start=5,
+                    end=12,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
             ),
             noun_chunks=(
                 NounChunkSpan(
-                    text="Very quickly", start_token=0, end_token=2, root_index=1,
-                    start=0, end=12, sentence_index=0,
+                    text="Very quickly",
+                    start_token=0,
+                    end_token=2,
+                    root_index=1,
+                    start=0,
+                    end=12,
+                    sentence_index=0,
                 ),
             ),
             sentence_count=1,
@@ -596,9 +638,7 @@ class TestNLPGroundedTyping:
             triples, "Very quickly.", "ontology_id", open_result
         )
 
-        typing_triples = [
-            t for t in result if t["predicate"]["label"] == "is_a"
-        ]
+        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 0
 
     @pytest.mark.asyncio
@@ -615,20 +655,43 @@ class TestNLPGroundedTyping:
         nlp_processor.process_open.return_value = OpenExtractionResult(
             tokens=(
                 OpenToken(
-                    index=0, text="the", lemma="the", pos="DET", tag="DT",
-                    dep="det", head_index=1, start=0, end=3, sentence_index=0,
-                    is_stop=True, is_alpha=True,
+                    index=0,
+                    text="the",
+                    lemma="the",
+                    pos="DET",
+                    tag="DT",
+                    dep="det",
+                    head_index=1,
+                    start=0,
+                    end=3,
+                    sentence_index=0,
+                    is_stop=True,
+                    is_alpha=True,
                 ),
                 OpenToken(
-                    index=1, text="dog", lemma="dog", pos="NOUN", tag="NN",
-                    dep="nsubj", head_index=1, start=4, end=7, sentence_index=0,
-                    is_stop=False, is_alpha=True,
+                    index=1,
+                    text="dog",
+                    lemma="dog",
+                    pos="NOUN",
+                    tag="NN",
+                    dep="nsubj",
+                    head_index=1,
+                    start=4,
+                    end=7,
+                    sentence_index=0,
+                    is_stop=False,
+                    is_alpha=True,
                 ),
             ),
             noun_chunks=(
                 NounChunkSpan(
-                    text="the", start_token=0, end_token=1, root_index=0,
-                    start=0, end=3, sentence_index=0,
+                    text="the",
+                    start_token=0,
+                    end_token=1,
+                    root_index=0,
+                    start=0,
+                    end=3,
+                    sentence_index=0,
                 ),
             ),
             sentence_count=1,
@@ -650,7 +713,5 @@ class TestNLPGroundedTyping:
             triples, "the dog", "ontology_id", open_result
         )
 
-        typing_triples = [
-            t for t in result if t["predicate"]["label"] == "is_a"
-        ]
+        typing_triples = [t for t in result if t["predicate"]["label"] == "is_a"]
         assert len(typing_triples) == 0

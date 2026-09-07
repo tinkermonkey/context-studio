@@ -76,9 +76,7 @@ class IndividualOpenV1Config:
         # against a property definition's "source predicate destination" title sits
         # in a different similarity regime than a noun phrase against a class title,
         # so predicate grounding needs its own calibration (Loop A tunes it apart).
-        predicate_similarity_threshold = float(
-            config.get("predicate_similarity_threshold", 0.45)
-        )
+        predicate_similarity_threshold = float(config.get("predicate_similarity_threshold", 0.45))
         if not 0.0 <= predicate_similarity_threshold <= 1.0:
             raise PipelineInputError(
                 "predicate_similarity_threshold must be within [0, 1], got "
@@ -177,7 +175,9 @@ def get_open_v1_config() -> dict:
         "nlp_grounded_typing": False,
         "nlp_typing_top_k": 8,  # candidates retrieved per chunk
         "nlp_typing_threshold": 0.2,  # minimum similarity for a candidate
-        "nlp_typing_matching_mode": None,  # override index's matching mode (max / definition_preferred)
+        "nlp_typing_matching_mode": (
+            None
+        ),  # override index's matching mode (max / definition_preferred)
         # --- confidence calibration (Brier knob) ---
         "relation_confidence": 0.7,
         # --- LLM label canonicalization (needs an LLM provider + cassettes) ---
