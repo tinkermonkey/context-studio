@@ -210,6 +210,7 @@ def _canon_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
     path = _canon_cassette_path(scenario)
     return CassetteLLMProvider(path) if path.exists() else None
 
+
 # Cassette location for the `grounded_v1` NLP-grounded typing variant's per-chunk
 # confirm calls. One file per scenario named `individual_grounded_typing_<scenario>.json`,
 # recorded by scripts/record_grounded_cassettes.py against the eval ontology this
@@ -289,7 +290,9 @@ def _grounded_cassettes_present() -> bool:
     admits `grounded_v1` only once cassettes exist for all scenarios, so an
     admitted variant can never crash mid-tournament on a missing recording.
     """
-    return all(_grounded_cassette_path(scenario).exists() for scenario in _GROUNDED_REPLAY_SCENARIOS)
+    return all(
+        _grounded_cassette_path(scenario).exists() for scenario in _GROUNDED_REPLAY_SCENARIOS
+    )
 
 
 @dataclass(frozen=True)
@@ -416,12 +419,14 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
     # base_config appears in _GROUNDED_SPACE (knob_space) so coordinate_ascent's
     # restart jitter can never drop a knob.
     grounded_base_config = dict(get_open_v1_config())
-    grounded_base_config.update({
-        "nlp_grounded_typing": True,
-        "ground_to_schema": False,
-        "require_schema_match": False,
-        "llm_canonicalization": True,
-    })
+    grounded_base_config.update(
+        {
+            "nlp_grounded_typing": True,
+            "ground_to_schema": False,
+            "require_schema_match": False,
+            "llm_canonicalization": True,
+        }
+    )
 
     return Variant(
         name="grounded_v1",
@@ -1056,9 +1061,7 @@ def _render_scoreboard_digest(
         lines.append(f"| {result['variant']} | {wave4['strict_f1']:.3f} | {wave4['soft_f1']:.3f} |")
     lines.append("")
 
-    lines.append(
-        "## Relabeled-arxiv diagnostics (always reported, never gates accept/reject)"
-    )
+    lines.append("## Relabeled-arxiv diagnostics (always reported, never gates accept/reject)")
     lines.append("")
     lines.append(
         f"Difficulty check only over {len(RELABELED_ARXIV_SCENARIOS)} scenario(s) -- real "
