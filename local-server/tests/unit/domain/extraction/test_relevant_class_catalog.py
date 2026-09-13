@@ -89,7 +89,7 @@ class TestRelevantClassCatalog:
 
     def test_returns_empty_list_for_missing_taxonomy_id(self, service):
         """When ontology has no id, method returns empty list."""
-        ontology = Mock(spec=['title'])
+        ontology = Mock(spec=["title"])
         ontology.id = None
         ontology.title = "Test Ontology"
 
@@ -368,7 +368,7 @@ class TestRelevantClassCatalog:
 
         all_matches = tax1_matches + tax2_matches
         taxonomies = {
-            m.entity_id: ("tax_1" if m.entity_id.startswith("tax1_") else "tax_2")
+            m.entity_id: "tax_1" if m.entity_id.startswith("tax1_") else "tax_2"
             for m in all_matches
         }
         schema_index.set_search_results(all_matches, taxonomies)

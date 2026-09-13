@@ -24,8 +24,13 @@ export function useCreateConfiguration(pipelineType: string, implId: string) {
 export function useUpdateConfiguration(pipelineType: string, implId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ configId, body }: { configId: string; body: PipelineConfigurationUpdateRequest }) =>
-      pipelineService.updateConfiguration(configId, body),
+    mutationFn: ({
+      configId,
+      body,
+    }: {
+      configId: string;
+      body: PipelineConfigurationUpdateRequest;
+    }) => pipelineService.updateConfiguration(configId, body),
     onSuccess: (_result, { configId }) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.pipelineConfigurations(pipelineType, implId),

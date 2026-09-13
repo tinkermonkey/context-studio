@@ -186,32 +186,44 @@
 
 /* Per-stage tone — drives node border + icon tile. Uses --status-* tokens so
    dark-canvas support is automatic. Default (no data-color) keeps the amber accent. */
-.pipeline-card__node[data-color="cyan"] { border-color: rgb(var(--status-cyan) / 0.30); }
+.pipeline-card__node[data-color="cyan"] {
+  border-color: rgb(var(--status-cyan) / 0.3);
+}
 .pipeline-card__node[data-color="cyan"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-cyan) / 0.15);
   color: rgb(var(--status-cyan));
 }
-.pipeline-card__node[data-color="violet"] { border-color: rgb(var(--status-violet) / 0.30); }
+.pipeline-card__node[data-color="violet"] {
+  border-color: rgb(var(--status-violet) / 0.3);
+}
 .pipeline-card__node[data-color="violet"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-violet) / 0.15);
   color: rgb(var(--status-violet));
 }
-.pipeline-card__node[data-color="amber"] { border-color: rgb(var(--status-amber) / 0.30); }
+.pipeline-card__node[data-color="amber"] {
+  border-color: rgb(var(--status-amber) / 0.3);
+}
 .pipeline-card__node[data-color="amber"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-amber) / 0.15);
   color: rgb(var(--status-amber));
 }
-.pipeline-card__node[data-color="emerald"] { border-color: rgb(var(--status-emerald) / 0.30); }
+.pipeline-card__node[data-color="emerald"] {
+  border-color: rgb(var(--status-emerald) / 0.3);
+}
 .pipeline-card__node[data-color="emerald"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-emerald) / 0.15);
   color: rgb(var(--status-emerald));
 }
-.pipeline-card__node[data-color="rose"] { border-color: rgb(var(--status-rose) / 0.30); }
+.pipeline-card__node[data-color="rose"] {
+  border-color: rgb(var(--status-rose) / 0.3);
+}
 .pipeline-card__node[data-color="rose"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-rose) / 0.15);
   color: rgb(var(--status-rose));
 }
-.pipeline-card__node[data-color="neutral"] { border-color: rgb(var(--status-neutral) / 0.30); }
+.pipeline-card__node[data-color="neutral"] {
+  border-color: rgb(var(--status-neutral) / 0.3);
+}
 .pipeline-card__node[data-color="neutral"] .pipeline-card__icon-tile {
   background-color: rgb(var(--status-neutral) / 0.15);
   color: rgb(var(--status-neutral));
@@ -263,7 +275,7 @@
 }
 
 .pipeline-card__arrow::after {
-  content: '';
+  content: "";
   position: absolute;
   right: -3px;
   top: 50%;

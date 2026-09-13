@@ -51,7 +51,11 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
-from tests.fixtures.pipeline_fixtures import load_distractors, load_expected_output, load_fixture
+from tests.fixtures.pipeline_fixtures import (
+    load_distractors,
+    load_expected_output,
+    load_fixture,
+)
 from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
@@ -385,8 +389,12 @@ class TestQualityIndividualExtraction:
 
         # Create extraction service with the quality provider instead of the fake provider
         from adapters.events.in_process import InProcessEventPublisher
-        from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
-        from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
+        from adapters.persistence.sqlite.extraction_repo import (
+            SQLiteExtractionRepository,
+        )
+        from adapters.persistence.sqlite.extraction_run_repo import (
+            SQLiteExtractionRunRepository,
+        )
         from tests.fakes.fake_embedding_service import FakeEmbeddingService
         from tests.fakes.fake_nlp_processor import FakeNLPProcessor
         from tests.fakes.fake_reference_source import FakeReferenceSource

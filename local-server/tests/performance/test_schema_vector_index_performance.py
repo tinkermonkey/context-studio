@@ -27,7 +27,10 @@ import time
 
 import pytest
 
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.models import Base, OntologyEntity
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 
@@ -48,9 +51,7 @@ class _HashEmbedding:
 
     def embed(self, text: str) -> list[float]:
         digest = hashlib.sha256(text.encode()).digest()
-        raw = (digest * ((_EMBEDDING_DIMENSION * 4 // len(digest)) + 1))[
-            : _EMBEDDING_DIMENSION * 4
-        ]
+        raw = (digest * ((_EMBEDDING_DIMENSION * 4 // len(digest)) + 1))[: _EMBEDDING_DIMENSION * 4]
         return [
             int.from_bytes(raw[i * 4 : (i + 1) * 4], "little") / 2**32
             for i in range(_EMBEDDING_DIMENSION)

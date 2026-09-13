@@ -30,10 +30,18 @@
   animation: slideUp 120ms ease-out;
 }
 
-.modal--sm { width: 360px; }
-.modal--md { width: 480px; }
-.modal--lg { width: 640px; }
-.modal--xl { width: 820px; }
+.modal--sm {
+  width: 360px;
+}
+.modal--md {
+  width: 480px;
+}
+.modal--lg {
+  width: 640px;
+}
+.modal--xl {
+  width: 820px;
+}
 
 @keyframes slideUp {
   from {
@@ -86,7 +94,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 80ms ease-out, color 80ms ease-out;
+  transition:
+    background 80ms ease-out,
+    color 80ms ease-out;
   flex: none;
 }
 

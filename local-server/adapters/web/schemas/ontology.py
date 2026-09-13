@@ -586,7 +586,8 @@ class AttributeDefinitionResponse(BaseModel):
         default="draft", description="Publication status (draft or published)"
     )
     source_run_id: Optional[str] = Field(
-        None, description="ID of the pipeline run that created or last modified this entity"
+        None,
+        description="ID of the pipeline run that created or last modified this entity",
     )
 
 

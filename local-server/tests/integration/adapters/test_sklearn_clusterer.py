@@ -24,16 +24,12 @@ def test_cluster_single_point():
 
 
 def test_cluster_single_point_collapses_to_noise_when_min_size_high():
-    result = SklearnClusterer().cluster(
-        [_NEAR_X_A], distance_threshold=0.3, min_cluster_size=2
-    )
+    result = SklearnClusterer().cluster([_NEAR_X_A], distance_threshold=0.3, min_cluster_size=2)
     assert result == [ClusterAssignment(index=0, label=-1)]
 
 
 def test_agglomerative_groups_near_separates_far():
-    result = SklearnClusterer().cluster(
-        [_NEAR_X_A, _NEAR_X_B, _NEAR_Y], distance_threshold=0.3
-    )
+    result = SklearnClusterer().cluster([_NEAR_X_A, _NEAR_X_B, _NEAR_Y], distance_threshold=0.3)
     labels = [a.label for a in result]
     # Indices preserved, in input order.
     assert [a.index for a in result] == [0, 1, 2]

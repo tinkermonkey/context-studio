@@ -1002,7 +1002,10 @@ class TestDeleteClass:
         dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         service.create_property_definition(
-            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+            identifier="is_a",
+            title="Is A",
+            domain_class_id=dog.id,
+            range_class_id=mammal.id,
         )
 
         with pytest.raises(OntologyError, match="referenced as domain/range"):
@@ -1015,7 +1018,10 @@ class TestDeleteClass:
         dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         service.create_property_definition(
-            identifier="is_a", title="Is A", domain_class_id=dog.id, range_class_id=mammal.id
+            identifier="is_a",
+            title="Is A",
+            domain_class_id=dog.id,
+            range_class_id=mammal.id,
         )
 
         with pytest.raises(OntologyError, match="referenced as domain/range"):
@@ -1066,9 +1072,7 @@ class TestDeleteClass:
             service.get_attribute_definition(attr_def_3.id)
 
         # Verify AttributeDefinitionDeleted events were emitted for each
-        attr_delete_events = service._event_publisher.get_events_of_type(
-            AttributeDefinitionDeleted
-        )
+        attr_delete_events = service._event_publisher.get_events_of_type(AttributeDefinitionDeleted)
         assert len(attr_delete_events) == 3
 
         # Verify event data is correct
@@ -1794,7 +1798,9 @@ class TestUpdatePropertyDefinition:
 
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.update_property_definition(
-                property_id=prop.id, domain_class_id="nonexistent", update_domain_class_id=True
+                property_id=prop.id,
+                domain_class_id="nonexistent",
+                update_domain_class_id=True,
             )
 
     def test_update_nonexistent_range_class_raises(self, service):
@@ -1803,7 +1809,9 @@ class TestUpdatePropertyDefinition:
 
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.update_property_definition(
-                property_id=prop.id, range_class_id="nonexistent", update_range_class_id=True
+                property_id=prop.id,
+                range_class_id="nonexistent",
+                update_range_class_id=True,
             )
 
 

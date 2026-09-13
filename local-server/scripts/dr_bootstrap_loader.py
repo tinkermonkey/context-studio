@@ -199,9 +199,7 @@ def _relationship_triple(
         source_path = relationship["source"]
         target_path = relationship["target"]
     except KeyError as exc:
-        raise ValueError(
-            f"Relationship {relationship} is missing required key {exc}"
-        ) from exc
+        raise ValueError(f"Relationship {relationship} is missing required key {exc}") from exc
     try:
         source = individuals_by_path[source_path]
     except KeyError as exc:

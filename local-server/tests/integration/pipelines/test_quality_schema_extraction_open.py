@@ -169,7 +169,10 @@ def _orchestrator_no_models():
 def test_build_relations_matches_classes_via_lemmas():
     # Class labels come from lemmas (ConsensusAlgorithm); the relation refs are
     # raw plural surface phrases. The lemma-based match must still connect them.
-    classes = [CandidateClass(label="ConsensusAlgorithm"), CandidateClass(label="StateAgreement")]
+    classes = [
+        CandidateClass(label="ConsensusAlgorithm"),
+        CandidateClass(label="StateAgreement"),
+    ]
     rel = RelationCandidate(
         subject="consensus algorithms",
         predicate="ensures",
@@ -353,7 +356,10 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
         result_state = await orch.execute(state)
         if isinstance(provider, RecordingLLMProvider):
             provider.flush()
-        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        actual = {
+            "status": result_state.current_status.value,
+            "result": result_state.result or {},
+        }
         metrics = compute_quality_metrics(
             load_expected_output("schema_extraction", scenario), actual
         )
@@ -385,7 +391,10 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
             input_data=fixture,
         )
         result_state = await orch.execute(state)
-        actual = {"status": result_state.current_status.value, "result": result_state.result or {}}
+        actual = {
+            "status": result_state.current_status.value,
+            "result": result_state.result or {},
+        }
         rule_rows.append(
             (
                 scenario,

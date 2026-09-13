@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import {
-  PageHeader,
-  Icon,
-  Button,
-  Chip,
-  VersionPill,
-} from "@tinkermonkey/heimdall-ui";
+import { PageHeader, Icon, Button, Chip, VersionPill } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
@@ -35,7 +29,7 @@ export function PipelineTypeDetail() {
     refetch: refetchImpl,
   } = usePipelineImplementations(type);
 
-  const implId = selectedImplId ?? (implementations?.[0]?.id ?? "");
+  const implId = selectedImplId ?? implementations?.[0]?.id ?? "";
 
   const {
     data: configurations,
@@ -217,9 +211,7 @@ export function PipelineTypeDetail() {
           {showEditor && implId && (
             <ConfigEditor
               key={
-                editorMode === "create"
-                  ? `create-${draftKey}`
-                  : `${selectedConfigId}-${editorMode}`
+                editorMode === "create" ? `create-${draftKey}` : `${selectedConfigId}-${editorMode}`
               }
               pipelineType={type}
               implId={implId}

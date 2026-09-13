@@ -35,7 +35,14 @@ export function ConfigurationDrawer({ configuration }: ConfigurationDrawerProps)
             rows={[
               { key: "Provider", value: configuration.provider ?? "—" },
               { key: "Model", value: configuration.model ?? "—" },
-              { key: "Status", value: configuration.enabled ? <Chip variant="emerald">enabled</Chip> : <Chip variant="neutral">disabled</Chip> },
+              {
+                key: "Status",
+                value: configuration.enabled ? (
+                  <Chip variant="emerald">enabled</Chip>
+                ) : (
+                  <Chip variant="neutral">disabled</Chip>
+                ),
+              },
             ]}
           />
         </InspectorPanel.Section>

@@ -165,7 +165,9 @@ describe("Individual Detail Page (Drawer Component)", () => {
       });
       await user.click(screen.getByTestId("individual-drawer-name-field-view"));
 
-      const nameInput = screen.getByTestId("individual-drawer-name-field-input") as HTMLInputElement;
+      const nameInput = screen.getByTestId(
+        "individual-drawer-name-field-input",
+      ) as HTMLInputElement;
       expect(nameInput.value).toBe("Original Title");
     });
 

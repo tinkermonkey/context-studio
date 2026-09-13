@@ -30,7 +30,10 @@ from typing import cast
 from uuid import uuid4
 
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
@@ -106,7 +109,7 @@ def build_eval_ontology(
         # schema_index=None here suppresses per-entity embedding sync during the
         # bulk import; the single reindex_all() below populates every vector once.
         ontology_service = OntologyService(
-        repository=cast(OntologyRepository, repo),
+            repository=cast(OntologyRepository, repo),
             embedding_service=embedding_service,
             event_publisher=InProcessEventPublisher(),
             schema_index=None,

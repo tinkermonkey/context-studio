@@ -19,10 +19,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning =
-    runMutation.isPending ||
-    run?.status === "PENDING" ||
-    run?.status === "RUNNING";
+  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
   const isFailed = run?.status === "FAILED";
 
@@ -59,7 +56,9 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
         params: { confidence_threshold: confidence, node_id: classId },
       });
       // The apply endpoint applies all candidates at or above the threshold; dismiss them all
-      const applied = new Set(allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri));
+      const applied = new Set(
+        allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri),
+      );
       setDismissedUris((prev) => new Set([...prev, ...applied]));
       toast("success", "Relationship applied");
     } catch (err) {
@@ -89,7 +88,10 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
       )}
 
       {isRunning && (
-        <div className="relationship-suggester-shimmer" data-testid="relationship-suggester-loading">
+        <div
+          className="relationship-suggester-shimmer"
+          data-testid="relationship-suggester-loading"
+        >
           <div className="skeleton" style={{ height: 72 }} />
           <div className="skeleton" style={{ height: 72 }} />
         </div>

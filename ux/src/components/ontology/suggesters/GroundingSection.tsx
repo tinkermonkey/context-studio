@@ -15,7 +15,12 @@ interface GroundingSectionProps {
   onRemoveRef?: (ref: ExternalReferenceResponse) => void;
 }
 
-export function GroundingSection({ classId, externalRefs = [], readOnly = false, onRemoveRef }: GroundingSectionProps) {
+export function GroundingSection({
+  classId,
+  externalRefs = [],
+  readOnly = false,
+  onRemoveRef,
+}: GroundingSectionProps) {
   const [runId, setRunId] = useState<string | null>(null);
   const [appliedUris, setAppliedUris] = useState<Set<string>>(new Set());
   const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
@@ -25,10 +30,7 @@ export function GroundingSection({ classId, externalRefs = [], readOnly = false,
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning =
-    runMutation.isPending ||
-    run?.status === "PENDING" ||
-    run?.status === "RUNNING";
+  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
   const isCompleted = run?.status === "COMPLETED";
   const isFailed = run?.status === "FAILED";
 
@@ -65,7 +67,9 @@ export function GroundingSection({ classId, externalRefs = [], readOnly = false,
         params: { confidence_threshold: confidence, node_id: classId },
       });
       // The apply endpoint applies all candidates at or above the threshold
-      const applied = new Set(allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri));
+      const applied = new Set(
+        allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri),
+      );
       setAppliedUris((prev) => new Set([...prev, ...applied]));
       toast("success", "Grounding applied");
     } catch (err) {
@@ -85,7 +89,11 @@ export function GroundingSection({ classId, externalRefs = [], readOnly = false,
         {externalRefs.length > 0 && (
           <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
             {externalRefs.map((ref, i) => (
-              <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+              <div
+                key={`${ref.source}-${ref.identifier}`}
+                className="grounding-ref-item"
+                data-testid={`grounding-ref-item-${i}`}
+              >
                 <div className="grounding-ref-name">{ref.identifier}</div>
                 {ref.uri && <span className="grounding-proposal-url">{ref.uri}</span>}
                 <span className="grounding-ref-source">{ref.source}</span>
@@ -102,7 +110,11 @@ export function GroundingSection({ classId, externalRefs = [], readOnly = false,
       {externalRefs.length > 0 && (
         <div className="grounding-existing-refs" data-testid="grounding-existing-refs">
           {externalRefs.map((ref, i) => (
-            <div key={`${ref.source}-${ref.identifier}`} className="grounding-ref-item" data-testid={`grounding-ref-item-${i}`}>
+            <div
+              key={`${ref.source}-${ref.identifier}`}
+              className="grounding-ref-item"
+              data-testid={`grounding-ref-item-${i}`}
+            >
               <div className="grounding-ref-header">
                 <div className="grounding-ref-name">{ref.identifier}</div>
                 {onRemoveRef && (
@@ -188,9 +200,7 @@ export function GroundingSection({ classId, externalRefs = [], readOnly = false,
                 <div className="grounding-proposal-header">
                   <span className="grounding-proposal-name">{candidate.label}</span>
                 </div>
-                {candidate.uri && (
-                  <span className="grounding-proposal-url">{candidate.uri}</span>
-                )}
+                {candidate.uri && <span className="grounding-proposal-url">{candidate.uri}</span>}
                 {candidate.description && (
                   <p className="suggest-field-candidate-text">{candidate.description}</p>
                 )}

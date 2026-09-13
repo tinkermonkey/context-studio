@@ -140,9 +140,7 @@ function renderSurface(props: Record<string, any> = {}) {
       entityType="taxonomy"
       data={makeRows(3)}
       columns={columns}
-      renderInspector={(entity) => (
-        <div data-testid="inspector">{(entity as TestRow).title}</div>
-      )}
+      renderInspector={(entity) => <div data-testid="inspector">{(entity as TestRow).title}</div>}
       {...props}
     />,
   );

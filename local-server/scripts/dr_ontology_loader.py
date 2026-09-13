@@ -267,7 +267,10 @@ def _upsert_concept_schemes(
         existing = repo.get_by_identifier(identifier)
         if existing is None:
             scheme = service.create_scheme(
-                taxonomy_id=taxonomy_id, title=title, description=description, identifier=identifier
+                taxonomy_id=taxonomy_id,
+                title=title,
+                description=description,
+                identifier=identifier,
             )
             summary.concept_schemes_created += 1
         else:

@@ -30,8 +30,13 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
-from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
@@ -40,7 +45,9 @@ from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRun, PipelineType
-from domain.pipelines.individual_extraction.apply_service import IndividualExtractionApplyService
+from domain.pipelines.individual_extraction.apply_service import (
+    IndividualExtractionApplyService,
+)
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -63,6 +70,7 @@ class EpisodeSetupError(RuntimeError):
     class of unrelated errors (e.g. `NotImplementedError`, `RecursionError`)
     that should propagate instead of being treated as a skippable episode.
     """
+
 
 # Why a mention lands out of the mention->node mapping recognition_metrics() scores.
 NOT_EXTRACTED = "not_extracted"  # the LLM never produced a matching individual mention
@@ -240,7 +248,9 @@ async def run_full_pipeline_episode(
         individual_index=index, embedding_service=embedding_service, llm=None
     )
     apply_service = IndividualExtractionApplyService(
-        ontology_service, cast(OntologyRepository, repo), individual_recognizer=recognizer
+        ontology_service,
+        cast(OntologyRepository, repo),
+        individual_recognizer=recognizer,
     )
 
     result = EpisodeRunResult(episode=episode)
@@ -304,9 +314,7 @@ async def run_full_pipeline_episode(
         for gt_mention in mentions_by_doc.get(doc, []):
             hit = extracted.get(normalize_label(gt_mention["surface"]))
             if hit is None:
-                result.extraction_misses.append(
-                    {**gt_mention, "doc": doc, "reason": NOT_EXTRACTED}
-                )
+                result.extraction_misses.append({**gt_mention, "doc": doc, "reason": NOT_EXTRACTED})
                 continue
             label, class_ids = hit
             node = _resolve_node_for_label(repo, label, class_ids)

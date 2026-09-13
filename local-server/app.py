@@ -409,6 +409,7 @@ async def lifespan(app: FastAPI):
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:
             from domain.pipelines.entities import PipelineType as _PipelineType
+
             user_configs = pipeline_config_repo.list_all()
             for user_cfg in user_configs:
                 try:
@@ -424,7 +425,10 @@ async def lifespan(app: FastAPI):
                         "enabled": user_cfg.enabled,
                     }
                     config_registry.register(
-                        ptype, user_cfg.implementation_id, user_cfg.config_ref, config_dict
+                        ptype,
+                        user_cfg.implementation_id,
+                        user_cfg.config_ref,
+                        config_dict,
                     )
                 except Exception as load_exc:
                     logger.warning(

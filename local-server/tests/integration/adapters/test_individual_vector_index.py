@@ -22,7 +22,9 @@ from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
 from adapters.persistence.sqlite.models import Base, IndividualClass, OntologyEntity
 
 CLASS_SW = "11111111-1111-1111-1111-111111111111"  # System Software
@@ -74,7 +76,7 @@ class TestMechanics:
         "Kubernetes": [1.0, 0.0, 0.0],
         "Nextflow": [0.0, 1.0, 0.0],
         "PostgreSQL": [0.0, 0.0, 1.0],
-        "k8s": [0.98, 0.02, 0.0],   # close to Kubernetes
+        "k8s": [0.98, 0.02, 0.0],  # close to Kubernetes
     }
 
     def _index(self, factory):
@@ -147,15 +149,13 @@ class TestRealEmbeddingRecognition:
         idx = SqliteIndividualVectorIndex(factory, emb)
         idx.reindex_all_individuals()
 
-        matches = idx.search(
-            emb.embed("K8s"), class_ids=[CLASS_SW], top_k=5, threshold=0.0
-        )
+        matches = idx.search(emb.embed("K8s"), class_ids=[CLASS_SW], top_k=5, threshold=0.0)
         assert matches, "expected candidates within the System Software class"
-        assert matches[0].individual_id == KUBERNETES, (
-            f"K8s should resolve to Kubernetes, got {matches[0].title}"
-        )
+        assert (
+            matches[0].individual_id == KUBERNETES
+        ), f"K8s should resolve to Kubernetes, got {matches[0].title}"
         # a usable recognition margin over the next same-class candidate (Nextflow)
         assert len(matches) >= 2
-        assert matches[0].score - matches[1].score > 0.1, (
-            f"insufficient margin: {[(m.title, round(m.score, 3)) for m in matches[:2]]}"
-        )
+        assert (
+            matches[0].score - matches[1].score > 0.1
+        ), f"insufficient margin: {[(m.title, round(m.score, 3)) for m in matches[:2]]}"

@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -104,9 +105,11 @@ class PipelineConfigurationRepository:
             with self._session() as session:
                 return (
                     session.query(PipelineConfiguration)
-                    .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                    .filter(  # type: ignore[arg-type]
+                        and_(  # type: ignore[arg-type]
+                            PipelineConfiguration.id == config_id,  # type: ignore[arg-type]
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )
@@ -121,10 +124,12 @@ class PipelineConfigurationRepository:
             with self._session() as session:
                 return (
                     session.query(PipelineConfiguration)
-                    .filter(
-                        PipelineConfiguration.pipeline_type == pipeline_type,
-                        PipelineConfiguration.implementation_id == implementation_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                    .filter(  # type: ignore[arg-type]
+                        and_(  # type: ignore[arg-type]
+                            PipelineConfiguration.pipeline_type == pipeline_type,  # type: ignore[arg-type]
+                            PipelineConfiguration.implementation_id == implementation_id,  # type: ignore[arg-type]
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .order_by(PipelineConfiguration.created_at)
                     .all()
@@ -165,9 +170,11 @@ class PipelineConfigurationRepository:
             with self._session() as session:
                 record = (
                     session.query(PipelineConfiguration)
-                    .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                    .filter(  # type: ignore[arg-type]
+                        and_(  # type: ignore[arg-type]
+                            PipelineConfiguration.id == config_id,  # type: ignore[arg-type]
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )
@@ -215,9 +222,11 @@ class PipelineConfigurationRepository:
             with self._session() as session:
                 record = (
                     session.query(PipelineConfiguration)
-                    .filter(
-                        PipelineConfiguration.id == config_id,
-                        PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                    .filter(  # type: ignore[arg-type]
+                        and_(  # type: ignore[arg-type]
+                            PipelineConfiguration.id == config_id,  # type: ignore[arg-type]
+                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                        )
                     )
                     .first()
                 )

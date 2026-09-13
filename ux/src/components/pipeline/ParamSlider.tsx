@@ -9,9 +9,21 @@ interface ParamSliderProps {
   active?: boolean;
 }
 
-export function ParamSlider({ label, value, min, max, step, fmt, onChange, active }: ParamSliderProps) {
+export function ParamSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  fmt,
+  onChange,
+  active,
+}: ParamSliderProps) {
   return (
-    <div className="param-slider" data-testid={`param-slider-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+    <div
+      className="param-slider"
+      data-testid={`param-slider-${label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
       <div className="param-slider__header">
         <span className="param-slider__label">{label}</span>
         <span className="param-slider__value">{fmt(value)}</span>

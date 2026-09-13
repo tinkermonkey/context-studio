@@ -27,7 +27,9 @@
   color: rgb(var(--shell-fg-3));
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 80ms ease-out, color 80ms ease-out;
+  transition:
+    background 80ms ease-out,
+    color 80ms ease-out;
 }
 
 /* Standalone toggle (no AppTitle host) — right-align in the header row. */
@@ -124,7 +126,7 @@
 }
 
 .sidebar__item--active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -8px;
   top: 5px;

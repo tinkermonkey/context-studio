@@ -153,10 +153,7 @@ export function PipelineTypeContent({ pipelineType }: PipelineTypeContentProps) 
       )}
 
       {!showEditor && implId && (
-        <div
-          className="pipeline-cfg-empty-inspector"
-          data-testid="pipeline-cfg-empty-inspector"
-        >
+        <div className="pipeline-cfg-empty-inspector" data-testid="pipeline-cfg-empty-inspector">
           <Icon name="settings" size={32} />
           <p>Select a configuration or create a new one.</p>
         </div>

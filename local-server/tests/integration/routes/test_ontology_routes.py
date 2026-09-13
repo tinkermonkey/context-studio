@@ -1247,7 +1247,8 @@ class TestAttributeDefinitionCRUD:
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = client.post(
-            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Attribute Test Scheme"}
+            f"/api/taxonomies/{taxonomy_id}/schemes",
+            json={"title": "Attribute Test Scheme"},
         )
         scheme_id = scheme_response.json()["id"]
 
@@ -1256,7 +1257,11 @@ class TestAttributeDefinitionCRUD:
         )
         class_id = class_response.json()["id"]
 
-        return {"class_id": class_id, "taxonomy_id": taxonomy_id, "scheme_id": scheme_id}
+        return {
+            "class_id": class_id,
+            "taxonomy_id": taxonomy_id,
+            "scheme_id": scheme_id,
+        }
 
     def test_create_attribute_definition_returns_201(self, client, class_fixture):
         """POST /api/classes/{class_id}/attribute-definitions returns 201."""

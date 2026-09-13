@@ -51,17 +51,23 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
-from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
+from adapters.persistence.sqlite.individual_vector_index import (
+    SqliteIndividualVectorIndex,
+)
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from domain.ontology.entities import Class, ConceptScheme, Individual, Taxonomy
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.individual_extraction.configurations.open_v1 import get_open_v1_config
+from domain.pipelines.individual_extraction.configurations.open_v1 import (
+    get_open_v1_config,
+)
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
-from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionState
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionState,
+)
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.dataset_split import split_for
 from tests.integration.pipelines._harness.error_report import (
@@ -115,9 +121,7 @@ def _recognize_scenario_triples(triples: list[dict], embedding) -> list[dict]:
     session_factory = sessionmaker(bind=engine)
     repo = SQLiteOntologyRepository(session_factory)
 
-    taxonomy = Taxonomy(
-        id=str(uuid4()), identifier="recognition_probe", title="Recognition probe"
-    )
+    taxonomy = Taxonomy(id=str(uuid4()), identifier="recognition_probe", title="Recognition probe")
     repo.save_taxonomy(taxonomy)
     scheme = ConceptScheme(
         id=str(uuid4()),
@@ -198,7 +202,11 @@ async def _build_reports(
                     "recall": strict["recall"],
                     "f1": strict["f1"],
                 },
-                soft={"precision": soft.precision, "recall": soft.recall, "f1": soft.f1},
+                soft={
+                    "precision": soft.precision,
+                    "recall": soft.recall,
+                    "f1": soft.f1,
+                },
                 candidate_recall=candidate_recall(expected_keys, actual_keys, embed_fn),
                 predicate_recall=predicate_recall(expected_keys, actual_keys, embed_fn),
                 label_accuracy=label_accuracy(expected_keys, actual_keys, embed_fn),

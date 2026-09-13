@@ -12,7 +12,10 @@
   border: 1px solid transparent;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.08s, border-color 0.08s, color 0.08s;
+  transition:
+    background 0.08s,
+    border-color 0.08s,
+    color 0.08s;
   outline: none;
 }
 

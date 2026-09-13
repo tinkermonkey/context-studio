@@ -48,10 +48,7 @@ class PipelineService extends BaseService {
     return this.get<ImplementationResponse[]>(`/api/pipelines/types/${type}/implementations`);
   }
 
-  async listConfigurations(
-    type: string,
-    implId: string,
-  ): Promise<PipelineConfigurationResponse[]> {
+  async listConfigurations(type: string, implId: string): Promise<PipelineConfigurationResponse[]> {
     return this.get<PipelineConfigurationResponse[]>(
       `/api/pipelines/types/${type}/implementations/${implId}/configurations`,
     );
