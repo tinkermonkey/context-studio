@@ -1,0 +1,513 @@
+{
+  "895c9eee6deba6949c70cb2a0d6dd595084e40ba92cafb993f0cfb87fef9fcff": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1010,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f00051250fa71469fdfcb01545913541bde5a4c1b5b481042cdba4131253fbb2": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 874,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f0a61f179a992d49f286335ba592179bb88508fdef47f53385a18f93ea02d57f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 948,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "55130d793d51d09a91263f7fb069cb2b4012466034608842f221aa51d26af0b9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1033,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a86d001e7b29c8ead8e35b25a50628343a6f4a21aaf98702c0d6716664adc73b": {
+    "content": "{\"class\":\"business.businessservice\"}",
+    "tokens_in": 813,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2e5ca555737a974b9803c19ac10431434c778839cb6c03c168affe39e03ca4e4": {
+    "content": "{\"class\":\"business.product\"}",
+    "tokens_in": 840,
+    "tokens_out": 14,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a5d55b8b87cc94bb2cd5f7bbf895918b8d8468f70b0595fb96f4f5b66a40148e": {
+    "content": "{\"class\":\"application.applicationprocess\"}",
+    "tokens_in": 884,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0505a7f2e4aac6cd8479aecf4df5333d2068504e7f5de168dcff037df8d099d2": {
+    "content": "{\"class\":\"business.businessactor\"}",
+    "tokens_in": 1074,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b90b1e9924200e527591cc12c7af0beea38d64f8bd1f9cbb91ec9891b6e322e2": {
+    "content": "{\"class\": \"business.businessactor\"}",
+    "tokens_in": 1000,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f88ee610005ce93e2e424966cfc565617a2bc1409732ca617e449402c80b6cc0": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1066,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9941992bdff0e3b208e7131591a72d92ca990615d95b1d2a298c0d833a1c908f": {
+    "content": "{\"class\": \"business.businessrole\"}",
+    "tokens_in": 1072,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "bbdf85aa6fd548a8d98217dd4fe80ac51e80ababc6676173324a4f22a787ae40": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1103,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9d89d6fb52db0cf4704f756afb695d70c850cbd9a17be99c3578c38352a80abb": {
+    "content": "{\"class\":\"business.businessrole\"}",
+    "tokens_in": 1028,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f683534f2dfd09a9386e8ce866dbf18ea4dae0261d70f65632fec02e9609d5d7": {
+    "content": "{\"class\":\"business.businessrole\"}",
+    "tokens_in": 1070,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "72a658bbd4f0bcceb9efef9d857e9f85d4bdc93d6e0520fe0b3d06a5c710daa5": {
+    "content": "{\"class\":\"business.businessrole\"}",
+    "tokens_in": 1034,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "85f1fe3ce0c2d5a90a9ff6892d15aaa2d91ddd44a8477f25d95f98a19bde9fe6": {
+    "content": "{\"class\":\"business.businessfunction\"}",
+    "tokens_in": 911,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2c9f387f1fda47f5c824b29116bd3a559f796168c7641f61af31d93ac4df0f2e": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 926,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "461a8d722f4df2bb878a3e1ccffe9fb78dea985f14b0bb8e389a7574203eedc1": {
+    "content": "{\"class\":\"business.businessactor\"}",
+    "tokens_in": 1010,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "444222e0ca43441e0396793822c3a41ae662fbf98b9ac9c4e5e0fb9a2b70126a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1036,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f3e46417b2c7abda0f4e004993f1c0f7c5e3bf5a10c757b4dd7d8e2659fdb914": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 966,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "fc24faabb6df17ec8ce13c6683ad30b33ba3f38cf57b4f2fb00a86df9b1fda65": {
+    "content": "{\"class\": \"business.businessprocess\"}",
+    "tokens_in": 880,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f1c7958f8420a83afced80e15f3183254f4825d771aeae9395ab0e24d3bb0b96": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 821,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "da3156ed9ce35a1301b0ee89c41cbfbb2f427eba987262a9069b74a009982aa3": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 877,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "aa94752766a9a71e17a1506d4743b47bcaffee5728aec728cc40449bf34e56f3": {
+    "content": "{\"class\": \"business.businessevent\"}",
+    "tokens_in": 856,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "95fb54fde1fcdcf25fde3895d0131ec39701dec7916e97cfd9890deecb34e3f7": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 891,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "014fa0c1b434d53703b609c53b4b616fff41c0ff901de9723ed7a40b0512c573": {
+    "content": "{\"class\":\"business.businessprocess\"}",
+    "tokens_in": 824,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "29f5b0859cb04600c3ca218bc45fbf1aa3a677f0dbab8289dbd7285383dd6885": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 968,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b4412ddbb2ce4e8f9c97ac63e03bf1bf5c4b806c72b5c7a83a16859f2e610dac": {
+    "content": "{\"class\":\"business.businessactor\"}",
+    "tokens_in": 875,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "39850b8613294a656aa510c933e895d6c2322129aeaac26087264df7b9eae5d7": {
+    "content": "{\"class\":\"business.businessinterface\"}",
+    "tokens_in": 957,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ddaedbc83894e202231134d57b229fb83e108bf102bd0eced441c773ba03317f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1133,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4b81ef841d6932b97e6005c520149a9c9de79e65c0587963740b0f1bfac173aa": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 1137,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "69595e330dd42129b71204a878e6bc85d3f77cc309c2850d0eaba33339d87448": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 867,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "798a5096cedb5b3274a03ecac7a664c59ca0cfd30ba5151b5396774b27eb3f42": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1059,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "21350f5de24a2e0d2aa83693e366647af5fabccb986d4e196925f8609fdb0953": {
+    "content": "{\"class\":\"business.businessfunction\"}",
+    "tokens_in": 1133,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2692717b2b714193aad830eb473efbc8e9815cc6aed98b5e2e10138ffce3013b": {
+    "content": "{\"class\":\"business.businessfunction\"}",
+    "tokens_in": 1055,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0632c64685dd47e5f267c968a8dea84f7b9e3d73c46a7a68fbf1886fd88d261f": {
+    "content": "{\"class\":\"business.businessfunction\"}",
+    "tokens_in": 1127,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "324aaba879c1f4d5ec16920bdbec8afa07369fe8afc6a8263662119cd9f10c8f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1122,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "fef72eff5ebde08ab4f925d41d11426fa1f99f5af743a26721cf7391f0cf5d8a": {
+    "content": "{\"class\":\"business.businessfunction\"}",
+    "tokens_in": 1083,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7bae68609271c9fbd90f4b972bc37274289920f36990897471934938b73e082b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1057,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "23ca5a3bde94e29c2d67816be31400b29db11ef3ded5d083422497875b728fd9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1129,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3d5304cfd7afde34793a742d46bb69e3addd1b28ddf19aa96ef5b48df8979155": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1073,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0bcfee3541a4dea8a9712f3d0e607fcf0f874f5d2f813f875fc9e79d13ca5985": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1130,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "88a7856fad54d3916e6e95faa391369f23f605a262418c324ceca585fc22c046": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1138,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7c3c32a29b7f6aea2b919df05e3174c6cdc80e0213d4426ecb015c0f504ecc9e": {
+    "content": "{\"class\":\"business.businessservice\"}",
+    "tokens_in": 957,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9aebe8ca27c3485aecef4325cb5ca039523ef57abb23ccc6d470774407781d14": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 875,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2271fad9721f7c7ec20786e4eb8492da8ca8facf3767af7655889499a7f078a5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1153,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0715a170baa7147ca2bc8bdeb8f71b46bc10ee33d0ebc8562ccdb351e0d595a3": {
+    "content": "{\"class\":\"product.capability\"}",
+    "tokens_in": 929,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6ba910b33f8d9d2f4e7cf60841ee06fb48cf45743e66c766322acee750688a71": {
+    "content": "{\"class\": \"business.businessservice\"}",
+    "tokens_in": 897,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a2be786322461597c39c6e2fda3a034b567e70adc46148f352534fee00ed441e": {
+    "content": "{\"class\":\"business.businessprocess\"}",
+    "tokens_in": 994,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a779a46026cf61fdf88c3dba4a31cc4f39898dacc7d94385b34ec248df005925": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 951,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "62fb14d8665a06461cf15d25dd651c86b803d801f8f138e232972579bacf0529": {
+    "content": "{\"class\": \"business.businessprocess\"}",
+    "tokens_in": 915,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9366f016177f7c84776c42d25022e290994d73b02238678a97ae60f567ee63a1": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 882,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "44fb882ea2dc9b4991737bfc9e71cfbb89ddc7ffaf9270ad7edc67cf455fa6e6": {
+    "content": "{\"class\": \"business.contract\"}",
+    "tokens_in": 1034,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "66bc2335f161ba37f218078553663411383f2dc9ba64db947f1be643b04918ae": {
+    "content": "{\"class\": \"business.contract\"}",
+    "tokens_in": 968,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "34c9a08d7a9b40b69d6ec69d47cad9f8c9387f115a04dc0638a9d574dbf44446": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 903,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3602e745f13a16245d006d7408efcda16942828152cd108471bb5dc85d31c56a": {
+    "content": "{\"class\":\"business.product\"}",
+    "tokens_in": 805,
+    "tokens_out": 14,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0f9aad8ae52e5e3cdbd3c97c3f54f6c3ee18a8067fb4de816be387735070f4ac": {
+    "content": "{\"class\":\"business.contract\"}",
+    "tokens_in": 837,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2a6e3381aa30720ca30101422ed252531c9e1816afb5547ac5ae75a2d620bf2c": {
+    "content": "{\"class\":\"business.businessservice\"}",
+    "tokens_in": 855,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "10ea42b7a9e862ab487f0f80833243a48eb2a28530a53e4ea7eb9c5a7d2bee13": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 965,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "bccc8c0a1cbc2cf4e3ce3d65109c41ae5466698c5883d74e9d4ec4ebfd52f928": {
+    "content": "{\"class\": \"motivation.stakeholder\"}",
+    "tokens_in": 937,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "53e3d5e1ae771e6a6680356f2b265b57655fc62093761a3dfae59249a34d6af7": {
+    "content": "{\"class\": \"motivation.stakeholder\"}",
+    "tokens_in": 944,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "74baa7d8eabe9962e26412daaae18e38646a683dde8e85621800b7b39a6b6912": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 920,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3e2b339f85ac02b08fbac2acc52f226334166138c0f982cf061bddcb01c3d6ea": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1123,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9ce71fcd97a25880b8fdf361414a00407aacd54742ec7a4d29a7758052dbea22": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 920,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f0d815e7c4e4ce4e006944a67761df26fba820734830e9aeeb5f22616a3780a3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1149,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "84062c63d07acd7c6f8cbc4dcf5e104a9bd6ca8e12eff184d2725ac3bfcb328b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1196,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ad44d5fd479d1d3efe106099086446e5308e639be5321ccab1179a1ee652f583": {
+    "content": "{\"class\":\"motivation.requirement\"}",
+    "tokens_in": 910,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "626fb3244c356f7dff043fb3b8acb8f81df29149f54a80c6ce9913d19cf5e0e9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 924,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "318595061fd63c63fda212cc49b1d1334ed9e83dbc112d6388a205c7a145335b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1187,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6b28152ef92874c0e3c45e57fc0e6e9de43bcf73270a62590d2661a0c4d10646": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1191,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e36ba7e7fb4754c52438de16f9061488c069f19df2fc3406073d04000ff341d3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1204,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "118240132ff3e34d5f74fd2665d07db8071f76ede8b4396c33c2f7c645f8bad9": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1222,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "73a0f3b5c5a3376f9b6fb98fc7f3ed0f4653da4c4bc80ae524c734421e2fa102": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"regional_operations_manager\", \"label\": \"The Regional Operations Manager\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"dispatcher_role\", \"label\": \"the Dispatcher role\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"assigned to the Dispatcher role\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"dispatcher_role\", \"label\": \"the Dispatcher role\"},\n      \"predicate\": {\"property_definition_id\": \"performs\", \"label\": \"performs\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"work_order_fulfillment\", \"label\": \"Work Order Fulfillment\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"performs the Work Order Fulfillment process\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"customer_reports\", \"label\": \"a Customer Reports\"},\n      \"predicate\": {\"property_definition_id\": \"triggers\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"work_order_fulfillment\", \"label\": \"Work Order Fulfillment\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"that business event triggers the whole process\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"dispatch_call_center\", \"label\": \"the Dispatch Call Center\"},\n      \"predicate\": {\"property_definition_id\": \"triggers\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"work_order_fulfillment\", \"label\": \"Work Order Fulfillment\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"a call landing there triggers Work Order Fulfillment\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"field_technician_role\", \"label\": \"the Field Technician role\"},\n      \"predicate\": {\"property_definition_id\": \"performs\", \"label\": \"performs\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"route_optimization\", \"label\": \"Route Optimization\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Field Technician role performs Route Optimization\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"route_optimization\", \"label\": \"Route Optimization\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"scheduling_dispatch_service\", \"label\": \"Scheduling & Dispatch service\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Route Optimization realizes the Scheduling & Dispatch service\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"work_order_fulfillment\", \"label\": \"Work Order Fulfillment\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"work_order_management_service\", \"label\": \"the Work Order Management service\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Work Order Fulfillment itself realizes the Work Order Management service\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"sla\", \"label\": \"a Service Level Agreement\"},\n      \"predicate\": {\"property_definition_id\": \"governs\", \"label\": \"governs\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"work_order_management_service\", \"label\": \"the Work Order Management service\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"contract that governs the Work Order Management service\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint_product\", \"label\": \"The Waypoint Field Service Platform product\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"that_contract\", \"label\": \"that contract\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Waypoint Field Service Platform product composes that contract\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint_product\", \"label\": \"The Waypoint Field Service Platform product\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"the_services\", \"label\": \"the services\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"aggregates both of the services above\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"dispatcher_role\", \"label\": \"the Dispatcher role\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"our_customers\", \"label\": \"our Customers\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the Dispatcher role serves our Customers\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"work_order_fulfillment\", \"label\": \"Work Order Fulfillment\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"on_time_service_delivery\", \"label\": \"On-Time Service Delivery\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Work Order Fulfillment realizes a specific goal on our roadmap, On-Time Service Delivery\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"scheduling_dispatch_service\", \"label\": \"the Scheduling & Dispatch service\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"realtime_location_visibility\", \"label\": \"Real-Time Technician Location Visibility\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the Scheduling & Dispatch service satisfies a requirement\"}\n    }\n  ]\n}",
+    "tokens_in": 3458,
+    "tokens_out": 2420,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}
