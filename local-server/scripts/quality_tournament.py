@@ -430,6 +430,17 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
             extraction_service=extraction_service,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
+        # ExtractionService.extract_triples() resolves ontology_id via
+        # OntologyRepository.get_taxonomy(), which looks up by the taxonomy's
+        # real id (a UUID) -- NOT by symbolic identifier. The fixture pins the
+        # symbolic identifier ("dr_spec"), so it must be resolved to the actual
+        # taxonomy id here first, the same way `_make_default_variant` resolves
+        # and overrides `ontology_id` for the `default` variant. Without this,
+        # every scenario fails with "Ontology dr_spec not found", is caught
+        # inside extract_triples, and silently returns zero triples.
+        taxonomy = eval_repo.get_by_identifier(fixture["ontology_id"])
+        if taxonomy is not None:
+            fixture["ontology_id"] = taxonomy.id
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
