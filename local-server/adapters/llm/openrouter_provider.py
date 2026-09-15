@@ -123,7 +123,7 @@ class OpenRouterProvider:
         ]
 
         request_body = {
-            "model": model,
+            "model": self._wire_model(model),
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -308,6 +308,41 @@ class OpenRouterProvider:
             timeout,
             seed,
         )
+
+    # Bare (unprefixed) model-name patterns mapped to their OpenRouter vendor
+    # prefix. OpenRouter requires "vendor/model" (e.g. "anthropic/claude-opus-4-7")
+    # and rejects a bare name outright ("claude-opus-4-7 is not a valid model
+    # ID") -- but callers throughout this codebase (fixtures, ExtractionRun
+    # records, other providers' model lists) commonly pass the bare form,
+    # especially when OpenRouter is the only configured provider and there is
+    # no direct provider key to route a bare name to instead.
+    _BARE_MODEL_VENDOR_PREFIXES: tuple[tuple[str, str], ...] = (
+        ("claude-", "anthropic/"),
+        ("gpt-", "openai/"),
+        ("o1-", "openai/"),
+        ("o3-", "openai/"),
+        ("gemini-", "google/"),
+    )
+
+    @classmethod
+    def _wire_model(cls, model: str) -> str:
+        """
+        Translate a bare model id to its OpenRouter vendor-prefixed form.
+
+        Only the outgoing HTTP request uses this value. The `model` the caller
+        passed keeps flowing everywhere else unchanged -- the cache key, the
+        returned `LLMResponse.model`, and (for `RecordingLLMProvider`) the
+        cassette key -- so switching between a direct provider key and
+        OpenRouter-only never shifts a hash. Already-prefixed ids (containing
+        "/") and unrecognized bare names pass through untouched, so OpenRouter
+        itself still surfaces a clear error for a genuinely invalid model.
+        """
+        if "/" in model:
+            return model
+        for bare_prefix, vendor_prefix in cls._BARE_MODEL_VENDOR_PREFIXES:
+            if model.startswith(bare_prefix):
+                return f"{vendor_prefix}{model}"
+        return model
 
     def _make_cache_key(
         self,

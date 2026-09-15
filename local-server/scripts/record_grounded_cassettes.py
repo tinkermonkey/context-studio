@@ -203,25 +203,24 @@ def record_all(scenarios: list[str]) -> int:
 
     settings = get_settings()
     llm_config = settings.llm
-    if (
-        not llm_config.openai_api_key
-        and not llm_config.anthropic_api_key
-        and not llm_config.openrouter_api_key
-    ):
+    if not llm_config.openrouter_api_key:
         print(
-            "ERROR: no LLM provider configured. Set an API key in config.json "
-            "(OpenAI, Anthropic, or OpenRouter) before recording."
+            "ERROR: no OpenRouter API key configured. Set OPENROUTER_API_KEY "
+            "(or config.json llm.openrouter_api_key) before recording."
         )
         return 1
 
     try:
         from adapters.llm.provider_router import LLMProviderRouter
 
-        real_llm_provider = LLMProviderRouter(
-            openai_api_key=llm_config.openai_api_key,
-            anthropic_api_key=llm_config.anthropic_api_key,
-            openrouter_api_key=llm_config.openrouter_api_key,
-        )
+        # OpenRouter only, deliberately -- not openai_api_key/anthropic_api_key.
+        # The fixture pins the bare model id "claude-opus-4-7" (no vendor
+        # prefix), which LLMProviderRouter hands straight to the direct
+        # AnthropicProvider if an anthropic_api_key is configured (it claims
+        # any bare "claude-*" name before OpenRouter is ever considered) --
+        # this project routes LLM calls through OpenRouter, not a direct
+        # provider key, so only openrouter_api_key is passed here.
+        real_llm_provider = LLMProviderRouter(openrouter_api_key=llm_config.openrouter_api_key)
     except ValueError as exc:
         print(f"ERROR: LLM provider initialization failed: {exc}")
         return 1

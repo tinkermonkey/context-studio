@@ -533,9 +533,12 @@ class TestOpenRouterCompletion:
         # Check endpoint
         assert call_args[0][0] == "/chat/completions"
 
-        # Check request body
+        # Check request body -- the bare "gpt-4" is sent to OpenRouter as
+        # "openai/gpt-4" (OpenRouter rejects unprefixed model ids), but the
+        # response's `model` field still reports the caller's original string
+        # (see test_complete_reports_original_model_not_wire_model below).
         json_arg = call_args[1]["json"]
-        assert json_arg["model"] == "gpt-4"
+        assert json_arg["model"] == "openai/gpt-4"
         assert json_arg["temperature"] == 0.7
         assert json_arg["max_tokens"] == 500
         assert json_arg["seed"] == 42
@@ -543,6 +546,30 @@ class TestOpenRouterCompletion:
         assert len(json_arg["messages"]) == 2
         assert json_arg["messages"][0]["role"] == "system"
         assert json_arg["messages"][1]["role"] == "user"
+
+    def test_complete_reports_original_model_not_wire_model(self):
+        """The response's `model` field is the caller's original bare id, not the wire-prefixed one."""
+        provider = self.create_provider_with_mock_client()
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "pong"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        }
+        provider._client.post.return_value = mock_response
+
+        result = provider.complete(
+            system_prompt="system",
+            user_prompt="user",
+            model="claude-opus-4-7",
+            temperature=0.0,
+            max_tokens=10,
+        )
+
+        assert result.model == "claude-opus-4-7"
+        sent_model = provider._client.post.call_args[1]["json"]["model"]
+        assert sent_model == "anthropic/claude-opus-4-7"
 
     def test_complete_without_seed(self):
         """Complete request without seed omits seed from body."""
@@ -864,6 +891,40 @@ class TestOpenRouterModelAvailability:
 
         assert models == []
         assert isinstance(models, list)
+
+
+class TestOpenRouterWireModel:
+    """
+    Tests for _wire_model: translating a bare model id to OpenRouter's
+    required vendor-prefixed form. OpenRouter rejects a bare id outright
+    (e.g. "claude-opus-4-7 is not a valid model ID"), so a caller routing
+    through OpenRouter only (no direct provider key) needs this translation
+    on the outgoing request -- see test_complete_reports_original_model_not_wire_model
+    for confirmation that nothing else (cache key, LLMResponse.model) observes it.
+    """
+
+    def test_maps_known_bare_prefixes_to_their_vendor(self):
+        assert OpenRouterProvider._wire_model("claude-opus-4-7") == "anthropic/claude-opus-4-7"
+        assert OpenRouterProvider._wire_model("gpt-4") == "openai/gpt-4"
+        assert OpenRouterProvider._wire_model("o1-preview") == "openai/o1-preview"
+        assert OpenRouterProvider._wire_model("o3-mini") == "openai/o3-mini"
+        assert (
+            OpenRouterProvider._wire_model("gemini-3-flash-preview")
+            == "google/gemini-3-flash-preview"
+        )
+
+    def test_leaves_already_prefixed_ids_untouched(self):
+        assert OpenRouterProvider._wire_model("google/gemini-3-flash-preview") == (
+            "google/gemini-3-flash-preview"
+        )
+        assert OpenRouterProvider._wire_model("anthropic/claude-opus-4-7") == (
+            "anthropic/claude-opus-4-7"
+        )
+
+    def test_leaves_unrecognized_bare_ids_untouched(self):
+        """An id matching no known bare prefix passes through so OpenRouter's own error surfaces."""
+        assert OpenRouterProvider._wire_model("custom-model") == "custom-model"
+        assert OpenRouterProvider._wire_model("llama-3") == "llama-3"
 
 
 @pytest.mark.llm
