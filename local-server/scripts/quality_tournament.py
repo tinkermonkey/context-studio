@@ -63,7 +63,7 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import EmbeddingService
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
 )
@@ -430,12 +430,52 @@ def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -
             extraction_service=extraction_service,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
+        # ExtractionService.extract_triples() resolves ontology_id via
+        # OntologyRepository.get_taxonomy(), which looks up by the taxonomy's
+        # real id (a UUID) -- NOT by symbolic identifier. The fixture pins the
+        # symbolic identifier ("dr_spec"), so it must be resolved to the actual
+        # taxonomy id here first, the same way `_make_default_variant` resolves
+        # and overrides `ontology_id` for the `default` variant. If this
+        # resolution fails (e.g. the DR spec checkout is absent -- see
+        # eval_ontology.build_eval_ontology), extract_triples would fail with
+        # "Ontology dr_spec not found", catch that internally, and silently
+        # return zero triples -- a harness bug indistinguishable on the
+        # scoreboard from a genuine pipeline miss. Fail loudly instead: this is
+        # a precondition for a trustworthy score, not a runtime possibility to
+        # degrade past.
+        taxonomy = eval_repo.get_by_identifier(fixture["ontology_id"])
+        if taxonomy is None:
+            raise RuntimeError(
+                f"grounded_v1 harness: ontology identifier {fixture['ontology_id']!r} "
+                f"did not resolve in eval_repo for scenario {scenario!r} (DR spec "
+                "checkout missing?) -- refusing to score this scenario, since "
+                "extract_triples would silently return zero triples for it."
+            )
+        fixture["ontology_id"] = taxonomy.id
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             input_data=fixture,
         )
         result_state = await orch.execute(state)
+        # extract_triples() catches its own internal failures (LLM errors,
+        # JSON parse failures, etc.) and returns a COMPLETED state with zero
+        # triples rather than raising -- so a clean-looking empty result here
+        # can mean either "the pipeline genuinely found nothing" or "something
+        # broke inside extract_triples." Surface the latter loudly rather than
+        # let it read as a legitimate zero score.
+        if result_state.current_status != PipelineRunStatus.COMPLETED:
+            raise RuntimeError(
+                f"grounded_v1 harness: scenario {scenario!r} did not complete "
+                f"(status={result_state.current_status})"
+            )
+        warnings = (result_state.result or {}).get("warnings") or []
+        failure_warnings = [w for w in warnings if str(w).startswith("Extraction failed:")]
+        if failure_warnings:
+            raise RuntimeError(
+                f"grounded_v1 harness: scenario {scenario!r} completed but "
+                f"extract_triples reported an internal failure: {failure_warnings}"
+            )
         return (result_state.result or {}).get("triples", [])
 
     # Base config for nlp_grounded mode.

@@ -267,6 +267,28 @@ class TestRecordingLLMProvider:
 
             assert len(recorder._recordings) == 3
 
+    def test_call_count_reflects_recorded_calls(self):
+        """call_count is 0 before any calls, and tracks distinct recorded entries."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cassette_path = Path(tmpdir) / "test.json"
+            delegate = FakeLLMProvider()
+            recorder = RecordingLLMProvider(delegate, cassette_path)
+
+            assert recorder.call_count == 0
+
+            recorder.complete(system_prompt="sys1", user_prompt="user1", model="test")
+            assert recorder.call_count == 1
+
+            recorder.complete(system_prompt="sys2", user_prompt="user2", model="test")
+            assert recorder.call_count == 2
+
+            # A repeat of an already-recorded prompt hashes to the same key,
+            # so it doesn't grow the count -- callers checking call_count to
+            # confirm a pipeline actually made real calls should know this
+            # counts distinct prompts, not total complete() invocations.
+            recorder.complete(system_prompt="sys1", user_prompt="user1", model="test")
+            assert recorder.call_count == 2
+
     def test_same_prompt_uses_same_key(self):
         """Same prompt hashes to same cassette key."""
         with tempfile.TemporaryDirectory() as tmpdir:

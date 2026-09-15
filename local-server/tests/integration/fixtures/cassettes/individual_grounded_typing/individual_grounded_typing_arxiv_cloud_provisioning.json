@@ -1,0 +1,275 @@
+{
+  "6b5bbc3c2b8ef89e4fa47b89022d2dde0be663949892f8d96ce2d01c8e3b68f5": {
+    "content": "{\"class\":\"technology.systemsoftware\"}",
+    "tokens_in": 1041,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3530f04d8daee673d8fc867c2862493b8f7796b1c3e9cf5e55f4e4fa39e38922": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 1037,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a345e9d1226b56d61bf0da9145818ca40ed21d44c31903fd4f369bd3abf75af3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1018,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ca8afccc5fcc71693082af8cdaa624a3837765c7d26dcf2e62b8b59781152843": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 808,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3c0b719a8146fc205d5e587b0738c7a01314fac3903ab92d13ce28b94692354a": {
+    "content": "{\"class\":\"technology.technologyservice\"}",
+    "tokens_in": 885,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d44748ac1faeccbab69520dfd9e84be6b3fcfdf88ca9465ca2d70e993d306fe5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 798,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d787dad841058656dd8efd619a5afde47d696c2bcd2c59e85f21da08a68799f9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 765,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5db6facae32f405e85f9c55a77fb83fbb42da38aca96a33f8b4633c869b95bd3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 897,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a9b28a2c7441711e7d0dd5e5601f26af6aaeeeda6d088c85c8c8ec75cc27670c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 921,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "10ca92ec9f3fbff109a36db177b6bd6353d1bdd4841e3d05d7f6efc7cc73b4a3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 798,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9338db77c3e801025b9c2b9bffbbe327feb739965de7d55ba7594a5e15b0bcd1": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 882,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2031d231c0a0f3655c97994ae4afac108f9f2b55b843a9ada93cbf6027280da7": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 827,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "55ddef83c54cd786aeb6c2c99407b2ae357746c835ce20bd6a8c51876c0fd62f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 826,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8d965628236fbae838960fd835f1406b4382d4561e9caab393119351c57ef8ab": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 877,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a5b1cb7dabc33ba0509b1d308d14cbd3b644cad4e1f8e7567999a111e696c1a2": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 834,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3ffd366d60bd952265fac7b3695174e828670bc46c8b1d3529c8a8cab2ae614a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 835,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5c8adae39f647933dfb75be3d85ce236033127ed0348c4509d9abebada059f2f": {
+    "content": "{\"class\": \"technology.technologyservice\"}",
+    "tokens_in": 805,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "cfa61fb12cbb06dee16956edc15efc62ac130e0b6d1745c797452374fed54ceb": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 841,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "89071482ab21629bb53eaab1455713e05b3307a8fc11e42df8d65858465d2d67": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 789,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f30cf683d8ae0b1a62c0e68e69bce7158552378c17bc9b9eff6c95f505649cd2": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 928,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9d71eb721b8269f8b2164b92d7a3f7a98333bdabb9022dae4a925df3c91fd22b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 839,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "291ffb2ffafe198296468f68758a194b6e4b4417238f8d6e4e0b856987914b6e": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 787,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8a461a315abfdca6934620a6c014de6c46590a55d58d1a77eb8b91084414ece1": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 786,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "41299bd9a6bf717d50aaee1fd25a21b26daa03f03362b473aabf4657ef0cded3": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 797,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "94548c304f468591fafa66b1e78308c681a416ad58bbaeb4ce941d98106546b0": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 806,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "021a13aa67ced9a0ab5be4bf3feaac501849e431fd22c57b7773f07cde81c981": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 794,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "438365c9560c0c849eb041ba533bd47a65a9a18772f815e54e10bbb4b60591b3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 735,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "74e844e9783183a5a180444fd8483e18a87378165bacb51bc6874f25baf9a5da": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 871,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c2774d49e023db41d14e85b3f6ded3e42282be98e17073af9e08358138916a11": {
+    "content": "{\"class\":\"technology.systemsoftware\"}",
+    "tokens_in": 866,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "284357b8364dae8dffc10a7947a1ee81f7542838c88449c72a598ad440798f3d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 740,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "587e308ac1002e62b96e5fa726284cee753d9334decff4f1ec3fdfc2bb7422ea": {
+    "content": "{\"class\":\"technology.technologycollaboration\"}",
+    "tokens_in": 851,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ef95e3977895a79ad57ccd9beca575c8c1f0b9e00d2172b509e9ded1bab7023a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 834,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1742d43dddfd9d0ab203d16fa31add7eb41a263b80284951e4e585292db066ee": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 499,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "63c2d808dc694a560e19cc37e05664389e526d289c681ec52e874831bfdadd84": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 502,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8534d63e545e9542313091a81165e0871e7c973d065c7fbe0863cc0571f34890": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 410,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8ba87c5ca042dbcaf61497480eb70eeee0c2d7a38ed7431e861dbd94423fac1f": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 500,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3c7352785214ffefd1bae538eb8e8563135689327e3a661e5c6fc51ee6509971": {
+    "content": "{\"class\":\"motivation.value\"}",
+    "tokens_in": 547,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "416c0690f4627a11f4e524ece95587da5b8e557f428c14b8d037a7ec42ede246": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 382,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3524eb621f02b8ca3b1309153137226836de067c48dfd96f1bfa5d21581779b2": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"cloud_service_platforms\", \"label\": \"Cloud service platforms\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"elastic_infrastructures\", \"label\": \"elastic infrastructures\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 96, \"raw\": \"Cloud service platforms increasingly rely on elastic infrastructures to support dynamic workloads\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"spot_instances\", \"label\": \"Spot instances\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"discounted_computing_resources\", \"label\": \"discounted computing resources\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 97, \"text_offset_end\": 160, \"raw\": \"Spot instances provide discounted computing resources\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"ec2_spot_service\", \"label\": \"the EC2 Spot Service\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"fleet_provisioning\", \"label\": \"fleet provisioning\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 260, \"text_offset_end\": 340, \"raw\": \"the EC2 Spot Service simplifies fleet provisioning through allocation strategies\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"ai_driven_provisioning_service\", \"label\": \"an AI-driven provisioning service\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"multi_region_spot_fleets\", \"label\": \"multi-region spot fleets\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 430, \"text_offset_end\": 500, \"raw\": \"an AI-driven provisioning service for multi-region spot fleets\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"ai_driven_provisioning_service\", \"label\": \"an AI-driven provisioning service\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"cost_aware_deployment\", \"label\": \"cost-aware deployment decisions\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 600, \"text_offset_end\": 700, \"raw\": \"enabling cost-aware deployment decisions across regions\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"ai_driven_provisioning_service\", \"label\": \"an AI-driven provisioning service\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"ec2_spot_service\", \"label\": \"the EC2 Spot Service\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 700, \"text_offset_end\": 780, \"raw\": \"preserving the operational behavior of the EC2 Spot Service\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"up_to_64_percent\", \"label\": \"up to 64%\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"cost_savings\", \"label\": \"cost savings\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 880, \"text_offset_end\": 960, \"raw\": \"potential cost savings of up to 64% by exploiting regional price variability\"}\n    }\n  ]\n}",
+    "tokens_in": 2171,
+    "tokens_out": 1364,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  }
+}

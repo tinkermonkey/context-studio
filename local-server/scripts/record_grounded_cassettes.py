@@ -2,16 +2,18 @@
 """
 One-time bootstrap recorder for the `grounded_v1` NLP-grounded typing variant's cassettes.
 
-`scripts/quality_tournament.py`'s `build_registry()` deliberately does NOT
-register the `grounded_v1` NLP-grounded typing variant
-(`OpenIndividualExtractionOrchestrator` with `nlp_grounded_typing=True`)
-because Loop A/B never make live LLM calls — every tournament variant must be
-fully replayable offline, and no cassettes have been recorded for the per-chunk
-typing confirmation calls yet. This script records that cassette set: it runs the
-`grounded_v1` variant once per corpus scenario through the same
-`RecordingLLMProvider` the quality suite uses, capturing each per-chunk confirm
-prompt->response pair to the standard cassette path so a future `grounded_v1`
-variant can replay it with `CassetteLLMProvider`.
+`scripts/quality_tournament.py`'s `_make_grounded_v1_variant()` evaluates the
+NLP-grounded typing pipeline via `ExtractionService(extraction_mode="nlp_grounded")`
++ `IndividualExtractionOrchestrator` (domain/extraction/services.py, issue #1141) —
+spaCy extracts noun chunks, the vector index retrieves candidate ontology classes,
+and the LLM only confirms the best fit per chunk; the same relationship-derivation
+pass `default` uses is then reused unchanged. Because Loop A/B never make live LLM
+calls, every tournament variant must be fully replayable offline. This script
+records that cassette set: it runs the variant once per corpus scenario through a
+`RecordingLLMProvider`, using the SAME construction `_make_grounded_v1_variant`
+uses, capturing every per-chunk confirm call and the relationship/concept-typing
+calls to the standard cassette path so the tournament can replay via
+`CassetteLLMProvider`.
 
 This is one-time bootstrap setup, not a loop experiment. It reuses the existing
 recording machinery verbatim -- the `RecordingLLMProvider` and the
@@ -20,14 +22,26 @@ recording machinery verbatim -- the `RecordingLLMProvider` and the
 DEDICATED directory (`cassettes/individual_grounded_typing/`), one scenario
 per file.
 
+Unlike `default` (which the tournament replays against an override model —
+DEFAULT_PIPELINE_MODEL — for cost reasons), `_make_grounded_v1_variant` does
+NOT override the fixture's model: it replays each scenario against whatever
+`load_fixture` returns, which pins `model: claude-opus-4-7`. It DOES need to
+resolve `ontology_id`, though: `ExtractionService.extract_triples()` looks up
+the ontology via `OntologyRepository.get_taxonomy()`, which takes the
+taxonomy's real id (a UUID) — not the fixture's symbolic identifier
+("dr_spec"). This script mirrors `_make_grounded_v1_variant`'s construction
+exactly (same ExtractionService(extraction_mode="nlp_grounded") +
+IndividualExtractionOrchestrator wiring, same eval ontology, same
+ontology_id resolution) so the recorded prompt hashes match what the
+tournament will actually replay. Because it uses the real model, and issues one
+LLM call per matched noun chunk (in addition to the relationship-derivation and
+concept-typing calls), the true call count is much larger than one-per-scenario
+-- always dry-run first to see the real count before recording.
+
 SAFETY: the default behavior (no flag, or `--dry-run`) makes ZERO live LLM
-calls. It only prints which scenarios and cassette paths would be recorded, the
-model id, and the total call count. Live recording -- which spends real money --
-requires the explicit `--record` flag. The per-chunk confirm calls use the model
-specified in the base_config dict (google/gemini-3-flash-preview by default).
-Unlike the cassette recording for the quality suite, which uses a pinned fixture
-model, this script records using the configured default model so the cassette
-keys match the actual pipeline configuration.
+calls. It only prints which scenarios and cassette paths would be recorded and
+the model id. Live recording -- which spends real money against claude-opus-4-7,
+potentially many calls per scenario -- requires the explicit `--record` flag.
 
 Usage (from local-server/, venv active):
     python scripts/record_grounded_cassettes.py            # dry run (default, no calls)
@@ -39,6 +53,7 @@ import argparse
 import asyncio
 import os
 import sys
+from typing import Any, cast
 from uuid import uuid4
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -56,7 +71,8 @@ from tests.integration.pipelines._harness.dataset_split import (
     WAVE4_INFORMAL_SCENARIOS,
 )
 
-# Cassette location for the grounded_v1 variant's per-chunk confirm calls.
+# Cassette location for the grounded_v1 variant's calls (per-chunk typing
+# confirms + relationship derivation + concept-object typing).
 # One file per scenario named `individual_grounded_typing_<scenario>.json`.
 _CASSETTE_DIR = (
     Path(__file__).parent.parent
@@ -101,76 +117,134 @@ def print_plan(scenarios: list[str]) -> None:
     """
     Print the dry-run plan: no LLM calls, no ontology builds, no network.
 
-    Lists each scenario and the cassette path that WOULD be written, then the
-    total live-call count.
+    Lists each scenario, its cassette path, and the noun-chunk count spaCy
+    finds for it (an upper bound on the per-chunk confirm calls that scenario
+    will make) so the real live-call count is visible before recording.
     """
     print("DRY RUN -- no LLM calls will be made. Pass --record to record for real.\n")
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
+    from adapters.nlp.spacy_processor import SpacyNLPProcessor
+
+    nlp = SpacyNLPProcessor()
+    nlp_ready = nlp.is_ready()
+
+    total_chunks = 0
     for scenario in scenarios:
-        print(f"  {scenario:<38}\n" f"      -> {cassette_path_for(scenario)}")
+        fixture = dict(load_fixture("individual_extraction", scenario))
+        text = fixture.get("text", "")
+        chunk_count = "?"
+        if nlp_ready and text:
+            result = nlp.process_open(text)
+            tokens = list(result.tokens)
+            n = 0
+            for chunk in result.noun_chunks:
+                root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
+                if root is not None and root.pos in ("NOUN", "PROPN") and not root.is_stop:
+                    n += 1
+            chunk_count = n
+            total_chunks += n
+        print(
+            f"  {scenario:<38} model={fixture.get('model', '?'):<20} "
+            f"~{chunk_count} noun chunk(s)\n"
+            f"      -> {cassette_path_for(scenario)}"
+        )
 
     print(
-        f"\nWould record {len(scenarios)} scenario(s) "
-        f"= ~{len(scenarios)} live LLM call(s) (one or more confirm calls per scenario)."
+        f"\n{len(scenarios)} scenario(s). Each makes up to 1 relationship-derivation "
+        "call (skipped if fewer than 2 individuals are identified) + up to 1 confirm "
+        "call per matched noun chunk. Concept-object typing is a deterministic lookup "
+        "against the ontology's property definitions -- it makes no LLM call."
     )
-    print("Model: google/gemini-3-flash-preview (from IndividualOpenV1Config default).")
+    if nlp_ready:
+        print(
+            f"~{total_chunks} noun chunk(s) total across all scenarios (upper bound on "
+            f"confirm calls; actual is lower -- only chunks with vector-index matches "
+            f"trigger a call). Rough total live call estimate: "
+            f"~{total_chunks + len(scenarios)}."
+        )
+    else:
+        print("spaCy model not loaded -- cannot estimate noun-chunk/call counts.")
+    print("Model: claude-opus-4-7 (fixture-pinned; NOT overridden, unlike `default`).")
 
 
 def record_all(scenarios: list[str]) -> int:
     """
-    Record the cassette set live. Makes real, billable LLM calls.
+    Record the cassette set live. Makes real, billable LLM calls against claude-opus-4-7.
 
-    Runs the `grounded_v1` variant once per scenario through the same
-    `RecordingLLMProvider` machinery the quality suite uses, capturing per-chunk
-    confirm prompt->response pairs to the cassette. Each scenario is graded
-    against its assigned ontology context (placeholder or the imported DR spec),
-    built with the same conftest helpers the quality suite uses so the recorded
-    prompts -- and therefore the cassette keys -- match what the offline
-    replay will produce.
+    Mirrors `scripts/quality_tournament.py::_make_grounded_v1_variant`'s
+    `run_scenario` construction exactly -- same `ExtractionService(
+    extraction_mode="nlp_grounded")` + `IndividualExtractionOrchestrator` wiring,
+    same eval ontology (`scripts/eval_ontology.build_eval_ontology`), same
+    ontology_id resolution (symbolic identifier -> taxonomy id) and
+    un-overridden model -- so the recorded prompt hashes match what the
+    tournament will replay.
     """
     from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+    from adapters.events.in_process import InProcessEventPublisher
     from adapters.nlp.spacy_processor import SpacyNLPProcessor
-    from config import get_settings
-    from domain.pipelines.entities import PipelineType
-    from domain.pipelines.individual_extraction.open_orchestrator import (
-        OpenIndividualExtractionOrchestrator,
+    from adapters.persistence.sqlite.connection import (
+        create_local_db_engine,
+        create_session_factory,
     )
+    from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+    from adapters.persistence.sqlite.extraction_run_repo import (
+        SQLiteExtractionRunRepository,
+    )
+    from adapters.persistence.sqlite.models import Base
+    from config import get_settings
+    from domain.extraction.services import ExtractionService
+    from domain.pipelines.entities import PipelineType
     from domain.pipelines.individual_extraction.orchestrator import (
+        IndividualExtractionOrchestrator,
         IndividualExtractionState,
     )
+    from scripts.default_pipeline_ontology import dr_spec_available
     from scripts.eval_ontology import build_eval_ontology
-    from scripts.quality_tournament import (
-        _grounded_cassette_path,
-    )
+    from tests.fakes.fake_reference_source import FakeReferenceSource
     from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 
     settings = get_settings()
     llm_config = settings.llm
-    if (
-        not llm_config.openai_api_key
-        and not llm_config.anthropic_api_key
-        and not llm_config.openrouter_api_key
-    ):
+    if not llm_config.openrouter_api_key:
         print(
-            "ERROR: no LLM provider configured. Set an API key in config.json "
-            "(OpenAI, Anthropic, or OpenRouter) before recording."
+            "ERROR: no OpenRouter API key configured. Set OPENROUTER_API_KEY "
+            "(or config.json llm.openrouter_api_key) before recording."
+        )
+        return 1
+
+    # All 17 fixtures pin ontology_id="dr_spec", which only resolves once the
+    # DR spec is imported into eval_repo -- and build_eval_ontology silently
+    # omits the DR half when the sibling checkout is absent (see its own
+    # docstring). Without this guard, every scenario below would fail to
+    # resolve ontology_id, extract_triples would swallow that internally, and
+    # every "recorded" cassette would be an empty shell -- the exact failure
+    # this script's call_count check exists to catch, but it's cheaper to
+    # refuse up front than to discover it scenario-by-scenario.
+    if not dr_spec_available():
+        print(
+            "ERROR: DR spec checkout not found (see scripts/eval_ontology.find_dr_spec_dir). "
+            "All grounded_v1 fixtures are graded against the imported DR spec ontology; "
+            "recording without it would produce empty cassettes."
         )
         return 1
 
     try:
         from adapters.llm.provider_router import LLMProviderRouter
 
-        real_llm_provider = LLMProviderRouter(
-            openai_api_key=llm_config.openai_api_key,
-            anthropic_api_key=llm_config.anthropic_api_key,
-            openrouter_api_key=llm_config.openrouter_api_key,
-        )
+        # OpenRouter only, deliberately -- not openai_api_key/anthropic_api_key.
+        # The fixture pins the bare model id "claude-opus-4-7" (no vendor
+        # prefix). LLMProviderRouter's AnthropicProvider does an exact match
+        # against a short hardcoded model list (AnthropicProvider.AVAILABLE_MODELS)
+        # -- "claude-opus-4-7" is on it, so an anthropic_api_key would claim
+        # this exact call before OpenRouter is ever considered. This project
+        # routes LLM calls through OpenRouter, not a direct provider key, so
+        # only openrouter_api_key is passed here.
+        real_llm_provider = LLMProviderRouter(openrouter_api_key=llm_config.openrouter_api_key)
     except ValueError as exc:
         print(f"ERROR: LLM provider initialization failed: {exc}")
         return 1
 
-    # Build the eval ontology once for all scenarios (grounded_v1 uses it for typing)
     nlp = SpacyNLPProcessor()
     if not nlp.is_ready():
         print("ERROR: spaCy model not loaded. Run: python -m spacy download en_core_web_sm")
@@ -184,25 +258,7 @@ def record_all(scenarios: list[str]) -> int:
 
     eval_repo, eval_index = build_eval_ontology(embedding)
 
-    # Base config for grounded_v1: nlp_grounded_typing=True, with reasonable defaults
-    base_config = {
-        "nlp_grounded_typing": True,
-        "ground_to_schema": False,
-        "require_schema_match": False,
-        "nlp_typing_top_k": 8,
-        "nlp_typing_threshold": 0.2,
-        "nlp_typing_matching_mode": None,
-        "llm_canonicalization": True,
-        "ground_predicates": False,
-        "coverage_completion": False,
-        "predicate_form": "surface",
-        "relation_confidence": 0.7,
-        "similarity_threshold": 0.45,
-        "kinds_to_search": ["class"],
-        "predicate_similarity_threshold": 0.45,
-    }
-
-    print(f"RECORDING {len(scenarios)} scenario(s) " f"= ~{len(scenarios)} live LLM call(s).")
+    print(f"RECORDING {len(scenarios)} scenario(s) against claude-opus-4-7.")
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
     _CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
@@ -210,36 +266,80 @@ def record_all(scenarios: list[str]) -> int:
     recorded = 0
     skipped = 0
     for scenario in scenarios:
-        cassette_path = _grounded_cassette_path(scenario)
+        cassette_path = cassette_path_for(scenario)
         recording_provider = RecordingLLMProvider(real_llm_provider, cassette_path)
 
-        fixture_input = dict(load_fixture("individual_extraction", scenario))
+        engine = create_local_db_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session_factory = create_session_factory(engine)
+        extraction_service = ExtractionService(
+            ontology_repo=eval_repo,
+            embedding_service=embedding,
+            llm=cast(Any, recording_provider),
+            nlp=nlp,
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=SQLiteExtractionRepository(session_factory),
+            extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
+            schema_index=eval_index,
+            extraction_mode="nlp_grounded",
+        )
+        orch = IndividualExtractionOrchestrator(
+            llm_provider=cast(Any, recording_provider),
+            extraction_service=extraction_service,
+        )
 
+        fixture = dict(load_fixture("individual_extraction", scenario))
+        # Mirror _make_grounded_v1_variant's resolution exactly: extract_triples()
+        # looks up ontology_id via get_taxonomy() (real id, not symbolic
+        # identifier), so the fixture's symbolic "dr_spec" must be resolved to
+        # the eval_repo's actual taxonomy id first. The dr_spec_available()
+        # guard above means this should always resolve; treat a miss as a bug
+        # to fix rather than silently recording an empty cassette for it.
+        taxonomy = eval_repo.get_by_identifier(fixture["ontology_id"])
+        if taxonomy is None:
+            print(
+                f"  ERROR {scenario:<35} (ontology identifier "
+                f"{fixture['ontology_id']!r} did not resolve despite "
+                "dr_spec_available() -- not recording an empty cassette)"
+            )
+            skipped += 1
+            continue
+        fixture["ontology_id"] = taxonomy.id
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture_input,
-        )
-
-        # Use fake services except for the recording LLM provider and eval ontology
-        # (grounded_v1 needs the real LLM and the eval ontology for typing)
-        orch = OpenIndividualExtractionOrchestrator(
-            llm_provider=recording_provider,
-            nlp_processor=nlp,
-            embedding_service=embedding,
-            schema_index=eval_index,
-            config=base_config,
-            ontology_repo=eval_repo,
+            input_data=fixture,
         )
 
         try:
-            asyncio.run(orch.execute(state))
+            result_state = asyncio.run(orch.execute(state))
+            # extract_triples() catches its own internal failures (LLM
+            # errors, JSON parse failures, ontology lookups, etc.) and
+            # returns normally with zero triples rather than raising, so
+            # orch.execute() not raising is NOT sufficient evidence that any
+            # real LLM call happened. Check the provider's own recorded-call
+            # count before trusting flush() to have written anything real --
+            # this is exactly the shape of failure that once produced
+            # "Recorded 15 cassette(s); skipped/failed 0" while every
+            # scenario had silently failed with zero real LLM calls made.
+            if recording_provider.call_count == 0:
+                warnings = (result_state.result or {}).get("warnings") or []
+                print(
+                    f"  ERROR {scenario:<35} (0 LLM calls captured -- pipeline "
+                    f"completed but made no real calls; warnings={warnings}). "
+                    "Not writing an empty cassette."
+                )
+                skipped += 1
+                continue
             recording_provider.flush()
-            print(f"  recorded {scenario:<38} -> {cassette_path}")
+            print(
+                f"  recorded {scenario:<38} -> {cassette_path} "
+                f"({recording_provider.call_count} call(s))"
+            )
             recorded += 1
         except Exception as exc:
             print(f"  ERROR {scenario:<35} ({type(exc).__name__}: {exc})")
-            # Remove any stale cassette file from a previous run
             if cassette_path.exists():
                 cassette_path.unlink()
                 print("         (removed stale cassette file)")
@@ -259,7 +359,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Record the `grounded_v1` NLP-grounded typing variant's cassette set "
-            "for offline Loop B replay (karpathy_loop_design.md §4.2, Phase 3)."
+            "for offline Loop B replay (karpathy_loop_design.md §4.2)."
         )
     )
     parser.add_argument(
@@ -274,9 +374,20 @@ def main() -> int:
         default=False,
         help="Record cassettes live (makes real LLM calls; requires --record to proceed)",
     )
+    parser.add_argument(
+        "--exclude",
+        nargs="+",
+        default=[],
+        metavar="SCENARIO",
+        help=(
+            "Skip these scenario(s), e.g. the long Wave 1 bootstrap diagnostics "
+            "(dr_bootstrap_claude, dr_bootstrap_readme) which dominate the noun-chunk "
+            "count but never gate the promotion decision."
+        ),
+    )
     args = parser.parse_args()
 
-    scenarios = union_scenarios()
+    scenarios = [s for s in union_scenarios() if s not in set(args.exclude)]
     if args.record:
         return record_all(scenarios)
     else:

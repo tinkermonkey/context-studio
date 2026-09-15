@@ -288,6 +288,20 @@ class RecordingLLMProvider:
         """Get list of available models."""
         return self._delegate.list_available_models()
 
+    @property
+    def call_count(self) -> int:
+        """
+        Number of distinct LLM calls recorded so far.
+
+        A recorder that finishes a pipeline run with this at 0 made no real
+        LLM calls at all -- typically because the pipeline failed internally
+        before reaching the LLM (e.g. an unresolved ontology lookup) and
+        swallowed the error rather than raising. `flush()` will still happily
+        write an empty cassette in that case, so callers should check this
+        before treating a run as a successful recording.
+        """
+        return len(self._recordings)
+
     def flush(self) -> None:
         """Write recorded cassette to disk."""
         try:
