@@ -151,15 +151,17 @@ def print_plan(scenarios: list[str]) -> None:
         )
 
     print(
-        f"\n{len(scenarios)} scenario(s). Each makes 1 relationship-derivation call "
-        "+ 1 concept-typing call + up to 1 confirm call per matched noun chunk."
+        f"\n{len(scenarios)} scenario(s). Each makes up to 1 relationship-derivation "
+        "call (skipped if fewer than 2 individuals are identified) + up to 1 confirm "
+        "call per matched noun chunk. Concept-object typing is a deterministic lookup "
+        "against the ontology's property definitions -- it makes no LLM call."
     )
     if nlp_ready:
         print(
             f"~{total_chunks} noun chunk(s) total across all scenarios (upper bound on "
             f"confirm calls; actual is lower -- only chunks with vector-index matches "
             f"trigger a call). Rough total live call estimate: "
-            f"~{total_chunks + 2 * len(scenarios)}."
+            f"~{total_chunks + len(scenarios)}."
         )
     else:
         print("spaCy model not loaded -- cannot estimate noun-chunk/call counts.")
@@ -197,6 +199,7 @@ def record_all(scenarios: list[str]) -> int:
         IndividualExtractionOrchestrator,
         IndividualExtractionState,
     )
+    from scripts.default_pipeline_ontology import dr_spec_available
     from scripts.eval_ontology import build_eval_ontology
     from tests.fakes.fake_reference_source import FakeReferenceSource
     from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
@@ -210,16 +213,33 @@ def record_all(scenarios: list[str]) -> int:
         )
         return 1
 
+    # All 17 fixtures pin ontology_id="dr_spec", which only resolves once the
+    # DR spec is imported into eval_repo -- and build_eval_ontology silently
+    # omits the DR half when the sibling checkout is absent (see its own
+    # docstring). Without this guard, every scenario below would fail to
+    # resolve ontology_id, extract_triples would swallow that internally, and
+    # every "recorded" cassette would be an empty shell -- the exact failure
+    # this script's call_count check exists to catch, but it's cheaper to
+    # refuse up front than to discover it scenario-by-scenario.
+    if not dr_spec_available():
+        print(
+            "ERROR: DR spec checkout not found (see scripts/eval_ontology.find_dr_spec_dir). "
+            "All grounded_v1 fixtures are graded against the imported DR spec ontology; "
+            "recording without it would produce empty cassettes."
+        )
+        return 1
+
     try:
         from adapters.llm.provider_router import LLMProviderRouter
 
         # OpenRouter only, deliberately -- not openai_api_key/anthropic_api_key.
         # The fixture pins the bare model id "claude-opus-4-7" (no vendor
-        # prefix), which LLMProviderRouter hands straight to the direct
-        # AnthropicProvider if an anthropic_api_key is configured (it claims
-        # any bare "claude-*" name before OpenRouter is ever considered) --
-        # this project routes LLM calls through OpenRouter, not a direct
-        # provider key, so only openrouter_api_key is passed here.
+        # prefix). LLMProviderRouter's AnthropicProvider does an exact match
+        # against a short hardcoded model list (AnthropicProvider.AVAILABLE_MODELS)
+        # -- "claude-opus-4-7" is on it, so an anthropic_api_key would claim
+        # this exact call before OpenRouter is ever considered. This project
+        # routes LLM calls through OpenRouter, not a direct provider key, so
+        # only openrouter_api_key is passed here.
         real_llm_provider = LLMProviderRouter(openrouter_api_key=llm_config.openrouter_api_key)
     except ValueError as exc:
         print(f"ERROR: LLM provider initialization failed: {exc}")
@@ -273,11 +293,19 @@ def record_all(scenarios: list[str]) -> int:
         # Mirror _make_grounded_v1_variant's resolution exactly: extract_triples()
         # looks up ontology_id via get_taxonomy() (real id, not symbolic
         # identifier), so the fixture's symbolic "dr_spec" must be resolved to
-        # the eval_repo's actual taxonomy id first, or every scenario fails with
-        # "Ontology dr_spec not found" before making any LLM call.
+        # the eval_repo's actual taxonomy id first. The dr_spec_available()
+        # guard above means this should always resolve; treat a miss as a bug
+        # to fix rather than silently recording an empty cassette for it.
         taxonomy = eval_repo.get_by_identifier(fixture["ontology_id"])
-        if taxonomy is not None:
-            fixture["ontology_id"] = taxonomy.id
+        if taxonomy is None:
+            print(
+                f"  ERROR {scenario:<35} (ontology identifier "
+                f"{fixture['ontology_id']!r} did not resolve despite "
+                "dr_spec_available() -- not recording an empty cassette)"
+            )
+            skipped += 1
+            continue
+        fixture["ontology_id"] = taxonomy.id
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -285,9 +313,30 @@ def record_all(scenarios: list[str]) -> int:
         )
 
         try:
-            asyncio.run(orch.execute(state))
+            result_state = asyncio.run(orch.execute(state))
+            # extract_triples() catches its own internal failures (LLM
+            # errors, JSON parse failures, ontology lookups, etc.) and
+            # returns normally with zero triples rather than raising, so
+            # orch.execute() not raising is NOT sufficient evidence that any
+            # real LLM call happened. Check the provider's own recorded-call
+            # count before trusting flush() to have written anything real --
+            # this is exactly the shape of failure that once produced
+            # "Recorded 15 cassette(s); skipped/failed 0" while every
+            # scenario had silently failed with zero real LLM calls made.
+            if recording_provider.call_count == 0:
+                warnings = (result_state.result or {}).get("warnings") or []
+                print(
+                    f"  ERROR {scenario:<35} (0 LLM calls captured -- pipeline "
+                    f"completed but made no real calls; warnings={warnings}). "
+                    "Not writing an empty cassette."
+                )
+                skipped += 1
+                continue
             recording_provider.flush()
-            print(f"  recorded {scenario:<38} -> {cassette_path}")
+            print(
+                f"  recorded {scenario:<38} -> {cassette_path} "
+                f"({recording_provider.call_count} call(s))"
+            )
             recorded += 1
         except Exception as exc:
             print(f"  ERROR {scenario:<35} ({type(exc).__name__}: {exc})")

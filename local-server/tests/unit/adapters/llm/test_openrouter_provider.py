@@ -548,7 +548,7 @@ class TestOpenRouterCompletion:
         assert json_arg["messages"][1]["role"] == "user"
 
     def test_complete_reports_original_model_not_wire_model(self):
-        """The response's `model` field is the caller's original bare id, not the wire-prefixed one."""
+        """The response's `model` is the caller's original bare id, not the wire-prefixed one."""
         provider = self.create_provider_with_mock_client()
 
         mock_response = Mock()
@@ -570,6 +570,41 @@ class TestOpenRouterCompletion:
         assert result.model == "claude-opus-4-7"
         sent_model = provider._client.post.call_args[1]["json"]["model"]
         assert sent_model == "anthropic/claude-opus-4-7"
+
+    def test_wire_translation_does_not_affect_cache_key(self):
+        """A bare model id and its already-prefixed equivalent must NOT collide in the cache.
+
+        `_wire_model` translation happens only when building the outgoing
+        request body, after the cache key is computed from the caller's
+        original `model` argument. If a regression moved that translation
+        earlier so it also fed the cache key, "claude-opus-4-7" and
+        "anthropic/claude-opus-4-7" would collide into one cache entry --
+        silently corrupting hit/miss behavior for any caller that mixes bare
+        and vendor-prefixed forms (e.g. switching between a direct provider
+        key and OpenRouter-only, exactly the scenario this translation exists
+        for).
+        """
+        provider = self.create_provider_with_mock_client()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "r"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        }
+        provider._client.post.return_value = mock_response
+
+        provider.complete(
+            system_prompt="s", user_prompt="u", model="claude-opus-4-7", temperature=0.0
+        )
+        provider.complete(
+            system_prompt="s",
+            user_prompt="u",
+            model="anthropic/claude-opus-4-7",
+            temperature=0.0,
+        )
+
+        assert provider._client.post.call_count == 2
+        assert len(provider._response_cache) == 2
 
     def test_complete_without_seed(self):
         """Complete request without seed omits seed from body."""

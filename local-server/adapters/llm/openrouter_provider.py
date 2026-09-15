@@ -310,12 +310,15 @@ class OpenRouterProvider:
         )
 
     # Bare (unprefixed) model-name patterns mapped to their OpenRouter vendor
-    # prefix. OpenRouter requires "vendor/model" (e.g. "anthropic/claude-opus-4-7")
-    # and rejects a bare name outright ("claude-opus-4-7 is not a valid model
-    # ID") -- but callers throughout this codebase (fixtures, ExtractionRun
-    # records, other providers' model lists) commonly pass the bare form,
-    # especially when OpenRouter is the only configured provider and there is
-    # no direct provider key to route a bare name to instead.
+    # prefix. In manual testing, OpenRouter rejected a bare "claude-opus-4-7"
+    # outright with a 400 and an error to the effect of "not a valid model
+    # ID" -- it wants "vendor/model" (e.g. "anthropic/claude-opus-4-7"). But
+    # callers throughout this codebase (fixtures, ExtractionRun records,
+    # other providers' model lists) commonly pass the bare form, especially
+    # when OpenRouter is the only configured provider and there is no direct
+    # provider key to route a bare name to instead. `is_model_available`'s
+    # looser format check above predates this and doesn't reflect what
+    # actually reaches OpenRouter's wire -- this translation is what does.
     _BARE_MODEL_VENDOR_PREFIXES: tuple[tuple[str, str], ...] = (
         ("claude-", "anthropic/"),
         ("gpt-", "openai/"),
@@ -342,6 +345,14 @@ class OpenRouterProvider:
         for bare_prefix, vendor_prefix in cls._BARE_MODEL_VENDOR_PREFIXES:
             if model.startswith(bare_prefix):
                 return f"{vendor_prefix}{model}"
+        logger.warning(
+            "OpenRouter: bare model id %r matched none of the known vendor "
+            "prefixes (%s); forwarding unchanged -- OpenRouter will likely "
+            "reject it. Add a mapping to _BARE_MODEL_VENDOR_PREFIXES if this "
+            "is a known model family.",
+            model,
+            ", ".join(prefix for prefix, _ in cls._BARE_MODEL_VENDOR_PREFIXES),
+        )
         return model
 
     def _make_cache_key(
