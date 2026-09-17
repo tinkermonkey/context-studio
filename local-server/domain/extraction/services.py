@@ -793,7 +793,7 @@ class ExtractionService:
         )
 
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens = self._derive_relationships(
+        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
@@ -803,12 +803,12 @@ class ExtractionService:
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        all_warnings = parse_warnings + typing_warnings
+        all_warnings = parse_warnings + typing_warnings + rel_warnings
         return combined, tokens_used, all_warnings
 
     def _derive_relationships(
         self, text, ontology, individuals, ontology_id, model, temperature
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         Derive relationships over already-identified individuals (shared pass 2).
 
@@ -818,10 +818,10 @@ class ExtractionService:
         clamps to domain/range). Any typing triple the model re-emits is dropped
         so the identification pass stays the single source of typing. Skipped when
         fewer than two individuals were identified. Returns (relationship triples,
-        tokens used).
+        tokens used, warnings).
         """
         if len(individuals) < 2:
-            return [], 0
+            return [], 0, []
         relationship_system, relationship_user = self._build_relationship_extraction_prompt(
             text, ontology, individuals
         )
@@ -840,10 +840,7 @@ class ExtractionService:
         relationship_triples = [
             triple for triple in relationship_triples if not self._is_typing_triple(triple)
         ]
-        if rel_warnings:
-            for warning in rel_warnings:
-                _logger.debug(f"Relationship extraction warning: {warning}")
-        return relationship_triples, tokens
+        return relationship_triples, tokens, rel_warnings
 
     def _post_process_triples(self, triples: list[dict], ontology) -> list[dict]:
         """Recognition step, shared by both modes."""
@@ -1105,7 +1102,7 @@ class ExtractionService:
             individual_triples, ontology
         )
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens = self._derive_relationships(
+        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
@@ -1115,7 +1112,7 @@ class ExtractionService:
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        all_warnings = nlp_typing_warnings + typing_warnings
+        all_warnings = nlp_typing_warnings + typing_warnings + rel_warnings
         return combined, tokens_used, all_warnings
 
     def _type_individuals_nlp_grounded(
@@ -1307,16 +1304,10 @@ class ExtractionService:
     def _make_typing_triple(label: str, match, chunk) -> dict:
         """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk.
 
-        Constructs SourceSpan directly from spaCy chunk (no resolution cascade needed
-        since this path is exact by construction from NLP processing).
+        Constructs provenance directly from spaCy chunk's exact positions
+        (no resolution cascade needed since this path is exact by construction).
         """
         class_ref = match.external_id or match.identifier or match.label
-        # Construct SourceSpan directly from spaCy chunk's exact positions
-        provenance_span = SourceSpan(
-            quote=chunk.text,
-            start=chunk.start,
-            end=chunk.end,
-        )
         return {
             "subject": {
                 "kind": "individual",
@@ -1328,9 +1319,9 @@ class ExtractionService:
             "object": {"kind": "class", "id": match.entity_id, "label": class_ref},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 2),
             "provenance": {
-                "text_offset_start": provenance_span.start,
-                "text_offset_end": provenance_span.end,
-                "raw": provenance_span.quote,
+                "text_offset_start": chunk.start,
+                "text_offset_end": chunk.end,
+                "raw": chunk.text,
             },
         }
 
