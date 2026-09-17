@@ -45,9 +45,44 @@ from .ports import (
     ReferenceSource,
 )
 from .span_resolution import resolve_span
-from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
+from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
 _logger = logging.getLogger(__name__)
+
+
+def _serialize_triple_provenance(triple: dict) -> dict:
+    """
+    Serialize SourceSpan objects in triple provenance to dict format.
+
+    Converts a triple with a SourceSpan provenance object to a dict with
+    serialized provenance (text_offset_start, text_offset_end, raw keys).
+    Leaves the triple unchanged if provenance is already a dict or None.
+
+    Args:
+        triple: Triple dict potentially containing a SourceSpan provenance object
+
+    Returns:
+        Triple dict with provenance serialized to dict format
+    """
+    provenance = triple.get("provenance")
+    if isinstance(provenance, SourceSpan):
+        # Serialize SourceSpan: include positions only if both are present
+        if provenance.start is not None and provenance.end is not None:
+            serialized = {
+                "text_offset_start": provenance.start,
+                "text_offset_end": provenance.end,
+                "raw": provenance.quote or "",
+            }
+        else:
+            # Quote-only or unresolved: preserve quote if available
+            serialized = {
+                "text_offset_start": None,
+                "text_offset_end": None,
+                "raw": provenance.quote,
+            }
+        return {**triple, "provenance": serialized}
+    return triple
+
 
 # Upper bound on the number of ontology classes injected into a triple-extraction
 # prompt. Keeps the RAG grounding block a bounded fraction of the prompt for
@@ -605,8 +640,11 @@ class ExtractionService:
             # Always clear the correlation context after extraction
             set_batch_run_context(None)
 
+        # Serialize SourceSpan objects in provenance to dict format for API contract
+        serialized_triples = [_serialize_triple_provenance(triple) for triple in extracted_triples]
+
         return TripleExtractionResult(
-            triples=extracted_triples,
+            triples=serialized_triples,
             warnings=warnings,
             metadata={
                 "model": model,
@@ -1306,9 +1344,11 @@ class ExtractionService:
     def _make_typing_triple(label: str, match, chunk) -> dict:
         """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk.
 
-        Constructs provenance directly from spaCy chunk's exact positions
+        Constructs provenance as a SourceSpan from spaCy chunk's exact positions
         (no resolution cascade needed since this path is exact by construction).
         """
+        from domain.extraction.value_objects import SourceSpan
+
         class_ref = match.external_id or match.identifier or match.label
         return {
             "subject": {
@@ -1320,11 +1360,11 @@ class ExtractionService:
             "predicate": {"property_definition_id": None, "label": "is_a"},
             "object": {"kind": "class", "id": match.entity_id, "label": class_ref},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 2),
-            "provenance": {
-                "text_offset_start": chunk.start,
-                "text_offset_end": chunk.end,
-                "raw": chunk.text,
-            },
+            "provenance": SourceSpan(
+                quote=chunk.text,
+                start=chunk.start,
+                end=chunk.end,
+            ),
         }
 
     def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
@@ -1947,41 +1987,26 @@ Identified individuals:
 
         resolved_span = resolve_span(raw_quote, hint_start, hint_end, text)
 
-        # Serialize SourceSpan to dict format
-        if resolved_span.start is not None and resolved_span.end is not None:
-            provenance = {
-                "text_offset_start": resolved_span.start,
-                "text_offset_end": resolved_span.end,
-                "raw": resolved_span.quote or "",
-            }
-        elif resolved_span.quote is not None:
-            # Fuzzy match: have quote but no exact position
-            subject_label = subject_data.get("label")
-            predicate_label = predicate_data.get("label")
-            object_label = object_data.get("label")
-            warnings.append(
-                f"Unresolved triple provenance (fuzzy match only): "
-                f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
-            )
-            provenance = {
-                "text_offset_start": None,
-                "text_offset_end": None,
-                "raw": resolved_span.quote,
-            }
-        else:
-            # Unresolved span
-            subject_label = subject_data.get("label")
-            predicate_label = predicate_data.get("label")
-            object_label = object_data.get("label")
-            warnings.append(
-                f"Unresolved triple provenance (no match found): "
-                f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
-            )
-            provenance = {
-                "text_offset_start": None,
-                "text_offset_end": None,
-                "raw": None,
-            }
+        # Use SourceSpan directly instead of converting to dict
+        if resolved_span.start is None and resolved_span.end is None:
+            # Fuzzy match or unresolved: record warning if no quote
+            if resolved_span.quote is None:
+                subject_label = subject_data.get("label")
+                predicate_label = predicate_data.get("label")
+                object_label = object_data.get("label")
+                warnings.append(
+                    f"Unresolved triple provenance (no match found): "
+                    f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
+                )
+            else:
+                subject_label = subject_data.get("label")
+                predicate_label = predicate_data.get("label")
+                object_label = object_data.get("label")
+                warnings.append(
+                    f"Unresolved triple provenance (fuzzy match only): "
+                    f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
+                )
+        provenance = resolved_span
 
         # Build subject
         subject_kind = subject_data.get("kind", "class")
