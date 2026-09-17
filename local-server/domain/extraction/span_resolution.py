@@ -122,7 +122,7 @@ def find_all_spans(
     # Stage 3: Fuzzy matches for variant spellings/typos (quote-only, no exact positions)
     # Only apply fuzzy matching if stages 1-2 found no results
     if not spans:
-        fuzzy_matches = _find_all_fuzzy_matches(term, source_text)
+        fuzzy_matches = _find_fuzzy_match_in_text(term, source_text)
         spans.extend(fuzzy_matches)
 
     return spans
@@ -336,24 +336,32 @@ def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
     return False
 
 
-def _find_all_fuzzy_matches(term: str, source_text: str) -> list[SourceSpan]:
+def _find_fuzzy_match_in_text(term: str, source_text: str) -> list[SourceSpan]:
     """
-    Find fuzzy matches across entire source text as quote-only spans.
+    Find a fuzzy match in source text as a quote-only span.
 
     Fuzzy matching is a fallback when exact and normalized matching find nothing.
-    It returns quote-only spans (no exact positions) because position mapping from
-    normalized text back to original text is unreliable when comparing normalized
-    substrings of varying lengths.
+    It returns at most one quote-only span (no exact position) because position
+    mapping from normalized text back to original text is unreliable when comparing
+    normalized substrings of varying lengths.
 
-    Scans the entire source text using normalized comparison with >0.80 similarity.
+    To avoid O(n*k) SequenceMatcher overhead on very large texts, this function
+    short-circuits when source_text exceeds 100,000 characters. Fuzzy matching for
+    such texts is deferred as the probability of finding a meaningful variant match
+    diminishes with text size.
 
     Args:
         term: The text to match (approximately).
-        source_text: The text to search within.
+        source_text: The text to search within. Very large texts (>100k chars)
+            are skipped for performance.
 
     Returns:
         List with a single quote-only SourceSpan if fuzzy match found, empty otherwise.
     """
+    if len(source_text) > 100_000:
+        # Skip fuzzy matching for very large texts to avoid O(n*k) cost
+        return []
+
     term_len = len(term)
     min_len = max(1, int(term_len * 0.8))  # 80% of term length
     max_len = int(term_len * 1.2)  # 120% of term length

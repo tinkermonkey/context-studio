@@ -37,6 +37,31 @@ _logger = logging.getLogger(__name__)
 _MAX_CHUNK_CHARS = 8000
 
 
+def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
+    """
+    Serialize SourceSpan objects to dict format, excluding quote-only spans.
+
+    Quote-only spans (where start/end are None) represent unresolved or fuzzy-matched
+    provenance and are excluded from serialization as they lack concrete positions.
+
+    Args:
+        spans: List of SourceSpan objects
+
+    Returns:
+        List of dicts with text_offset_start, text_offset_end, and raw fields
+    """
+    provenance_dicts: list[dict[str, Any]] = []
+    for span in spans:
+        # Skip quote-only spans (where start/end are None) - they're not concrete provenance
+        if span.start is not None and span.end is not None:
+            provenance_dicts.append({
+                "text_offset_start": span.start,
+                "text_offset_end": span.end,
+                "raw": span.quote,
+            })
+    return provenance_dicts
+
+
 @dataclass
 class CandidateClass:
     """A candidate class extracted from text."""
@@ -49,22 +74,12 @@ class CandidateClass:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
-        provenance_dicts: list[dict[str, Any]] = []
-        for span in self.provenance:
-            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
-            if span.start is not None and span.end is not None:
-                provenance_dicts.append({
-                    "text_offset_start": span.start,
-                    "text_offset_end": span.end,
-                    "raw": span.quote,
-                })
         return {
             "kind": "class",
             "label": self.label,
             "proposed_definition": self.proposed_definition,
             "confidence": self.confidence,
-            "provenance": provenance_dicts,
+            "provenance": _serialize_provenance(self.provenance),
             "disambiguation_rationale": self.disambiguation_rationale,
         }
 
@@ -82,16 +97,6 @@ class CandidatePropertyDefinition:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
-        provenance_dicts: list[dict[str, Any]] = []
-        for span in self.provenance:
-            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
-            if span.start is not None and span.end is not None:
-                provenance_dicts.append({
-                    "text_offset_start": span.start,
-                    "text_offset_end": span.end,
-                    "raw": span.quote,
-                })
         return {
             "kind": "property_definition",
             "label": self.label,
@@ -99,7 +104,7 @@ class CandidatePropertyDefinition:
             "proposed_domain": self.proposed_domain,
             "proposed_range": self.proposed_range,
             "confidence": self.confidence,
-            "provenance": provenance_dicts,
+            "provenance": _serialize_provenance(self.provenance),
         }
 
 
@@ -115,22 +120,12 @@ class CandidateConnection:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
-        provenance_dicts: list[dict[str, Any]] = []
-        for span in self.provenance:
-            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
-            if span.start is not None and span.end is not None:
-                provenance_dicts.append({
-                    "text_offset_start": span.start,
-                    "text_offset_end": span.end,
-                    "raw": span.quote,
-                })
         return {
             "subject_ref": self.subject_ref,
             "predicate": self.predicate,
             "object_ref": self.object_ref,
             "confidence": self.confidence,
-            "provenance": provenance_dicts,
+            "provenance": _serialize_provenance(self.provenance),
         }
 
 
@@ -312,7 +307,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         return any(span.start is not None and span.end is not None for span in spans)
 
-    def _compute_confidence(self, label: str, source_text: str) -> float:
+    def _compute_confidence(
+        self, label: str, source_text: str, provenance_spans: list[SourceSpan] | None = None
+    ) -> float:
         """
         Compute evidence-based confidence for a candidate label.
 
@@ -321,11 +318,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Args:
             label: Candidate label to score
             source_text: Original source text
+            provenance_spans: Pre-computed provenance spans. If None, will call _find_provenance.
 
         Returns:
             Confidence in [0.2, 1.0]
         """
-        provenance_spans = self._find_provenance(label, source_text)
+        if provenance_spans is None:
+            provenance_spans = self._find_provenance(label, source_text)
         provenance_found = self._has_concrete_provenance(provenance_spans)
         term_freq = len(re.findall(re.escape(label), source_text, re.IGNORECASE))
         return min(
@@ -515,7 +514,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         for concept in labels:
             definition = definitions_dict.get(concept) or f"{concept}: a domain concept."
             provenance = self._find_provenance(concept, state.source_text)
-            confidence = self._compute_confidence(concept, state.source_text)
+            confidence = self._compute_confidence(concept, state.source_text, provenance)
 
             # Warn if provenance is empty or contains only quote-only (unresolved) spans
             if not self._has_concrete_provenance(provenance):
