@@ -1136,10 +1136,12 @@ class ExtractionService:
         warnings: list[str] = []
 
         if self._schema_index is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded typing requested but schema_index is None; "
                 "no typing triples will be produced"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return [], 0, warnings
 
         taxonomy_id = getattr(ontology, "id", None)
@@ -1880,6 +1882,9 @@ Identified individuals:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if not json_match:
+                warning_msg = "No JSON found in LLM response; no triples extracted"
+                _logger.warning(warning_msg)
+                warnings.append(warning_msg)
                 return [], warnings
 
             response_json = json.loads(json_match.group())
@@ -1893,9 +1898,15 @@ Identified individuals:
                     )
                     triples.append(triple)
                     warnings.extend(triple_warnings)
-                except Exception as e:
-                    _logger.warning(f"Failed to parse triple: {e}")
+                except (TypeError, ValueError, KeyError) as e:
+                    warning_msg = f"Failed to parse triple due to data error: {type(e).__name__}: {e}"
+                    _logger.warning(warning_msg)
+                    warnings.append(warning_msg)
                     continue
+                except Exception as e:
+                    error_msg = f"Unexpected error while parsing triple: {type(e).__name__}: {e}"
+                    _logger.error(error_msg)
+                    raise
 
             return triples, warnings
 

@@ -251,6 +251,12 @@ class IndividualExtractionApplyService:
                     if key in individual_key_to_id:
                         obj_id = individual_key_to_id[key]
 
+                if not obj_id and obj_label:
+                    _logger.warning(
+                        f"Object individual lookup failed: label '{obj_label}' with classes {obj_class_ids} "
+                        "not found in individual cache; relationship will be skipped"
+                    )
+
             if property_definition_id and obj_kind in ("individual", "class") and obj_id:
                 self._apply_relationship(
                     source_id=resolved_id,

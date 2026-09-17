@@ -621,14 +621,18 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         warnings: list[str] = []
 
         if self._schema_index is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded_typing requested but schema_index is None; typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
         if self._ontology_repo is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded_typing requested but ontology_repo is None; typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
         if not ontology_id:
             _logger.debug("nlp_grounded_typing: ontology_id is None; typing stage skipped")
