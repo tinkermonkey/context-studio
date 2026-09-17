@@ -39,7 +39,8 @@ def resolve_span(
     Args:
         quote: The text to find, or None. May be verbatim or paraphrased.
         hint_start: Approximate character position of the span start, or None.
-        hint_end: Approximate character position of the span end, or None (unused in current implementation).
+        hint_end: Approximate character position of the span end, or None
+            (unused in current implementation).
         source_text: The full source document text to search within.
 
     Returns:
@@ -107,9 +108,7 @@ def find_all_spans(
     normalized_matches = _find_all_normalized_matches(term, source_text)
     for start, end in normalized_matches:
         # Avoid duplicates from stage 1 (exact match will also be found in normalized)
-        if not any(
-            s.start == start and s.end == end for s in spans
-        ):
+        if not any(s.start == start and s.end == end for s in spans):
             spans.append(SourceSpan(quote=term, start=start, end=end))
 
     return spans
@@ -155,9 +154,7 @@ def _find_exact_match(
     return (occurrences[0], occurrences[0] + len(quote))
 
 
-def _find_all_exact_matches(
-    term: str, source_text: str
-) -> list[tuple[int, int]]:
+def _find_all_exact_matches(term: str, source_text: str) -> list[tuple[int, int]]:
     """
     Find all exact substring matches in source text.
 
@@ -224,16 +221,12 @@ def _find_normalized_match(
             # Map each normalized position back to original and pick closest to hint
             candidates = []
             for norm_pos in occurrences:
-                orig_pos = _map_normalized_to_original(
-                    normalized_source, source_text, norm_pos
-                )
+                orig_pos = _map_normalized_to_original(normalized_source, source_text, norm_pos)
                 if orig_pos is not None:
                     candidates.append((norm_pos, orig_pos))
 
             if candidates:
-                best_normalized_pos, _ = min(
-                    candidates, key=lambda c: abs(c[1] - hint_start)
-                )
+                best_normalized_pos, _ = min(candidates, key=lambda c: abs(c[1] - hint_start))
             else:
                 best_normalized_pos = occurrences[0]
         else:
@@ -254,9 +247,7 @@ def _find_normalized_match(
     return None
 
 
-def _find_all_normalized_matches(
-    term: str, source_text: str
-) -> list[tuple[int, int]]:
+def _find_all_normalized_matches(term: str, source_text: str) -> list[tuple[int, int]]:
     """
     Find all matches using whitespace-normalized, case-folded comparison.
 
@@ -291,9 +282,7 @@ def _find_all_normalized_matches(
     return matches
 
 
-def _find_fuzzy_match(
-    quote: str, source_text: str, hint_start: int
-) -> bool:
+def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
     """
     Find a fuzzy match within a bounded window around hint_start.
 
@@ -325,9 +314,7 @@ def _find_fuzzy_match(
             candidate = window[i : i + candidate_len]
             normalized_candidate = _normalize_text(candidate)
 
-            ratio = difflib.SequenceMatcher(
-                None, normalized_quote, normalized_candidate
-            ).ratio()
+            ratio = difflib.SequenceMatcher(None, normalized_quote, normalized_candidate).ratio()
 
             if ratio >= 0.80:
                 return True
@@ -374,15 +361,10 @@ def _map_normalized_to_original(
     while normalized_idx < normalized_pos and original_idx < len(original_text):
         if original_text[original_idx].isspace():
             # Skip all whitespace in original
-            while (
-                original_idx < len(original_text)
-                and original_text[original_idx].isspace()
-            ):
+            while original_idx < len(original_text) and original_text[original_idx].isspace():
                 original_idx += 1
             # Skip one space in normalized (representing all that whitespace)
-            if normalized_idx < len(normalized_text) and normalized_text[
-                normalized_idx
-            ].isspace():
+            if normalized_idx < len(normalized_text) and normalized_text[normalized_idx].isspace():
                 normalized_idx += 1
         else:
             original_idx += 1

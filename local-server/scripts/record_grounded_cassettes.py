@@ -142,7 +142,7 @@ def print_plan(scenarios: list[str]) -> None:
                 root = tokens[chunk.root_index] if 0 <= chunk.root_index < len(tokens) else None
                 if root is not None and root.pos in ("NOUN", "PROPN") and not root.is_stop:
                     n += 1
-            chunk_count = n
+            chunk_count = str(n)
             total_chunks += n
         print(
             f"  {scenario:<38} model={fixture.get('model', '?'):<20} "
