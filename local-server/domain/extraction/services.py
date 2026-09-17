@@ -45,7 +45,7 @@ from .ports import (
     ReferenceSource,
 )
 from .span_resolution import resolve_span
-from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
+from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 _logger = logging.getLogger(__name__)
 
@@ -1879,7 +1879,9 @@ Identified individuals:
             triples = []
             for triple_data in triples_data:
                 try:
-                    triple, triple_warnings = self._build_triple_from_llm_output(triple_data, text, ontology_id)
+                    triple, triple_warnings = self._build_triple_from_llm_output(
+                        triple_data, text, ontology_id
+                    )
                     triples.append(triple)
                     warnings.extend(triple_warnings)
                 except Exception as e:
@@ -1892,7 +1894,9 @@ Identified individuals:
             _logger.error(f"Failed to parse LLM JSON response: {e}")
             return [], warnings
 
-    def _build_triple_from_llm_output(self, triple_data: dict, text: str, ontology_id: str) -> tuple[dict, list[str]]:
+    def _build_triple_from_llm_output(
+        self, triple_data: dict, text: str, ontology_id: str
+    ) -> tuple[dict, list[str]]:
         """
         Build a triple dict from LLM-extracted data using span resolution.
 
@@ -1930,9 +1934,12 @@ Identified individuals:
             }
         elif resolved_span.quote is not None:
             # Fuzzy match: have quote but no exact position
+            subject_label = subject_data.get("label")
+            predicate_label = predicate_data.get("label")
+            object_label = object_data.get("label")
             warnings.append(
-                f"Unresolved triple provenance (fuzzy match only): subject={subject_data.get('label')}, "
-                f"predicate={predicate_data.get('label')}, object={object_data.get('label')}"
+                f"Unresolved triple provenance (fuzzy match only): "
+                f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
             )
             provenance = {
                 "text_offset_start": None,
@@ -1941,9 +1948,12 @@ Identified individuals:
             }
         else:
             # Unresolved span
+            subject_label = subject_data.get("label")
+            predicate_label = predicate_data.get("label")
+            object_label = object_data.get("label")
             warnings.append(
-                f"Unresolved triple provenance (no match found): subject={subject_data.get('label')}, "
-                f"predicate={predicate_data.get('label')}, object={object_data.get('label')}"
+                f"Unresolved triple provenance (no match found): "
+                f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
             )
             provenance = {
                 "text_offset_start": None,
