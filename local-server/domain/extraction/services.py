@@ -1615,6 +1615,10 @@ Extract triples in the following JSON format:
   ]
 }
 
+For each extracted triple, set provenance.raw to an exact, verbatim substring from
+the source text (not a paraphrase), and set text_offset_start/text_offset_end to the
+best-effort character positions of that substring.
+
 Extract every distinct individual (a concrete named thing, concept, or component)
 the text mentions. For each individual, emit exactly one typing triple: subject =
 the individual, predicate.label = "is_a", object = the ontology class it belongs to.
@@ -1729,6 +1733,11 @@ Extract relationship triples in the following JSON format:
     }}
   ]
 }}
+
+For each relationship triple, set provenance.raw to an exact, verbatim substring that
+evidences the relationship (typically spanning both entities and the connecting clause,
+not just a single entity mention), and set text_offset_start/text_offset_end to the
+best-effort character positions of that substring.
 
 Use one of the individuals listed in the prompt as the SUBJECT of each relationship,
 copying its label EXACTLY. The OBJECT may be one of the listed individuals OR a new
