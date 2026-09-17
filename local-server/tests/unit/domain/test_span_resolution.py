@@ -166,8 +166,9 @@ class TestResolveSpanFuzzyMatch:
 
         # Should fuzzy-match (quote-only, no exact position)
         assert span.quote is not None
-        assert span.start is None or span.end is None or (
-            span.start is not None and span.end is not None
+        # Either fully resolved with both start and end, or fuzzy-matched with both None
+        assert (span.start is not None and span.end is not None) or (
+            span.start is None and span.end is None
         )
 
     def test_fuzzy_match_paraphrased_quote(self):
@@ -178,8 +179,11 @@ class TestResolveSpanFuzzyMatch:
 
         span = resolve_span(quote, hint_start, None, source_text)
 
-        # Fuzzy matcher should check the bounded window
-        assert span is not None
+        # Should find a fuzzy match with preserved quote, but no position
+        assert span.quote == quote
+        # Fuzzy matching on a bounded window may or may not find this paraphrased quote
+        # The key is that it doesn't crash and returns a valid SourceSpan
+        assert span.start is None and span.end is None
 
     def test_fuzzy_match_without_hint_fallback_to_quote_only(self):
         """Fuzzy match requires hint_start, falls back to quote-only without it."""
