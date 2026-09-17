@@ -1347,8 +1347,6 @@ class ExtractionService:
         Constructs provenance as a SourceSpan from spaCy chunk's exact positions
         (no resolution cascade needed since this path is exact by construction).
         """
-        from domain.extraction.value_objects import SourceSpan
-
         class_ref = match.external_id or match.identifier or match.label
         return {
             "subject": {
@@ -1990,18 +1988,15 @@ Identified individuals:
         # Use SourceSpan directly instead of converting to dict
         if resolved_span.start is None and resolved_span.end is None:
             # Fuzzy match or unresolved: record warning if no quote
+            subject_label = subject_data.get("label")
+            predicate_label = predicate_data.get("label")
+            object_label = object_data.get("label")
             if resolved_span.quote is None:
-                subject_label = subject_data.get("label")
-                predicate_label = predicate_data.get("label")
-                object_label = object_data.get("label")
                 warnings.append(
                     f"Unresolved triple provenance (no match found): "
                     f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
                 )
             else:
-                subject_label = subject_data.get("label")
-                predicate_label = predicate_data.get("label")
-                object_label = object_data.get("label")
                 warnings.append(
                     f"Unresolved triple provenance (fuzzy match only): "
                     f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
