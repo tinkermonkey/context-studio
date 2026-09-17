@@ -8,6 +8,7 @@ pipelines to reliably ground provenance information.
 """
 
 import difflib
+
 from domain.extraction.value_objects import SourceSpan
 
 
