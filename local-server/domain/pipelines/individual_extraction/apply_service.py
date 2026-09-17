@@ -253,8 +253,9 @@ class IndividualExtractionApplyService:
 
                 if not obj_id and obj_label:
                     _logger.warning(
-                        f"Object individual lookup failed: label '{obj_label}' with classes {obj_class_ids} "
-                        "not found in individual cache; relationship will be skipped"
+                        "Object lookup for %r with classes %s not found in cache; skipping",
+                        obj_label,
+                        obj_class_ids,
                     )
 
             if property_definition_id and obj_kind in ("individual", "class") and obj_id:

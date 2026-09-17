@@ -1899,7 +1899,9 @@ Identified individuals:
                     triples.append(triple)
                     warnings.extend(triple_warnings)
                 except (TypeError, ValueError, KeyError) as e:
-                    warning_msg = f"Failed to parse triple due to data error: {type(e).__name__}: {e}"
+                    warning_msg = (
+                        f"Failed to parse triple due to data error: {type(e).__name__}: {e}"
+                    )
                     _logger.warning(warning_msg)
                     warnings.append(warning_msg)
                     continue
