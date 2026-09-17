@@ -1520,20 +1520,13 @@ class TestBuildTripleFromLLMOutput:
     @pytest.fixture
     def service(self):
         """Create a minimal ExtractionService for testing."""
-        from tests.fakes.fake_embedding_service import FakeEmbeddingService
-        from tests.fakes.fake_nlp_processor import FakeNLPProcessor
-        from tests.fakes.fake_reference_source import FakeReferenceSource
-        from tests.fakes.fake_extraction_repository import FakeExtractionRepository
-        from tests.fakes.fake_extraction_run_repo import FakeExtractionRunRepository
-        from adapters.events.in_process import InProcessEventPublisher
-
         return ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
             llm=FakeLLMProvider(),
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
-            event_publisher=InProcessEventPublisher(),
+            event_publisher=FakeEventPublisher(),
             extraction_repo=FakeExtractionRepository(),
             extraction_run_repo=FakeExtractionRunRepository(),
         )
