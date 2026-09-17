@@ -86,15 +86,15 @@ class TestResolveSpanExactMatch:
         assert span.end == 7
 
     def test_exact_match_not_found(self):
-        """No exact match returns null span from stage 1."""
+        """No exact match falls through stages and returns quote-only span."""
         quote = "unicorn"
         source_text = "The quick brown fox jumped over the lazy dog"
 
         span = resolve_span(quote, None, None, source_text)
 
         # Will continue to stage 2 (normalized), then stage 3, then stage 4
-        # "unicorn" won't match anything
-        assert span.quote is None
+        # "unicorn" won't match anything, but quote is preserved in fallback
+        assert span.quote == quote
         assert span.start is None
         assert span.end is None
 
@@ -181,15 +181,15 @@ class TestResolveSpanFuzzyMatch:
         # Fuzzy matcher should check the bounded window
         assert span is not None
 
-    def test_fuzzy_match_without_hint_fallback_to_null(self):
-        """Fuzzy match requires hint_start, falls back to null without it."""
+    def test_fuzzy_match_without_hint_fallback_to_quote_only(self):
+        """Fuzzy match requires hint_start, falls back to quote-only without it."""
         quote = "somewat similar"
         source_text = "This is somewhat similar text here"
 
         span = resolve_span(quote, None, None, source_text)
 
-        # No exact match, no normalized match, no hint for fuzzy
-        assert span.quote is None
+        # No exact match, no normalized match, no hint for fuzzy; quote preserved in fallback
+        assert span.quote == quote
         assert span.start is None
         assert span.end is None
 
@@ -205,7 +205,10 @@ class TestResolveSpanFuzzyMatch:
         # Fuzzy match won't find it because hint (0) is >200 chars from match (~500)
         # The search window is [max(0, 0-200), min(len, 0+200)] = [0, 200]
         # but the match is at position 500, well outside the window
-        assert span.quote is None
+        # Quote is preserved in fallback as quote-only span
+        assert span.quote == quote
+        assert span.start is None
+        assert span.end is None
 
 
 class TestResolveSpanEdgeCases:
@@ -542,6 +545,81 @@ class TestSourceSpanDataclass:
         assert resolved.start is not None  # Fully resolved
         assert unresolved.start is None  # Unresolved
         assert fuzzy.start is None  # Fuzzy-matched
+
+    def test_source_span_validation_start_without_end_invalid(self):
+        """SourceSpan rejects start without end (invalid partial state)."""
+        with pytest.raises(ValueError, match="Invalid SourceSpan state"):
+            SourceSpan(quote="test", start=0, end=None)
+
+    def test_source_span_validation_end_without_start_invalid(self):
+        """SourceSpan rejects end without start (invalid partial state)."""
+        with pytest.raises(ValueError, match="Invalid SourceSpan state"):
+            SourceSpan(quote="test", start=None, end=4)
+
+    def test_source_span_validation_start_greater_than_end_invalid(self):
+        """SourceSpan rejects start > end (invalid range)."""
+        with pytest.raises(ValueError, match="start must be <= end"):
+            SourceSpan(quote="test", start=5, end=2)
+
+    def test_source_span_validation_negative_start_invalid(self):
+        """SourceSpan rejects negative start offset."""
+        with pytest.raises(ValueError, match="must be non-negative"):
+            SourceSpan(quote="test", start=-1, end=4)
+
+    def test_source_span_validation_negative_end_invalid(self):
+        """SourceSpan rejects negative end offset."""
+        with pytest.raises(ValueError, match="must be non-negative"):
+            SourceSpan(quote="test", start=0, end=-1)
+
+    def test_source_span_validation_offsets_without_quote_invalid(self):
+        """SourceSpan rejects offsets when quote is None."""
+        with pytest.raises(ValueError, match="Invalid SourceSpan state"):
+            SourceSpan(quote=None, start=0, end=4)
+
+
+class TestCasefoldExpansion:
+    """Tests for handling casefold expansion (e.g., ß → ss)."""
+
+    def test_normalized_match_with_casefold_expansion(self):
+        """Character that expands when case-folded (ß → ss) is handled correctly."""
+        quote = "Straße"  # Contains ß which expands to ss when case-folded
+        source_text = "The Straße in Berlin is famous"
+
+        span = resolve_span(quote, None, None, source_text)
+
+        # Should match despite the casefold expansion in the normalization process
+        assert span.quote == quote
+        assert span.start is not None
+        assert span.end is not None
+        # Verify the matched text
+        assert source_text[span.start:span.end].casefold() == quote.casefold()
+
+    def test_find_all_spans_with_casefold_expansion(self):
+        """find_all_spans handles casefold expansion correctly."""
+        term = "straße"
+        source_text = "The Straße and another Straße were both visited"
+
+        spans = find_all_spans(term, source_text)
+
+        # Should find both case-variant occurrences
+        assert len(spans) == 2
+        for span in spans:
+            assert source_text[span.start:span.end].casefold() == term.casefold()
+
+    def test_normalized_match_casefold_expansion_position_mapping(self):
+        """Position mapping correctly handles casefold expansion of ß → ss."""
+        # Original: "Straße" (6 chars)
+        # Normalized: "strasse" (7 chars, ß expanded to ss)
+        quote = "aße"  # This is the end of "Straße"
+        source_text = "Start with Straße and more"
+
+        span = resolve_span(quote, None, None, source_text)
+
+        # Should map positions correctly despite ß expansion
+        assert span.quote == quote
+        assert span.start is not None
+        assert span.end is not None
+        assert source_text[span.start:span.end].casefold() == quote.casefold()
 
 
 class TestIntegrationScenarios:

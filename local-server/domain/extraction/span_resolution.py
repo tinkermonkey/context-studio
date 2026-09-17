@@ -69,8 +69,10 @@ def resolve_span(
             # Fuzzy match returns quote-only (no exact position)
             return SourceSpan(quote=quote, start=None, end=None)
 
-    # Stage 4: Fallback to null span
-    return SourceSpan(quote=None, start=None, end=None)
+    # Stage 4: Fallback to quote-only span
+    # Preserve the original quote even if we couldn't find an exact position;
+    # a paraphrased quote is more useful provenance than None
+    return SourceSpan(quote=quote, start=None, end=None)
 
 
 def find_all_spans(
@@ -347,8 +349,11 @@ def _map_normalized_to_original(
     """
     Map a position in normalized text back to the original text.
 
+    Correctly handles casefold expansion where a single original character
+    (e.g., 'ß') may become multiple characters in normalized text (e.g., 'ss').
+
     Args:
-        normalized_text: The normalized (whitespace-collapsed, lowercased) text.
+        normalized_text: The normalized (whitespace-collapsed, case-folded) text.
         original_text: The original text.
         normalized_pos: A position in normalized_text.
 
@@ -358,17 +363,35 @@ def _map_normalized_to_original(
     normalized_idx = 0
     original_idx = 0
 
-    while normalized_idx < normalized_pos and original_idx < len(original_text):
+    while original_idx < len(original_text) and normalized_idx < normalized_pos:
         if original_text[original_idx].isspace():
-            # Skip all whitespace in original
+            # Skip all consecutive whitespace in original
             while original_idx < len(original_text) and original_text[original_idx].isspace():
                 original_idx += 1
-            # Skip one space in normalized (representing all that whitespace)
+            # In normalized, this becomes a single space
             if normalized_idx < len(normalized_text) and normalized_text[normalized_idx].isspace():
                 normalized_idx += 1
         else:
-            original_idx += 1
-            if normalized_idx < len(normalized_text):
-                normalized_idx += 1
+            # Non-whitespace character may expand when case-folded
+            char = original_text[original_idx]
+            folded = char.casefold()
+            folded_len = len(folded)
 
-    return original_idx if normalized_idx == normalized_pos else None
+            # If normalized_pos falls within this character's expansion
+            if normalized_idx + folded_len > normalized_pos:
+                # If normalized_pos is exactly at the start of the expansion,
+                # return the position before this character
+                if normalized_idx == normalized_pos:
+                    return original_idx
+                else:
+                    # Otherwise, return the position after this character
+                    return original_idx + 1
+
+            normalized_idx += folded_len
+            original_idx += 1
+
+    # If we've reached the exact position
+    if normalized_idx == normalized_pos:
+        return original_idx
+
+    return None
