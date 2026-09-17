@@ -49,14 +49,16 @@ class CandidateClass:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format
+        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
         provenance_dicts: list[dict[str, Any]] = []
         for span in self.provenance:
-            provenance_dicts.append({
-                "text_offset_start": span.start,
-                "text_offset_end": span.end,
-                "raw": span.quote,
-            })
+            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
+            if span.start is not None and span.end is not None:
+                provenance_dicts.append({
+                    "text_offset_start": span.start,
+                    "text_offset_end": span.end,
+                    "raw": span.quote,
+                })
         return {
             "kind": "class",
             "label": self.label,
@@ -80,14 +82,16 @@ class CandidatePropertyDefinition:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format
+        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
         provenance_dicts: list[dict[str, Any]] = []
         for span in self.provenance:
-            provenance_dicts.append({
-                "text_offset_start": span.start,
-                "text_offset_end": span.end,
-                "raw": span.quote,
-            })
+            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
+            if span.start is not None and span.end is not None:
+                provenance_dicts.append({
+                    "text_offset_start": span.start,
+                    "text_offset_end": span.end,
+                    "raw": span.quote,
+                })
         return {
             "kind": "property_definition",
             "label": self.label,
@@ -111,14 +115,16 @@ class CandidateConnection:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        # Serialize SourceSpan objects to dict format
+        # Serialize SourceSpan objects to dict format, excluding quote-only (unresolved) spans
         provenance_dicts: list[dict[str, Any]] = []
         for span in self.provenance:
-            provenance_dicts.append({
-                "text_offset_start": span.start,
-                "text_offset_end": span.end,
-                "raw": span.quote,
-            })
+            # Skip quote-only spans (where start/end are None) - they're not concrete provenance
+            if span.start is not None and span.end is not None:
+                provenance_dicts.append({
+                    "text_offset_start": span.start,
+                    "text_offset_end": span.end,
+                    "raw": span.quote,
+                })
         return {
             "subject_ref": self.subject_ref,
             "predicate": self.predicate,
@@ -291,6 +297,21 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         return chunks if chunks else [text]
 
+    def _has_concrete_provenance(self, spans: list[SourceSpan]) -> bool:
+        """
+        Check if provenance has at least one concrete (resolved) span.
+
+        Concrete spans have both start and end positions. Quote-only spans
+        (start=None, end=None) are not considered concrete.
+
+        Args:
+            spans: List of SourceSpan objects
+
+        Returns:
+            True if at least one span has concrete positions, False otherwise
+        """
+        return any(span.start is not None and span.end is not None for span in spans)
+
     def _compute_confidence(self, label: str, source_text: str) -> float:
         """
         Compute evidence-based confidence for a candidate label.
@@ -304,7 +325,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Returns:
             Confidence in [0.2, 1.0]
         """
-        provenance_found = bool(self._find_provenance(label, source_text))
+        provenance_spans = self._find_provenance(label, source_text)
+        provenance_found = self._has_concrete_provenance(provenance_spans)
         term_freq = len(re.findall(re.escape(label), source_text, re.IGNORECASE))
         return min(
             1.0,
@@ -494,6 +516,16 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             definition = definitions_dict.get(concept) or f"{concept}: a domain concept."
             provenance = self._find_provenance(concept, state.source_text)
             confidence = self._compute_confidence(concept, state.source_text)
+
+            # Warn if provenance is empty or contains only quote-only (unresolved) spans
+            if not self._has_concrete_provenance(provenance):
+                warning = {
+                    "stage": "definition_synthesis",
+                    "error": f"Candidate class '{concept}' has no provenance in source text",
+                    "fallback_action": "use candidate without concrete provenance",
+                }
+                state = replace(state, parse_warnings=state.parse_warnings + [warning])
+
             candidates.append(
                 CandidateClass(
                     label=concept,
@@ -567,9 +599,19 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     if not subject or not obj:
                         continue
                     # Compose provenance from subject + object, not from the predicate string
-                    provenance = self._find_provenance(
-                        subject, state.source_text
-                    ) + self._find_provenance(obj, state.source_text)
+                    subject_provenance = self._find_provenance(subject, state.source_text)
+                    object_provenance = self._find_provenance(obj, state.source_text)
+                    provenance = subject_provenance + object_provenance
+
+                    # Warn if provenance has no concrete (resolved) spans
+                    if not self._has_concrete_provenance(provenance):
+                        warning = {
+                            "stage": "connection_proposal",
+                            "error": f"Connection '{subject}' -> '{obj}' has no provenance in source text",
+                            "fallback_action": "use connection without concrete provenance",
+                        }
+                        state = replace(state, parse_warnings=state.parse_warnings + [warning])
+
                     conn = CandidateConnection(
                         subject_ref=subject,
                         predicate=rel.get("predicate", ""),
@@ -580,9 +622,20 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     connections.append(conn)
 
                 for prop in parsed.get("properties", []):
-                    provenance = self._find_provenance(prop.get("name", ""), state.source_text)
+                    prop_name = prop.get("name", "")
+                    provenance = self._find_provenance(prop_name, state.source_text)
+
+                    # Warn if provenance has no concrete (resolved) spans
+                    if not self._has_concrete_provenance(provenance):
+                        warning = {
+                            "stage": "connection_proposal",
+                            "error": f"Property '{prop_name}' has no provenance in source text",
+                            "fallback_action": "use property without concrete provenance",
+                        }
+                        state = replace(state, parse_warnings=state.parse_warnings + [warning])
+
                     prop_def = CandidatePropertyDefinition(
-                        label=prop.get("name", ""),
+                        label=prop_name,
                         proposed_domain=prop.get("domain"),
                         proposed_range=prop.get("range"),
                         confidence=prop.get("confidence", 0.5),
@@ -744,6 +797,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             "candidate_count": len(state.candidate_classes),
             "property_count": len(state.candidate_properties),
             "connection_count": len(state.proposed_connections),
+            "warnings": state.parse_warnings,
         }
 
         return replace(
@@ -757,15 +811,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         Find all occurrences of a term in source text using span resolution.
 
-        Delegates to find_all_spans() which uses exact and normalized matching,
-        returning a list of SourceSpan objects. Preserves existing method signature
-        so callers require no changes.
+        Delegates to find_all_spans() which uses exact, normalized, and fuzzy matching
+        to locate all occurrences of the term in the source text.
 
         Args:
             text: Text to find
             source: Source text to search in
 
         Returns:
-            List of SourceSpan objects representing each occurrence
+            List of SourceSpan objects representing each occurrence.
+            Returns empty list if term is not found.
         """
         return find_all_spans(text, source)
