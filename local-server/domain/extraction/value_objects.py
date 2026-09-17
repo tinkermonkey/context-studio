@@ -13,6 +13,27 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
+class SourceSpan:
+    """
+    Immutable representation of a span in source text with provenance information.
+
+    A SourceSpan encodes the resolution state via nullable fields:
+    - Fully resolved: all three fields populated, source_text[start:end] == quote
+    - Quote-only: quote populated, start/end are None (fuzzy-matched, no exact position)
+    - Unresolved: all fields are None (nothing found)
+
+    Attributes:
+        quote: The verbatim or matched text from the source, or None if unresolved
+        start: Zero-indexed character position where the span begins, or None if unresolved
+        end: Zero-indexed character position where the span ends (exclusive), or None if unresolved
+    """
+
+    quote: str | None
+    start: int | None
+    end: int | None
+
+
+@dataclass(frozen=True)
 class ExtractionLayerResult:
     """
     Metadata about a single extraction layer execution.
