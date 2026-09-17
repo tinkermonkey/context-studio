@@ -414,7 +414,8 @@ class TestNLPGroundedTyping:
         )
 
         assert result_triples == triples
-        assert warnings == []
+        assert len(warnings) == 1
+        assert "schema_index is None" in warnings[0]
 
     @pytest.mark.asyncio
     async def test_skip_when_no_ontology_repo(self):
@@ -439,7 +440,8 @@ class TestNLPGroundedTyping:
         )
 
         assert result_triples == triples
-        assert warnings == []
+        assert len(warnings) == 1
+        assert "ontology_repo is None" in warnings[0]
 
     @pytest.mark.asyncio
     async def test_skip_when_no_ontology_id(self):

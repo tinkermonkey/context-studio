@@ -612,7 +612,9 @@ class TestNlpGroundedTyping:
         triples, tokens, warnings = service._type_individuals_nlp_grounded(
             "Kubernetes runs pods.", object(), "onto", "m", 0.0
         )
-        assert triples == [] and tokens == 0 and warnings == []
+        assert triples == [] and tokens == 0
+        assert len(warnings) == 1
+        assert "schema_index is None" in warnings[0]
 
     def test_confirmed_match_becomes_an_is_a_triple_typed_to_the_matched_class(self):
         service = self._service(schema_index=_OneMatchIndex())
