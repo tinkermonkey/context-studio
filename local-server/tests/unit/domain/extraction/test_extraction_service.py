@@ -639,6 +639,7 @@ class TestNlpGroundedTyping:
 
     def test_aggregate_llm_error_warning_when_all_chunks_fail(self):
         """When all chunks fail with LLM errors, an aggregate warning is returned."""
+
         class FailingLLM:
             def complete(self, system_prompt, user_prompt, model, **kwargs):
                 raise RuntimeError("LLM service unavailable")
@@ -1683,7 +1684,9 @@ class TestBuildTripleFromLLMOutput:
             "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
         }
 
-        triple_under, _ = service._build_triple_from_llm_output(triple_data_under, text, ontology_id)
+        triple_under, _ = service._build_triple_from_llm_output(
+            triple_data_under, text, ontology_id
+        )
         assert triple_under["confidence"] == 0.0
 
     def test_build_triple_object_kind_discrimination(self, service):
@@ -1703,7 +1706,9 @@ class TestBuildTripleFromLLMOutput:
         text = "Some text"
         ontology_id = "test"
 
-        triple_lit, _ = service._build_triple_from_llm_output(triple_data_literal, text, ontology_id)
+        triple_lit, _ = service._build_triple_from_llm_output(
+            triple_data_literal, text, ontology_id
+        )
         assert triple_lit["object"]["kind"] == "literal"
         assert triple_lit["object"]["value"] == "25"
         assert triple_lit["object"]["datatype"] == "http://www.w3.org/2001/XMLSchema#integer"
