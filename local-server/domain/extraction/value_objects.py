@@ -21,7 +21,8 @@ class SourceSpan:
     - Fully resolved (exact match): all three fields populated, source_text[start:end] == quote
     - Fully resolved (normalized match): all three fields populated, but source_text[start:end]
       may differ from quote in case or whitespace due to normalization during matching
-    - Quote-only: quote populated, start/end are None (fuzzy-matched or found without exact position)
+    - Quote-only: quote populated, start/end are None
+      (fuzzy-matched or found without exact position)
     - Unresolved: all fields are None (nothing found)
 
     Attributes:
