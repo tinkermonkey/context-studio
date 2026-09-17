@@ -22,6 +22,8 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
+from domain.extraction.span_resolution import find_all_spans
+from domain.extraction.value_objects import SourceSpan
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import (
@@ -42,17 +44,25 @@ class CandidateClass:
     label: str
     proposed_definition: str | None = None
     confidence: float = 0.5
-    provenance: list[dict[str, Any]] = field(default_factory=list)
+    provenance: list[SourceSpan] = field(default_factory=list)
     disambiguation_rationale: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
+        # Serialize SourceSpan objects to dict format
+        provenance_dicts: list[dict[str, Any]] = []
+        for span in self.provenance:
+            provenance_dicts.append({
+                "text_offset_start": span.start,
+                "text_offset_end": span.end,
+                "raw": span.quote,
+            })
         return {
             "kind": "class",
             "label": self.label,
             "proposed_definition": self.proposed_definition,
             "confidence": self.confidence,
-            "provenance": self.provenance,
+            "provenance": provenance_dicts,
             "disambiguation_rationale": self.disambiguation_rationale,
         }
 
@@ -66,10 +76,18 @@ class CandidatePropertyDefinition:
     proposed_domain: str | None = None
     proposed_range: str | None = None
     confidence: float = 0.5
-    provenance: list[dict[str, Any]] = field(default_factory=list)
+    provenance: list[SourceSpan] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
+        # Serialize SourceSpan objects to dict format
+        provenance_dicts: list[dict[str, Any]] = []
+        for span in self.provenance:
+            provenance_dicts.append({
+                "text_offset_start": span.start,
+                "text_offset_end": span.end,
+                "raw": span.quote,
+            })
         return {
             "kind": "property_definition",
             "label": self.label,
@@ -77,7 +95,7 @@ class CandidatePropertyDefinition:
             "proposed_domain": self.proposed_domain,
             "proposed_range": self.proposed_range,
             "confidence": self.confidence,
-            "provenance": self.provenance,
+            "provenance": provenance_dicts,
         }
 
 
@@ -89,16 +107,24 @@ class CandidateConnection:
     predicate: str
     object_ref: str
     confidence: float = 0.5
-    provenance: list[dict[str, Any]] = field(default_factory=list)
+    provenance: list[SourceSpan] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
+        # Serialize SourceSpan objects to dict format
+        provenance_dicts: list[dict[str, Any]] = []
+        for span in self.provenance:
+            provenance_dicts.append({
+                "text_offset_start": span.start,
+                "text_offset_end": span.end,
+                "raw": span.quote,
+            })
         return {
             "subject_ref": self.subject_ref,
             "predicate": self.predicate,
             "object_ref": self.object_ref,
             "confidence": self.confidence,
-            "provenance": self.provenance,
+            "provenance": provenance_dicts,
         }
 
 
@@ -727,31 +753,19 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             steps_completed=state.steps_completed + ["finalize"],
         )
 
-    def _find_provenance(self, text: str, source: str) -> list[dict[str, Any]]:
+    def _find_provenance(self, text: str, source: str) -> list[SourceSpan]:
         """
-        Find text offsets where a term appears in source.
+        Find all occurrences of a term in source text using span resolution.
+
+        Delegates to find_all_spans() which uses exact and normalized matching,
+        returning a list of SourceSpan objects. Preserves existing method signature
+        so callers require no changes.
 
         Args:
             text: Text to find
             source: Source text to search in
 
         Returns:
-            List of provenance dicts with offsets and raw excerpt
+            List of SourceSpan objects representing each occurrence
         """
-        if not text:
-            return []
-
-        provenance = []
-        pattern = re.escape(text)
-        for match in re.finditer(pattern, source, re.IGNORECASE):
-            start = match.start()
-            end = match.end()
-            provenance.append(
-                {
-                    "text_offset_start": start,
-                    "text_offset_end": end,
-                    "raw": source[start:end],
-                }
-            )
-
-        return provenance
+        return find_all_spans(text, source)

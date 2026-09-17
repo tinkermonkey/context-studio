@@ -35,6 +35,7 @@ from domain.extraction.open_extraction import (
     synthesize_label,
 )
 from domain.extraction.ports import ClusteringPort, NLPProcessor, ReferenceSource
+from domain.extraction.value_objects import SourceSpan
 from domain.ontology.ports import EmbeddingService
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
@@ -406,15 +407,15 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         }[priority]
 
     @staticmethod
-    def _provenance(rep: ConceptCandidate, source_text: str) -> list[dict[str, Any]]:
+    def _provenance(rep: ConceptCandidate, source_text: str) -> list[SourceSpan]:
         """Single provenance span for a representative's source offsets."""
         if 0 <= rep.start < rep.end <= len(source_text):
             return [
-                {
-                    "text_offset_start": rep.start,
-                    "text_offset_end": rep.end,
-                    "raw": source_text[rep.start : rep.end],
-                }
+                SourceSpan(
+                    quote=source_text[rep.start : rep.end],
+                    start=rep.start,
+                    end=rep.end,
+                )
             ]
         return []
 
