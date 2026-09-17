@@ -112,7 +112,8 @@ class TestResolveSpanNormalizedMatch:
         assert span.quote == quote
         assert span.start is not None
         assert span.end is not None
-        # The span should cover the normalized match in original text
+        # Verify the text slice is correct (normalized form)
+        assert source_text[span.start:span.end].casefold().split() == quote.casefold().split()
 
     def test_normalized_match_case_difference(self):
         """Case differences are ignored in normalized matching."""
@@ -125,6 +126,8 @@ class TestResolveSpanNormalizedMatch:
         assert span.quote == quote
         assert span.start is not None
         assert span.end is not None
+        # Verify the text slice matches (case-folded comparison)
+        assert source_text[span.start:span.end].casefold() == quote.casefold()
 
     def test_normalized_match_mixed_whitespace(self):
         """Various whitespace characters normalized to single spaces."""
@@ -136,6 +139,8 @@ class TestResolveSpanNormalizedMatch:
         assert span.quote == quote
         assert span.start is not None
         assert span.end is not None
+        # Verify the normalized slice matches (whitespace normalized)
+        assert source_text[span.start:span.end].casefold().split() == quote.casefold().split()
 
     def test_normalized_match_with_hint(self):
         """Normalized match with hint disambiguates multiple matches."""
@@ -363,8 +368,11 @@ class TestFindAllSpans:
 
         spans = find_all_spans(term, source_text)
 
-        # Should find normalized matches (case-insensitive)
-        assert len(spans) >= 1
+        # Should find both the exact match and the case-variant match (normalized)
+        assert len(spans) == 2
+        # Verify each slice matches (case-folded)
+        for span in spans:
+            assert source_text[span.start:span.end].casefold() == term.casefold()
 
     def test_find_all_spans_overlapping_matches(self):
         """Overlapping matches are all returned."""
@@ -435,8 +443,11 @@ class TestFindAllSpans:
 
         spans = find_all_spans(term, source_text)
 
-        # Should find all three due to normalization
-        assert len(spans) >= 1
+        # Should find all three occurrences due to normalization
+        assert len(spans) == 3
+        # Verify each slice matches (case-folded)
+        for span in spans:
+            assert source_text[span.start:span.end].casefold() == term.casefold()
 
     def test_find_all_spans_no_fuzzy_matching(self):
         """find_all_spans does not use fuzzy matching (schema labels are precise)."""

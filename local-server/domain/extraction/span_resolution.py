@@ -81,7 +81,8 @@ def find_all_spans(
     Used by the schema extraction path where the term is known a priori (e.g., a
     schema label). This function uses only steps 1-2 of the resolution cascade
     (exact and normalized matching), not fuzzy matching, since schema labels should
-    match exactly or with minor normalization.
+    match exactly or with minor normalization. Returns all matches found, merging
+    both exact and normalized results to avoid missing case-variant occurrences.
 
     Args:
         term: The text to find. Must be non-empty.
@@ -101,14 +102,14 @@ def find_all_spans(
     for start, end in exact_matches:
         spans.append(SourceSpan(quote=term, start=start, end=end))
 
-    # If we found exact matches, return them
-    if spans:
-        return spans
-
-    # Stage 2: Normalized matches (if no exact matches)
+    # Stage 2: Normalized matches (always run to catch case-variant occurrences)
     normalized_matches = _find_all_normalized_matches(term, source_text)
     for start, end in normalized_matches:
-        spans.append(SourceSpan(quote=term, start=start, end=end))
+        # Avoid duplicates from stage 1 (exact match will also be found in normalized)
+        if not any(
+            s.start == start and s.end == end for s in spans
+        ):
+            spans.append(SourceSpan(quote=term, start=start, end=end))
 
     return spans
 
@@ -186,7 +187,8 @@ def _find_normalized_match(
     Find match using whitespace-normalized, case-folded comparison.
 
     Collapses runs of whitespace to single spaces, strips leading/trailing
-    whitespace, and case-folds both quote and source_text.
+    whitespace, and case-folds both quote and source_text. If multiple matches
+    exist, uses hint_start to select the closest one.
 
     Args:
         quote: The text to find.
@@ -199,46 +201,56 @@ def _find_normalized_match(
     normalized_quote = _normalize_text(quote)
     normalized_source = _normalize_text(source_text)
 
-    # Find match in normalized text
-    pos = normalized_source.find(normalized_quote)
-    if pos == -1:
+    # Find all normalized matches
+    occurrences: list[int] = []
+    pos = 0
+    while True:
+        pos = normalized_source.find(normalized_quote, pos)
+        if pos == -1:
+            break
+        occurrences.append(pos)
+        pos += 1
+
+    if not occurrences:
         return None
 
-    # Map position back to original source text
-    # Count characters (including whitespace) in original source up to the normalized position
-    original_pos = 0
-    normalized_pos = 0
-    normalized_idx = 0
+    # Pick the best match (first or closest to hint)
+    if len(occurrences) == 1:
+        best_normalized_pos = occurrences[0]
+    else:
+        # Multiple occurrences: pick first, or closest to hint if provided
+        if hint_start is not None:
+            # Map each normalized position back to original and pick closest to hint
+            candidates = []
+            for norm_pos in occurrences:
+                orig_pos = _map_normalized_to_original(
+                    normalized_source, source_text, norm_pos
+                )
+                if orig_pos is not None:
+                    candidates.append((norm_pos, orig_pos))
 
-    while normalized_idx < pos and original_pos < len(source_text):
-        if source_text[original_pos].isspace():
-            if normalized_idx < len(normalized_source) and not normalized_source[
-                normalized_idx
-            ].isspace():
-                # Skipped a space in normalized version
-                original_pos += 1
+            if candidates:
+                best_normalized_pos, _ = min(
+                    candidates, key=lambda c: abs(c[1] - hint_start)
+                )
             else:
-                original_pos += 1
-                normalized_idx += 1
+                best_normalized_pos = occurrences[0]
         else:
-            original_pos += 1
-            normalized_idx += 1
+            # No hint: return the first occurrence
+            best_normalized_pos = occurrences[0]
 
-    # Find the end position (length of normalized match mapped back)
-    start_pos = original_pos
-    chars_remaining = len(quote)  # Approximate, map normalized length
-    end_pos = original_pos
+    # Map the normalized position back to the original text
+    original_start = _map_normalized_to_original(
+        normalized_source, source_text, best_normalized_pos
+    )
+    original_end = _map_normalized_to_original(
+        normalized_source, source_text, best_normalized_pos + len(normalized_quote)
+    )
 
-    # Scan forward to find where the normalized match ends in the original text
-    normalized_chars_matched = 0
-    while end_pos < len(source_text) and normalized_chars_matched < len(
-        normalized_quote
-    ):
-        if not source_text[end_pos].isspace():
-            normalized_chars_matched += 1
-        end_pos += 1
+    if original_start is not None and original_end is not None:
+        return (original_start, original_end)
 
-    return (start_pos, end_pos)
+    return None
 
 
 def _find_all_normalized_matches(
@@ -327,7 +339,7 @@ def _normalize_text(text: str) -> str:
     Normalize text by collapsing whitespace and case-folding.
 
     Replaces runs of whitespace with single spaces, strips leading/trailing
-    whitespace, and converts to lowercase.
+    whitespace, and case-folds using Unicode case folding rules.
 
     Args:
         text: The text to normalize.
@@ -337,8 +349,8 @@ def _normalize_text(text: str) -> str:
     """
     # Collapse runs of whitespace to single spaces
     normalized = " ".join(text.split())
-    # Case-fold to lowercase
-    return normalized.lower()
+    # Case-fold using Unicode case folding rules
+    return normalized.casefold()
 
 
 def _map_normalized_to_original(
