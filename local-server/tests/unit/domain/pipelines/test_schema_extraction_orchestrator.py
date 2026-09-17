@@ -12,13 +12,11 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from domain.extraction.value_objects import SourceSpan
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
@@ -139,15 +137,33 @@ class TestWarningEmissions:
         """Connection without concrete provenance emits a connection_proposal warning."""
         from domain.pipelines.schema_extraction.orchestrator import CandidateClass
 
-        # Custom mock that returns a relationship and property with unknown terms not in source text
+        # Custom mock that returns a relationship and property with unknown
+        # terms not in source text
         class _MockLLMWithUnknownConnection(_MockLLM):
-            def complete(self, system_prompt, user_prompt, model, temperature=0.0, max_tokens=2000, response_format=None, timeout=None, seed=None):
+            def complete(
+                self,
+                system_prompt,
+                user_prompt,
+                model,
+                temperature=0.0,
+                max_tokens=2000,
+                response_format=None,
+                timeout=None,
+                seed=None,
+            ):
                 if "relationships and properties" in user_prompt.lower():
-                    # Return a relationship with both unknown terms and a property with unknown name
-                    # Both won't be found in source text: "Microservice interacts with Gateway."
+                    # Return a relationship with both unknown terms and a
+                    # property with unknown name. Both won't be found in
+                    # source text: "Microservice interacts with Gateway."
                     content = (
-                        '{"relationships": [{"subject": "UnknownA", "predicate": "calls", "object": "UnknownB", "confidence": 0.8}], '
-                        '"properties": [{"name": "UnknownProperty", "domain": "Unknown", "range": "Unknown", "confidence": 0.7}]}'
+                        '{"relationships": ['
+                        '{"subject": "UnknownA", "predicate": "calls", '
+                        '"object": "UnknownB", "confidence": 0.8}'
+                        '], '
+                        '"properties": ['
+                        '{"name": "UnknownProperty", "domain": "Unknown", '
+                        '"range": "Unknown", "confidence": 0.7}'
+                        ']}'
                     )
                 else:
                     return super().complete(
@@ -201,10 +217,18 @@ class TestWarningEmissions:
             if w.get("stage") == "connection_proposal"
         ]
 
-        # Both the unknown relationship and unknown property should generate warnings (no provenance in text)
-        assert len(conn_warnings) > 0, "Expected at least one connection_proposal warning for unknown terms"
-        assert any("UnknownA" in w.get("error", "") or "UnknownB" in w.get("error", "") for w in conn_warnings), "Expected warning to mention unknown relationship"
-        assert any("UnknownProperty" in w.get("error", "") for w in conn_warnings), "Expected warning to mention unknown property"
+        # Both the unknown relationship and unknown property should
+        # generate warnings (no provenance in text)
+        assert (
+            len(conn_warnings) > 0
+        ), "Expected at least one connection_proposal warning for unknown terms"
+        assert any(
+            "UnknownA" in w.get("error", "") or "UnknownB" in w.get("error", "")
+            for w in conn_warnings
+        ), "Expected warning to mention unknown relationship"
+        assert any(
+            "UnknownProperty" in w.get("error", "") for w in conn_warnings
+        ), "Expected warning to mention unknown property"
 
     @pytest.mark.asyncio
     async def test_finalize_includes_warnings_in_result(self, orchestrator):

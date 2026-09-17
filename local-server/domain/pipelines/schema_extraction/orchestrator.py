@@ -606,10 +606,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     if not self._has_concrete_provenance(provenance):
                         warning = {
                             "stage": "connection_proposal",
-                            "error": f"Connection '{subject}' -> '{obj}' has no provenance in source text",
+                            "error": (
+                                f"Connection '{subject}' -> '{obj}' "
+                                "has no provenance in source text"
+                            ),
                             "fallback_action": "use connection without concrete provenance",
                         }
-                        state = replace(state, parse_warnings=state.parse_warnings + [warning])
+                        state = replace(
+                            state, parse_warnings=state.parse_warnings + [warning]
+                        )
 
                     conn = CandidateConnection(
                         subject_ref=subject,
