@@ -135,9 +135,48 @@ class TestWarningEmissions:
         assert any("UnknownTerm" in w.get("error", "") for w in def_syn_warnings)
 
     @pytest.mark.asyncio
-    async def test_connection_proposal_warns_on_missing_provenance(self, orchestrator):
+    async def test_connection_proposal_warns_on_missing_provenance(self):
         """Connection without concrete provenance emits a connection_proposal warning."""
         from domain.pipelines.schema_extraction.orchestrator import CandidateClass
+
+        # Custom mock that returns a relationship and property with unknown terms not in source text
+        class _MockLLMWithUnknownConnection(_MockLLM):
+            def complete(self, system_prompt, user_prompt, model, temperature=0.0, max_tokens=2000, response_format=None, timeout=None, seed=None):
+                if "relationships and properties" in user_prompt.lower():
+                    # Return a relationship with both unknown terms and a property with unknown name
+                    # Both won't be found in source text: "Microservice interacts with Gateway."
+                    content = (
+                        '{"relationships": [{"subject": "UnknownA", "predicate": "calls", "object": "UnknownB", "confidence": 0.8}], '
+                        '"properties": [{"name": "UnknownProperty", "domain": "Unknown", "range": "Unknown", "confidence": 0.7}]}'
+                    )
+                else:
+                    return super().complete(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        model=model,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        response_format=response_format,
+                        timeout=timeout,
+                        seed=seed,
+                    )
+
+                return LLMResponse(
+                    content=content,
+                    tokens_in=10,
+                    tokens_out=30,
+                    duration_ms=5,
+                    finish_reason="stop",
+                    model=model,
+                )
+
+        mock_llm = _MockLLMWithUnknownConnection()
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=mock_llm,
+            ontology_repo=None,
+            run_id="test-run",
+            status_writer=None,
+        )
 
         state = SchemaExtractionState(
             run_id="test-run",
@@ -149,20 +188,23 @@ class TestWarningEmissions:
             candidate_concepts=["Microservice", "Gateway"],
             candidate_classes=[
                 CandidateClass(label="Microservice", confidence=0.8),
-                CandidateClass(label="UnknownClass", confidence=0.5),
+                CandidateClass(label="Gateway", confidence=0.7),
             ],
             parse_warnings=[],
         )
 
         result_state = await orchestrator._stage_connection_proposal(state)
 
-        # Check that warnings include connection/property-related entries
+        # Filter warnings for connection_proposal stage
         conn_warnings = [
             w for w in result_state.parse_warnings
             if w.get("stage") == "connection_proposal"
         ]
-        # If relationships include unknown terms, warnings will be present
-        assert isinstance(result_state.parse_warnings, list)
+
+        # Both the unknown relationship and unknown property should generate warnings (no provenance in text)
+        assert len(conn_warnings) > 0, "Expected at least one connection_proposal warning for unknown terms"
+        assert any("UnknownA" in w.get("error", "") or "UnknownB" in w.get("error", "") for w in conn_warnings), "Expected warning to mention unknown relationship"
+        assert any("UnknownProperty" in w.get("error", "") for w in conn_warnings), "Expected warning to mention unknown property"
 
     @pytest.mark.asyncio
     async def test_finalize_includes_warnings_in_result(self, orchestrator):
