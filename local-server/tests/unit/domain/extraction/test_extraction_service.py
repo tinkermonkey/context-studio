@@ -1925,8 +1925,9 @@ class TestPreviewRecognition:
     def test_preview_recognition_empty_triples_list(self, service_with_recognizer):
         """Empty triples list returns empty hits."""
         service = service_with_recognizer["service"]
-        hits = service.preview_recognition([])
-        assert hits == []
+        result = service.preview_recognition([])
+        assert result["hits"] == []
+        assert result["skipped_count"] == 0
 
     def test_preview_recognition_no_recognizer_returns_empty(self):
         """preview_recognition returns empty list when recognizer is None."""
@@ -1952,8 +1953,9 @@ class TestPreviewRecognition:
         )
 
         triples = [self._make_triple("Alice")]
-        hits = service.preview_recognition(triples)
-        assert hits == []
+        result = service.preview_recognition(triples)
+        assert result["hits"] == []
+        assert result["skipped_count"] == 0
 
     def test_preview_recognition_skips_non_individual_subjects(self, service_with_recognizer):
         """Triples with non-individual subjects are skipped."""
@@ -1966,14 +1968,15 @@ class TestPreviewRecognition:
                 "confidence": 0.9,
             }
         ]
-        hits = service.preview_recognition(triples)
-        assert len(hits) == 0
+        result = service.preview_recognition(triples)
+        assert len(result["hits"]) == 0
 
     def test_preview_recognition_unmatched_mention_no_class_ids(self, service_with_recognizer):
         """Mention with empty class_ids produces unmatched hit."""
         service = service_with_recognizer["service"]
         triples = [self._make_triple("Alice", class_ids=[])]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -1989,7 +1992,8 @@ class TestPreviewRecognition:
             self._make_triple("ALICE"),  # Case variant
             self._make_triple("alice"),  # Another case variant
         ]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2011,7 +2015,8 @@ class TestPreviewRecognition:
         )
 
         triples = [self._make_triple("Alice")]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2025,7 +2030,8 @@ class TestPreviewRecognition:
         """Unmatched mention produces hit with will_match_existing=False."""
         service = service_with_recognizer["service"]
         triples = [self._make_triple("UnknownPerson")]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "UnknownPerson"
@@ -2055,7 +2061,8 @@ class TestPreviewRecognition:
             self._make_triple("Bob"),
             self._make_triple("Charlie"),
         ]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 3
         labels = {hit.mention_label for hit in hits}
@@ -2100,7 +2107,8 @@ class TestPreviewRecognition:
                 "confidence": 0.9,
             }
         ]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2114,7 +2122,8 @@ class TestPreviewRecognition:
             self._make_triple("   "),
             self._make_triple("Alice"),
         ]
-        hits = service.preview_recognition(triples)
+        result = service.preview_recognition(triples)
+        hits = result["hits"]
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2141,3 +2150,58 @@ class TestPreviewRecognition:
 
         assert len(received_class_ids) == 1
         assert received_class_ids[0] == class_ids
+
+    def test_preview_recognition_filters_by_confidence_threshold(self, service_with_recognizer):
+        """Triples below confidence_threshold are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "Alice",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.3,
+            },
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "Bob",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.7,
+            },
+        ]
+        result = service.preview_recognition(triples, confidence_threshold=0.5)
+        hits = result["hits"]
+        skipped = result["skipped_count"]
+
+        assert skipped == 1
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Bob"
+
+    def test_preview_recognition_passes_recognition_threshold(self, service_with_recognizer):
+        """recognition_threshold is passed to recognizer."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        received_thresholds = []
+        original_recognize = recognizer.recognize
+
+        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+            received_thresholds.append(threshold)
+            return original_recognize(label, context, class_ids, taxonomy_id, threshold)
+
+        recognizer.recognize = tracking_recognize
+
+        triples = [self._make_triple("Alice")]
+        service.preview_recognition(triples, recognition_threshold=0.75)
+
+        assert len(received_thresholds) == 1
+        assert received_thresholds[0] == 0.75

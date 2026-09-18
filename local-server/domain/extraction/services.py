@@ -2281,26 +2281,42 @@ Identified individuals:
 
         return deduplicated
 
-    def preview_recognition(self, triples: list[dict]) -> list[RecognitionPreviewHit]:
+    def preview_recognition(
+        self,
+        triples: list[dict],
+        confidence_threshold: float = 0.5,
+        recognition_threshold: float = 0.90,
+    ) -> dict[str, Any]:
         """
         Preview which extracted individuals would match existing graph nodes.
 
         Computes at request time against current ontology state, with zero writes.
-        For each distinct typing triple (subject is an individual), attempts to resolve
-        the mention via IndividualRecognizer if configured. Returns a hit for each
-        mention, whether it would match or be created as new.
+        For each distinct typing triple (subject is an individual) with confidence
+        >= confidence_threshold, attempts to resolve the mention via IndividualRecognizer
+        if configured. Returns a hit for each qualifying mention, whether it would match
+        or be created as new.
 
         Args:
             triples: List of extracted triples from a completed pipeline run
+            confidence_threshold: Minimum confidence for extracted mentions (0.0–1.0).
+                                  Mentions below this threshold are skipped.
+            recognition_threshold: Minimum confidence for recognition matches (0.0–1.0).
+                                  Matches below this threshold are not reported.
 
         Returns:
-            List of RecognitionPreviewHit entities reporting match status per mention
+            Dict with keys:
+            - 'hits': List of RecognitionPreviewHit entities reporting match status
+            - 'skipped_count': Number of mentions below the confidence threshold
         """
-        if self._individual_recognizer is None:
-            return []
-
         hits: list[RecognitionPreviewHit] = []
         seen_mentions: set[str] = set()
+        skipped_count = 0
+
+        if self._individual_recognizer is None:
+            _logger.warning(
+                "Individual recognizer is not configured; returning empty recognition preview"
+            )
+            return {"hits": hits, "skipped_count": skipped_count}
 
         for triple in triples:
             subject = triple.get("subject", {})
@@ -2310,6 +2326,12 @@ Identified individuals:
             mention_label = (subject.get("label") or "").strip()
             if not mention_label or mention_label.lower() in seen_mentions:
                 continue
+
+            confidence = float(triple.get("confidence", 0.5))
+            if confidence < confidence_threshold:
+                skipped_count += 1
+                continue
+
             seen_mentions.add(mention_label.lower())
 
             class_ids = subject.get("class_ids") or []
@@ -2331,7 +2353,7 @@ Identified individuals:
                 context="",
                 class_ids=class_ids,
                 taxonomy_id=None,
-                threshold=None,
+                threshold=recognition_threshold,
             )
 
             if match is not None:
@@ -2357,7 +2379,7 @@ Identified individuals:
                     )
                 )
 
-        return hits
+        return {"hits": hits, "skipped_count": skipped_count}
 
     def _normalized_similarity(self, label_a: str, label_b: str) -> float:
         """

@@ -41,6 +41,7 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.extraction import (
     RecognitionPreviewHitSchema,
+    RecognitionPreviewRequest,
     RecognitionPreviewResponse,
     SourceSpanSchema,
 )
@@ -1411,6 +1412,7 @@ async def apply_pipeline_run(
 async def preview_recognition(
     run_id: str,
     request: Request,
+    request_body: Optional[RecognitionPreviewRequest] = Body(None),
 ) -> RecognitionPreviewResponse:
     """
     Preview which extracted individuals would match existing graph nodes.
@@ -1427,6 +1429,7 @@ async def preview_recognition(
 
     Args:
         run_id: ID of the completed pipeline run to preview
+        request_body: Preview parameters including confidence thresholds
 
     Returns:
         RecognitionPreviewResponse with recognition results per mention
@@ -1451,15 +1454,29 @@ async def preview_recognition(
     ptype = run.pipeline_type
     triples = run.output_summary.get("triples", [])
 
+    if request_body is None:
+        request_body = RecognitionPreviewRequest()
+
     hits = []
+    skipped_count = 0
     matched_count = 0
     unmatched_count = 0
 
     if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
         svc = request.app.state.extraction_service
-        hits = svc.preview_recognition(triples)
-        matched_count = sum(1 for hit in hits if hit.will_match_existing)
-        unmatched_count = sum(1 for hit in hits if not hit.will_match_existing)
+        try:
+            result = svc.preview_recognition(
+                triples=triples,
+                confidence_threshold=request_body.confidence_threshold,
+                recognition_threshold=request_body.recognition_threshold,
+            )
+            hits = result["hits"]
+            skipped_count = result["skipped_count"]
+            matched_count = sum(1 for hit in hits if hit.will_match_existing)
+            unmatched_count = sum(1 for hit in hits if not hit.will_match_existing)
+        except Exception as exc:
+            status_code, message = _handle_domain_error(exc)
+            raise HTTPException(status_code=status_code, detail=message) from exc
 
     hit_schemas = [
         RecognitionPreviewHitSchema(
@@ -1478,6 +1495,7 @@ async def preview_recognition(
         total_mentions=len(hits),
         matched_count=matched_count,
         unmatched_count=unmatched_count,
+        skipped_count=skipped_count,
     )
 
 

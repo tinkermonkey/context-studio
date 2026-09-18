@@ -113,6 +113,25 @@ class EnrichFromReferencesRequest(BaseModel):
     )
 
 
+class RecognitionPreviewRequest(BaseModel):
+    """Request to preview recognition results for a pipeline run."""
+
+    confidence_threshold: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence threshold for extracted mentions (0.0–1.0). "
+        "Mentions below this threshold are skipped.",
+    )
+    recognition_threshold: float = Field(
+        default=0.90,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence threshold for individual recognition matches (0.0–1.0). "
+        "Matches below this threshold are not reported.",
+    )
+
+
 class RecognitionPreviewHitSchema(BaseModel):
     """Preview of recognition result for a single extracted mention."""
 
@@ -167,4 +186,9 @@ class RecognitionPreviewResponse(BaseModel):
         ...,
         ge=0,
         description="Number of mentions that would be created as new",
+    )
+    skipped_count: int = Field(
+        ...,
+        ge=0,
+        description="Number of mentions skipped due to being below the confidence threshold",
     )

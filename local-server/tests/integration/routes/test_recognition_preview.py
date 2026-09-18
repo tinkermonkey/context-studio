@@ -191,6 +191,7 @@ def test_recognition_preview_empty_run(client, pipeline_repo):
     assert data["total_mentions"] == 0
     assert data["matched_count"] == 0
     assert data["unmatched_count"] == 0
+    assert data["skipped_count"] == 0
     assert len(data["hits"]) == 0
 
 
@@ -205,6 +206,7 @@ def test_recognition_preview_single_mention_no_match(client, pipeline_repo, reco
     assert data["total_mentions"] == 1
     assert data["matched_count"] == 0
     assert data["unmatched_count"] == 1
+    assert data["skipped_count"] == 0
     assert len(data["hits"]) == 1
 
     hit = data["hits"][0]
@@ -236,6 +238,7 @@ def test_recognition_preview_single_mention_with_match(client, pipeline_repo, re
     assert data["total_mentions"] == 1
     assert data["matched_count"] == 1
     assert data["unmatched_count"] == 0
+    assert data["skipped_count"] == 0
 
     hit = data["hits"][0]
     assert hit["mention_label"] == "Alice"
@@ -272,6 +275,7 @@ def test_recognition_preview_multiple_mentions(client, pipeline_repo, recognizer
     assert data["total_mentions"] == 2
     assert data["matched_count"] == 1
     assert data["unmatched_count"] == 1
+    assert data["skipped_count"] == 0
 
     hit_labels = {hit["mention_label"] for hit in data["hits"]}
     assert hit_labels == {"Alice", "Bob"}
@@ -331,7 +335,64 @@ def test_recognition_preview_empty_result_for_non_individual_pipeline(client, pi
     assert data["total_mentions"] == 0
     assert data["matched_count"] == 0
     assert data["unmatched_count"] == 0
+    assert data["skipped_count"] == 0
     assert len(data["hits"]) == 0
+
+
+def test_recognition_preview_filters_by_confidence_threshold(client, pipeline_repo, recognizer):
+    """Mentions below confidence_threshold are skipped."""
+    triples = [
+        _make_triple("Alice"),  # confidence 0.9
+        {
+            "subject": {
+                "kind": "individual",
+                "id": "",
+                "label": "Bob",
+                "class_ids": [CLASS_ID],
+            },
+            "predicate": {"label": "is_a"},
+            "object": {"kind": "class", "id": CLASS_ID, "label": "Person"},
+            "confidence": 0.3,
+        },
+    ]
+    run_id = _create_and_complete_individual_run(pipeline_repo, triples=triples)
+
+    response = client.post(
+        f"/api/pipelines/runs/{run_id}/recognition-preview",
+        json={"confidence_threshold": 0.5},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 1
+    assert data["matched_count"] == 0
+    assert data["unmatched_count"] == 1
+    assert data["skipped_count"] == 1
+    assert data["hits"][0]["mention_label"] == "Alice"
+
+
+def test_recognition_preview_with_recognition_threshold(client, pipeline_repo, recognizer):
+    """recognition_threshold parameter is accepted."""
+    alice_id = str(uuid4())
+    recognizer.add_match(
+        label="Alice",
+        match=RecognitionMatch(
+            individual_id=alice_id,
+            title="Alice (Person)",
+            score=0.8,
+            method="vector",
+        ),
+    )
+
+    triple = _make_triple("Alice")
+    run_id = _create_and_complete_individual_run(pipeline_repo, triples=[triple])
+
+    response = client.post(
+        f"/api/pipelines/runs/{run_id}/recognition-preview",
+        json={"recognition_threshold": 0.90},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 1
 
 
 if __name__ == "__main__":
