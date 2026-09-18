@@ -42,6 +42,8 @@ from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
 
+from adapters.web.schemas.extraction import SourceSpanSchema
+
 
 class PipelineTypeResponse(BaseModel):
     """Response containing pipeline type metadata."""
@@ -319,22 +321,6 @@ class RevertRunResponse(BaseModel):
     entities_restored: int = Field(
         default=0, description="Number of entities restored during revert"
     )
-
-
-class SourceSpanSchema(BaseModel):
-    """Represents a span in source text with optional character offsets.
-
-    Encodes provenance via nullable fields:
-    - Fully resolved: all three fields populated
-    - Quote-only: quote populated, offsets are None
-    - Unresolved: all fields are None
-    """
-
-    model_config = ConfigDict(from_attributes=True)
-
-    quote: Optional[str] = Field(None, description="The verbatim or matched text from source")
-    start: Optional[int] = Field(None, ge=0, description="Zero-indexed character start position")
-    end: Optional[int] = Field(None, ge=0, description="Zero-indexed character end position (exclusive)")
 
 
 class CandidateBase(BaseModel):
