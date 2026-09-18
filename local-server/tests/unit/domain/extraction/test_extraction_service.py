@@ -1926,8 +1926,8 @@ class TestPreviewRecognition:
         """Empty triples list returns empty hits."""
         service = service_with_recognizer["service"]
         result = service.preview_recognition([])
-        assert result["hits"] == []
-        assert result["skipped_count"] == 0
+        assert result.hits == []
+        assert result.skipped_count == 0
 
     def test_preview_recognition_no_recognizer_returns_empty(self):
         """preview_recognition returns empty list when recognizer is None."""
@@ -1954,8 +1954,8 @@ class TestPreviewRecognition:
 
         triples = [self._make_triple("Alice")]
         result = service.preview_recognition(triples)
-        assert result["hits"] == []
-        assert result["skipped_count"] == 0
+        assert result.hits == []
+        assert result.skipped_count == 0
 
     def test_preview_recognition_skips_non_individual_subjects(self, service_with_recognizer):
         """Triples with non-individual subjects are skipped."""
@@ -1969,14 +1969,14 @@ class TestPreviewRecognition:
             }
         ]
         result = service.preview_recognition(triples)
-        assert len(result["hits"]) == 0
+        assert len(result.hits) == 0
 
     def test_preview_recognition_unmatched_mention_no_class_ids(self, service_with_recognizer):
         """Mention with empty class_ids produces unmatched hit."""
         service = service_with_recognizer["service"]
         triples = [self._make_triple("Alice", class_ids=[])]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -1993,7 +1993,7 @@ class TestPreviewRecognition:
             self._make_triple("alice"),  # Another case variant
         ]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2016,7 +2016,7 @@ class TestPreviewRecognition:
 
         triples = [self._make_triple("Alice")]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2031,7 +2031,7 @@ class TestPreviewRecognition:
         service = service_with_recognizer["service"]
         triples = [self._make_triple("UnknownPerson")]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "UnknownPerson"
@@ -2062,7 +2062,7 @@ class TestPreviewRecognition:
             self._make_triple("Charlie"),
         ]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 3
         labels = {hit.mention_label for hit in hits}
@@ -2108,7 +2108,7 @@ class TestPreviewRecognition:
             }
         ]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2123,7 +2123,7 @@ class TestPreviewRecognition:
             self._make_triple("Alice"),
         ]
         result = service.preview_recognition(triples)
-        hits = result["hits"]
+        hits = result.hits
 
         assert len(hits) == 1
         assert hits[0].mention_label == "Alice"
@@ -2179,8 +2179,8 @@ class TestPreviewRecognition:
             },
         ]
         result = service.preview_recognition(triples, confidence_threshold=0.5)
-        hits = result["hits"]
-        skipped = result["skipped_count"]
+        hits = result.hits
+        skipped = result.skipped_count
 
         assert skipped == 1
         assert len(hits) == 1

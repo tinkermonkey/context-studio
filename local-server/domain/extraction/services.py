@@ -38,6 +38,7 @@ from .entities import (
     ExtractionRun,
     ExtractionRunStatus,
     RecognitionPreviewHit,
+    RecognitionPreviewResult,
     TripleExtractionResult,
 )
 from .events import ExtractionCompleted
@@ -2286,7 +2287,7 @@ Identified individuals:
         triples: list[dict],
         confidence_threshold: float = 0.5,
         recognition_threshold: float = 0.90,
-    ) -> dict[str, Any]:
+    ) -> RecognitionPreviewResult:
         """
         Preview which extracted individuals would match existing graph nodes.
 
@@ -2304,9 +2305,7 @@ Identified individuals:
                                   Matches below this threshold are not reported.
 
         Returns:
-            Dict with keys:
-            - 'hits': List of RecognitionPreviewHit entities reporting match status
-            - 'skipped_count': Number of mentions below the confidence threshold
+            RecognitionPreviewResult with hits and skipped_count.
         """
         hits: list[RecognitionPreviewHit] = []
         seen_mentions: set[str] = set()
@@ -2316,7 +2315,7 @@ Identified individuals:
             _logger.warning(
                 "Individual recognizer is not configured; returning empty recognition preview"
             )
-            return {"hits": hits, "skipped_count": skipped_count}
+            return RecognitionPreviewResult(hits=hits, skipped_count=skipped_count)
 
         for triple in triples:
             subject = triple.get("subject", {})
@@ -2327,12 +2326,12 @@ Identified individuals:
             if not mention_label or mention_label.lower() in seen_mentions:
                 continue
 
+            seen_mentions.add(mention_label.lower())
+
             confidence = float(triple.get("confidence", 0.5))
             if confidence < confidence_threshold:
                 skipped_count += 1
                 continue
-
-            seen_mentions.add(mention_label.lower())
 
             class_ids = subject.get("class_ids") or []
             if not class_ids:
@@ -2379,7 +2378,7 @@ Identified individuals:
                     )
                 )
 
-        return {"hits": hits, "skipped_count": skipped_count}
+        return RecognitionPreviewResult(hits=hits, skipped_count=skipped_count)
 
     def _normalized_similarity(self, label_a: str, label_b: str) -> float:
         """

@@ -333,3 +333,28 @@ class RecognitionPreviewHit:
                 raise ValueError(
                     "will_match_existing=False requires no match_method/score"
                 )
+
+
+@dataclass(frozen=True)
+class RecognitionPreviewResult:
+    """
+    Result of a recognition preview operation.
+
+    This represents the output of preview_recognition(), containing the set of
+    mentions that passed the confidence threshold and were sent for recognition,
+    along with a count of mentions that were skipped due to low confidence.
+
+    Attributes:
+        hits: List of RecognitionPreviewHit entities reporting match status for
+            mentions that passed the confidence threshold
+        skipped_count: Number of unique individual mentions that were skipped
+            because their confidence was below the confidence_threshold
+    """
+
+    hits: list[RecognitionPreviewHit]
+    skipped_count: int
+
+    def __post_init__(self) -> None:
+        """Validate recognition preview result invariants."""
+        if self.skipped_count < 0:
+            raise ValueError(f"skipped_count must be non-negative, got {self.skipped_count}")

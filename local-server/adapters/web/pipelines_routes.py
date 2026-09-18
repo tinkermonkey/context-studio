@@ -1470,8 +1470,8 @@ async def preview_recognition(
                 confidence_threshold=request_body.confidence_threshold,
                 recognition_threshold=request_body.recognition_threshold,
             )
-            hits = result["hits"]
-            skipped_count = result["skipped_count"]
+            hits = result.hits
+            skipped_count = result.skipped_count
             matched_count = sum(1 for hit in hits if hit.will_match_existing)
             unmatched_count = sum(1 for hit in hits if not hit.will_match_existing)
         except Exception as exc:
