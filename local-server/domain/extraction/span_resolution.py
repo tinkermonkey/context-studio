@@ -34,7 +34,7 @@ def resolve_span(
     4. Fallback: return SourceSpan(quote=None, start=None, end=None).
 
     The function never raises on missing/empty inputs—it degrades gracefully to a
-    quote-only span. Warning emission is the caller's responsibility (Phase 2).
+    fully-null span (all fields None). Warning emission is the caller's responsibility.
 
     Args:
         quote: The text to find, or None. May be verbatim or paraphrased.
@@ -368,6 +368,14 @@ def _map_normalized_to_original(
     """
     normalized_idx = 0
     original_idx = 0
+
+    # Skip leading whitespace in original text — it's removed entirely during normalization
+    while original_idx < len(original_text) and original_text[original_idx].isspace():
+        original_idx += 1
+
+    # If we're looking for position 0 in normalized, we're done after skipping whitespace
+    if normalized_idx == normalized_pos:
+        return original_idx if original_idx <= len(original_text) else None
 
     while original_idx < len(original_text) and normalized_idx < normalized_pos:
         if original_text[original_idx].isspace():
