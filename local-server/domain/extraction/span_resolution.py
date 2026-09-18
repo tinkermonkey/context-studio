@@ -82,17 +82,15 @@ def find_all_spans(
     source_text: str,
 ) -> list[SourceSpan]:
     """
-    Find all occurrences of a term in source text using exact, normalized, and fuzzy matching.
+    Find all occurrences of a term in source text using exact and normalized matching.
 
     Used by the schema extraction path where the term is known a priori (e.g., a
-    schema label). This function uses the full resolution cascade:
+    schema label). No fuzzy matching here — the label should match exactly or with
+    minor normalization (whitespace/case-folding).
+
+    This function uses stages 1-2 of the resolution cascade:
     1. Exact matching: locate term exactly in source_text
     2. Normalized matching: collapse whitespace and case-fold both term and source
-    3. Fuzzy matching: find close matches (>0.80 similarity) for variants/typos
-       (only if stages 1-2 find no results)
-
-    Returns all matches found, preferring exact/normalized matches. Fuzzy matches
-    are used as a fallback only when exact and normalized matching find nothing.
 
     Args:
         term: The text to find. Must be non-empty.
@@ -118,12 +116,6 @@ def find_all_spans(
         # Avoid duplicates from stage 1 (exact match will also be found in normalized)
         if not any(s.start == start and s.end == end for s in spans):
             spans.append(SourceSpan(quote=term, start=start, end=end))
-
-    # Stage 3: Fuzzy matches for variant spellings/typos (quote-only, no exact positions)
-    # Only apply fuzzy matching if stages 1-2 found no results
-    if not spans:
-        fuzzy_matches = _find_fuzzy_match_in_text(term, source_text)
-        spans.extend(fuzzy_matches)
 
     return spans
 
@@ -336,52 +328,6 @@ def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
     return False
 
 
-def _find_fuzzy_match_in_text(term: str, source_text: str) -> list[SourceSpan]:
-    """
-    Find a fuzzy match in source text as a quote-only span.
-
-    Fuzzy matching is a fallback when exact and normalized matching find nothing.
-    It returns at most one quote-only span (no exact position) because position
-    mapping from normalized text back to original text is unreliable when comparing
-    normalized substrings of varying lengths.
-
-    To avoid O(n*k) SequenceMatcher overhead on very large texts, this function
-    short-circuits when source_text exceeds 100,000 characters. Fuzzy matching for
-    such texts is deferred as the probability of finding a meaningful variant match
-    diminishes with text size.
-
-    Args:
-        term: The text to match (approximately).
-        source_text: The text to search within. Very large texts (>100k chars)
-            are skipped for performance.
-
-    Returns:
-        List with a single quote-only SourceSpan if fuzzy match found, empty otherwise.
-    """
-    if len(source_text) > 100_000:
-        # Skip fuzzy matching for very large texts to avoid O(n*k) cost
-        return []
-
-    term_len = len(term)
-    min_len = max(1, int(term_len * 0.8))  # 80% of term length
-    max_len = int(term_len * 1.2)  # 120% of term length
-
-    normalized_term = _normalize_text(term)
-
-    # Slide through entire text looking for fuzzy matches
-    for candidate_len in range(min_len, max_len + 1):
-        for i in range(len(source_text) - candidate_len + 1):
-            candidate = source_text[i : i + candidate_len]
-            normalized_candidate = _normalize_text(candidate)
-
-            ratio = difflib.SequenceMatcher(None, normalized_term, normalized_candidate).ratio()
-
-            if ratio >= 0.80:
-                # Found a fuzzy match; return as quote-only (no exact position)
-                # Position mapping is unreliable when working with normalized substrings
-                return [SourceSpan(quote=term, start=None, end=None)]
-
-    return []
 
 
 def _normalize_text(text: str) -> str:

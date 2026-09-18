@@ -815,7 +815,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         Find all occurrences of a term in source text using span resolution.
 
-        Delegates to find_all_spans() which uses exact, normalized, and fuzzy matching
+        Delegates to find_all_spans() which uses exact and normalized matching
         to locate all occurrences of the term in the source text.
 
         Args:

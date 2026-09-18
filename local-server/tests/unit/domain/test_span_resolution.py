@@ -458,7 +458,7 @@ class TestFindAllSpans:
             assert source_text[span.start:span.end].casefold() == term.casefold()
 
     def test_find_all_spans_returns_empty_when_no_match(self):
-        """find_all_spans returns empty when no match is found (exact, normalized, or fuzzy)."""
+        """find_all_spans returns empty when no match is found (exact or normalized only)."""
         term = "banana"
         source_text = "apples in the orchard, some peaches and pears"
 
@@ -468,30 +468,24 @@ class TestFindAllSpans:
         assert len(spans) == 0
 
     def test_find_all_spans_fuzzy_matching_typo(self):
-        """find_all_spans falls back to fuzzy matching when exact/normalized fail."""
+        """find_all_spans does not use fuzzy matching—exact/normalized only."""
         term = "Microservce"  # Typo: missing 'i'
         source_text = "A Microservice is a key architecture pattern for building scalable systems"
 
         spans = find_all_spans(term, source_text)
 
-        # Fuzzy matching should find the variant with >0.80 similarity
-        assert len(spans) == 1
-        assert spans[0].quote == term
-        assert spans[0].start is None  # Fuzzy matches are quote-only
-        assert spans[0].end is None
+        # No fuzzy matching in schema extraction path; typo doesn't match exactly or normalized
+        assert len(spans) == 0
 
     def test_find_all_spans_fuzzy_matching_variant(self):
-        """find_all_spans uses fuzzy matching for spelling variants."""
-        term = "organistion"  # British spelling variant
+        """find_all_spans does not use fuzzy matching for spelling variants."""
+        term = "organistion"  # Typo/variant
         source_text = "The organization manages multiple service teams"
 
         spans = find_all_spans(term, source_text)
 
-        # Fuzzy matching should find similar text
-        assert len(spans) == 1
-        assert spans[0].quote == term
-        assert spans[0].start is None  # Fuzzy matches are quote-only
-        assert spans[0].end is None
+        # No fuzzy matching; spelling variant doesn't match exactly or normalized
+        assert len(spans) == 0
 
     def test_find_all_spans_unicode(self):
         """Unicode text is handled correctly."""
