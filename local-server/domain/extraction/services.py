@@ -2254,6 +2254,7 @@ Identified individuals:
                             uri=other.uri or entity.uri,
                             description=other.description or entity.description,
                             matched_class_id=entity.matched_class_id,
+                            span=entity.span or other.span,
                             properties={
                                 **(entity.properties or {}),
                                 **(other.properties or {}),

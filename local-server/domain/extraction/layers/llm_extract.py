@@ -9,7 +9,8 @@ import logging
 from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerInput, LayerOutput
+from domain.extraction.value_objects import LayerInput, LayerOutput, SourceSpan
+from domain.extraction.span_resolution import resolve_span
 from domain.pipelines.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)
@@ -134,13 +135,30 @@ JSON Array:"""
                 confidence = float(item.get("confidence", 0.5))
                 confidence = max(0.0, min(1.0, confidence))
 
+                label = item.get("label", "").strip()
+
+                # Resolve span from text using the entity label
+                span = None
+                if label:
+                    try:
+                        span = resolve_span(label, input.text)
+                    except Exception as e:
+                        _logger.warning(
+                            "Failed to resolve span for entity '%s': %s",
+                            label,
+                            e,
+                        )
+                        # Fall back to quote-only span on resolution failure
+                        span = SourceSpan(quote=label, start=None, end=None)
+
                 extracted = ExtractedEntity(
-                    label=item.get("label", "").strip(),
+                    label=label,
                     entity_type=item.get("type", "UNKNOWN"),
                     source_layer=1,
                     confidence=confidence,
                     uri=item.get("uri"),
                     description=item.get("description"),
+                    span=span,
                 )
                 if extracted.label:  # Only add if label is non-empty
                     entities.append(extracted)

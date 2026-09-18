@@ -9,7 +9,8 @@ import logging
 from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerOutput
+from domain.extraction.value_objects import LayerOutput, SourceSpan
+from domain.extraction.span_resolution import resolve_span
 from domain.ontology.entities import Class, Individual
 
 _logger = logging.getLogger(__name__)
@@ -95,6 +96,20 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
             # Clamp similarity to [0.0, 1.0] to handle floating point precision issues
             confidence = max(0.0, min(1.0, float(similarity)))
 
+            # Resolve span from text using the entity title
+            span = None
+            if entity.title:
+                try:
+                    span = resolve_span(entity.title, text)
+                except Exception as e:
+                    _logger.warning(
+                        "Failed to resolve span for KG entity '%s': %s",
+                        entity.title,
+                        e,
+                    )
+                    # Fall back to quote-only span on resolution failure
+                    span = SourceSpan(quote=entity.title, start=None, end=None)
+
             extracted = ExtractedEntity(
                 label=entity.title,
                 entity_type=entity_type,
@@ -102,6 +117,7 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
                 confidence=confidence,
                 uri=entity_uri,
                 description=entity.description,
+                span=span,
                 properties={"kg_entity_id": entity.id},
             )
             entities.append(extracted)
