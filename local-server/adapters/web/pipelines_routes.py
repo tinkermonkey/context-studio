@@ -845,7 +845,10 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
-@router.get("/runs/{run_id}/candidates", response_model=list[Union[CandidateItem, CandidateResponse]])
+@router.get(
+    "/runs/{run_id}/candidates",
+    response_model=list[Union[CandidateItem, CandidateResponse]],
+)
 async def get_pipeline_candidates(
     run_id: str,
     request: Request,

@@ -1,6 +1,5 @@
 """Unit tests for pipelines route helper functions."""
 
-import pytest
 
 from adapters.web.pipelines_routes import _normalize_provenance
 from adapters.web.schemas.extraction import SourceSpanSchema

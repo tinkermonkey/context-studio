@@ -252,7 +252,7 @@ class TestSchemaExtractionHTTP:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_candidates_endpoint_returns_schema_extraction_candidates(self, schema_client):
-        """GET /api/pipelines/runs/{run_id}/candidates returns typed candidates for schema_extraction."""
+        """Return typed candidates for schema_extraction at /candidates endpoint."""
         run_response = schema_client.post(
             "/api/pipelines/schema_extraction/run",
             json=_MICROSERVICES_PAYLOAD,
@@ -280,8 +280,10 @@ class TestSchemaExtractionHTTP:
             assert "candidate_type" in candidate
             assert candidate["candidate_type"] == "schema_class"
 
-    def test_candidates_endpoint_empty_for_no_candidates(self, schema_client, pipeline_run_repo, batch_repo):
-        """GET /api/pipelines/runs/{run_id}/candidates returns empty list when output_summary has no candidates."""
+    def test_candidates_endpoint_empty_for_no_candidates(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """Return empty list when output_summary has no candidates."""
         from domain.pipelines.entities import PipelineRunStatus
 
         # Create a batch first
@@ -316,8 +318,10 @@ class TestSchemaExtractionHTTP:
         response = schema_client.get("/api/pipelines/runs/nonexistent-run-id/candidates")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_candidates_endpoint_provenance_format(self, schema_client, pipeline_run_repo, batch_repo):
-        """GET /api/pipelines/runs/{run_id}/candidates returns provenance with quote and offsets."""
+    def test_candidates_endpoint_provenance_format(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """Return provenance with quote and offsets at /candidates endpoint."""
         from domain.pipelines.entities import PipelineRunStatus
 
         # Create a batch and a run with explicit provenance in both pre-span and post-span formats
