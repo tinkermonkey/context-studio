@@ -147,3 +147,25 @@ class TestNormalizeProvenance:
 
         assert len(result) == 1
         assert isinstance(result[0], SourceSpanSchema)
+
+    def test_normalize_dict_provenance_single(self):
+        """Dict-format provenance (single dict, not in a list) is normalized correctly."""
+        provenance_data = {"quote": "example text", "start": 10, "end": 22}
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 1
+        assert result[0].quote == "example text"
+        assert result[0].start == 10
+        assert result[0].end == 22
+
+    def test_normalize_dict_provenance_with_raw_key(self):
+        """Dict-format provenance with raw key (old format) is normalized correctly."""
+        provenance_data = {"raw": "old format text", "text_offset_start": 5, "text_offset_end": 20}
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 1
+        assert result[0].quote == "old format text"
+        assert result[0].start == 5
+        assert result[0].end == 20

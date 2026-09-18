@@ -108,7 +108,7 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
     and post-span format (quote/start/end).
 
     Args:
-        provenance_data: Provenance data from orchestrator output (list or string)
+        provenance_data: Provenance data from orchestrator output (list, dict, or string)
 
     Returns:
         List of SourceSpanSchema objects
@@ -139,6 +139,25 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
                     end=end,
                 )
                 result.append(span)
+    elif isinstance(provenance_data, dict):
+        quote = provenance_data.get("quote")
+        if quote is None:
+            quote = provenance_data.get("raw")
+
+        start = provenance_data.get("start")
+        if start is None:
+            start = provenance_data.get("text_offset_start")
+
+        end = provenance_data.get("end")
+        if end is None:
+            end = provenance_data.get("text_offset_end")
+
+        span = SourceSpanSchema(
+            quote=quote,
+            start=start,
+            end=end,
+        )
+        result.append(span)
     elif isinstance(provenance_data, str):
         if provenance_data:
             span = SourceSpanSchema(quote=provenance_data, start=None, end=None)
