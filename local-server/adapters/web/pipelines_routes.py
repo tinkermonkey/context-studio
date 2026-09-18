@@ -54,6 +54,7 @@ from adapters.web.schemas.pipelines import (
     CandidateResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
+    GroundingCandidate,
     ImplementationResponse,
     NodeReference,
     PipelineConfigurationCreateRequest,
@@ -64,6 +65,7 @@ from adapters.web.schemas.pipelines import (
     PipelineRunResponse,
     PipelineTypeResponse,
     PredicateReference,
+    RefinementCandidate,
     ResumeBatchResponse,
     RevertRunResponse,
     SchemaClassCandidate,
@@ -282,6 +284,52 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
         predicate=_map_predicate_ref(predicate_data),
         object=_map_node_ref(object_data),
         confidence=float(triple_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
+
+
+def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> "GroundingCandidate":
+    """
+    Map an orchestrator grounding to GroundingCandidate response.
+
+    Args:
+        grounding_dict: Grounding dict from orchestrator output
+
+    Returns:
+        GroundingCandidate response object
+    """
+    from adapters.web.schemas.pipelines import GroundingCandidate
+
+    provenance = _normalize_provenance(grounding_dict.get("provenance", []))
+
+    return GroundingCandidate(
+        uri=grounding_dict.get("uri", ""),
+        label=grounding_dict.get("label", ""),
+        description=grounding_dict.get("description", ""),
+        source=grounding_dict.get("source", ""),
+        confidence=float(grounding_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
+
+
+def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> "RefinementCandidate":
+    """
+    Map an orchestrator refinement to RefinementCandidate response.
+
+    Args:
+        refinement_dict: Refinement dict from orchestrator output
+
+    Returns:
+        RefinementCandidate response object
+    """
+    from adapters.web.schemas.pipelines import RefinementCandidate
+
+    provenance = _normalize_provenance(refinement_dict.get("provenance", []))
+
+    return RefinementCandidate(
+        content=refinement_dict.get("content", ""),
+        scope_id=refinement_dict.get("scope_id"),
+        confidence=float(refinement_dict.get("confidence", 0.5)),
         provenance=provenance,
     )
 
@@ -938,43 +986,28 @@ async def get_pipeline_run(
 
 @router.get(
     "/runs/{run_id}/candidates",
-    response_model=list[Union[CandidateItem, CandidateResponse]],
+    response_model=list[CandidateItem],
 )
-async def get_pipeline_candidates(
+async def get_pipeline_candidates_generic(
     run_id: str,
     request: Request,
-) -> list[Union[CandidateItem, CandidateResponse]]:
+) -> list[CandidateItem]:
     """
-    Retrieve candidates from a completed pipeline run.
+    Retrieve candidates from a completed pipeline run (generic endpoint).
 
-    Extracts the full candidate list with provenance and confidence scores
-    from the pipeline run's output. The structure of candidates depends on
-    the pipeline type:
-    - individual_extraction: returns TripleCandidate (structured subject-predicate-object)
-      from triples key with mapped/new node distinction via id presence
-    - schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate
-      from candidates key, and SchemaConnectionCandidate from connections key
-    - schema_node_grounding: returns groundings with URI, label, confidence
-    - schema_node_definition_refinement: returns definition candidates
-    - schema_node_connection_refinement: returns connection candidates
-
-    NOTE: The response model uses Union[CandidateItem, CandidateResponse] as a
-    transitional design. individual_extraction and schema_extraction return CandidateItem
-    (discriminated union with candidate_type), while legacy pipeline types return
-    CandidateResponse (deprecated flat schema). This union will be simplified once
-    all consumers migrate to CandidateItem.
+    Routes to the appropriate type-specific endpoint based on pipeline type.
+    This endpoint provides backward compatibility while enforcing proper
+    type-specific candidate mapping.
 
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateItem objects (discriminated union) or CandidateResponse for
-        legacy types, with full provenance and confidence. Returns empty list for
-        runs with no candidates/triples.
+        List of CandidateItem objects (discriminated union) with appropriate candidates
 
     Raises:
-        HTTPException: 404 if run not found
+        HTTPException: 404 if run not found or 422 if pipeline type has no candidates
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -985,69 +1018,234 @@ async def get_pipeline_candidates(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    output_summary = run.output_summary or {}
-    result: list[Union[CandidateItem, CandidateResponse]] = []
-
-    # Schema extraction: map candidates and connections to typed schemas
+    # Route to the appropriate type-specific endpoint
     if run.pipeline_type == PipelineType.SCHEMA_EXTRACTION:
-        candidates_data = output_summary.get("candidates", [])
-        connections_data = output_summary.get("connections", [])
+        return await get_schema_extraction_candidates(run_id, request)
+    elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        return await get_individual_extraction_candidates(run_id, request)
+    elif run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        return await get_schema_grounding_candidates(run_id, request)
+    elif run.pipeline_type in (
+        PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+        PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+    ):
+        return await get_schema_refinement_candidates(run_id, request)
+    else:
+        # NO_OP and any other pipeline types return empty list
+        return []
 
-        # Map class and property candidates
-        for candidate_dict in candidates_data:
-            kind = candidate_dict.get("kind")
-            if kind == "class":
-                result.append(_map_schema_class_candidate(candidate_dict))
-            elif kind == "property_definition":
-                result.append(_map_schema_property_candidate(candidate_dict))
-            else:
-                _logger.warning(
-                    f"Skipping candidate with unrecognized kind: {kind}. "
-                    f"Expected 'class' or 'property_definition'."
-                )
 
-        # Map connections
-        for connection_dict in connections_data:
-            result.append(_map_schema_connection_candidate(connection_dict))
+@router.get(
+    "/runs/{run_id}/schema-extraction-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_extraction_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from a schema_extraction pipeline run.
 
-        return result
+    Returns SchemaClassCandidate, SchemaPropertyCandidate, and
+    SchemaConnectionCandidate objects with full provenance and confidence.
 
-    # Individual extraction: return structured TripleCandidate items
-    if run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        triples_data = output_summary.get("triples", [])
-        return [_map_triple_candidate(triple_dict) for triple_dict in triples_data]
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
 
-    # For other pipeline types, use the existing legacy logic
-    candidates_key = None
-    candidates_data = []
+    Returns:
+        List of CandidateItem objects (discriminated union) with schema candidates
 
-    if run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
-        candidates_key = "groundings"
-    elif run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
-        candidates_key = "candidates"
-    elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-        candidates_key = "deltas"
-    # NO_OP and any other pipelines return empty list
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not schema_extraction type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
 
-    if candidates_key and candidates_key in output_summary:
-        candidates_data = output_summary[candidates_key]
-
-    # Convert candidate dicts to legacy response schema for backward compatibility
-    legacy_results: list[Union[CandidateItem, CandidateResponse]] = [
-        CandidateResponse.model_validate(
-            {
-                "uri": cand.get("uri") or cand.get("id") or "",
-                "label": cand.get("label") or cand.get("name") or "",
-                "description": cand.get("description") or "",
-                "source": cand.get("source") or cand.get("source_uri") or "",
-                "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
-                "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
-            }
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
         )
-        for cand in candidates_data
-    ]
 
-    return legacy_results
+    if run.pipeline_type != PipelineType.SCHEMA_EXTRACTION:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Run {run_id} is type {run.pipeline_type.value}, not schema_extraction",
+        )
+
+    output_summary = run.output_summary or {}
+    result: list[CandidateItem] = []
+
+    candidates_data = output_summary.get("candidates", [])
+    connections_data = output_summary.get("connections", [])
+
+    # Map class and property candidates
+    for candidate_dict in candidates_data:
+        kind = candidate_dict.get("kind")
+        if kind == "class":
+            result.append(_map_schema_class_candidate(candidate_dict))
+        elif kind == "property_definition":
+            result.append(_map_schema_property_candidate(candidate_dict))
+        else:
+            _logger.warning(
+                f"Skipping candidate with unrecognized kind: {kind}. "
+                f"Expected 'class' or 'property_definition'."
+            )
+
+    # Map connections
+    for connection_dict in connections_data:
+        result.append(_map_schema_connection_candidate(connection_dict))
+
+    return result
+
+
+@router.get(
+    "/runs/{run_id}/individual-extraction-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_individual_extraction_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from an individual_extraction pipeline run.
+
+    Returns TripleCandidate objects with structured subject-predicate-object
+    relationships and full provenance and confidence.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with triple candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not individual_extraction type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    if run.pipeline_type != PipelineType.INDIVIDUAL_EXTRACTION:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Run {run_id} is type {run.pipeline_type.value}, not individual_extraction",
+        )
+
+    output_summary = run.output_summary or {}
+    triples_data = output_summary.get("triples", [])
+    return [_map_triple_candidate(triple_dict) for triple_dict in triples_data]
+
+
+@router.get(
+    "/runs/{run_id}/schema-grounding-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_grounding_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from a schema_node_grounding pipeline run.
+
+    Returns GroundingCandidate objects linking schema nodes to external knowledge
+    with URI, label, description, and confidence.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with grounding candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not schema_node_grounding type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    if run.pipeline_type != PipelineType.SCHEMA_NODE_GROUNDING:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Run {run_id} is type {run.pipeline_type.value}, not schema_node_grounding",
+        )
+
+    output_summary = run.output_summary or {}
+    groundings_data = output_summary.get("groundings", [])
+    return [_map_grounding_candidate(grounding_dict) for grounding_dict in groundings_data]
+
+
+@router.get(
+    "/runs/{run_id}/schema-refinement-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_refinement_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from schema refinement pipeline runs.
+
+    Handles both schema_node_definition_refinement and schema_node_connection_refinement
+    pipeline types, returning RefinementCandidate objects with refined content
+    (definitions or connections) with confidence and provenance.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with refinement candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not a refinement type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    if run.pipeline_type not in (
+        PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+        PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+    ):
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Run {run_id} is type {run.pipeline_type.value}, not a refinement type "
+                "(schema_node_definition_refinement or schema_node_connection_refinement)"
+            ),
+        )
+
+    output_summary = run.output_summary or {}
+
+    # For definition refinement, look for "candidates" key
+    if run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        refinement_data = output_summary.get("candidates", [])
+    # For connection refinement, look for "deltas" key
+    elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
+        refinement_data = output_summary.get("deltas", [])
+    else:
+        refinement_data = []
+
+    return [_map_refinement_candidate(ref_dict) for ref_dict in refinement_data]
 
 
 @router.get(

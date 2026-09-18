@@ -275,39 +275,40 @@ class TestTripleCandidateMapping:
 
 
 class TestIndividualExtractionCandidatesEndpoint:
-    """Tests for GET /api/pipelines/runs/{run_id}/candidates endpoint."""
+    """Tests for GET /api/pipelines/runs/{run_id}/individual-extraction-candidates endpoint."""
 
-    def test_no_op_run_returns_empty_candidates(self, client):
-        """No-op pipeline run returns empty candidate list."""
-        create_response = client.post(
-            "/api/pipelines/no_op/run",
-            json={
-                "text": "Sample text",
-                "ontology_id": "test-ontology",
-                "implementation_id": "default",
-                "configuration_ref": "noop-default",
-            },
-        )
-        assert create_response.status_code == status.HTTP_201_CREATED
-        run_id = create_response.json()["id"]
-
-        response = client.get(f"/api/pipelines/runs/{run_id}/candidates")
-        assert response.status_code == status.HTTP_200_OK
-
-        candidates = response.json()
-        assert isinstance(candidates, list)
-        assert len(candidates) == 0
-
-    def test_candidates_endpoint_404_for_missing_run(self, client):
+    def test_individual_extraction_candidates_endpoint_404_for_missing_run(self, client):
         """Returns 404 when run does not exist."""
         nonexistent_run_id = str(uuid4())
-        response = client.get(f"/api/pipelines/runs/{nonexistent_run_id}/candidates")
+        response = client.get(f"/api/pipelines/runs/{nonexistent_run_id}/individual-extraction-candidates")
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_individual_extraction_candidates_422_for_wrong_pipeline_type(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """Returns 422 when run is not individual_extraction type."""
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
+        # Create a no-op run (different pipeline type)
+        batch = batch_repo.create()
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="noop-default",
+            configuration_slug="noop-default",
+            configuration_version=1,
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # Call endpoint with wrong pipeline type
+        response = client.get(f"/api/pipelines/runs/{run.id}/individual-extraction-candidates")
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_individual_extraction_candidates_with_mapped_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /candidates for mapped INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
+        """GET /individual-extraction-candidates for mapped INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -362,7 +363,7 @@ class TestIndividualExtractionCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        response = client.get(f"/api/pipelines/runs/{run.id}/individual-extraction-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -399,7 +400,7 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_with_new_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /candidates for new nodes INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
+        """GET /individual-extraction-candidates for new nodes INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -449,7 +450,7 @@ class TestIndividualExtractionCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        response = client.get(f"/api/pipelines/runs/{run.id}/individual-extraction-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -482,7 +483,7 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_empty_triples_returns_empty_list(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /candidates for INDIVIDUAL_EXTRACTION run with no triples returns empty list."""
+        """GET /individual-extraction-candidates for INDIVIDUAL_EXTRACTION run with no triples returns empty list."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -508,7 +509,7 @@ class TestIndividualExtractionCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        response = client.get(f"/api/pipelines/runs/{run.id}/individual-extraction-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
