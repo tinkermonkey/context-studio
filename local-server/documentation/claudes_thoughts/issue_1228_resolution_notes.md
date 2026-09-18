@@ -25,15 +25,15 @@ committed) — that work is now done.
 
 ## Result
 
-| metric | this run | last verified baseline (2026-09-13/14) | outcome |
+| metric | this run | last verified baseline (2026-09-15) | outcome |
 |---|---|---|---|
 | dev strict-F1 | 0.924 | 0.917 | ✅ no regression (+0.007) |
 | dev soft-F1 | 0.935 | 0.928 | ✅ no regression (+0.007) |
 | candidate_recall | 0.992 | 0.992 | ✅ unchanged |
-| predicate_recall | 0.970 | — | — |
+| predicate_recall | 0.970 | 0.970 | ✅ unchanged |
 | label_accuracy (strict/soft) | 0.982/0.982 | 0.982 | ✅ unchanged |
-| holdout strict-F1 | 0.829 | 0.841 | advisory only, never gates (thin split, 2 scenarios) |
-| holdout soft-F1 | 0.960 | 0.973 | advisory only, never gates |
+| holdout strict-F1 | 0.829 | 0.829 | advisory only, never gates (thin split, 2 scenarios) — unchanged |
+| holdout soft-F1 | 0.960 | 0.960 | advisory only, never gates — unchanged |
 
 Note: the 0.917/0.928 figure (not the older 0.941/0.952) is the correct comparison
 baseline — that was the last real, cassette-verified score before this PR, established
@@ -51,6 +51,18 @@ pipeline.** Accept gate clears. Digest:
   and were **not** re-recorded here. That pipeline's promotion question was already
   closed with a STAY verdict on 2026-09-15 (retrieval-for-typing underperforms
   `default`) — re-recording it is not required to clear this accept gate, and it costs
-  an order of magnitude more (~2,442 LLM calls on `claude-opus-4-7` vs. 17 calls on
-  `gemini-3-flash-preview`). Its cassette directory remains empty; the tournament will
-  print an "not registered" note for `grounded_v1` until/unless someone re-records it.
+  two orders of magnitude more (~2,442 LLM calls on `claude-opus-4-7` vs. 34 calls —
+  17 scenarios x 2 passes — on `gemini-3-flash-preview`). Its cassette directory does
+  not exist; the tournament will print a "not registered" note for `grounded_v1`
+  until/unless someone re-records it.
+
+## Follow-up worth tracking (not fixed here)
+
+The scenario union this PR fixed is now hand-duplicated across four places:
+`record_default_cassettes.py`, `record_grounded_cassettes.py`, and both replay-scenario
+lists in `quality_tournament.py`. `record_grounded_cassettes.py` already includes
+`RELABELED_ARXIV_SCENARIOS` correctly, so nothing is broken today — but the next
+scenario group added to `dataset_split.py` can silently desync one of these four copies
+again, reproducing this exact failure mode (a "successful" recording run that still
+leaves a variant unregistered). Worth defining the union once in `dataset_split.py`
+(e.g. `REPLAY_SCENARIOS`) and having all four call sites import it, as a follow-up.
