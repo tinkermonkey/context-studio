@@ -25,7 +25,7 @@ from adapters.web.schemas.pipelines import (
     TripleCandidate,
 )
 
-candidate_adapter = TypeAdapter(CandidateItem)
+candidate_adapter: TypeAdapter[CandidateItem] = TypeAdapter(CandidateItem)
 
 
 class TestSourceSpanSchema:
