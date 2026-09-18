@@ -73,23 +73,20 @@ class TestSchemaClassCandidate:
     def test_minimal_schema_class_candidate(self):
         """SchemaClassCandidate with required fields only."""
         candidate = SchemaClassCandidate(
-            uri="http://example.org/Class",
             label="Example Class",
             confidence=0.95,
         )
         assert candidate.candidate_type == "schema_class"
-        assert candidate.uri == "http://example.org/Class"
         assert candidate.label == "Example Class"
         assert candidate.confidence == 0.95
-        assert candidate.description == ""
+        assert candidate.proposed_definition is None
         assert candidate.provenance == []
 
     def test_schema_class_candidate_with_provenance(self):
         """SchemaClassCandidate with provenance spans."""
         candidate = SchemaClassCandidate(
-            uri="http://example.org/Class",
             label="Example Class",
-            description="A test class",
+            proposed_definition="A test class",
             confidence=0.9,
             provenance=[
                 SourceSpanSchema(quote="Example Class", start=0, end=14),
@@ -99,30 +96,31 @@ class TestSchemaClassCandidate:
         assert candidate.provenance[0].quote == "Example Class"
         assert candidate.provenance[0].start == 0
         assert candidate.provenance[0].end == 14
+        assert candidate.proposed_definition == "A test class"
 
     def test_schema_class_candidate_from_dict(self):
         """SchemaClassCandidate can be instantiated from dict."""
         data = {
             "candidate_type": "schema_class",
-            "uri": "http://example.org/Class",
             "label": "Test Class",
             "confidence": 0.85,
         }
         candidate = SchemaClassCandidate(**data)
         assert candidate.candidate_type == "schema_class"
-        assert candidate.uri == "http://example.org/Class"
+        assert candidate.label == "Test Class"
 
     def test_schema_class_candidate_model_dump(self):
         """SchemaClassCandidate serializes correctly."""
         candidate = SchemaClassCandidate(
-            uri="http://example.org/Class",
             label="Test Class",
+            proposed_definition="A class for testing",
             confidence=0.95,
             provenance=[SourceSpanSchema(quote="Test", start=0, end=4)],
         )
         dumped = candidate.model_dump()
         assert dumped["candidate_type"] == "schema_class"
-        assert dumped["uri"] == "http://example.org/Class"
+        assert dumped["label"] == "Test Class"
+        assert dumped["proposed_definition"] == "A class for testing"
         assert len(dumped["provenance"]) == 1
         assert dumped["provenance"][0]["quote"] == "Test"
 
@@ -133,14 +131,17 @@ class TestSchemaPropertyCandidate:
     def test_schema_property_candidate(self):
         """SchemaPropertyCandidate with required fields."""
         candidate = SchemaPropertyCandidate(
-            uri="http://example.org/hasName",
             label="has_name",
-            description="Relates an entity to its name",
+            proposed_definition="Relates an entity to its name",
+            proposed_domain="Entity",
+            proposed_range="String",
             confidence=0.88,
         )
         assert candidate.candidate_type == "schema_property"
-        assert candidate.uri == "http://example.org/hasName"
         assert candidate.label == "has_name"
+        assert candidate.proposed_definition == "Relates an entity to its name"
+        assert candidate.proposed_domain == "Entity"
+        assert candidate.proposed_range == "String"
 
 
 class TestSchemaConnectionCandidate:
@@ -149,15 +150,15 @@ class TestSchemaConnectionCandidate:
     def test_schema_connection_candidate(self):
         """SchemaConnectionCandidate representing a proposed relationship."""
         candidate = SchemaConnectionCandidate(
-            source_uri="http://example.org/Class1",
-            property_uri="http://example.org/relatedTo",
-            target_uri="http://example.org/Class2",
+            subject_ref="Class1",
+            predicate="relatedTo",
+            object_ref="Class2",
             confidence=0.82,
         )
         assert candidate.candidate_type == "schema_connection"
-        assert candidate.source_uri == "http://example.org/Class1"
-        assert candidate.property_uri == "http://example.org/relatedTo"
-        assert candidate.target_uri == "http://example.org/Class2"
+        assert candidate.subject_ref == "Class1"
+        assert candidate.predicate == "relatedTo"
+        assert candidate.object_ref == "Class2"
 
 
 class TestNodeAndPredicateReferences:
@@ -267,8 +268,8 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaClassCandidate."""
         data = {
             "candidate_type": "schema_class",
-            "uri": "http://example.org/Class",
             "label": "Test Class",
+            "proposed_definition": "A class for testing",
             "confidence": 0.95,
         }
         candidate = candidate_adapter.validate_python(data)
@@ -279,8 +280,8 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaPropertyCandidate."""
         data = {
             "candidate_type": "schema_property",
-            "uri": "http://example.org/hasName",
             "label": "has_name",
+            "proposed_definition": "Relates an entity to its name",
             "confidence": 0.88,
         }
         candidate = candidate_adapter.validate_python(data)
@@ -290,9 +291,9 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaConnectionCandidate."""
         data = {
             "candidate_type": "schema_connection",
-            "source_uri": "http://example.org/Class1",
-            "property_uri": "http://example.org/relatedTo",
-            "target_uri": "http://example.org/Class2",
+            "subject_ref": "Class1",
+            "predicate": "relatedTo",
+            "object_ref": "Class2",
             "confidence": 0.82,
         }
         candidate = candidate_adapter.validate_python(data)
@@ -396,8 +397,8 @@ class TestProvenanceRoundTrip:
     def test_class_candidate_provenance_round_trip(self):
         """SchemaClassCandidate provenance survives round-trip."""
         original = SchemaClassCandidate(
-            uri="http://example.org/Class",
             label="Test Class",
+            proposed_definition="A test class",
             confidence=0.95,
             provenance=[
                 SourceSpanSchema(quote="Test Class", start=0, end=10),
@@ -408,7 +409,7 @@ class TestProvenanceRoundTrip:
         dumped = original.model_dump()
         restored = SchemaClassCandidate(**dumped)
 
-        assert restored.uri == original.uri
+        assert restored.label == original.label
         assert len(restored.provenance) == 2
         assert restored.provenance[0].quote == "Test Class"
         assert restored.provenance[0].start == 0

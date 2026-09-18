@@ -23,7 +23,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """  # noqa: E501
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
@@ -38,11 +38,13 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
 )
 from adapters.web.dependencies import get_versioning_service
+from adapters.web.schemas.extraction import SourceSpanSchema
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
     BatchResponse,
     CancelBatchResponse,
+    CandidateItem,
     CandidateResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
@@ -56,6 +58,9 @@ from adapters.web.schemas.pipelines import (
     PipelineTypeResponse,
     ResumeBatchResponse,
     RevertRunResponse,
+    SchemaClassCandidate,
+    SchemaConnectionCandidate,
+    SchemaPropertyCandidate,
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
@@ -85,6 +90,108 @@ _logger = get_logger(__name__)
 
 
 # ==================== Helper Functions ====================
+
+
+def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
+    """
+    Normalize provenance data to SourceSpanSchema format.
+
+    Handles both pre-span format (text_offset_start/text_offset_end/raw)
+    and post-span format (quote/start/end).
+
+    Args:
+        provenance_data: Provenance data from orchestrator output (list or string)
+
+    Returns:
+        List of SourceSpanSchema objects
+    """
+    if not provenance_data:
+        return []
+
+    result = []
+
+    if isinstance(provenance_data, list):
+        for item in provenance_data:
+            if isinstance(item, dict):
+                span = SourceSpanSchema(
+                    quote=item.get("quote") or item.get("raw"),
+                    start=item.get("start") or item.get("text_offset_start"),
+                    end=item.get("end") or item.get("text_offset_end"),
+                )
+                result.append(span)
+    elif isinstance(provenance_data, str):
+        if provenance_data:
+            span = SourceSpanSchema(quote=provenance_data, start=None, end=None)
+            result.append(span)
+
+    return result
+
+
+def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCandidate:
+    """
+    Map an orchestrator class candidate to SchemaClassCandidate response.
+
+    Args:
+        candidate_dict: Candidate dict from orchestrator output
+
+    Returns:
+        SchemaClassCandidate response object
+    """
+    provenance = _normalize_provenance(candidate_dict.get("provenance", []))
+
+    return SchemaClassCandidate(
+        label=candidate_dict.get("label", ""),
+        proposed_definition=candidate_dict.get("proposed_definition"),
+        confidence=float(candidate_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
+
+
+def _map_schema_property_candidate(
+    candidate_dict: dict[str, Any],
+) -> SchemaPropertyCandidate:
+    """
+    Map an orchestrator property candidate to SchemaPropertyCandidate response.
+
+    Args:
+        candidate_dict: Candidate dict from orchestrator output
+
+    Returns:
+        SchemaPropertyCandidate response object
+    """
+    provenance = _normalize_provenance(candidate_dict.get("provenance", []))
+
+    return SchemaPropertyCandidate(
+        label=candidate_dict.get("label", ""),
+        proposed_definition=candidate_dict.get("proposed_definition"),
+        proposed_domain=candidate_dict.get("proposed_domain"),
+        proposed_range=candidate_dict.get("proposed_range"),
+        confidence=float(candidate_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
+
+
+def _map_schema_connection_candidate(
+    connection_dict: dict[str, Any],
+) -> SchemaConnectionCandidate:
+    """
+    Map an orchestrator connection to SchemaConnectionCandidate response.
+
+    Args:
+        connection_dict: Connection dict from orchestrator output
+
+    Returns:
+        SchemaConnectionCandidate response object
+    """
+    provenance = _normalize_provenance(connection_dict.get("provenance", []))
+
+    return SchemaConnectionCandidate(
+        subject_ref=connection_dict.get("subject_ref", ""),
+        predicate=connection_dict.get("predicate", ""),
+        object_ref=connection_dict.get("object_ref", ""),
+        confidence=float(connection_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
 
 
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
@@ -726,17 +833,19 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
-@router.get("/runs/{run_id}/candidates", response_model=list[CandidateResponse])
+@router.get("/runs/{run_id}/candidates", response_model=list[Union[CandidateItem, CandidateResponse]])
 async def get_pipeline_candidates(
     run_id: str,
     request: Request,
-) -> list[CandidateResponse]:
+) -> list[Union[CandidateItem, CandidateResponse]]:
     """
     Retrieve candidates from a completed pipeline run.
 
     Extracts the full candidate list with provenance and confidence scores
     from the pipeline run's output. The structure of candidates depends on
     the pipeline type:
+    - schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate
+      from candidates key, and SchemaConnectionCandidate from connections key
     - schema_node_grounding: returns groundings with URI, label, confidence
     - schema_node_definition_refinement: returns definition candidates
     - schema_node_connection_refinement: returns connection candidates
@@ -746,10 +855,11 @@ async def get_pipeline_candidates(
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateResponse objects with full provenance and confidence
+        List of CandidateItem objects (discriminated union) with full provenance
+        and confidence. Returns empty list for runs with no candidates/connections.
 
     Raises:
-        HTTPException: 404 if run not found, 400 if run has no candidates
+        HTTPException: 404 if run not found
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -760,10 +870,29 @@ async def get_pipeline_candidates(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    # Extract candidates from output_summary based on pipeline type
     output_summary = run.output_summary or {}
+    result: list[Union[CandidateItem, CandidateResponse]] = []
 
-    # Determine which key contains candidates based on pipeline type
+    # Schema extraction: map candidates and connections to typed schemas
+    if run.pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        candidates_data = output_summary.get("candidates", [])
+        connections_data = output_summary.get("connections", [])
+
+        # Map class and property candidates
+        for candidate_dict in candidates_data:
+            kind = candidate_dict.get("kind")
+            if kind == "class":
+                result.append(_map_schema_class_candidate(candidate_dict))
+            elif kind == "property_definition":
+                result.append(_map_schema_property_candidate(candidate_dict))
+
+        # Map connections
+        for connection_dict in connections_data:
+            result.append(_map_schema_connection_candidate(connection_dict))
+
+        return result
+
+    # For other pipeline types, use the existing legacy logic
     candidates_key = None
     candidates_data = []
 
@@ -775,13 +904,13 @@ async def get_pipeline_candidates(
         candidates_key = "deltas"
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         candidates_key = "triples"
-    # NO_OP and SCHEMA_EXTRACTION pipelines don't produce candidates, return empty list
+    # NO_OP and any other pipelines return empty list
 
     if candidates_key and candidates_key in output_summary:
         candidates_data = output_summary[candidates_key]
 
-    # Convert candidate dicts to response schema
-    return [
+    # Convert candidate dicts to legacy response schema for backward compatibility
+    legacy_results: list[Union[CandidateItem, CandidateResponse]] = [
         CandidateResponse.model_validate(
             {
                 "uri": cand.get("uri") or cand.get("id") or "",
@@ -794,6 +923,8 @@ async def get_pipeline_candidates(
         )
         for cand in candidates_data
     ]
+
+    return legacy_results
 
 
 @router.get(

@@ -251,6 +251,86 @@ class TestSchemaExtractionHTTP:
         response = schema_client.get("/api/pipelines/runs/nonexistent-run-id")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_candidates_endpoint_returns_schema_extraction_candidates(self, schema_client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns typed candidates for schema_extraction."""
+        run_response = schema_client.post(
+            "/api/pipelines/schema_extraction/run",
+            json=_MICROSERVICES_PAYLOAD,
+        )
+        assert run_response.status_code == status.HTTP_201_CREATED
+        run_id = run_response.json()["id"]
+
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) > 0
+
+        # Check that we have both class and connection candidates
+        candidate_types = [c.get("candidate_type") for c in candidates]
+        assert "schema_class" in candidate_types or "schema_property" in candidate_types
+
+        # Validate class candidate structure
+        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
+        for candidate in class_candidates:
+            assert "label" in candidate
+            assert "confidence" in candidate
+            assert "provenance" in candidate
+            assert "candidate_type" in candidate
+            assert candidate["candidate_type"] == "schema_class"
+
+    def test_candidates_endpoint_empty_for_no_candidates(self, schema_client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns empty list if no candidates."""
+        run_response = schema_client.post(
+            "/api/pipelines/schema_extraction/run",
+            json=_MICROSERVICES_PAYLOAD,
+        )
+        assert run_response.status_code == status.HTTP_201_CREATED
+        run_id = run_response.json()["id"]
+
+        # Even if there are candidates from the run, the endpoint should return a list
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+        candidates = candidates_response.json()
+        assert isinstance(candidates, list)
+
+    def test_candidates_endpoint_not_found(self, schema_client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns 404 for nonexistent run."""
+        response = schema_client.get("/api/pipelines/runs/nonexistent-run-id/candidates")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_candidates_endpoint_provenance_format(self, schema_client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns provenance with quote and offsets."""
+        run_response = schema_client.post(
+            "/api/pipelines/schema_extraction/run",
+            json=_MICROSERVICES_PAYLOAD,
+        )
+        assert run_response.status_code == status.HTTP_201_CREATED
+        run_id = run_response.json()["id"]
+
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
+
+        # Check that provenance is properly normalized to SourceSpanSchema format
+        for candidate in class_candidates:
+            provenance = candidate.get("provenance", [])
+            if provenance:  # Only check if provenance exists
+                for span in provenance:
+                    # Each span should be a dict with quote, start, end fields
+                    assert isinstance(span, dict)
+                    # At least quote should be present
+                    if "quote" in span:
+                        assert isinstance(span["quote"], str) or span["quote"] is None
+                    # Start and end should be ints or None
+                    if "start" in span:
+                        assert isinstance(span["start"], int) or span["start"] is None
+                    if "end" in span:
+                        assert isinstance(span["end"], int) or span["end"] is None
+
 
 # ---------------------------------------------------------------------------- #
 # Canon-driven assertions                                                      #

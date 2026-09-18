@@ -346,9 +346,10 @@ class SchemaClassCandidate(CandidateBase):
     """
 
     candidate_type: Literal["schema_class"] = "schema_class"
-    uri: str = Field(..., description="Class URI or identifier")
     label: str = Field(..., description="Class label/name")
-    description: str = Field(default="", description="Class description or definition")
+    proposed_definition: Optional[str] = Field(
+        None, description="Proposed definition or description of the class"
+    )
 
 
 class SchemaPropertyCandidate(CandidateBase):
@@ -358,9 +359,16 @@ class SchemaPropertyCandidate(CandidateBase):
     """
 
     candidate_type: Literal["schema_property"] = "schema_property"
-    uri: str = Field(..., description="Property URI or identifier")
     label: str = Field(..., description="Property label/name")
-    description: str = Field(default="", description="Property description or semantics")
+    proposed_definition: Optional[str] = Field(
+        None, description="Proposed definition or semantics of the property"
+    )
+    proposed_domain: Optional[str] = Field(
+        None, description="Proposed domain (subject class) for this property"
+    )
+    proposed_range: Optional[str] = Field(
+        None, description="Proposed range (object class) for this property"
+    )
 
 
 class SchemaConnectionCandidate(CandidateBase):
@@ -370,10 +378,9 @@ class SchemaConnectionCandidate(CandidateBase):
     """
 
     candidate_type: Literal["schema_connection"] = "schema_connection"
-    source_uri: str = Field(..., description="Source entity URI")
-    property_uri: str = Field(..., description="Property/relationship type URI")
-    target_uri: str = Field(..., description="Target entity URI")
-    description: str = Field(default="", description="Relationship description or rationale")
+    subject_ref: str = Field(..., description="Subject entity reference or label")
+    predicate: str = Field(..., description="Relationship/property type")
+    object_ref: str = Field(..., description="Object entity reference or label")
 
 
 class NodeReference(BaseModel):
