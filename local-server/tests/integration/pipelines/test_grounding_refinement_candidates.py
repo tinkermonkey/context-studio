@@ -79,6 +79,37 @@ class TestGroundingCandidateMapping:
         assert result.confidence == 0.5  # Default
         assert result.provenance == []
 
+    def test_map_grounding_candidate_with_match_rationale_fallback(self):
+        """Grounding uses match_rationale when provenance is missing (actual orchestrator output)."""
+        grounding_dict = {
+            "uri": "http://dbpedia.org/resource/Python_(programming_language)",
+            "label": "Python Programming Language",
+            "description": "A high-level programming language",
+            "source": "DBpedia",
+            "confidence": 0.92,
+            "match_rationale": "The match explanation from the grounding orchestrator",
+            # No "provenance" key - this is what the actual orchestrator produces
+        }
+
+        result = _map_grounding_candidate(grounding_dict)
+
+        assert isinstance(result, GroundingCandidate)
+        assert len(result.provenance) == 1
+        assert result.provenance[0].quote == "The match explanation from the grounding orchestrator"
+
+    def test_map_grounding_candidate_with_null_confidence(self):
+        """Grounding mapper handles null confidence without crashing."""
+        grounding_dict = {
+            "uri": "http://example.org/concept",
+            "label": "Concept",
+            "confidence": None,  # Null confidence from orchestrator
+            "provenance": [],
+        }
+
+        result = _map_grounding_candidate(grounding_dict)
+
+        assert result.confidence == 0.5  # Falls back to default
+
 
 class TestRefinementCandidateMapping:
     """Tests for the _map_refinement_candidate function."""
@@ -129,6 +160,50 @@ class TestRefinementCandidateMapping:
         assert result.scope_id is None
         assert result.confidence == 0.5  # Default
         assert result.provenance == []
+
+    def test_map_refinement_candidate_with_definition_key(self):
+        """Refinement mapper reads from definition key (actual definition orchestrator output)."""
+        refinement_dict = {
+            "definition": "An improved definition of the class from the definition refinement orchestrator",
+            "scope_id": "class_123",
+            "confidence": 0.87,
+            # No "content" key - this is what the definition refinement orchestrator produces
+        }
+
+        result = _map_refinement_candidate(refinement_dict)
+
+        assert isinstance(result, RefinementCandidate)
+        assert result.content == "An improved definition of the class from the definition refinement orchestrator"
+        assert result.scope_id == "class_123"
+        assert result.confidence == 0.87
+
+    def test_map_refinement_candidate_with_rationale_key(self):
+        """Refinement mapper reads from rationale key (actual connection orchestrator output)."""
+        refinement_dict = {
+            "rationale": "Improved connection rationale from the connection refinement orchestrator",
+            "scope_id": "connection_456",
+            "confidence": 0.91,
+            # No "content" key - this is what the connection refinement orchestrator produces
+        }
+
+        result = _map_refinement_candidate(refinement_dict)
+
+        assert isinstance(result, RefinementCandidate)
+        assert result.content == "Improved connection rationale from the connection refinement orchestrator"
+        assert result.scope_id == "connection_456"
+        assert result.confidence == 0.91
+
+    def test_map_refinement_candidate_with_null_confidence(self):
+        """Refinement mapper handles null confidence without crashing."""
+        refinement_dict = {
+            "definition": "An improved definition",
+            "scope_id": "class_123",
+            "confidence": None,  # Null confidence from orchestrator
+        }
+
+        result = _map_refinement_candidate(refinement_dict)
+
+        assert result.confidence == 0.5  # Falls back to default
 
 
 class TestSchemaCroundingCandidatesEndpoint:

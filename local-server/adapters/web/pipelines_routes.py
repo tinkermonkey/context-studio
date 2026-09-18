@@ -317,7 +317,7 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
     Handles both definition and connection refinement outputs:
     - Definition refinement: content is stored in "definition" key
     - Connection refinement: content is stored in "rationale" key
-    Falls back to "content" for backwards compatibility with test fixtures.
+    Falls back to "content" for backwards compatibility.
 
     Args:
         refinement_dict: Refinement dict from orchestrator output
