@@ -1130,15 +1130,6 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             confidence=candidate.confidence,
             provenance="",
         )
-    else:
-        return CandidateResponse(
-            uri="",
-            label="",
-            description="",
-            source="",
-            confidence=0.0,
-            provenance="",
-        )
 
 
 def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:

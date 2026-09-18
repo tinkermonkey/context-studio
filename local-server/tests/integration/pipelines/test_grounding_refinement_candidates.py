@@ -493,14 +493,14 @@ class TestSchemaRefinementCandidatesEndpoint:
         # Verify first refinement
         refinement1 = candidates[0]
         assert refinement1["candidate_type"] == "refinement"
-        assert refinement1["content"] == "An improved, more precise definition of the Person class"
-        assert refinement1["scope_id"] == "class_123"
+        assert refinement1["description"] == "An improved, more precise definition of the Person class"
+        assert refinement1["uri"] == "class_123"
         assert refinement1["confidence"] == 0.92
         assert len(refinement1["provenance"]) == 1
 
         # Verify second refinement
         refinement2 = candidates[1]
-        assert refinement2["content"] == "Alternative definition emphasizing human characteristics"
+        assert refinement2["description"] == "Alternative definition emphasizing human characteristics"
         assert refinement2["confidence"] == 0.85
 
     def test_schema_connection_refinement_candidates(self, client, pipeline_run_repo, batch_repo):
@@ -558,13 +558,13 @@ class TestSchemaRefinementCandidatesEndpoint:
         # Verify first connection refinement
         delta1 = candidates[0]
         assert delta1["candidate_type"] == "refinement"
-        assert delta1["content"] == "Person -> improvedRelationship -> Organization"
-        assert delta1["scope_id"] == "conn_456"
+        assert delta1["description"] == "Person -> improvedRelationship -> Organization"
+        assert delta1["uri"] == "conn_456"
         assert delta1["confidence"] == 0.88
 
         # Verify second connection refinement
         delta2 = candidates[1]
-        assert delta2["content"] == "Person -> betterPredicate -> Company"
+        assert delta2["description"] == "Person -> betterPredicate -> Company"
         assert delta2["confidence"] == 0.82
 
     def test_schema_refinement_empty_candidates_returns_empty_list(
