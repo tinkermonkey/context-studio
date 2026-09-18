@@ -572,9 +572,13 @@ async def list_configurations(
                 f"Failed to load user configurations from DB for {ptype.value}:{impl_id}",
                 exc_info=exc,
             )
+            error_msg = (
+                "Failed to load pipeline configurations. "
+                "Database may be corrupted or unavailable."
+            )
             raise HTTPException(
                 status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to load pipeline configurations. Database may be corrupted or unavailable.",
+                detail=error_msg,
             ) from exc
 
     # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
@@ -1011,9 +1015,7 @@ async def get_pipeline_candidates(
     # Individual extraction: return structured TripleCandidate items
     if run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         triples_data = output_summary.get("triples", [])
-        return [
-            _map_triple_candidate(triple_dict) for triple_dict in triples_data
-        ]
+        return [_map_triple_candidate(triple_dict) for triple_dict in triples_data]
 
     # For other pipeline types, use the existing legacy logic
     candidates_key = None
