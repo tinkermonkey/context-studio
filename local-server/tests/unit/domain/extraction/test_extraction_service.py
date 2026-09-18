@@ -653,6 +653,105 @@ class TestNlpGroundedTyping:
         assert len(warnings) == 1
         assert "aggregate LLM error" in warnings[0].lower() or "llm" in warnings[0].lower()
 
+    def test_warning_emitted_when_partial_chunks_fail(self):
+        """When some (but not all) chunks fail with LLM errors, a degradation warning is returned."""
+
+        class SelectiveFailingLLM:
+            def __init__(self):
+                self.call_count = 0
+
+            def complete(self, system_prompt, user_prompt, model, **kwargs):
+                import json as _json
+
+                from domain.pipelines.ports import LLMResponse
+
+                # Fail on first call, succeed on second
+                self.call_count += 1
+                if self.call_count == 1:
+                    raise RuntimeError("transient LLM error")
+                return LLMResponse(
+                    content=_json.dumps({"class": "technology.systemsoftware"}),
+                    model=model,
+                    tokens_in=5,
+                    tokens_out=5,
+                    duration_ms=1.0,
+                    finish_reason="stop",
+                )
+
+        # Create a service with an NLP processor that returns multiple chunks
+        from domain.extraction.services import ExtractionService
+
+        service = ExtractionService(
+            ontology_repo=_RepoWithClass(),
+            embedding_service=FakeEmbeddingService(),
+            llm=SelectiveFailingLLM(),
+            nlp=_MultiChunkNLP(),  # NLP processor with 2 chunks
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+            schema_index=_OneMatchIndex(),
+            extraction_mode="nlp_grounded",
+        )
+        triples, _, warnings = service._type_individuals_nlp_grounded(
+            "Kubernetes and Docker are tools.", _Ontology(), "onto", "m", 0.0
+        )
+        # One chunk fails, one succeeds, so we get 1 triple
+        assert len(triples) == 1
+        # A warning should be emitted about partial failures
+        assert len(warnings) == 1
+        assert "partial" in warnings[0].lower() or "degraded" in warnings[0].lower()
+        assert "1 of 2" in warnings[0]
+
+
+class _MultiChunkNLP:
+    """process_open with multiple NOUN-headed noun chunks."""
+
+    def process_open(self, text):
+        from domain.extraction.ports import (
+            NounChunkSpan,
+            OpenExtractionResult,
+            OpenToken,
+        )
+
+        chunks_data = [("Kubernetes", 0, 10), ("Docker", 15, 21)]
+        tokens = []
+        noun_chunks = []
+
+        for idx, (chunk_text, start, end) in enumerate(chunks_data):
+            tok = OpenToken(
+                index=idx,
+                text=chunk_text,
+                lemma=chunk_text.lower(),
+                pos="PROPN",
+                tag="NNP",
+                dep="nsubj",
+                head_index=idx,
+                start=start,
+                end=end,
+                sentence_index=0,
+                is_stop=False,
+                is_alpha=True,
+            )
+            tokens.append(tok)
+            chunk = NounChunkSpan(
+                text=chunk_text,
+                start_token=idx,
+                end_token=idx + 1,
+                root_index=idx,
+                start=start,
+                end=end,
+                sentence_index=0,
+            )
+            noun_chunks.append(chunk)
+
+        return OpenExtractionResult(
+            tokens=tuple(tokens),
+            noun_chunks=tuple(noun_chunks),
+            sentence_count=1,
+            language="en",
+        )
+
 
 class _Ontology:
     id = "onto-1"
@@ -1424,10 +1523,15 @@ class TestTypeConceptObjects:
         """Helper to identify typing triples."""
         return triple.get("object", {}).get("kind") == "class"
 
-    def test_database_access_failure_returns_untyped_triples(
+    def test_database_access_failure_returns_untyped_triples_with_error(
         self, extraction_service_for_typing, caplog
     ):
-        """Test that database access failures return untyped relationship triples unchanged."""
+        """Test that database access failures return untyped relationship triples with clear error.
+
+        When property_definition_index fails, we return the relationship triples without
+        property_definition_id stamped (so they'll be dropped by apply), but we make the
+        failure explicit via error message rather than silently losing the triples.
+        """
         import logging
 
         service = extraction_service_for_typing["service"]
@@ -1462,20 +1566,21 @@ class TestTypeConceptObjects:
                 relationship_triples, individual_triples, ontology
             )
 
-        # Assert original triples are returned unchanged
-        assert result_triples == relationship_triples
+        # Assert untyped triples are returned (not empty list, so caller can see what was lost)
         assert len(result_triples) == 2
+        assert result_triples[0]["subject"]["label"] == "System"
+        assert result_triples[1]["subject"]["label"] == "Module"
+        # Verify property_definition_id was not stamped
+        assert result_triples[0]["predicate"].get("property_definition_id") is None
+        assert result_triples[1]["predicate"].get("property_definition_id") is None
 
-        # Assert no synthetic is_a triples are appended
-        typing_triples = [
-            t for t in result_triples if t.get("predicate", {}).get("label") == "is_a"
-        ]
-        assert len(typing_triples) == 0
-
-        # Assert warning is returned
+        # Assert error warning is returned with count of untyped triples
         assert len(warnings) == 1
         assert "Concept-object typing step failed" in warnings[0]
         assert "transient SQLite error" in warnings[0]
+        assert "Cannot type concept-objects" in warnings[0]
+        assert "2 relationship triple" in warnings[0]
+        assert "will be silently dropped during apply" in warnings[0]
 
         # Assert ERROR-level log is emitted
         assert "Concept-object typing step failed" in caplog.text

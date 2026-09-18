@@ -947,14 +947,16 @@ class ExtractionService:
             raise
         except Exception as exc:
             error_type = type(exc).__name__
-            warning_msg = (
+            error_msg = (
                 f"Concept-object typing step failed ({error_type}): {exc}. "
-                "Returning untyped relationship triples. Relationships will be dropped "
-                "during apply since property_definition_id will not be stamped. "
+                "Cannot type concept-objects or stamp property_definition_id. "
+                "Returning {count} relationship triple(s) WITHOUT property_definition_id; "
+                "they will be silently dropped during apply (apply service requires "
+                "property_definition_id to be truthy). "
                 "Verify database connectivity, schema integrity, and repository state."
-            )
-            _logger.error(warning_msg, exc_info=True)
-            warnings.append(warning_msg)
+            ).format(count=len(relationship_triples))
+            _logger.error(error_msg, exc_info=True)
+            warnings.append(error_msg)
             return relationship_triples, warnings
 
         synthetic_triples: list[dict] = []
@@ -1245,13 +1247,24 @@ class ExtractionService:
             seen.add(label.lower())
             triples.append(self._make_typing_triple(label, chosen, chunk))
 
-        if chunks_with_results > 0 and chunks_with_llm_errors == chunks_with_results:
-            warning_msg = (
-                f"NLP-grounded typing: all {chunks_with_results} chunks with search results "
-                "failed with LLM errors. This indicates a systemic LLM provider issue. "
-                "Check availability, rate limits, authentication, and network connectivity."
-            )
-            _logger.error(warning_msg)
+        if chunks_with_llm_errors > 0:
+            error_rate = (chunks_with_llm_errors / chunks_with_results * 100) if chunks_with_results > 0 else 0
+            if chunks_with_llm_errors == chunks_with_results:
+                warning_msg = (
+                    f"NLP-grounded typing FAILED: all {chunks_with_results} chunks with search results "
+                    "failed with LLM errors (100% failure rate). This indicates a systemic LLM provider issue. "
+                    "Check availability, rate limits, authentication, and network connectivity. "
+                    "No typing triples will be produced."
+                )
+                _logger.error(warning_msg)
+            else:
+                warning_msg = (
+                    f"NLP-grounded typing DEGRADED: {chunks_with_llm_errors} of {chunks_with_results} chunks "
+                    f"with search results encountered LLM errors ({error_rate:.1f}% failure rate). "
+                    "Typing quality is significantly degraded. "
+                    "Check LLM availability, rate limits, authentication, and network connectivity."
+                )
+                _logger.error(warning_msg)
             warnings.append(warning_msg)
 
         return triples, tokens_used, warnings
