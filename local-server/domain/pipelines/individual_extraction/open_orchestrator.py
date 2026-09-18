@@ -30,6 +30,8 @@ from domain.extraction.open_extraction import (
     unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
+from domain.extraction.services import _serialize_triple_provenance
+from domain.extraction.value_objects import SourceSpan
 from domain.ontology.ports import (
     EmbeddingService,
     OntologyRepository,
@@ -161,12 +163,14 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 llm_provider=state.llm_provider,
                 result=state.result,
             )
+        # Serialize all provenance in triples before returning
+        serialized_triples = [_serialize_triple_provenance(t) for t in triples]
         return replace(
             state,
             extracted_triples=triples,
             warnings=warnings,
             metadata=metadata,
-            result={"triples": triples, "warnings": warnings, "metadata": metadata},
+            result={"triples": serialized_triples, "warnings": warnings, "metadata": metadata},
             current_status=PipelineRunStatus.COMPLETED,
         )
 
@@ -812,11 +816,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             "predicate": {"label": "is_a", "kind": "property"},
             "object": {"label": class_ref, "kind": "class"},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 4),
-            "provenance": {
-                "text_offset_start": chunk.start,
-                "text_offset_end": chunk.end,
-                "raw": chunk.text,
-            },
+            "provenance": SourceSpan(
+                quote=chunk.text,
+                start=chunk.start,
+                end=chunk.end,
+            ),
         }
 
 

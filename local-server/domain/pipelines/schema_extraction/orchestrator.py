@@ -39,25 +39,26 @@ _MAX_CHUNK_CHARS = 8000
 
 def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
     """
-    Serialize SourceSpan objects to dict format, excluding quote-only spans.
+    Serialize SourceSpan objects to dict format with quote, start, and end fields.
 
-    Quote-only spans (where start/end are None) represent unresolved or fuzzy-matched
-    provenance and are excluded from serialization as they lack concrete positions.
+    Preserves both fully-resolved spans (with character offsets) and quote-only spans
+    (where start/end are None represent fuzzy-matched or unresolved provenance). All
+    spans with a quote are included in the serialization.
 
     Args:
         spans: List of SourceSpan objects
 
     Returns:
-        List of dicts with text_offset_start, text_offset_end, and raw fields
+        List of dicts with quote, start, and end fields
     """
     provenance_dicts: list[dict[str, Any]] = []
     for span in spans:
-        # Skip quote-only spans (where start/end are None) - they're not concrete provenance
-        if span.start is not None and span.end is not None:
+        # Include all spans that have a quote, whether or not they have offsets
+        if span.quote is not None:
             provenance_dicts.append({
-                "text_offset_start": span.start,
-                "text_offset_end": span.end,
-                "raw": span.quote,
+                "quote": span.quote,
+                "start": span.start,
+                "end": span.end,
             })
     return provenance_dicts
 

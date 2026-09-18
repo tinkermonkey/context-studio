@@ -55,7 +55,8 @@ def _serialize_triple_provenance(triple: dict) -> dict:
     Serialize SourceSpan objects in triple provenance to dict format.
 
     Converts a triple with a SourceSpan provenance object to a dict with
-    serialized provenance (text_offset_start, text_offset_end, raw keys).
+    serialized provenance (quote, start, end keys). Preserves both fully-resolved
+    spans (with character offsets) and quote-only spans (where start/end are None).
     Leaves the triple unchanged if provenance is already a dict or None.
 
     Args:
@@ -66,20 +67,12 @@ def _serialize_triple_provenance(triple: dict) -> dict:
     """
     provenance = triple.get("provenance")
     if isinstance(provenance, SourceSpan):
-        # Serialize SourceSpan: include positions only if both are present
-        if provenance.start is not None and provenance.end is not None:
-            serialized = {
-                "text_offset_start": provenance.start,
-                "text_offset_end": provenance.end,
-                "raw": provenance.quote or "",
-            }
-        else:
-            # Quote-only or unresolved: preserve quote if available
-            serialized = {
-                "text_offset_start": None,
-                "text_offset_end": None,
-                "raw": provenance.quote or "",
-            }
+        # Serialize SourceSpan with quote, start, end fields
+        serialized = {
+            "quote": provenance.quote,
+            "start": provenance.start,
+            "end": provenance.end,
+        }
         return {**triple, "provenance": serialized}
     return triple
 

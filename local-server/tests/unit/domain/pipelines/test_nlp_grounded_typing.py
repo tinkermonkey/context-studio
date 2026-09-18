@@ -153,6 +153,8 @@ class TestMakeTypingTriple:
 
     def test_make_typing_triple_with_external_id(self):
         """Create typing triple using external_id."""
+        from domain.extraction.value_objects import SourceSpan
+
         match = Mock(
             external_id="technology.node",
             identifier="tech_node",
@@ -169,12 +171,15 @@ class TestMakeTypingTriple:
         assert triple["object"]["label"] == "technology.node"
         assert triple["object"]["kind"] == "class"
         assert triple["confidence"] == 0.85
-        assert triple["provenance"]["text_offset_start"] == 0
-        assert triple["provenance"]["text_offset_end"] == 8
-        assert triple["provenance"]["raw"] == "my_label"
+        assert isinstance(triple["provenance"], SourceSpan)
+        assert triple["provenance"].quote == "my_label"
+        assert triple["provenance"].start == 0
+        assert triple["provenance"].end == 8
 
     def test_make_typing_triple_fallback_to_identifier(self):
         """Create typing triple falling back to identifier when no external_id."""
+        from domain.extraction.value_objects import SourceSpan
+
         match = Mock(
             external_id=None,
             identifier="tech_node",
@@ -185,12 +190,15 @@ class TestMakeTypingTriple:
         triple = OpenIndividualExtractionOrchestrator._make_typing_triple("example", match, chunk)
 
         assert triple["object"]["label"] == "tech_node"
-        assert triple["provenance"]["text_offset_start"] == 10
-        assert triple["provenance"]["text_offset_end"] == 17
-        assert triple["provenance"]["raw"] == "example"
+        assert isinstance(triple["provenance"], SourceSpan)
+        assert triple["provenance"].quote == "example"
+        assert triple["provenance"].start == 10
+        assert triple["provenance"].end == 17
 
     def test_make_typing_triple_fallback_to_label(self):
         """Create typing triple falling back to label when no external_id/identifier."""
+        from domain.extraction.value_objects import SourceSpan
+
         match = Mock(
             external_id=None,
             identifier=None,
@@ -202,12 +210,15 @@ class TestMakeTypingTriple:
 
         assert triple["object"]["label"] == "Technology"
         assert triple["confidence"] == 0.65
-        assert triple["provenance"]["text_offset_start"] == 20
-        assert triple["provenance"]["text_offset_end"] == 24
-        assert triple["provenance"]["raw"] == "test"
+        assert isinstance(triple["provenance"], SourceSpan)
+        assert triple["provenance"].quote == "test"
+        assert triple["provenance"].start == 20
+        assert triple["provenance"].end == 24
 
     def test_make_typing_triple_label_is_verbatim(self):
         """Subject label is character-identical to source text (no transformation)."""
+        from domain.extraction.value_objects import SourceSpan
+
         match = Mock(
             external_id="class_ref",
             identifier=None,
@@ -219,9 +230,10 @@ class TestMakeTypingTriple:
         triple = OpenIndividualExtractionOrchestrator._make_typing_triple(label, match, chunk)
 
         assert triple["subject"]["label"] == "My Exact Label With Capitals"
-        assert triple["provenance"]["text_offset_start"] == 30
-        assert triple["provenance"]["text_offset_end"] == 58
-        assert triple["provenance"]["raw"] == "My Exact Label With Capitals"
+        assert isinstance(triple["provenance"], SourceSpan)
+        assert triple["provenance"].quote == "My Exact Label With Capitals"
+        assert triple["provenance"].start == 30
+        assert triple["provenance"].end == 58
 
 
 class TestConfirmClassForChunk:
