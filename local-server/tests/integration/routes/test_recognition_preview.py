@@ -396,7 +396,7 @@ def test_recognition_preview_with_recognition_threshold(client, pipeline_repo, r
 
 
 def test_recognition_preview_returns_400_for_unsupported_pipeline_type(client, pipeline_repo):
-    """400 returned when pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION."""
+    """200 with empty results returned for unsupported pipeline types."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
         batch_run_id=batch_id,
@@ -414,13 +414,17 @@ def test_recognition_preview_returns_400_for_unsupported_pipeline_type(client, p
     )
 
     response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert "not applicable" in data["detail"].lower()
+    assert data["total_mentions"] == 0
+    assert data["matched_count"] == 0
+    assert data["unmatched_count"] == 0
+    assert data["skipped_count"] == 0
+    assert len(data["hits"]) == 0
 
 
 def test_recognition_preview_handles_null_confidence(client, pipeline_repo, recognizer):
-    """Null confidence values default to 0.5 without crashing."""
+    """Null confidence values default to 0.0 and are skipped."""
     triple_with_null_confidence = {
         "subject": {
             "kind": "individual",
@@ -439,10 +443,8 @@ def test_recognition_preview_handles_null_confidence(client, pipeline_repo, reco
     response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["total_mentions"] == 1
-    assert data["unmatched_count"] == 1
-    hit = data["hits"][0]
-    assert hit["mention_label"] == "Charlie"
+    assert data["total_mentions"] == 0
+    assert data["skipped_count"] == 1
 
 
 def test_recognition_preview_includes_candidate_class_ids(client, pipeline_repo, recognizer):

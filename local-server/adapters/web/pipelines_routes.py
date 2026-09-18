@@ -1760,11 +1760,12 @@ async def preview_recognition(
     Computes at request time against current ontology state, with zero writes.
     For an individual_extraction run, reports which extracted individual mentions
     would resolve to existing ontology individuals if the run were applied, and
-    which would be created as new.
+    which would be created as new. For schema_extraction runs, returns an empty
+    result (not yet implemented).
 
     This endpoint:
     - Returns 404 if the run does not exist
-    - Returns 400 if the pipeline type does not support recognition preview
+    - Returns 200 with empty results for unsupported pipeline types
     - Produces zero writes to ontology data, pipeline run data, or change events
 
     Args:
@@ -1775,8 +1776,7 @@ async def preview_recognition(
         RecognitionPreviewResponse with recognition results per mention
 
     Raises:
-        HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,
-            404 if run not found, 422 if run is not completed
+        HTTPException: 404 if run not found, 422 if run is not completed
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -1793,12 +1793,6 @@ async def preview_recognition(
         )
 
     ptype = run.pipeline_type
-
-    if ptype not in (PipelineType.INDIVIDUAL_EXTRACTION, PipelineType.SCHEMA_EXTRACTION):
-        raise HTTPException(
-            status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail=f"Recognition preview is not applicable for pipeline type {ptype.value}",
-        )
 
     triples = (run.output_summary or {}).get("triples", [])
 
@@ -1822,6 +1816,8 @@ async def preview_recognition(
         except Exception as exc:
             status_code, message = _handle_domain_error(exc)
             raise HTTPException(status_code=status_code, detail=message) from exc
+    elif ptype == PipelineType.SCHEMA_EXTRACTION:
+        pass
 
     hit_schemas = [
         RecognitionPreviewHitSchema(

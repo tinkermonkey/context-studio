@@ -2349,13 +2349,16 @@ Identified individuals:
 
             seen_mentions.add(mention_label.lower())
 
-            confidence_raw = triple.get("confidence", 0.5)
-            confidence = float(confidence_raw) if confidence_raw is not None else 0.5
+            confidence_raw = triple.get("confidence")
+            confidence = float(confidence_raw) if confidence_raw is not None else 0.0
             if confidence < confidence_threshold:
                 skipped_count += 1
                 continue
 
-            class_ids = subject.get("class_ids") or []
+            class_id = subject.get("class_id")
+            class_ids = subject.get("class_ids") or (
+                [class_id] if class_id else []
+            )
             if not class_ids:
                 hits.append(
                     RecognitionPreviewHit(
