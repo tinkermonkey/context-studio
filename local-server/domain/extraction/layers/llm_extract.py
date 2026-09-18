@@ -9,8 +9,8 @@ import logging
 from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerInput, LayerOutput, SourceSpan
 from domain.extraction.span_resolution import resolve_span
+from domain.extraction.value_objects import LayerInput, LayerOutput, SourceSpan
 from domain.pipelines.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)

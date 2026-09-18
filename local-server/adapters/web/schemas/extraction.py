@@ -32,7 +32,10 @@ class SourceSpanSchema(BaseModel):
     )
     end: Optional[int] = Field(
         None,
-        description="Zero-indexed character position where the span ends (exclusive), or None if unresolved",
+        description=(
+            "Zero-indexed character position where the span ends "
+            "(exclusive), or None if unresolved"
+        ),
     )
 
 

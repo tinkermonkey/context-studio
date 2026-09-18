@@ -9,8 +9,8 @@ import logging
 from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerOutput, SourceSpan
 from domain.extraction.span_resolution import resolve_span
+from domain.extraction.value_objects import LayerOutput, SourceSpan
 from domain.ontology.entities import Class, Individual
 
 _logger = logging.getLogger(__name__)
