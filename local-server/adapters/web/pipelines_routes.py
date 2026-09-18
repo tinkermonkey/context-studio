@@ -113,10 +113,22 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
     if isinstance(provenance_data, list):
         for item in provenance_data:
             if isinstance(item, dict):
+                quote = item.get("quote")
+                if quote is None:
+                    quote = item.get("raw")
+
+                start = item.get("start")
+                if start is None:
+                    start = item.get("text_offset_start")
+
+                end = item.get("end")
+                if end is None:
+                    end = item.get("text_offset_end")
+
                 span = SourceSpanSchema(
-                    quote=item.get("quote") or item.get("raw"),
-                    start=item.get("start") or item.get("text_offset_start"),
-                    end=item.get("end") or item.get("text_offset_end"),
+                    quote=quote,
+                    start=start,
+                    end=end,
                 )
                 result.append(span)
     elif isinstance(provenance_data, str):
@@ -850,6 +862,12 @@ async def get_pipeline_candidates(
     - schema_node_definition_refinement: returns definition candidates
     - schema_node_connection_refinement: returns connection candidates
 
+    NOTE: The response model uses Union[CandidateItem, CandidateResponse] as a
+    transitional design. schema_extraction returns CandidateItem (discriminated
+    union with candidate_type), while legacy pipeline types return CandidateResponse
+    (deprecated flat schema). This union will be simplified once all consumers
+    migrate to CandidateItem.
+
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
@@ -885,6 +903,11 @@ async def get_pipeline_candidates(
                 result.append(_map_schema_class_candidate(candidate_dict))
             elif kind == "property_definition":
                 result.append(_map_schema_property_candidate(candidate_dict))
+            else:
+                _logger.warning(
+                    f"Skipping candidate with unrecognized kind: {kind}. "
+                    f"Expected 'class' or 'property_definition'."
+                )
 
         # Map connections
         for connection_dict in connections_data:

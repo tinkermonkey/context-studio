@@ -280,56 +280,111 @@ class TestSchemaExtractionHTTP:
             assert "candidate_type" in candidate
             assert candidate["candidate_type"] == "schema_class"
 
-    def test_candidates_endpoint_empty_for_no_candidates(self, schema_client):
-        """GET /api/pipelines/runs/{run_id}/candidates returns empty list if no candidates."""
-        run_response = schema_client.post(
-            "/api/pipelines/schema_extraction/run",
-            json=_MICROSERVICES_PAYLOAD,
-        )
-        assert run_response.status_code == status.HTTP_201_CREATED
-        run_id = run_response.json()["id"]
+    def test_candidates_endpoint_empty_for_no_candidates(self, schema_client, pipeline_run_repo, batch_repo):
+        """GET /api/pipelines/runs/{run_id}/candidates returns empty list when output_summary has no candidates."""
+        from domain.pipelines.entities import PipelineRunStatus
 
-        # Even if there are candidates from the run, the endpoint should return a list
-        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        # Create a batch first
+        batch = batch_repo.create()
+
+        # Create a run with empty output_summary (simulates a run with no candidates)
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update the run with empty output_summary and set status to COMPLETED
+        pipeline_run_repo.update_summaries(
+            run.id,
+            output_summary={},  # Empty output - no candidates or connections
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # The endpoint should return an empty list, not an error
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run.id}/candidates")
         assert candidates_response.status_code == status.HTTP_200_OK
         candidates = candidates_response.json()
         assert isinstance(candidates, list)
+        assert len(candidates) == 0
 
     def test_candidates_endpoint_not_found(self, schema_client):
         """GET /api/pipelines/runs/{run_id}/candidates returns 404 for nonexistent run."""
         response = schema_client.get("/api/pipelines/runs/nonexistent-run-id/candidates")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_candidates_endpoint_provenance_format(self, schema_client):
+    def test_candidates_endpoint_provenance_format(self, schema_client, pipeline_run_repo, batch_repo):
         """GET /api/pipelines/runs/{run_id}/candidates returns provenance with quote and offsets."""
-        run_response = schema_client.post(
-            "/api/pipelines/schema_extraction/run",
-            json=_MICROSERVICES_PAYLOAD,
-        )
-        assert run_response.status_code == status.HTTP_201_CREATED
-        run_id = run_response.json()["id"]
+        from domain.pipelines.entities import PipelineRunStatus
 
-        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        # Create a batch and a run with explicit provenance in both pre-span and post-span formats
+        batch = batch_repo.create()
+
+        # Create a run with mixed provenance formats to test normalization
+        test_run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update with output_summary containing provenance in both formats
+        pipeline_run_repo.update_summaries(
+            test_run.id,
+            output_summary={
+                "candidates": [
+                    {
+                        "kind": "class",
+                        "label": "Service",
+                        "proposed_definition": "A software service",
+                        "confidence": 0.95,
+                        "provenance": [
+                            # Post-span format
+                            {"quote": "service", "start": 10, "end": 17},
+                            # Pre-span format (text_offset_start/text_offset_end/raw)
+                            {"text_offset_start": 0, "text_offset_end": 7, "raw": "Service"},
+                        ],
+                    }
+                ],
+                "connections": [],
+            },
+        )
+        pipeline_run_repo.update_status(test_run.id, PipelineRunStatus.COMPLETED)
+
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{test_run.id}/candidates")
         assert candidates_response.status_code == status.HTTP_200_OK
 
         candidates = candidates_response.json()
-        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
+        assert len(candidates) > 0
 
-        # Check that provenance is properly normalized to SourceSpanSchema format
+        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
+        assert len(class_candidates) > 0
+
+        # Verify provenance is present and properly formatted
         for candidate in class_candidates:
             provenance = candidate.get("provenance", [])
-            if provenance:  # Only check if provenance exists
-                for span in provenance:
-                    # Each span should be a dict with quote, start, end fields
-                    assert isinstance(span, dict)
-                    # At least quote should be present
-                    if "quote" in span:
-                        assert isinstance(span["quote"], str) or span["quote"] is None
-                    # Start and end should be ints or None
-                    if "start" in span:
-                        assert isinstance(span["start"], int) or span["start"] is None
-                    if "end" in span:
-                        assert isinstance(span["end"], int) or span["end"] is None
+            # Should have at least one provenance span
+            assert len(provenance) > 0
+
+            for span in provenance:
+                # Each span should be a dict with quote, start, end fields
+                assert isinstance(span, dict)
+                assert "quote" in span
+                assert "start" in span
+                assert "end" in span
+
+                # Verify types: quote should be string or None, start/end should be int or None
+                if span["quote"] is not None:
+                    assert isinstance(span["quote"], str)
+                if span["start"] is not None:
+                    assert isinstance(span["start"], int)
+                if span["end"] is not None:
+                    assert isinstance(span["end"], int)
 
 
 # ---------------------------------------------------------------------------- #
