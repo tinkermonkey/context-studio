@@ -1697,7 +1697,14 @@ async def preview_recognition(
         )
 
     ptype = run.pipeline_type
-    triples = run.output_summary.get("triples", [])
+
+    if ptype not in (PipelineType.INDIVIDUAL_EXTRACTION, PipelineType.SCHEMA_EXTRACTION):
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Recognition preview is not applicable for pipeline type {ptype.value}",
+        )
+
+    triples = (run.output_summary or {}).get("triples", [])
 
     if request_body is None:
         request_body = RecognitionPreviewRequest()
@@ -1731,6 +1738,7 @@ async def preview_recognition(
             match_method=hit.match_method,
             match_score=hit.match_score,
             will_match_existing=hit.will_match_existing,
+            candidate_class_ids=hit.candidate_class_ids,
         )
         for hit in hits
     ]

@@ -161,6 +161,10 @@ class RecognitionPreviewHitSchema(BaseModel):
         description="True if the mention would match an existing individual, "
         "False if it would be created as new",
     )
+    candidate_class_ids: list[str] = Field(
+        default_factory=list,
+        description="List of class IDs that drove this recognition match decision",
+    )
 
 
 class RecognitionPreviewResponse(BaseModel):

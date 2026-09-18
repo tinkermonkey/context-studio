@@ -297,6 +297,7 @@ class RecognitionPreviewHit:
         match_score: Confidence of the match (0.0–1.0), or None if no match
         will_match_existing: True if the mention would match an existing individual,
             False if it would be created as new
+        candidate_class_ids: List of class IDs that drove this recognition match decision
 
     Raises:
         ValueError: If match_score is not None and not 0.0–1.0, or if resolved_individual_id
@@ -309,6 +310,7 @@ class RecognitionPreviewHit:
     match_method: str | None
     match_score: float | None
     will_match_existing: bool
+    candidate_class_ids: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate recognition preview hit invariants."""

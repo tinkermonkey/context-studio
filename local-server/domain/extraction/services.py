@@ -2349,7 +2349,8 @@ Identified individuals:
 
             seen_mentions.add(mention_label.lower())
 
-            confidence = float(triple.get("confidence", 0.5))
+            confidence_raw = triple.get("confidence", 0.5)
+            confidence = float(confidence_raw) if confidence_raw is not None else 0.5
             if confidence < confidence_threshold:
                 skipped_count += 1
                 continue
@@ -2364,6 +2365,7 @@ Identified individuals:
                         match_method=None,
                         match_score=None,
                         will_match_existing=False,
+                        candidate_class_ids=[],
                     )
                 )
                 continue
@@ -2385,6 +2387,7 @@ Identified individuals:
                         match_method=match.method,
                         match_score=match.score,
                         will_match_existing=True,
+                        candidate_class_ids=class_ids,
                     )
                 )
             else:
@@ -2396,6 +2399,7 @@ Identified individuals:
                         match_method=None,
                         match_score=None,
                         will_match_existing=False,
+                        candidate_class_ids=class_ids,
                     )
                 )
 
