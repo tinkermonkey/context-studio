@@ -183,7 +183,7 @@ def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCa
     return SchemaClassCandidate(
         label=candidate_dict.get("label", ""),
         proposed_definition=candidate_dict.get("proposed_definition"),
-        confidence=float(candidate_dict.get("confidence", 0.5)),
+        confidence=float(candidate_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
@@ -207,7 +207,7 @@ def _map_schema_property_candidate(
         proposed_definition=candidate_dict.get("proposed_definition"),
         proposed_domain=candidate_dict.get("proposed_domain"),
         proposed_range=candidate_dict.get("proposed_range"),
-        confidence=float(candidate_dict.get("confidence", 0.5)),
+        confidence=float(candidate_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
@@ -230,7 +230,7 @@ def _map_schema_connection_candidate(
         subject_ref=connection_dict.get("subject_ref", ""),
         predicate=connection_dict.get("predicate", ""),
         object_ref=connection_dict.get("object_ref", ""),
-        confidence=float(connection_dict.get("confidence", 0.5)),
+        confidence=float(connection_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
@@ -282,7 +282,7 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
         subject=_map_node_ref(subject_data),
         predicate=_map_predicate_ref(predicate_data),
         object=_map_node_ref(object_data),
-        confidence=float(triple_dict.get("confidence", 0.5)),
+        confidence=float(triple_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
@@ -297,14 +297,15 @@ def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandida
     Returns:
         GroundingCandidate response object
     """
-    provenance = _normalize_provenance(grounding_dict.get("provenance", []))
+    provenance_data = grounding_dict.get("provenance") or grounding_dict.get("match_rationale")
+    provenance = _normalize_provenance(provenance_data or [])
 
     return GroundingCandidate(
         uri=grounding_dict.get("uri", ""),
         label=grounding_dict.get("label", ""),
         description=grounding_dict.get("description", ""),
         source=grounding_dict.get("source", ""),
-        confidence=float(grounding_dict.get("confidence", 0.5)),
+        confidence=float(grounding_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
@@ -313,18 +314,29 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
     """
     Map an orchestrator refinement to RefinementCandidate response.
 
+    Handles both definition and connection refinement outputs:
+    - Definition refinement: content is stored in "definition" key
+    - Connection refinement: content is stored in "rationale" key
+    Falls back to "content" for backwards compatibility with test fixtures.
+
     Args:
         refinement_dict: Refinement dict from orchestrator output
 
     Returns:
         RefinementCandidate response object
     """
+    content = (
+        refinement_dict.get("definition")
+        or refinement_dict.get("rationale")
+        or refinement_dict.get("content")
+        or ""
+    )
     provenance = _normalize_provenance(refinement_dict.get("provenance", []))
 
     return RefinementCandidate(
-        content=refinement_dict.get("content", ""),
+        content=content,
         scope_id=refinement_dict.get("scope_id"),
-        confidence=float(refinement_dict.get("confidence", 0.5)),
+        confidence=float(refinement_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
 
