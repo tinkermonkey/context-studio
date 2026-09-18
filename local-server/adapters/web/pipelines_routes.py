@@ -567,8 +567,15 @@ async def list_configurations(
         try:
             user_configs = config_repo.list_for_type(ptype.value, impl_id)
             known_user_refs = config_repo.list_known_config_refs(ptype.value, impl_id)
-        except Exception:
-            _logger.warning("Failed to load user configurations from DB", exc_info=True)
+        except Exception as exc:
+            _logger.error(
+                f"Failed to load user configurations from DB for {ptype.value}:{impl_id}",
+                exc_info=exc,
+            )
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to load pipeline configurations. Database may be corrupted or unavailable.",
+            ) from exc
 
     # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
     system_configs = config_registry.list_configs(ptype, impl_id)
@@ -2001,8 +2008,16 @@ async def update_configuration(
             "enabled": record.enabled,
         }
         config_registry.register(ptype, record.implementation_id, record.config_ref, config_dict)
-    except Exception:
-        _logger.warning("Failed to register updated config in registry", exc_info=True)
+    except Exception as exc:
+        _logger.error(
+            f"Failed to register updated config {config_id} in registry",
+            exc_info=exc,
+        )
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Configuration updated in database but failed to sync to runtime registry. "
+            "Pipeline runs may use stale configuration until server restart.",
+        ) from exc
 
     return _db_config_to_response(record)
 
