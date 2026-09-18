@@ -25,9 +25,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
 from unittest.mock import Mock
-from uuid import uuid4
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
@@ -42,10 +40,10 @@ from adapters.persistence.sqlite.connection import (
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.extraction.services import ExtractionService
-from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontology
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 from tests.integration.pipelines._harness.dataset_split import (
     DR_BOOTSTRAP_SCENARIOS,
@@ -54,7 +52,6 @@ from tests.integration.pipelines._harness.dataset_split import (
     WAVE4_INFORMAL_SCENARIOS,
 )
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
-from tests.fixtures.pipeline_fixtures import load_fixture
 
 
 def rehash_cassettes() -> int:
@@ -104,10 +101,7 @@ def rehash_cassettes() -> int:
         WAVE4_INFORMAL_SCENARIOS,
         RELABELED_ARXIV_SCENARIOS,
     ]:
-        if isinstance(scenario_set, dict):
-            all_scenarios.update(scenario_set.keys())
-        else:
-            all_scenarios.update(scenario_set)
+        all_scenarios.update(scenario_set)
 
     # Find cassette directories
     cassette_base = (
@@ -157,7 +151,9 @@ def rehash_cassettes() -> int:
                 system_prompt, user_prompt = extraction_service._build_individual_extraction_prompt(
                     text, dr_taxonomy
                 )
-                new_hash = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, None)
+                new_hash = _compute_prompt_hash(
+                    system_prompt, user_prompt, model, temperature, None
+                )
 
                 # Add new entry to cassette while preserving existing entries
                 if cassette_data and new_hash not in cassette_data:

@@ -6,7 +6,10 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from config import Settings
 
 try:
     # Try to import from config if available
@@ -14,7 +17,7 @@ try:
 except ImportError:
     # Fallback: use an empty settings-like object with defaults
     class _DefaultLogLevel:
-        value = 'INFO'
+        value = "INFO"
 
     class _DefaultSettings:
         class Logging:
@@ -24,8 +27,9 @@ except ImportError:
 
         logging = Logging()
 
-    def get_settings():
-        return _DefaultSettings()
+    def get_settings() -> "Settings":
+        return _DefaultSettings()  # type: ignore[return-value]
+
 
 _file_handler: logging.Handler | None = None
 _otlp_handler: Optional[logging.Handler] = None
