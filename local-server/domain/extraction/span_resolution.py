@@ -71,10 +71,10 @@ def resolve_span(
             # Fuzzy match returns quote-only (no exact position)
             return SourceSpan(quote=quote, start=None, end=None)
 
-    # Stage 4: Fallback to quote-only span
-    # Preserve the original quote even if we couldn't find an exact position;
-    # a paraphrased quote is more useful provenance than None
-    return SourceSpan(quote=quote, start=None, end=None)
+    # Stage 4: Fallback — nothing found at all
+    # Return null span to distinguish from Stage 3 (fuzzy match found).
+    # This allows callers to emit appropriate warnings: "fuzzy match only" vs "no match found".
+    return SourceSpan(quote=None, start=None, end=None)
 
 
 def find_all_spans(

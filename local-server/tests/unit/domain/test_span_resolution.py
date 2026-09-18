@@ -86,15 +86,16 @@ class TestResolveSpanExactMatch:
         assert span.end == 7
 
     def test_exact_match_not_found(self):
-        """No exact match falls through stages and returns quote-only span."""
+        """No exact match falls through stages and returns null span."""
         quote = "unicorn"
         source_text = "The quick brown fox jumped over the lazy dog"
 
         span = resolve_span(quote, None, None, source_text)
 
-        # Will continue to stage 2 (normalized), then stage 3, then stage 4
-        # "unicorn" won't match anything, but quote is preserved in fallback
-        assert span.quote == quote
+        # Will continue to stage 2 (normalized), then stage 3, then stage 4 (fallback)
+        # "unicorn" won't match anything, so all fields are None to distinguish
+        # from fuzzy match found (which preserves quote)
+        assert span.quote is None
         assert span.start is None
         assert span.end is None
 
@@ -173,34 +174,34 @@ class TestResolveSpanFuzzyMatch:
 
     def test_fuzzy_match_paraphrased_quote(self):
         """Paraphrased quote with minor differences matches via fuzzy."""
-        quote = "rapid brown"  # Similar to "quick brown"
+        quote = "quick brownn"  # Very similar to "quick brown" (one extra char)
         source_text = "The quick brown fox is very clever"
-        hint_start = 10
+        hint_start = 4  # Points near "quick"
 
         span = resolve_span(quote, hint_start, None, source_text)
 
         # Should find a fuzzy match with preserved quote, but no position
         assert span.quote == quote
-        # Fuzzy matching on a bounded window may or may not find this paraphrased quote
-        # The key is that it doesn't crash and returns a valid SourceSpan
+        # Fuzzy matching on a bounded window should find this similar quote
         assert span.start is None and span.end is None
 
-    def test_fuzzy_match_without_hint_fallback_to_quote_only(self):
-        """Fuzzy match requires hint_start, falls back to quote-only without it."""
+    def test_fuzzy_match_without_hint_fallback_to_null(self):
+        """Fuzzy match requires hint_start; without it, fallback returns null span."""
         quote = "somewat similar"
         source_text = "This is somewhat similar text here"
 
         span = resolve_span(quote, None, None, source_text)
 
-        # No exact match, no normalized match, no hint for fuzzy; quote preserved in fallback
-        assert span.quote == quote
+        # No exact match, no normalized match, no hint for fuzzy matching
+        # Stage 4 fallback returns fully-null span to distinguish from fuzzy match found
+        assert span.quote is None
         assert span.start is None
         assert span.end is None
 
     def test_fuzzy_match_bounded_window(self):
         """Fuzzy matching respects bounded ±200 character window."""
         # Create a source where fuzzy match is outside ±200 window
-        quote = "something"  # Will fuzzy-match
+        quote = "something"  # Would fuzzy-match if within window
         source_text = "x" * 500 + "somewhat different text" + "y" * 500
         hint_start = 0  # Far from the actual match at ~500
 
@@ -209,8 +210,8 @@ class TestResolveSpanFuzzyMatch:
         # Fuzzy match won't find it because hint (0) is >200 chars from match (~500)
         # The search window is [max(0, 0-200), min(len, 0+200)] = [0, 200]
         # but the match is at position 500, well outside the window
-        # Quote is preserved in fallback as quote-only span
-        assert span.quote == quote
+        # Falls through to Stage 4 fallback which returns null span
+        assert span.quote is None
         assert span.start is None
         assert span.end is None
 

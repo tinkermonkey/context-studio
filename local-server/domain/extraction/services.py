@@ -1936,7 +1936,7 @@ Identified individuals:
                     )
                     triples.append(triple)
                     warnings.extend(triple_warnings)
-                except (TypeError, ValueError, KeyError) as e:
+                except (TypeError, ValueError, KeyError, AttributeError) as e:
                     warning_msg = (
                         f"Failed to parse triple due to data error: {type(e).__name__}: {e}"
                     )
@@ -1951,7 +1951,9 @@ Identified individuals:
             return triples, warnings
 
         except json.JSONDecodeError as e:
-            _logger.error(f"Failed to parse LLM JSON response: {e}")
+            error_msg = f"Failed to parse LLM JSON response: {e}"
+            _logger.error(error_msg)
+            warnings.append(error_msg)
             return [], warnings
 
     def _build_triple_from_llm_output(

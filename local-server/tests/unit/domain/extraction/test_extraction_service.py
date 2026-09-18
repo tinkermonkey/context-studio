@@ -1591,13 +1591,56 @@ class TestBuildTripleFromLLMOutput:
             },
             "confidence": 0.85,
             "provenance": {
-                # Paraphrased quote that won't match exactly
-                "text_offset_start": None,
+                # Quote with slight variation (extra whitespace) that won't match exactly
+                # but will match after normalization, with hint_start for fuzzy matching
+                "text_offset_start": 6,  # Hints at "collaborates" location
                 "text_offset_end": None,
-                "raw": "Alice works together with Bob",
+                "raw": "collaborates  closely  with Bob",  # Extra spaces - matches only after normalization
             },
         }
         text = "Alice collaborates closely with Bob on research projects"
+        ontology_id = "test_ontology"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify triple is built
+        assert triple["subject"]["label"] == "Alice"
+        assert triple["predicate"]["label"] == "collaborates with"
+        assert triple["object"]["label"] == "Bob"
+
+        # Verify provenance: normalized match should be found with exact positions
+        provenance = triple["provenance"]
+        assert provenance.quote is not None
+        assert provenance.start is not None  # Normalized match provides positions
+        assert provenance.end is not None
+
+        # No warning when positions are resolved
+        assert len(warnings) == 0
+
+    def test_build_triple_fuzzy_match_quote_only_span(self, service):
+        """Fuzzy-matched span with no exact positions (quote-only span)."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "alice",
+                "label": "Alice",
+                "class_id": "Person",
+            },
+            "predicate": {"label": "collaborates with", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "bob",
+                "label": "Bob",
+            },
+            "confidence": 0.85,
+            "provenance": {
+                # Paraphrased quote that will fuzzy match (high similarity but not exact)
+                "text_offset_start": 6,  # Hints for fuzzy match window
+                "text_offset_end": None,
+                "raw": "Alice collaborates with Bob",  # Close to actual text
+            },
+        }
+        text = "Alice collaborates closely with Bob on research"
         ontology_id = "test_ontology"
 
         triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
