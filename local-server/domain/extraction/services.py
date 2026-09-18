@@ -15,7 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
@@ -28,12 +28,16 @@ from domain.ontology.ports import (
 from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
+if TYPE_CHECKING:
+    from domain.extraction.ports import IndividualRecognizer
+
 from . import layers
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
     ExtractionRun,
     ExtractionRunStatus,
+    RecognitionPreviewHit,
     TripleExtractionResult,
 )
 from .events import ExtractionCompleted
@@ -205,6 +209,7 @@ class ExtractionService:
         schema_index: SchemaVectorIndex | None = None,
         extraction_mode: str = "llm_two_pass",
         individual_index: IndividualVectorIndex | None = None,
+        individual_recognizer: "IndividualRecognizer | None" = None,
         recog_threshold: float = 0.90,
         recog_margin: float = 0.05,
         recog_min_len: int = 4,
@@ -235,6 +240,9 @@ class ExtractionService:
                 or ``"nlp_grounded"`` (spaCy extracts noun chunks, the vector
                 index retrieves candidate classes, and the LLM only confirms the
                 best fit — see issue #1141). Defaults to ``"llm_two_pass"``.
+            individual_recognizer: Optional port for resolving extracted individual
+                mentions to existing graph nodes. When provided, enables the
+                preview_recognition() method for recognition preview queries.
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
@@ -256,6 +264,7 @@ class ExtractionService:
         # a false merge corrupts the graph, a missed merge is a recoverable
         # duplicate — so acceptance is conservative and biased toward "new node".
         self._individual_index = individual_index
+        self._individual_recognizer = individual_recognizer
         self._recog_threshold = recog_threshold
         self._recog_margin = recog_margin
         self._recog_min_len = recog_min_len
@@ -2271,6 +2280,84 @@ Identified individuals:
             deduplicated.append(entity_to_keep)
 
         return deduplicated
+
+    def preview_recognition(self, triples: list[dict]) -> list[RecognitionPreviewHit]:
+        """
+        Preview which extracted individuals would match existing graph nodes.
+
+        Computes at request time against current ontology state, with zero writes.
+        For each distinct typing triple (subject is an individual), attempts to resolve
+        the mention via IndividualRecognizer if configured. Returns a hit for each
+        mention, whether it would match or be created as new.
+
+        Args:
+            triples: List of extracted triples from a completed pipeline run
+
+        Returns:
+            List of RecognitionPreviewHit entities reporting match status per mention
+        """
+        if self._individual_recognizer is None:
+            return []
+
+        hits: list[RecognitionPreviewHit] = []
+        seen_mentions: set[str] = set()
+
+        for triple in triples:
+            subject = triple.get("subject", {})
+            if subject.get("kind") != "individual":
+                continue
+
+            mention_label = (subject.get("label") or "").strip()
+            if not mention_label or mention_label.lower() in seen_mentions:
+                continue
+            seen_mentions.add(mention_label.lower())
+
+            class_ids = subject.get("class_ids") or []
+            if not class_ids:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=None,
+                        resolved_individual_title=None,
+                        match_method=None,
+                        match_score=None,
+                        will_match_existing=False,
+                    )
+                )
+                continue
+
+            match = self._individual_recognizer.recognize(
+                label=mention_label,
+                context="",
+                class_ids=class_ids,
+                taxonomy_id=None,
+                threshold=None,
+            )
+
+            if match is not None:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=match.individual_id,
+                        resolved_individual_title=match.title,
+                        match_method=match.method,
+                        match_score=match.score,
+                        will_match_existing=True,
+                    )
+                )
+            else:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=None,
+                        resolved_individual_title=None,
+                        match_method=None,
+                        match_score=None,
+                        will_match_existing=False,
+                    )
+                )
+
+        return hits
 
     def _normalized_similarity(self, label_a: str, label_b: str) -> float:
         """

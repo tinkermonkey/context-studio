@@ -111,3 +111,60 @@ class EnrichFromReferencesRequest(BaseModel):
     extracted_entities: list[ExtractedEntitySchema] = Field(
         ..., description="Entities to enrich with reference knowledge"
     )
+
+
+class RecognitionPreviewHitSchema(BaseModel):
+    """Preview of recognition result for a single extracted mention."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    mention_label: str = Field(..., description="The extracted mention's surface text")
+    resolved_individual_id: Optional[str] = Field(
+        None,
+        description="ID of the matched existing individual, or None if no match",
+    )
+    resolved_individual_title: Optional[str] = Field(
+        None,
+        description="Canonical title of the matched individual, or None if no match",
+    )
+    match_method: Optional[str] = Field(
+        None,
+        description='Match method when resolved: "exact", "vector", or "llm", or None',
+    )
+    match_score: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence of the match (0.0–1.0), or None if no match",
+    )
+    will_match_existing: bool = Field(
+        ...,
+        description="True if the mention would match an existing individual, "
+        "False if it would be created as new",
+    )
+
+
+class RecognitionPreviewResponse(BaseModel):
+    """Response from recognition preview endpoint."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    hits: list[RecognitionPreviewHitSchema] = Field(
+        default_factory=list,
+        description="Preview results for each distinct extracted individual mention",
+    )
+    total_mentions: int = Field(
+        ...,
+        ge=0,
+        description="Total number of distinct individual mentions previewed",
+    )
+    matched_count: int = Field(
+        ...,
+        ge=0,
+        description="Number of mentions that would match an existing individual",
+    )
+    unmatched_count: int = Field(
+        ...,
+        ge=0,
+        description="Number of mentions that would be created as new",
+    )

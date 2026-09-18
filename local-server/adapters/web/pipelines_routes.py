@@ -11,6 +11,7 @@ This module implements HTTP endpoints for generic pipeline execution:
 - GET /api/pipelines/runs/{run_id}/change-events → Get change events produced by a run
 - GET /api/pipelines/runs → List PipelineRuns with filters
 - POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
+- POST /api/pipelines/runs/{run_id}/recognition-preview → Preview recognition results
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -38,7 +39,11 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
 )
 from adapters.web.dependencies import get_versioning_service
-from adapters.web.schemas.extraction import SourceSpanSchema
+from adapters.web.schemas.extraction import (
+    RecognitionPreviewHitSchema,
+    RecognitionPreviewResponse,
+    SourceSpanSchema,
+)
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
@@ -1376,6 +1381,84 @@ async def apply_pipeline_run(
         created_property_definition_ids=apply_result.created_property_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
         recognized_individual_ids=apply_result.recognized_individual_ids,
+    )
+
+
+@router.post(
+    "/runs/{run_id}/recognition-preview",
+    response_model=RecognitionPreviewResponse,
+    status_code=http_status.HTTP_200_OK,
+)
+async def preview_recognition(
+    run_id: str,
+    request: Request,
+) -> RecognitionPreviewResponse:
+    """
+    Preview which extracted individuals would match existing graph nodes.
+
+    Computes at request time against current ontology state, with zero writes.
+    For an individual_extraction run, reports which extracted individual mentions
+    would resolve to existing ontology individuals if the run were applied, and
+    which would be created as new.
+
+    This endpoint:
+    - Returns 404 if the run does not exist
+    - Returns empty results if the run's pipeline type has no individuals to preview
+    - Produces zero writes to ontology data, pipeline run data, or change events
+
+    Args:
+        run_id: ID of the completed pipeline run to preview
+
+    Returns:
+        RecognitionPreviewResponse with recognition results per mention
+
+    Raises:
+        HTTPException: 404 if run not found, 422 if run is not completed
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run {run_id} not found",
+        )
+
+    if run.status != PipelineRunStatus.COMPLETED:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Pipeline run {run_id} is not completed (status: {run.status.value})",
+        )
+
+    ptype = run.pipeline_type
+    triples = run.output_summary.get("triples", [])
+
+    hits = []
+    matched_count = 0
+    unmatched_count = 0
+
+    if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+        svc = request.app.state.extraction_service
+        hits = svc.preview_recognition(triples)
+        matched_count = sum(1 for hit in hits if hit.will_match_existing)
+        unmatched_count = sum(1 for hit in hits if not hit.will_match_existing)
+
+    hit_schemas = [
+        RecognitionPreviewHitSchema(
+            mention_label=hit.mention_label,
+            resolved_individual_id=hit.resolved_individual_id,
+            resolved_individual_title=hit.resolved_individual_title,
+            match_method=hit.match_method,
+            match_score=hit.match_score,
+            will_match_existing=hit.will_match_existing,
+        )
+        for hit in hits
+    ]
+
+    return RecognitionPreviewResponse(
+        hits=hit_schemas,
+        total_mentions=len(hits),
+        matched_count=matched_count,
+        unmatched_count=unmatched_count,
     )
 
 
