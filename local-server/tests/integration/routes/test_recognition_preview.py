@@ -306,5 +306,32 @@ def test_recognition_preview_no_writes_to_ontology(client, pipeline_repo, ontolo
     assert individuals_before == individuals_after
 
 
+def test_recognition_preview_empty_result_for_non_individual_pipeline(client, pipeline_repo):
+    """Empty result returned for non-individual pipeline types (FR3.6/FR3.7)."""
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        implementation_id="default",
+        configuration_ref="extraction-default",
+        configuration_slug="extraction-default",
+        configuration_version=1,
+    )
+    run_id = run.id
+    pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+    pipeline_repo.update_summaries(
+        run_id,
+        output_summary={"triples": [_make_triple("SomeClass")]},
+    )
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 0
+    assert data["matched_count"] == 0
+    assert data["unmatched_count"] == 0
+    assert len(data["hits"]) == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

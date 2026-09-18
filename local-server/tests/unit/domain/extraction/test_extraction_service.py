@@ -11,6 +11,7 @@ import pytest
 
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
 from domain.extraction.exceptions import ExtractionError
+from domain.extraction.ports import RecognitionMatch
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import SchemaVectorIndex
 
@@ -1864,3 +1865,279 @@ class TestBuildTripleFromLLMOutput:
         assert provenance.end == 12
         assert provenance.quote == "REST API"
         assert len(warnings) == 0
+
+
+class TestPreviewRecognition:
+    """
+    Unit tests for ExtractionService.preview_recognition() method.
+
+    Tests the recognition preview logic with FakeIndividualRecognizer,
+    covering edge cases like empty triples, non-individual subjects,
+    empty class_ids, case-insensitive deduplication, and recognizer=None.
+    """
+
+    @pytest.fixture
+    def service_with_recognizer(self):
+        """Create an ExtractionService with FakeIndividualRecognizer."""
+        from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
+
+        ontology_repo = FakeOntologyRepository()
+        embedding_service = FakeEmbeddingService()
+        llm = Mock()
+        nlp = Mock()
+        reference_sources = []
+        event_publisher = FakeEventPublisher()
+        extraction_repo = Mock()
+        extraction_run_repo = Mock()
+        recognizer = FakeIndividualRecognizer()
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=reference_sources,
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+            individual_recognizer=recognizer,
+        )
+
+        return {
+            "service": service,
+            "recognizer": recognizer,
+        }
+
+    def _make_triple(self, label, class_ids=None):
+        """Helper to build a typing triple for individual extraction."""
+        return {
+            "subject": {
+                "kind": "individual",
+                "id": "",
+                "label": label,
+                "class_ids": class_ids or ["cls-test"],
+            },
+            "predicate": {"label": "is_a"},
+            "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+            "confidence": 0.9,
+        }
+
+    def test_preview_recognition_empty_triples_list(self, service_with_recognizer):
+        """Empty triples list returns empty hits."""
+        service = service_with_recognizer["service"]
+        hits = service.preview_recognition([])
+        assert hits == []
+
+    def test_preview_recognition_no_recognizer_returns_empty(self):
+        """preview_recognition returns empty list when recognizer is None."""
+        ontology_repo = FakeOntologyRepository()
+        embedding_service = FakeEmbeddingService()
+        llm = Mock()
+        nlp = Mock()
+        reference_sources = []
+        event_publisher = FakeEventPublisher()
+        extraction_repo = Mock()
+        extraction_run_repo = Mock()
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=reference_sources,
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+            individual_recognizer=None,
+        )
+
+        triples = [self._make_triple("Alice")]
+        hits = service.preview_recognition(triples)
+        assert hits == []
+
+    def test_preview_recognition_skips_non_individual_subjects(self, service_with_recognizer):
+        """Triples with non-individual subjects are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            {
+                "subject": {"kind": "class", "id": "cls-1", "label": "Person"},
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-2", "label": "Entity"},
+                "confidence": 0.9,
+            }
+        ]
+        hits = service.preview_recognition(triples)
+        assert len(hits) == 0
+
+    def test_preview_recognition_unmatched_mention_no_class_ids(self, service_with_recognizer):
+        """Mention with empty class_ids produces unmatched hit."""
+        service = service_with_recognizer["service"]
+        triples = [self._make_triple("Alice", class_ids=[])]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is False
+        assert hits[0].resolved_individual_id is None
+        assert hits[0].resolved_individual_title is None
+
+    def test_preview_recognition_case_insensitive_dedup(self, service_with_recognizer):
+        """Duplicate mentions (case-insensitive) are deduplicated."""
+        service = service_with_recognizer["service"]
+        triples = [
+            self._make_triple("Alice"),
+            self._make_triple("ALICE"),  # Case variant
+            self._make_triple("alice"),  # Another case variant
+        ]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+
+    def test_preview_recognition_matched_individual(self, service_with_recognizer):
+        """Matched mention includes resolved individual details."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=1.0,
+                method="exact",
+            ),
+        )
+
+        triples = [self._make_triple("Alice")]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is True
+        assert hits[0].resolved_individual_id == alice_id
+        assert hits[0].resolved_individual_title == "Alice (Person)"
+        assert hits[0].match_method == "exact"
+        assert hits[0].match_score == 1.0
+
+    def test_preview_recognition_unmatched_individual(self, service_with_recognizer):
+        """Unmatched mention produces hit with will_match_existing=False."""
+        service = service_with_recognizer["service"]
+        triples = [self._make_triple("UnknownPerson")]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "UnknownPerson"
+        assert hits[0].will_match_existing is False
+        assert hits[0].resolved_individual_id is None
+        assert hits[0].match_method is None
+        assert hits[0].match_score is None
+
+    def test_preview_recognition_mixed_matches_and_unmatched(self, service_with_recognizer):
+        """Mixed mentions with matches and unmatched produce correct hits."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=0.95,
+                method="vector",
+            ),
+        )
+
+        triples = [
+            self._make_triple("Alice"),
+            self._make_triple("Bob"),
+            self._make_triple("Charlie"),
+        ]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 3
+        labels = {hit.mention_label for hit in hits}
+        assert labels == {"Alice", "Bob", "Charlie"}
+
+        alice_hit = next(h for h in hits if h.mention_label == "Alice")
+        assert alice_hit.will_match_existing is True
+        assert alice_hit.resolved_individual_id == alice_id
+
+        bob_hit = next(h for h in hits if h.mention_label == "Bob")
+        assert bob_hit.will_match_existing is False
+
+        charlie_hit = next(h for h in hits if h.mention_label == "Charlie")
+        assert charlie_hit.will_match_existing is False
+
+    def test_preview_recognition_whitespace_trimming(self, service_with_recognizer):
+        """Mention labels with leading/trailing whitespace are trimmed."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=1.0,
+                method="exact",
+            ),
+        )
+
+        triples = [
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "  Alice  ",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.9,
+            }
+        ]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is True
+
+    def test_preview_recognition_skips_empty_labels(self, service_with_recognizer):
+        """Mentions with empty or whitespace-only labels are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            self._make_triple(""),
+            self._make_triple("   "),
+            self._make_triple("Alice"),
+        ]
+        hits = service.preview_recognition(triples)
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+
+    def test_preview_recognition_passes_class_ids_to_recognizer(self, service_with_recognizer):
+        """Class IDs are passed to recognizer for scoped recognition."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        # Track what class_ids were passed to recognize()
+        received_class_ids = []
+
+        original_recognize = recognizer.recognize
+
+        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+            received_class_ids.append(class_ids)
+            return original_recognize(label, context, class_ids, taxonomy_id, threshold)
+
+        recognizer.recognize = tracking_recognize
+
+        class_ids = ["cls-person", "cls-agent"]
+        triples = [self._make_triple("Alice", class_ids=class_ids)]
+        service.preview_recognition(triples)
+
+        assert len(received_class_ids) == 1
+        assert received_class_ids[0] == class_ids
