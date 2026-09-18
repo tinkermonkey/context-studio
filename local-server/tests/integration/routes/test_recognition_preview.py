@@ -156,6 +156,21 @@ def _make_triple(subject_label, class_ids=None):
     }
 
 
+def _make_triple_with_singular_class_id(subject_label):
+    """Helper to build a typing triple with singular class_id (format from _make_typing_triple())."""
+    return {
+        "subject": {
+            "kind": "individual",
+            "id": "",
+            "label": subject_label,
+            "class_id": CLASS_ID,
+        },
+        "predicate": {"label": "is_a"},
+        "object": {"kind": "class", "id": CLASS_ID, "label": "Person"},
+        "confidence": 0.9,
+    }
+
+
 def test_recognition_preview_returns_404_for_nonexistent_run(client):
     """404 returned for a nonexistent run ID."""
     response = client.post("/api/pipelines/runs/nonexistent-run-id/recognition-preview")
@@ -395,7 +410,7 @@ def test_recognition_preview_with_recognition_threshold(client, pipeline_repo, r
     assert data["total_mentions"] == 1
 
 
-def test_recognition_preview_returns_400_for_unsupported_pipeline_type(client, pipeline_repo):
+def test_recognition_preview_returns_empty_result_for_unsupported_pipeline_type(client, pipeline_repo):
     """200 with empty results returned for unsupported pipeline types."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
@@ -445,6 +460,35 @@ def test_recognition_preview_handles_null_confidence(client, pipeline_repo, reco
     data = response.json()
     assert data["total_mentions"] == 0
     assert data["skipped_count"] == 1
+
+
+def test_recognition_preview_handles_singular_class_id(client, pipeline_repo, recognizer):
+    """Triples with singular class_id (from _make_typing_triple) are recognized correctly."""
+    existing_id = str(uuid4())
+    recognizer.add_match(
+        label="Eve",
+        match=RecognitionMatch(
+            individual_id=existing_id,
+            title="Eve (Person)",
+            score=1.0,
+            method="exact",
+        ),
+    )
+
+    triple = _make_triple_with_singular_class_id("Eve")
+    run_id = _create_and_complete_individual_run(pipeline_repo, triples=[triple])
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 1
+    assert data["matched_count"] == 1
+    assert data["unmatched_count"] == 0
+    hit = data["hits"][0]
+    assert hit["mention_label"] == "Eve"
+    assert hit["will_match_existing"] is True
+    assert hit["resolved_individual_id"] == existing_id
+    assert hit["candidate_class_ids"] == [CLASS_ID]
 
 
 def test_recognition_preview_includes_candidate_class_ids(client, pipeline_repo, recognizer):
