@@ -146,7 +146,7 @@ class TestTripleCandidateMapping:
         assert result.object.id is None
 
     def test_map_triple_candidate_with_provenance_dict_in_list(self):
-        """Provenance as list with dict containing text_offset_start/end/raw normalized to SourceSpanSchema."""
+        """Provenance list with dict (text_offset_start/end/raw) normalized to SourceSpanSchema."""
         triple_dict = {
             "subject": {
                 "kind": "individual",
@@ -307,7 +307,7 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_with_mapped_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /candidates for INDIVIDUAL_EXTRACTION run returns TripleCandidate items with mapped nodes."""
+        """GET /candidates for mapped INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -399,7 +399,7 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_with_new_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /candidates for INDIVIDUAL_EXTRACTION run returns TripleCandidate items with new (unmapped) nodes."""
+        """GET /candidates for new nodes INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run

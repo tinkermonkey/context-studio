@@ -396,7 +396,7 @@ class NodeReference(BaseModel):
     label: str = Field(..., description="Node label/name")
     id: Optional[str] = Field(
         None,
-        description="Ontology entity ID; empty/None = new candidate, non-empty = mapped to existing",
+        description="Ontology entity ID (empty/None=new, non-empty=mapped)",
     )
     class_ids: Optional[list[str]] = Field(
         None, description="Class IDs if this node is an individual instance"

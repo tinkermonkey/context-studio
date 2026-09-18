@@ -978,10 +978,9 @@ async def get_pipeline_candidates(
     # Individual extraction: return structured TripleCandidate items
     if run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         triples_data = output_summary.get("triples", [])
-        triple_candidates: list[CandidateItem] = [
+        return [
             _map_triple_candidate(triple_dict) for triple_dict in triples_data
         ]
-        return triple_candidates
 
     # For other pipeline types, use the existing legacy logic
     candidates_key = None
