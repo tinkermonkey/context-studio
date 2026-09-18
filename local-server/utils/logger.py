@@ -8,7 +8,21 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from config import get_settings
+try:
+    # Try to import from config if available
+    from config import get_settings
+except ImportError:
+    # Fallback: use an empty settings-like object with defaults
+    class _DefaultSettings:
+        class Logging:
+            log_level = type('obj', (object,), {'value': 'INFO'})()
+            max_bytes = 10485760  # 10MB
+            backup_count = 5
+
+        logging = Logging()
+
+    def get_settings():
+        return _DefaultSettings()
 
 _file_handler: logging.Handler | None = None
 _otlp_handler: Optional[logging.Handler] = None
