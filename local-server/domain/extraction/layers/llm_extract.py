@@ -141,7 +141,7 @@ JSON Array:"""
                 span = None
                 if label:
                     try:
-                        span = resolve_span(label, input.text)
+                        span = resolve_span(label, None, None, input.text)
                     except Exception as e:
                         _logger.warning(
                             "Failed to resolve span for entity '%s': %s",

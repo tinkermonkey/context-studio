@@ -100,7 +100,7 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
             span = None
             if entity.title:
                 try:
-                    span = resolve_span(entity.title, text)
+                    span = resolve_span(entity.title, None, None, text)
                 except Exception as e:
                     _logger.warning(
                         "Failed to resolve span for KG entity '%s': %s",
