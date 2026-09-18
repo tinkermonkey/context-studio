@@ -947,14 +947,15 @@ class ExtractionService:
             raise
         except Exception as exc:
             error_type = type(exc).__name__
+            count = len(relationship_triples)
             error_msg = (
                 f"Concept-object typing step failed ({error_type}): {exc}. "
-                "Cannot type concept-objects or stamp property_definition_id. "
-                "Returning {count} relationship triple(s) WITHOUT property_definition_id; "
-                "they will be silently dropped during apply (apply service requires "
-                "property_definition_id to be truthy). "
-                "Verify database connectivity, schema integrity, and repository state."
-            ).format(count=len(relationship_triples))
+                f"Cannot type concept-objects or stamp property_definition_id. "
+                f"Returning {count} relationship triple(s) WITHOUT property_definition_id; "
+                f"they will be silently dropped during apply (apply service requires "
+                f"property_definition_id to be truthy). "
+                f"Verify database connectivity, schema integrity, and repository state."
+            )
             _logger.error(error_msg, exc_info=True)
             warnings.append(error_msg)
             return relationship_triples, warnings
