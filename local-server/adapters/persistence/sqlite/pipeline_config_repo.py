@@ -135,7 +135,8 @@ class PipelineConfigurationRepository:
                                 == implementation_id  # type: ignore[arg-type]
                             ),
                             (
-                                PipelineConfiguration.deleted_at.is_(None)  # type: ignore[union-attr]
+                                PipelineConfiguration.deleted_at.is_(None)
+                                # type: ignore[union-attr]
                             ),
                         )
                     )

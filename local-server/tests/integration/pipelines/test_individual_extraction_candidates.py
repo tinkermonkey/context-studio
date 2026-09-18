@@ -280,7 +280,9 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_endpoint_404_for_missing_run(self, client):
         """Returns 404 when run does not exist."""
         nonexistent_run_id = str(uuid4())
-        response = client.get(f"/api/pipelines/runs/{nonexistent_run_id}/individual-extraction-candidates")
+        response = client.get(
+            f"/api/pipelines/runs/{nonexistent_run_id}/individual-extraction-candidates"
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_individual_extraction_candidates_422_for_wrong_pipeline_type(
@@ -308,7 +310,8 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_with_mapped_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /individual-extraction-candidates for mapped INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
+        """GET /individual-extraction-candidates for mapped INDIVIDUAL_EXTRACTION
+        returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -400,7 +403,8 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_candidates_with_new_nodes(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /individual-extraction-candidates for new nodes INDIVIDUAL_EXTRACTION returns TripleCandidate items."""
+        """GET /individual-extraction-candidates for new nodes INDIVIDUAL_EXTRACTION
+        returns TripleCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -483,7 +487,8 @@ class TestIndividualExtractionCandidatesEndpoint:
     def test_individual_extraction_empty_triples_returns_empty_list(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /individual-extraction-candidates for INDIVIDUAL_EXTRACTION run with no triples returns empty list."""
+        """GET /individual-extraction-candidates for INDIVIDUAL_EXTRACTION run with
+        no triples returns empty list."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run

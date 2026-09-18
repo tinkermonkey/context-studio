@@ -169,7 +169,8 @@ class TestSchemaCroundingCandidatesEndpoint:
     def test_schema_grounding_candidates_with_dbpedia_groundings(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /schema-grounding-candidates for SCHEMA_NODE_GROUNDING returns GroundingCandidate items."""
+        """GET /schema-grounding-candidates for SCHEMA_NODE_GROUNDING returns
+        GroundingCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run
@@ -247,7 +248,8 @@ class TestSchemaCroundingCandidatesEndpoint:
     def test_schema_grounding_candidates_with_wikidata_groundings(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /schema-grounding-candidates for Wikidata groundings returns GroundingCandidate items."""
+        """GET /schema-grounding-candidates for Wikidata groundings returns
+        GroundingCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         batch = batch_repo.create()
@@ -361,7 +363,8 @@ class TestSchemaRefinementCandidatesEndpoint:
     def test_schema_definition_refinement_candidates(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /schema-refinement-candidates for SCHEMA_NODE_DEFINITION_REFINEMENT returns RefinementCandidate items."""
+        """GET /schema-refinement-candidates for SCHEMA_NODE_DEFINITION_REFINEMENT
+        returns RefinementCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run for definition refinement
@@ -441,7 +444,8 @@ class TestSchemaRefinementCandidatesEndpoint:
     def test_schema_connection_refinement_candidates(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """GET /schema-refinement-candidates for SCHEMA_NODE_CONNECTION_REFINEMENT returns RefinementCandidate items."""
+        """GET /schema-refinement-candidates for SCHEMA_NODE_CONNECTION_REFINEMENT
+        returns RefinementCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
 
         # Create a batch and run for connection refinement
