@@ -1595,7 +1595,9 @@ class TestBuildTripleFromLLMOutput:
                 # but will match after normalization, with hint_start for fuzzy matching
                 "text_offset_start": 6,  # Hints at "collaborates" location
                 "text_offset_end": None,
-                "raw": "collaborates  closely  with Bob",  # Extra spaces - matches only after normalization
+                "raw": (
+                    "collaborates  closely  with Bob"
+                ),  # Extra spaces - matches only after normalization
             },
         }
         text = "Alice collaborates closely with Bob on research projects"
