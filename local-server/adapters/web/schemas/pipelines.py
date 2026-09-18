@@ -416,6 +416,7 @@ class PredicateReference(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    kind: str = Field(..., description="Predicate kind: property or relation type")
     label: str = Field(..., description="Predicate label/name")
     property_definition_id: Optional[str] = Field(
         None,

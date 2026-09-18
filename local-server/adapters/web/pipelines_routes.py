@@ -241,6 +241,7 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
         if not pred_data:
             pred_data = {}
         return PredicateReference(
+            kind=pred_data.get("kind", "property"),
             label=pred_data.get("label", ""),
             property_definition_id=pred_data.get("property_definition_id"),
         )
