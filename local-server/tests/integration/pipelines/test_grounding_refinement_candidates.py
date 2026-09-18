@@ -9,10 +9,8 @@ Tests verify the grounding and refinement candidate endpoints correctly:
 5. Return empty lists when output_summary lacks expected data keys
 """
 
-import hashlib
 from uuid import uuid4
 
-import pytest
 from starlette import status
 
 from adapters.web.pipelines_routes import (

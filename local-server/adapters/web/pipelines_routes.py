@@ -24,7 +24,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """  # noqa: E501
 
 from datetime import datetime, timezone
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
