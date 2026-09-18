@@ -11,7 +11,6 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 
 from domain.extraction.services import _serialize_triple_provenance
 from domain.extraction.value_objects import SourceSpan
