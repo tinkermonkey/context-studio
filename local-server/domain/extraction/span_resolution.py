@@ -84,16 +84,18 @@ def find_all_spans(
     """
     Find all occurrences of a term in source text using exact and normalized matching.
 
-    Used by the schema extraction path where the term is known a priori (e.g., a
-    schema label). No fuzzy matching here — the label should match exactly or with
-    minor normalization (whitespace/case-folding).
+    DESIGN DECISION (Architect Guidance): Schema extraction labels are known a priori
+    (e.g., ontology class names, relationship types from schema). Per architect guidance,
+    these known labels should match exactly or with minor normalization—NOT fuzzy matching.
+    Fuzzy matching is reserved for the individual extraction path (resolve_span) where
+    the quote may be paraphrased by the LLM and requires bounded fuzzy recovery.
 
-    This function uses stages 1-2 of the resolution cascade:
+    This function intentionally uses only stages 1-2 of the resolution cascade:
     1. Exact matching: locate term exactly in source_text
     2. Normalized matching: collapse whitespace and case-fold both term and source
 
     Args:
-        term: The text to find. Must be non-empty.
+        term: The text to find (a known schema label). Must be non-empty.
         source_text: The source document to search within.
 
     Returns:

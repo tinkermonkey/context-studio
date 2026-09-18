@@ -153,6 +153,30 @@ class TestResolveSpanNormalizedMatch:
         # Should find a match (normalized matching will handle case)
         assert span.quote == quote
 
+    def test_normalized_match_with_leading_whitespace_exact(self):
+        """Exact match skips leading whitespace in source text."""
+        quote = "Machine Learning"
+        source_text = "   Machine Learning is great"
+
+        span = resolve_span(quote, None, None, source_text)
+
+        # Should find the match at position 3, not 0
+        assert span.quote == quote
+        assert span.start == 3
+        assert span.end == 19
+
+    def test_normalized_match_with_leading_whitespace_case_different(self):
+        """Normalized match with leading whitespace skips leading spaces."""
+        quote = "machine learning"
+        source_text = "   Machine Learning is great"
+
+        span = resolve_span(quote, None, None, source_text)
+
+        # Should find via normalized matching at position 3, not 0
+        assert span.quote == quote
+        assert span.start == 3
+        assert span.end == 19
+
 
 class TestResolveSpanFuzzyMatch:
     """Tests for bounded fuzzy matching with difflib.SequenceMatcher."""
@@ -504,6 +528,19 @@ class TestFindAllSpans:
         spans = find_all_spans(term, source_text)
 
         assert len(spans) == 2
+
+    def test_find_all_spans_with_leading_whitespace(self):
+        """find_all_spans skips leading whitespace in source text."""
+        term = "Machine Learning"
+        source_text = "   Machine Learning is great"
+
+        spans = find_all_spans(term, source_text)
+
+        # Should find the match at position 3, not 0
+        assert len(spans) == 1
+        assert spans[0].quote == term
+        assert spans[0].start == 3
+        assert spans[0].end == 19
 
 
 class TestSourceSpanDataclass:
