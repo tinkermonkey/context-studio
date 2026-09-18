@@ -184,7 +184,9 @@ class TestGroundedV1Integration:
             assert "start" in provenance, "Provenance missing start field"
             assert "end" in provenance, "Provenance missing end field"
             # Verify no legacy keys
-            assert "text_offset_start" not in provenance, "Provenance should not have text_offset_start"
+            assert (
+                "text_offset_start" not in provenance
+            ), "Provenance should not have text_offset_start"
             assert "text_offset_end" not in provenance, "Provenance should not have text_offset_end"
             assert "raw" not in provenance, "Provenance should not have raw"
 
