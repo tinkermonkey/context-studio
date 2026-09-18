@@ -13,6 +13,7 @@ Tests verify:
 5. Literal objects with kind=literal, value, datatype are supported
 """
 
+import hashlib
 from uuid import uuid4
 
 import pytest
@@ -202,7 +203,7 @@ class TestTripleCandidateMapping:
         assert result.provenance[1].start == 30
 
     def test_map_triple_candidate_confidence_bounds(self):
-        """Confidence score clamped to 0.0-1.0 and converted to float."""
+        """Confidence validates as float between 0.0-1.0; out-of-bounds values are rejected."""
         triple_dict = {
             "subject": {"kind": "individual", "id": "s", "label": "S"},
             "predicate": {"label": "p"},
@@ -214,6 +215,21 @@ class TestTripleCandidateMapping:
         result = _map_triple_candidate(triple_dict)
         assert isinstance(result.confidence, float)
         assert 0.0 <= result.confidence <= 1.0
+
+    def test_map_triple_candidate_confidence_out_of_bounds_rejected(self):
+        """Confidence value outside 0.0-1.0 is rejected with ValidationError."""
+        triple_dict = {
+            "subject": {"kind": "individual", "id": "s", "label": "S"},
+            "predicate": {"label": "p"},
+            "object": {"kind": "individual", "id": "o", "label": "O"},
+            "confidence": 1.5,  # Out of bounds
+            "provenance": []
+        }
+
+        # Pydantic's ge=0.0, le=1.0 constraint rejects out-of-bounds values
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
+            _map_triple_candidate(triple_dict)
 
     def test_map_triple_candidate_with_missing_fields(self):
         """Missing optional fields default gracefully."""
@@ -287,4 +303,215 @@ class TestIndividualExtractionCandidatesEndpoint:
         nonexistent_run_id = str(uuid4())
         response = client.get(f"/api/pipelines/runs/{nonexistent_run_id}/candidates")
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_individual_extraction_candidates_with_mapped_nodes(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates for INDIVIDUAL_EXTRACTION run returns TripleCandidate items with mapped nodes."""
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
+        # Create a batch and run
+        batch = batch_repo.create()
+        source_text = "John Doe works for ACME Corp"
+        source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
+
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="individual-extraction-default",
+            configuration_slug="individual-extraction-default",
+            configuration_version=1,
+            specific_data={"source_text_hash": source_text_hash},
+        )
+
+        # Set output_summary with triples containing mapped nodes
+        pipeline_run_repo.update_summaries(
+            run.id,
+            output_summary={
+                "triples": [
+                    {
+                        "subject": {
+                            "kind": "individual",
+                            "id": "john_doe",
+                            "label": "John Doe",
+                            "class_ids": ["person"]
+                        },
+                        "predicate": {
+                            "property_definition_id": "works_for",
+                            "label": "works for"
+                        },
+                        "object": {
+                            "kind": "individual",
+                            "id": "acme_corp",
+                            "label": "ACME Corp",
+                            "class_ids": ["organization"]
+                        },
+                        "confidence": 0.95,
+                        "provenance": [
+                            {
+                                "quote": "John Doe works for ACME Corp",
+                                "start": 0,
+                                "end": 30
+                            }
+                        ]
+                    }
+                ]
+            },
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # Call the endpoint
+        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        assert response.status_code == status.HTTP_200_OK
+
+        candidates = response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) == 1
+
+        # Verify TripleCandidate structure
+        triple = candidates[0]
+        assert triple["candidate_type"] == "triple"
+
+        # Verify subject (mapped)
+        assert triple["subject"]["kind"] == "individual"
+        assert triple["subject"]["id"] == "john_doe"
+        assert triple["subject"]["label"] == "John Doe"
+        assert triple["subject"]["class_ids"] == ["person"]
+
+        # Verify predicate (mapped)
+        assert triple["predicate"]["property_definition_id"] == "works_for"
+        assert triple["predicate"]["label"] == "works for"
+
+        # Verify object (mapped)
+        assert triple["object"]["kind"] == "individual"
+        assert triple["object"]["id"] == "acme_corp"
+        assert triple["object"]["label"] == "ACME Corp"
+        assert triple["object"]["class_ids"] == ["organization"]
+
+        # Verify confidence and provenance
+        assert triple["confidence"] == 0.95
+        assert len(triple["provenance"]) == 1
+        assert triple["provenance"][0]["quote"] == "John Doe works for ACME Corp"
+        assert triple["provenance"][0]["start"] == 0
+        assert triple["provenance"][0]["end"] == 30
+
+    def test_individual_extraction_candidates_with_new_nodes(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates for INDIVIDUAL_EXTRACTION run returns TripleCandidate items with new (unmapped) nodes."""
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
+        # Create a batch and run
+        batch = batch_repo.create()
+        source_text = "Jane Smith manages Project Alpha"
+        source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
+
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="individual-extraction-default",
+            configuration_slug="individual-extraction-default",
+            configuration_version=1,
+            specific_data={"source_text_hash": source_text_hash},
+        )
+
+        # Set output_summary with triples containing new (unmapped) nodes
+        pipeline_run_repo.update_summaries(
+            run.id,
+            output_summary={
+                "triples": [
+                    {
+                        "subject": {
+                            "kind": "individual",
+                            "label": "Jane Smith"
+                        },
+                        "predicate": {
+                            "label": "manages"
+                        },
+                        "object": {
+                            "kind": "individual",
+                            "label": "Project Alpha"
+                        },
+                        "confidence": 0.85,
+                        "provenance": [
+                            {
+                                "quote": "Jane Smith manages Project Alpha",
+                                "start": 0,
+                                "end": 32
+                            }
+                        ]
+                    }
+                ]
+            },
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # Call the endpoint
+        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        assert response.status_code == status.HTTP_200_OK
+
+        candidates = response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) == 1
+
+        # Verify TripleCandidate structure with new nodes
+        triple = candidates[0]
+        assert triple["candidate_type"] == "triple"
+
+        # Verify subject (new - no id)
+        assert triple["subject"]["kind"] == "individual"
+        assert triple["subject"]["id"] is None
+        assert triple["subject"]["label"] == "Jane Smith"
+
+        # Verify predicate (new - no property_definition_id)
+        assert triple["predicate"]["property_definition_id"] is None
+        assert triple["predicate"]["label"] == "manages"
+
+        # Verify object (new - no id)
+        assert triple["object"]["kind"] == "individual"
+        assert triple["object"]["id"] is None
+        assert triple["object"]["label"] == "Project Alpha"
+
+        # Verify confidence and provenance
+        assert triple["confidence"] == 0.85
+        assert len(triple["provenance"]) == 1
+        assert triple["provenance"][0]["quote"] == "Jane Smith manages Project Alpha"
+
+    def test_individual_extraction_empty_triples_returns_empty_list(
+        self, client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates for INDIVIDUAL_EXTRACTION run with no triples returns empty list."""
+        from domain.pipelines.entities import PipelineRunStatus, PipelineType
+
+        # Create a batch and run
+        batch = batch_repo.create()
+        source_text = "Test text"
+        source_text_hash = hashlib.sha256(source_text.encode()).hexdigest()
+
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="individual-extraction-default",
+            configuration_slug="individual-extraction-default",
+            configuration_version=1,
+            specific_data={"source_text_hash": source_text_hash},
+        )
+
+        # Set output_summary with empty triples
+        pipeline_run_repo.update_summaries(
+            run.id,
+            output_summary={"triples": []},
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # Call the endpoint
+        response = client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        assert response.status_code == status.HTTP_200_OK
+
+        candidates = response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) == 0
 
