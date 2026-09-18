@@ -1,8 +1,407 @@
 {
-  "e8061b9d1b612deecbd2b1c0cd33b3539d469c51cdc823abb01aadcd781907ab": {
+  "bf5ed2bc1d660aad1964d894c0468404bc006b0c875c24ea73313c5f132bfde8": {
     "content": "{\"class\": \"application.applicationcomponent\"}",
     "tokens_in": 726,
     "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b9d058e28485d0e73895c060985c011e8f4193a0ad7ea213c7898a898631b9e5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 928,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a5e4d85857752d4e9d96b67997a69ea1106d17420f5218637ca1b565e2179ddd": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 911,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ab36dd705d6135c43c99f610534b536ffdca5baab222c531f76d9626172acdaa": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 680,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "94f3b3aa9420a9fa3309f781f8808d979bf0e0661f879d0f3f7ca07747ddd8be": {
+    "content": "{\"class\":\"ux.uxspec\"}",
+    "tokens_in": 724,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "fedf00500ccf484329240aa4699dfb28b794e4c9d77f28f8b95b68f568cb8a1e": {
+    "content": "{\"class\":\"product.userworkflow\"}",
+    "tokens_in": 907,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a6a2507adc18457946be6c956d734255b4afbe9c34e80f52a6bab7e6f24e46f6": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 925,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b4fa3f83bd5183ef9da4346b0daaeee3c885dd4e9131484644fc6d2678db840f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 823,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "52093d46b72adbbe4058484409446deaed888fda16fee0827ab6e93791f89189": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 908,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c8e21dd55d49adec074a170f62cd65efddf1cf32129ac6399dd7ce2d5841fc90": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 780,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a83faf75c8940fd7da928835cf2ad0bac29f733b9b910aa9aa8f5de36e49e8ed": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 968,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "bd2d611a9f30f866fb1c318088aa5d20f53a5edcb9fb8932abfdc27181d2cfd3": {
+    "content": "{\"class\":\"ux.view\"}",
+    "tokens_in": 982,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8ba4f1d169a98a30d202b52d094a2c06c35dff16c42ab8482cd857ebbec5776f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 967,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f9fe06712a9fb7c729541df447484330dca3e4a5284a535a9405e49b3284c665": {
+    "content": "{\"class\": \"ux.componentreference\"}",
+    "tokens_in": 1112,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ce7881a2f55b561b83273187bb27a351a2af89d7f033ea56e19ff55ee1656d7e": {
+    "content": "{\"class\":\"ux.componentinstance\"}",
+    "tokens_in": 908,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "aa8db106baf1889ef4902730b82054d4973cee0bdc6619dda18a24d9518e9849": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1156,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ae2f876c1bbadb3869d1d811cbca803b04a8cd2916e3cf247a4147c0b0bf9531": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1118,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ba22807c0e2ffb7fcc2fa270f59ec88dfc1743ea5870657525b9723d1852b93a": {
+    "content": "{\"class\": \"ux.view\"}",
+    "tokens_in": 1000,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "54af700ba279554aa2bd9c57d10b75189971ba8d92ae32e3a4d3ce5933825500": {
+    "content": "{\"class\":\"ux.actioncomponent\"}",
+    "tokens_in": 998,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2df876332002b46aee481d857b89dd3ad2c16c2290d77430c6844865938f4c52": {
+    "content": "{\"class\":\"ux.actioncomponent\"}",
+    "tokens_in": 1103,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "34866f1efb6100503935826c2f9cd1985d4fbff4d13f19ba973d4cd93b98f21c": {
+    "content": "{\"class\": \"ux.view\"}",
+    "tokens_in": 1013,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2c83fc147f3136d68dae5f5b6b41d7141cde5a8f8e46669dc18290efd7627b2d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 997,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f3826e7e1c836125f30f7a223d221dac6fc8381066f5ec2a6dce8cae4b2dd0c2": {
+    "content": "{\"class\":\"product.feature\"}",
+    "tokens_in": 887,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "23c0d92ed021f7d5deebdafa68374d8495fd0a7c417671ddde2c8bcc607e93e6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 994,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "afa7705f47bb7c0c768e6996fa31b6290d13b90ab0ceb7eef29d7e49dd55083d": {
+    "content": "{\"class\":\"ux.subview\"}",
+    "tokens_in": 891,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3b94124ea6bc518847b667377958c2146bff8829572f67f3f8e7111b86ffd8ae": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 950,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7172884b399202cbfbd4d2113d468b74a3abe559ef8acf41b2389d220d21244d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 902,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b68fd6426a1d54e9dd5f2ca45833dc4d65ae0b36eeb8dd7d227cf793b31a2319": {
+    "content": "{\"class\":\"security.actor\"}",
+    "tokens_in": 932,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "df3631fd7c6a92b4f0b21f68226d6b688e878e260fcf4811c26de32157dc4c2a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 899,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3e4896f7f2b26507891930faa180753a2223ab4b29993d24891754e0151ae7df": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 801,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "cc7157d19fa8091586116e46919df7dd4cf65e53d7afbbefa910921d693f01a0": {
+    "content": "{\"class\": \"ux.actioncomponent\"}",
+    "tokens_in": 1172,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "db305888000abcf2be1a2fb6ca0ad8630db411dc2c4db79a37b9bef7fb26bd4a": {
+    "content": "{\"class\":\"ux.actioncomponent\"}",
+    "tokens_in": 1083,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a4a304be198ec87a5a9eb24c07f36b3de4bfe3d854bf9f6f26b4b2515d360512": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 883,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "76de3df5b9ac6997af817eb567c670d74da9a54b967c0cbb2abf455b5893b7b2": {
+    "content": "{\"class\": \"business.businessevent\"}",
+    "tokens_in": 850,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4bd3f1a3715312af19eeb6556e0c78119a87f0a7a4217aba1263324087e517db": {
+    "content": "{\"class\": \"business.businessevent\"}",
+    "tokens_in": 1060,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b275f1a151311be9c65e3e277f2b8a01d7c464c7568538d7c9a010155b0d695d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 918,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2d6c3a685b51bd03aefa7eea9884bfe613bb96ca99b7d17ffe8ef4349d4e8873": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 918,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "274cac7e5c3525f34209fea2fc05f7fa101180b7edb7f38076fe4ddd65451c58": {
+    "content": "{\"class\": \"motivation.requirement\"}",
+    "tokens_in": 970,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2c05de887ed27d1f33861f26bed2af86d78068e114a6cecd6340fa9f699292aa": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 925,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "add5ae0e1d118e039df8c436769516aa255a0b3118c553e19f8724c119823317": {
+    "content": "{\"class\":\"product.userworkflow\"}",
+    "tokens_in": 998,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8bbdae71caf5fa775086e573413785dec53f7d651cb85b4d264f3591a52e3124": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1027,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "81c2168096496384f03854a880750abe7c2acaca6d9affe340b46e4f3dcbbbca": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 885,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5c72d24f88d07bb1086c256e1cf224b159296f9f56c01bcecb50b2ca7b56b485": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 876,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4b622fc0f30353fddf80323e06d5ca321f7b685fb9a3e4d74b86e9b4fc80a570": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1166,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "74aae52a5d1942dab01cdfb420047e38e58c1e022858b3e51aeb93d8621b1d5e": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1234,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d9e0ea8296e2e2ea84f7c425fc98b6383eab35da92b51daa72be3bb0d0338a91": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1219,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a3c3043da972cd867cd148da8f07eb71b2a389f8c432f4edb603d5f94a4cd6b5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1309,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ff201335906084e84823596ad6482d1422d24ea4a9be7769b4c08ffaaf99cc91": {
+    "content": "{\"class\":\"ux.errorconfig\"}",
+    "tokens_in": 1151,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ce942e9958c38fdc98c5397d3d77f1f715442b1db314552723a55f67f8aac1b5": {
+    "content": "{\"class\": \"ux.errorconfig\"}",
+    "tokens_in": 1201,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b3cd9a4cb43b608c9b375d57ede8e9ab22107cb19adec32d9254da3ca66f9cb4": {
+    "content": "{\"class\":\"ux.errorconfig\"}",
+    "tokens_in": 1129,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5479641601b89844779fae8a83350b8a1f1d4faa6f0ff95743cd779392dd1e63": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1019,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "010a27abbf24e9d161c558f83e6ea4fafc21db3ed2dfa8173011ca48e8fe9cfa": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1017,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "225a54820ad0cbafec96a474dba55e703f0ea5eda3912e6a15213c114849284a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1022,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "67f09830465787187ea5033b11ced60c6d87ea390df28dcf6121caddd97bb596": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1003,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "582d3a2ae6ba859dde68ebe0603c75d1501644c8813a371e100284f4f4ba34ac": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1017,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "92ebe38bd7f816af3e17c34faf704cbbc171330e764112d11211181e0bde5c9b": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1000,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "65f390b1993c1a7db26de082ca60c1691758bf038a9cf97518e2c00ebee1fb27": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint_technician_app\", \"label\": \"The Waypoint Technician App\"},\n      \"predicate\": {\"property_definition_id\": \"ux_uxspec_aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_ux_spec\", \"label\": \"one UX spec\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 400, \"raw\": \"it aggregates one UX spec, Technician Daily Workflow\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"technician_daily_workflow\", \"label\": \"Technician Daily Workflow\"},\n      \"predicate\": {\"property_definition_id\": \"product_userworkflow_composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 500, \"raw\": \"aggregates both of the app's two core views: Today's Jobs and Job Detail\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"technician_daily_workflow\", \"label\": \"Technician Daily Workflow\"},\n      \"predicate\": {\"property_definition_id\": \"product_userworkflow_composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_detail\", \"label\": \"Job Detail\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 500, \"raw\": \"aggregates both of the app's two core views: Today's Jobs and Job Detail\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_renders\", \"label\": \"renders\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_list\", \"label\": \"the Job List\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 700, \"raw\": \"It renders the Job List\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"view_job_button\", \"label\": \"a View Job button\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 800, \"raw\": \"Today's Jobs also aggregates a View Job button\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"view_job_button\", \"label\": \"a View Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_navigates_to\", \"label\": \"navigates-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 900, \"raw\": \"when tapped, navigates to the Job Detail view\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail\", \"label\": \"Job Detail\"},\n      \"predicate\": {\"property_definition_id\": \"product_feature_satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_tap_job_completion\", \"label\": \"One-Tap Job Completion\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1200, \"raw\": \"satisfies a requirement... One-Tap Job Completion\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"signature_capture_panel\", \"label\": \"a subview\"},\n      \"predicate\": {\"property_definition_id\": \"ux_subview_serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_technician_role\", \"label\": \"Field Technician\"},\n      \"confidence\": 0.4,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1500, \"raw\": \"so the technician never has to leave the job\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"complete_job_button\", \"label\": \"the Complete Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_triggers_businessevent\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_marked_complete\", \"label\": \"Job Marked Complete\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1100, \"raw\": \"Tapping Complete Job triggers a business event, Job Marked Complete\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"complete_job_button\", \"label\": \"the Complete Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_tap_job_completion_req\", \"label\": \"One-Tap Job Completion\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1300, \"raw\": \"That same Complete Job button satisfies a requirement\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_requires_errorconfig\", \"label\": \"requires\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"offline_sync_error_banner\", \"label\": \"the Offline Sync Error Banner\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1500, \"raw\": \"Today's Jobs requires an error config, the Offline Sync Error Banner\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_composes_subview\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"signature_capture_panel\", \"label\": \"a subview\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1000, \"raw\": \"Job Detail composes a Signature Capture Panel, a subview\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_serves_businessrole\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_technician\", \"label\": \"Field Technician\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1600, \"raw\": \"Job Detail serves the Field Technician business role directly\"}\n    }\n  ]\n}",
+    "tokens_in": 3536,
+    "tokens_out": 2496,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e8061b9d1b612deecbd2b1c0cd33b3539d469c51cdc823abb01aadcd781907ab": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint_technician_app\", \"label\": \"The Waypoint Technician App\"},\n      \"predicate\": {\"property_definition_id\": \"ux_uxspec_aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_ux_spec\", \"label\": \"one UX spec\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 400, \"raw\": \"it aggregates one UX spec, Technician Daily Workflow\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"technician_daily_workflow\", \"label\": \"Technician Daily Workflow\"},\n      \"predicate\": {\"property_definition_id\": \"product_userworkflow_composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 500, \"raw\": \"aggregates both of the app's two core views: Today's Jobs and Job Detail\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"technician_daily_workflow\", \"label\": \"Technician Daily Workflow\"},\n      \"predicate\": {\"property_definition_id\": \"product_userworkflow_composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_detail\", \"label\": \"Job Detail\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 500, \"raw\": \"aggregates both of the app's two core views: Today's Jobs and Job Detail\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_renders\", \"label\": \"renders\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_list\", \"label\": \"the Job List\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 700, \"raw\": \"It renders the Job List\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"view_job_button\", \"label\": \"a View Job button\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 800, \"raw\": \"Today's Jobs also aggregates a View Job button\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"view_job_button\", \"label\": \"a View Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_navigates_to\", \"label\": \"navigates-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 900, \"raw\": \"when tapped, navigates to the Job Detail view\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail\", \"label\": \"Job Detail\"},\n      \"predicate\": {\"property_definition_id\": \"product_feature_satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_tap_job_completion\", \"label\": \"One-Tap Job Completion\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1200, \"raw\": \"satisfies a requirement... One-Tap Job Completion\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"signature_capture_panel\", \"label\": \"a subview\"},\n      \"predicate\": {\"property_definition_id\": \"ux_subview_serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_technician_role\", \"label\": \"Field Technician\"},\n      \"confidence\": 0.4,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1500, \"raw\": \"so the technician never has to leave the job\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"complete_job_button\", \"label\": \"the Complete Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_triggers_businessevent\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_marked_complete\", \"label\": \"Job Marked Complete\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1100, \"raw\": \"Tapping Complete Job triggers a business event, Job Marked Complete\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"complete_job_button\", \"label\": \"the Complete Job button\"},\n      \"predicate\": {\"property_definition_id\": \"ux_actioncomponent_satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"one_tap_job_completion_req\", \"label\": \"One-Tap Job Completion\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1300, \"raw\": \"That same Complete Job button satisfies a requirement\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"todays_jobs\", \"label\": \"Today's Jobs\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_requires_errorconfig\", \"label\": \"requires\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"offline_sync_error_banner\", \"label\": \"the Offline Sync Error Banner\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1500, \"raw\": \"Today's Jobs requires an error config, the Offline Sync Error Banner\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_composes_subview\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"signature_capture_panel\", \"label\": \"a subview\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1000, \"raw\": \"Job Detail composes a Signature Capture Panel, a subview\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_detail_view\", \"label\": \"the Job Detail view\"},\n      \"predicate\": {\"property_definition_id\": \"ux_view_serves_businessrole\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_technician\", \"label\": \"Field Technician\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 1600, \"raw\": \"Job Detail serves the Field Technician business role directly\"}\n    }\n  ]\n}",
+    "tokens_in": 3536,
+    "tokens_out": 2496,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   }

@@ -1,8 +1,365 @@
 {
-  "be2d67dcc2edbff0959586ae6a7f8fc8bf4ec9fcbbf64561029947994af972d7": {
+  "e2f5b66632ce5d778f3b7fe780a368e839707499310e7fc1d7cf12c2e3315f09": {
     "content": "{\"class\":\"technology.technologyprocess\"}",
     "tokens_in": 902,
     "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6151296b223088ac115a6490147bbf5106fad72f0bb1ef289ba7b43dcc49bfdb": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 820,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b58b8db262f85fa7001ddb240b4efc60717caefea7528294042558b551b5e5a6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 916,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a6e7e1313b3322c886c60bae144508383068bbbce302778ad9df97aec9a72221": {
+    "content": "{\"class\":\"technology.technologycollaboration\"}",
+    "tokens_in": 911,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b78beafc5444648e1274e7d13da4a1651c8a64b059a735c885e6e1f85067f29e": {
+    "content": "{\"class\":\"technology.systemsoftware\"}",
+    "tokens_in": 888,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a817ee329b2409ed6831e4763d27b4f747918260fc8d8cbdcf2201e75f04cfd9": {
+    "content": "{\"class\":\"technology.systemsoftware\"}",
+    "tokens_in": 926,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1214b9b49b0b0fd5a82a9a172e9d170b6c0707dc5fc0e2a22e17f7c5d01acad5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 758,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7bab352939191b0a22c040eeaba65d6bce801fd6445b3474302716bcc409c0d7": {
+    "content": "{\"class\":\"motivation.value\"}",
+    "tokens_in": 543,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c61d5b9da4fb21f9087e71d91dc7a9b1dd17296e7f4c80e8ff285052ed1b8188": {
+    "content": "{\"class\": \"motivation.driver\"}",
+    "tokens_in": 784,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "53a28dc4abe29c3fcbd713a9bd57e2780e8de78e231cc4ede6d55f2989616af9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 800,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e34701686769bee7e245b005e85889d56488285d2d18ba29a2981c9fc9aa6df6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1069,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "84c8246dc52ccd7742cb4e96ae307d01fc267de84458a6387fb80dac7654252f": {
+    "content": "{\"class\":\"technology.technologycollaboration\"}",
+    "tokens_in": 1067,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "dd57fc0f254041b12e24a14bd18d649649d90be41eff1954175837a6114d9343": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 1255,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d107dd9b85790491e2fed433ab779beb5d6cf4d896451f83cbe7141d018ee5a4": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1151,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "38f3e3ecba4ee50b3ac89f5f355c59ff7f3255866007ab15f522b1eaba466162": {
+    "content": "{\"class\":\"security.resourceoperation\"}",
+    "tokens_in": 1127,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4449980e3eb4ed44b7f8a5e60a7a81b87c52d47c394b47541bbe42095af884b9": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1132,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "54cdbfc122812db2fcc20463f941f5bd510634ee21755c34c364841270631c4e": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1209,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5966418e4b978472ce39e2220cb7a71f54d889abe74ee10e72087a156f293861": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1068,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "429ac056b42b946a24dd8a5afbd5f6f2009d604828484e25008ec8ebf5e15c89": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1170,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "86d8282b0e1adbdabea36ff9d2246a43db7f63da36d0f359f3a8af1d8f9b8a9f": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 1046,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ba5383537e8e390dd05f46edd3b8b5998991904930dba7724b151963d7705504": {
+    "content": "{\"class\":\"technology.systemsoftware\"}",
+    "tokens_in": 1016,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "aebcdd0d074d7cd26f0e89e765348ed1ba78471ae381c23c5aefaacf0e1cbcb1": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 989,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2491c1d00c1857f21faab15f7659d1ddcbb948fa1c1b1ab2d61851ee14732a41": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 940,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "fb63bb2655ab8d9b3f8e2df87052d972890df7642841c25f258968d173a4af4b": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 959,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a5be6d7324fb0a40d3c9ca1ebbb56c0cfb2c9f682368d7e0d28ee45bcb2c0bc0": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 863,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "73f597f54da562fcef2b1b4aebd79275ed54882396ef220adab3572d3e341f6c": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 1042,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "90126089a11d1258cdfd3d4842513721a95218d2fecacd1a400f602a5a690464": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 860,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "13f92c89807904c346170ca9af1109e8d911ac2a95abec9f1c23fa0b12e041b5": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 922,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4c5e78c5b71549745265b1555c0d34e44f8c9553dcf782b4ec0184fad4beece2": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1092,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9938226726a442418394a407c98e73886956c4ca290aa89ebe71c2f0cccd97be": {
+    "content": "{\"class\":\"application.applicationprocess\"}",
+    "tokens_in": 1042,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a58e0e8b918a67fc567aae7df8f9c6bef5e4304dd1817b2c848c56dad3ba0708": {
+    "content": "{\"class\":\"application.applicationprocess\"}",
+    "tokens_in": 1151,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1a00e16ed789cb136600eddca17e3377bb3c65801cc5e33c576e327c5a53551c": {
+    "content": "{\"class\":\"technology.technologyprocess\"}",
+    "tokens_in": 975,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d159bd46650b145f2a27307afeadc7f3e1c5af8a2ebb0c8ddd6f4bf2eaf80c37": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1043,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0b8016e4e554c7e91d899a886de74492515e74aafc3b9ec1f584a79d2037f60f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 850,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d34c4457bec09ef4bf8a0d912932592c8cca20565268f451e694ccd5c573261d": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 919,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "204e127d6717e34a3996f143431348ba719bb0aec5cad8212d9293f21d360e3c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1182,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f704502c4fb1143428377ecc78105775d6be126b04c8a03f6b45e7596cbf6e39": {
+    "content": "{\"class\":\"technology.technologycollaboration\"}",
+    "tokens_in": 958,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "75304d653bc2cf7977d5519c5d1561a7c96a087742a5a7b51fad25124f7e8812": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 956,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "90dd179aad6d86be50e82de80ca5d1145e77e07e37d261e3b7380693d699e0f6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 958,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "338952892b8ad2a9e4abf52df40631c05983240a0135ffc9f81cd9dc06c2ec81": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 687,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "deb71b903a4f832317d451f0115cd4fa2af05c093aa18381606dfc7de91065d0": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 708,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "868c56c2e809683a6d0a54a324f420008b38a680f638e1e4b0e8c243167b04fe": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 672,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d530dd8c749b291290a6d756779851282254b69881ce853420967d44c3ab349a": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 708,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3f39310edba0399b94fcee31c5cc379844eb03853218aef0d8bc07f2406572cd": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 780,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "84eea529f58710fd1198fb01c8adf9093db97089bee6eec2860d728d6074f2cb": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 804,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "67bf7e6910fc522dd8e1b268293f2b76782bc090ce13a1a1c830b33e2aaa1358": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 818,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b9e2f4a464fc4fdbcde9e76a44310f8de867cb1e9e5f98e54b89a672f3d99f81": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 870,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e613ce9b0d41c66361e7c1854595885bfde539dd98fefb9f768a76f11294916f": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 669,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "67beafb9cb85ae9c45de8226ff6fdb1f7aa8f8a339600fabce5ad6904ad1580c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 589,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "56758ac9b83af56feb71fd76ae8f4237f87b1f361030db6da76c92b917677130": {
+    "content": "{\"class\":\"testing.environmentfactor\"}",
+    "tokens_in": 876,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c68de851c8a103a8b99b812e5b6fb8c29d6e401284b64ce4f9f94db9974cfdf0": {
+    "content": "{\"triples\":[{\"subject\":{\"kind\":\"individual\",\"id\":\"scientific_workflows\",\"label\":\"Scientific workflows\"},\"predicate\":{\"property_definition_id\":\"composes\",\"label\":\"composes\"},\"object\":{\"kind\":\"individual\",\"id\":\"pipelines\",\"label\":\"pipelines\"},\"confidence\":0.85,\"provenance\":{\"text_offset_start\":0,\"text_offset_end\":60,\"raw\":\"Scientific workflows are pipelines of interdependent tasks.\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nextflow\",\"label\":\"Nextflow\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"scientific_workflow_execution\",\"label\":\"scientific workflow execution\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":60,\"text_offset_end\":180,\"raw\":\"executed on shared Kubernetes clusters via workflow engines such as Nextflow\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"shared_kubernetes_clusters\",\"label\":\"shared Kubernetes clusters\"},\"predicate\":{\"property_definition_id\":\"aggregates\",\"label\":\"aggregates\"},\"object\":{\"kind\":\"individual\",\"id\":\"node\",\"label\":\"node\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":60,\"text_offset_end\":140,\"raw\":\"executed on shared Kubernetes clusters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"sustainability\",\"label\":\"sustainability\"},\"predicate\":{\"property_definition_id\":\"associated-with\",\"label\":\"associated-with\"},\"object\":{\"kind\":\"individual\",\"id\":\"both_cost\",\"label\":\"both cost\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":140,\"text_offset_end\":230,\"raw\":\"Their energy consumption matters for both cost and sustainability.\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"intel_rapl_counters\",\"label\":\"Intel RAPL counters\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"node_level_energy_reporting\",\"label\":\"node-level energy reporting\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":300,\"text_offset_end\":400,\"raw\":\"Intel RAPL counters report only node-level energy\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"access\",\"label\":\"access\"},\"predicate\":{\"property_definition_id\":\"accesses\",\"label\":\"accesses\"},\"object\":{\"kind\":\"individual\",\"id\":\"counters_and_host_process_information\",\"label\":\"counters and host process information\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":400,\"text_offset_end\":480,\"raw\":\"access to counters and host process information is typically restricted\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nf_peak\",\"label\":\"Nf-PEAK\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"energy_attribution\",\"label\":\"energy attribution\"},\"confidence\":0.9,\"provenance\":{\"text_offset_start\":540,\"text_offset_end\":680,\"raw\":\"containerized method to attribute CPU-package and DRAM energy to individual processes and Nextflow tasks\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nf_peak\",\"label\":\"Nf-PEAK\"},\"predicate\":{\"property_definition_id\":\"composes\",\"label\":\"composes\"},\"object\":{\"kind\":\"individual\",\"id\":\"ii\",\"label\":\"ii\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":680,\"text_offset_end\":760,\"raw\":\"(i) identifies workflow pods, (ii) maps pods to host processes\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"a_containerized_method\",\"label\":\"a containerized method\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"energy_attribution\",\"label\":\"energy attribution\"},\"confidence\":0.85,\"provenance\":{\"text_offset_start\":540,\"text_offset_end\":680,\"raw\":\"containerized method to attribute CPU-package and DRAM energy\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"ii\",\"label\":\"ii\"},\"predicate\":{\"property_definition_id\":\"flows-to\",\"label\":\"flows-to\"},\"object\":{\"kind\":\"individual\",\"id\":\"host_processes\",\"label\":\"host processes\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":710,\"text_offset_end\":770,\"raw\":\"(ii) maps pods to host processes via cgroup metadata\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"samples_rapl\",\"label\":\"samples RAPL\"},\"predicate\":{\"property_definition_id\":\"depends-on\",\"label\":\"depends-on\"},\"object\":{\"kind\":\"individual\",\"id\":\"intel_rapl_counters\",\"label\":\"Intel RAPL counters\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":760,\"text_offset_end\":830,\"raw\":\"samples RAPL and per-process performance counters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"iii\",\"label\":\"iii\"},\"predicate\":{\"property_definition_id\":\"flows-to\",\"label\":\"flows-to\"},\"object\":{\"kind\":\"individual\",\"id\":\"samples_rapl\",\"label\":\"samples RAPL\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":760,\"text_offset_end\":830,\"raw\":\"(iii) samples RAPL and per-process performance counters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"workflow_pods\",\"label\":\"workflow pods\"},\"predicate\":{\"property_definition_id\":\"serves\",\"label\":\"serves\"},\"object\":{\"kind\":\"individual\",\"id\":\"nextflow_tasks\",\"label\":\"Nextflow tasks\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":680,\"text_offset_end\":760,\"raw\":\"(i) identifies workflow pods\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"co_located_load\",\"label\":\"co-located load\"},\"predicate\":{\"property_definition_id\":\"references\",\"label\":\"references\"},\"object\":{\"kind\":\"individual\",\"id\":\"node\",\"label\":\"node\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":1000,\"text_offset_end\":1120,\"raw\":\"unrelated workload saturates 8 of 32 hardware threads per node\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"a_kubernetes_cluster\",\"label\":\"a Kubernetes cluster\"},\"predicate\":{\"property_definition_id\":\"aggregates\",\"label\":\"aggregates\"},\"object\":{\"kind\":\"individual\",\"id\":\"8_nodes\",\"label\":\"8 nodes\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":900,\"text_offset_end\":1200,\"raw\":\"On a Kubernetes cluster... across 2, 3, 4, and 8 nodes\"}}]}",
+    "tokens_in": 2821,
+    "tokens_out": 2362,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "be2d67dcc2edbff0959586ae6a7f8fc8bf4ec9fcbbf64561029947994af972d7": {
+    "content": "{\"triples\":[{\"subject\":{\"kind\":\"individual\",\"id\":\"scientific_workflows\",\"label\":\"Scientific workflows\"},\"predicate\":{\"property_definition_id\":\"composes\",\"label\":\"composes\"},\"object\":{\"kind\":\"individual\",\"id\":\"pipelines\",\"label\":\"pipelines\"},\"confidence\":0.85,\"provenance\":{\"text_offset_start\":0,\"text_offset_end\":60,\"raw\":\"Scientific workflows are pipelines of interdependent tasks.\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nextflow\",\"label\":\"Nextflow\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"scientific_workflow_execution\",\"label\":\"scientific workflow execution\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":60,\"text_offset_end\":180,\"raw\":\"executed on shared Kubernetes clusters via workflow engines such as Nextflow\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"shared_kubernetes_clusters\",\"label\":\"shared Kubernetes clusters\"},\"predicate\":{\"property_definition_id\":\"aggregates\",\"label\":\"aggregates\"},\"object\":{\"kind\":\"individual\",\"id\":\"node\",\"label\":\"node\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":60,\"text_offset_end\":140,\"raw\":\"executed on shared Kubernetes clusters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"sustainability\",\"label\":\"sustainability\"},\"predicate\":{\"property_definition_id\":\"associated-with\",\"label\":\"associated-with\"},\"object\":{\"kind\":\"individual\",\"id\":\"both_cost\",\"label\":\"both cost\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":140,\"text_offset_end\":230,\"raw\":\"Their energy consumption matters for both cost and sustainability.\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"intel_rapl_counters\",\"label\":\"Intel RAPL counters\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"node_level_energy_reporting\",\"label\":\"node-level energy reporting\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":300,\"text_offset_end\":400,\"raw\":\"Intel RAPL counters report only node-level energy\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"access\",\"label\":\"access\"},\"predicate\":{\"property_definition_id\":\"accesses\",\"label\":\"accesses\"},\"object\":{\"kind\":\"individual\",\"id\":\"counters_and_host_process_information\",\"label\":\"counters and host process information\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":400,\"text_offset_end\":480,\"raw\":\"access to counters and host process information is typically restricted\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nf_peak\",\"label\":\"Nf-PEAK\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"energy_attribution\",\"label\":\"energy attribution\"},\"confidence\":0.9,\"provenance\":{\"text_offset_start\":540,\"text_offset_end\":680,\"raw\":\"containerized method to attribute CPU-package and DRAM energy to individual processes and Nextflow tasks\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"nf_peak\",\"label\":\"Nf-PEAK\"},\"predicate\":{\"property_definition_id\":\"composes\",\"label\":\"composes\"},\"object\":{\"kind\":\"individual\",\"id\":\"ii\",\"label\":\"ii\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":680,\"text_offset_end\":760,\"raw\":\"(i) identifies workflow pods, (ii) maps pods to host processes\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"a_containerized_method\",\"label\":\"a containerized method\"},\"predicate\":{\"property_definition_id\":\"realizes\",\"label\":\"realizes\"},\"object\":{\"kind\":\"individual\",\"id\":\"energy_attribution\",\"label\":\"energy attribution\"},\"confidence\":0.85,\"provenance\":{\"text_offset_start\":540,\"text_offset_end\":680,\"raw\":\"containerized method to attribute CPU-package and DRAM energy\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"ii\",\"label\":\"ii\"},\"predicate\":{\"property_definition_id\":\"flows-to\",\"label\":\"flows-to\"},\"object\":{\"kind\":\"individual\",\"id\":\"host_processes\",\"label\":\"host processes\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":710,\"text_offset_end\":770,\"raw\":\"(ii) maps pods to host processes via cgroup metadata\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"samples_rapl\",\"label\":\"samples RAPL\"},\"predicate\":{\"property_definition_id\":\"depends-on\",\"label\":\"depends-on\"},\"object\":{\"kind\":\"individual\",\"id\":\"intel_rapl_counters\",\"label\":\"Intel RAPL counters\"},\"confidence\":0.8,\"provenance\":{\"text_offset_start\":760,\"text_offset_end\":830,\"raw\":\"samples RAPL and per-process performance counters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"iii\",\"label\":\"iii\"},\"predicate\":{\"property_definition_id\":\"flows-to\",\"label\":\"flows-to\"},\"object\":{\"kind\":\"individual\",\"id\":\"samples_rapl\",\"label\":\"samples RAPL\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":760,\"text_offset_end\":830,\"raw\":\"(iii) samples RAPL and per-process performance counters\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"workflow_pods\",\"label\":\"workflow pods\"},\"predicate\":{\"property_definition_id\":\"serves\",\"label\":\"serves\"},\"object\":{\"kind\":\"individual\",\"id\":\"nextflow_tasks\",\"label\":\"Nextflow tasks\"},\"confidence\":0.6,\"provenance\":{\"text_offset_start\":680,\"text_offset_end\":760,\"raw\":\"(i) identifies workflow pods\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"co_located_load\",\"label\":\"co-located load\"},\"predicate\":{\"property_definition_id\":\"references\",\"label\":\"references\"},\"object\":{\"kind\":\"individual\",\"id\":\"node\",\"label\":\"node\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":1000,\"text_offset_end\":1120,\"raw\":\"unrelated workload saturates 8 of 32 hardware threads per node\"}},{\"subject\":{\"kind\":\"individual\",\"id\":\"a_kubernetes_cluster\",\"label\":\"a Kubernetes cluster\"},\"predicate\":{\"property_definition_id\":\"aggregates\",\"label\":\"aggregates\"},\"object\":{\"kind\":\"individual\",\"id\":\"8_nodes\",\"label\":\"8 nodes\"},\"confidence\":0.7,\"provenance\":{\"text_offset_start\":900,\"text_offset_end\":1200,\"raw\":\"On a Kubernetes cluster... across 2, 3, 4, and 8 nodes\"}}]}",
+    "tokens_in": 2821,
+    "tokens_out": 2362,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   }

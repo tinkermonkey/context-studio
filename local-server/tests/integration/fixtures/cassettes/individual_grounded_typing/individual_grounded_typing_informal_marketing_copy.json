@@ -1,8 +1,351 @@
 {
-  "a842283b0a33291f329b862563d311ea16553b03b807d10843e45f898aac2af7": {
+  "5832dee2a212b8d30f5efdad805f778f1c632a7ecafed638a7083463df9d8dcb": {
     "content": "{\"class\":\"none\"}",
     "tokens_in": 1194,
     "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "538c670be10dbe5cc38907c53d49a7f9e3fc6ef96b02f250b863da1066b64138": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1159,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "98786156a013c313664991934c31bb175f5b5347213f1db5732061e325b5ffff": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 982,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "52c55fcd7ea440e56ba456ddd4a3367a85a1a9dd4fc31cb6ee12494251375935": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1189,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5fa8112a1a4f9453f14824ecd79d5635676fafe88bcc9d0d5f3e5dbe683e9a5b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1014,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a8559897c4cc7e2f3c226a5cbe92f628838a341710bfff32d6ba81eff2038509": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1187,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a07c99ac19f43b8fabe85e83308d85ff3de2f21c2da7370e6a5ab759c40acdd5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1188,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5fda62bbee829e0dfe5cbd3e4b7543f8255c643c1195e0b4e4c0e86f97f0dd16": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 954,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "676dc094d34b996a5e9b9f6e605f26fb05c687a77697bdac27cb87ff411847cc": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1005,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "390cca201d07041d73e5ec0b96e712f31118fb771066e58f7b0cccfdfcfd70e6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1005,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "175dd1b3109d7b8264f239503794ad87226e8d0eed8079c629d89b5243747944": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 920,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "dbe9246fa6949d4ee5fb5c470537f5d58fff2f9b6d389571f71a4bf2aeaf7985": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 928,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d9b9283721244c1f62905a6971098819c5cf13bdec006ee1161cd5c4b9d4497a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1001,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "840c1fd17a73592bd8ce540ff3476acf146fcb76bb75d9d8cd2ca4def405bcd4": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 1046,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9c73d0c065e8917b2035a2c25115467559d16ae5ff4a3fc6e702d64bb991f179": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 954,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5bc37d7dd213c11e8d3f024203b64701a77b7bf01591851aa3e9cb706d7ce218": {
+    "content": "{\"class\":\"technology.technologyevent\"}",
+    "tokens_in": 1117,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f26e3f772dfd6b41595a33af81edb185e3359cee621d34f54d519f1c08074f71": {
+    "content": "{\"class\":\"business.businessevent\"}",
+    "tokens_in": 1161,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4d0c30a0b3bc01e36466016d7723879fa44e53538afe612b2b5a1261f7d306d8": {
+    "content": "{\"class\":\"technology.technologyevent\"}",
+    "tokens_in": 1070,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "af8dc8c6f88e89c1ba7d7b69f675a6c905d96722bfe0fba6c102d2ea16bb52e1": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 914,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "647fb628fa4406252d663ad38f3d36f80664875f8aef81a5c08bbc896f0d58e7": {
+    "content": "{\"class\":\"security.informationentity\"}",
+    "tokens_in": 1151,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e7b20449322d19f24d874921fc3b776bd22b6ab06c1eb043f8ae42f531a423cd": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1027,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "220e77a904481282f1f3d7b4d08fc65c82ae940da1f643ca8884d836be2acc0a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 910,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1ae0fe06924669b12fb9d80752f43db319fca70ddcc512fc95817b75d3bfffc2": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1076,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ae5eb26ce0baabab05b817376717375a4d9c77f4ae4099592e2f0116abffc8d2": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1070,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "14c81259c88b6a378fe4f55ee0bace2c7e94fb1f97053d1e83ce048496a0f162": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1136,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "59ae23f5cf0abc0c0774079280051d140bb7749bbf339218d777ba1bf50dc57e": {
+    "content": "{\"class\":\"technology.technologyinteraction\"}",
+    "tokens_in": 974,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7cb08163c9f053337806f140f9b84f58e5bb92bcf6c2a2548835b4c750f49c40": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 831,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ffe4ad59941fb81bfe1a07baa70cd011d161d679e5141e8b073d251172a7d9d8": {
+    "content": "{\"class\": \"business.businessactor\"}",
+    "tokens_in": 891,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "514f4edc5362ca59604d53507c01edce580983aebea1f0964768ac42b6d3e7ea": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 962,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1100724d185a0982b2591690e9bcf0c07ca402478a6f12a7540c74726d8a9024": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 769,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b6ec5da5f739035c4f9a9ae1c8eae151a2a1bb7f8ce2086751738204ab3fe989": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 922,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "df583085464466339a7c1b13db3459217bc13d0d8dfbcb5fe6281f39fc9ad13f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 973,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "10b9a5ff0738a8dc36766274a89cf4d34043f440c6d1f6d593f823eaca74e4f1": {
+    "content": "{\"class\":\"technology.communicationnetwork\"}",
+    "tokens_in": 1154,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "13ffc0940563ff32c61502ea610e15c4717d6cc138fd4bcd71dd84657666d61f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 921,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "02c4bc393ed8882ad1a5b2e11e25b79190fbbd2a0a2890921780af506788255f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 973,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "140259d0d80dcb6ee2fa31c6d05b2e3043dd75def6bad77ad82dce2f87ab3bcc": {
+    "content": "{\"class\": \"business.product\"}",
+    "tokens_in": 694,
+    "tokens_out": 14,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "79e4e7c24322aae5b4f297aadb4655f3ac52208801e77243ab446a2e23eb6a84": {
+    "content": "{\"class\":\"motivation.value\"}",
+    "tokens_in": 644,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "39beffbb5e4cb79c122284645a0866e543368b84a7d79d43aa41b319937818fc": {
+    "content": "{\"class\":\"motivation.value\"}",
+    "tokens_in": 703,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3f446d4df46ab20cc4e4533d0dc0239d2e814137a8750d38062d706501a0f140": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1141,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "964ff2fbf14add9c011cd3372ee09330b89f6a66823dc90d97f60e04c40f0edc": {
+    "content": "{\"class\":\"application.applicationfunction\"}",
+    "tokens_in": 1059,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "93e9ef70e54479b4e5a0167839fcf9c02f3af7fab7add94b6400cca1c3409391": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1156,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b9f7a363f4000be1055792db200efcc1c342bec5bf693dc99b9ce486321c87cf": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 933,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9d0228cd7f7c642d8a863690048bdcf5d727404f75dbbcf8aaaec0faeeef68c8": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 969,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4965dd8629b49f43ea0cc724118ae4d3cd90769d4277a9ac557166541e9ade5f": {
+    "content": "{\"class\":\"business.contract\"}",
+    "tokens_in": 1111,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "58e3a289e24c209d645a797d43a4c763b4c4e56071fc5d43ef7947ceb22795d4": {
+    "content": "{\"class\":\"security.actor\"}",
+    "tokens_in": 986,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "81e3eb120337b4e49d020db1fb1e5c97cfb765aac4336b6158bbf1a1b4529bfe": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 951,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "cfe2bc5a5ea57d89235c5e0700e0f72ea1500fe8f4049954f13d7f117adbdc47": {
+    "content": "{\"class\":\"business.businessrole\"}",
+    "tokens_in": 876,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0b31ba80653545764db9b127992400e432679d694c06bd36ef1e631a1cb93b10": {
+    "content": "{\"class\":\"business.businessactor\"}",
+    "tokens_in": 849,
+    "tokens_out": 17,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4b09ff68127714976fe212383aa0e2dfac31b5a098dae20b36e01ee038e94717": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint\", \"label\": \"Waypoint\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"the_promise\", \"label\": \"the promise\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"making sure the promise you made to a customer actually gets kept\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"kept_promise_outcome\", \"label\": \"kept customer promise\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"making sure the promise you made to a customer actually gets kept\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"one_value\", \"label\": \"one value\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"one value that never changes... Customer Trust\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_action\", \"label\": \"every action\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every action a technician takes... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_photo\", \"label\": \"every photo\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every photo... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_signature\", \"label\": \"every signature\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every signature... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_status_update\", \"label\": \"every status update\"},\n      \"predicate\": {\"property_definition_id\": \"triggers\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_write\", \"label\": \"job event write\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every status update... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_offline_sync\", \"label\": \"every offline sync\"},\n      \"predicate\": {\"property_definition_id\": \"delivers-value\", \"label\": \"delivers-value\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every offline sync... exists in service of... Customer Trust\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_dashboard_alert\", \"label\": \"every dashboard alert\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_status\", \"label\": \"job status\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every dashboard alert\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"the_promise\", \"label\": \"the promise\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"a_customer_role\", \"label\": \"customer\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the promise you made to a customer\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"your_dispatchers\", \"label\": \"your dispatchers\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"running_business\", \"label\": \"running a business\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"how they ever ran a business without it\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"our_customers\", \"label\": \"our customers\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"waypoint\", \"label\": \"Waypoint\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"our customers tell us they've cut missed appointments in half since switching\"}\n    }\n  ]\n}",
+    "tokens_in": 2594,
+    "tokens_out": 2069,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a842283b0a33291f329b862563d311ea16553b03b807d10843e45f898aac2af7": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"waypoint\", \"label\": \"Waypoint\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"the_promise\", \"label\": \"the promise\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"making sure the promise you made to a customer actually gets kept\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"kept_promise_outcome\", \"label\": \"kept customer promise\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"making sure the promise you made to a customer actually gets kept\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"one_value\", \"label\": \"one value\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"one value that never changes... Customer Trust\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_action\", \"label\": \"every action\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every action a technician takes... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_photo\", \"label\": \"every photo\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every photo... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_signature\", \"label\": \"every signature\"},\n      \"predicate\": {\"property_definition_id\": \"flows-to\", \"label\": \"flows-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"Job Event Store\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every signature... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_status_update\", \"label\": \"every status update\"},\n      \"predicate\": {\"property_definition_id\": \"triggers\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_write\", \"label\": \"job event write\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every status update... gets written straight to the Job Event Store\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_offline_sync\", \"label\": \"every offline sync\"},\n      \"predicate\": {\"property_definition_id\": \"delivers-value\", \"label\": \"delivers-value\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"customer_trust\", \"label\": \"Customer Trust\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every offline sync... exists in service of... Customer Trust\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"every_dashboard_alert\", \"label\": \"every dashboard alert\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_status\", \"label\": \"job status\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"every dashboard alert\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"the_promise\", \"label\": \"the promise\"},\n      \"predicate\": {\"property_definition_id\": \"serves\", \"label\": \"serves\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"a_customer_role\", \"label\": \"customer\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the promise you made to a customer\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"your_dispatchers\", \"label\": \"your dispatchers\"},\n      \"predicate\": {\"property_definition_id\": \"assigned-to\", \"label\": \"assigned-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"running_business\", \"label\": \"running a business\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"how they ever ran a business without it\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"our_customers\", \"label\": \"our customers\"},\n      \"predicate\": {\"property_definition_id\": \"accesses\", \"label\": \"accesses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"waypoint\", \"label\": \"Waypoint\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"our customers tell us they've cut missed appointments in half since switching\"}\n    }\n  ]\n}",
+    "tokens_in": 2594,
+    "tokens_out": 2069,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   }

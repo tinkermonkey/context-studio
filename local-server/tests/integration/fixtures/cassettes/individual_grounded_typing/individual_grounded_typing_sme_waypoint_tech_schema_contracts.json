@@ -1,8 +1,470 @@
 {
-  "48888c0d686ffcc0ed855b97b6dcee4fca68b22bcde075e13eb762cc7ef83d19": {
+  "73ef5d0f3434d32ddce4913dc2a6936dbe211c3b13fa6e757f32c8817c71fbc7": {
     "content": "{\"class\":\"none\"}",
     "tokens_in": 989,
     "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e8a0b4dbe0b0fb36104c0988a7ba50b933d959b72770744210cdba1f05ebf4ff": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1013,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7da58c2ed3688af1b57d3a20dbcc02b04bc80e35fc13df77eef05374f7a3cd9c": {
+    "content": "{\"class\":\"api.schema\"}",
+    "tokens_in": 1091,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c6b081703bec4a4b27e9edeba8d95b70c46795040de77ff6cd1595842689abf4": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 955,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "befe479ab93e8a50aa5160051518cc4a733cde9a6f7f4dc55ac1d0c8d41d2d0c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 998,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3c4101c963e4ef3b0a307896db489f4efd3c0d89aec935be0cba02d94784fc62": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1012,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f1175e2c911b19e5a81843e86f3b4d246e96854dd4c2fd2106e66752ab320505": {
+    "content": "{\"class\":\"data-store.field\"}",
+    "tokens_in": 1011,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9100ba420cdc7aec699b3afd4b777315ef967bfbb79e2750e347a055f3896688": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1032,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4ca494a52dd0e964ce0e8165c30aba7a6651659461276e4be7e10fc41f6e9395": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1015,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2d970ef351ba49eea46a1b8a7bbf1cc831e2e7dea5f22c20c22bc19b7e6c4d3f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1001,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "07d87f8d7bcff1b455a359c49fa6bc0fce9f62b4d91d5ca8da5224bd61ccd3fe": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1006,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3b76cec30c5d4c33ce9abd61d9875c9866bd61dbe2d4c1d8149478b0b4a4f628": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1042,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "784e617250b44785d5df1922d2e1e918d89224cc856e74b150c5575e5487601d": {
+    "content": "{\"class\":\"data-model.jsonschema\"}",
+    "tokens_in": 916,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "69be388809e3c1b0fffd0d8a58fe34c1951695f382042ed7fe7ade2ff748b913": {
+    "content": "{\"class\":\"data-model.jsonschema\"}",
+    "tokens_in": 1035,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "eda1012ee65885bc8deb57d4e0f7f2a422a36c7cb83a5beed28fcfa3ef2ee75e": {
+    "content": "{\"class\":\"data-model.jsonschema\"}",
+    "tokens_in": 999,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "247b3feeee3ea100415afe4c10088376fd88e83012baec9a320192b4189bc77c": {
+    "content": "{\"class\":\"data-model.schemadefinition\"}",
+    "tokens_in": 988,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8a9f22010c890bd1b962590ef5620b8bf822955afdf74bf29a5f36158fb99483": {
+    "content": "{\"class\":\"data-model.objectschema\"}",
+    "tokens_in": 941,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b586623f6c8b9aad7299d58520198e634867948393d8423a23fc271aa8d1b05e": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1004,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8f9ebcfd81bb26fcad44377c3fac905961daf0b4041ae6bbd0f8b4c8711b5aa3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 984,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b0d1d1ee8b46a7c9532a53f0316fcf3b561ae82c16bbbaf81c4ecf83da1dbe1b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 896,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "30d120e4422f1873300fb3ec5a5785b3f6a980cb9336663d755661bb0988fd95": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1137,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "28a4efe38c2fbc331674e12b5a366b5ee1f9a47b14e61e422bb87f29b4e4b0c3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 963,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e3ca5bd1f84dd29dd42fd4b6267e100d4471f3458b135d9df57b3edfa4e5b20f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1066,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e67ae11848be4c2b80b8d8bbc0667400dbacd520123f662f1a940b5f9e9432ef": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1064,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8a786e6a0aab33048e734c72b0bdb0788a781f6b909e47f4760fd56fec6466e5": {
+    "content": "{\"class\": \"data-model.schemaproperty\"}",
+    "tokens_in": 1069,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4420735ea3ea93de577ea0c0725410d626f41bb935981f0177c8de492dfd106f": {
+    "content": "{\"class\":\"data-model.schemaproperty\"}",
+    "tokens_in": 1065,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f1bb4f60ba38cd4a4893c744fdddf782013151b0896b381f4d80ee1a5efd709a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1063,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "413f82db0c64a8657b03b62ed867281c4682ed6d0c38d5b08de262f2d7baa935": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1064,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "e92410026ee0d1d70652f73598620b7c626a9352d52c13235eabfdb4621118cc": {
+    "content": "{\"class\":\"data-model.schemaproperty\"}",
+    "tokens_in": 1068,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4481fa783fb356dbfbbe086c275ce0628d746aca53962d5f1be9d5f5765681cf": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1062,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7156e6e3fc4f20de64a74fe3312e2b0c9716ed227549ecb252b519744878c90d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1064,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6d3d5aa3a1ae1939bbe2f53cb0f1c7c7c112c8a8c614251bd7f10aac0c336f79": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1062,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b6a4444a098ec7e55b2840c27aa9b9caccbb8a20d8571807b876dd8a1712f845": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1063,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "eb79611869f867f45d050c0aec86c68fefe05fbe34a9aca29e507a6cdca54fd7": {
+    "content": "{\"class\": \"api.schema\"}",
+    "tokens_in": 1211,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ac03c25281aeea26c3f239d6bfc0cb4ca4b39b0063a2c2dba6a5761eebbe4566": {
+    "content": "{\"class\": \"api.schema\"}",
+    "tokens_in": 1234,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "91f31d3b3acfa0c460c793d0f906a010479265d7f7a1502236a1dcba988dbee6": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1210,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6f8625c7fe034d7cebc2a2d9c9361eeda4cc2bd4b4b2d0c43be3536f80ffa0a4": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1209,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "21ef60542e630a5e2279dce28f07b2f084dda5bc76a766117cea7f197c5162a3": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1206,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b828b36a7eaaf06ec4041c480d8d62862c5075041a800242010a13492a6ecf00": {
+    "content": "{\"class\":\"api.schema\"}",
+    "tokens_in": 1208,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3f53e73c641dbcc8babc387084115864657f08c221a117673a431a0c847c717f": {
+    "content": "{\"class\":\"api.openapidocument\"}",
+    "tokens_in": 1208,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "eba07fc4163288b140d8ab16947392343fd3d4fd6be70ff2e8118ee708740983": {
+    "content": "{\"class\":\"data-model.schemadefinition\"}",
+    "tokens_in": 1012,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "7f44ecc2def006c1eed7a0f08e66937968a0d4821f478b7135046dc15fed2b93": {
+    "content": "{\"class\": \"data-model.schemadefinition\"}",
+    "tokens_in": 1081,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ee66e946efadbc7f60c709ce1c9e01483ad6f7c600354de76b7f9b930df90023": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1004,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "55b2a55d97868e745407e0200523f30bc0626fbd82d0aed8635c1422805aa083": {
+    "content": "{\"class\":\"data-store.namespace\"}",
+    "tokens_in": 1047,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "627af5e61be53c8fd31934125ca440b2205419da8dcee03a8c0fe17880173bb5": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1006,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c484adfa170fb96d7af14051e1ef919b85f40fb593c8ca143d3eac7417cbd3fb": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1005,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "06537fde19c72a72c2fb391278c7c7353864ffe6b828d6e6fda8f1e65c0316b0": {
+    "content": "{\"class\":\"api.schema\"}",
+    "tokens_in": 1020,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "feade1d2c25475598ae37b7b87c32a3f1428338a55dd69c87c54ddd769ce21ef": {
+    "content": "{\"class\":\"data-model.schemadefinition\"}",
+    "tokens_in": 1015,
+    "tokens_out": 21,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3192e4b06125352fe58e3219a35ccfbe85411e2a2368a2ca6f00afffcbbc0263": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1004,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "830952cf7a5274852e2f77d5150611853e196134dfe757401282408d542cf6ec": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1014,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "062c98a621944a0ab0be7ccc7985a1e73b365f27a7580bc477a72ab9b600f56b": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 958,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "56f28ea800f3889adc71d0a0603dab381d40dda868e22e86d5444b7e429a9763": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 942,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c688e8a4e1885849245b8d7eab143f8fefad37e0fb58f02fb5fa510ac3ff03c7": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 956,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "cc7267648093c609005c178f78c0bd08b980c7871c3c3db87257380e6dc3a046": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 941,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d4fd53a11056d93e5ba3c7d92fca5356edd9e103a3243fb911c7545dfba48230": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 941,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "9ccda3104dbb280cffda73699b3114463da8ceaff63ca346b795f0ef1c0ef30c": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1063,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d46923cf32b67dc6f422d0a7d6a1156cb8c58f74d12d22fcb4ae3f9e2333e103": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1008,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d1e1b5c9096e3427dc79fade17a266ec26ac955c1136bd6abc14c2dbc9037119": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1066,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "16f350c2c229eeede08a1a2243fe7a435c3bf813cd268ea54378ba7bc521c657": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1032,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "ae0a8c469da3883b39894aee0a2b2cca5c64d0f14a82e6c7c76aed3036733f84": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 957,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "af4efdbf6341827ef3fd46a6cf9c3a14db421e9b1dc5e202211c9e80a91c3533": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 959,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "06aa0d61ff45502be004f1a891d0c35e2d5dd23ac2f206e053aeb2a15196c3d2": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 903,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d06d1fd15e55c1f019cf34eabfa7c1bd718276ecc32a4762feb973c379461224": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 974,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "db0382158545d9ded7168181a49d797b8180c431fd1dd9eed1cf50a963a0a78f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1028,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2df21e6da30ad1558d3006bf7a96ac07d3b83aa0742fa677c13f664e30b78708": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 941,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3e33ac6e1c227d552ac359113d9f2f8a5569361baffb894d2817d248b62bfc9b": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"It aggregates the Job Core Object Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_priority_property\", \"label\": \"the Job Priority Property\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"aggregates two properties ... the Job Priority Property\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_status_property\", \"label\": \"the Job Status Property\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the Job Status Property\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_priority_property\", \"label\": \"the Job Priority Property\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"priority_three_values\", \"label\": \"priority constrained to three known values\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"constrains priority to one of three known values\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_status_property\", \"label\": \"the Job Status Property\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"status_finite_states\", \"label\": \"status constrained to finite set of states\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"constrains status to the finite set of states\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_api_schema\", \"label\": \"the Job API Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The Job Payload Schema realizes the Job API Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"address_sub_schema\", \"label\": \"the Address Sub-Schema\"},\n      \"predicate\": {\"property_definition_id\": \"maps-to\", \"label\": \"maps-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"jobs_collection\", \"label\": \"both the Jobs Collection\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"maps to both the Jobs Collection\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"address_sub_schema\", \"label\": \"the Address Sub-Schema\"},\n      \"predicate\": {\"property_definition_id\": \"maps-to\", \"label\": \"maps-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_api_schema_same\", \"label\": \"that same Job API Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and to that same Job API Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"schema_validation_runtime\", \"label\": \"the Schema Validation Runtime\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Enforcing all of this depends on the Schema Validation Runtime\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"single_schema_change_req\", \"label\": \"A Single Schema Change Must Update API and Database Validation Simultaneously\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"satisfies a specific requirement ... A Single Schema Change Must Update API and Database Validation Simultaneously\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"eliminate_payload_drift\", \"label\": \"Eliminate Payload Drift Between the Mobile App and the Backend\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"realizes the broader goal ... Eliminate Payload Drift Between the Mobile App and the Backend\"}\n    }\n  ]\n}",
+    "tokens_in": 2854,
+    "tokens_out": 2111,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "48888c0d686ffcc0ed855b97b6dcee4fca68b22bcde075e13eb762cc7ef83d19": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"It aggregates the Job Core Object Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_priority_property\", \"label\": \"the Job Priority Property\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"aggregates two properties ... the Job Priority Property\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"aggregates\", \"label\": \"aggregates\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_status_property\", \"label\": \"the Job Status Property\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the Job Status Property\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_priority_property\", \"label\": \"the Job Priority Property\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"priority_three_values\", \"label\": \"priority constrained to three known values\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"constrains priority to one of three known values\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_status_property\", \"label\": \"the Job Status Property\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"status_finite_states\", \"label\": \"status constrained to finite set of states\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"constrains status to the finite set of states\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_api_schema\", \"label\": \"the Job API Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The Job Payload Schema realizes the Job API Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"address_sub_schema\", \"label\": \"the Address Sub-Schema\"},\n      \"predicate\": {\"property_definition_id\": \"maps-to\", \"label\": \"maps-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"jobs_collection\", \"label\": \"both the Jobs Collection\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"maps to both the Jobs Collection\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"address_sub_schema\", \"label\": \"the Address Sub-Schema\"},\n      \"predicate\": {\"property_definition_id\": \"maps-to\", \"label\": \"maps-to\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_api_schema_same\", \"label\": \"that same Job API Schema\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and to that same Job API Schema\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"schema_validation_runtime\", \"label\": \"the Schema Validation Runtime\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Enforcing all of this depends on the Schema Validation Runtime\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_payload_schema\", \"label\": \"The Job Payload Schema\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"single_schema_change_req\", \"label\": \"A Single Schema Change Must Update API and Database Validation Simultaneously\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"satisfies a specific requirement ... A Single Schema Change Must Update API and Database Validation Simultaneously\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_core_object_schema\", \"label\": \"the Job Core Object Schema\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"eliminate_payload_drift\", \"label\": \"Eliminate Payload Drift Between the Mobile App and the Backend\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"realizes the broader goal ... Eliminate Payload Drift Between the Mobile App and the Backend\"}\n    }\n  ]\n}",
+    "tokens_in": 2854,
+    "tokens_out": 2111,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   }

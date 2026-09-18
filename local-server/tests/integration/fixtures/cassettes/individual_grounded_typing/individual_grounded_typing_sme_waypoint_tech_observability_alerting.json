@@ -1,8 +1,344 @@
 {
-  "044a12137314df28bd4b1623c1fb704211389ad18f4b3de0766b91442dedf834": {
+  "b2d4ed750742ab67d83cc649a625e26cf14cf0e65d64776c34181ce7b39a2070": {
     "content": "{\"class\": \"none\"}",
     "tokens_in": 1073,
     "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "968ace3ce523edaec1ccc1cac541cbd8a01b9372842ba8375dff2d82dce1eb84": {
+    "content": "{\"class\":\"data-store.database\"}",
+    "tokens_in": 1058,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3e9de4bce1d276d5b8ede20e22919a163c12e5a3fc00e93869a8cf90a647b290": {
+    "content": "{\"class\":\"data-store.database\"}",
+    "tokens_in": 1126,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "53592036740a6d5ce69a434c16e4335401b63c2b0bf1c74a8ecd564338945aab": {
+    "content": "{\"class\":\"business.businessprocess\"}",
+    "tokens_in": 1046,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "fd40cc56d4bc2f49d273114eb9cb076a182e0f131a31421d0096cf8147375399": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1068,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a4bafaf0e4b6b9770f582b654326e2d1375ec298238b19df1bda94970fc2028a": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1112,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d70369b6275057fd16cf213b88f2eeaa00ddeab8db6499bc79da36904e8c7a00": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1037,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1d632e484273a5f18ec9e3ee37a6501281c0e2f922acb3ee2898512db19adae6": {
+    "content": "{\"class\":\"apm.resource\"}",
+    "tokens_in": 967,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b3691333ce1af3a85a1a7dc824af49b0ec4f5b05a9288bd3e6178a682e1b8486": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1001,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "072b4b2623855781c58859e917b511d26cd46b7e2b00ea5b08475f832d326906": {
+    "content": "{\"class\": \"technology.node\"}",
+    "tokens_in": 938,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a1b5046f789cd0950203985df907540e693246be827853a2723c449811a74dd9": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 998,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "b8fcbf604d9321cdbe95b5fd9379c45d1c87df4886cea62b5b5f57a249facd7d": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 989,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2ffc7041e0447ddc1c2d8d2e14c0a7673f27e3b43a49f83fc5b36a088a5c7a9e": {
+    "content": "{\"class\": \"data-store.database\"}",
+    "tokens_in": 1013,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "f7bc9545406ed838535416f1ece3264027ade29402a59a453041da5afbb05094": {
+    "content": "{\"class\":\"data-store.database\"}",
+    "tokens_in": 1021,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "95944ace3c3ab86dc5c6654792ee7b864340c87fa65a508b62036f6eaeacc4e9": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 968,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "52e68b2420373a656b531d2dbc255aa2f1d1768e5645b9330a4391438f8ca5a2": {
+    "content": "{\"class\":\"technology.node\"}",
+    "tokens_in": 987,
+    "tokens_out": 15,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "6d19975d722b123c99e9b9987084083604f04e0cb8a62ce1a648d46ec951fe2a": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 975,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a994041f1cd1b620f072175318967794a01237102cfa39e2ccae3f1b999e6754": {
+    "content": "{\"class\":\"apm.resource\"}",
+    "tokens_in": 982,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "5be2617b378451a3a1b8ddc82afe3116596957ba7b8c7f8e5d46391e8e13eb87": {
+    "content": "{\"class\":\"apm.metricinstrument\"}",
+    "tokens_in": 1065,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "8e23c766f1c44d5816921fc1967f50cf3b710f50afc5aca8d779e68a3aeac21e": {
+    "content": "{\"class\":\"apm.metricinstrument\"}",
+    "tokens_in": 1122,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "50d60980c18d4cb25d2c04c551031f7f8001c13a85181b3f503d52b08584456c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1046,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "414f20da52f6875f68c327fb7ca7ecbae0d737fe1ac58935246df6e72818aa25": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1122,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a8bb85fdc913818263a22cdbd2e9381da07b1146c0d1117d9e6c8c89c6477983": {
+    "content": "{\"class\": \"none\"}",
+    "tokens_in": 1043,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "0f30e2b56d21c757ead79d287860293084294781e0476945bcb44ee57f16012c": {
+    "content": "{\"class\":\"data-store.database\"}",
+    "tokens_in": 1128,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "57d3dc767e5b6f0200afa49e71a7ee5854ef7aa0399a3759d76ca395005f6bd2": {
+    "content": "{\"class\":\"apm.metricinstrument\"}",
+    "tokens_in": 1083,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "05cac3cf641f0b7f783fc7b60fc6c1406ce364d0bdb42b485a2fc04e8dfe077a": {
+    "content": "{\"class\": \"apm.resource\"}",
+    "tokens_in": 1067,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "76d994676e78b815f2e4933d946aca4483c3d72fb3f01691d09a1507b03356d4": {
+    "content": "{\"class\":\"apm.metricinstrument\"}",
+    "tokens_in": 1067,
+    "tokens_out": 20,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "905c6b3e71189b58ee5a456eff60908a6cb013786ae248abe010e0214b594b72": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1099,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "36168b186d6136db8da71a378b27d194597a6285e847cbbb23b749c2fad2aed6": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1045,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "dd52ccea275895fff6f981f86076f60142a29d5fb3532689520acd6ddfa742c0": {
+    "content": "{\"class\":\"motivation.requirement\"}",
+    "tokens_in": 1069,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "4a4f6bc0e3340aa0edb1f5b9f0bb16b3762a84e41d9221662c47f94b4b681cc9": {
+    "content": "{\"class\":\"motivation.requirement\"}",
+    "tokens_in": 1067,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "07e7390fef5d9a0c3f7b1884d726d3bfd8f2d6f0ecb7581558699dec59e9a578": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1025,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "1fb7bca9965d6d62ec5ae9d7338746d303e2e9fcebbf62c20740aafc32db2107": {
+    "content": "{\"class\":\"testing.coveragegap\"}",
+    "tokens_in": 1096,
+    "tokens_out": 19,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "77a341744fe152b41fec6e95c695b5a1384293512954aea7363d054e4e51320c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 992,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c45f44a9f8d8345ca1047f9c74132035b563bc5504ba999ef75106d8be75991c": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1118,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "49efc72997d56160b07c98609faa7987a98acd72a2bbc4b93e55196be4041288": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1110,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "d1a89982ac33a24136d28d14275ed38f27681a08116d6cf9a8f19322dd1bdb1c": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1001,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "58ecfc876753d19e402b89baabadbc898c718e263a8755538391fdb031bf771d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1041,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "2e9c6ca4680eccbe14fc51386602494b436168458a36367ecff85b7a1a20d361": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1107,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "a325ce22480c8e1a32bd2c5d4aad8db0dad7e34adc4d0a2df075d369b2c009f2": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1208,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "99306fd6b8a1360d66491d0a81b11440bb1dd0ba1048b2676241ea61327193d1": {
+    "content": "{\"class\":\"apm.dashboard\"}",
+    "tokens_in": 1215,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "418496a6dbb3aceaf5c198d49973f3d22d82d48708d26a283422e385f4592814": {
+    "content": "{\"class\":\"apm.dashboard\"}",
+    "tokens_in": 1214,
+    "tokens_out": 18,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "c2e384fcbb4ababe96ba28605bd393e3e4422422a41326b289e00410d5a4349d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1196,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "da7408763232cc651e0c7ecd04a9fefc4796cf5a7a0404fe714592624822f619": {
+    "content": "{\"class\":\"apm.alert\"}",
+    "tokens_in": 1170,
+    "tokens_out": 16,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "3030aeb5fe998227e69f56f75066bed6d00d2656ad0428746c480414c7c4c68f": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1211,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "424e20908451e67afbe52041d9dc0918bea05128ec2ffd13a24a00b4a06f715d": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1103,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "11ddf32ce0cb5f5d0e9f649e7abf9f95ae79b8564176682f49b57befa20455a0": {
+    "content": "{\"class\":\"none\"}",
+    "tokens_in": 1207,
+    "tokens_out": 12,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "52abb8f7f3c42f123f389fa5085d87583dab4171a38a544d4b943275da6c206b": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_ops_compute_cluster\", \"label\": \"the Field Ops Compute Cluster\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"it monitors the Field Ops Compute Cluster\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"documentdb_engine\", \"label\": \"the DocumentDB Engine\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and the DocumentDB Engine, the system software running on that node\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"the Job Event Store\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"it monitors the Job Event Store directly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"That gauge depends on the Job Event Store Resource\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_requirement\", \"label\": \"Connection Pool Saturation Must Be Visible Before It Causes Request Failures\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The gauge satisfies a specific requirement\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_alert\", \"label\": \"the Connection Pool Saturation Alert\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"an alerting rule that monitors the Connection Pool Saturation Gauge\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"database_health_dashboard\", \"label\": \"the Database Health Dashboard\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_alert\", \"label\": \"the Connection Pool Saturation Alert\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the dashboard monitors both the Connection Pool Saturation Alert\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"database_health_dashboard\", \"label\": \"the Database Health Dashboard\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and the Connection Pool Saturation Gauge directly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"The Job Event Store\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_ops_compute_cluster\", \"label\": \"the Field Ops Compute Cluster\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the compute node the database runs on\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"The Job Event Store\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"documentdb_engine\", \"label\": \"the DocumentDB Engine\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the DocumentDB Engine, the system software running on that node\"}\n    }\n  ]\n}",
+    "tokens_in": 3077,
+    "tokens_out": 2000,
+    "model": "claude-opus-4-7",
+    "finish_reason": "stop"
+  },
+  "044a12137314df28bd4b1623c1fb704211389ad18f4b3de0766b91442dedf834": {
+    "content": "{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_ops_compute_cluster\", \"label\": \"the Field Ops Compute Cluster\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"it monitors the Field Ops Compute Cluster\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"documentdb_engine\", \"label\": \"the DocumentDB Engine\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and the DocumentDB Engine, the system software running on that node\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"the Job Event Store\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"it monitors the Job Event Store directly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"job_event_store_resource\", \"label\": \"The Job Event Store Resource\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"That gauge depends on the Job Event Store Resource\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_requirement\", \"label\": \"Connection Pool Saturation Must Be Visible Before It Causes Request Failures\"},\n      \"confidence\": 0.9,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"The gauge satisfies a specific requirement\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_alert\", \"label\": \"the Connection Pool Saturation Alert\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"an alerting rule that monitors the Connection Pool Saturation Gauge\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"database_health_dashboard\", \"label\": \"the Database Health Dashboard\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_alert\", \"label\": \"the Connection Pool Saturation Alert\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the dashboard monitors both the Connection Pool Saturation Alert\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"database_health_dashboard\", \"label\": \"the Database Health Dashboard\"},\n      \"predicate\": {\"property_definition_id\": \"monitors\", \"label\": \"monitors\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"connection_pool_saturation_gauge\", \"label\": \"The Connection Pool Saturation Gauge\"},\n      \"confidence\": 0.95,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"and the Connection Pool Saturation Gauge directly\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"The Job Event Store\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"field_ops_compute_cluster\", \"label\": \"the Field Ops Compute Cluster\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the compute node the database runs on\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"job_event_store\", \"label\": \"The Job Event Store\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"documentdb_engine\", \"label\": \"the DocumentDB Engine\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"the DocumentDB Engine, the system software running on that node\"}\n    }\n  ]\n}",
+    "tokens_in": 3077,
+    "tokens_out": 2000,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   }
