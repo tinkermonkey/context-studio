@@ -1249,21 +1249,28 @@ class ExtractionService:
             triples.append(self._make_typing_triple(label, chosen, chunk))
 
         if chunks_with_llm_errors > 0:
-            error_rate = (chunks_with_llm_errors / chunks_with_results * 100) if chunks_with_results > 0 else 0
+            error_rate = (
+                (chunks_with_llm_errors / chunks_with_results * 100)
+                if chunks_with_results > 0
+                else 0
+            )
             if chunks_with_llm_errors == chunks_with_results:
                 warning_msg = (
-                    f"NLP-grounded typing FAILED: all {chunks_with_results} chunks with search results "
-                    "failed with LLM errors (100% failure rate). This indicates a systemic LLM provider issue. "
-                    "Check availability, rate limits, authentication, and network connectivity. "
-                    "No typing triples will be produced."
+                    f"NLP-grounded typing FAILED: all {chunks_with_results} chunks "
+                    "with search results failed with LLM errors (100% failure rate). "
+                    "This indicates a systemic LLM provider issue. "
+                    "Check availability, rate limits, authentication, and network "
+                    "connectivity. No typing triples will be produced."
                 )
                 _logger.error(warning_msg)
             else:
                 warning_msg = (
-                    f"NLP-grounded typing DEGRADED: {chunks_with_llm_errors} of {chunks_with_results} chunks "
-                    f"with search results encountered LLM errors ({error_rate:.1f}% failure rate). "
+                    f"NLP-grounded typing DEGRADED: {chunks_with_llm_errors} of "
+                    f"{chunks_with_results} chunks with search results encountered "
+                    f"LLM errors ({error_rate:.1f}% failure rate). "
                     "Typing quality is significantly degraded. "
-                    "Check LLM availability, rate limits, authentication, and network connectivity."
+                    "Check LLM availability, rate limits, authentication, and "
+                    "network connectivity."
                 )
                 _logger.error(warning_msg)
             warnings.append(warning_msg)

@@ -654,7 +654,8 @@ class TestNlpGroundedTyping:
         assert "aggregate LLM error" in warnings[0].lower() or "llm" in warnings[0].lower()
 
     def test_warning_emitted_when_partial_chunks_fail(self):
-        """When some (but not all) chunks fail with LLM errors, a degradation warning is returned."""
+        """When some (but not all) chunks fail with LLM errors, a degradation warning
+        is returned."""
 
         class SelectiveFailingLLM:
             def __init__(self):

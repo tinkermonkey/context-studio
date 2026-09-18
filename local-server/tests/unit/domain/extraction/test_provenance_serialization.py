@@ -9,7 +9,12 @@ Tests for:
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+# Add parent directories to path for imports
+_file_path = os.path.abspath(__file__)
+_four_levels_up = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(_file_path)
+)))
+sys.path.append(_four_levels_up)
 
 
 from domain.extraction.services import _serialize_triple_provenance
