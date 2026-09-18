@@ -246,6 +246,11 @@ class IndividualExtractionApplyService:
                         if key in individual_key_to_id:
                             obj_id = individual_key_to_id[key]
                             break
+                    # Fall back to label-only entry if no class_id matched
+                    if not obj_id:
+                        key = (obj_label.lower(), "")
+                        if key in individual_key_to_id:
+                            obj_id = individual_key_to_id[key]
                 elif obj_label:
                     key = (obj_label.lower(), "")
                     if key in individual_key_to_id:
