@@ -267,16 +267,25 @@ class TestSchemaExtractionHTTP:
         assert isinstance(candidates, list)
         assert len(candidates) > 0
 
-        # Generic endpoint returns flat CandidateResponse format for backward compatibility
+        # Generic endpoint returns CandidateItem (discriminated union) format
         for candidate in candidates:
-            assert "uri" in candidate
-            assert "label" in candidate
-            assert "description" in candidate
-            assert "source" in candidate
+            assert "candidate_type" in candidate
             assert "confidence" in candidate
             assert "provenance" in candidate
             assert isinstance(candidate["confidence"], (int, float))
             assert 0.0 <= candidate["confidence"] <= 1.0
+            # Check that it has the correct structure for schema extraction candidates
+            candidate_type = candidate["candidate_type"]
+            if candidate_type == "schema_class":
+                assert "label" in candidate
+                assert "proposed_definition" in candidate
+            elif candidate_type == "schema_property":
+                assert "label" in candidate
+                assert "proposed_definition" in candidate
+            elif candidate_type == "schema_connection":
+                assert "subject_ref" in candidate
+                assert "predicate" in candidate
+                assert "object_ref" in candidate
 
     def test_candidates_endpoint_empty_for_no_candidates(
         self, schema_client, pipeline_run_repo, batch_repo
@@ -319,7 +328,7 @@ class TestSchemaExtractionHTTP:
     def test_candidates_endpoint_provenance_format(
         self, schema_client, pipeline_run_repo, batch_repo
     ):
-        """Generic endpoint returns candidates in legacy flat CandidateResponse format."""
+        """Generic endpoint returns candidates with proper provenance in discriminated union format."""
         from domain.pipelines.entities import PipelineRunStatus
 
         # Create a batch and a run with explicit provenance in both pre-span and post-span formats
@@ -364,18 +373,20 @@ class TestSchemaExtractionHTTP:
         candidates = candidates_response.json()
         assert len(candidates) > 0
 
-        # Generic endpoint returns flat CandidateResponse format for backward compatibility
+        # Generic endpoint returns discriminated union format (CandidateItem)
         for candidate in candidates:
-            # Legacy format has: uri, label, description, source, confidence, provenance (as string)
-            assert "uri" in candidate
-            assert "label" in candidate
-            assert "description" in candidate
-            assert "source" in candidate
+            assert "candidate_type" in candidate
             assert "confidence" in candidate
             assert "provenance" in candidate
 
-            # Provenance should be a string in legacy format
-            assert isinstance(candidate["provenance"], str)
+            # Provenance should be a list of objects with quote, start, end fields
+            assert isinstance(candidate["provenance"], list)
+            for prov in candidate["provenance"]:
+                assert "quote" in prov
+                assert prov["quote"] is not None
+                # start and end may be None but should be present
+                assert "start" in prov
+                assert "end" in prov
 
 
 # ---------------------------------------------------------------------------- #

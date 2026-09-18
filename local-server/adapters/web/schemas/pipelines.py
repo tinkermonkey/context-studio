@@ -350,6 +350,9 @@ class SchemaClassCandidate(CandidateBase):
     proposed_definition: Optional[str] = Field(
         None, description="Proposed definition or description of the class"
     )
+    disambiguation_rationale: Optional[str] = Field(
+        None, description="Rationale for this candidate when multiple senses are disambiguated"
+    )
 
 
 class SchemaPropertyCandidate(CandidateBase):

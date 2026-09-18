@@ -190,6 +190,27 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
     return result
 
 
+def _safe_confidence(value: Any) -> float:
+    """
+    Safely convert a confidence value to float, treating 0.0 as valid.
+
+    Handles the case where confidence is 0, which should not default to 0.5.
+    Only uses 0.5 default when the value is None.
+
+    Args:
+        value: Confidence value (may be None, 0, 0.0, or other numeric type)
+
+    Returns:
+        Confidence as float; 0.5 default only if value is None
+    """
+    if value is None:
+        return 0.5
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.5
+
+
 def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCandidate:
     """
     Map an orchestrator class candidate to SchemaClassCandidate response.
@@ -205,7 +226,8 @@ def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCa
     return SchemaClassCandidate(
         label=candidate_dict.get("label", ""),
         proposed_definition=candidate_dict.get("proposed_definition"),
-        confidence=float(candidate_dict.get("confidence") or 0.5),
+        disambiguation_rationale=candidate_dict.get("disambiguation_rationale"),
+        confidence=_safe_confidence(candidate_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -229,7 +251,7 @@ def _map_schema_property_candidate(
         proposed_definition=candidate_dict.get("proposed_definition"),
         proposed_domain=candidate_dict.get("proposed_domain"),
         proposed_range=candidate_dict.get("proposed_range"),
-        confidence=float(candidate_dict.get("confidence") or 0.5),
+        confidence=_safe_confidence(candidate_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -252,7 +274,7 @@ def _map_schema_connection_candidate(
         subject_ref=connection_dict.get("subject_ref", ""),
         predicate=connection_dict.get("predicate", ""),
         object_ref=connection_dict.get("object_ref", ""),
-        confidence=float(connection_dict.get("confidence") or 0.5),
+        confidence=_safe_confidence(connection_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -304,7 +326,7 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
         subject=_map_node_ref(subject_data),
         predicate=_map_predicate_ref(predicate_data),
         object=_map_node_ref(object_data),
-        confidence=float(triple_dict.get("confidence") or 0.5),
+        confidence=_safe_confidence(triple_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -327,7 +349,7 @@ def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandida
         label=grounding_dict.get("label", ""),
         description=grounding_dict.get("description", ""),
         source=grounding_dict.get("source", ""),
-        confidence=float(grounding_dict.get("confidence") or 0.5),
+        confidence=_safe_confidence(grounding_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -361,7 +383,7 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
         label=refined_text[:100] if refined_text else "",
         description=refined_text,
         source=refinement_dict.get("source", "refinement_pipeline"),
-        confidence=float(refinement_dict.get("confidence") or 0.5),
+        confidence=_safe_confidence(refinement_dict.get("confidence")),
         provenance=provenance,
     )
 
@@ -1063,6 +1085,34 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
+def _provenance_to_string(provenance: list[SourceSpanSchema]) -> str:
+    """
+    Convert provenance list to a JSON string for legacy response format.
+
+    Args:
+        provenance: List of SourceSpanSchema objects
+
+    Returns:
+        JSON string representation of provenance; empty string if no provenance
+    """
+    if not provenance:
+        return ""
+    try:
+        import json
+        provenance_dicts = [
+            {
+                "quote": p.quote,
+                "start": p.start,
+                "end": p.end,
+            }
+            for p in provenance
+        ]
+        return json.dumps(provenance_dicts)
+    except Exception as exc:
+        _logger.warning(f"Failed to serialize provenance: {exc}")
+        return ""
+
+
 def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateResponse:
     """
     Convert a CandidateItem (discriminated union) to flat CandidateResponse format.
@@ -1075,6 +1125,9 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
 
     Returns:
         CandidateResponse in flat format (matches legacy contract)
+
+    Raises:
+        ValueError: If candidate type is not recognized (indicates unhandled variant)
     """
     if isinstance(candidate, SchemaClassCandidate):
         return CandidateResponse(
@@ -1083,7 +1136,7 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=candidate.proposed_definition or "",
             source="schema_extraction",
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
         )
     elif isinstance(candidate, SchemaPropertyCandidate):
         return CandidateResponse(
@@ -1092,7 +1145,7 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=candidate.proposed_definition or "",
             source="schema_extraction",
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
         )
     elif isinstance(candidate, SchemaConnectionCandidate):
         return CandidateResponse(
@@ -1101,7 +1154,7 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=f"{candidate.subject_ref} {candidate.predicate} {candidate.object_ref}",
             source="schema_extraction",
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
         )
     elif isinstance(candidate, TripleCandidate):
         return CandidateResponse(
@@ -1110,7 +1163,7 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=candidate.object.label,
             source="individual_extraction",
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
         )
     elif isinstance(candidate, GroundingCandidate):
         return CandidateResponse(
@@ -1119,7 +1172,7 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=candidate.description,
             source=candidate.source,
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
         )
     elif isinstance(candidate, RefinementCandidate):
         return CandidateResponse(
@@ -1128,7 +1181,13 @@ def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateRes
             description=candidate.description,
             source=candidate.source,
             confidence=candidate.confidence,
-            provenance="",
+            provenance=_provenance_to_string(candidate.provenance),
+        )
+    else:
+        raise ValueError(
+            f"Unhandled CandidateItem variant: {type(candidate).__name__}. "
+            f"This indicates a new candidate type was added but not handled in "
+            f"_candidate_item_to_legacy_response."
         )
 
 
@@ -1190,26 +1249,29 @@ def _extract_refinement_candidates(run: PipelineRun) -> list[CandidateItem]:
 
 @router.get(
     "/runs/{run_id}/candidates",
-    response_model=list[CandidateResponse],
+    response_model=list[CandidateItem],
 )
 async def get_pipeline_candidates_generic(
     run_id: str,
     request: Request,
-) -> list[CandidateResponse]:
+) -> list[CandidateItem]:
     """
     Retrieve candidates from a completed pipeline run (generic endpoint).
 
     Routes to the appropriate extraction logic based on pipeline type.
-    Returns results in the legacy flat CandidateResponse format for backward
-    compatibility with existing consumers. For new applications, prefer the
-    type-specific endpoints which return the discriminated union CandidateItem format.
+    Returns results as a discriminated union (CandidateItem) with full structure:
+    - SchemaClassCandidate, SchemaPropertyCandidate, SchemaConnectionCandidate
+      (from schema_extraction)
+    - TripleCandidate (from individual_extraction)
+    - GroundingCandidate (from schema_node_grounding)
+    - RefinementCandidate (from refinement pipelines)
 
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateResponse objects (flat legacy format) with appropriate candidates
+        List of CandidateItem objects (discriminated union) with appropriate candidates
 
     Raises:
         HTTPException: 404 if run not found
@@ -1237,7 +1299,7 @@ async def get_pipeline_candidates_generic(
     ):
         candidates = _extract_refinement_candidates(run)
 
-    return [_candidate_item_to_legacy_response(c) for c in candidates]
+    return candidates
 
 
 @router.get(
