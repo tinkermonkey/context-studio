@@ -964,6 +964,11 @@ class ExtractionService:
             prop_def = prop_index.get(normalized_label)
             if prop_def:
                 triple["predicate"]["property_definition_id"] = str(prop_def.id)
+            else:
+                _logger.info(
+                    f"PropertyDefinition not found for predicate '{predicate_label}'; "
+                    f"relationship will be dropped during apply"
+                )
 
             obj = triple.get("object", {})
             obj_kind = obj.get("kind", "")

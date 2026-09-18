@@ -640,11 +640,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
         taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
         if taxonomy is None:
-            _logger.debug(
-                "nlp_grounded_typing: ontology_id '%s' not found in repository; "
-                "typing stage skipped",
-                ontology_id,
+            warning_msg = (
+                f"nlp_grounded_typing: ontology_id '{ontology_id}' not found in repository; "
+                "typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
 
         if not open_result.tokens:

@@ -494,7 +494,8 @@ class TestNLPGroundedTyping:
         )
 
         assert result_triples == triples
-        assert warnings == []
+        assert len(warnings) == 1
+        assert "ontology_id 'unknown_ontology' not found" in warnings[0]
         ontology_repo.get_by_identifier.assert_called_once_with("unknown_ontology")
 
     @pytest.mark.asyncio
