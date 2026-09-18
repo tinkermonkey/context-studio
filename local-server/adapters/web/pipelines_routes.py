@@ -28,6 +28,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from adapters.factories.orchestrator_factory import (
@@ -109,11 +110,13 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
     Handles both pre-span format (text_offset_start/text_offset_end/raw)
     and post-span format (quote/start/end).
 
+    Invalid spans (e.g., negative offsets) are skipped with a warning logged.
+
     Args:
         provenance_data: Provenance data from orchestrator output (list, dict, or string)
 
     Returns:
-        List of SourceSpanSchema objects
+        List of SourceSpanSchema objects (valid spans only)
     """
     if not provenance_data:
         return []
@@ -135,12 +138,18 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
                 if end is None:
                     end = item.get("text_offset_end")
 
-                span = SourceSpanSchema(
-                    quote=quote,
-                    start=start,
-                    end=end,
-                )
-                result.append(span)
+                try:
+                    span = SourceSpanSchema(
+                        quote=quote,
+                        start=start,
+                        end=end,
+                    )
+                    result.append(span)
+                except ValidationError as exc:
+                    _logger.warning(
+                        f"Skipping invalid provenance span: {exc}. "
+                        f"Span data: quote={quote!r}, start={start}, end={end}"
+                    )
     elif isinstance(provenance_data, dict):
         quote = provenance_data.get("quote")
         if quote is None:
@@ -154,16 +163,28 @@ def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
         if end is None:
             end = provenance_data.get("text_offset_end")
 
-        span = SourceSpanSchema(
-            quote=quote,
-            start=start,
-            end=end,
-        )
-        result.append(span)
+        try:
+            span = SourceSpanSchema(
+                quote=quote,
+                start=start,
+                end=end,
+            )
+            result.append(span)
+        except ValidationError as exc:
+            _logger.warning(
+                f"Skipping invalid provenance span: {exc}. "
+                f"Span data: quote={quote!r}, start={start}, end={end}"
+            )
     elif isinstance(provenance_data, str):
         if provenance_data:
-            span = SourceSpanSchema(quote=provenance_data, start=None, end=None)
-            result.append(span)
+            try:
+                span = SourceSpanSchema(quote=provenance_data, start=None, end=None)
+                result.append(span)
+            except ValidationError as exc:
+                _logger.warning(
+                    f"Skipping invalid provenance span: {exc}. "
+                    f"Span data: quote={provenance_data!r}, start=None, end=None"
+                )
 
     return result
 

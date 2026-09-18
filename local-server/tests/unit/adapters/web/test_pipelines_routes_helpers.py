@@ -169,3 +169,55 @@ class TestNormalizeProvenance:
         assert result[0].quote == "old format text"
         assert result[0].start == 5
         assert result[0].end == 20
+
+    def test_normalize_negative_start_skipped(self):
+        """Spans with negative start offset are skipped with warning."""
+        provenance_data = [
+            {"quote": "valid", "start": 10, "end": 15},
+            {"quote": "invalid negative start", "start": -1, "end": 20},
+            {"quote": "another valid", "start": 30, "end": 43},
+        ]
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 2
+        assert result[0].quote == "valid"
+        assert result[0].start == 10
+        assert result[1].quote == "another valid"
+        assert result[1].start == 30
+
+    def test_normalize_negative_end_skipped(self):
+        """Spans with negative end offset are skipped with warning."""
+        provenance_data = [
+            {"quote": "valid", "start": 0, "end": 5},
+            {"quote": "invalid negative end", "start": 10, "end": -1},
+        ]
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 1
+        assert result[0].quote == "valid"
+        assert result[0].start == 0
+        assert result[0].end == 5
+
+    def test_normalize_dict_with_negative_offsets_skipped(self):
+        """Dict-format provenance with negative offsets is skipped."""
+        provenance_data = {"quote": "invalid", "start": -5, "end": 10}
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 0
+
+    def test_normalize_pre_span_negative_offsets_skipped(self):
+        """Pre-span format with negative offsets is skipped."""
+        provenance_data = [
+            {"raw": "text1", "text_offset_start": 5, "text_offset_end": 10},
+            {"raw": "invalid", "text_offset_start": -1, "text_offset_end": 5},
+            {"raw": "text2", "text_offset_start": 20, "text_offset_end": 25},
+        ]
+
+        result = _normalize_provenance(provenance_data)
+
+        assert len(result) == 2
+        assert result[0].quote == "text1"
+        assert result[1].quote == "text2"
