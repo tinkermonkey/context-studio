@@ -1845,6 +1845,45 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/runs/{run_id}/recognition-preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Recognition
+     * @description Preview which extracted individuals would match existing graph nodes.
+     *
+     *     Computes at request time against current ontology state, with zero writes.
+     *     For an individual_extraction run, reports which extracted individual mentions
+     *     would resolve to existing ontology individuals if the run were applied, and
+     *     which would be created as new.
+     *
+     *     This endpoint:
+     *     - Returns 404 if the run does not exist
+     *     - Returns empty results if the run's pipeline type has no individuals to preview
+     *     - Produces zero writes to ontology data, pipeline run data, or change events
+     *
+     *     Args:
+     *         run_id: ID of the completed pipeline run to preview
+     *
+     *     Returns:
+     *         RecognitionPreviewResponse with recognition results per mention
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found, 422 if run is not completed
+     */
+    post: operations["preview_recognition_api_pipelines_runs__run_id__recognition_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/runs/{run_id}/revert": {
     parameters: {
       query?: never;
@@ -6144,7 +6183,7 @@ export interface components {
       label: string;
       /**
        * Id
-       * @description Ontology entity ID; empty/None = new candidate, non-empty = mapped to existing
+       * @description Ontology entity ID (empty/None=new, non-empty=mapped)
        */
       id?: string | null;
       /**
@@ -6535,6 +6574,11 @@ export interface components {
      */
     PredicateReference: {
       /**
+       * Kind
+       * @description Predicate kind: property or relation type
+       */
+      kind: string;
+      /**
        * Label
        * @description Predicate label/name
        */
@@ -6721,6 +6765,68 @@ export interface components {
        * @description Number of classes that will be removed
        */
       removed: number;
+    };
+    /**
+     * RecognitionPreviewHitSchema
+     * @description Preview of recognition result for a single extracted mention.
+     */
+    RecognitionPreviewHitSchema: {
+      /**
+       * Mention Label
+       * @description The extracted mention's surface text
+       */
+      mention_label: string;
+      /**
+       * Resolved Individual Id
+       * @description ID of the matched existing individual, or None if no match
+       */
+      resolved_individual_id?: string | null;
+      /**
+       * Resolved Individual Title
+       * @description Canonical title of the matched individual, or None if no match
+       */
+      resolved_individual_title?: string | null;
+      /**
+       * Match Method
+       * @description Match method when resolved: "exact", "vector", or "llm", or None
+       */
+      match_method?: string | null;
+      /**
+       * Match Score
+       * @description Confidence of the match (0.0–1.0), or None if no match
+       */
+      match_score?: number | null;
+      /**
+       * Will Match Existing
+       * @description True if the mention would match an existing individual, False if it would be created as new
+       */
+      will_match_existing: boolean;
+    };
+    /**
+     * RecognitionPreviewResponse
+     * @description Response from recognition preview endpoint.
+     */
+    RecognitionPreviewResponse: {
+      /**
+       * Hits
+       * @description Preview results for each distinct extracted individual mention
+       */
+      hits?: components["schemas"]["RecognitionPreviewHitSchema"][];
+      /**
+       * Total Mentions
+       * @description Total number of distinct individual mentions previewed
+       */
+      total_mentions: number;
+      /**
+       * Matched Count
+       * @description Number of mentions that would match an existing individual
+       */
+      matched_count: number;
+      /**
+       * Unmatched Count
+       * @description Number of mentions that would be created as new
+       */
+      unmatched_count: number;
     };
     /**
      * ReferenceRelationSchema
@@ -10150,6 +10256,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ApplyRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  preview_recognition_api_pipelines_runs__run_id__recognition_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecognitionPreviewResponse"];
         };
       };
       /** @description Validation Error */

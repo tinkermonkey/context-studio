@@ -3817,6 +3817,49 @@
         }
       }
     },
+    "/api/pipelines/runs/{run_id}/recognition-preview": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Preview Recognition",
+        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns empty results if the run's pipeline type has no individuals to preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
+        "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecognitionPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines/runs/{run_id}/revert": {
       "post": {
         "tags": [
@@ -10319,7 +10362,7 @@
               }
             ],
             "title": "Id",
-            "description": "Ontology entity ID; empty/None = new candidate, non-empty = mapped to existing"
+            "description": "Ontology entity ID (empty/None=new, non-empty=mapped)"
           },
           "class_ids": {
             "anyOf": [
@@ -10925,6 +10968,11 @@
       },
       "PredicateReference": {
         "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Predicate kind: property or relation type"
+          },
           "label": {
             "type": "string",
             "title": "Label",
@@ -10945,6 +10993,7 @@
         },
         "type": "object",
         "required": [
+          "kind",
           "label"
         ],
         "title": "PredicateReference",
@@ -11261,6 +11310,115 @@
         ],
         "title": "PublishDiffStats",
         "description": "Response containing diff statistics for publishing."
+      },
+      "RecognitionPreviewHitSchema": {
+        "properties": {
+          "mention_label": {
+            "type": "string",
+            "title": "Mention Label",
+            "description": "The extracted mention's surface text"
+          },
+          "resolved_individual_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Individual Id",
+            "description": "ID of the matched existing individual, or None if no match"
+          },
+          "resolved_individual_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Individual Title",
+            "description": "Canonical title of the matched individual, or None if no match"
+          },
+          "match_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Method",
+            "description": "Match method when resolved: \"exact\", \"vector\", or \"llm\", or None"
+          },
+          "match_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Score",
+            "description": "Confidence of the match (0.0\u20131.0), or None if no match"
+          },
+          "will_match_existing": {
+            "type": "boolean",
+            "title": "Will Match Existing",
+            "description": "True if the mention would match an existing individual, False if it would be created as new"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mention_label",
+          "will_match_existing"
+        ],
+        "title": "RecognitionPreviewHitSchema",
+        "description": "Preview of recognition result for a single extracted mention."
+      },
+      "RecognitionPreviewResponse": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/RecognitionPreviewHitSchema"
+            },
+            "type": "array",
+            "title": "Hits",
+            "description": "Preview results for each distinct extracted individual mention"
+          },
+          "total_mentions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Mentions",
+            "description": "Total number of distinct individual mentions previewed"
+          },
+          "matched_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Matched Count",
+            "description": "Number of mentions that would match an existing individual"
+          },
+          "unmatched_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unmatched Count",
+            "description": "Number of mentions that would be created as new"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_mentions",
+          "matched_count",
+          "unmatched_count"
+        ],
+        "title": "RecognitionPreviewResponse",
+        "description": "Response from recognition preview endpoint."
       },
       "ReferenceRelationSchema": {
         "properties": {
