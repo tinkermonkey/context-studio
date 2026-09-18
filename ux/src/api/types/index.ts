@@ -1686,39 +1686,158 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Pipeline Candidates
-     * @description Retrieve candidates from a completed pipeline run.
+     * Get Pipeline Candidates Generic
+     * @description Retrieve candidates from a completed pipeline run (generic endpoint).
      *
-     *     Extracts the full candidate list with provenance and confidence scores
-     *     from the pipeline run's output. The structure of candidates depends on
-     *     the pipeline type:
-     *     - individual_extraction: returns TripleCandidate (structured subject-predicate-object)
-     *       from triples key with mapped/new node distinction via id presence
-     *     - schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate
-     *       from candidates key, and SchemaConnectionCandidate from connections key
-     *     - schema_node_grounding: returns groundings with URI, label, confidence
-     *     - schema_node_definition_refinement: returns definition candidates
-     *     - schema_node_connection_refinement: returns connection candidates
-     *
-     *     NOTE: The response model uses Union[CandidateItem, CandidateResponse] as a
-     *     transitional design. individual_extraction and schema_extraction return CandidateItem
-     *     (discriminated union with candidate_type), while legacy pipeline types return
-     *     CandidateResponse (deprecated flat schema). This union will be simplified once
-     *     all consumers migrate to CandidateItem.
+     *     Routes to the appropriate extraction logic based on pipeline type.
+     *     Returns results in the legacy flat CandidateResponse format for backward
+     *     compatibility with existing consumers. For new applications, prefer the
+     *     type-specific endpoints which return the discriminated union CandidateItem format.
      *
      *     Args:
      *         run_id: The pipeline run ID
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         List of CandidateItem objects (discriminated union) or CandidateResponse for
-     *         legacy types, with full provenance and confidence. Returns empty list for
-     *         runs with no candidates/triples.
+     *         List of CandidateResponse objects (flat legacy format) with appropriate candidates
      *
      *     Raises:
      *         HTTPException: 404 if run not found
      */
-    get: operations["get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get"];
+    get: operations["get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/schema-extraction-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Schema Extraction Candidates
+     * @description Retrieve candidates from a schema_extraction pipeline run.
+     *
+     *     Returns SchemaClassCandidate, SchemaPropertyCandidate, and
+     *     SchemaConnectionCandidate objects with full provenance and confidence.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of CandidateItem objects (discriminated union) with schema candidates
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found or 422 if run is not schema_extraction type
+     */
+    get: operations["get_schema_extraction_candidates_api_pipelines_runs__run_id__schema_extraction_candidates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/individual-extraction-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Individual Extraction Candidates
+     * @description Retrieve candidates from an individual_extraction pipeline run.
+     *
+     *     Returns TripleCandidate objects with structured subject-predicate-object
+     *     relationships and full provenance and confidence.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of CandidateItem objects (discriminated union) with triple candidates
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found or 422 if run is not individual_extraction type
+     */
+    get: operations["get_individual_extraction_candidates_api_pipelines_runs__run_id__individual_extraction_candidates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/schema-grounding-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Schema Grounding Candidates
+     * @description Retrieve candidates from a schema_node_grounding pipeline run.
+     *
+     *     Returns GroundingCandidate objects linking schema nodes to external knowledge
+     *     with URI, label, description, and confidence.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of CandidateItem objects (discriminated union) with grounding candidates
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found or 422 if run is not schema_node_grounding type
+     */
+    get: operations["get_schema_grounding_candidates_api_pipelines_runs__run_id__schema_grounding_candidates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/schema-refinement-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Schema Refinement Candidates
+     * @description Retrieve candidates from schema refinement pipeline runs.
+     *
+     *     Handles both schema_node_definition_refinement and schema_node_connection_refinement
+     *     pipeline types, returning RefinementCandidate objects with refined content
+     *     (definitions or connections) with confidence and provenance.
+     *
+     *     Args:
+     *         run_id: The pipeline run ID
+     *         request: FastAPI request (for service access)
+     *
+     *     Returns:
+     *         List of CandidateItem objects (discriminated union) with refinement candidates
+     *
+     *     Raises:
+     *         HTTPException: 404 if run not found or 422 if run is not a refinement type
+     */
+    get: operations["get_schema_refinement_candidates_api_pipelines_runs__run_id__schema_refinement_candidates_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1865,17 +1984,19 @@ export interface paths {
      *
      *     This endpoint:
      *     - Returns 404 if the run does not exist
-     *     - Returns empty results if the run's pipeline type has no individuals to preview
+     *     - Returns 400 if the pipeline type does not support recognition preview
      *     - Produces zero writes to ontology data, pipeline run data, or change events
      *
      *     Args:
      *         run_id: ID of the completed pipeline run to preview
+     *         request_body: Preview parameters including confidence thresholds
      *
      *     Returns:
      *         RecognitionPreviewResponse with recognition results per mention
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 422 if run is not completed
+     *         HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,
+     *             404 if run not found, 422 if run is not completed
      */
     post: operations["preview_recognition_api_pipelines_runs__run_id__recognition_preview_post"];
     delete?: never;
@@ -6801,6 +6922,29 @@ export interface components {
        * @description True if the mention would match an existing individual, False if it would be created as new
        */
       will_match_existing: boolean;
+      /**
+       * Candidate Class Ids
+       * @description List of class IDs that drove this recognition match decision
+       */
+      candidate_class_ids?: string[];
+    };
+    /**
+     * RecognitionPreviewRequest
+     * @description Request to preview recognition results for a pipeline run.
+     */
+    RecognitionPreviewRequest: {
+      /**
+       * Confidence Threshold
+       * @description Minimum confidence threshold for extracted mentions (0.0–1.0). Mentions below this threshold are skipped.
+       * @default 0.5
+       */
+      confidence_threshold: number;
+      /**
+       * Recognition Threshold
+       * @description Minimum confidence threshold for individual recognition matches (0.0–1.0). Matches below this threshold are not reported.
+       * @default 0.9
+       */
+      recognition_threshold: number;
     };
     /**
      * RecognitionPreviewResponse
@@ -6827,6 +6971,11 @@ export interface components {
        * @description Number of mentions that would be created as new
        */
       unmatched_count: number;
+      /**
+       * Skipped Count
+       * @description Number of mentions skipped due to being below the confidence threshold
+       */
+      skipped_count: number;
     };
     /**
      * ReferenceRelationSchema
@@ -7047,6 +7196,7 @@ export interface components {
      * @description Refined definition or connection candidate from refinement pipelines.
      *
      *     Represents a proposed refinement to an existing schema entity or relationship.
+     *     Follows the same shape as GroundingCandidate for consistency.
      */
     RefinementCandidate: {
       /**
@@ -7065,15 +7215,27 @@ export interface components {
        */
       provenance?: components["schemas"]["SourceSpanSchema"][];
       /**
-       * Content
-       * @description Refined text content (definition or relationship)
+       * Uri
+       * @description Refined entity URI or identifier
        */
-      content: string;
+      uri: string;
       /**
-       * Scope Id
-       * @description Target entity ID for this refinement
+       * Label
+       * @description Human-readable label for the refinement
        */
-      scope_id?: string | null;
+      label: string;
+      /**
+       * Description
+       * @description Refined description or definition
+       * @default
+       */
+      description: string;
+      /**
+       * Source
+       * @description Source or rationale for this refinement
+       * @default
+       */
+      source: string;
     };
     /**
      * RejectProposalRequest
@@ -10104,7 +10266,38 @@ export interface operations {
       };
     };
   };
-  get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get: {
+  get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CandidateResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_schema_extraction_candidates_api_pipelines_runs__run_id__schema_extraction_candidates_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -10122,15 +10315,126 @@ export interface operations {
         };
         content: {
           "application/json": (
-            | (
-                | components["schemas"]["SchemaClassCandidate"]
-                | components["schemas"]["SchemaPropertyCandidate"]
-                | components["schemas"]["SchemaConnectionCandidate"]
-                | components["schemas"]["TripleCandidate"]
-                | components["schemas"]["GroundingCandidate"]
-                | components["schemas"]["RefinementCandidate"]
-              )
-            | components["schemas"]["CandidateResponse"]
+            | components["schemas"]["SchemaClassCandidate"]
+            | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaConnectionCandidate"]
+            | components["schemas"]["TripleCandidate"]
+            | components["schemas"]["GroundingCandidate"]
+            | components["schemas"]["RefinementCandidate"]
+          )[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_individual_extraction_candidates_api_pipelines_runs__run_id__individual_extraction_candidates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": (
+            | components["schemas"]["SchemaClassCandidate"]
+            | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaConnectionCandidate"]
+            | components["schemas"]["TripleCandidate"]
+            | components["schemas"]["GroundingCandidate"]
+            | components["schemas"]["RefinementCandidate"]
+          )[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_schema_grounding_candidates_api_pipelines_runs__run_id__schema_grounding_candidates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": (
+            | components["schemas"]["SchemaClassCandidate"]
+            | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaConnectionCandidate"]
+            | components["schemas"]["TripleCandidate"]
+            | components["schemas"]["GroundingCandidate"]
+            | components["schemas"]["RefinementCandidate"]
+          )[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_schema_refinement_candidates_api_pipelines_runs__run_id__schema_refinement_candidates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": (
+            | components["schemas"]["SchemaClassCandidate"]
+            | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaConnectionCandidate"]
+            | components["schemas"]["TripleCandidate"]
+            | components["schemas"]["GroundingCandidate"]
+            | components["schemas"]["RefinementCandidate"]
           )[];
         };
       };
@@ -10278,7 +10582,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["RecognitionPreviewRequest"];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

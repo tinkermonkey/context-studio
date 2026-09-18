@@ -127,8 +127,8 @@ class TestRefinementCandidateMapping:
 
         assert isinstance(result, RefinementCandidate)
         assert result.candidate_type == "refinement"
-        assert result.content == "An improved definition of the class"
-        assert result.scope_id == "class_123"
+        assert result.uri == "class_123"
+        assert result.description == "An improved definition of the class"
         assert result.confidence == 0.87
 
     def test_map_refinement_candidate_connection(self):
@@ -142,8 +142,8 @@ class TestRefinementCandidateMapping:
 
         result = _map_refinement_candidate(refinement_dict)
 
-        assert result.content == "Subject -> improved_predicate -> Object"
-        assert result.scope_id == "connection_456"
+        assert result.uri == "connection_456"
+        assert result.description == "Subject -> improved_predicate -> Object"
         assert result.confidence == 0.91
         assert len(result.provenance) == 1
 
@@ -156,8 +156,8 @@ class TestRefinementCandidateMapping:
 
         result = _map_refinement_candidate(refinement_dict)
 
-        assert result.content == "Refined content"
-        assert result.scope_id is None
+        assert result.description == "Refined content"
+        assert result.uri == ""
         assert result.confidence == 0.5  # Default
         assert result.provenance == []
 
@@ -176,10 +176,10 @@ class TestRefinementCandidateMapping:
 
         assert isinstance(result, RefinementCandidate)
         assert (
-            result.content
+            result.description
             == "An improved definition of the class from the definition refinement orchestrator"
         )
-        assert result.scope_id == "class_123"
+        assert result.uri == "class_123"
         assert result.confidence == 0.87
 
     def test_map_refinement_candidate_with_rationale_key(self):
@@ -197,10 +197,10 @@ class TestRefinementCandidateMapping:
 
         assert isinstance(result, RefinementCandidate)
         assert (
-            result.content
+            result.description
             == "Improved connection rationale from the connection refinement orchestrator"
         )
-        assert result.scope_id == "connection_456"
+        assert result.uri == "connection_456"
         assert result.confidence == 0.91
 
     def test_map_refinement_candidate_with_null_confidence(self):
@@ -214,6 +214,7 @@ class TestRefinementCandidateMapping:
         result = _map_refinement_candidate(refinement_dict)
 
         assert result.confidence == 0.5  # Falls back to default
+        assert result.uri == "class_123"
 
 
 class TestSchemaCroundingCandidatesEndpoint:

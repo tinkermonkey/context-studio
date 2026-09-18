@@ -244,21 +244,29 @@ class TestRefinementCandidate:
     def test_refinement_candidate(self):
         """RefinementCandidate for definition refinement."""
         candidate = RefinementCandidate(
-            content="A refined definition of the concept",
-            scope_id="class-123",
+            uri="class-123",
+            label="Refined Class",
+            description="A refined definition of the concept",
+            source="refinement_pipeline",
             confidence=0.87,
         )
         assert candidate.candidate_type == "refinement"
-        assert candidate.content == "A refined definition of the concept"
-        assert candidate.scope_id == "class-123"
+        assert candidate.uri == "class-123"
+        assert candidate.label == "Refined Class"
+        assert candidate.description == "A refined definition of the concept"
+        assert candidate.source == "refinement_pipeline"
 
-    def test_refinement_candidate_without_scope(self):
-        """RefinementCandidate can have null scope_id."""
+    def test_refinement_candidate_minimal(self):
+        """RefinementCandidate with minimal required fields."""
         candidate = RefinementCandidate(
-            content="Another refined definition",
+            uri="entity-456",
+            label="Refined Definition",
             confidence=0.85,
         )
-        assert candidate.scope_id is None
+        assert candidate.uri == "entity-456"
+        assert candidate.label == "Refined Definition"
+        assert candidate.description == ""
+        assert candidate.source == ""
 
 
 class TestDiscriminatedUnion:
@@ -326,8 +334,10 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes RefinementCandidate."""
         data = {
             "candidate_type": "refinement",
-            "content": "A refined definition",
-            "scope_id": "class-123",
+            "uri": "class-123",
+            "label": "Refined Definition",
+            "description": "A refined definition",
+            "source": "refinement_pipeline",
             "confidence": 0.87,
         }
         candidate = candidate_adapter.validate_python(data)

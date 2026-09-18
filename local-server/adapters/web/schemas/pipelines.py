@@ -453,11 +453,14 @@ class RefinementCandidate(CandidateBase):
     """Refined definition or connection candidate from refinement pipelines.
 
     Represents a proposed refinement to an existing schema entity or relationship.
+    Follows the same shape as GroundingCandidate for consistency.
     """
 
     candidate_type: Literal["refinement"] = "refinement"
-    content: str = Field(..., description="Refined text content (definition or relationship)")
-    scope_id: Optional[str] = Field(None, description="Target entity ID for this refinement")
+    uri: str = Field(..., description="Refined entity URI or identifier")
+    label: str = Field(..., description="Human-readable label for the refinement")
+    description: str = Field(default="", description="Refined description or definition")
+    source: str = Field(default="", description="Source or rationale for this refinement")
 
 
 CandidateItem = Annotated[

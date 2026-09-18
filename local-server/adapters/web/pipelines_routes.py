@@ -52,6 +52,7 @@ from adapters.web.schemas.pipelines import (
     BatchResponse,
     CancelBatchResponse,
     CandidateItem,
+    CandidateResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     GroundingCandidate,
@@ -336,9 +337,9 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
     Map an orchestrator refinement to RefinementCandidate response.
 
     Handles both definition and connection refinement outputs:
-    - Definition refinement: content is stored in "definition" key
-    - Connection refinement: content is stored in "rationale" key
-    Falls back to "content" for backwards compatibility.
+    - Definition refinement: refined text stored in "definition" key
+    - Connection refinement: refined text stored in "rationale" key
+    Uses scope_id as the URI and refined text as description to match spec.
 
     Args:
         refinement_dict: Refinement dict from orchestrator output
@@ -346,17 +347,20 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
     Returns:
         RefinementCandidate response object
     """
-    content = (
+    refined_text = (
         refinement_dict.get("definition")
         or refinement_dict.get("rationale")
         or refinement_dict.get("content")
         or ""
     )
+    scope_id = refinement_dict.get("scope_id", "")
     provenance = _normalize_provenance(refinement_dict.get("provenance", []))
 
     return RefinementCandidate(
-        content=content,
-        scope_id=refinement_dict.get("scope_id"),
+        uri=scope_id,
+        label=refined_text[:100] if refined_text else "",
+        description=refined_text,
+        source=refinement_dict.get("source", "refinement_pipeline"),
         confidence=float(refinement_dict.get("confidence") or 0.5),
         provenance=provenance,
     )
@@ -1059,6 +1063,84 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
+def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateResponse:
+    """
+    Convert a CandidateItem (discriminated union) to flat CandidateResponse format.
+
+    Maps all candidate variants to the legacy flat schema for backward compatibility
+    with existing consumers that expect the old CandidateResponse format.
+
+    Args:
+        candidate: CandidateItem in discriminated union format
+
+    Returns:
+        CandidateResponse in flat format (matches legacy contract)
+    """
+    if isinstance(candidate, SchemaClassCandidate):
+        return CandidateResponse(
+            uri=candidate.label,
+            label=candidate.label,
+            description=candidate.proposed_definition or "",
+            source="schema_extraction",
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    elif isinstance(candidate, SchemaPropertyCandidate):
+        return CandidateResponse(
+            uri=candidate.label,
+            label=candidate.label,
+            description=candidate.proposed_definition or "",
+            source="schema_extraction",
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    elif isinstance(candidate, SchemaConnectionCandidate):
+        return CandidateResponse(
+            uri=f"{candidate.subject_ref}--{candidate.predicate}--{candidate.object_ref}",
+            label=candidate.predicate,
+            description=f"{candidate.subject_ref} {candidate.predicate} {candidate.object_ref}",
+            source="schema_extraction",
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    elif isinstance(candidate, TripleCandidate):
+        return CandidateResponse(
+            uri=candidate.subject.label,
+            label=candidate.subject.label,
+            description=candidate.object.label,
+            source="individual_extraction",
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    elif isinstance(candidate, GroundingCandidate):
+        return CandidateResponse(
+            uri=candidate.uri,
+            label=candidate.label,
+            description=candidate.description,
+            source=candidate.source,
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    elif isinstance(candidate, RefinementCandidate):
+        return CandidateResponse(
+            uri=candidate.uri,
+            label=candidate.label,
+            description=candidate.description,
+            source=candidate.source,
+            confidence=candidate.confidence,
+            provenance="",
+        )
+    else:
+        return CandidateResponse(
+            uri="",
+            label="",
+            description="",
+            source="",
+            confidence=0.0,
+            provenance="",
+        )
+
+
 def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
     """Extract schema extraction candidates from an already-fetched run."""
     output_summary = run.output_summary or {}
@@ -1117,28 +1199,29 @@ def _extract_refinement_candidates(run: PipelineRun) -> list[CandidateItem]:
 
 @router.get(
     "/runs/{run_id}/candidates",
-    response_model=list[CandidateItem],
+    response_model=list[CandidateResponse],
 )
 async def get_pipeline_candidates_generic(
     run_id: str,
     request: Request,
-) -> list[CandidateItem]:
+) -> list[CandidateResponse]:
     """
     Retrieve candidates from a completed pipeline run (generic endpoint).
 
     Routes to the appropriate extraction logic based on pipeline type.
-    This endpoint provides backward compatibility while enforcing proper
-    type-specific candidate mapping.
+    Returns results in the legacy flat CandidateResponse format for backward
+    compatibility with existing consumers. For new applications, prefer the
+    type-specific endpoints which return the discriminated union CandidateItem format.
 
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateItem objects (discriminated union) with appropriate candidates
+        List of CandidateResponse objects (flat legacy format) with appropriate candidates
 
     Raises:
-        HTTPException: 404 if run not found or 422 if pipeline type has no candidates
+        HTTPException: 404 if run not found
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -1150,20 +1233,20 @@ async def get_pipeline_candidates_generic(
         )
 
     # Route to the appropriate extraction logic based on type
+    candidates: list[CandidateItem] = []
     if run.pipeline_type == PipelineType.SCHEMA_EXTRACTION:
-        return _extract_schema_extraction_candidates(run)
+        candidates = _extract_schema_extraction_candidates(run)
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        return _extract_individual_extraction_candidates(run)
+        candidates = _extract_individual_extraction_candidates(run)
     elif run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
-        return _extract_grounding_candidates(run)
+        candidates = _extract_grounding_candidates(run)
     elif run.pipeline_type in (
         PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
         PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
     ):
-        return _extract_refinement_candidates(run)
-    else:
-        # NO_OP and any other pipeline types return empty list
-        return []
+        candidates = _extract_refinement_candidates(run)
+
+    return [_candidate_item_to_legacy_response(c) for c in candidates]
 
 
 @router.get(
@@ -1678,7 +1761,7 @@ async def apply_pipeline_run(
 async def preview_recognition(
     run_id: str,
     request: Request,
-    request_body: Optional[RecognitionPreviewRequest] = Body(None),
+    request_body: RecognitionPreviewRequest = Body(default=RecognitionPreviewRequest()),
 ) -> RecognitionPreviewResponse:
     """
     Preview which extracted individuals would match existing graph nodes.
@@ -1727,9 +1810,6 @@ async def preview_recognition(
         )
 
     triples = (run.output_summary or {}).get("triples", [])
-
-    if request_body is None:
-        request_body = RecognitionPreviewRequest()
 
     hits = []
     skipped_count = 0

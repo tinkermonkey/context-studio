@@ -3369,7 +3369,7 @@
           "pipelines"
         ],
         "summary": "Get Pipeline Candidates Generic",
-        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nThis endpoint provides backward compatibility while enforcing proper\ntype-specific candidate mapping.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if pipeline type has no candidates",
+        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nReturns results in the legacy flat CandidateResponse format for backward\ncompatibility with existing consumers. For new applications, prefer the\ntype-specific endpoints which return the discriminated union CandidateItem format.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateResponse objects (flat legacy format) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found",
         "operationId": "get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get",
         "parameters": [
           {
@@ -3390,37 +3390,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "oneOf": [
-                      {
-                        "$ref": "#/components/schemas/SchemaClassCandidate"
-                      },
-                      {
-                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
-                      },
-                      {
-                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
-                      },
-                      {
-                        "$ref": "#/components/schemas/TripleCandidate"
-                      },
-                      {
-                        "$ref": "#/components/schemas/GroundingCandidate"
-                      },
-                      {
-                        "$ref": "#/components/schemas/RefinementCandidate"
-                      }
-                    ],
-                    "discriminator": {
-                      "propertyName": "candidate_type",
-                      "mapping": {
-                        "schema_class": "#/components/schemas/SchemaClassCandidate",
-                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
-                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
-                        "triple": "#/components/schemas/TripleCandidate",
-                        "grounding": "#/components/schemas/GroundingCandidate",
-                        "refinement": "#/components/schemas/RefinementCandidate"
-                      }
-                    }
+                    "$ref": "#/components/schemas/CandidateResponse"
                   },
                   "title": "Response Get Pipeline Candidates Generic Api Pipelines Runs  Run Id  Candidates Get"
                 }
@@ -4124,7 +4094,7 @@
           "pipelines"
         ],
         "summary": "Preview Recognition",
-        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns empty results if the run's pipeline type has no individuals to preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
+        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 400 if the pipeline type does not support recognition preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,\n        404 if run not found, 422 if run is not completed",
         "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
         "parameters": [
           {
@@ -4141,15 +4111,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/RecognitionPreviewRequest"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Request Body"
+                "$ref": "#/components/schemas/RecognitionPreviewRequest",
+                "default": {
+                  "confidence_threshold": 0.5,
+                  "recognition_threshold": 0.9
+                }
               }
             }
           }
@@ -7505,6 +7471,53 @@
         ],
         "title": "CancelBatchResponse",
         "description": "Response from batch cancel operation."
+      },
+      "CandidateResponse": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "Candidate URI or identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable candidate label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Candidate description or definition",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source or database where candidate originates",
+            "default": ""
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "description": "Rationale or provenance for the candidate",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "uri",
+          "label",
+          "confidence"
+        ],
+        "title": "CandidateResponse",
+        "description": "Response containing a single candidate from a pipeline run.\n\nDEPRECATED: Use CandidateItem (discriminated union) for new implementations.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface. Kept for backwards compatibility until\nall consumers migrate to discriminated union variants."
       },
       "CentralityResponse": {
         "properties": {
@@ -12074,31 +12087,37 @@
             "title": "Provenance",
             "description": "List of source spans with provenance information"
           },
-          "content": {
+          "uri": {
             "type": "string",
-            "title": "Content",
-            "description": "Refined text content (definition or relationship)"
+            "title": "Uri",
+            "description": "Refined entity URI or identifier"
           },
-          "scope_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scope Id",
-            "description": "Target entity ID for this refinement"
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label for the refinement"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Refined description or definition",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source or rationale for this refinement",
+            "default": ""
           }
         },
         "type": "object",
         "required": [
           "confidence",
-          "content"
+          "uri",
+          "label"
         ],
         "title": "RefinementCandidate",
-        "description": "Refined definition or connection candidate from refinement pipelines.\n\nRepresents a proposed refinement to an existing schema entity or relationship."
+        "description": "Refined definition or connection candidate from refinement pipelines.\n\nRepresents a proposed refinement to an existing schema entity or relationship.\nFollows the same shape as GroundingCandidate for consistency."
       },
       "RejectProposalRequest": {
         "properties": {

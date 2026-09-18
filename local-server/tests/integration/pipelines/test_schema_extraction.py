@@ -252,7 +252,7 @@ class TestSchemaExtractionHTTP:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_candidates_endpoint_returns_schema_extraction_candidates(self, schema_client):
-        """Return typed candidates for schema_extraction at /candidates endpoint."""
+        """Return candidates in legacy flat format at generic /candidates endpoint."""
         run_response = schema_client.post(
             "/api/pipelines/schema_extraction/run",
             json=_MICROSERVICES_PAYLOAD,
@@ -267,18 +267,16 @@ class TestSchemaExtractionHTTP:
         assert isinstance(candidates, list)
         assert len(candidates) > 0
 
-        # Check that we have both class and connection candidates
-        candidate_types = [c.get("candidate_type") for c in candidates]
-        assert "schema_class" in candidate_types or "schema_property" in candidate_types
-
-        # Validate class candidate structure
-        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
-        for candidate in class_candidates:
+        # Generic endpoint returns flat CandidateResponse format for backward compatibility
+        for candidate in candidates:
+            assert "uri" in candidate
             assert "label" in candidate
+            assert "description" in candidate
+            assert "source" in candidate
             assert "confidence" in candidate
             assert "provenance" in candidate
-            assert "candidate_type" in candidate
-            assert candidate["candidate_type"] == "schema_class"
+            assert isinstance(candidate["confidence"], (int, float))
+            assert 0.0 <= candidate["confidence"] <= 1.0
 
     def test_candidates_endpoint_empty_for_no_candidates(
         self, schema_client, pipeline_run_repo, batch_repo
@@ -321,7 +319,7 @@ class TestSchemaExtractionHTTP:
     def test_candidates_endpoint_provenance_format(
         self, schema_client, pipeline_run_repo, batch_repo
     ):
-        """Return provenance with quote and offsets at /candidates endpoint."""
+        """Generic endpoint returns candidates in legacy flat CandidateResponse format."""
         from domain.pipelines.entities import PipelineRunStatus
 
         # Create a batch and a run with explicit provenance in both pre-span and post-span formats
@@ -366,29 +364,18 @@ class TestSchemaExtractionHTTP:
         candidates = candidates_response.json()
         assert len(candidates) > 0
 
-        class_candidates = [c for c in candidates if c.get("candidate_type") == "schema_class"]
-        assert len(class_candidates) > 0
+        # Generic endpoint returns flat CandidateResponse format for backward compatibility
+        for candidate in candidates:
+            # Legacy format has: uri, label, description, source, confidence, provenance (as string)
+            assert "uri" in candidate
+            assert "label" in candidate
+            assert "description" in candidate
+            assert "source" in candidate
+            assert "confidence" in candidate
+            assert "provenance" in candidate
 
-        # Verify provenance is present and properly formatted
-        for candidate in class_candidates:
-            provenance = candidate.get("provenance", [])
-            # Should have at least one provenance span
-            assert len(provenance) > 0
-
-            for span in provenance:
-                # Each span should be a dict with quote, start, end fields
-                assert isinstance(span, dict)
-                assert "quote" in span
-                assert "start" in span
-                assert "end" in span
-
-                # Verify types: quote should be string or None, start/end should be int or None
-                if span["quote"] is not None:
-                    assert isinstance(span["quote"], str)
-                if span["start"] is not None:
-                    assert isinstance(span["start"], int)
-                if span["end"] is not None:
-                    assert isinstance(span["end"], int)
+            # Provenance should be a string in legacy format
+            assert isinstance(candidate["provenance"], str)
 
 
 # ---------------------------------------------------------------------------- #
