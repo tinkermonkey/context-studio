@@ -80,7 +80,7 @@ class TestGroundingCandidateMapping:
         assert result.provenance == []
 
     def test_map_grounding_candidate_with_match_rationale_fallback(self):
-        """Grounding uses match_rationale when provenance is missing (actual orchestrator output)."""
+        """Grounding uses match_rationale when provenance is missing."""
         grounding_dict = {
             "uri": "http://dbpedia.org/resource/Python_(programming_language)",
             "label": "Python Programming Language",
@@ -164,7 +164,9 @@ class TestRefinementCandidateMapping:
     def test_map_refinement_candidate_with_definition_key(self):
         """Refinement mapper reads from definition key (actual definition orchestrator output)."""
         refinement_dict = {
-            "definition": "An improved definition of the class from the definition refinement orchestrator",
+            "definition": (
+                "An improved definition of the class from the definition refinement orchestrator"
+            ),
             "scope_id": "class_123",
             "confidence": 0.87,
             # No "content" key - this is what the definition refinement orchestrator produces
@@ -173,14 +175,19 @@ class TestRefinementCandidateMapping:
         result = _map_refinement_candidate(refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
-        assert result.content == "An improved definition of the class from the definition refinement orchestrator"
+        assert (
+            result.content
+            == "An improved definition of the class from the definition refinement orchestrator"
+        )
         assert result.scope_id == "class_123"
         assert result.confidence == 0.87
 
     def test_map_refinement_candidate_with_rationale_key(self):
         """Refinement mapper reads from rationale key (actual connection orchestrator output)."""
         refinement_dict = {
-            "rationale": "Improved connection rationale from the connection refinement orchestrator",
+            "rationale": (
+                "Improved connection rationale from the connection refinement orchestrator"
+            ),
             "scope_id": "connection_456",
             "confidence": 0.91,
             # No "content" key - this is what the connection refinement orchestrator produces
@@ -189,7 +196,10 @@ class TestRefinementCandidateMapping:
         result = _map_refinement_candidate(refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
-        assert result.content == "Improved connection rationale from the connection refinement orchestrator"
+        assert (
+            result.content
+            == "Improved connection rationale from the connection refinement orchestrator"
+        )
         assert result.scope_id == "connection_456"
         assert result.confidence == 0.91
 
@@ -236,9 +246,7 @@ class TestSchemaCroundingCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call endpoint with wrong pipeline type
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-grounding-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-grounding-candidates")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_schema_grounding_candidates_with_dbpedia_groundings(
@@ -270,9 +278,7 @@ class TestSchemaCroundingCandidatesEndpoint:
                         "description": "A human being",
                         "source": "DBpedia",
                         "confidence": 0.95,
-                        "provenance": [
-                            {"quote": "A human being", "start": 0, "end": 13}
-                        ],
+                        "provenance": [{"quote": "A human being", "start": 0, "end": 13}],
                     },
                     {
                         "uri": "http://dbpedia.org/resource/Organization",
@@ -294,9 +300,7 @@ class TestSchemaCroundingCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-grounding-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-grounding-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -348,18 +352,14 @@ class TestSchemaCroundingCandidatesEndpoint:
                         "description": "Homo sapiens",
                         "source": "Wikidata",
                         "confidence": 0.98,
-                        "provenance": [
-                            {"quote": "Homo sapiens", "start": 0, "end": 12}
-                        ],
+                        "provenance": [{"quote": "Homo sapiens", "start": 0, "end": 12}],
                     }
                 ]
             },
         )
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-grounding-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-grounding-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -390,9 +390,7 @@ class TestSchemaCroundingCandidatesEndpoint:
         )
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-grounding-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-grounding-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -430,14 +428,10 @@ class TestSchemaRefinementCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call endpoint with wrong pipeline type
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-refinement-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-refinement-candidates")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_schema_definition_refinement_candidates(
-        self, client, pipeline_run_repo, batch_repo
-    ):
+    def test_schema_definition_refinement_candidates(self, client, pipeline_run_repo, batch_repo):
         """GET /schema-refinement-candidates for SCHEMA_NODE_DEFINITION_REFINEMENT
         returns RefinementCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
@@ -488,9 +482,7 @@ class TestSchemaRefinementCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-refinement-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-refinement-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -500,25 +492,17 @@ class TestSchemaRefinementCandidatesEndpoint:
         # Verify first refinement
         refinement1 = candidates[0]
         assert refinement1["candidate_type"] == "refinement"
-        assert (
-            refinement1["content"]
-            == "An improved, more precise definition of the Person class"
-        )
+        assert refinement1["content"] == "An improved, more precise definition of the Person class"
         assert refinement1["scope_id"] == "class_123"
         assert refinement1["confidence"] == 0.92
         assert len(refinement1["provenance"]) == 1
 
         # Verify second refinement
         refinement2 = candidates[1]
-        assert (
-            refinement2["content"]
-            == "Alternative definition emphasizing human characteristics"
-        )
+        assert refinement2["content"] == "Alternative definition emphasizing human characteristics"
         assert refinement2["confidence"] == 0.85
 
-    def test_schema_connection_refinement_candidates(
-        self, client, pipeline_run_repo, batch_repo
-    ):
+    def test_schema_connection_refinement_candidates(self, client, pipeline_run_repo, batch_repo):
         """GET /schema-refinement-candidates for SCHEMA_NODE_CONNECTION_REFINEMENT
         returns RefinementCandidate items."""
         from domain.pipelines.entities import PipelineRunStatus, PipelineType
@@ -563,9 +547,7 @@ class TestSchemaRefinementCandidatesEndpoint:
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
         # Call the endpoint
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-refinement-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-refinement-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
@@ -607,9 +589,7 @@ class TestSchemaRefinementCandidatesEndpoint:
         )
         pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
 
-        response = client.get(
-            f"/api/pipelines/runs/{run.id}/schema-refinement-candidates"
-        )
+        response = client.get(f"/api/pipelines/runs/{run.id}/schema-refinement-candidates")
         assert response.status_code == status.HTTP_200_OK
 
         candidates = response.json()
