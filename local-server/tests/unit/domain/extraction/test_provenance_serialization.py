@@ -16,9 +16,8 @@ _four_levels_up = os.path.dirname(os.path.dirname(os.path.dirname(
 )))
 sys.path.append(_four_levels_up)
 
-
-from domain.extraction.services import _serialize_triple_provenance
-from domain.extraction.value_objects import SourceSpan
+from domain.extraction.services import _serialize_triple_provenance  # noqa: E402
+from domain.extraction.value_objects import SourceSpan  # noqa: E402
 
 
 class TestSerializeTripleProvenance:
