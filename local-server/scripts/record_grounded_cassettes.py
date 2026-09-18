@@ -56,8 +56,9 @@ import sys
 from typing import Any, cast
 from uuid import uuid4
 
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+# Allow online access to download embedding models
+# os.environ.setdefault("HF_HUB_OFFLINE", "1")
+# os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

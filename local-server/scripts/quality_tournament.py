@@ -38,8 +38,9 @@ import os
 import random
 import sys
 
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+# Allow online access to download embedding models
+# os.environ.setdefault("HF_HUB_OFFLINE", "1")
+# os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 # Ensure both the script's directory and current working directory are in sys.path
 sys.path.insert(0, os.getcwd())
