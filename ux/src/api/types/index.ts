@@ -1692,19 +1692,31 @@ export interface paths {
      *     Extracts the full candidate list with provenance and confidence scores
      *     from the pipeline run's output. The structure of candidates depends on
      *     the pipeline type:
+     *     - individual_extraction: returns TripleCandidate (structured subject-predicate-object)
+     *       from triples key with mapped/new node distinction via id presence
+     *     - schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate
+     *       from candidates key, and SchemaConnectionCandidate from connections key
      *     - schema_node_grounding: returns groundings with URI, label, confidence
      *     - schema_node_definition_refinement: returns definition candidates
      *     - schema_node_connection_refinement: returns connection candidates
+     *
+     *     NOTE: The response model uses Union[CandidateItem, CandidateResponse] as a
+     *     transitional design. individual_extraction and schema_extraction return CandidateItem
+     *     (discriminated union with candidate_type), while legacy pipeline types return
+     *     CandidateResponse (deprecated flat schema). This union will be simplified once
+     *     all consumers migrate to CandidateItem.
      *
      *     Args:
      *         run_id: The pipeline run ID
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         List of CandidateResponse objects with full provenance and confidence
+     *         List of CandidateItem objects (discriminated union) or CandidateResponse for
+     *         legacy types, with full provenance and confidence. Returns empty list for
+     *         runs with no candidates/triples.
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 400 if run has no candidates
+     *         HTTPException: 404 if run not found
      */
     get: operations["get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get"];
     put?: never;
@@ -4135,9 +4147,12 @@ export interface components {
      * CandidateResponse
      * @description Response containing a single candidate from a pipeline run.
      *
+     *     DEPRECATED: Use CandidateItem (discriminated union) for new implementations.
+     *
      *     Represents a candidate result from pipeline execution with full provenance
      *     and confidence information. Structure adapts based on pipeline type but
-     *     maintains a consistent interface.
+     *     maintains a consistent interface. Kept for backwards compatibility until
+     *     all consumers migrate to discriminated union variants.
      */
     CandidateResponse: {
       /**
@@ -5135,6 +5150,8 @@ export interface components {
        * @description ID of matched ontology class, if any
        */
       matched_class_id?: string | null;
+      /** @description Optional span with provenance information (quote and character offsets) */
+      span?: components["schemas"]["SourceSpanSchema"] | null;
       /**
        * Properties
        * @description Optional metadata key-value pairs
@@ -5265,6 +5282,51 @@ export interface components {
        * @description Timestamp when metrics were computed
        */
       computed_at: string;
+    };
+    /**
+     * GroundingCandidate
+     * @description Grounding candidate linking a schema node to external knowledge.
+     *
+     *     Represents an external resource that grounds or validates a schema entity.
+     */
+    GroundingCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "grounding";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Uri
+       * @description External resource URI or identifier
+       */
+      uri: string;
+      /**
+       * Label
+       * @description External resource label
+       */
+      label: string;
+      /**
+       * Description
+       * @description External resource description
+       * @default
+       */
+      description: string;
+      /**
+       * Source
+       * @description Source database or knowledge base
+       * @default
+       */
+      source: string;
     };
     /**
      * GroundingWorkflowCreate
@@ -6063,6 +6125,45 @@ export interface components {
       outgoing: string[];
     };
     /**
+     * NodeReference
+     * @description Reference to an extracted node (individual/class/literal) in individual extraction.
+     *
+     *     Identifies a subject or object node with optional mapping to existing ontology.
+     *     Non-empty id means mapped to existing ontology entity; empty/None means new candidate.
+     */
+    NodeReference: {
+      /**
+       * Kind
+       * @description Node kind: individual, class, or literal
+       */
+      kind: string;
+      /**
+       * Label
+       * @description Node label/name
+       */
+      label: string;
+      /**
+       * Id
+       * @description Ontology entity ID; empty/None = new candidate, non-empty = mapped to existing
+       */
+      id?: string | null;
+      /**
+       * Class Ids
+       * @description Class IDs if this node is an individual instance
+       */
+      class_ids?: string[] | null;
+      /**
+       * Value
+       * @description Literal value (only for kind=literal)
+       */
+      value?: string | null;
+      /**
+       * Datatype
+       * @description Literal data type URI (only for kind=literal)
+       */
+      datatype?: string | null;
+    };
+    /**
      * PathResultResponse
      * @description Response containing a single path between two nodes.
      */
@@ -6424,6 +6525,25 @@ export interface components {
       output_contract: {
         [key: string]: unknown;
       };
+    };
+    /**
+     * PredicateReference
+     * @description Reference to a property/predicate in individual extraction.
+     *
+     *     Identifies a relationship type with optional mapping to existing property definition.
+     *     Non-empty property_definition_id means mapped; empty/None means new candidate.
+     */
+    PredicateReference: {
+      /**
+       * Label
+       * @description Predicate label/name
+       */
+      label: string;
+      /**
+       * Property Definition Id
+       * @description Property definition ID; empty/None = new candidate, non-empty = mapped
+       */
+      property_definition_id?: string | null;
     };
     /**
      * PropertyDefinitionCreateRequest
@@ -6817,6 +6937,39 @@ export interface components {
       timestamp: string;
     };
     /**
+     * RefinementCandidate
+     * @description Refined definition or connection candidate from refinement pipelines.
+     *
+     *     Represents a proposed refinement to an existing schema entity or relationship.
+     */
+    RefinementCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "refinement";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Content
+       * @description Refined text content (definition or relationship)
+       */
+      content: string;
+      /**
+       * Scope Id
+       * @description Target entity ID for this refinement
+       */
+      scope_id?: string | null;
+    };
+    /**
      * RejectProposalRequest
      * @description Request to reject a proposal
      */
@@ -7059,6 +7212,120 @@ export interface components {
       triple_count: number;
     };
     /**
+     * SchemaClassCandidate
+     * @description Candidate class entity from schema extraction or grounding.
+     *
+     *     Represents a proposed or grounded class in the schema.
+     */
+    SchemaClassCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "schema_class";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Label
+       * @description Class label/name
+       */
+      label: string;
+      /**
+       * Proposed Definition
+       * @description Proposed definition or description of the class
+       */
+      proposed_definition?: string | null;
+    };
+    /**
+     * SchemaConnectionCandidate
+     * @description Candidate connection/relationship from schema extraction or refinement.
+     *
+     *     Represents a proposed relationship between schema entities.
+     */
+    SchemaConnectionCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "schema_connection";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Subject Ref
+       * @description Subject entity reference or label
+       */
+      subject_ref: string;
+      /**
+       * Predicate
+       * @description Relationship/property type
+       */
+      predicate: string;
+      /**
+       * Object Ref
+       * @description Object entity reference or label
+       */
+      object_ref: string;
+    };
+    /**
+     * SchemaPropertyCandidate
+     * @description Candidate property definition from schema extraction.
+     *
+     *     Represents a proposed property/relationship type.
+     */
+    SchemaPropertyCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "schema_property";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Label
+       * @description Property label/name
+       */
+      label: string;
+      /**
+       * Proposed Definition
+       * @description Proposed definition or semantics of the property
+       */
+      proposed_definition?: string | null;
+      /**
+       * Proposed Domain
+       * @description Proposed domain (subject class) for this property
+       */
+      proposed_domain?: string | null;
+      /**
+       * Proposed Range
+       * @description Proposed range (object class) for this property
+       */
+      proposed_range?: string | null;
+    };
+    /**
      * SerializationScopeRequest
      * @description Request to specify what to export.
      */
@@ -7128,6 +7395,27 @@ export interface components {
        * @description List of available LLM provider names
        */
       llm_providers_available?: string[];
+    };
+    /**
+     * SourceSpanSchema
+     * @description Immutable representation of a span in source text with provenance information.
+     */
+    SourceSpanSchema: {
+      /**
+       * Quote
+       * @description The verbatim or matched text from the source, or None if unresolved
+       */
+      quote?: string | null;
+      /**
+       * Start
+       * @description Zero-indexed character position where the span begins, or None if unresolved
+       */
+      start?: number | null;
+      /**
+       * End
+       * @description Zero-indexed character position where the span ends (exclusive), or None if unresolved
+       */
+      end?: number | null;
     };
     /**
      * StatsTrendsResponse
@@ -7424,6 +7712,35 @@ export interface components {
        * @description New hex color '#rrggbb' or null to clear
        */
       color?: string | null;
+    };
+    /**
+     * TripleCandidate
+     * @description Subject-predicate-object triple candidate from individual extraction.
+     *
+     *     Represents a proposed relationship between two extracted entities.
+     */
+    TripleCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "triple";
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /** @description Subject node reference */
+      subject: components["schemas"]["NodeReference"];
+      /** @description Predicate reference */
+      predicate: components["schemas"]["PredicateReference"];
+      /** @description Object node reference */
+      object: components["schemas"]["NodeReference"];
     };
     /**
      * TripleCountResponse
@@ -9698,7 +10015,17 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CandidateResponse"][];
+          "application/json": (
+            | (
+                | components["schemas"]["SchemaClassCandidate"]
+                | components["schemas"]["SchemaPropertyCandidate"]
+                | components["schemas"]["SchemaConnectionCandidate"]
+                | components["schemas"]["TripleCandidate"]
+                | components["schemas"]["GroundingCandidate"]
+                | components["schemas"]["RefinementCandidate"]
+              )
+            | components["schemas"]["CandidateResponse"]
+          )[];
         };
       };
       /** @description Validation Error */

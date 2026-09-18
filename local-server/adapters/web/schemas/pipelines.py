@@ -384,27 +384,43 @@ class SchemaConnectionCandidate(CandidateBase):
 
 
 class NodeReference(BaseModel):
-    """Reference to an extracted node (individual) in individual extraction.
+    """Reference to an extracted node (individual/class/literal) in individual extraction.
 
-    Identifies a node without full triple context.
+    Identifies a subject or object node with optional mapping to existing ontology.
+    Non-empty id means mapped to existing ontology entity; empty/None means new candidate.
     """
 
     model_config = ConfigDict(from_attributes=True)
 
+    kind: str = Field(..., description="Node kind: individual, class, or literal")
     label: str = Field(..., description="Node label/name")
-    kind: str = Field(..., description="Node kind/type (e.g., 'individual', 'class')")
+    id: Optional[str] = Field(
+        None,
+        description="Ontology entity ID; empty/None = new candidate, non-empty = mapped to existing",
+    )
+    class_ids: Optional[list[str]] = Field(
+        None, description="Class IDs if this node is an individual instance"
+    )
+    value: Optional[str] = Field(None, description="Literal value (only for kind=literal)")
+    datatype: Optional[str] = Field(
+        None, description="Literal data type URI (only for kind=literal)"
+    )
 
 
 class PredicateReference(BaseModel):
-    """Reference to a predicate/property in individual extraction.
+    """Reference to a property/predicate in individual extraction.
 
-    Identifies a property without full triple context.
+    Identifies a relationship type with optional mapping to existing property definition.
+    Non-empty property_definition_id means mapped; empty/None means new candidate.
     """
 
     model_config = ConfigDict(from_attributes=True)
 
     label: str = Field(..., description="Predicate label/name")
-    kind: str = Field(..., description="Predicate kind/type (e.g., 'property')")
+    property_definition_id: Optional[str] = Field(
+        None,
+        description="Property definition ID; empty/None = new candidate, non-empty = mapped",
+    )
 
 
 class TripleCandidate(CandidateBase):

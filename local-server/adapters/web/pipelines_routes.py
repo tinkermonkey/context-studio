@@ -49,6 +49,7 @@ from adapters.web.schemas.pipelines import (
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     ImplementationResponse,
+    NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
     PipelineConfigurationResponse,
@@ -56,11 +57,13 @@ from adapters.web.schemas.pipelines import (
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
+    PredicateReference,
     ResumeBatchResponse,
     RevertRunResponse,
     SchemaClassCandidate,
     SchemaConnectionCandidate,
     SchemaPropertyCandidate,
+    TripleCandidate,
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
@@ -202,6 +205,57 @@ def _map_schema_connection_candidate(
         predicate=connection_dict.get("predicate", ""),
         object_ref=connection_dict.get("object_ref", ""),
         confidence=float(connection_dict.get("confidence", 0.5)),
+        provenance=provenance,
+    )
+
+
+def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
+    """
+    Map an orchestrator triple to TripleCandidate response.
+
+    Handles normalized provenance from output_summary["triples"],
+    distinguishing mapped nodes (with id) from new ones (without id).
+
+    Args:
+        triple_dict: Triple dict from orchestrator output
+
+    Returns:
+        TripleCandidate response object
+    """
+
+    def _map_node_ref(node_data: dict[str, Any] | None) -> NodeReference:
+        """Map subject or object node to NodeReference."""
+        if not node_data:
+            node_data = {}
+        return NodeReference(
+            kind=node_data.get("kind", "individual"),
+            label=node_data.get("label", ""),
+            id=node_data.get("id"),
+            class_ids=node_data.get("class_ids"),
+            value=node_data.get("value"),
+            datatype=node_data.get("datatype"),
+        )
+
+    def _map_predicate_ref(pred_data: dict[str, Any] | None) -> PredicateReference:
+        """Map predicate to PredicateReference."""
+        if not pred_data:
+            pred_data = {}
+        return PredicateReference(
+            label=pred_data.get("label", ""),
+            property_definition_id=pred_data.get("property_definition_id"),
+        )
+
+    subject_data = triple_dict.get("subject") or {}
+    object_data = triple_dict.get("object") or {}
+    predicate_data = triple_dict.get("predicate") or {}
+
+    provenance = _normalize_provenance(triple_dict.get("provenance", []))
+
+    return TripleCandidate(
+        subject=_map_node_ref(subject_data),
+        predicate=_map_predicate_ref(predicate_data),
+        object=_map_node_ref(object_data),
+        confidence=float(triple_dict.get("confidence", 0.5)),
         provenance=provenance,
     )
 
@@ -859,6 +913,8 @@ async def get_pipeline_candidates(
     Extracts the full candidate list with provenance and confidence scores
     from the pipeline run's output. The structure of candidates depends on
     the pipeline type:
+    - individual_extraction: returns TripleCandidate (structured subject-predicate-object)
+      from triples key with mapped/new node distinction via id presence
     - schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate
       from candidates key, and SchemaConnectionCandidate from connections key
     - schema_node_grounding: returns groundings with URI, label, confidence
@@ -866,18 +922,19 @@ async def get_pipeline_candidates(
     - schema_node_connection_refinement: returns connection candidates
 
     NOTE: The response model uses Union[CandidateItem, CandidateResponse] as a
-    transitional design. schema_extraction returns CandidateItem (discriminated
-    union with candidate_type), while legacy pipeline types return CandidateResponse
-    (deprecated flat schema). This union will be simplified once all consumers
-    migrate to CandidateItem.
+    transitional design. individual_extraction and schema_extraction return CandidateItem
+    (discriminated union with candidate_type), while legacy pipeline types return
+    CandidateResponse (deprecated flat schema). This union will be simplified once
+    all consumers migrate to CandidateItem.
 
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateItem objects (discriminated union) with full provenance
-        and confidence. Returns empty list for runs with no candidates/connections.
+        List of CandidateItem objects (discriminated union) or CandidateResponse for
+        legacy types, with full provenance and confidence. Returns empty list for
+        runs with no candidates/triples.
 
     Raises:
         HTTPException: 404 if run not found
@@ -918,6 +975,14 @@ async def get_pipeline_candidates(
 
         return result
 
+    # Individual extraction: return structured TripleCandidate items
+    if run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
+        triples_data = output_summary.get("triples", [])
+        triple_candidates: list[CandidateItem] = [
+            _map_triple_candidate(triple_dict) for triple_dict in triples_data
+        ]
+        return triple_candidates
+
     # For other pipeline types, use the existing legacy logic
     candidates_key = None
     candidates_data = []
@@ -928,8 +993,6 @@ async def get_pipeline_candidates(
         candidates_key = "candidates"
     elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
         candidates_key = "deltas"
-    elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        candidates_key = "triples"
     # NO_OP and any other pipelines return empty list
 
     if candidates_key and candidates_key in output_summary:
