@@ -3,14 +3,19 @@
 Re-hash cassettes after prompt changes.
 
 When extraction prompts change, their hashes change. This script updates
-cassette files by recomputing hashes for the current prompts.
+cassette files by ADDING NEW entries with updated hashes while PRESERVING
+all existing entries.
 
 The script:
 1. Finds all cassette files for a scenario
 2. Reads the fixture to get the prompt inputs (text, model, temperature)
 3. Builds prompts using the current ExtractionService
 4. Computes new hashes
-5. Re-indexes cassette entries with new hashes
+5. Adds new cassette entries while preserving existing ones
+
+NOTE: This approach works for pass-1 prompts. Pass-2 (relationship) prompts
+depend on identified individuals from pass-1, so their hashes cannot be easily
+recomputed. The old pass-2 hash keys are preserved and continue to work.
 
 Usage (from local-server/, venv active):
     python scripts/rehash_cassettes.py
@@ -53,7 +58,7 @@ from tests.fixtures.pipeline_fixtures import load_fixture
 
 
 def rehash_cassettes() -> int:
-    """Re-hash all cassette files with new prompt hashes."""
+    """Re-hash all cassette files by adding new entries while preserving old ones."""
     print("Re-hashing cassettes after prompt changes...")
 
     spec_dir = _find_dr_spec_dir()
@@ -148,23 +153,32 @@ def rehash_cassettes() -> int:
                 with open(cassette_file) as f:
                     cassette_data = json.load(f)
 
-                # Build prompts and compute new hashes
+                # Build prompts and compute new hashes for pass-1
                 system_prompt, user_prompt = extraction_service._build_individual_extraction_prompt(
                     text, dr_taxonomy
                 )
                 new_hash = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, None)
 
-                # Re-index cassette with new hash
-                if cassette_data:
-                    # Get the first entry (assumes all entries have same model/temperature)
-                    first_entry = next(iter(cassette_data.values()))
+                # Add new entry to cassette while preserving existing entries
+                if cassette_data and new_hash not in cassette_data:
+                    # Find an entry to use as a template (preferably a pass-1 response)
+                    # Look for responses with triples (not "class" only)
+                    template_entry = None
+                    for entry in cassette_data.values():
+                        if "triples" in entry.get("content", ""):
+                            template_entry = entry
+                            break
 
-                    # Create new cassette with updated hash
-                    new_cassette = {new_hash: first_entry}
+                    if template_entry is None:
+                        # No suitable template, use first entry
+                        template_entry = next(iter(cassette_data.values()))
+
+                    # Add new entry with new hash but keep old entries
+                    cassette_data[new_hash] = template_entry
 
                     # Write back
                     with open(cassette_file, "w") as f:
-                        json.dump(new_cassette, f, indent=2)
+                        json.dump(cassette_data, f, indent=2)
 
                     print(f"    ✓ {scenario}")
                     updated_count += 1
