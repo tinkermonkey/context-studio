@@ -44,9 +44,38 @@ from .ports import (
     NLPProcessor,
     ReferenceSource,
 )
-from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
+from .span_resolution import resolve_span
+from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
 _logger = logging.getLogger(__name__)
+
+
+def _serialize_triple_provenance(triple: dict) -> dict:
+    """
+    Serialize SourceSpan objects in triple provenance to dict format.
+
+    Converts a triple with a SourceSpan provenance object to a dict with
+    serialized provenance (quote, start, end keys). Preserves both fully-resolved
+    spans (with character offsets) and quote-only spans (where start/end are None).
+    Leaves the triple unchanged if provenance is already a dict or None.
+
+    Args:
+        triple: Triple dict potentially containing a SourceSpan provenance object
+
+    Returns:
+        Triple dict with provenance serialized to dict format
+    """
+    provenance = triple.get("provenance")
+    if isinstance(provenance, SourceSpan):
+        # Serialize SourceSpan with quote, start, end fields
+        serialized = {
+            "quote": provenance.quote,
+            "start": provenance.start,
+            "end": provenance.end,
+        }
+        return {**triple, "provenance": serialized}
+    return triple
+
 
 # Upper bound on the number of ontology classes injected into a triple-extraction
 # prompt. Keeps the RAG grounding block a bounded fraction of the prompt for
@@ -604,8 +633,11 @@ class ExtractionService:
             # Always clear the correlation context after extraction
             set_batch_run_context(None)
 
+        # Serialize SourceSpan objects in provenance to dict format for API contract
+        serialized_triples = [_serialize_triple_provenance(triple) for triple in extracted_triples]
+
         return TripleExtractionResult(
-            triples=extracted_triples,
+            triples=serialized_triples,
             warnings=warnings,
             metadata={
                 "model": model,
@@ -784,7 +816,7 @@ class ExtractionService:
         )
         tokens_used = individual_response.tokens_in + individual_response.tokens_out
 
-        individual_triples = self._parse_triple_extraction_response(
+        individual_triples, parse_warnings = self._parse_triple_extraction_response(
             individual_response.content, text, ontology_id
         )
         individual_triples = self._canonicalize_triples_against_ontology(
@@ -792,7 +824,7 @@ class ExtractionService:
         )
 
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens = self._derive_relationships(
+        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
@@ -802,11 +834,12 @@ class ExtractionService:
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        return combined, tokens_used, typing_warnings
+        all_warnings = parse_warnings + typing_warnings + rel_warnings
+        return combined, tokens_used, all_warnings
 
     def _derive_relationships(
         self, text, ontology, individuals, ontology_id, model, temperature
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[dict], int, list[str]]:
         """
         Derive relationships over already-identified individuals (shared pass 2).
 
@@ -816,10 +849,10 @@ class ExtractionService:
         clamps to domain/range). Any typing triple the model re-emits is dropped
         so the identification pass stays the single source of typing. Skipped when
         fewer than two individuals were identified. Returns (relationship triples,
-        tokens used).
+        tokens used, warnings).
         """
         if len(individuals) < 2:
-            return [], 0
+            return [], 0, []
         relationship_system, relationship_user = self._build_relationship_extraction_prompt(
             text, ontology, individuals
         )
@@ -832,13 +865,13 @@ class ExtractionService:
             response_format="json",
         )
         tokens = relationship_response.tokens_in + relationship_response.tokens_out
-        relationship_triples = self._parse_triple_extraction_response(
+        relationship_triples, rel_warnings = self._parse_triple_extraction_response(
             relationship_response.content, text, ontology_id
         )
         relationship_triples = [
             triple for triple in relationship_triples if not self._is_typing_triple(triple)
         ]
-        return relationship_triples, tokens
+        return relationship_triples, tokens, rel_warnings
 
     def _post_process_triples(self, triples: list[dict], ontology) -> list[dict]:
         """Recognition step, shared by both modes."""
@@ -924,6 +957,11 @@ class ExtractionService:
             prop_def = prop_index.get(normalized_label)
             if prop_def:
                 triple["predicate"]["property_definition_id"] = str(prop_def.id)
+            else:
+                _logger.info(
+                    f"PropertyDefinition not found for predicate '{predicate_label}'; "
+                    f"relationship will be dropped during apply"
+                )
 
             obj = triple.get("object", {})
             obj_kind = obj.get("kind", "")
@@ -1100,7 +1138,7 @@ class ExtractionService:
             individual_triples, ontology
         )
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens = self._derive_relationships(
+        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
             text, ontology, individuals, ontology_id, model, temperature
         )
         tokens_used += rel_tokens
@@ -1110,7 +1148,7 @@ class ExtractionService:
         combined = self._post_process_triples(
             individual_triples + all_relationship_triples, ontology
         )
-        all_warnings = nlp_typing_warnings + typing_warnings
+        all_warnings = nlp_typing_warnings + typing_warnings + rel_warnings
         return combined, tokens_used, all_warnings
 
     def _type_individuals_nlp_grounded(
@@ -1134,10 +1172,12 @@ class ExtractionService:
         warnings: list[str] = []
 
         if self._schema_index is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded typing requested but schema_index is None; "
                 "no typing triples will be produced"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return [], 0, warnings
 
         taxonomy_id = getattr(ontology, "id", None)
@@ -1300,7 +1340,11 @@ class ExtractionService:
 
     @staticmethod
     def _make_typing_triple(label: str, match, chunk) -> dict:
-        """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk."""
+        """Build an ``is_a`` typing triple from a confirmed class match and its noun chunk.
+
+        Constructs provenance as a SourceSpan from spaCy chunk's exact positions
+        (no resolution cascade needed since this path is exact by construction).
+        """
         class_ref = match.external_id or match.identifier or match.label
         return {
             "subject": {
@@ -1312,11 +1356,11 @@ class ExtractionService:
             "predicate": {"property_definition_id": None, "label": "is_a"},
             "object": {"kind": "class", "id": match.entity_id, "label": class_ref},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 2),
-            "provenance": {
-                "text_offset_start": chunk.start,
-                "text_offset_end": chunk.end,
-                "raw": chunk.text,
-            },
+            "provenance": SourceSpan(
+                quote=chunk.text,
+                start=chunk.start,
+                end=chunk.end,
+            ),
         }
 
     def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
@@ -1609,6 +1653,10 @@ Extract triples in the following JSON format:
   ]
 }
 
+For each extracted triple, set provenance.raw to an exact, verbatim substring from
+the source text (not a paraphrase), and set text_offset_start/text_offset_end to the
+best-effort character positions of that substring.
+
 Extract every distinct individual (a concrete named thing, concept, or component)
 the text mentions. For each individual, emit exactly one typing triple: subject =
 the individual, predicate.label = "is_a", object = the ontology class it belongs to.
@@ -1723,6 +1771,11 @@ Extract relationship triples in the following JSON format:
     }}
   ]
 }}
+
+For each relationship triple, set provenance.raw to an exact, verbatim substring that
+evidences the relationship (typically spanning both entities and the connecting clause,
+not just a single entity mention), and set text_offset_start/text_offset_end to the
+best-effort character positions of that substring.
 
 Use one of the individuals listed in the prompt as the SUBJECT of each relationship,
 copying its label EXACTLY. The OBJECT may be one of the listed individuals OR a new
@@ -1847,9 +1900,9 @@ Identified individuals:
 
     def _parse_triple_extraction_response(
         self, response: str, text: str, ontology_id: str
-    ) -> list[dict]:
+    ) -> tuple[list[dict], list[str]]:
         """
-        Parse LLM response to extract structured triples.
+        Parse LLM response to extract structured triples with span resolution.
 
         Args:
             response: LLM response text
@@ -1857,13 +1910,18 @@ Identified individuals:
             ontology_id: Target ontology ID
 
         Returns:
-            List of extracted triple dictionaries
+            Tuple of (list of extracted triple dictionaries, list of warnings)
+            Unresolved spans are recorded as warnings; triples are always retained.
         """
+        warnings: list[str] = []
         try:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if not json_match:
-                return []
+                warning_msg = "No JSON found in LLM response; no triples extracted"
+                _logger.warning(warning_msg)
+                warnings.append(warning_msg)
+                return [], warnings
 
             response_json = json.loads(json_match.group())
             triples_data = response_json.get("triples", [])
@@ -1871,21 +1929,36 @@ Identified individuals:
             triples = []
             for triple_data in triples_data:
                 try:
-                    triple = self._build_triple_from_llm_output(triple_data, text, ontology_id)
+                    triple, triple_warnings = self._build_triple_from_llm_output(
+                        triple_data, text, ontology_id
+                    )
                     triples.append(triple)
-                except Exception as e:
-                    _logger.warning(f"Failed to parse triple: {e}")
+                    warnings.extend(triple_warnings)
+                except (TypeError, ValueError, KeyError, AttributeError) as e:
+                    warning_msg = (
+                        f"Failed to parse triple due to data error: {type(e).__name__}: {e}"
+                    )
+                    _logger.warning(warning_msg)
+                    warnings.append(warning_msg)
                     continue
+                except Exception as e:
+                    error_msg = f"Unexpected error while parsing triple: {type(e).__name__}: {e}"
+                    _logger.error(error_msg)
+                    raise
 
-            return triples
+            return triples, warnings
 
         except json.JSONDecodeError as e:
-            _logger.error(f"Failed to parse LLM JSON response: {e}")
-            return []
+            error_msg = f"Failed to parse LLM JSON response: {e}"
+            _logger.error(error_msg)
+            warnings.append(error_msg)
+            return [], warnings
 
-    def _build_triple_from_llm_output(self, triple_data: dict, text: str, ontology_id: str) -> dict:
+    def _build_triple_from_llm_output(
+        self, triple_data: dict, text: str, ontology_id: str
+    ) -> tuple[dict, list[str]]:
         """
-        Build a triple dict from LLM-extracted data.
+        Build a triple dict from LLM-extracted data using span resolution.
 
         Args:
             triple_data: Triple data from LLM
@@ -1893,7 +1966,9 @@ Identified individuals:
             ontology_id: Target ontology ID
 
         Returns:
-            Triple dictionary matching ExtractedTriple schema
+            Tuple of (triple dictionary, warnings list)
+            Triple has provenance resolved via resolve_span(); unresolved spans
+            are recorded as warnings and the triple is still retained.
         """
         subject_data = triple_data.get("subject", {})
         predicate_data = triple_data.get("predicate", {})
@@ -1901,16 +1976,32 @@ Identified individuals:
         confidence = float(triple_data.get("confidence", 0.5))
         provenance_data = triple_data.get("provenance", {})
 
-        # Build provenance
-        start = provenance_data.get("text_offset_start", 0)
-        end = provenance_data.get("text_offset_end", min(start + 10, len(text)))
-        raw = text[start:end] if start < len(text) else ""
+        warnings: list[str] = []
 
-        provenance = {
-            "text_offset_start": max(0, start),
-            "text_offset_end": min(end, len(text)),
-            "raw": raw,
-        }
+        # Resolve provenance span using Phase 1 resolution cascade
+        hint_start = provenance_data.get("text_offset_start")
+        hint_end = provenance_data.get("text_offset_end")
+        raw_quote = provenance_data.get("raw")
+
+        resolved_span = resolve_span(raw_quote, hint_start, hint_end, text)
+
+        # Use SourceSpan directly instead of converting to dict
+        if resolved_span.start is None and resolved_span.end is None:
+            # Fuzzy match or unresolved: record warning if no quote
+            subject_label = subject_data.get("label")
+            predicate_label = predicate_data.get("label")
+            object_label = object_data.get("label")
+            if resolved_span.quote is None:
+                warnings.append(
+                    f"Unresolved triple provenance (no match found): "
+                    f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
+                )
+            else:
+                warnings.append(
+                    f"Unresolved triple provenance (fuzzy match only): "
+                    f"subject={subject_label}, predicate={predicate_label}, object={object_label}"
+                )
+        provenance = resolved_span
 
         # Build subject
         subject_kind = subject_data.get("kind", "class")
@@ -1944,13 +2035,15 @@ Identified individuals:
                 "label": object_data.get("label", ""),
             }
 
-        return {
+        triple = {
             "subject": subject,
             "predicate": predicate,
             "object": obj,
             "confidence": max(0.0, min(1.0, confidence)),
             "provenance": provenance,
         }
+
+        return triple, warnings
 
     def _build_result(
         self,
@@ -2159,6 +2252,7 @@ Identified individuals:
                             uri=other.uri or entity.uri,
                             description=other.description or entity.description,
                             matched_class_id=entity.matched_class_id,
+                            span=entity.span or other.span,
                             properties={
                                 **(entity.properties or {}),
                                 **(other.properties or {}),

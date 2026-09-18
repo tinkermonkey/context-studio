@@ -1,12 +1,12 @@
 {
-  "7eca5cd666bbd9b7e41c6573cce897b53956e5d87c1a89bd50e569dd204c4e64": {
+  "71f77063312e75cc4fb79a312d9aaf683494b62fb3c04bec4103edaafb58e41d": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"kubernetes\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Nf-PEAK\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"RAPL counters\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"data objects\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.dataobject\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,
     "model": "claude-opus-4-7",
     "finish_reason": "stop"
   },
-  "7da6ac555b9dd6cfa554c06694a3d45a33621ced5a9783fea7aadff59f4fd923": {
+  "00b0282db93b9c07a85e6a92a317a880d28996bc46db5a3372c363d6ab0fe016": {
     "content": "{\"triples\": []}",
     "tokens_in": 1,
     "tokens_out": 1,

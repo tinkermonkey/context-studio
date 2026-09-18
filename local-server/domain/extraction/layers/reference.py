@@ -108,6 +108,7 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                     uri=top_result.uri or prior_entity.uri,
                     description=top_result.description or prior_entity.description,
                     matched_class_id=prior_entity.matched_class_id,
+                    span=prior_entity.span,
                     properties={
                         **(prior_entity.properties or {}),
                         "reference_source": source.source_name,

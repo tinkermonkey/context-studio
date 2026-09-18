@@ -26,6 +26,7 @@ from adapters.web.schemas.extraction import (
     ExtractionLayerResultSchema,
     ExtractionResultSchema,
     ExtractRequest,
+    SourceSpanSchema,
 )
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.exceptions import (
@@ -94,6 +95,15 @@ def _to_schema(result) -> ExtractionResultSchema:
                 uri=e.uri,
                 description=e.description,
                 matched_class_id=e.matched_class_id,
+                span=(
+                    SourceSpanSchema(
+                        quote=e.span.quote,
+                        start=e.span.start,
+                        end=e.span.end,
+                    )
+                    if e.span
+                    else None
+                ),
                 properties=e.properties,
             )
             for e in result.extracted_entities

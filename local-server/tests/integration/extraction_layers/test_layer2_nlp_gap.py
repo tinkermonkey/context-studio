@@ -107,8 +107,9 @@ def test_nlp_entities_emit_layer_2_extracted_entities():
         assert entity.confidence > 0.0
     crdt = next(e for e in out.entities if e.label == "CRDT")
     assert crdt.entity_type == "DataStructure"
-    assert "char_offset_start" in crdt.properties
-    assert "char_offset_end" in crdt.properties
+    assert crdt.span is not None
+    assert crdt.span.start == 20
+    assert crdt.span.end == 24
 
 
 def test_duplicate_against_prior_entity_is_filtered():

@@ -13,6 +13,56 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
+class SourceSpan:
+    """
+    Immutable representation of a span in source text with provenance information.
+
+    A SourceSpan encodes the resolution state via nullable fields:
+    - Fully resolved (exact match): all three fields populated, source_text[start:end] == quote
+    - Fully resolved (normalized match): all three fields populated, but source_text[start:end]
+      may differ from quote in case or whitespace due to normalization during matching
+    - Quote-only: quote populated, start/end are None
+      (fuzzy-matched or found without exact position)
+    - Unresolved: all fields are None (nothing found)
+
+    Attributes:
+        quote: The verbatim or matched text from the source, or None if unresolved
+        start: Zero-indexed character position where the span begins, or None if unresolved
+        end: Zero-indexed character position where the span ends (exclusive), or None if unresolved
+    """
+
+    quote: str | None
+    start: int | None
+    end: int | None
+
+    def __post_init__(self) -> None:
+        """Validate SourceSpan invariants."""
+        # State 1: Fully resolved (all three fields populated)
+        if self.quote is not None and self.start is not None and self.end is not None:
+            if not (isinstance(self.start, int) and isinstance(self.end, int)):
+                raise ValueError("start and end must be integers when quote is present")
+            if self.start < 0 or self.end < 0:
+                raise ValueError("start and end offsets must be non-negative")
+            if self.start > self.end:
+                raise ValueError("start must be <= end")
+            return
+
+        # State 2: Quote-only (only quote populated)
+        if self.quote is not None and self.start is None and self.end is None:
+            return
+
+        # State 3: Unresolved (all fields None)
+        if self.quote is None and self.start is None and self.end is None:
+            return
+
+        # Invalid state: partial position data, start without end, etc.
+        raise ValueError(
+            f"Invalid SourceSpan state: quote={self.quote!r}, start={self.start}, end={self.end}. "
+            "Must be one of: (1) all three fields populated; (2) quote only; (3) all None"
+        )
+
+
+@dataclass(frozen=True)
 class ExtractionLayerResult:
     """
     Metadata about a single extraction layer execution.

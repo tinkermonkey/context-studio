@@ -10,7 +10,7 @@ from types import MappingProxyType
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.exceptions import NLPProcessorNotReadyError
 from domain.extraction.ports import NLPProcessor
-from domain.extraction.value_objects import LayerInput, LayerOutput
+from domain.extraction.value_objects import LayerInput, LayerOutput, SourceSpan
 
 
 def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
@@ -69,10 +69,11 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
             source_layer=2,  # Layer 2 = NLP gap-filling
             confidence=nlp_entity.confidence,  # Use adapter-provided confidence score
             uri=nlp_entity.linked_uri,
-            properties={
-                "char_offset_start": nlp_entity.start,
-                "char_offset_end": nlp_entity.end,
-            },
+            span=SourceSpan(
+                quote=nlp_entity.text.strip(),
+                start=nlp_entity.start,
+                end=nlp_entity.end,
+            ),
         )
         entities.append(extracted)
 

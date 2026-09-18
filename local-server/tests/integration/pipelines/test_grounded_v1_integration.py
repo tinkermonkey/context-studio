@@ -176,6 +176,20 @@ class TestGroundedV1Integration:
             assert isinstance(confidence, (int, float)), "Confidence must be numeric"
             assert 0.0 <= confidence <= 1.0, f"Confidence must be in [0, 1], got {confidence}"
 
+            # Verify provenance structure (quote, start, end fields)
+            provenance = triple.get("provenance")
+            assert provenance is not None, "Triple missing provenance field"
+            assert isinstance(provenance, dict), "Provenance must be a dict"
+            assert "quote" in provenance, "Provenance missing quote field"
+            assert "start" in provenance, "Provenance missing start field"
+            assert "end" in provenance, "Provenance missing end field"
+            # Verify no legacy keys
+            assert (
+                "text_offset_start" not in provenance
+            ), "Provenance should not have text_offset_start"
+            assert "text_offset_end" not in provenance, "Provenance should not have text_offset_end"
+            assert "raw" not in provenance, "Provenance should not have raw"
+
     @pytest.mark.skip(
         reason=(
             "Config validation tested in "

@@ -17,6 +17,28 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class SourceSpanSchema(BaseModel):
+    """Immutable representation of a span in source text with provenance information."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    quote: Optional[str] = Field(
+        None,
+        description="The verbatim or matched text from the source, or None if unresolved",
+    )
+    start: Optional[int] = Field(
+        None,
+        description="Zero-indexed character position where the span begins, or None if unresolved",
+    )
+    end: Optional[int] = Field(
+        None,
+        description=(
+            "Zero-indexed character position where the span ends "
+            "(exclusive), or None if unresolved"
+        ),
+    )
+
+
 class ExtractedEntitySchema(BaseModel):
     """Response containing extracted entity data."""
 
@@ -31,6 +53,9 @@ class ExtractedEntitySchema(BaseModel):
     description: Optional[str] = Field(None, description="Optional description of the entity")
     matched_class_id: Optional[str] = Field(
         None, description="ID of matched ontology class, if any"
+    )
+    span: Optional[SourceSpanSchema] = Field(
+        None, description="Optional span with provenance information (quote and character offsets)"
     )
     properties: dict = Field(default_factory=dict, description="Optional metadata key-value pairs")
 

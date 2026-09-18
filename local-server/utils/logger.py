@@ -6,9 +6,30 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from config import get_settings
+if TYPE_CHECKING:
+    from config import Settings
+
+try:
+    # Try to import from config if available
+    from config import get_settings
+except ImportError:
+    # Fallback: use an empty settings-like object with defaults
+    class _DefaultLogLevel:
+        value = "INFO"
+
+    class _DefaultSettings:
+        class Logging:
+            log_level = _DefaultLogLevel()
+            max_bytes = 10485760  # 10MB
+            backup_count = 5
+
+        logging = Logging()
+
+    def get_settings() -> "Settings":
+        return _DefaultSettings()  # type: ignore[return-value]
+
 
 _file_handler: logging.Handler | None = None
 _otlp_handler: Optional[logging.Handler] = None

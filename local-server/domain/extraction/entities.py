@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 if TYPE_CHECKING:
-    from domain.extraction.value_objects import ExtractionLayerResult
+    from domain.extraction.value_objects import ExtractionLayerResult, SourceSpan
 
 
 class ExtractionRunStatus(str, Enum):
@@ -44,6 +44,7 @@ class ExtractedEntity:
         matched_class_id: Optional ID linking to an existing Class entity when resolved
         uri: Optional URI linking to external knowledge base
         description: Optional free-text description
+        span: Optional SourceSpan containing provenance information (quote, char offsets)
         properties: Optional key-value metadata associated with the entity
 
     Raises:
@@ -58,6 +59,7 @@ class ExtractedEntity:
     matched_class_id: str | None = None
     uri: str | None = None
     description: str | None = None
+    span: SourceSpan | None = None
     properties: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:

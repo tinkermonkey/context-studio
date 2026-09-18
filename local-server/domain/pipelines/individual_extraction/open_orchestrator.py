@@ -30,6 +30,7 @@ from domain.extraction.open_extraction import (
     unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
+from domain.extraction.value_objects import SourceSpan
 from domain.ontology.ports import (
     EmbeddingService,
     OntologyRepository,
@@ -63,6 +64,19 @@ def _extract_json_obj(content: str) -> str:
     if start == -1 or end == -1 or end < start:
         return content
     return content[start : end + 1]
+
+
+def _serialize_triple_provenance(triple: dict) -> dict:
+    """Serialize SourceSpan provenance to dict format for API boundary."""
+    provenance = triple.get("provenance")
+    if isinstance(provenance, SourceSpan):
+        serialized = {
+            "quote": provenance.quote,
+            "start": provenance.start,
+            "end": provenance.end,
+        }
+        return {**triple, "provenance": serialized}
+    return triple
 
 
 class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
@@ -161,12 +175,14 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                 llm_provider=state.llm_provider,
                 result=state.result,
             )
+        # Serialize all provenance in triples before returning
+        serialized_triples = [_serialize_triple_provenance(t) for t in triples]
         return replace(
             state,
             extracted_triples=triples,
             warnings=warnings,
             metadata=metadata,
-            result={"triples": triples, "warnings": warnings, "metadata": metadata},
+            result={"triples": serialized_triples, "warnings": warnings, "metadata": metadata},
             current_status=PipelineRunStatus.COMPLETED,
         )
 
@@ -621,14 +637,18 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
         warnings: list[str] = []
 
         if self._schema_index is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded_typing requested but schema_index is None; typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
         if self._ontology_repo is None:
-            _logger.warning(
+            warning_msg = (
                 "nlp_grounded_typing requested but ontology_repo is None; typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
         if not ontology_id:
             _logger.debug("nlp_grounded_typing: ontology_id is None; typing stage skipped")
@@ -636,11 +656,12 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
 
         taxonomy = self._ontology_repo.get_by_identifier(ontology_id)
         if taxonomy is None:
-            _logger.debug(
-                "nlp_grounded_typing: ontology_id '%s' not found in repository; "
-                "typing stage skipped",
-                ontology_id,
+            warning_msg = (
+                f"nlp_grounded_typing: ontology_id '{ontology_id}' not found in repository; "
+                "typing stage skipped"
             )
+            _logger.warning(warning_msg)
+            warnings.append(warning_msg)
             return triples, warnings
 
         if not open_result.tokens:
@@ -807,11 +828,11 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
             "predicate": {"label": "is_a", "kind": "property"},
             "object": {"label": class_ref, "kind": "class"},
             "confidence": round(float(getattr(match, "score", 0.0) or 0.0), 4),
-            "provenance": {
-                "text_offset_start": chunk.start,
-                "text_offset_end": chunk.end,
-                "raw": chunk.text,
-            },
+            "provenance": SourceSpan(
+                quote=chunk.text,
+                start=chunk.start,
+                end=chunk.end,
+            ),
         }
 
 

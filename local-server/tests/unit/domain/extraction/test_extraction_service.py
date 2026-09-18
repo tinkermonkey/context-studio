@@ -612,7 +612,9 @@ class TestNlpGroundedTyping:
         triples, tokens, warnings = service._type_individuals_nlp_grounded(
             "Kubernetes runs pods.", object(), "onto", "m", 0.0
         )
-        assert triples == [] and tokens == 0 and warnings == []
+        assert triples == [] and tokens == 0
+        assert len(warnings) == 1
+        assert "schema_index is None" in warnings[0]
 
     def test_confirmed_match_becomes_an_is_a_triple_typed_to_the_matched_class(self):
         service = self._service(schema_index=_OneMatchIndex())
@@ -637,6 +639,7 @@ class TestNlpGroundedTyping:
 
     def test_aggregate_llm_error_warning_when_all_chunks_fail(self):
         """When all chunks fail with LLM errors, an aggregate warning is returned."""
+
         class FailingLLM:
             def complete(self, system_prompt, user_prompt, model, **kwargs):
                 raise RuntimeError("LLM service unavailable")
@@ -1502,3 +1505,362 @@ class TestTypeConceptObjects:
         # Programming errors should be re-raised, not caught
         with pytest.raises(TypeError, match="unexpected type error"):
             service._type_concept_objects(relationship_triples, individual_triples, ontology)
+
+
+class TestBuildTripleFromLLMOutput:
+    """
+    Tests for _build_triple_from_llm_output method.
+
+    This method is the primary integration point where resolve_span() is called
+    with real LLM provenance data. Tests cover the three distinct output branches:
+    1. Fully-resolved spans (both start and end positions)
+    2. Fuzzy-matched spans (no positions, quote preserved)
+    3. Fully-null spans (no positions, no quote)
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a minimal ExtractionService for testing."""
+        return ExtractionService(
+            ontology_repo=FakeOntologyRepository(),
+            embedding_service=FakeEmbeddingService(),
+            llm=FakeLLMProvider(),
+            nlp=FakeNLPProcessor(),
+            reference_sources=[FakeReferenceSource()],
+            event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
+            extraction_run_repo=FakeExtractionRunRepository(),
+        )
+
+    def test_build_triple_fully_resolved_span(self, service):
+        """Fully-resolved span (exact match with positions) branch."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "john_doe",
+                "label": "John Doe",
+                "class_id": "Researcher",
+            },
+            "predicate": {"label": "published", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "paper_123",
+                "label": "Byzantine Fault Tolerance",
+            },
+            "confidence": 0.95,
+            "provenance": {
+                "text_offset_start": 0,
+                "text_offset_end": 20,
+                "raw": "John Doe published",
+            },
+        }
+        text = "John Doe published a paper on Byzantine Fault Tolerance"
+        ontology_id = "test_ontology"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify triple structure
+        assert triple["subject"]["label"] == "John Doe"
+        assert triple["predicate"]["label"] == "published"
+        assert triple["object"]["label"] == "Byzantine Fault Tolerance"
+        assert triple["confidence"] == 0.95
+
+        # Verify provenance is fully resolved
+        provenance = triple["provenance"]
+        assert provenance.start is not None
+        assert provenance.end is not None
+        assert provenance.quote is not None
+
+        # No warnings for fully resolved span
+        assert len(warnings) == 0
+
+    def test_build_triple_normalized_match_with_positions(self, service):
+        """Normalized whitespace-collapsed match resolving to exact positions."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "alice",
+                "label": "Alice",
+                "class_id": "Person",
+            },
+            "predicate": {"label": "collaborates with", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "bob",
+                "label": "Bob",
+            },
+            "confidence": 0.85,
+            "provenance": {
+                # Quote with slight variation (extra whitespace) that won't match exactly
+                # but will match after normalization, with hint_start for fuzzy matching
+                "text_offset_start": 6,  # Hints at "collaborates" location
+                "text_offset_end": None,
+                "raw": (
+                    "collaborates  closely  with Bob"
+                ),  # Extra spaces - matches only after normalization
+            },
+        }
+        text = "Alice collaborates closely with Bob on research projects"
+        ontology_id = "test_ontology"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify triple is built
+        assert triple["subject"]["label"] == "Alice"
+        assert triple["predicate"]["label"] == "collaborates with"
+        assert triple["object"]["label"] == "Bob"
+
+        # Verify provenance: normalized match should be found with exact positions
+        provenance = triple["provenance"]
+        assert provenance.quote is not None
+        assert provenance.start is not None  # Normalized match provides positions
+        assert provenance.end is not None
+
+        # No warning when positions are resolved
+        assert len(warnings) == 0
+
+    def test_build_triple_fuzzy_match_quote_only_span(self, service):
+        """Fuzzy-matched span with no exact positions (quote-only span)."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "alice",
+                "label": "Alice",
+                "class_id": "Person",
+            },
+            "predicate": {"label": "collaborates with", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "bob",
+                "label": "Bob",
+            },
+            "confidence": 0.85,
+            "provenance": {
+                # Paraphrased quote that will fuzzy match (high similarity but not exact)
+                "text_offset_start": 6,  # Hints for fuzzy match window
+                "text_offset_end": None,
+                "raw": "Alice collaborates with Bob",  # Close to actual text
+            },
+        }
+        text = "Alice collaborates closely with Bob on research"
+        ontology_id = "test_ontology"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify triple is built
+        assert triple["subject"]["label"] == "Alice"
+        assert triple["predicate"]["label"] == "collaborates with"
+        assert triple["object"]["label"] == "Bob"
+
+        # Verify provenance has quote but no positions (fuzzy match)
+        provenance = triple["provenance"]
+        assert provenance.quote is not None
+        assert provenance.start is None and provenance.end is None
+
+        # Should have a warning about fuzzy match
+        assert len(warnings) == 1
+        assert "fuzzy match only" in warnings[0].lower()
+
+    def test_build_triple_fully_null_span_no_input(self, service):
+        """Fully-null span (all None) when input quote is None/empty."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "charlie",
+                "label": "Charlie",
+                "class_id": "Person",
+            },
+            "predicate": {"label": "invented", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "invention_456",
+                "label": "Quantum Computing",
+            },
+            "confidence": 0.92,
+            "provenance": {
+                # Empty raw quote (resolve_span returns fully-null for empty input)
+                "text_offset_start": None,
+                "text_offset_end": None,
+                "raw": "",  # Empty string input
+            },
+        }
+        text = "Charlie works on classical computing and distributed systems"
+        ontology_id = "test_ontology"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify triple is still built (not dropped)
+        assert triple["subject"]["label"] == "Charlie"
+        assert triple["predicate"]["label"] == "invented"
+        assert triple["object"]["label"] == "Quantum Computing"
+
+        # Verify provenance is fully null (all None)
+        provenance = triple["provenance"]
+        assert provenance.quote is None
+        assert provenance.start is None and provenance.end is None
+
+        # Should have warning about unresolved span
+        assert len(warnings) == 1
+        assert "unresolved" in warnings[0].lower()
+        assert "no match found" in warnings[0].lower()
+
+    def test_build_triple_confidence_normalization(self, service):
+        """Confidence values are clamped to [0.0, 1.0] range."""
+        # Test over-max confidence
+        triple_data_over = {
+            "subject": {"kind": "individual", "id": "x", "label": "X"},
+            "predicate": {"label": "test", "property_definition_id": None},
+            "object": {"kind": "individual", "id": "y", "label": "Y"},
+            "confidence": 2.5,  # > 1.0
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+        text = "Some text"
+        ontology_id = "test"
+
+        triple_over, _ = service._build_triple_from_llm_output(triple_data_over, text, ontology_id)
+        assert triple_over["confidence"] == 1.0
+
+        # Test under-min confidence
+        triple_data_under = {
+            "subject": {"kind": "individual", "id": "x", "label": "X"},
+            "predicate": {"label": "test", "property_definition_id": None},
+            "object": {"kind": "individual", "id": "y", "label": "Y"},
+            "confidence": -0.5,  # < 0.0
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+
+        triple_under, _ = service._build_triple_from_llm_output(
+            triple_data_under, text, ontology_id
+        )
+        assert triple_under["confidence"] == 0.0
+
+    def test_build_triple_object_kind_discrimination(self, service):
+        """Object kind determines object structure (literal vs. entity)."""
+        # Test literal object
+        triple_data_literal = {
+            "subject": {"kind": "individual", "id": "x", "label": "X"},
+            "predicate": {"label": "has_age", "property_definition_id": None},
+            "object": {
+                "kind": "literal",
+                "value": "25",
+                "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+            },
+            "confidence": 0.9,
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+        text = "Some text"
+        ontology_id = "test"
+
+        triple_lit, _ = service._build_triple_from_llm_output(
+            triple_data_literal, text, ontology_id
+        )
+        assert triple_lit["object"]["kind"] == "literal"
+        assert triple_lit["object"]["value"] == "25"
+        assert triple_lit["object"]["datatype"] == "http://www.w3.org/2001/XMLSchema#integer"
+
+        # Test entity object
+        triple_data_entity = {
+            "subject": {"kind": "individual", "id": "x", "label": "X"},
+            "predicate": {"label": "knows", "property_definition_id": None},
+            "object": {"kind": "individual", "id": "z", "label": "Z"},
+            "confidence": 0.85,
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+
+        triple_ent, _ = service._build_triple_from_llm_output(triple_data_entity, text, ontology_id)
+        assert triple_ent["object"]["kind"] == "individual"
+        assert triple_ent["object"]["id"] == "z"
+        assert triple_ent["object"]["label"] == "Z"
+
+    def test_build_triple_subject_class_ids_handling(self, service):
+        """Subject with class_id creates class_ids array."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "person_1",
+                "label": "Alice",
+                "class_id": "Person",
+            },
+            "predicate": {"label": "works_for", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "org_1",
+                "label": "TechCorp",
+            },
+            "confidence": 0.95,
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+        text = "Alice works for TechCorp"
+        ontology_id = "test"
+
+        triple, _ = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify class_ids array was created from class_id
+        assert triple["subject"]["class_ids"] == ["Person"]
+
+    def test_build_triple_subject_no_class_id_empty_array(self, service):
+        """Subject without class_id creates empty class_ids array."""
+        triple_data = {
+            "subject": {
+                "kind": "individual",
+                "id": "person_1",
+                "label": "Bob",
+                # No class_id field
+            },
+            "predicate": {"label": "knows", "property_definition_id": None},
+            "object": {
+                "kind": "individual",
+                "id": "person_2",
+                "label": "Charlie",
+            },
+            "confidence": 0.88,
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+        text = "Bob knows Charlie"
+        ontology_id = "test"
+
+        triple, _ = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify class_ids is empty when class_id not provided
+        assert triple["subject"]["class_ids"] == []
+
+    def test_build_triple_missing_confidence_defaults_to_0_5(self, service):
+        """Missing confidence defaults to 0.5."""
+        triple_data = {
+            "subject": {"kind": "individual", "id": "x", "label": "X"},
+            "predicate": {"label": "test", "property_definition_id": None},
+            "object": {"kind": "individual", "id": "y", "label": "Y"},
+            # No confidence field
+            "provenance": {"text_offset_start": None, "text_offset_end": None, "raw": None},
+        }
+        text = "Test"
+        ontology_id = "test"
+
+        triple, _ = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        assert triple["confidence"] == 0.5
+
+    def test_build_triple_exact_position_match(self, service):
+        """Exact match with provided positions validates correctly."""
+        triple_data = {
+            "subject": {"kind": "individual", "id": "1", "label": "REST API"},
+            "predicate": {"label": "provides", "property_definition_id": None},
+            "object": {"kind": "individual", "id": "2", "label": "data access"},
+            "confidence": 0.99,
+            "provenance": {
+                "text_offset_start": 4,
+                "text_offset_end": 12,
+                "raw": "REST API",
+            },
+        }
+        text = "The REST API provides endpoints for data access"
+        ontology_id = "test"
+
+        triple, warnings = service._build_triple_from_llm_output(triple_data, text, ontology_id)
+
+        # Verify exact match is recognized
+        provenance = triple["provenance"]
+        assert provenance.start == 4
+        assert provenance.end == 12
+        assert provenance.quote == "REST API"
+        assert len(warnings) == 0

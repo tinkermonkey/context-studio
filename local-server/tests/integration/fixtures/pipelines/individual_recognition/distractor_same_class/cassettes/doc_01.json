@@ -1,5 +1,5 @@
 {
-  "68ce0f704c452bca95406e3643e7b6e52923e5d1243c88f89f2dfa0d4216ae5a": {
+  "88ff96c3b51063e1c6162c2bba1ca103807d5bc17ef8c99cb128b173889060c6": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Beacon Primary Node\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.node\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,

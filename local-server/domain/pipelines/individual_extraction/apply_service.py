@@ -251,6 +251,13 @@ class IndividualExtractionApplyService:
                     if key in individual_key_to_id:
                         obj_id = individual_key_to_id[key]
 
+                if not obj_id and obj_label:
+                    _logger.warning(
+                        "Object lookup for %r with classes %s not found in cache; skipping",
+                        obj_label,
+                        obj_class_ids,
+                    )
+
             if property_definition_id and obj_kind in ("individual", "class") and obj_id:
                 self._apply_relationship(
                     source_id=resolved_id,
@@ -328,9 +335,9 @@ class IndividualExtractionApplyService:
     def _triple_context(triple: dict) -> str:
         """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
         provenance = triple.get("provenance") or {}
-        raw = provenance.get("raw")
-        if raw:
-            return str(raw)
+        quote = provenance.get("quote")
+        if quote:
+            return str(quote)
         subject_label = triple.get("subject", {}).get("label", "")
         predicate_label = triple.get("predicate", {}).get("label", "")
         object_label = triple.get("object", {}).get("label", "")

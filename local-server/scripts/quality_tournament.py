@@ -38,9 +38,8 @@ import os
 import random
 import sys
 
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-
+# Ensure both the script's directory and current working directory are in sys.path
+sys.path.insert(0, os.getcwd())
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dataclasses import asdict, dataclass
@@ -1293,8 +1292,7 @@ async def _amain(args) -> int:
     except Exception as exc:
         print(f"ERROR: embedding model probe failed ({type(exc).__name__}): {exc}")
         print(
-            "This may be an offline cache miss (HF_HUB_OFFLINE=1 is set), but could "
-            "also be a CUDA/GPU error, an out-of-memory failure, a missing dependency, "
+            "This could be a CUDA/GPU error, an out-of-memory failure, a missing dependency, "
             "or a dtype mismatch -- see the exception above for the actual cause."
         )
         return 1
