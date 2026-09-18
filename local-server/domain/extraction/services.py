@@ -78,7 +78,7 @@ def _serialize_triple_provenance(triple: dict) -> dict:
             serialized = {
                 "text_offset_start": None,
                 "text_offset_end": None,
-                "raw": provenance.quote,
+                "raw": provenance.quote or "",
             }
         return {**triple, "provenance": serialized}
     return triple
