@@ -35,7 +35,6 @@ from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
-
 TAXONOMY_ID = "tx-preview-test"
 SCHEME_ID = "cs-preview-test"
 CLASS_ID = "cls-person"
@@ -263,7 +262,7 @@ def test_recognition_preview_multiple_mentions(client, pipeline_repo, recognizer
     triples = [
         _make_triple("Alice"),
         _make_triple("Alice"),  # Duplicate — should be deduped
-        _make_triple("Bob"),    # New mention
+        _make_triple("Bob"),  # New mention
     ]
     run_id = _create_and_complete_individual_run(pipeline_repo, triples=triples)
 
@@ -278,7 +277,9 @@ def test_recognition_preview_multiple_mentions(client, pipeline_repo, recognizer
     assert hit_labels == {"Alice", "Bob"}
 
 
-def test_recognition_preview_no_writes_to_ontology(client, pipeline_repo, ontology_repo, recognizer):
+def test_recognition_preview_no_writes_to_ontology(
+    client, pipeline_repo, ontology_repo, recognizer
+):
     """Recognition preview produces zero writes to ontology."""
     alice_id = str(uuid4())
     recognizer.add_match(
