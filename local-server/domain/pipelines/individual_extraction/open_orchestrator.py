@@ -30,7 +30,6 @@ from domain.extraction.open_extraction import (
     unconsumed_noun_chunk_heads,
 )
 from domain.extraction.ports import NLPProcessor, OpenExtractionResult
-from domain.extraction.services import _serialize_triple_provenance
 from domain.extraction.value_objects import SourceSpan
 from domain.ontology.ports import (
     EmbeddingService,
@@ -65,6 +64,19 @@ def _extract_json_obj(content: str) -> str:
     if start == -1 or end == -1 or end < start:
         return content
     return content[start : end + 1]
+
+
+def _serialize_triple_provenance(triple: dict) -> dict:
+    """Serialize SourceSpan provenance to dict format for API boundary."""
+    provenance = triple.get("provenance")
+    if isinstance(provenance, SourceSpan):
+        serialized = {
+            "quote": provenance.quote,
+            "start": provenance.start,
+            "end": provenance.end,
+        }
+        return {**triple, "provenance": serialized}
+    return triple
 
 
 class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):

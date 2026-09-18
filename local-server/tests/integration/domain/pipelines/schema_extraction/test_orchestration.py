@@ -259,19 +259,20 @@ async def test_schema_extraction_provenance_tracking():
         if candidate["provenance"]:
             for prov in candidate["provenance"]:
                 # Verify provenance structure
-                assert "text_offset_start" in prov
-                assert "text_offset_end" in prov
-                assert "raw" in prov
+                assert "quote" in prov
+                # start and end may be None for quote-only spans
+                start = prov.get("start")
+                end = prov.get("end")
+                quote = prov["quote"]
 
-                # Verify offsets are valid
-                start = prov["text_offset_start"]
-                end = prov["text_offset_end"]
-                assert 0 <= start < len(source_text)
-                assert start <= end <= len(source_text)
+                # Verify offsets are valid if present
+                if start is not None and end is not None:
+                    assert 0 <= start < len(source_text)
+                    assert start <= end <= len(source_text)
 
-                # Verify raw text matches source
-                extracted = source_text[start:end]
-                assert extracted.lower() == prov["raw"].lower()
+                    # Verify quote text matches source
+                    extracted = source_text[start:end]
+                    assert extracted.lower() == quote.lower()
 
 
 @pytest.mark.asyncio
