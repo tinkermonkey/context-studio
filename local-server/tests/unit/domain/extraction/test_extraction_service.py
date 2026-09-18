@@ -1574,8 +1574,8 @@ class TestBuildTripleFromLLMOutput:
         # No warnings for fully resolved span
         assert len(warnings) == 0
 
-    def test_build_triple_fuzzy_match_span_no_positions(self, service):
-        """Fuzzy-matched span (no positions, quote preserved) branch."""
+    def test_build_triple_normalized_match_with_positions(self, service):
+        """Normalized whitespace-collapsed match resolving to exact positions."""
         triple_data = {
             "subject": {
                 "kind": "individual",

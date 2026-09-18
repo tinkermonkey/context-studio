@@ -31,7 +31,7 @@ def resolve_span(
     3. Bounded fuzzy match: if hint_start is provided, scan a ±200 character window
        around the hint and slide substrings of length len(quote)±20% looking for a
        match above 0.80 similarity (difflib.SequenceMatcher.ratio).
-    4. Fallback: return SourceSpan(quote=quote, start=None, end=None).
+    4. Fallback: return SourceSpan(quote=None, start=None, end=None).
 
     The function never raises on missing/empty inputs—it degrades gracefully to a
     quote-only span. Warning emission is the caller's responsibility (Phase 2).
@@ -46,8 +46,8 @@ def resolve_span(
     Returns:
         SourceSpan with fully-resolved (quote, start, end), quote-only (quote present,
         start/end None), or fully-null (all None) based on the cascade result.
-        Note: fully-null only occurs when inputs are empty/None; stages 1-4 preserve
-        the quote as a quote-only span even when exact position cannot be resolved.
+        Stage 4 returns fully-null (same as empty input) to distinguish "fuzzy match found"
+        (Stage 3, quote-only) from "nothing found" (Stage 4, fully-null).
     """
     if not quote or not source_text:
         return SourceSpan(quote=None, start=None, end=None)
