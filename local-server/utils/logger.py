@@ -13,9 +13,12 @@ try:
     from config import get_settings
 except ImportError:
     # Fallback: use an empty settings-like object with defaults
+    class _DefaultLogLevel:
+        value = 'INFO'
+
     class _DefaultSettings:
         class Logging:
-            log_level = type('obj', (object,), {'value': 'INFO'})()
+            log_level = _DefaultLogLevel()
             max_bytes = 10485760  # 10MB
             backup_count = 5
 
