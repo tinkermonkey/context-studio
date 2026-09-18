@@ -157,7 +157,9 @@ def _make_triple(subject_label, class_ids=None):
 
 
 def _make_triple_with_singular_class_id(subject_label):
-    """Helper to build a typing triple with singular class_id (format from _make_typing_triple())."""
+    """Helper to build a typing triple with singular class_id.
+
+    Format from _make_typing_triple()."""
     return {
         "subject": {
             "kind": "individual",
@@ -410,7 +412,9 @@ def test_recognition_preview_with_recognition_threshold(client, pipeline_repo, r
     assert data["total_mentions"] == 1
 
 
-def test_recognition_preview_returns_empty_result_for_unsupported_pipeline_type(client, pipeline_repo):
+def test_recognition_preview_returns_empty_result_for_unsupported_pipeline_type(
+    client, pipeline_repo
+):
     """200 with empty results returned for unsupported pipeline types."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(

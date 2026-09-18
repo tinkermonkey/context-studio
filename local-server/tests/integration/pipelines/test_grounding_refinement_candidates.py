@@ -493,14 +493,16 @@ class TestSchemaRefinementCandidatesEndpoint:
         # Verify first refinement
         refinement1 = candidates[0]
         assert refinement1["candidate_type"] == "refinement"
-        assert refinement1["description"] == "An improved, more precise definition of the Person class"
+        description_msg = "An improved, more precise definition of the Person class"
+        assert refinement1["description"] == description_msg
         assert refinement1["uri"] == "class_123"
         assert refinement1["confidence"] == 0.92
         assert len(refinement1["provenance"]) == 1
 
         # Verify second refinement
         refinement2 = candidates[1]
-        assert refinement2["description"] == "Alternative definition emphasizing human characteristics"
+        description_msg2 = "Alternative definition emphasizing human characteristics"
+        assert refinement2["description"] == description_msg2
         assert refinement2["confidence"] == 0.85
 
     def test_schema_connection_refinement_candidates(self, client, pipeline_run_repo, batch_repo):
