@@ -1669,7 +1669,7 @@ async def preview_recognition(
 
     This endpoint:
     - Returns 404 if the run does not exist
-    - Returns empty results if the run's pipeline type has no individuals to preview
+    - Returns 400 if the pipeline type does not support recognition preview
     - Produces zero writes to ontology data, pipeline run data, or change events
 
     Args:
@@ -1680,7 +1680,8 @@ async def preview_recognition(
         RecognitionPreviewResponse with recognition results per mention
 
     Raises:
-        HTTPException: 404 if run not found, 422 if run is not completed
+        HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,
+            404 if run not found, 422 if run is not completed
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)

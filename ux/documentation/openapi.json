@@ -3368,9 +3368,9 @@
         "tags": [
           "pipelines"
         ],
-        "summary": "Get Pipeline Candidates",
-        "description": "Retrieve candidates from a completed pipeline run.\n\nExtracts the full candidate list with provenance and confidence scores\nfrom the pipeline run's output. The structure of candidates depends on\nthe pipeline type:\n- individual_extraction: returns TripleCandidate (structured subject-predicate-object)\n  from triples key with mapped/new node distinction via id presence\n- schema_extraction: returns SchemaClassCandidate and SchemaPropertyCandidate\n  from candidates key, and SchemaConnectionCandidate from connections key\n- schema_node_grounding: returns groundings with URI, label, confidence\n- schema_node_definition_refinement: returns definition candidates\n- schema_node_connection_refinement: returns connection candidates\n\nNOTE: The response model uses Union[CandidateItem, CandidateResponse] as a\ntransitional design. individual_extraction and schema_extraction return CandidateItem\n(discriminated union with candidate_type), while legacy pipeline types return\nCandidateResponse (deprecated flat schema). This union will be simplified once\nall consumers migrate to CandidateItem.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) or CandidateResponse for\n    legacy types, with full provenance and confidence. Returns empty list for\n    runs with no candidates/triples.\n\nRaises:\n    HTTPException: 404 if run not found",
-        "operationId": "get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get",
+        "summary": "Get Pipeline Candidates Generic",
+        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nThis endpoint provides backward compatibility while enforcing proper\ntype-specific candidate mapping.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if pipeline type has no candidates",
+        "operationId": "get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get",
         "parameters": [
           {
             "name": "run_id",
@@ -3390,46 +3390,347 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "anyOf": [
+                    "oneOf": [
                       {
-                        "oneOf": [
-                          {
-                            "$ref": "#/components/schemas/SchemaClassCandidate"
-                          },
-                          {
-                            "$ref": "#/components/schemas/SchemaPropertyCandidate"
-                          },
-                          {
-                            "$ref": "#/components/schemas/SchemaConnectionCandidate"
-                          },
-                          {
-                            "$ref": "#/components/schemas/TripleCandidate"
-                          },
-                          {
-                            "$ref": "#/components/schemas/GroundingCandidate"
-                          },
-                          {
-                            "$ref": "#/components/schemas/RefinementCandidate"
-                          }
-                        ],
-                        "discriminator": {
-                          "propertyName": "candidate_type",
-                          "mapping": {
-                            "schema_class": "#/components/schemas/SchemaClassCandidate",
-                            "schema_property": "#/components/schemas/SchemaPropertyCandidate",
-                            "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
-                            "triple": "#/components/schemas/TripleCandidate",
-                            "grounding": "#/components/schemas/GroundingCandidate",
-                            "refinement": "#/components/schemas/RefinementCandidate"
-                          }
-                        }
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
                       },
                       {
-                        "$ref": "#/components/schemas/CandidateResponse"
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
                       }
-                    ]
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
                   },
-                  "title": "Response Get Pipeline Candidates Api Pipelines Runs  Run Id  Candidates Get"
+                  "title": "Response Get Pipeline Candidates Generic Api Pipelines Runs  Run Id  Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-extraction-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Extraction Candidates",
+        "description": "Retrieve candidates from a schema_extraction pipeline run.\n\nReturns SchemaClassCandidate, SchemaPropertyCandidate, and\nSchemaConnectionCandidate objects with full provenance and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with schema candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not schema_extraction type",
+        "operationId": "get_schema_extraction_candidates_api_pipelines_runs__run_id__schema_extraction_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Extraction Candidates Api Pipelines Runs  Run Id  Schema Extraction Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/individual-extraction-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Individual Extraction Candidates",
+        "description": "Retrieve candidates from an individual_extraction pipeline run.\n\nReturns TripleCandidate objects with structured subject-predicate-object\nrelationships and full provenance and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with triple candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not individual_extraction type",
+        "operationId": "get_individual_extraction_candidates_api_pipelines_runs__run_id__individual_extraction_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Individual Extraction Candidates Api Pipelines Runs  Run Id  Individual Extraction Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-grounding-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Grounding Candidates",
+        "description": "Retrieve candidates from a schema_node_grounding pipeline run.\n\nReturns GroundingCandidate objects linking schema nodes to external knowledge\nwith URI, label, description, and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with grounding candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not schema_node_grounding type",
+        "operationId": "get_schema_grounding_candidates_api_pipelines_runs__run_id__schema_grounding_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Grounding Candidates Api Pipelines Runs  Run Id  Schema Grounding Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-refinement-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Refinement Candidates",
+        "description": "Retrieve candidates from schema refinement pipeline runs.\n\nHandles both schema_node_definition_refinement and schema_node_connection_refinement\npipeline types, returning RefinementCandidate objects with refined content\n(definitions or connections) with confidence and provenance.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with refinement candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not a refinement type",
+        "operationId": "get_schema_refinement_candidates_api_pipelines_runs__run_id__schema_refinement_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Refinement Candidates Api Pipelines Runs  Run Id  Schema Refinement Candidates Get"
                 }
               }
             }
@@ -3823,7 +4124,7 @@
           "pipelines"
         ],
         "summary": "Preview Recognition",
-        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns empty results if the run's pipeline type has no individuals to preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
+        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns empty results if the run's pipeline type has no individuals to preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
         "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
         "parameters": [
           {
@@ -3836,6 +4137,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RecognitionPreviewRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -7187,53 +7505,6 @@
         ],
         "title": "CancelBatchResponse",
         "description": "Response from batch cancel operation."
-      },
-      "CandidateResponse": {
-        "properties": {
-          "uri": {
-            "type": "string",
-            "title": "Uri",
-            "description": "Candidate URI or identifier"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable candidate label"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Candidate description or definition",
-            "default": ""
-          },
-          "source": {
-            "type": "string",
-            "title": "Source",
-            "description": "Source or database where candidate originates",
-            "default": ""
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "description": "Confidence score (0.0-1.0)"
-          },
-          "provenance": {
-            "type": "string",
-            "title": "Provenance",
-            "description": "Rationale or provenance for the candidate",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "required": [
-          "uri",
-          "label",
-          "confidence"
-        ],
-        "title": "CandidateResponse",
-        "description": "Response containing a single candidate from a pipeline run.\n\nDEPRECATED: Use CandidateItem (discriminated union) for new implementations.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface. Kept for backwards compatibility until\nall consumers migrate to discriminated union variants."
       },
       "CentralityResponse": {
         "properties": {
@@ -11372,6 +11643,14 @@
             "type": "boolean",
             "title": "Will Match Existing",
             "description": "True if the mention would match an existing individual, False if it would be created as new"
+          },
+          "candidate_class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Candidate Class Ids",
+            "description": "List of class IDs that drove this recognition match decision"
           }
         },
         "type": "object",
@@ -11381,6 +11660,29 @@
         ],
         "title": "RecognitionPreviewHitSchema",
         "description": "Preview of recognition result for a single extracted mention."
+      },
+      "RecognitionPreviewRequest": {
+        "properties": {
+          "confidence_threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Threshold",
+            "description": "Minimum confidence threshold for extracted mentions (0.0\u20131.0). Mentions below this threshold are skipped.",
+            "default": 0.5
+          },
+          "recognition_threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Recognition Threshold",
+            "description": "Minimum confidence threshold for individual recognition matches (0.0\u20131.0). Matches below this threshold are not reported.",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "RecognitionPreviewRequest",
+        "description": "Request to preview recognition results for a pipeline run."
       },
       "RecognitionPreviewResponse": {
         "properties": {
@@ -11409,13 +11711,20 @@
             "minimum": 0.0,
             "title": "Unmatched Count",
             "description": "Number of mentions that would be created as new"
+          },
+          "skipped_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Skipped Count",
+            "description": "Number of mentions skipped due to being below the confidence threshold"
           }
         },
         "type": "object",
         "required": [
           "total_mentions",
           "matched_count",
-          "unmatched_count"
+          "unmatched_count",
+          "skipped_count"
         ],
         "title": "RecognitionPreviewResponse",
         "description": "Response from recognition preview endpoint."

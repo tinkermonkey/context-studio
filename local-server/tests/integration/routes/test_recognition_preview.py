@@ -395,5 +395,69 @@ def test_recognition_preview_with_recognition_threshold(client, pipeline_repo, r
     assert data["total_mentions"] == 1
 
 
+def test_recognition_preview_returns_400_for_unsupported_pipeline_type(client, pipeline_repo):
+    """400 returned when pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION."""
+    batch_id = str(uuid4())
+    run = pipeline_repo.create(
+        batch_run_id=batch_id,
+        pipeline_type=PipelineType.NO_OP,
+        implementation_id="default",
+        configuration_ref="noop-default",
+        configuration_slug="noop-default",
+        configuration_version=1,
+    )
+    run_id = run.id
+    pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+    pipeline_repo.update_summaries(
+        run_id,
+        output_summary={"triples": []},
+    )
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = response.json()
+    assert "not applicable" in data["detail"].lower()
+
+
+def test_recognition_preview_handles_null_confidence(client, pipeline_repo, recognizer):
+    """Null confidence values default to 0.5 without crashing."""
+    triple_with_null_confidence = {
+        "subject": {
+            "kind": "individual",
+            "id": "",
+            "label": "Charlie",
+            "class_ids": [CLASS_ID],
+        },
+        "predicate": {"label": "is_a"},
+        "object": {"kind": "class", "id": CLASS_ID, "label": "Person"},
+        "confidence": None,
+    }
+    run_id = _create_and_complete_individual_run(
+        pipeline_repo, triples=[triple_with_null_confidence]
+    )
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 1
+    assert data["unmatched_count"] == 1
+    hit = data["hits"][0]
+    assert hit["mention_label"] == "Charlie"
+
+
+def test_recognition_preview_includes_candidate_class_ids(client, pipeline_repo, recognizer):
+    """candidate_class_ids field is included in recognition preview hits."""
+    triple = _make_triple("Diana", class_ids=[CLASS_ID])
+    run_id = _create_and_complete_individual_run(pipeline_repo, triples=[triple])
+
+    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["total_mentions"] == 1
+    hit = data["hits"][0]
+    assert "candidate_class_ids" in hit
+    assert hit["candidate_class_ids"] == [CLASS_ID]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
