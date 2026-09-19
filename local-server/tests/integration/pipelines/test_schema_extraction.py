@@ -328,7 +328,7 @@ class TestSchemaExtractionHTTP:
     def test_candidates_endpoint_provenance_format(
         self, schema_client, pipeline_run_repo, batch_repo
     ):
-        """Generic endpoint returns candidates with proper provenance in discriminated union format."""
+        """Returns candidates with proper provenance in discriminated union format."""
         from domain.pipelines.entities import PipelineRunStatus
 
         # Create a batch and a run with explicit provenance in both pre-span and post-span formats
@@ -414,7 +414,10 @@ class TestSchemaExtractionHTTP:
                         "kind": "class",
                         "label": "Service",
                         "proposed_definition": "A reusable software component",
-                        "disambiguation_rationale": "Chosen over 'Component' due to context mentioning orchestration and deployment",
+                        "disambiguation_rationale": (
+                            "Chosen over 'Component' due to context mentioning "
+                            "orchestration and deployment"
+                        ),
                         "confidence": 0.87,
                         "provenance": [{"quote": "service", "start": 5, "end": 12}],
                     }
@@ -439,7 +442,10 @@ class TestSchemaExtractionHTTP:
         assert candidate["confidence"] == 0.87
         # This is the critical assertion: disambiguation_rationale must round-trip
         assert candidate["disambiguation_rationale"] is not None
-        assert candidate["disambiguation_rationale"] == "Chosen over 'Component' due to context mentioning orchestration and deployment"
+        assert (
+            candidate["disambiguation_rationale"]
+            == "Chosen over 'Component' due to context mentioning orchestration and deployment"
+        )
 
 
 # ---------------------------------------------------------------------------- #
