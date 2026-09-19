@@ -974,3 +974,73 @@ class TestConceptObjectCacheLookup:
         rels = repo.list_relationships(source_id=bob.id, property_id="prop-knows")
         assert len(rels) == 1
         assert rels[0].target_id == "ind-existing"
+
+
+# ---------------------------------------------------------------------------
+# Recognition context (triple_context)
+# ---------------------------------------------------------------------------
+
+
+class TestTripleContextBackwardCompatibility:
+    """Tests for _triple_context backward compatibility with old provenance format."""
+
+    def test_triple_context_with_new_quote_key(self):
+        """Triple with new 'quote' key in provenance returns the quote."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows"},
+            "object": {"label": "Bob", "kind": "individual"},
+            "provenance": {"quote": "Alice knows Bob well", "start": 0, "end": 20},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "Alice knows Bob well"
+
+    def test_triple_context_with_old_raw_key(self):
+        """Triple with old 'raw' key in provenance returns the raw text (backward compatibility)."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows"},
+            "object": {"label": "Bob", "kind": "individual"},
+            "provenance": {"raw": "old format text", "text_offset_start": 0, "text_offset_end": 15},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "old format text"
+
+    def test_triple_context_prefers_quote_over_raw(self):
+        """When both 'quote' and 'raw' keys are present, 'quote' takes precedence."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "provenance": {"quote": "new format", "raw": "old format"},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "new format"
+
+    def test_triple_context_falls_back_to_label_when_no_provenance(self):
+        """When provenance has no quote/raw, falls back to subject+predicate+object labels."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows"},
+            "object": {"label": "Bob", "kind": "individual"},
+            "provenance": {},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "Alice knows Bob"
+
+    def test_triple_context_subject_only_when_no_predicate(self):
+        """When predicate is missing, uses subject label only."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "provenance": {},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "Alice"
+
+    def test_triple_context_missing_provenance_field(self):
+        """Triple missing provenance field entirely falls back to labels."""
+        triple = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows"},
+            "object": {"label": "Bob", "kind": "individual"},
+        }
+        context = IndividualExtractionApplyService._triple_context(triple)
+        assert context == "Alice knows Bob"

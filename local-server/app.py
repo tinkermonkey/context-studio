@@ -352,6 +352,7 @@ async def lifespan(app: FastAPI):
             extraction_run_repo=extraction_run_repo,
             schema_index=schema_vector_index,
             individual_index=individual_vector_index,
+            individual_recognizer=individual_recognizer,
         )
         logger.info("ExtractionService created and wired with adapters")
 

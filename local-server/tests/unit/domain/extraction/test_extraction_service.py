@@ -11,6 +11,7 @@ import pytest
 
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
 from domain.extraction.exceptions import ExtractionError
+from domain.extraction.ports import RecognitionMatch
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import SchemaVectorIndex
 
@@ -651,6 +652,106 @@ class TestNlpGroundedTyping:
         assert triples == []
         assert len(warnings) == 1
         assert "aggregate LLM error" in warnings[0].lower() or "llm" in warnings[0].lower()
+
+    def test_warning_emitted_when_partial_chunks_fail(self):
+        """When some (but not all) chunks fail with LLM errors, a degradation warning
+        is returned."""
+
+        class SelectiveFailingLLM:
+            def __init__(self):
+                self.call_count = 0
+
+            def complete(self, system_prompt, user_prompt, model, **kwargs):
+                import json as _json
+
+                from domain.pipelines.ports import LLMResponse
+
+                # Fail on first call, succeed on second
+                self.call_count += 1
+                if self.call_count == 1:
+                    raise RuntimeError("transient LLM error")
+                return LLMResponse(
+                    content=_json.dumps({"class": "technology.systemsoftware"}),
+                    model=model,
+                    tokens_in=5,
+                    tokens_out=5,
+                    duration_ms=1.0,
+                    finish_reason="stop",
+                )
+
+        # Create a service with an NLP processor that returns multiple chunks
+        from domain.extraction.services import ExtractionService
+
+        service = ExtractionService(
+            ontology_repo=_RepoWithClass(),
+            embedding_service=FakeEmbeddingService(),
+            llm=SelectiveFailingLLM(),
+            nlp=_MultiChunkNLP(),  # NLP processor with 2 chunks
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+            schema_index=_OneMatchIndex(),
+            extraction_mode="nlp_grounded",
+        )
+        triples, _, warnings = service._type_individuals_nlp_grounded(
+            "Kubernetes and Docker are tools.", _Ontology(), "onto", "m", 0.0
+        )
+        # One chunk fails, one succeeds, so we get 1 triple
+        assert len(triples) == 1
+        # A warning should be emitted about partial failures
+        assert len(warnings) == 1
+        assert "partial" in warnings[0].lower() or "degraded" in warnings[0].lower()
+        assert "1 of 2" in warnings[0]
+
+
+class _MultiChunkNLP:
+    """process_open with multiple NOUN-headed noun chunks."""
+
+    def process_open(self, text):
+        from domain.extraction.ports import (
+            NounChunkSpan,
+            OpenExtractionResult,
+            OpenToken,
+        )
+
+        chunks_data = [("Kubernetes", 0, 10), ("Docker", 15, 21)]
+        tokens = []
+        noun_chunks = []
+
+        for idx, (chunk_text, start, end) in enumerate(chunks_data):
+            tok = OpenToken(
+                index=idx,
+                text=chunk_text,
+                lemma=chunk_text.lower(),
+                pos="PROPN",
+                tag="NNP",
+                dep="nsubj",
+                head_index=idx,
+                start=start,
+                end=end,
+                sentence_index=0,
+                is_stop=False,
+                is_alpha=True,
+            )
+            tokens.append(tok)
+            chunk = NounChunkSpan(
+                text=chunk_text,
+                start_token=idx,
+                end_token=idx + 1,
+                root_index=idx,
+                start=start,
+                end=end,
+                sentence_index=0,
+            )
+            noun_chunks.append(chunk)
+
+        return OpenExtractionResult(
+            tokens=tuple(tokens),
+            noun_chunks=tuple(noun_chunks),
+            sentence_count=1,
+            language="en",
+        )
 
 
 class _Ontology:
@@ -1423,10 +1524,14 @@ class TestTypeConceptObjects:
         """Helper to identify typing triples."""
         return triple.get("object", {}).get("kind") == "class"
 
-    def test_database_access_failure_returns_untyped_triples(
+    def test_database_access_failure_raises_extraction_error(
         self, extraction_service_for_typing, caplog
     ):
-        """Test that database access failures return untyped relationship triples unchanged."""
+        """Test that database access failures raise ExtractionError instead of silently losing data.
+
+        When property_definition_index fails, we raise ExtractionError with the underlying
+        cause chained. This makes the error explicit to the caller, preventing silent data loss.
+        """
         import logging
 
         service = extraction_service_for_typing["service"]
@@ -1456,32 +1561,29 @@ class TestTypeConceptObjects:
             },
         ]
 
-        with caplog.at_level(logging.ERROR):
-            result_triples, warnings = service._type_concept_objects(
-                relationship_triples, individual_triples, ontology
-            )
+        # Expect ExtractionError to be raised with underlying RuntimeError chained
+        with pytest.raises(ExtractionError, match="Concept-object typing step failed"):
+            with caplog.at_level(logging.ERROR):
+                service._type_concept_objects(
+                    relationship_triples, individual_triples, ontology
+                )
 
-        # Assert original triples are returned unchanged
-        assert result_triples == relationship_triples
-        assert len(result_triples) == 2
-
-        # Assert no synthetic is_a triples are appended
-        typing_triples = [
-            t for t in result_triples if t.get("predicate", {}).get("label") == "is_a"
-        ]
-        assert len(typing_triples) == 0
-
-        # Assert warning is returned
-        assert len(warnings) == 1
-        assert "Concept-object typing step failed" in warnings[0]
-        assert "transient SQLite error" in warnings[0]
-
-        # Assert ERROR-level log is emitted
+        # Assert error is logged with context
+        assert any(
+            "Concept-object typing step failed" in record.message
+            for record in caplog.records
+            if record.levelname == "ERROR"
+        )
         assert "Concept-object typing step failed" in caplog.text
         assert "transient SQLite error" in caplog.text
 
-    def test_programming_error_is_reraised(self, extraction_service_for_typing):
-        """Test that programming errors (TypeError, etc.) are re-raised, not caught."""
+    def test_programming_error_wrapped_in_extraction_error(self, extraction_service_for_typing):
+        """Test that programming errors are wrapped in ExtractionError to signal critical failure.
+
+        Even coding errors that would normally be re-raised are now wrapped in ExtractionError
+        to make it explicit to the caller that the extraction cannot continue and data loss
+        will result if not handled properly.
+        """
         service = extraction_service_for_typing["service"]
         ontology = extraction_service_for_typing["ontology"]
         ontology_repo = extraction_service_for_typing["ontology_repo"]
@@ -1502,8 +1604,8 @@ class TestTypeConceptObjects:
             }
         ]
 
-        # Programming errors should be re-raised, not caught
-        with pytest.raises(TypeError, match="unexpected type error"):
+        # All errors, including programming errors, are wrapped in ExtractionError
+        with pytest.raises(ExtractionError, match="Concept-object typing step failed"):
             service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
 
@@ -1864,3 +1966,343 @@ class TestBuildTripleFromLLMOutput:
         assert provenance.end == 12
         assert provenance.quote == "REST API"
         assert len(warnings) == 0
+
+
+class TestPreviewRecognition:
+    """
+    Unit tests for ExtractionService.preview_recognition() method.
+
+    Tests the recognition preview logic with FakeIndividualRecognizer,
+    covering edge cases like empty triples, non-individual subjects,
+    empty class_ids, case-insensitive deduplication, and recognizer=None.
+    """
+
+    @pytest.fixture
+    def service_with_recognizer(self):
+        """Create an ExtractionService with FakeIndividualRecognizer."""
+        from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
+
+        ontology_repo = FakeOntologyRepository()
+        embedding_service = FakeEmbeddingService()
+        llm = Mock()
+        nlp = Mock()
+        reference_sources = []
+        event_publisher = FakeEventPublisher()
+        extraction_repo = Mock()
+        extraction_run_repo = Mock()
+        recognizer = FakeIndividualRecognizer()
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=reference_sources,
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+            individual_recognizer=recognizer,
+        )
+
+        return {
+            "service": service,
+            "recognizer": recognizer,
+        }
+
+    def _make_triple(self, label, class_ids=None):
+        """Helper to build a typing triple for individual extraction."""
+        return {
+            "subject": {
+                "kind": "individual",
+                "id": "",
+                "label": label,
+                "class_ids": class_ids or ["cls-test"],
+            },
+            "predicate": {"label": "is_a"},
+            "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+            "confidence": 0.9,
+        }
+
+    def test_preview_recognition_empty_triples_list(self, service_with_recognizer):
+        """Empty triples list returns empty hits."""
+        service = service_with_recognizer["service"]
+        result = service.preview_recognition([])
+        assert result.hits == []
+        assert result.skipped_count == 0
+
+    def test_preview_recognition_no_recognizer_returns_empty(self):
+        """preview_recognition returns empty list when recognizer is None."""
+        ontology_repo = FakeOntologyRepository()
+        embedding_service = FakeEmbeddingService()
+        llm = Mock()
+        nlp = Mock()
+        reference_sources = []
+        event_publisher = FakeEventPublisher()
+        extraction_repo = Mock()
+        extraction_run_repo = Mock()
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=reference_sources,
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+            extraction_run_repo=extraction_run_repo,
+            individual_recognizer=None,
+        )
+
+        triples = [self._make_triple("Alice")]
+        result = service.preview_recognition(triples)
+        assert result.hits == []
+        assert result.skipped_count == 0
+
+    def test_preview_recognition_skips_non_individual_subjects(self, service_with_recognizer):
+        """Triples with non-individual subjects are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            {
+                "subject": {"kind": "class", "id": "cls-1", "label": "Person"},
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-2", "label": "Entity"},
+                "confidence": 0.9,
+            }
+        ]
+        result = service.preview_recognition(triples)
+        assert len(result.hits) == 0
+
+    def test_preview_recognition_unmatched_mention_no_class_ids(self, service_with_recognizer):
+        """Mention with empty class_ids produces unmatched hit."""
+        service = service_with_recognizer["service"]
+        triples = [self._make_triple("Alice", class_ids=[])]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is False
+        assert hits[0].resolved_individual_id is None
+        assert hits[0].resolved_individual_title is None
+
+    def test_preview_recognition_case_insensitive_dedup(self, service_with_recognizer):
+        """Duplicate mentions (case-insensitive) are deduplicated."""
+        service = service_with_recognizer["service"]
+        triples = [
+            self._make_triple("Alice"),
+            self._make_triple("ALICE"),  # Case variant
+            self._make_triple("alice"),  # Another case variant
+        ]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+
+    def test_preview_recognition_matched_individual(self, service_with_recognizer):
+        """Matched mention includes resolved individual details."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=1.0,
+                method="exact",
+            ),
+        )
+
+        triples = [self._make_triple("Alice")]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is True
+        assert hits[0].resolved_individual_id == alice_id
+        assert hits[0].resolved_individual_title == "Alice (Person)"
+        assert hits[0].match_method == "exact"
+        assert hits[0].match_score == 1.0
+
+    def test_preview_recognition_unmatched_individual(self, service_with_recognizer):
+        """Unmatched mention produces hit with will_match_existing=False."""
+        service = service_with_recognizer["service"]
+        triples = [self._make_triple("UnknownPerson")]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "UnknownPerson"
+        assert hits[0].will_match_existing is False
+        assert hits[0].resolved_individual_id is None
+        assert hits[0].match_method is None
+        assert hits[0].match_score is None
+
+    def test_preview_recognition_mixed_matches_and_unmatched(self, service_with_recognizer):
+        """Mixed mentions with matches and unmatched produce correct hits."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=0.95,
+                method="vector",
+            ),
+        )
+
+        triples = [
+            self._make_triple("Alice"),
+            self._make_triple("Bob"),
+            self._make_triple("Charlie"),
+        ]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 3
+        labels = {hit.mention_label for hit in hits}
+        assert labels == {"Alice", "Bob", "Charlie"}
+
+        alice_hit = next(h for h in hits if h.mention_label == "Alice")
+        assert alice_hit.will_match_existing is True
+        assert alice_hit.resolved_individual_id == alice_id
+
+        bob_hit = next(h for h in hits if h.mention_label == "Bob")
+        assert bob_hit.will_match_existing is False
+
+        charlie_hit = next(h for h in hits if h.mention_label == "Charlie")
+        assert charlie_hit.will_match_existing is False
+
+    def test_preview_recognition_whitespace_trimming(self, service_with_recognizer):
+        """Mention labels with leading/trailing whitespace are trimmed."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        alice_id = "ind-alice-1"
+        recognizer.add_match(
+            label="Alice",
+            match=RecognitionMatch(
+                individual_id=alice_id,
+                title="Alice (Person)",
+                score=1.0,
+                method="exact",
+            ),
+        )
+
+        triples = [
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "  Alice  ",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.9,
+            }
+        ]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+        assert hits[0].will_match_existing is True
+
+    def test_preview_recognition_skips_empty_labels(self, service_with_recognizer):
+        """Mentions with empty or whitespace-only labels are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            self._make_triple(""),
+            self._make_triple("   "),
+            self._make_triple("Alice"),
+        ]
+        result = service.preview_recognition(triples)
+        hits = result.hits
+
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Alice"
+
+    def test_preview_recognition_passes_class_ids_to_recognizer(self, service_with_recognizer):
+        """Class IDs are passed to recognizer for scoped recognition."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        # Track what class_ids were passed to recognize()
+        received_class_ids = []
+
+        original_recognize = recognizer.recognize
+
+        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+            received_class_ids.append(class_ids)
+            return original_recognize(label, context, class_ids, taxonomy_id, threshold)
+
+        recognizer.recognize = tracking_recognize
+
+        class_ids = ["cls-person", "cls-agent"]
+        triples = [self._make_triple("Alice", class_ids=class_ids)]
+        service.preview_recognition(triples)
+
+        assert len(received_class_ids) == 1
+        assert received_class_ids[0] == class_ids
+
+    def test_preview_recognition_filters_by_confidence_threshold(self, service_with_recognizer):
+        """Triples below confidence_threshold are skipped."""
+        service = service_with_recognizer["service"]
+        triples = [
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "Alice",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.3,
+            },
+            {
+                "subject": {
+                    "kind": "individual",
+                    "id": "",
+                    "label": "Bob",
+                    "class_ids": ["cls-test"],
+                },
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "id": "cls-test", "label": "Test"},
+                "confidence": 0.7,
+            },
+        ]
+        result = service.preview_recognition(triples, confidence_threshold=0.5)
+        hits = result.hits
+        skipped = result.skipped_count
+
+        assert skipped == 1
+        assert len(hits) == 1
+        assert hits[0].mention_label == "Bob"
+
+    def test_preview_recognition_passes_recognition_threshold(self, service_with_recognizer):
+        """recognition_threshold is passed to recognizer."""
+        service = service_with_recognizer["service"]
+        recognizer = service_with_recognizer["recognizer"]
+
+        received_thresholds = []
+        original_recognize = recognizer.recognize
+
+        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+            received_thresholds.append(threshold)
+            return original_recognize(label, context, class_ids, taxonomy_id, threshold)
+
+        recognizer.recognize = tracking_recognize
+
+        triples = [self._make_triple("Alice")]
+        service.preview_recognition(triples, recognition_threshold=0.75)
+
+        assert len(received_thresholds) == 1
+        assert received_thresholds[0] == 0.75

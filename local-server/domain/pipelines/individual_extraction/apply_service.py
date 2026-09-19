@@ -246,6 +246,11 @@ class IndividualExtractionApplyService:
                         if key in individual_key_to_id:
                             obj_id = individual_key_to_id[key]
                             break
+                    # Fall back to label-only entry if no class_id matched
+                    if not obj_id:
+                        key = (obj_label.lower(), "")
+                        if key in individual_key_to_id:
+                            obj_id = individual_key_to_id[key]
                 elif obj_label:
                     key = (obj_label.lower(), "")
                     if key in individual_key_to_id:
@@ -335,7 +340,7 @@ class IndividualExtractionApplyService:
     def _triple_context(triple: dict) -> str:
         """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
         provenance = triple.get("provenance") or {}
-        quote = provenance.get("quote")
+        quote = provenance.get("quote") or provenance.get("raw")
         if quote:
             return str(quote)
         subject_label = triple.get("subject", {}).get("label", "")

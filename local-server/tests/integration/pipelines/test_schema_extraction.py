@@ -251,6 +251,202 @@ class TestSchemaExtractionHTTP:
         response = schema_client.get("/api/pipelines/runs/nonexistent-run-id")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_candidates_endpoint_returns_schema_extraction_candidates(self, schema_client):
+        """Return candidates in legacy flat format at generic /candidates endpoint."""
+        run_response = schema_client.post(
+            "/api/pipelines/schema_extraction/run",
+            json=_MICROSERVICES_PAYLOAD,
+        )
+        assert run_response.status_code == status.HTTP_201_CREATED
+        run_id = run_response.json()["id"]
+
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run_id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) > 0
+
+        # Generic endpoint returns CandidateItem (discriminated union) format
+        for candidate in candidates:
+            assert "candidate_type" in candidate
+            assert "confidence" in candidate
+            assert "provenance" in candidate
+            assert isinstance(candidate["confidence"], (int, float))
+            assert 0.0 <= candidate["confidence"] <= 1.0
+            # Check that it has the correct structure for schema extraction candidates
+            candidate_type = candidate["candidate_type"]
+            if candidate_type == "schema_class":
+                assert "label" in candidate
+                assert "proposed_definition" in candidate
+            elif candidate_type == "schema_property":
+                assert "label" in candidate
+                assert "proposed_definition" in candidate
+            elif candidate_type == "schema_connection":
+                assert "subject_ref" in candidate
+                assert "predicate" in candidate
+                assert "object_ref" in candidate
+
+    def test_candidates_endpoint_empty_for_no_candidates(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """Return empty list when output_summary has no candidates."""
+        from domain.pipelines.entities import PipelineRunStatus
+
+        # Create a batch first
+        batch = batch_repo.create()
+
+        # Create a run with empty output_summary (simulates a run with no candidates)
+        run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update the run with empty output_summary and set status to COMPLETED
+        pipeline_run_repo.update_summaries(
+            run.id,
+            output_summary={},  # Empty output - no candidates or connections
+        )
+        pipeline_run_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
+
+        # The endpoint should return an empty list, not an error
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{run.id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+        candidates = candidates_response.json()
+        assert isinstance(candidates, list)
+        assert len(candidates) == 0
+
+    def test_candidates_endpoint_not_found(self, schema_client):
+        """GET /api/pipelines/runs/{run_id}/candidates returns 404 for nonexistent run."""
+        response = schema_client.get("/api/pipelines/runs/nonexistent-run-id/candidates")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_candidates_endpoint_provenance_format(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """Returns candidates with proper provenance in discriminated union format."""
+        from domain.pipelines.entities import PipelineRunStatus
+
+        # Create a batch and a run with explicit provenance in both pre-span and post-span formats
+        batch = batch_repo.create()
+
+        # Create a run with mixed provenance formats to test normalization
+        test_run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update with output_summary containing provenance in both formats
+        pipeline_run_repo.update_summaries(
+            test_run.id,
+            output_summary={
+                "candidates": [
+                    {
+                        "kind": "class",
+                        "label": "Service",
+                        "proposed_definition": "A software service",
+                        "confidence": 0.95,
+                        "provenance": [
+                            # Post-span format
+                            {"quote": "service", "start": 10, "end": 17},
+                            # Pre-span format (text_offset_start/text_offset_end/raw)
+                            {"text_offset_start": 0, "text_offset_end": 7, "raw": "Service"},
+                        ],
+                    }
+                ],
+                "connections": [],
+            },
+        )
+        pipeline_run_repo.update_status(test_run.id, PipelineRunStatus.COMPLETED)
+
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{test_run.id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        assert len(candidates) > 0
+
+        # Generic endpoint returns discriminated union format (CandidateItem)
+        for candidate in candidates:
+            assert "candidate_type" in candidate
+            assert "confidence" in candidate
+            assert "provenance" in candidate
+
+            # Provenance should be a list of objects with quote, start, end fields
+            assert isinstance(candidate["provenance"], list)
+            for prov in candidate["provenance"]:
+                assert "quote" in prov
+                assert prov["quote"] is not None
+                # start and end may be None but should be present
+                assert "start" in prov
+                assert "end" in prov
+
+    def test_candidates_endpoint_with_disambiguation_rationale(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates returns schema class candidates with disambiguation_rationale field."""
+        from domain.pipelines.entities import PipelineRunStatus
+
+        # Create a batch and run with a class candidate that has disambiguation_rationale
+        batch = batch_repo.create()
+        test_run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update with output_summary containing a class candidate with disambiguation_rationale
+        pipeline_run_repo.update_summaries(
+            test_run.id,
+            output_summary={
+                "candidates": [
+                    {
+                        "kind": "class",
+                        "label": "Service",
+                        "proposed_definition": "A reusable software component",
+                        "disambiguation_rationale": (
+                            "Chosen over 'Component' due to context mentioning "
+                            "orchestration and deployment"
+                        ),
+                        "confidence": 0.87,
+                        "provenance": [{"quote": "service", "start": 5, "end": 12}],
+                    }
+                ],
+                "connections": [],
+            },
+        )
+        pipeline_run_repo.update_status(test_run.id, PipelineRunStatus.COMPLETED)
+
+        # Call the endpoint
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{test_run.id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        assert len(candidates) == 1
+
+        # Verify the candidate has the disambiguation_rationale field
+        candidate = candidates[0]
+        assert candidate["candidate_type"] == "schema_class"
+        assert candidate["label"] == "Service"
+        assert candidate["proposed_definition"] == "A reusable software component"
+        assert candidate["confidence"] == 0.87
+        # This is the critical assertion: disambiguation_rationale must round-trip
+        assert candidate["disambiguation_rationale"] is not None
+        assert (
+            candidate["disambiguation_rationale"]
+            == "Chosen over 'Component' due to context mentioning orchestration and deployment"
+        )
+
 
 # ---------------------------------------------------------------------------- #
 # Canon-driven assertions                                                      #

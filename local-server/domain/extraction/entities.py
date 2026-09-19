@@ -278,3 +278,85 @@ class TripleExtractionResult:
     triples: list[dict]
     warnings: list[str]
     metadata: dict[str, int | str]
+
+
+@dataclass(frozen=True)
+class RecognitionPreviewHit:
+    """
+    A preview of what would happen if an extracted individual mention were applied.
+
+    This represents a mention from an extraction run and whether/how it would match
+    an existing ontology individual if the run were applied. Used by the recognition
+    preview endpoint to report recognition results without writing any data.
+
+    Attributes:
+        mention_label: The extracted mention's surface text
+        resolved_individual_id: ID of the matched existing individual, or None if no match
+        resolved_individual_title: Canonical title of the matched individual, or None
+        match_method: Match method when resolved ("exact", "vector", "llm"), or None
+        match_score: Confidence of the match (0.0–1.0), or None if no match
+        will_match_existing: True if the mention would match an existing individual,
+            False if it would be created as new
+        candidate_class_ids: List of class IDs that drove this recognition match decision
+
+    Raises:
+        ValueError: If match_score is not None and not 0.0–1.0, or if resolved_individual_id
+            and resolved_individual_title are inconsistent with match_method
+    """
+
+    mention_label: str
+    resolved_individual_id: str | None
+    resolved_individual_title: str | None
+    match_method: str | None
+    match_score: float | None
+    will_match_existing: bool
+    candidate_class_ids: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """Validate recognition preview hit invariants."""
+        if self.match_score is not None and not (0.0 <= self.match_score <= 1.0):
+            raise ValueError(f"match_score must be 0.0–1.0 or None, got {self.match_score}")
+        if self.will_match_existing:
+            if not self.resolved_individual_id or not self.resolved_individual_title:
+                raise ValueError(
+                    "will_match_existing=True requires both resolved_individual_id "
+                    "and resolved_individual_title"
+                )
+            if self.match_method not in ("exact", "vector", "llm"):
+                raise ValueError(
+                    f"will_match_existing=True requires valid match_method, got {self.match_method}"
+                )
+        else:
+            if self.resolved_individual_id or self.resolved_individual_title:
+                raise ValueError(
+                    "will_match_existing=False requires no resolved_individual_id/title"
+                )
+            if self.match_method or self.match_score is not None:
+                raise ValueError(
+                    "will_match_existing=False requires no match_method/score"
+                )
+
+
+@dataclass(frozen=True)
+class RecognitionPreviewResult:
+    """
+    Result of a recognition preview operation.
+
+    This represents the output of preview_recognition(), containing the set of
+    mentions that passed the confidence threshold and were sent for recognition,
+    along with a count of mentions that were skipped due to low confidence.
+
+    Attributes:
+        hits: List of RecognitionPreviewHit entities reporting match status for
+            mentions that passed the confidence threshold
+        skipped_count: Number of unique individual mentions that were skipped
+            because their confidence was below the confidence_threshold
+    """
+
+    hits: list[RecognitionPreviewHit]
+    skipped_count: int
+
+    def __post_init__(self) -> None:
+        """Validate recognition preview result invariants."""
+        if self.skipped_count < 0:
+            raise ValueError(f"skipped_count must be non-negative, got {self.skipped_count}")

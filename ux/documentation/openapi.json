@@ -3368,9 +3368,9 @@
         "tags": [
           "pipelines"
         ],
-        "summary": "Get Pipeline Candidates",
-        "description": "Retrieve candidates from a completed pipeline run.\n\nExtracts the full candidate list with provenance and confidence scores\nfrom the pipeline run's output. The structure of candidates depends on\nthe pipeline type:\n- schema_node_grounding: returns groundings with URI, label, confidence\n- schema_node_definition_refinement: returns definition candidates\n- schema_node_connection_refinement: returns connection candidates\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateResponse objects with full provenance and confidence\n\nRaises:\n    HTTPException: 404 if run not found, 400 if run has no candidates",
-        "operationId": "get_pipeline_candidates_api_pipelines_runs__run_id__candidates_get",
+        "summary": "Get Pipeline Candidates Generic",
+        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nReturns results in the legacy flat CandidateResponse format for backward\ncompatibility with existing consumers. For new applications, prefer the\ntype-specific endpoints which return the discriminated union CandidateItem format.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateResponse objects (flat legacy format) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found",
+        "operationId": "get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get",
         "parameters": [
           {
             "name": "run_id",
@@ -3392,7 +3392,315 @@
                   "items": {
                     "$ref": "#/components/schemas/CandidateResponse"
                   },
-                  "title": "Response Get Pipeline Candidates Api Pipelines Runs  Run Id  Candidates Get"
+                  "title": "Response Get Pipeline Candidates Generic Api Pipelines Runs  Run Id  Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-extraction-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Extraction Candidates",
+        "description": "Retrieve candidates from a schema_extraction pipeline run.\n\nReturns SchemaClassCandidate, SchemaPropertyCandidate, and\nSchemaConnectionCandidate objects with full provenance and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with schema candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not schema_extraction type",
+        "operationId": "get_schema_extraction_candidates_api_pipelines_runs__run_id__schema_extraction_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Extraction Candidates Api Pipelines Runs  Run Id  Schema Extraction Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/individual-extraction-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Individual Extraction Candidates",
+        "description": "Retrieve candidates from an individual_extraction pipeline run.\n\nReturns TripleCandidate objects with structured subject-predicate-object\nrelationships and full provenance and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with triple candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not individual_extraction type",
+        "operationId": "get_individual_extraction_candidates_api_pipelines_runs__run_id__individual_extraction_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Individual Extraction Candidates Api Pipelines Runs  Run Id  Individual Extraction Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-grounding-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Grounding Candidates",
+        "description": "Retrieve candidates from a schema_node_grounding pipeline run.\n\nReturns GroundingCandidate objects linking schema nodes to external knowledge\nwith URI, label, description, and confidence.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with grounding candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not schema_node_grounding type",
+        "operationId": "get_schema_grounding_candidates_api_pipelines_runs__run_id__schema_grounding_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Grounding Candidates Api Pipelines Runs  Run Id  Schema Grounding Candidates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/schema-refinement-candidates": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Get Schema Refinement Candidates",
+        "description": "Retrieve candidates from schema refinement pipeline runs.\n\nHandles both schema_node_definition_refinement and schema_node_connection_refinement\npipeline types, returning RefinementCandidate objects with refined content\n(definitions or connections) with confidence and provenance.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with refinement candidates\n\nRaises:\n    HTTPException: 404 if run not found or 422 if run is not a refinement type",
+        "operationId": "get_schema_refinement_candidates_api_pipelines_runs__run_id__schema_refinement_candidates_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
+                  },
+                  "title": "Response Get Schema Refinement Candidates Api Pipelines Runs  Run Id  Schema Refinement Candidates Get"
                 }
               }
             }
@@ -3763,6 +4071,62 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApplyRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/recognition-preview": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Preview Recognition",
+        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 400 if the pipeline type does not support recognition preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,\n        404 if run not found, 422 if run is not completed",
+        "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecognitionPreviewRequest",
+                "default": {
+                  "confidence_threshold": 0.5,
+                  "recognition_threshold": 0.9
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecognitionPreviewResponse"
                 }
               }
             }
@@ -7153,7 +7517,7 @@
           "confidence"
         ],
         "title": "CandidateResponse",
-        "description": "Response containing a single candidate from a pipeline run.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface."
+        "description": "Response containing a single candidate from a pipeline run.\n\nDEPRECATED: Use CandidateItem (discriminated union) for new implementations.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface. Kept for backwards compatibility until\nall consumers migrate to discriminated union variants."
       },
       "CentralityResponse": {
         "properties": {
@@ -8690,6 +9054,17 @@
             "title": "Matched Class Id",
             "description": "ID of matched ontology class, if any"
           },
+          "span": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceSpanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional span with provenance information (quote and character offsets)"
+          },
           "properties": {
             "additionalProperties": true,
             "type": "object",
@@ -8877,6 +9252,61 @@
         ],
         "title": "GraphMetricsResponse",
         "description": "Response containing computed graph metrics."
+      },
+      "GroundingCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "grounding",
+            "title": "Candidate Type",
+            "default": "grounding"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "External resource URI or identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "External resource label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "External resource description",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source database or knowledge base",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "uri",
+          "label"
+        ],
+        "title": "GroundingCandidate",
+        "description": "Grounding candidate linking a schema node to external knowledge.\n\nRepresents an external resource that grounds or validates a schema entity."
       },
       "GroundingWorkflowCreate": {
         "properties": {
@@ -10194,6 +10624,78 @@
         "title": "NeighborsResponse",
         "description": "Response containing neighbor nodes."
       },
+      "NodeReference": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Node kind: individual, class, or literal"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Node label/name"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Ontology entity ID (empty/None=new, non-empty=mapped)"
+          },
+          "class_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Ids",
+            "description": "Class IDs if this node is an individual instance"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Literal value (only for kind=literal)"
+          },
+          "datatype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datatype",
+            "description": "Literal data type URI (only for kind=literal)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "label"
+        ],
+        "title": "NodeReference",
+        "description": "Reference to an extracted node (individual/class/literal) in individual extraction.\n\nIdentifies a subject or object node with optional mapping to existing ontology.\nNon-empty id means mapped to existing ontology entity; empty/None means new candidate."
+      },
       "PathResultResponse": {
         "properties": {
           "source_id": {
@@ -10748,6 +11250,39 @@
         "title": "PipelineTypeResponse",
         "description": "Response containing pipeline type metadata."
       },
+      "PredicateReference": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Predicate kind: property or relation type"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Predicate label/name"
+          },
+          "property_definition_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property Definition Id",
+            "description": "Property definition ID; empty/None = new candidate, non-empty = mapped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "label"
+        ],
+        "title": "PredicateReference",
+        "description": "Reference to a property/predicate in individual extraction.\n\nIdentifies a relationship type with optional mapping to existing property definition.\nNon-empty property_definition_id means mapped; empty/None means new candidate."
+      },
       "PropertyDefinitionCreateRequest": {
         "properties": {
           "identifier": {
@@ -11059,6 +11594,153 @@
         ],
         "title": "PublishDiffStats",
         "description": "Response containing diff statistics for publishing."
+      },
+      "RecognitionPreviewHitSchema": {
+        "properties": {
+          "mention_label": {
+            "type": "string",
+            "title": "Mention Label",
+            "description": "The extracted mention's surface text"
+          },
+          "resolved_individual_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Individual Id",
+            "description": "ID of the matched existing individual, or None if no match"
+          },
+          "resolved_individual_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Individual Title",
+            "description": "Canonical title of the matched individual, or None if no match"
+          },
+          "match_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Method",
+            "description": "Match method when resolved: \"exact\", \"vector\", or \"llm\", or None"
+          },
+          "match_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Score",
+            "description": "Confidence of the match (0.0\u20131.0), or None if no match"
+          },
+          "will_match_existing": {
+            "type": "boolean",
+            "title": "Will Match Existing",
+            "description": "True if the mention would match an existing individual, False if it would be created as new"
+          },
+          "candidate_class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Candidate Class Ids",
+            "description": "List of class IDs that drove this recognition match decision"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mention_label",
+          "will_match_existing"
+        ],
+        "title": "RecognitionPreviewHitSchema",
+        "description": "Preview of recognition result for a single extracted mention."
+      },
+      "RecognitionPreviewRequest": {
+        "properties": {
+          "confidence_threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Threshold",
+            "description": "Minimum confidence threshold for extracted mentions (0.0\u20131.0). Mentions below this threshold are skipped.",
+            "default": 0.5
+          },
+          "recognition_threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Recognition Threshold",
+            "description": "Minimum confidence threshold for individual recognition matches (0.0\u20131.0). Matches below this threshold are not reported.",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "RecognitionPreviewRequest",
+        "description": "Request to preview recognition results for a pipeline run."
+      },
+      "RecognitionPreviewResponse": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/RecognitionPreviewHitSchema"
+            },
+            "type": "array",
+            "title": "Hits",
+            "description": "Preview results for each distinct extracted individual mention"
+          },
+          "total_mentions": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Mentions",
+            "description": "Total number of distinct individual mentions previewed"
+          },
+          "matched_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Matched Count",
+            "description": "Number of mentions that would match an existing individual"
+          },
+          "unmatched_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unmatched Count",
+            "description": "Number of mentions that would be created as new"
+          },
+          "skipped_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Skipped Count",
+            "description": "Number of mentions skipped due to being below the confidence threshold"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_mentions",
+          "matched_count",
+          "unmatched_count",
+          "skipped_count"
+        ],
+        "title": "RecognitionPreviewResponse",
+        "description": "Response from recognition preview endpoint."
       },
       "ReferenceRelationSchema": {
         "properties": {
@@ -11381,6 +12063,61 @@
         ],
         "title": "ReferenceStatusResponseSchema",
         "description": "Response containing status of all reference sources."
+      },
+      "RefinementCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "refinement",
+            "title": "Candidate Type",
+            "default": "refinement"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "Refined entity URI or identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label for the refinement"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Refined description or definition",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source or rationale for this refinement",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "uri",
+          "label"
+        ],
+        "title": "RefinementCandidate",
+        "description": "Refined definition or connection candidate from refinement pipelines.\n\nRepresents a proposed refinement to an existing schema entity or relationship.\nFollows the same shape as GroundingCandidate for consistency."
       },
       "RejectProposalRequest": {
         "properties": {
@@ -11710,6 +12447,177 @@
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
       },
+      "SchemaClassCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "schema_class",
+            "title": "Candidate Type",
+            "default": "schema_class"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Class label/name"
+          },
+          "proposed_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Definition",
+            "description": "Proposed definition or description of the class"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "label"
+        ],
+        "title": "SchemaClassCandidate",
+        "description": "Candidate class entity from schema extraction or grounding.\n\nRepresents a proposed or grounded class in the schema."
+      },
+      "SchemaConnectionCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "schema_connection",
+            "title": "Candidate Type",
+            "default": "schema_connection"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "subject_ref": {
+            "type": "string",
+            "title": "Subject Ref",
+            "description": "Subject entity reference or label"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate",
+            "description": "Relationship/property type"
+          },
+          "object_ref": {
+            "type": "string",
+            "title": "Object Ref",
+            "description": "Object entity reference or label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "subject_ref",
+          "predicate",
+          "object_ref"
+        ],
+        "title": "SchemaConnectionCandidate",
+        "description": "Candidate connection/relationship from schema extraction or refinement.\n\nRepresents a proposed relationship between schema entities."
+      },
+      "SchemaPropertyCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "schema_property",
+            "title": "Candidate Type",
+            "default": "schema_property"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Property label/name"
+          },
+          "proposed_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Definition",
+            "description": "Proposed definition or semantics of the property"
+          },
+          "proposed_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Domain",
+            "description": "Proposed domain (subject class) for this property"
+          },
+          "proposed_range": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Range",
+            "description": "Proposed range (object class) for this property"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "label"
+        ],
+        "title": "SchemaPropertyCandidate",
+        "description": "Candidate property definition from schema extraction.\n\nRepresents a proposed property/relationship type."
+      },
       "SerializationScopeRequest": {
         "properties": {
           "scope_type": {
@@ -11859,6 +12767,51 @@
         ],
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
+      },
+      "SourceSpanSchema": {
+        "properties": {
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote",
+            "description": "The verbatim or matched text from the source, or None if unresolved"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start",
+            "description": "Zero-indexed character position where the span begins, or None if unresolved"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End",
+            "description": "Zero-indexed character position where the span ends (exclusive), or None if unresolved"
+          }
+        },
+        "type": "object",
+        "title": "SourceSpanSchema",
+        "description": "Immutable representation of a span in source text with provenance information."
       },
       "StatsTrendsResponse": {
         "properties": {
@@ -12359,6 +13312,52 @@
         "type": "object",
         "title": "TaxonomyUpdateRequest",
         "description": "Request to update a taxonomy. Identifier is immutable post-create."
+      },
+      "TripleCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "triple",
+            "title": "Candidate Type",
+            "default": "triple"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/NodeReference",
+            "description": "Subject node reference"
+          },
+          "predicate": {
+            "$ref": "#/components/schemas/PredicateReference",
+            "description": "Predicate reference"
+          },
+          "object": {
+            "$ref": "#/components/schemas/NodeReference",
+            "description": "Object node reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confidence",
+          "subject",
+          "predicate",
+          "object"
+        ],
+        "title": "TripleCandidate",
+        "description": "Subject-predicate-object triple candidate from individual extraction.\n\nRepresents a proposed relationship between two extracted entities."
       },
       "TripleCountResponse": {
         "properties": {
