@@ -943,22 +943,17 @@ class ExtractionService:
         try:
             prop_index = self._property_definition_index()
             _, by_id = self._class_index(ontology)
-        except (TypeError, AttributeError, KeyError, IndexError):
-            raise
         except Exception as exc:
             error_type = type(exc).__name__
-            count = len(relationship_triples)
             error_msg = (
                 f"Concept-object typing step failed ({error_type}): {exc}. "
                 f"Cannot type concept-objects or stamp property_definition_id. "
-                f"Returning {count} relationship triple(s) WITHOUT property_definition_id; "
-                f"they will be silently dropped during apply (apply service requires "
-                f"property_definition_id to be truthy). "
+                f"This is a critical error — relationship triples require property_definition_id "
+                f"to be applied. Data will be lost if extraction continues. "
                 f"Verify database connectivity, schema integrity, and repository state."
             )
             _logger.error(error_msg, exc_info=True)
-            warnings.append(error_msg)
-            return relationship_triples, warnings
+            raise ExtractionError(error_msg) from exc
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()

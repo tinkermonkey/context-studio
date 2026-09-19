@@ -1524,14 +1524,13 @@ class TestTypeConceptObjects:
         """Helper to identify typing triples."""
         return triple.get("object", {}).get("kind") == "class"
 
-    def test_database_access_failure_returns_untyped_triples_with_error(
+    def test_database_access_failure_raises_extraction_error(
         self, extraction_service_for_typing, caplog
     ):
-        """Test that database access failures return untyped relationship triples with clear error.
+        """Test that database access failures raise ExtractionError instead of silently losing data.
 
-        When property_definition_index fails, we return the relationship triples without
-        property_definition_id stamped (so they'll be dropped by apply), but we make the
-        failure explicit via error message rather than silently losing the triples.
+        When property_definition_index fails, we raise ExtractionError with the underlying
+        cause chained. This makes the error explicit to the caller, preventing silent data loss.
         """
         import logging
 
@@ -1562,33 +1561,29 @@ class TestTypeConceptObjects:
             },
         ]
 
-        with caplog.at_level(logging.ERROR):
-            result_triples, warnings = service._type_concept_objects(
-                relationship_triples, individual_triples, ontology
-            )
+        # Expect ExtractionError to be raised with underlying RuntimeError chained
+        with pytest.raises(ExtractionError, match="Concept-object typing step failed"):
+            with caplog.at_level(logging.ERROR):
+                service._type_concept_objects(
+                    relationship_triples, individual_triples, ontology
+                )
 
-        # Assert untyped triples are returned (not empty list, so caller can see what was lost)
-        assert len(result_triples) == 2
-        assert result_triples[0]["subject"]["label"] == "System"
-        assert result_triples[1]["subject"]["label"] == "Module"
-        # Verify property_definition_id was not stamped
-        assert result_triples[0]["predicate"].get("property_definition_id") is None
-        assert result_triples[1]["predicate"].get("property_definition_id") is None
-
-        # Assert error warning is returned with count of untyped triples
-        assert len(warnings) == 1
-        assert "Concept-object typing step failed" in warnings[0]
-        assert "transient SQLite error" in warnings[0]
-        assert "Cannot type concept-objects" in warnings[0]
-        assert "2 relationship triple" in warnings[0]
-        assert "will be silently dropped during apply" in warnings[0]
-
-        # Assert ERROR-level log is emitted
+        # Assert error is logged with context
+        assert any(
+            "Concept-object typing step failed" in record.message
+            for record in caplog.records
+            if record.levelname == "ERROR"
+        )
         assert "Concept-object typing step failed" in caplog.text
         assert "transient SQLite error" in caplog.text
 
-    def test_programming_error_is_reraised(self, extraction_service_for_typing):
-        """Test that programming errors (TypeError, etc.) are re-raised, not caught."""
+    def test_programming_error_wrapped_in_extraction_error(self, extraction_service_for_typing):
+        """Test that programming errors are wrapped in ExtractionError to signal critical failure.
+
+        Even coding errors that would normally be re-raised are now wrapped in ExtractionError
+        to make it explicit to the caller that the extraction cannot continue and data loss
+        will result if not handled properly.
+        """
         service = extraction_service_for_typing["service"]
         ontology = extraction_service_for_typing["ontology"]
         ontology_repo = extraction_service_for_typing["ontology_repo"]
@@ -1609,8 +1604,8 @@ class TestTypeConceptObjects:
             }
         ]
 
-        # Programming errors should be re-raised, not caught
-        with pytest.raises(TypeError, match="unexpected type error"):
+        # All errors, including programming errors, are wrapped in ExtractionError
+        with pytest.raises(ExtractionError, match="Concept-object typing step failed"):
             service._type_concept_objects(relationship_triples, individual_triples, ontology)
 
 
