@@ -110,6 +110,32 @@ class TestGroundingCandidateMapping:
 
         assert result.confidence == 0.5  # Falls back to default
 
+    def test_map_grounding_candidate_with_zero_confidence(self):
+        """Grounding mapper preserves zero confidence without promoting to 0.5."""
+        grounding_dict = {
+            "uri": "http://example.org/concept",
+            "label": "Concept",
+            "confidence": 0,  # Zero confidence should be preserved, not promoted
+            "provenance": [],
+        }
+
+        result = _map_grounding_candidate(grounding_dict)
+
+        assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
+
+    def test_map_grounding_candidate_with_zero_float_confidence(self):
+        """Grounding mapper preserves 0.0 float confidence without promoting to 0.5."""
+        grounding_dict = {
+            "uri": "http://example.org/concept",
+            "label": "Concept",
+            "confidence": 0.0,  # Zero float confidence should be preserved
+            "provenance": [],
+        }
+
+        result = _map_grounding_candidate(grounding_dict)
+
+        assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
+
 
 class TestRefinementCandidateMapping:
     """Tests for the _map_refinement_candidate function."""
@@ -214,6 +240,32 @@ class TestRefinementCandidateMapping:
         result = _map_refinement_candidate(refinement_dict)
 
         assert result.confidence == 0.5  # Falls back to default
+        assert result.uri == "class_123"
+
+    def test_map_refinement_candidate_with_zero_confidence(self):
+        """Refinement mapper preserves zero confidence without promoting to 0.5."""
+        refinement_dict = {
+            "definition": "An improved definition",
+            "scope_id": "class_123",
+            "confidence": 0,  # Zero confidence should be preserved, not promoted
+        }
+
+        result = _map_refinement_candidate(refinement_dict)
+
+        assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
+        assert result.uri == "class_123"
+
+    def test_map_refinement_candidate_with_zero_float_confidence(self):
+        """Refinement mapper preserves 0.0 float confidence without promoting to 0.5."""
+        refinement_dict = {
+            "definition": "An improved definition",
+            "scope_id": "class_123",
+            "confidence": 0.0,  # Zero float confidence should be preserved
+        }
+
+        result = _map_refinement_candidate(refinement_dict)
+
+        assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
         assert result.uri == "class_123"
 
 

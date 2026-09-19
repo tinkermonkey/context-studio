@@ -388,6 +388,59 @@ class TestSchemaExtractionHTTP:
                 assert "start" in prov
                 assert "end" in prov
 
+    def test_candidates_endpoint_with_disambiguation_rationale(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates returns schema class candidates with disambiguation_rationale field."""
+        from domain.pipelines.entities import PipelineRunStatus
+
+        # Create a batch and run with a class candidate that has disambiguation_rationale
+        batch = batch_repo.create()
+        test_run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+
+        # Update with output_summary containing a class candidate with disambiguation_rationale
+        pipeline_run_repo.update_summaries(
+            test_run.id,
+            output_summary={
+                "candidates": [
+                    {
+                        "kind": "class",
+                        "label": "Service",
+                        "proposed_definition": "A reusable software component",
+                        "disambiguation_rationale": "Chosen over 'Component' due to context mentioning orchestration and deployment",
+                        "confidence": 0.87,
+                        "provenance": [{"quote": "service", "start": 5, "end": 12}],
+                    }
+                ],
+                "connections": [],
+            },
+        )
+        pipeline_run_repo.update_status(test_run.id, PipelineRunStatus.COMPLETED)
+
+        # Call the endpoint
+        candidates_response = schema_client.get(f"/api/pipelines/runs/{test_run.id}/candidates")
+        assert candidates_response.status_code == status.HTTP_200_OK
+
+        candidates = candidates_response.json()
+        assert len(candidates) == 1
+
+        # Verify the candidate has the disambiguation_rationale field
+        candidate = candidates[0]
+        assert candidate["candidate_type"] == "schema_class"
+        assert candidate["label"] == "Service"
+        assert candidate["proposed_definition"] == "A reusable software component"
+        assert candidate["confidence"] == 0.87
+        # This is the critical assertion: disambiguation_rationale must round-trip
+        assert candidate["disambiguation_rationale"] is not None
+        assert candidate["disambiguation_rationale"] == "Chosen over 'Component' due to context mentioning orchestration and deployment"
+
 
 # ---------------------------------------------------------------------------- #
 # Canon-driven assertions                                                      #

@@ -186,3 +186,67 @@ class TestProvenanceValidation:
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 1
         assert result.provenance[0].quote == "valid text"
+
+
+class TestConfidenceEdgeCases:
+    """Tests for handling edge cases in confidence values."""
+
+    def test_schema_class_candidate_with_zero_confidence(self):
+        """Schema class candidate preserves zero confidence without promoting to 0.5."""
+        candidate_dict = {
+            "kind": "class",
+            "label": "Person",
+            "proposed_definition": "A human being",
+            "confidence": 0,  # Zero confidence should be preserved, not promoted
+            "provenance": [],
+        }
+
+        result = _map_schema_class_candidate(candidate_dict)
+
+        assert isinstance(result, SchemaClassCandidate)
+        assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
+
+    def test_schema_class_candidate_with_zero_float_confidence(self):
+        """Schema class candidate preserves 0.0 float confidence without promoting to 0.5."""
+        candidate_dict = {
+            "kind": "class",
+            "label": "Person",
+            "proposed_definition": "A human being",
+            "confidence": 0.0,  # Zero float confidence should be preserved
+            "provenance": [],
+        }
+
+        result = _map_schema_class_candidate(candidate_dict)
+
+        assert isinstance(result, SchemaClassCandidate)
+        assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
+
+    def test_triple_candidate_with_zero_confidence(self):
+        """Triple candidate preserves zero confidence without promoting to 0.5."""
+        triple_dict = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows", "kind": "property"},
+            "object": {"label": "Bob", "kind": "individual"},
+            "confidence": 0,  # Zero confidence should be preserved
+            "provenance": [],
+        }
+
+        result = _map_triple_candidate(triple_dict)
+
+        assert isinstance(result, TripleCandidate)
+        assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
+
+    def test_triple_candidate_with_zero_float_confidence(self):
+        """Triple candidate preserves 0.0 float confidence without promoting to 0.5."""
+        triple_dict = {
+            "subject": {"label": "Alice", "kind": "individual"},
+            "predicate": {"label": "knows", "kind": "property"},
+            "object": {"label": "Bob", "kind": "individual"},
+            "confidence": 0.0,  # Zero float confidence should be preserved
+            "provenance": [],
+        }
+
+        result = _map_triple_candidate(triple_dict)
+
+        assert isinstance(result, TripleCandidate)
+        assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5

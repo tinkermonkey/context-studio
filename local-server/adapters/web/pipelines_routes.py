@@ -52,7 +52,6 @@ from adapters.web.schemas.pipelines import (
     BatchResponse,
     CancelBatchResponse,
     CandidateItem,
-    CandidateResponse,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
     GroundingCandidate,
@@ -1083,112 +1082,6 @@ async def get_pipeline_run(
         )
 
     return _to_response(run)
-
-
-def _provenance_to_string(provenance: list[SourceSpanSchema]) -> str:
-    """
-    Convert provenance list to a JSON string for legacy response format.
-
-    Args:
-        provenance: List of SourceSpanSchema objects
-
-    Returns:
-        JSON string representation of provenance; empty string if no provenance
-    """
-    if not provenance:
-        return ""
-    try:
-        import json
-        provenance_dicts = [
-            {
-                "quote": p.quote,
-                "start": p.start,
-                "end": p.end,
-            }
-            for p in provenance
-        ]
-        return json.dumps(provenance_dicts)
-    except Exception as exc:
-        _logger.warning(f"Failed to serialize provenance: {exc}")
-        return ""
-
-
-def _candidate_item_to_legacy_response(candidate: CandidateItem) -> CandidateResponse:
-    """
-    Convert a CandidateItem (discriminated union) to flat CandidateResponse format.
-
-    Maps all candidate variants to the legacy flat schema for backward compatibility
-    with existing consumers that expect the old CandidateResponse format.
-
-    Args:
-        candidate: CandidateItem in discriminated union format
-
-    Returns:
-        CandidateResponse in flat format (matches legacy contract)
-
-    Raises:
-        ValueError: If candidate type is not recognized (indicates unhandled variant)
-    """
-    if isinstance(candidate, SchemaClassCandidate):
-        return CandidateResponse(
-            uri=candidate.label,
-            label=candidate.label,
-            description=candidate.proposed_definition or "",
-            source="schema_extraction",
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    elif isinstance(candidate, SchemaPropertyCandidate):
-        return CandidateResponse(
-            uri=candidate.label,
-            label=candidate.label,
-            description=candidate.proposed_definition or "",
-            source="schema_extraction",
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    elif isinstance(candidate, SchemaConnectionCandidate):
-        return CandidateResponse(
-            uri=f"{candidate.subject_ref}--{candidate.predicate}--{candidate.object_ref}",
-            label=candidate.predicate,
-            description=f"{candidate.subject_ref} {candidate.predicate} {candidate.object_ref}",
-            source="schema_extraction",
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    elif isinstance(candidate, TripleCandidate):
-        return CandidateResponse(
-            uri=candidate.subject.label,
-            label=candidate.subject.label,
-            description=candidate.object.label,
-            source="individual_extraction",
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    elif isinstance(candidate, GroundingCandidate):
-        return CandidateResponse(
-            uri=candidate.uri,
-            label=candidate.label,
-            description=candidate.description,
-            source=candidate.source,
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    elif isinstance(candidate, RefinementCandidate):
-        return CandidateResponse(
-            uri=candidate.uri,
-            label=candidate.label,
-            description=candidate.description,
-            source=candidate.source,
-            confidence=candidate.confidence,
-            provenance=_provenance_to_string(candidate.provenance),
-        )
-    else:
-        raise ValueError(
-            f"Unhandled CandidateItem variant: {type(candidate).__name__}. "
-            f"This indicates a new candidate type was added but not handled in "
-            f"_candidate_item_to_legacy_response."
-        )
 
 
 def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
