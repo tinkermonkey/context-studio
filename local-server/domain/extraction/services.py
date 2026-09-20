@@ -15,7 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
@@ -28,12 +28,17 @@ from domain.ontology.ports import (
 from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
+if TYPE_CHECKING:
+    from domain.extraction.ports import IndividualRecognizer
+
 from . import layers
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
     ExtractionRun,
     ExtractionRunStatus,
+    RecognitionPreviewHit,
+    RecognitionPreviewResult,
     TripleExtractionResult,
 )
 from .events import ExtractionCompleted
@@ -205,6 +210,7 @@ class ExtractionService:
         schema_index: SchemaVectorIndex | None = None,
         extraction_mode: str = "llm_two_pass",
         individual_index: IndividualVectorIndex | None = None,
+        individual_recognizer: "IndividualRecognizer | None" = None,
         recog_threshold: float = 0.90,
         recog_margin: float = 0.05,
         recog_min_len: int = 4,
@@ -235,6 +241,9 @@ class ExtractionService:
                 or ``"nlp_grounded"`` (spaCy extracts noun chunks, the vector
                 index retrieves candidate classes, and the LLM only confirms the
                 best fit — see issue #1141). Defaults to ``"llm_two_pass"``.
+            individual_recognizer: Optional port for resolving extracted individual
+                mentions to existing graph nodes. When provided, enables the
+                preview_recognition() method for recognition preview queries.
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
@@ -256,6 +265,7 @@ class ExtractionService:
         # a false merge corrupts the graph, a missed merge is a recoverable
         # duplicate — so acceptance is conservative and biased toward "new node".
         self._individual_index = individual_index
+        self._individual_recognizer = individual_recognizer
         self._recog_threshold = recog_threshold
         self._recog_margin = recog_margin
         self._recog_min_len = recog_min_len
@@ -933,19 +943,17 @@ class ExtractionService:
         try:
             prop_index = self._property_definition_index()
             _, by_id = self._class_index(ontology)
-        except (TypeError, AttributeError, KeyError, IndexError):
-            raise
         except Exception as exc:
             error_type = type(exc).__name__
-            warning_msg = (
+            error_msg = (
                 f"Concept-object typing step failed ({error_type}): {exc}. "
-                "Returning untyped relationship triples. Relationships will be dropped "
-                "during apply since property_definition_id will not be stamped. "
-                "Verify database connectivity, schema integrity, and repository state."
+                f"Cannot type concept-objects or stamp property_definition_id. "
+                f"This is a critical error — relationship triples require property_definition_id "
+                f"to be applied. Data will be lost if extraction continues. "
+                f"Verify database connectivity, schema integrity, and repository state."
             )
-            _logger.error(warning_msg, exc_info=True)
-            warnings.append(warning_msg)
-            return relationship_triples, warnings
+            _logger.error(error_msg, exc_info=True)
+            raise ExtractionError(error_msg) from exc
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()
@@ -1235,13 +1243,31 @@ class ExtractionService:
             seen.add(label.lower())
             triples.append(self._make_typing_triple(label, chosen, chunk))
 
-        if chunks_with_results > 0 and chunks_with_llm_errors == chunks_with_results:
-            warning_msg = (
-                f"NLP-grounded typing: all {chunks_with_results} chunks with search results "
-                "failed with LLM errors. This indicates a systemic LLM provider issue. "
-                "Check availability, rate limits, authentication, and network connectivity."
+        if chunks_with_llm_errors > 0:
+            error_rate = (
+                (chunks_with_llm_errors / chunks_with_results * 100)
+                if chunks_with_results > 0
+                else 0
             )
-            _logger.error(warning_msg)
+            if chunks_with_llm_errors == chunks_with_results:
+                warning_msg = (
+                    f"NLP-grounded typing FAILED: all {chunks_with_results} chunks "
+                    "with search results failed with LLM errors (100% failure rate). "
+                    "This indicates a systemic LLM provider issue. "
+                    "Check availability, rate limits, authentication, and network "
+                    "connectivity. No typing triples will be produced."
+                )
+                _logger.error(warning_msg)
+            else:
+                warning_msg = (
+                    f"NLP-grounded typing DEGRADED: {chunks_with_llm_errors} of "
+                    f"{chunks_with_results} chunks with search results encountered "
+                    f"LLM errors ({error_rate:.1f}% failure rate). "
+                    "Typing quality is significantly degraded. "
+                    "Check LLM availability, rate limits, authentication, and "
+                    "network connectivity."
+                )
+                _logger.error(warning_msg)
             warnings.append(warning_msg)
 
         return triples, tokens_used, warnings
@@ -2271,6 +2297,111 @@ Identified individuals:
             deduplicated.append(entity_to_keep)
 
         return deduplicated
+
+    def preview_recognition(
+        self,
+        triples: list[dict],
+        confidence_threshold: float = 0.5,
+        recognition_threshold: float = 0.90,
+    ) -> RecognitionPreviewResult:
+        """
+        Preview which extracted individuals would match existing graph nodes.
+
+        Computes at request time against current ontology state, with zero writes.
+        For each distinct typing triple (subject is an individual) with confidence
+        >= confidence_threshold, attempts to resolve the mention via IndividualRecognizer
+        if configured. Returns a hit for each qualifying mention, whether it would match
+        or be created as new.
+
+        Args:
+            triples: List of extracted triples from a completed pipeline run
+            confidence_threshold: Minimum confidence for extracted mentions (0.0–1.0).
+                                  Mentions below this threshold are skipped.
+            recognition_threshold: Minimum confidence for recognition matches (0.0–1.0).
+                                  Matches below this threshold are not reported.
+
+        Returns:
+            RecognitionPreviewResult with hits and skipped_count.
+        """
+        hits: list[RecognitionPreviewHit] = []
+        seen_mentions: set[str] = set()
+        skipped_count = 0
+
+        if self._individual_recognizer is None:
+            _logger.warning(
+                "Individual recognizer is not configured; returning empty recognition preview"
+            )
+            return RecognitionPreviewResult(hits=hits, skipped_count=skipped_count)
+
+        for triple in triples:
+            subject = triple.get("subject", {})
+            if subject.get("kind") != "individual":
+                continue
+
+            mention_label = (subject.get("label") or "").strip()
+            if not mention_label or mention_label.lower() in seen_mentions:
+                continue
+
+            seen_mentions.add(mention_label.lower())
+
+            confidence_raw = triple.get("confidence")
+            confidence = float(confidence_raw) if confidence_raw is not None else 0.0
+            if confidence < confidence_threshold:
+                skipped_count += 1
+                continue
+
+            class_id = subject.get("class_id")
+            class_ids = subject.get("class_ids") or (
+                [class_id] if class_id else []
+            )
+            if not class_ids:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=None,
+                        resolved_individual_title=None,
+                        match_method=None,
+                        match_score=None,
+                        will_match_existing=False,
+                        candidate_class_ids=[],
+                    )
+                )
+                continue
+
+            match = self._individual_recognizer.recognize(
+                label=mention_label,
+                context="",
+                class_ids=class_ids,
+                taxonomy_id=None,
+                threshold=recognition_threshold,
+            )
+
+            if match is not None:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=match.individual_id,
+                        resolved_individual_title=match.title,
+                        match_method=match.method,
+                        match_score=match.score,
+                        will_match_existing=True,
+                        candidate_class_ids=class_ids,
+                    )
+                )
+            else:
+                hits.append(
+                    RecognitionPreviewHit(
+                        mention_label=mention_label,
+                        resolved_individual_id=None,
+                        resolved_individual_title=None,
+                        match_method=None,
+                        match_score=None,
+                        will_match_existing=False,
+                        candidate_class_ids=class_ids,
+                    )
+                )
+
+        return RecognitionPreviewResult(hits=hits, skipped_count=skipped_count)
 
     def _normalized_similarity(self, label_a: str, label_b: str) -> float:
         """

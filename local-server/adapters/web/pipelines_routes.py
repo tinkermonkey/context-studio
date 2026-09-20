@@ -11,6 +11,7 @@ This module implements HTTP endpoints for generic pipeline execution:
 - GET /api/pipelines/runs/{run_id}/change-events → Get change events produced by a run
 - GET /api/pipelines/runs → List PipelineRuns with filters
 - POST /api/pipelines/runs/{run_id}/apply → Materialize run output into ontology
+- POST /api/pipelines/runs/{run_id}/recognition-preview → Preview recognition results
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -27,6 +28,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi import status as http_status
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from adapters.factories.orchestrator_factory import (
@@ -38,15 +40,23 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
 )
 from adapters.web.dependencies import get_versioning_service
+from adapters.web.schemas.extraction import (
+    RecognitionPreviewHitSchema,
+    RecognitionPreviewRequest,
+    RecognitionPreviewResponse,
+    SourceSpanSchema,
+)
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
     ApplyRunResponse,
     BatchResponse,
     CancelBatchResponse,
-    CandidateResponse,
+    CandidateItem,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
+    GroundingCandidate,
     ImplementationResponse,
+    NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
     PipelineConfigurationResponse,
@@ -54,8 +64,14 @@ from adapters.web.schemas.pipelines import (
     PipelineRunRequest,
     PipelineRunResponse,
     PipelineTypeResponse,
+    PredicateReference,
+    RefinementCandidate,
     ResumeBatchResponse,
     RevertRunResponse,
+    SchemaClassCandidate,
+    SchemaConnectionCandidate,
+    SchemaPropertyCandidate,
+    TripleCandidate,
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
@@ -85,6 +101,290 @@ _logger = get_logger(__name__)
 
 
 # ==================== Helper Functions ====================
+
+
+def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
+    """
+    Normalize provenance data to SourceSpanSchema format.
+
+    Handles both pre-span format (text_offset_start/text_offset_end/raw)
+    and post-span format (quote/start/end).
+
+    Invalid spans (e.g., negative offsets) are skipped with a warning logged.
+
+    Args:
+        provenance_data: Provenance data from orchestrator output (list, dict, or string)
+
+    Returns:
+        List of SourceSpanSchema objects (valid spans only)
+    """
+    if not provenance_data:
+        return []
+
+    result = []
+
+    if isinstance(provenance_data, list):
+        for item in provenance_data:
+            if isinstance(item, dict):
+                quote = item.get("quote")
+                if quote is None:
+                    quote = item.get("raw")
+
+                start = item.get("start")
+                if start is None:
+                    start = item.get("text_offset_start")
+
+                end = item.get("end")
+                if end is None:
+                    end = item.get("text_offset_end")
+
+                try:
+                    span = SourceSpanSchema(
+                        quote=quote,
+                        start=start,
+                        end=end,
+                    )
+                    result.append(span)
+                except ValidationError as exc:
+                    _logger.warning(
+                        f"Skipping invalid provenance span: {exc}. "
+                        f"Span data: quote={quote!r}, start={start}, end={end}"
+                    )
+    elif isinstance(provenance_data, dict):
+        quote = provenance_data.get("quote")
+        if quote is None:
+            quote = provenance_data.get("raw")
+
+        start = provenance_data.get("start")
+        if start is None:
+            start = provenance_data.get("text_offset_start")
+
+        end = provenance_data.get("end")
+        if end is None:
+            end = provenance_data.get("text_offset_end")
+
+        try:
+            span = SourceSpanSchema(
+                quote=quote,
+                start=start,
+                end=end,
+            )
+            result.append(span)
+        except ValidationError as exc:
+            _logger.warning(
+                f"Skipping invalid provenance span: {exc}. "
+                f"Span data: quote={quote!r}, start={start}, end={end}"
+            )
+    elif isinstance(provenance_data, str):
+        if provenance_data:
+            try:
+                span = SourceSpanSchema(quote=provenance_data, start=None, end=None)
+                result.append(span)
+            except ValidationError as exc:
+                _logger.warning(
+                    f"Skipping invalid provenance span: {exc}. "
+                    f"Span data: quote={provenance_data!r}, start=None, end=None"
+                )
+
+    return result
+
+
+def _safe_confidence(value: Any) -> float:
+    """
+    Safely convert a confidence value to float, treating 0.0 as valid.
+
+    Handles the case where confidence is 0, which should not default to 0.5.
+    Only uses 0.5 default when the value is None.
+
+    Args:
+        value: Confidence value (may be None, 0, 0.0, or other numeric type)
+
+    Returns:
+        Confidence as float; 0.5 default only if value is None
+    """
+    if value is None:
+        return 0.5
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.5
+
+
+def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCandidate:
+    """
+    Map an orchestrator class candidate to SchemaClassCandidate response.
+
+    Args:
+        candidate_dict: Candidate dict from orchestrator output
+
+    Returns:
+        SchemaClassCandidate response object
+    """
+    provenance = _normalize_provenance(candidate_dict.get("provenance", []))
+
+    return SchemaClassCandidate(
+        label=candidate_dict.get("label", ""),
+        proposed_definition=candidate_dict.get("proposed_definition"),
+        disambiguation_rationale=candidate_dict.get("disambiguation_rationale"),
+        confidence=_safe_confidence(candidate_dict.get("confidence")),
+        provenance=provenance,
+    )
+
+
+def _map_schema_property_candidate(
+    candidate_dict: dict[str, Any],
+) -> SchemaPropertyCandidate:
+    """
+    Map an orchestrator property candidate to SchemaPropertyCandidate response.
+
+    Args:
+        candidate_dict: Candidate dict from orchestrator output
+
+    Returns:
+        SchemaPropertyCandidate response object
+    """
+    provenance = _normalize_provenance(candidate_dict.get("provenance", []))
+
+    return SchemaPropertyCandidate(
+        label=candidate_dict.get("label", ""),
+        proposed_definition=candidate_dict.get("proposed_definition"),
+        proposed_domain=candidate_dict.get("proposed_domain"),
+        proposed_range=candidate_dict.get("proposed_range"),
+        confidence=_safe_confidence(candidate_dict.get("confidence")),
+        provenance=provenance,
+    )
+
+
+def _map_schema_connection_candidate(
+    connection_dict: dict[str, Any],
+) -> SchemaConnectionCandidate:
+    """
+    Map an orchestrator connection to SchemaConnectionCandidate response.
+
+    Args:
+        connection_dict: Connection dict from orchestrator output
+
+    Returns:
+        SchemaConnectionCandidate response object
+    """
+    provenance = _normalize_provenance(connection_dict.get("provenance", []))
+
+    return SchemaConnectionCandidate(
+        subject_ref=connection_dict.get("subject_ref", ""),
+        predicate=connection_dict.get("predicate", ""),
+        object_ref=connection_dict.get("object_ref", ""),
+        confidence=_safe_confidence(connection_dict.get("confidence")),
+        provenance=provenance,
+    )
+
+
+def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
+    """
+    Map an orchestrator triple to TripleCandidate response.
+
+    Handles normalized provenance from output_summary["triples"],
+    distinguishing mapped nodes (with id) from new ones (without id).
+
+    Args:
+        triple_dict: Triple dict from orchestrator output
+
+    Returns:
+        TripleCandidate response object
+    """
+
+    def _map_node_ref(node_data: dict[str, Any] | None) -> NodeReference:
+        """Map subject or object node to NodeReference."""
+        if not node_data:
+            node_data = {}
+        return NodeReference(
+            kind=node_data.get("kind", "individual"),
+            label=node_data.get("label", ""),
+            id=node_data.get("id"),
+            class_ids=node_data.get("class_ids"),
+            value=node_data.get("value"),
+            datatype=node_data.get("datatype"),
+        )
+
+    def _map_predicate_ref(pred_data: dict[str, Any] | None) -> PredicateReference:
+        """Map predicate to PredicateReference."""
+        if not pred_data:
+            pred_data = {}
+        return PredicateReference(
+            kind=pred_data.get("kind", "property"),
+            label=pred_data.get("label", ""),
+            property_definition_id=pred_data.get("property_definition_id"),
+        )
+
+    subject_data = triple_dict.get("subject") or {}
+    object_data = triple_dict.get("object") or {}
+    predicate_data = triple_dict.get("predicate") or {}
+
+    provenance = _normalize_provenance(triple_dict.get("provenance", []))
+
+    return TripleCandidate(
+        subject=_map_node_ref(subject_data),
+        predicate=_map_predicate_ref(predicate_data),
+        object=_map_node_ref(object_data),
+        confidence=_safe_confidence(triple_dict.get("confidence")),
+        provenance=provenance,
+    )
+
+
+def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandidate:
+    """
+    Map an orchestrator grounding to GroundingCandidate response.
+
+    Args:
+        grounding_dict: Grounding dict from orchestrator output
+
+    Returns:
+        GroundingCandidate response object
+    """
+    provenance_data = grounding_dict.get("provenance") or grounding_dict.get("match_rationale")
+    provenance = _normalize_provenance(provenance_data or [])
+
+    return GroundingCandidate(
+        uri=grounding_dict.get("uri", ""),
+        label=grounding_dict.get("label", ""),
+        description=grounding_dict.get("description", ""),
+        source=grounding_dict.get("source", ""),
+        confidence=_safe_confidence(grounding_dict.get("confidence")),
+        provenance=provenance,
+    )
+
+
+def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCandidate:
+    """
+    Map an orchestrator refinement to RefinementCandidate response.
+
+    Handles both definition and connection refinement outputs:
+    - Definition refinement: refined text stored in "definition" key
+    - Connection refinement: refined text stored in "rationale" key
+    Uses scope_id as the URI and refined text as description to match spec.
+
+    Args:
+        refinement_dict: Refinement dict from orchestrator output
+
+    Returns:
+        RefinementCandidate response object
+    """
+    refined_text = (
+        refinement_dict.get("definition")
+        or refinement_dict.get("rationale")
+        or refinement_dict.get("content")
+        or ""
+    )
+    scope_id = refinement_dict.get("scope_id", "")
+    provenance = _normalize_provenance(refinement_dict.get("provenance", []))
+
+    return RefinementCandidate(
+        uri=scope_id,
+        label=refined_text[:100] if refined_text else "",
+        description=refined_text,
+        source=refinement_dict.get("source", "refinement_pipeline"),
+        confidence=_safe_confidence(refinement_dict.get("confidence")),
+        provenance=provenance,
+    )
 
 
 def _handle_domain_error(exc: Exception) -> tuple[int, str]:
@@ -150,6 +450,53 @@ def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
             },
         ),
     }
+
+
+def _fetch_and_validate_run(
+    run_id: str,
+    repo: Any,
+    expected_type: PipelineType | tuple[PipelineType, ...],
+    error_description: str,
+) -> PipelineRun:
+    """
+    Fetch a pipeline run and validate its type.
+
+    Shared helper to avoid redundant database fetches when validating
+    that a run exists and matches the expected type.
+
+    Args:
+        run_id: The pipeline run ID
+        repo: The pipeline run repository
+        expected_type: Expected pipeline type(s) - single type or tuple of types
+        error_description: Description to include in 422 error if type doesn't match
+
+    Returns:
+        The validated PipelineRun
+
+    Raises:
+        HTTPException: 404 if run not found, 422 if type doesn't match
+    """
+    run = repo.get(run_id)
+
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+
+    # Handle both single type and multiple types
+    if isinstance(expected_type, tuple):
+        type_matches = run.pipeline_type in expected_type
+    else:
+        type_matches = run.pipeline_type == expected_type
+
+    if not type_matches:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_description,
+        )
+
+    return run
 
 
 # ==================== Response Mapping ====================
@@ -368,8 +715,19 @@ async def list_configurations(
         try:
             user_configs = config_repo.list_for_type(ptype.value, impl_id)
             known_user_refs = config_repo.list_known_config_refs(ptype.value, impl_id)
-        except Exception:
-            _logger.warning("Failed to load user configurations from DB", exc_info=True)
+        except Exception as exc:
+            _logger.error(
+                f"Failed to load user configurations from DB for {ptype.value}:{impl_id}",
+                exc_info=exc,
+            )
+            error_msg = (
+                "Failed to load pipeline configurations. "
+                "Database may be corrupted or unavailable."
+            )
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_msg,
+            ) from exc
 
     # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
     system_configs = config_registry.list_configs(ptype, impl_id)
@@ -726,30 +1084,90 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
-@router.get("/runs/{run_id}/candidates", response_model=list[CandidateResponse])
-async def get_pipeline_candidates(
+def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
+    """Extract schema extraction candidates from an already-fetched run."""
+    output_summary = run.output_summary or {}
+    result: list[CandidateItem] = []
+
+    candidates_data = output_summary.get("candidates", [])
+    connections_data = output_summary.get("connections", [])
+
+    # Map class and property candidates
+    for candidate_dict in candidates_data:
+        kind = candidate_dict.get("kind")
+        if kind == "class":
+            result.append(_map_schema_class_candidate(candidate_dict))
+        elif kind == "property_definition":
+            result.append(_map_schema_property_candidate(candidate_dict))
+        else:
+            _logger.warning(
+                f"Skipping candidate with unrecognized kind: {kind}. "
+                f"Expected 'class' or 'property_definition'."
+            )
+
+    # Map connections
+    for connection_dict in connections_data:
+        result.append(_map_schema_connection_candidate(connection_dict))
+
+    return result
+
+
+def _extract_individual_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
+    """Extract individual extraction candidates from an already-fetched run."""
+    output_summary = run.output_summary or {}
+    triples_data = output_summary.get("triples", [])
+    return [_map_triple_candidate(triple_dict) for triple_dict in triples_data]
+
+
+def _extract_grounding_candidates(run: PipelineRun) -> list[CandidateItem]:
+    """Extract grounding candidates from an already-fetched run."""
+    output_summary = run.output_summary or {}
+    groundings_data = output_summary.get("groundings", [])
+    return [_map_grounding_candidate(grounding_dict) for grounding_dict in groundings_data]
+
+
+def _extract_refinement_candidates(run: PipelineRun) -> list[CandidateItem]:
+    """Extract refinement candidates from an already-fetched run."""
+    output_summary = run.output_summary or {}
+
+    # For definition refinement, look for "candidates" key
+    if run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
+        refinement_data = output_summary.get("candidates", [])
+    # For connection refinement, look for "deltas" key
+    else:
+        refinement_data = output_summary.get("deltas", [])
+
+    return [_map_refinement_candidate(ref_dict) for ref_dict in refinement_data]
+
+
+@router.get(
+    "/runs/{run_id}/candidates",
+    response_model=list[CandidateItem],
+)
+async def get_pipeline_candidates_generic(
     run_id: str,
     request: Request,
-) -> list[CandidateResponse]:
+) -> list[CandidateItem]:
     """
-    Retrieve candidates from a completed pipeline run.
+    Retrieve candidates from a completed pipeline run (generic endpoint).
 
-    Extracts the full candidate list with provenance and confidence scores
-    from the pipeline run's output. The structure of candidates depends on
-    the pipeline type:
-    - schema_node_grounding: returns groundings with URI, label, confidence
-    - schema_node_definition_refinement: returns definition candidates
-    - schema_node_connection_refinement: returns connection candidates
+    Routes to the appropriate extraction logic based on pipeline type.
+    Returns results as a discriminated union (CandidateItem) with full structure:
+    - SchemaClassCandidate, SchemaPropertyCandidate, SchemaConnectionCandidate
+      (from schema_extraction)
+    - TripleCandidate (from individual_extraction)
+    - GroundingCandidate (from schema_node_grounding)
+    - RefinementCandidate (from refinement pipelines)
 
     Args:
         run_id: The pipeline run ID
         request: FastAPI request (for service access)
 
     Returns:
-        List of CandidateResponse objects with full provenance and confidence
+        List of CandidateItem objects (discriminated union) with appropriate candidates
 
     Raises:
-        HTTPException: 404 if run not found, 400 if run has no candidates
+        HTTPException: 404 if run not found
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -760,40 +1178,162 @@ async def get_pipeline_candidates(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    # Extract candidates from output_summary based on pipeline type
-    output_summary = run.output_summary or {}
-
-    # Determine which key contains candidates based on pipeline type
-    candidates_key = None
-    candidates_data = []
-
-    if run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
-        candidates_key = "groundings"
-    elif run.pipeline_type == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
-        candidates_key = "candidates"
-    elif run.pipeline_type == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
-        candidates_key = "deltas"
+    # Route to the appropriate extraction logic based on type
+    candidates: list[CandidateItem] = []
+    if run.pipeline_type == PipelineType.SCHEMA_EXTRACTION:
+        candidates = _extract_schema_extraction_candidates(run)
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        candidates_key = "triples"
-    # NO_OP and SCHEMA_EXTRACTION pipelines don't produce candidates, return empty list
+        candidates = _extract_individual_extraction_candidates(run)
+    elif run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
+        candidates = _extract_grounding_candidates(run)
+    elif run.pipeline_type in (
+        PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+        PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+    ):
+        candidates = _extract_refinement_candidates(run)
 
-    if candidates_key and candidates_key in output_summary:
-        candidates_data = output_summary[candidates_key]
+    return candidates
 
-    # Convert candidate dicts to response schema
-    return [
-        CandidateResponse.model_validate(
-            {
-                "uri": cand.get("uri") or cand.get("id") or "",
-                "label": cand.get("label") or cand.get("name") or "",
-                "description": cand.get("description") or "",
-                "source": cand.get("source") or cand.get("source_uri") or "",
-                "confidence": float(cand.get("confidence") or cand.get("match_confidence") or 0.0),
-                "provenance": cand.get("provenance") or cand.get("match_rationale") or "",
-            }
-        )
-        for cand in candidates_data
-    ]
+
+@router.get(
+    "/runs/{run_id}/schema-extraction-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_extraction_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from a schema_extraction pipeline run.
+
+    Returns SchemaClassCandidate, SchemaPropertyCandidate, and
+    SchemaConnectionCandidate objects with full provenance and confidence.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with schema candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not schema_extraction type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = _fetch_and_validate_run(
+        run_id,
+        repo,
+        PipelineType.SCHEMA_EXTRACTION,
+        f"Run {run_id} is not of type schema_extraction",
+    )
+    return _extract_schema_extraction_candidates(run)
+
+
+@router.get(
+    "/runs/{run_id}/individual-extraction-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_individual_extraction_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from an individual_extraction pipeline run.
+
+    Returns TripleCandidate objects with structured subject-predicate-object
+    relationships and full provenance and confidence.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with triple candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not individual_extraction type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = _fetch_and_validate_run(
+        run_id,
+        repo,
+        PipelineType.INDIVIDUAL_EXTRACTION,
+        f"Run {run_id} is not of type individual_extraction",
+    )
+    return _extract_individual_extraction_candidates(run)
+
+
+@router.get(
+    "/runs/{run_id}/schema-grounding-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_grounding_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from a schema_node_grounding pipeline run.
+
+    Returns GroundingCandidate objects linking schema nodes to external knowledge
+    with URI, label, description, and confidence.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with grounding candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not schema_node_grounding type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = _fetch_and_validate_run(
+        run_id,
+        repo,
+        PipelineType.SCHEMA_NODE_GROUNDING,
+        f"Run {run_id} is not of type schema_node_grounding",
+    )
+    return _extract_grounding_candidates(run)
+
+
+@router.get(
+    "/runs/{run_id}/schema-refinement-candidates",
+    response_model=list[CandidateItem],
+)
+async def get_schema_refinement_candidates(
+    run_id: str,
+    request: Request,
+) -> list[CandidateItem]:
+    """
+    Retrieve candidates from schema refinement pipeline runs.
+
+    Handles both schema_node_definition_refinement and schema_node_connection_refinement
+    pipeline types, returning RefinementCandidate objects with refined content
+    (definitions or connections) with confidence and provenance.
+
+    Args:
+        run_id: The pipeline run ID
+        request: FastAPI request (for service access)
+
+    Returns:
+        List of CandidateItem objects (discriminated union) with refinement candidates
+
+    Raises:
+        HTTPException: 404 if run not found or 422 if run is not a refinement type
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = _fetch_and_validate_run(
+        run_id,
+        repo,
+        (
+            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
+        ),
+        f"Run {run_id} is not a refinement type "
+        "(schema_node_definition_refinement or schema_node_connection_refinement)",
+    )
+    return _extract_refinement_candidates(run)
 
 
 @router.get(
@@ -1156,6 +1696,103 @@ async def apply_pipeline_run(
         created_property_definition_ids=apply_result.created_property_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
         recognized_individual_ids=apply_result.recognized_individual_ids,
+    )
+
+
+@router.post(
+    "/runs/{run_id}/recognition-preview",
+    response_model=RecognitionPreviewResponse,
+    status_code=http_status.HTTP_200_OK,
+)
+async def preview_recognition(
+    run_id: str,
+    request: Request,
+    request_body: RecognitionPreviewRequest = Body(default=RecognitionPreviewRequest()),
+) -> RecognitionPreviewResponse:
+    """
+    Preview which extracted individuals would match existing graph nodes.
+
+    Computes at request time against current ontology state, with zero writes.
+    For an individual_extraction run, reports which extracted individual mentions
+    would resolve to existing ontology individuals if the run were applied, and
+    which would be created as new. For schema_extraction runs, returns an empty
+    result (not yet implemented).
+
+    This endpoint:
+    - Returns 404 if the run does not exist
+    - Returns 200 with empty results for unsupported pipeline types
+    - Produces zero writes to ontology data, pipeline run data, or change events
+
+    Args:
+        run_id: ID of the completed pipeline run to preview
+        request_body: Preview parameters including confidence thresholds
+
+    Returns:
+        RecognitionPreviewResponse with recognition results per mention
+
+    Raises:
+        HTTPException: 404 if run not found, 422 if run is not completed
+    """
+    repo = request.app.state.pipeline_run_repo
+    run = repo.get(run_id)
+    if run is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run {run_id} not found",
+        )
+
+    if run.status != PipelineRunStatus.COMPLETED:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Pipeline run {run_id} is not completed (status: {run.status.value})",
+        )
+
+    ptype = run.pipeline_type
+
+    triples = (run.output_summary or {}).get("triples", [])
+
+    hits = []
+    skipped_count = 0
+    matched_count = 0
+    unmatched_count = 0
+
+    if ptype == PipelineType.INDIVIDUAL_EXTRACTION:
+        svc = request.app.state.extraction_service
+        try:
+            result = svc.preview_recognition(
+                triples=triples,
+                confidence_threshold=request_body.confidence_threshold,
+                recognition_threshold=request_body.recognition_threshold,
+            )
+            hits = result.hits
+            skipped_count = result.skipped_count
+            matched_count = sum(1 for hit in hits if hit.will_match_existing)
+            unmatched_count = sum(1 for hit in hits if not hit.will_match_existing)
+        except Exception as exc:
+            status_code, message = _handle_domain_error(exc)
+            raise HTTPException(status_code=status_code, detail=message) from exc
+    elif ptype == PipelineType.SCHEMA_EXTRACTION:
+        pass
+
+    hit_schemas = [
+        RecognitionPreviewHitSchema(
+            mention_label=hit.mention_label,
+            resolved_individual_id=hit.resolved_individual_id,
+            resolved_individual_title=hit.resolved_individual_title,
+            match_method=hit.match_method,
+            match_score=hit.match_score,
+            will_match_existing=hit.will_match_existing,
+            candidate_class_ids=hit.candidate_class_ids,
+        )
+        for hit in hits
+    ]
+
+    return RecognitionPreviewResponse(
+        hits=hit_schemas,
+        total_mentions=len(hits),
+        matched_count=matched_count,
+        unmatched_count=unmatched_count,
+        skipped_count=skipped_count,
     )
 
 
@@ -1661,8 +2298,16 @@ async def update_configuration(
             "enabled": record.enabled,
         }
         config_registry.register(ptype, record.implementation_id, record.config_ref, config_dict)
-    except Exception:
-        _logger.warning("Failed to register updated config in registry", exc_info=True)
+    except Exception as exc:
+        _logger.error(
+            f"Failed to register updated config {config_id} in registry",
+            exc_info=exc,
+        )
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Configuration updated in database but failed to sync to runtime registry. "
+            "Pipeline runs may use stale configuration until server restart.",
+        ) from exc
 
     return _db_config_to_response(record)
 

@@ -17,13 +17,32 @@ Response schemas (for GET/returns):
 - ConfigurationResponse
 - PipelineConfigurationResponse (rich schema for user-editable configs)
 
+Candidate response schemas:
+- SourceSpanSchema — quote and character offsets (start, end)
+- CandidateBase — shared candidate fields (candidate_type, confidence, provenance)
+- Discriminated union variants:
+  - SchemaClassCandidate — class extraction candidate
+  - SchemaPropertyCandidate — property definition candidate
+  - SchemaConnectionCandidate — connection/relationship candidate
+  - NodeReference — reference to an extracted node (individual_extraction)
+  - PredicateReference — reference to a predicate/property (individual_extraction)
+  - TripleCandidate — subject-predicate-object triple (individual_extraction)
+  - GroundingCandidate — external knowledge grounding (schema_node_grounding)
+  - RefinementCandidate — refined definition or connection (refinement pipelines)
+- CandidateItem — Annotated discriminated union covering all variants
+
+Legacy schemas (deprecated, kept for reference):
+- CandidateResponse — flat candidate schema (replaced by discriminated union)
+
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
 
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
+
+from adapters.web.schemas.extraction import SourceSpanSchema
 
 
 class PipelineTypeResponse(BaseModel):
@@ -304,12 +323,171 @@ class RevertRunResponse(BaseModel):
     )
 
 
+class CandidateBase(BaseModel):
+    """Base class for all candidates from pipeline execution.
+
+    Provides shared fields: candidate_type (discriminator), confidence, and provenance.
+    Each concrete candidate type specifies its variant via candidate_type.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    candidate_type: str = Field(..., description="Discriminator: identifies the candidate variant")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
+    provenance: list[SourceSpanSchema] = Field(
+        default_factory=list, description="List of source spans with provenance information"
+    )
+
+
+class SchemaClassCandidate(CandidateBase):
+    """Candidate class entity from schema extraction or grounding.
+
+    Represents a proposed or grounded class in the schema.
+    """
+
+    candidate_type: Literal["schema_class"] = "schema_class"
+    label: str = Field(..., description="Class label/name")
+    proposed_definition: Optional[str] = Field(
+        None, description="Proposed definition or description of the class"
+    )
+    disambiguation_rationale: Optional[str] = Field(
+        None, description="Rationale for this candidate when multiple senses are disambiguated"
+    )
+
+
+class SchemaPropertyCandidate(CandidateBase):
+    """Candidate property definition from schema extraction.
+
+    Represents a proposed property/relationship type.
+    """
+
+    candidate_type: Literal["schema_property"] = "schema_property"
+    label: str = Field(..., description="Property label/name")
+    proposed_definition: Optional[str] = Field(
+        None, description="Proposed definition or semantics of the property"
+    )
+    proposed_domain: Optional[str] = Field(
+        None, description="Proposed domain (subject class) for this property"
+    )
+    proposed_range: Optional[str] = Field(
+        None, description="Proposed range (object class) for this property"
+    )
+
+
+class SchemaConnectionCandidate(CandidateBase):
+    """Candidate connection/relationship from schema extraction or refinement.
+
+    Represents a proposed relationship between schema entities.
+    """
+
+    candidate_type: Literal["schema_connection"] = "schema_connection"
+    subject_ref: str = Field(..., description="Subject entity reference or label")
+    predicate: str = Field(..., description="Relationship/property type")
+    object_ref: str = Field(..., description="Object entity reference or label")
+
+
+class NodeReference(BaseModel):
+    """Reference to an extracted node (individual/class/literal) in individual extraction.
+
+    Identifies a subject or object node with optional mapping to existing ontology.
+    Non-empty id means mapped to existing ontology entity; empty/None means new candidate.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    kind: str = Field(..., description="Node kind: individual, class, or literal")
+    label: str = Field(..., description="Node label/name")
+    id: Optional[str] = Field(
+        None,
+        description="Ontology entity ID (empty/None=new, non-empty=mapped)",
+    )
+    class_ids: Optional[list[str]] = Field(
+        None, description="Class IDs if this node is an individual instance"
+    )
+    value: Optional[str] = Field(None, description="Literal value (only for kind=literal)")
+    datatype: Optional[str] = Field(
+        None, description="Literal data type URI (only for kind=literal)"
+    )
+
+
+class PredicateReference(BaseModel):
+    """Reference to a property/predicate in individual extraction.
+
+    Identifies a relationship type with optional mapping to existing property definition.
+    Non-empty property_definition_id means mapped; empty/None means new candidate.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    kind: str = Field(..., description="Predicate kind: property or relation type")
+    label: str = Field(..., description="Predicate label/name")
+    property_definition_id: Optional[str] = Field(
+        None,
+        description="Property definition ID; empty/None = new candidate, non-empty = mapped",
+    )
+
+
+class TripleCandidate(CandidateBase):
+    """Subject-predicate-object triple candidate from individual extraction.
+
+    Represents a proposed relationship between two extracted entities.
+    """
+
+    candidate_type: Literal["triple"] = "triple"
+    subject: NodeReference = Field(..., description="Subject node reference")
+    predicate: PredicateReference = Field(..., description="Predicate reference")
+    object: NodeReference = Field(..., description="Object node reference")
+
+
+class GroundingCandidate(CandidateBase):
+    """Grounding candidate linking a schema node to external knowledge.
+
+    Represents an external resource that grounds or validates a schema entity.
+    """
+
+    candidate_type: Literal["grounding"] = "grounding"
+    uri: str = Field(..., description="External resource URI or identifier")
+    label: str = Field(..., description="External resource label")
+    description: str = Field(default="", description="External resource description")
+    source: str = Field(default="", description="Source database or knowledge base")
+
+
+class RefinementCandidate(CandidateBase):
+    """Refined definition or connection candidate from refinement pipelines.
+
+    Represents a proposed refinement to an existing schema entity or relationship.
+    Follows the same shape as GroundingCandidate for consistency.
+    """
+
+    candidate_type: Literal["refinement"] = "refinement"
+    uri: str = Field(..., description="Refined entity URI or identifier")
+    label: str = Field(..., description="Human-readable label for the refinement")
+    description: str = Field(default="", description="Refined description or definition")
+    source: str = Field(default="", description="Source or rationale for this refinement")
+
+
+CandidateItem = Annotated[
+    Union[
+        Annotated[SchemaClassCandidate, Tag("schema_class")],
+        Annotated[SchemaPropertyCandidate, Tag("schema_property")],
+        Annotated[SchemaConnectionCandidate, Tag("schema_connection")],
+        Annotated[TripleCandidate, Tag("triple")],
+        Annotated[GroundingCandidate, Tag("grounding")],
+        Annotated[RefinementCandidate, Tag("refinement")],
+    ],
+    Discriminator("candidate_type"),
+]
+
+
 class CandidateResponse(BaseModel):
     """Response containing a single candidate from a pipeline run.
 
+    DEPRECATED: Use CandidateItem (discriminated union) for new implementations.
+
     Represents a candidate result from pipeline execution with full provenance
     and confidence information. Structure adapts based on pipeline type but
-    maintains a consistent interface.
+    maintains a consistent interface. Kept for backwards compatibility until
+    all consumers migrate to discriminated union variants.
     """
 
     model_config = ConfigDict(from_attributes=True)

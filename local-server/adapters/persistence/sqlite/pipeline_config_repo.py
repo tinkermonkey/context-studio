@@ -126,9 +126,17 @@ class PipelineConfigurationRepository:
                     session.query(PipelineConfiguration)
                     .filter(  # type: ignore[arg-type]
                         and_(  # type: ignore[arg-type]
-                            PipelineConfiguration.pipeline_type == pipeline_type,  # type: ignore[arg-type]
-                            PipelineConfiguration.implementation_id == implementation_id,  # type: ignore[arg-type]
-                            PipelineConfiguration.deleted_at.is_(None),  # type: ignore[union-attr]
+                            (
+                                PipelineConfiguration.pipeline_type
+                                == pipeline_type  # type: ignore[arg-type]
+                            ),
+                            (
+                                PipelineConfiguration.implementation_id
+                                == implementation_id  # type: ignore[arg-type]
+                            ),
+                            (
+                                PipelineConfiguration.deleted_at.is_(None)  # type: ignore[union-attr]
+                            ),
                         )
                     )
                     .order_by(PipelineConfiguration.created_at)
