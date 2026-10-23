@@ -36,6 +36,7 @@ const NAV_SECTIONS = [
         icon: "pipeline",
         children: [
           { id: "pipelines/all", label: "All pipelines", count: 11 },
+          { id: "pipelines/review", label: "Extraction review" },
           { id: "pipelines/runs", label: "Run history" },
           { id: "pipelines/flavors", label: "Flavors" },
         ],
@@ -65,6 +66,7 @@ const ROUTE_CRUMBS = {
   "data/individuals": ["Data", "Individuals"],
   "data/datasets": ["Data", "Datasets"],
   "pipelines/all": ["Pipelines", "All pipelines"],
+  "pipelines/review": ["Pipelines", "Extraction review"],
   "pipelines/runs": ["Pipelines", "Run history"],
   "pipelines/flavors": ["Pipelines", "Flavors"],
   "reference/sources": ["External Reference", "Sources"],
@@ -143,6 +145,8 @@ function CSApp() {
     Page = <CSSchemaRelationships route={route} onNav={navigate} />;
   else if (route === "data/individuals") Page = <CSIndividuals onNav={navigate} />;
   else if (route === "pipelines/all") Page = <CSPipelines onNav={navigate} />;
+  else if (route === "pipelines/review")
+    Page = <CSExtractionReview onNav={navigate} onToast={setToast} />;
   else Page = <CSStub route={route} />;
 
   // --- Statusbar items ---------------------------------------------------
@@ -237,6 +241,14 @@ function CSApp() {
         description: "/pipelines/all",
         icon: "pipeline",
         onSelect: () => navigate("pipelines/all"),
+      },
+      {
+        id: "go-extraction-review",
+        group: "Navigate",
+        label: "Go to Extraction review",
+        description: "/pipelines/review",
+        icon: "zap",
+        onSelect: () => navigate("pipelines/review"),
       },
       {
         id: "go-graph",

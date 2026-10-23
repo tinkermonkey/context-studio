@@ -58,3 +58,183 @@
    shipped in the library. Even distribution is now the default `flowLayout="fill"`,
    node tiles + 26px arrows are baked into PipelineCard.css, and per-stage tone is
    passed via FlowNode.color (see cs/pages.jsx → toHeimdallPipeline). Overrides removed. */
+
+/* ============================================================================
+   Extraction review (issue #1230). Layout glue + source-span highlighting.
+   Heimdall has no highlighted-text primitive, so .cs-span is the one new visual.
+   ============================================================================ */
+
+.cs-gap {
+  height: 16px;
+}
+
+.cs-gap-sm {
+  height: 10px;
+}
+
+.cs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.cs-stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-chip-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-actions-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* review body: candidates (left) · source text + inspector (right) */
+.cs-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* paragraph + scope pickers */
+.cs-input-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.cs-run-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cs-run-meta__proto {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  border-left: 1px dashed rgb(var(--canvas-border-strong));
+}
+
+.cs-apply-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cs-apply-bar__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cs-decision {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cs-node-ref {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.cs-node-ref__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cs-strong {
+  font-weight: 500;
+}
+
+.cs-muted {
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12.5px;
+}
+
+.cs-mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.cs-mono-muted {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+}
+
+.cs-quote {
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-2));
+  font-style: italic;
+}
+
+.cs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  text-align: center;
+  color: rgb(var(--canvas-fg-3));
+  font-size: 13px;
+}
+
+/* source paragraph with provenance highlights */
+.cs-source-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: rgb(var(--canvas-fg-1));
+}
+
+.cs-span {
+  color: inherit;
+  background: rgb(var(--status-cyan) / 0.14);
+  border-bottom: 1px solid rgb(var(--status-cyan) / 0.55);
+  border-radius: 2px;
+  padding: 1px 0;
+  cursor: pointer;
+}
+
+.cs-span--overlap {
+  background: rgb(var(--status-cyan) / 0.26);
+}
+
+.cs-span--active {
+  background: rgb(var(--accent-primary) / 0.32);
+  border-bottom: 2px solid rgb(var(--accent-primary));
+}
+
+.cs-span:focus-visible {
+  outline: 2px solid rgb(var(--accent-primary));
+  outline-offset: 1px;
+}
+
+/* Library gap: tokens.css gives --status-warn-bg / --status-error-bg light values
+   only, so FormCallout warn/error render light-on-light under body.dark-canvas.
+   Recommended library fix: dark-canvas values for those tokens. */
+body.dark-canvas .form-callout--warn {
+  background-color: rgb(var(--status-warn) / 0.12);
+}
+
+body.dark-canvas .form-callout--error {
+  background-color: rgb(var(--status-error) / 0.12);
+}

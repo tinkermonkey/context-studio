@@ -1355,3 +1355,1244 @@ function CSStub({ route }) {
   );
 }
 window.CSStub = CSStub;
+
+// =========================================================================
+// Pipelines · Extraction review  (issue #1230 — design for #1231)
+//
+// One paragraph input → two independent runs (schema_extraction and
+// individual_extraction) → two review tabs, each with its own accept/apply.
+//
+// Every mocked field below is a real API contract field (openapi.json):
+//   POST /pipelines/{type}/run                         → PipelineRunResponse
+//   GET  /pipelines/runs/{id}/schema-extraction-candidates
+//        → SchemaClassCandidate | SchemaPropertyCandidate | SchemaConnectionCandidate
+//   GET  /pipelines/runs/{id}/individual-extraction-candidates → TripleCandidate
+//   POST /pipelines/runs/{id}/recognition-preview      → RecognitionPreviewResponse
+//   POST /pipelines/runs/{id}/apply                    → ApplyRunResponse
+// Candidates carry no id, so rows are keyed by list index (sc-0, t-3, hit-2).
+// Demo dataset: Documentation Robotics 12-layer model (taxonomy dr_spec).
+// =========================================================================
+
+const DR_LAYERS = {
+  motivation: "01",
+  business: "02",
+  security: "03",
+  application: "04",
+  technology: "05",
+  api: "06",
+  "data-model": "07",
+  "data-store": "08",
+  ux: "09",
+  navigation: "10",
+  apm: "11",
+  testing: "12",
+};
+
+// "motivation.stakeholder" → { layer: "motivation", num: "01", type: "stakeholder" }
+function drLayerOf(classId) {
+  if (!classId) return null;
+  const [layer, ...rest] = classId.split(".");
+  return { layer, num: DR_LAYERS[layer] || "??", type: rest.join(".") };
+}
+
+const XR_TEXT =
+  "The Customer Portal lets policyholders submit insurance claims online. Each claim is reviewed by a Claims Adjuster, a key stakeholder, through the Claims Review Service, which exposes the POST /claims operation and persists records to the Claims Database. The goal Reduce Claim Turnaround influences the Claims Review Service, which must resolve claims within 48 hours.";
+
+// SourceSpanSchema {quote, start, end} — mock helper locates the quote in XR_TEXT.
+function xrSpan(quote) {
+  const at = XR_TEXT.indexOf(quote);
+  return at < 0 ? { quote, start: null, end: null } : { quote, start: at, end: at + quote.length };
+}
+
+const XR_MOCK = {
+  scope: { taxonomy_id: "dr_spec", concept_scheme_id: "dr_spec.extracted" },
+  schemaRun: {
+    id: "run_5b0e91",
+    pipeline_type: "schema_extraction",
+    configuration_slug: "default",
+    configuration_version: 3,
+    status: "COMPLETED",
+    duration: "11.4s",
+    failure_reason: "LLM provider timeout after 60s",
+  },
+  individualRun: {
+    id: "run_5b0e92",
+    pipeline_type: "individual_extraction",
+    configuration_slug: "default",
+    configuration_version: 3,
+    status: "COMPLETED",
+    duration: "14.9s",
+    failure_reason: "LLM provider timeout after 60s",
+  },
+  schemaCandidates: [
+    {
+      candidate_type: "schema_class",
+      label: "Policyholder",
+      confidence: 0.91,
+      proposed_definition:
+        "A person or organization holding an insurance policy who interacts with the business through its channels.",
+      provenance: [xrSpan("policyholders")],
+    },
+    {
+      candidate_type: "schema_class",
+      label: "Insurance Claim",
+      confidence: 0.88,
+      proposed_definition: "A request by a policyholder for compensation under the terms of a policy.",
+      provenance: [xrSpan("insurance claims"), xrSpan("Each claim")],
+    },
+    {
+      candidate_type: "schema_class",
+      label: "Claims Adjuster",
+      confidence: 0.74,
+      proposed_definition: "A role that assesses the validity and value of submitted claims.",
+      provenance: [xrSpan("Claims Adjuster")],
+    },
+    {
+      candidate_type: "schema_class",
+      label: "Online Channel",
+      confidence: 0.41,
+      proposed_definition: "A digital channel through which customers reach a business service.",
+      provenance: [xrSpan("online")],
+    },
+    {
+      candidate_type: "schema_class",
+      label: "Turnaround SLA",
+      confidence: 0.38,
+      proposed_definition: null,
+      provenance: [{ quote: "turnaround SLA", start: null, end: null }],
+    },
+    {
+      candidate_type: "schema_property",
+      label: "submits",
+      confidence: 0.86,
+      proposed_definition: "The actor initiates a business object.",
+      proposed_domain: "business.business-actor",
+      proposed_range: "business.business-object",
+      provenance: [xrSpan("submit")],
+    },
+    {
+      candidate_type: "schema_property",
+      label: "reviewed-by",
+      confidence: 0.79,
+      proposed_definition: "The object is assessed by a stakeholder or role.",
+      proposed_domain: "business.business-object",
+      proposed_range: "motivation.stakeholder",
+      provenance: [xrSpan("reviewed by")],
+    },
+    {
+      candidate_type: "schema_property",
+      label: "persists-to",
+      confidence: 0.72,
+      proposed_definition: "A service writes records to a data store.",
+      proposed_domain: "application.application-service",
+      proposed_range: "data-store.database",
+      provenance: [xrSpan("persists records to")],
+    },
+    {
+      candidate_type: "schema_property",
+      label: "resolution-window",
+      confidence: 0.55,
+      proposed_definition: "Maximum time allowed to resolve the object.",
+      proposed_domain: "application.application-service",
+      proposed_range: "xsd:duration",
+      provenance: [xrSpan("within 48 hours")],
+    },
+    {
+      candidate_type: "schema_connection",
+      subject_ref: "application.application-service",
+      predicate: "exposes",
+      object_ref: "api.operation",
+      confidence: 0.83,
+      provenance: [xrSpan("exposes the POST /claims operation")],
+    },
+    {
+      candidate_type: "schema_connection",
+      subject_ref: "motivation.goal",
+      predicate: "influences",
+      object_ref: "application.application-service",
+      confidence: 0.77,
+      provenance: [xrSpan("Reduce Claim Turnaround influences the Claims Review Service")],
+    },
+    {
+      candidate_type: "schema_connection",
+      subject_ref: "Policyholder",
+      predicate: "submits",
+      object_ref: "Insurance Claim",
+      confidence: 0.81,
+      provenance: [xrSpan("policyholders submit insurance claims")],
+    },
+  ],
+};
+
+// NodeReference {kind, label, id (null = new), class_ids, value, datatype}
+const XR_N = {
+  portal: { kind: "individual", label: "Customer Portal", id: "ind_7c21", class_ids: ["application.application-component"] },
+  holder: { kind: "individual", label: "Policyholder", id: null, class_ids: ["business.business-actor"] },
+  claim: { kind: "individual", label: "Insurance Claim", id: null, class_ids: ["business.business-object"] },
+  adjuster: { kind: "individual", label: "Claims Adjuster", id: "ind_3a90", class_ids: ["motivation.stakeholder"] },
+  crs: { kind: "individual", label: "Claims Review Service", id: "ind_5e12", class_ids: ["application.application-service"] },
+  op: { kind: "individual", label: "POST /claims", id: "ind_0b44", class_ids: ["api.operation"] },
+  db: { kind: "individual", label: "Claims Database", id: null, class_ids: ["data-store.database"] },
+  goal: { kind: "individual", label: "Reduce Claim Turnaround", id: "ind_9f07", class_ids: ["motivation.goal"] },
+  window: { kind: "literal", label: "48 hours", id: null, class_ids: null, value: "PT48H", datatype: "xsd:duration" },
+};
+// PredicateReference {kind, label, property_definition_id (null = new)}
+const xrP = (label, pdId) => ({ kind: "property", label, property_definition_id: pdId });
+
+XR_MOCK.triples = [
+  { subject: XR_N.portal, predicate: xrP("serves", "pd_serves"), object: XR_N.holder, confidence: 0.9,
+    provenance: [xrSpan("Customer Portal lets policyholders")] },
+  { subject: XR_N.holder, predicate: xrP("submits", null), object: XR_N.claim, confidence: 0.87,
+    provenance: [xrSpan("policyholders submit insurance claims")] },
+  { subject: XR_N.adjuster, predicate: xrP("reviews", null), object: XR_N.claim, confidence: 0.82,
+    provenance: [xrSpan("Each claim is reviewed by a Claims Adjuster")] },
+  { subject: XR_N.adjuster, predicate: xrP("uses", "pd_uses"), object: XR_N.crs, confidence: 0.69,
+    provenance: [xrSpan("through the Claims Review Service")] },
+  { subject: XR_N.crs, predicate: xrP("exposes", "pd_exposes"), object: XR_N.op, confidence: 0.93,
+    provenance: [xrSpan("exposes the POST /claims operation")] },
+  { subject: XR_N.crs, predicate: xrP("persists-to", "pd_accesses"), object: XR_N.db, confidence: 0.8,
+    provenance: [xrSpan("persists records to the Claims Database")] },
+  { subject: XR_N.goal, predicate: xrP("influences", "pd_influences"), object: XR_N.crs, confidence: 0.76,
+    provenance: [xrSpan("Reduce Claim Turnaround influences the Claims Review Service")] },
+  { subject: XR_N.crs, predicate: xrP("resolution-window", null), object: XR_N.window, confidence: 0.58,
+    provenance: [xrSpan("within 48 hours")] },
+];
+
+// RecognitionPreviewResponse
+XR_MOCK.recognition = {
+  total_mentions: 8,
+  matched_count: 5,
+  unmatched_count: 3,
+  skipped_count: 0,
+  hits: [
+    { mention_label: "Customer Portal", resolved_individual_id: "ind_7c21", resolved_individual_title: "Customer Self-Service Portal",
+      match_method: "vector", match_score: 0.92, will_match_existing: true, candidate_class_ids: ["application.application-component"] },
+    { mention_label: "Claims Adjuster", resolved_individual_id: "ind_3a90", resolved_individual_title: "Claims Adjuster",
+      match_method: "exact", match_score: 1.0, will_match_existing: true, candidate_class_ids: ["motivation.stakeholder"] },
+    { mention_label: "Claims Review Service", resolved_individual_id: "ind_5e12", resolved_individual_title: "Claim Review Service",
+      match_method: "vector", match_score: 0.95, will_match_existing: true, candidate_class_ids: ["application.application-service"] },
+    { mention_label: "POST /claims", resolved_individual_id: "ind_0b44", resolved_individual_title: "POST /claims",
+      match_method: "exact", match_score: 1.0, will_match_existing: true, candidate_class_ids: ["api.operation"] },
+    { mention_label: "Reduce Claim Turnaround", resolved_individual_id: "ind_9f07", resolved_individual_title: "Reduce claim turnaround time",
+      match_method: "llm", match_score: 0.91, will_match_existing: true, candidate_class_ids: ["motivation.goal"] },
+    { mention_label: "Policyholder", resolved_individual_id: null, resolved_individual_title: null,
+      match_method: null, match_score: null, will_match_existing: false, candidate_class_ids: ["business.business-actor"] },
+    { mention_label: "Insurance Claim", resolved_individual_id: null, resolved_individual_title: null,
+      match_method: null, match_score: null, will_match_existing: false, candidate_class_ids: ["business.business-object"] },
+    { mention_label: "Claims Database", resolved_individual_id: null, resolved_individual_title: null,
+      match_method: null, match_score: null, will_match_existing: false, candidate_class_ids: ["data-store.database"] },
+  ],
+};
+
+const XR_METHOD_VARIANT = { exact: "emerald", vector: "cyan", llm: "violet" };
+const xrPct = (v) => (v == null ? "—" : `${Math.round(v * 100)}%`);
+const xrLocated = (s) => s.start != null && s.end != null;
+
+// ---- Source text with span highlighting --------------------------------
+// spans: [{ key, start, end }]. Overlaps are handled by splitting the text at
+// every boundary; a segment is "active" if any covering span's key is selected.
+function CSSourceText({ text, spans, activeKey, onSelectKey, testId }) {
+  const located = spans.filter(xrLocated);
+  const cuts = Array.from(new Set([0, text.length, ...located.flatMap((s) => [s.start, s.end])])).sort(
+    (a, b) => a - b,
+  );
+  const segments = [];
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i];
+    const b = cuts[i + 1];
+    segments.push({ a, b, covering: located.filter((s) => s.start <= a && s.end >= b) });
+  }
+  return (
+    <p className="cs-source-text" data-testid={testId}>
+      {segments.map(({ a, b, covering }) => {
+        const chunk = text.slice(a, b);
+        if (covering.length === 0) return <span key={a}>{chunk}</span>;
+        const active = covering.some((s) => s.key === activeKey);
+        return (
+          <mark
+            key={a}
+            className={`cs-span${active ? " cs-span--active" : ""}${covering.length > 1 ? " cs-span--overlap" : ""}`}
+            data-testid="extraction-review-span"
+            data-span-keys={covering.map((s) => s.key).join(" ")}
+            aria-current={active ? "true" : undefined}
+            role="button"
+            tabIndex={0}
+            onClick={() => onSelectKey(active ? activeKey : covering[0].key)}
+          >
+            {chunk}
+          </mark>
+        );
+      })}
+    </p>
+  );
+}
+
+// ---- Provenance list (inspector) ----------------------------------------
+function CSProvenanceList({ provenance }) {
+  return (
+    <div className="cs-stack-sm" data-testid="extraction-review-provenance">
+      {provenance.map((s, i) => (
+        <div key={i} className="cs-between">
+          <span className="cs-quote">“{s.quote || "—"}”</span>
+          {xrLocated(s) ? (
+            <span className="cs-mono-muted">
+              {s.start}–{s.end}
+            </span>
+          ) : (
+            <Chip variant="amber">unlocated</Chip>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---- Accept / reject (or merge / keep-separate) pair ---------------------
+// Clicking the active choice again returns the item to "pending".
+// `compact` renders icon-only square buttons for dense tables (triples).
+function CSDecision({ value, onChange, yes = "Accept", no = "Reject", compact = false, testId }) {
+  const pick = (v) => (e) => {
+    e.stopPropagation();
+    onChange(value === v ? "pending" : v);
+  };
+  return (
+    <div className="cs-decision" role="group" aria-label="Review decision" data-testid={testId}>
+      <Button
+        size="sm"
+        icon={compact}
+        variant={value === "yes" ? "primary" : "ghost"}
+        aria-pressed={value === "yes"}
+        aria-label={yes}
+        title={yes}
+        onClick={pick("yes")}
+      >
+        <Icon name="check" size={12} /> {compact ? null : yes}
+      </Button>
+      <Button
+        size="sm"
+        icon={compact}
+        variant={value === "no" ? "danger" : "ghost"}
+        aria-pressed={value === "no"}
+        aria-label={no}
+        title={no}
+        onClick={pick("no")}
+      >
+        <Icon name="x" size={12} /> {compact ? null : no}
+      </Button>
+    </div>
+  );
+}
+
+// ---- NodeReference cell: label + mapped/new + DR layer · class ----------
+function CSNodeRef({ node }) {
+  if (node.kind === "literal") {
+    return (
+      <div className="cs-node-ref">
+        <div className="cs-node-ref__head">
+          <span className="cs-mono">"{node.value}"</span>
+          <Chip variant="neutral">literal</Chip>
+        </div>
+        <span className="cs-mono-muted">{node.datatype}</span>
+      </div>
+    );
+  }
+  const mapped = !!node.id;
+  const cls = node.class_ids?.[0];
+  const L = drLayerOf(cls);
+  return (
+    <div className="cs-node-ref">
+      <div className="cs-node-ref__head">
+        <span className="cs-strong">{node.label}</span>
+        <Chip variant={mapped ? "emerald" : "amber"}>{mapped ? "mapped" : "new"}</Chip>
+      </div>
+      {L && (
+        <span className="cs-mono-muted">
+          L{L.num} · {cls}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---- Run state header for a tab -----------------------------------------
+// The "prototype state" control exists only in the design file so the builder
+// can see every state; production derives state from PipelineRunResponse.status.
+function CSRunMeta({ run, state, onState, testId }) {
+  const STATUS_CHIP = {
+    ready: <Chip variant="emerald">COMPLETED</Chip>,
+    running: <Chip variant="cyan">RUNNING</Chip>,
+    failed: <Chip variant="rose">FAILED</Chip>,
+    empty: <Chip variant="emerald">COMPLETED</Chip>,
+  };
+  return (
+    <div className="cs-run-meta" data-testid={testId}>
+      <Chip form="id-tag">{run.id}</Chip>
+      {STATUS_CHIP[state]}
+      <span className="cs-mono-muted">
+        {run.pipeline_type} · {run.configuration_slug} v{run.configuration_version}
+        {state !== "running" ? ` · ${run.duration}` : ""}
+      </span>
+      <span className="cs-run-meta__proto">
+        <span className="cs-mono-muted">prototype state</span>
+        <SegmentedControl
+          value={state}
+          onChange={onState}
+          options={[
+            { value: "ready", label: "ready" },
+            { value: "running", label: "running" },
+            { value: "failed", label: "failed" },
+            { value: "empty", label: "empty" },
+          ]}
+        />
+      </span>
+    </div>
+  );
+}
+
+function CSRunStateBody({ state, run, kind, onRetry }) {
+  if (state === "running")
+    return (
+      <Panel data-testid={`extraction-review-${kind}-running`}>
+        <FormCallout variant="info" icon="clock">
+          {run.pipeline_type} is running. Candidates appear here when the run completes.
+        </FormCallout>
+      </Panel>
+    );
+  if (state === "failed")
+    return (
+      <Panel
+        data-testid={`extraction-review-${kind}-failed`}
+        footer={
+          <div className="cs-actions-end">
+            <Button variant="secondary" size="sm" onClick={onRetry}>
+              <Icon name="reload" size={12} /> Re-run {run.pipeline_type}
+            </Button>
+          </div>
+        }
+      >
+        <FormCallout variant="error" icon="alert">
+          Run failed: {run.failure_reason}. The other extraction tab is unaffected.
+        </FormCallout>
+      </Panel>
+    );
+  if (state === "empty")
+    return (
+      <Panel data-testid={`extraction-review-${kind}-empty`}>
+        <div className="cs-empty">
+          <Icon name="search" size={18} />
+          <div>The run completed but produced no candidates for this paragraph.</div>
+        </div>
+      </Panel>
+    );
+  return null;
+}
+
+// ---- Apply bar (same shape on both tabs) ---------------------------------
+// Scope is read-only here: it was chosen in the run panel and lives in the
+// run's input_summary, which is what apply reads.
+function CSApplyBar({ kind, counts, scope, applied, onApply, onRevert, extra }) {
+  return (
+    <Panel
+      data-testid={`extraction-review-${kind}-apply-bar`}
+      title={applied ? "Applied" : "Apply to graph"}
+      subtitle={
+        applied
+          ? "Draft entities were written. Revert removes everything this run created."
+          : "Accepted candidates are written as DRAFT entities in the run's scope."
+      }
+    >
+      <div className="cs-apply-bar">
+        <KVGrid
+          keyWidth={150}
+          rows={[
+            { key: "taxonomy", value: <span className="cs-mono">{scope.taxonomy_id}</span> },
+            ...(kind === "schema"
+              ? [{ key: "concept_scheme", value: <span className="cs-mono">{scope.concept_scheme_id}</span> }]
+              : []),
+            {
+              key: "decisions",
+              value: (
+                <span className="cs-chip-row">
+                  <Chip variant="emerald">{counts.yes} accepted</Chip>
+                  <Chip variant="rose">{counts.no} rejected</Chip>
+                  <Chip variant="neutral">{counts.pending} pending</Chip>
+                </span>
+              ),
+            },
+            ...(extra || []),
+          ]}
+        />
+        <div className="cs-apply-bar__actions">
+          {applied ? (
+            <Button variant="danger" onClick={onRevert} data-testid={`extraction-review-${kind}-revert`}>
+              <Icon name="reload" size={13} /> Revert run
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              disabled={counts.yes === 0}
+              onClick={onApply}
+              data-testid={`extraction-review-${kind}-apply`}
+            >
+              <Icon name="check" size={13} /> Apply {counts.yes} accepted
+            </Button>
+          )}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+const xrCount = (decisions, keys) => {
+  const c = { yes: 0, no: 0, pending: 0 };
+  keys.forEach((k) => c[decisions[k] || "pending"]++);
+  return c;
+};
+// Apply only takes confidence_threshold, so the effective filter is the lowest
+// accepted confidence. Rejected items at or above it would still be applied.
+const xrLeakedRejects = (decisions, items) => {
+  const acc = items.filter((it) => decisions[it.key] === "yes").map((it) => it.confidence);
+  if (!acc.length) return { min: null, leaked: [] };
+  const min = Math.min(...acc);
+  return { min, leaked: items.filter((it) => decisions[it.key] === "no" && it.confidence >= min) };
+};
+
+// =========================================================================
+// Tab 1 — Schema / entity extraction review
+// =========================================================================
+function CSSchemaExtractionReview({ text, scope, run, onToast }) {
+  const all = XR_MOCK.schemaCandidates.map((c, i) => ({ ...c, key: `sc-${i}` }));
+  const [state, setState] = useState("ready");
+  const [kind, setKind] = useState("schema_class");
+  const [selectedKey, setSelectedKey] = useState("sc-1");
+  const [decisions, setDecisions] = useState({ "sc-0": "yes", "sc-1": "yes", "sc-2": "no", "sc-4": "no", "sc-5": "yes", "sc-8": "yes" });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [applied, setApplied] = useState(false);
+
+  const setDecision = (k, v) => setDecisions((d) => ({ ...d, [k]: v }));
+  const rows = all.filter((c) => c.candidate_type === kind);
+  const selected = all.find((c) => c.key === selectedKey);
+  const counts = xrCount(decisions, all.map((c) => c.key));
+  const { min: minConf, leaked } = xrLeakedRejects(decisions, all);
+  const label = (c) => c.label || `${c.subject_ref} → ${c.predicate} → ${c.object_ref}`;
+  const spans = all.flatMap((c) => c.provenance.map((s) => ({ ...s, key: c.key })));
+  const countOf = (t) => all.filter((c) => c.candidate_type === t).length;
+
+  const decisionCol = {
+    key: "key",
+    label: "Decision",
+    width: "196px",
+    render: (k) => (
+      <CSDecision
+        value={decisions[k] || "pending"}
+        onChange={(v) => setDecision(k, v)}
+        testId={`extraction-review-schema-decision-${k}`}
+      />
+    ),
+  };
+  const confCol = {
+    key: "confidence",
+    label: "Conf",
+    width: "64px",
+    render: (v) => <span className="cs-mono">{xrPct(v)}</span>,
+  };
+  const COLUMNS = {
+    schema_class: [
+      { key: "label", label: "Proposed class", width: "160px", render: (v) => <span className="cs-strong">{v}</span> },
+      {
+        key: "proposed_definition",
+        label: "Proposed definition",
+        render: (v) => (v ? <span className="cs-muted">{v}</span> : <span className="cs-mono-muted">no definition</span>),
+      },
+      confCol,
+      decisionCol,
+    ],
+    schema_property: [
+      { key: "label", label: "Proposed property", width: "150px", render: (v) => <span className="cs-mono">{v}</span> },
+      {
+        key: "proposed_domain",
+        label: "Domain → range",
+        render: (v, r) => (
+          <span className="cs-mono-muted">
+            {v || "?"} → {r.proposed_range || "?"}
+          </span>
+        ),
+      },
+      confCol,
+      decisionCol,
+    ],
+    schema_connection: [
+      { key: "subject_ref", label: "Subject", render: (v) => <span className="cs-mono">{v}</span> },
+      { key: "predicate", label: "Predicate", width: "110px", render: (v) => <Chip form="id-tag">{v}</Chip> },
+      { key: "object_ref", label: "Object", render: (v) => <span className="cs-mono">{v}</span> },
+      confCol,
+      decisionCol,
+    ],
+  };
+
+  return (
+    <div data-testid="extraction-review-schema">
+      <CSRunMeta run={run} state={state} onState={setState} testId="extraction-review-schema-run-meta" />
+      {state !== "ready" ? (
+        <CSRunStateBody state={state} run={run} kind="schema" onRetry={() => setState("running")} />
+      ) : (
+        <>
+          <StatGrid columns={4}>
+            <StatTile label="CLASSES" value={countOf("schema_class")} color="violet" icon="schema" meta="proposed classes" />
+            <StatTile label="PROPERTIES" value={countOf("schema_property")} color="cyan" icon="component" meta="proposed properties" />
+            <StatTile label="CONNECTIONS" value={countOf("schema_connection")} color="amber" icon="link" meta="class-to-class" />
+            <StatTile
+              label="ACCEPTED"
+              value={`${counts.yes} / ${all.length}`}
+              color="emerald"
+              icon="check"
+              meta={`${counts.no} rejected · ${counts.pending} pending`}
+            />
+          </StatGrid>
+          <div className="cs-gap" />
+          <div className="cs-review-grid">
+            <Panel
+              noPadding
+              title="Candidates"
+              subtitle="Accept or reject each proposal. Select a row to see its source spans."
+              headerAction={
+                <SegmentedControl
+                  value={kind}
+                  onChange={setKind}
+                  options={[
+                    { value: "schema_class", label: `Classes · ${countOf("schema_class")}` },
+                    { value: "schema_property", label: `Properties · ${countOf("schema_property")}` },
+                    { value: "schema_connection", label: `Connections · ${countOf("schema_connection")}` },
+                  ]}
+                />
+              }
+              data-testid="extraction-review-schema-candidates"
+            >
+              <Table
+                columns={COLUMNS[kind]}
+                data={rows}
+                rowKey="key"
+                selectedRows={[selectedKey]}
+                onRowClick={(r) => setSelectedKey(r.key)}
+                emptyState={<div className="cs-empty">No candidates of this type.</div>}
+              />
+            </Panel>
+
+            <div className="cs-stack">
+              <Panel
+                title="Source text"
+                subtitle="Highlights are candidate provenance. Click one to select its candidate."
+                data-testid="extraction-review-schema-source-panel"
+              >
+                <CSSourceText
+                  text={text}
+                  spans={spans}
+                  activeKey={selectedKey}
+                  onSelectKey={(k) => {
+                    setSelectedKey(k);
+                    setKind(all.find((c) => c.key === k).candidate_type);
+                  }}
+                  testId="extraction-review-schema-source"
+                />
+              </Panel>
+              {selected && (
+                <InspectorPanel
+                  eyebrow={selected.candidate_type.replace("_", " ").toUpperCase() + " CANDIDATE"}
+                  title={label(selected)}
+                  id={`${run.id} · #${selected.key.split("-")[1]}`}
+                  actions={
+                    <CSDecision
+                      value={decisions[selected.key] || "pending"}
+                      onChange={(v) => setDecision(selected.key, v)}
+                      testId="extraction-review-schema-inspector-decision"
+                    />
+                  }
+                  data-testid="extraction-review-schema-inspector"
+                >
+                  <InspectorPanel.Section title="Proposal">
+                    <KVGrid
+                      rows={[
+                        { key: "candidate_type", value: <span className="cs-mono">{selected.candidate_type}</span> },
+                        { key: "confidence", value: <span className="cs-mono">{xrPct(selected.confidence)}</span> },
+                        ...(selected.proposed_definition !== undefined
+                          ? [{ key: "definition", value: selected.proposed_definition || "—" }]
+                          : []),
+                        ...(selected.proposed_domain
+                          ? [
+                              { key: "domain", value: <span className="cs-mono">{selected.proposed_domain}</span> },
+                              { key: "range", value: <span className="cs-mono">{selected.proposed_range}</span> },
+                            ]
+                          : []),
+                        ...(selected.subject_ref
+                          ? [
+                              { key: "subject_ref", value: <span className="cs-mono">{selected.subject_ref}</span> },
+                              { key: "predicate", value: <span className="cs-mono">{selected.predicate}</span> },
+                              { key: "object_ref", value: <span className="cs-mono">{selected.object_ref}</span> },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  </InspectorPanel.Section>
+                  <InspectorPanel.Section title="Provenance" count={selected.provenance.length}>
+                    <CSProvenanceList provenance={selected.provenance} />
+                  </InspectorPanel.Section>
+                </InspectorPanel>
+              )}
+            </div>
+          </div>
+          <div className="cs-gap" />
+          <CSApplyBar
+            kind="schema"
+            counts={counts}
+            scope={scope}
+            applied={applied}
+            onApply={() => setConfirmOpen(true)}
+            onRevert={() => {
+              setApplied(false);
+              onToast({ variant: "info", title: "Run reverted", subtitle: `${run.id} · draft schema removed` });
+            }}
+          />
+          <ConfirmDialog
+            isOpen={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            onConfirm={() => {
+              setConfirmOpen(false);
+              setApplied(true);
+              onToast({ variant: "success", title: "Schema candidates applied", subtitle: `${run.id} → ${scope.concept_scheme_id}` });
+            }}
+            variant="primary"
+            title="Apply schema extraction"
+            subtitle={`${run.id} → ${scope.taxonomy_id} / ${scope.concept_scheme_id}`}
+            confirmLabel={`Apply ${counts.yes} accepted`}
+            message={
+              <div className="cs-stack-sm" data-testid="extraction-review-schema-confirm">
+                <span>
+                  Creates draft classes, property definitions and relationships from the {counts.yes} accepted
+                  candidates. Entities that already exist with the same label are skipped.
+                </span>
+                {leaked.length > 0 && (
+                  <FormCallout variant="warn" icon="alert">
+                    Apply filters by confidence ≥ {xrPct(minConf)} (the lowest accepted score), so {leaked.length}{" "}
+                    rejected candidate{leaked.length > 1 ? "s" : ""} above that score will also be applied:{" "}
+                    {leaked.map(label).join(", ")}.
+                  </FormCallout>
+                )}
+              </div>
+            }
+          />
+        </>
+      )}
+    </div>
+  );
+}
+window.CSSchemaExtractionReview = CSSchemaExtractionReview;
+
+// =========================================================================
+// Tab 2 — Individual extraction review
+// =========================================================================
+function CSIndividualExtractionReview({ text, scope, run, onToast }) {
+  const triples = XR_MOCK.triples.map((t, i) => ({ ...t, key: `t-${i}` }));
+  const rec = XR_MOCK.recognition;
+  // Hits carry no spans: locate mention_label in the run's text client-side.
+  const hits = rec.hits.map((h, i) => {
+    const at = text.indexOf(h.mention_label);
+    return {
+      ...h,
+      key: `hit-${i}`,
+      provenance: [
+        at < 0
+          ? { quote: h.mention_label, start: null, end: null }
+          : { quote: h.mention_label, start: at, end: at + h.mention_label.length },
+      ],
+    };
+  });
+  const [state, setState] = useState("ready");
+  const [selectedKey, setSelectedKey] = useState("t-4");
+  const [decisions, setDecisions] = useState({ "t-0": "yes", "t-1": "yes", "t-4": "yes", "t-5": "yes", "t-7": "no" });
+  const [merges, setMerges] = useState({ "hit-0": "yes", "hit-1": "yes", "hit-2": "yes", "hit-3": "yes", "hit-4": "no" });
+  const [nodeFilter, setNodeFilter] = useState("all");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [applied, setApplied] = useState(false);
+
+  const matchedHits = hits.filter((h) => h.will_match_existing);
+  const hasNewNode = (t) => [t.subject, t.object].some((n) => n.kind !== "literal" && !n.id);
+  const filtered = triples.filter((t) =>
+    nodeFilter === "all" ? true : nodeFilter === "new" ? hasNewNode(t) : !hasNewNode(t),
+  );
+  const nodes = Object.values(
+    Object.fromEntries(
+      triples
+        .flatMap((t) => [t.subject, t.object])
+        .filter((n) => n.kind !== "literal")
+        .map((n) => [n.label, n]),
+    ),
+  );
+  const counts = xrCount(decisions, triples.map((t) => t.key));
+  const mergeCounts = xrCount(merges, matchedHits.map((h) => h.key));
+  const { min: minConf, leaked } = xrLeakedRejects(decisions, triples);
+  const tLabel = (t) => `${t.subject.label} → ${t.predicate.label} → ${t.object.label}`;
+  const usesMention = (t, m) => t.subject.label === m || t.object.label === m;
+
+  const selectedTriple = triples.find((t) => t.key === selectedKey);
+  const selectedHit = hits.find((h) => h.key === selectedKey);
+  const hitFor = (node) => hits.find((h) => h.mention_label === node.label);
+  const spans = [
+    ...triples.flatMap((t) => t.provenance.map((s) => ({ ...s, key: t.key }))),
+    ...hits.flatMap((h) => h.provenance.map((s) => ({ ...s, key: h.key }))),
+  ];
+  const setDecision = (k, v) => setDecisions((d) => ({ ...d, [k]: v }));
+
+  const nodeKV = (node) => {
+    if (node.kind === "literal")
+      return [
+        { key: "kind", value: "literal" },
+        { key: "value", value: <span className="cs-mono">{node.value}</span> },
+        { key: "datatype", value: <span className="cs-mono">{node.datatype}</span> },
+      ];
+    const L = drLayerOf(node.class_ids?.[0]);
+    const h = hitFor(node);
+    return [
+      { key: "label", value: node.label },
+      {
+        key: "status",
+        value: node.id ? <Chip variant="emerald">mapped · {node.id}</Chip> : <Chip variant="amber">new individual</Chip>,
+      },
+      { key: "class", value: <span className="cs-mono">{node.class_ids?.[0]}</span> },
+      { key: "dr_layer", value: L ? `L${L.num} · ${L.layer}` : "—" },
+      ...(h && h.will_match_existing
+        ? [{ key: "recognized_as", value: `${h.resolved_individual_title} (${h.match_method} ${xrPct(h.match_score)})` }]
+        : []),
+    ];
+  };
+
+  return (
+    <div data-testid="extraction-review-individual">
+      <CSRunMeta run={run} state={state} onState={setState} testId="extraction-review-individual-run-meta" />
+      {state !== "ready" ? (
+        <CSRunStateBody state={state} run={run} kind="individual" onRetry={() => setState("running")} />
+      ) : (
+        <>
+          <StatGrid columns={4}>
+            <StatTile label="TRIPLES" value={triples.length} color="violet" icon="link" meta={`${counts.yes} accepted · ${counts.no} rejected`} />
+            <StatTile label="MAPPED NODES" value={nodes.filter((n) => n.id).length} color="emerald" icon="check" meta="resolve to existing individuals" />
+            <StatTile label="NEW NODES" value={nodes.filter((n) => !n.id).length} color="amber" icon="plus" meta="created on apply" />
+            <StatTile
+              label="RECOGNITION"
+              value={`${rec.matched_count} / ${rec.total_mentions}`}
+              color="cyan"
+              icon="search"
+              meta={`${rec.unmatched_count} unmatched · ${rec.skipped_count} skipped`}
+            />
+          </StatGrid>
+          <div className="cs-gap" />
+          <div className="cs-review-grid">
+            <div className="cs-stack">
+              <Panel
+                noPadding
+                title="Extracted triples"
+                subtitle="Mapped nodes resolve to an existing individual. New nodes are created on apply."
+                headerAction={
+                  <SegmentedControl
+                    value={nodeFilter}
+                    onChange={setNodeFilter}
+                    options={[
+                      { value: "all", label: "All" },
+                      { value: "mapped", label: "Mapped only" },
+                      { value: "new", label: "Has new node" },
+                    ]}
+                  />
+                }
+                data-testid="extraction-review-triples"
+              >
+                <Table
+                  columns={[
+                    { key: "subject", label: "Subject", render: (v) => <CSNodeRef node={v} /> },
+                    {
+                      key: "predicate",
+                      label: "Predicate",
+                      width: "140px",
+                      render: (p) => (
+                        <div className="cs-node-ref">
+                          <span className="cs-mono">{p.label}</span>
+                          {p.property_definition_id ? (
+                            <span className="cs-mono-muted">↳ {p.property_definition_id}</span>
+                          ) : (
+                            <span>
+                              <Chip variant="amber">new property</Chip>
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    },
+                    { key: "object", label: "Object", render: (v) => <CSNodeRef node={v} /> },
+                    { key: "confidence", label: "Conf", width: "60px", render: (v) => <span className="cs-mono">{xrPct(v)}</span> },
+                    {
+                      key: "key",
+                      label: "Decision",
+                      width: "84px",
+                      render: (k) => (
+                        <CSDecision
+                          compact
+                          value={decisions[k] || "pending"}
+                          onChange={(v) => setDecision(k, v)}
+                          testId={`extraction-review-individual-decision-${k}`}
+                        />
+                      ),
+                    },
+                  ]}
+                  data={filtered}
+                  rowKey="key"
+                  selectedRows={[selectedKey]}
+                  onRowClick={(r) => setSelectedKey(r.key)}
+                  emptyState={<div className="cs-empty">No triples match this filter.</div>}
+                />
+              </Panel>
+
+              <Panel
+                noPadding
+                title="Recognition · dedup hits"
+                subtitle="Mentions that match an existing individual (recognition ≥ 90%). Merge reuses the existing node; keep separate creates a new one."
+                headerAction={
+                  <span className="cs-chip-row">
+                    <Chip variant="emerald">{mergeCounts.yes} merge</Chip>
+                    <Chip variant="neutral">{mergeCounts.no} separate</Chip>
+                  </span>
+                }
+                data-testid="extraction-review-recognition"
+              >
+                <Table
+                  columns={[
+                    { key: "mention_label", label: "Mention", width: "170px", render: (v) => <span className="cs-strong">{v}</span> },
+                    {
+                      key: "resolved_individual_title",
+                      label: "Existing individual",
+                      render: (v, h) =>
+                        h.will_match_existing ? (
+                          <div className="cs-node-ref">
+                            <span>{v}</span>
+                            <span className="cs-mono-muted">
+                              {h.resolved_individual_id} · {h.candidate_class_ids[0]}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="cs-mono-muted">no match · created as new</span>
+                        ),
+                    },
+                    {
+                      key: "match_method",
+                      label: "Method",
+                      width: "84px",
+                      render: (v) => (v ? <Chip variant={XR_METHOD_VARIANT[v]}>{v}</Chip> : <span className="cs-mono-muted">—</span>),
+                    },
+                    { key: "match_score", label: "Score", width: "64px", render: (v) => <span className="cs-mono">{xrPct(v)}</span> },
+                    {
+                      key: "key",
+                      label: "Decision",
+                      width: "236px",
+                      render: (k, h) =>
+                        h.will_match_existing ? (
+                          <CSDecision
+                            value={merges[k] || "pending"}
+                            onChange={(v) => setMerges((m) => ({ ...m, [k]: v }))}
+                            yes="Merge"
+                            no="Keep separate"
+                            testId={`extraction-review-recognition-decision-${k}`}
+                          />
+                        ) : (
+                          <Chip variant="amber">new</Chip>
+                        ),
+                    },
+                  ]}
+                  data={hits}
+                  rowKey="key"
+                  selectedRows={[selectedKey]}
+                  onRowClick={(r) => setSelectedKey(r.key)}
+                  emptyState={<div className="cs-empty">No mentions previewed.</div>}
+                />
+              </Panel>
+            </div>
+
+            <div className="cs-stack">
+              <Panel
+                title="Source text"
+                subtitle="Highlights link to triples and mentions. Click one to select it."
+                data-testid="extraction-review-individual-source-panel"
+              >
+                <CSSourceText
+                  text={text}
+                  spans={spans}
+                  activeKey={selectedKey}
+                  onSelectKey={setSelectedKey}
+                  testId="extraction-review-individual-source"
+                />
+              </Panel>
+
+              {selectedTriple && (
+                <InspectorPanel
+                  eyebrow="TRIPLE CANDIDATE"
+                  title={tLabel(selectedTriple)}
+                  id={`${run.id} · #${selectedTriple.key.split("-")[1]} · ${xrPct(selectedTriple.confidence)}`}
+                  actions={
+                    <CSDecision
+                      value={decisions[selectedTriple.key] || "pending"}
+                      onChange={(v) => setDecision(selectedTriple.key, v)}
+                      testId="extraction-review-individual-inspector-decision"
+                    />
+                  }
+                  data-testid="extraction-review-individual-inspector"
+                >
+                  <InspectorPanel.Section title="Subject">
+                    <KVGrid rows={nodeKV(selectedTriple.subject)} />
+                  </InspectorPanel.Section>
+                  <InspectorPanel.Section title="Predicate">
+                    <KVGrid
+                      rows={[
+                        { key: "label", value: <span className="cs-mono">{selectedTriple.predicate.label}</span> },
+                        {
+                          key: "property",
+                          value: selectedTriple.predicate.property_definition_id ? (
+                            <Chip variant="emerald">mapped · {selectedTriple.predicate.property_definition_id}</Chip>
+                          ) : (
+                            <Chip variant="amber">new property</Chip>
+                          ),
+                        },
+                      ]}
+                    />
+                  </InspectorPanel.Section>
+                  <InspectorPanel.Section title="Object">
+                    <KVGrid rows={nodeKV(selectedTriple.object)} />
+                  </InspectorPanel.Section>
+                  <InspectorPanel.Section title="Provenance" count={selectedTriple.provenance.length}>
+                    <CSProvenanceList provenance={selectedTriple.provenance} />
+                  </InspectorPanel.Section>
+                </InspectorPanel>
+              )}
+
+              {selectedHit && (
+                <InspectorPanel
+                  eyebrow="RECOGNITION HIT"
+                  title={selectedHit.mention_label}
+                  id={selectedHit.resolved_individual_id || "no match"}
+                  data-testid="extraction-review-recognition-inspector"
+                >
+                  <InspectorPanel.Section title="Match">
+                    <KVGrid
+                      rows={[
+                        { key: "will_match", value: selectedHit.will_match_existing ? "existing individual" : "created as new" },
+                        { key: "resolved_title", value: selectedHit.resolved_individual_title || "—" },
+                        { key: "method", value: selectedHit.match_method || "—" },
+                        { key: "score", value: <span className="cs-mono">{xrPct(selectedHit.match_score)}</span> },
+                        {
+                          key: "classes",
+                          value: (
+                            <span className="cs-chip-row">
+                              {selectedHit.candidate_class_ids.map((c) => (
+                                <Chip key={c} form="id-tag">
+                                  {c}
+                                </Chip>
+                              ))}
+                            </span>
+                          ),
+                        },
+                      ]}
+                    />
+                  </InspectorPanel.Section>
+                  <InspectorPanel.Section
+                    title="Triples using this mention"
+                    count={triples.filter((t) => usesMention(t, selectedHit.mention_label)).length}
+                  >
+                    <div className="cs-stack-sm">
+                      {triples
+                        .filter((t) => usesMention(t, selectedHit.mention_label))
+                        .map((t) => (
+                          <Button key={t.key} variant="link" size="sm" onClick={() => setSelectedKey(t.key)}>
+                            {tLabel(t)}
+                          </Button>
+                        ))}
+                    </div>
+                  </InspectorPanel.Section>
+                </InspectorPanel>
+              )}
+            </div>
+          </div>
+          <div className="cs-gap" />
+          <CSApplyBar
+            kind="individual"
+            counts={counts}
+            scope={scope}
+            applied={applied}
+            onApply={() => setConfirmOpen(true)}
+            onRevert={() => {
+              setApplied(false);
+              onToast({ variant: "info", title: "Run reverted", subtitle: `${run.id} · draft individuals removed` });
+            }}
+            extra={[
+              {
+                key: "recognition",
+                value: (
+                  <span className="cs-chip-row">
+                    <Chip variant="emerald">{mergeCounts.yes} merge</Chip>
+                    <Chip variant="neutral">{mergeCounts.no} keep separate</Chip>
+                    <span className="cs-mono-muted">threshold 0.90</span>
+                  </span>
+                ),
+              },
+            ]}
+          />
+          <ConfirmDialog
+            isOpen={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            onConfirm={() => {
+              setConfirmOpen(false);
+              setApplied(true);
+              onToast({ variant: "success", title: "Individuals applied", subtitle: `${run.id} → ${scope.taxonomy_id}` });
+            }}
+            variant="primary"
+            title="Apply individual extraction"
+            subtitle={`${run.id} → ${scope.taxonomy_id}`}
+            confirmLabel={`Apply ${counts.yes} accepted`}
+            message={
+              <div className="cs-stack-sm" data-testid="extraction-review-individual-confirm">
+                <span>
+                  Creates draft individuals and relationships from {counts.yes} accepted triples. {mergeCounts.yes}{" "}
+                  mentions merge into existing individuals; {nodes.filter((n) => !n.id).length} new individuals are
+                  created.
+                </span>
+                {leaked.length > 0 && (
+                  <FormCallout variant="warn" icon="alert">
+                    Apply filters by confidence ≥ {xrPct(minConf)}, so {leaked.length} rejected triple
+                    {leaked.length > 1 ? "s" : ""} above that score will also be applied.
+                  </FormCallout>
+                )}
+                {mergeCounts.no > 0 && (
+                  <FormCallout variant="warn" icon="alert">
+                    {mergeCounts.no} "keep separate" choice{mergeCounts.no > 1 ? "s" : ""} can't be applied per hit.
+                    Apply uses one recognition threshold for every mention.
+                  </FormCallout>
+                )}
+              </div>
+            }
+          />
+        </>
+      )}
+    </div>
+  );
+}
+window.CSIndividualExtractionReview = CSIndividualExtractionReview;
+
+// =========================================================================
+// Page — paragraph input + run trigger + two review tabs
+// =========================================================================
+function CSExtractionReview({ onNav, onToast }) {
+  const [text, setText] = useState(XR_TEXT);
+  const [runText, setRunText] = useState(XR_TEXT);
+  const [taxonomy, setTaxonomy] = useState(XR_MOCK.scope.taxonomy_id);
+  const [scheme, setScheme] = useState(XR_MOCK.scope.concept_scheme_id);
+  const [config, setConfig] = useState("default");
+  const [textError, setTextError] = useState(undefined);
+  const [tab, setTab] = useState(() => ((location.hash || "").includes("tab=individual") ? "individual" : "schema"));
+  const [runKey, setRunKey] = useState(0);
+  const scope = { taxonomy_id: taxonomy, concept_scheme_id: scheme };
+
+  const run = () => {
+    if (!text.trim()) {
+      setTextError("Paste a paragraph to extract from");
+      return;
+    }
+    setRunText(text);
+    setRunKey((k) => k + 1);
+    onToast({ variant: "info", title: "Extraction started", subtitle: "schema_extraction + individual_extraction" });
+  };
+
+  return (
+    <div data-screen-label="08 Pipelines · Extraction review" data-testid="extraction-review-page">
+      <PageHeader
+        eyebrow="PIPELINES · extraction · review"
+        title="Extraction review"
+        idChip="/pipelines/review"
+        subtitle="Paste a paragraph and run schema and individual extraction against a taxonomy. Review each result set, then apply what you accept. Nothing is written until you apply."
+        actions={
+          <Button variant="ghost" onClick={() => onNav("pipelines/runs")}>
+            <Icon name="clock" size={13} /> Run history
+          </Button>
+        }
+      />
+      <div className="cs-gap" />
+
+      <Panel
+        title="Source paragraph"
+        subtitle="Both runs read the same paragraph. Each result set is reviewed and applied separately."
+        data-testid="extraction-review-input"
+        footer={
+          <div className="cs-between">
+            <span className="cs-mono-muted">starts schema_extraction + individual_extraction</span>
+            <Button variant="primary" onClick={run} data-testid="extraction-review-run">
+              <Icon name="zap" size={13} /> Run extraction
+            </Button>
+          </div>
+        }
+      >
+        <div className="cs-input-grid">
+          <Field label="Paragraph" required error={textError} errorId="extraction-review-text-error">
+            <TextArea
+              rows={5}
+              value={text}
+              error={!!textError}
+              aria-describedby={textError ? "extraction-review-text-error" : undefined}
+              onChange={(e) => {
+                setText(e.target.value);
+                setTextError(undefined);
+              }}
+              data-testid="extraction-review-text"
+            />
+          </Field>
+          <div className="cs-stack-sm">
+            <Field label="Taxonomy" required>
+              <Select value={taxonomy} onChange={setTaxonomy}>
+                <Select.Item value="dr_spec">Documentation Robotics · dr_spec</Select.Item>
+              </Select>
+            </Field>
+            <Field label="Concept scheme" required hint="schema target">
+              <Select value={scheme} onChange={setScheme}>
+                <Select.Item value="dr_spec.extracted">Extracted · dr_spec.extracted</Select.Item>
+                <Select.Item value="dr_spec.core">Core layers · dr_spec.core</Select.Item>
+              </Select>
+            </Field>
+            <Field label="Configuration">
+              <Select value={config} onChange={setConfig}>
+                <Select.Item value="default">default · v3</Select.Item>
+                <Select.Item value="open_v1">open_v1 · v1</Select.Item>
+              </Select>
+            </Field>
+          </div>
+        </div>
+        {text !== runText && (
+          <div className="cs-gap-sm">
+            <FormCallout variant="warn" icon="alert" data-testid="extraction-review-stale">
+              The paragraph changed since the last run. Highlights show the text that was run. Re-run to review the
+              new text.
+            </FormCallout>
+          </div>
+        )}
+      </Panel>
+
+      <div className="cs-gap" />
+      <TabBar
+        tabs={[
+          { id: "schema", label: "Schema extraction", count: XR_MOCK.schemaCandidates.length },
+          { id: "individual", label: "Individual extraction", count: XR_MOCK.triples.length },
+        ]}
+        activeTabId={tab}
+        onSelectTab={setTab}
+        data-testid="extraction-review-tabs"
+      />
+      <div className="cs-gap-sm" />
+      {tab === "schema" ? (
+        <CSSchemaExtractionReview key={`s${runKey}`} text={runText} scope={scope} run={XR_MOCK.schemaRun} onToast={onToast} />
+      ) : (
+        <CSIndividualExtractionReview key={`i${runKey}`} text={runText} scope={scope} run={XR_MOCK.individualRun} onToast={onToast} />
+      )}
+    </div>
+  );
+}
+window.CSExtractionReview = CSExtractionReview;
