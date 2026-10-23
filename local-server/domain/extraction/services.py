@@ -25,6 +25,7 @@ from domain.ontology.ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
+from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.ports import LLMProvider
 from domain.ports import EventPublisher
 
@@ -2339,10 +2340,10 @@ Identified individuals:
                 continue
 
             mention_label = (subject.get("label") or "").strip()
-            if not mention_label or mention_label.lower() in seen_mentions:
+            if not mention_label or mention_key(mention_label) in seen_mentions:
                 continue
 
-            seen_mentions.add(mention_label.lower())
+            seen_mentions.add(mention_key(mention_label))
 
             confidence_raw = triple.get("confidence")
             confidence = float(confidence_raw) if confidence_raw is not None else 0.0

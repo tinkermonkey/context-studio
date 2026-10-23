@@ -20,6 +20,11 @@ from uuid import uuid4
 from domain.ontology.entities import Class, PropertyDefinition, Relationship
 from domain.ontology.value_objects import Status
 from domain.pipelines.apply_result import ApplyResult
+from domain.pipelines.apply_selection import check_accepted_ids
+from domain.pipelines.candidate_ids import (
+    enumerate_schema_candidates,
+    enumerate_schema_connections,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -57,6 +62,7 @@ class SchemaExtractionApplyService:
         concept_scheme_id: str,
         taxonomy_id: str,
         confidence_threshold: float = 0.0,
+        accepted_candidate_ids: "set[str] | list[str] | None" = None,
     ) -> ApplyResult:
         """
         Apply schema extraction results to the ontology.
@@ -65,13 +71,20 @@ class SchemaExtractionApplyService:
             run: Completed PipelineRun with output_summary containing candidates/connections
             concept_scheme_id: Target concept scheme for Class entities
             taxonomy_id: Parent taxonomy for Class entities
-            confidence_threshold: Minimum confidence to include a candidate (0.0–1.0)
+            confidence_threshold: Minimum confidence to include a candidate (0.0–1.0).
+                Ignored when ``accepted_candidate_ids`` is given.
+            accepted_candidate_ids: Explicit reviewer selection of ``class-{i}``,
+                ``property-{i}`` and ``connection-{i}`` ids; when given it is the
+                full selection — everything else is skipped regardless of
+                confidence. An accepted connection whose endpoint class was not
+                accepted (and does not already exist) is skipped.
 
         Returns:
             ApplyResult with counts of created and skipped entities
 
         Raises:
             ValueError: If concept_scheme_id or taxonomy_id is empty
+            ApplySelectionError: If an accepted id is not a candidate of this run
         """
         if not concept_scheme_id:
             raise ValueError("concept_scheme_id is required for schema extraction apply")
@@ -79,8 +92,15 @@ class SchemaExtractionApplyService:
             raise ValueError("taxonomy_id is required for schema extraction apply")
 
         result = ApplyResult()
-        candidates = run.output_summary.get("candidates", [])
-        connections = run.output_summary.get("connections", [])
+        candidates = enumerate_schema_candidates(run.output_summary)
+        connections = enumerate_schema_connections(run.output_summary)
+        check_accepted_ids(accepted_candidate_ids, {cid for cid, _ in candidates + connections})
+        selected = set(accepted_candidate_ids) if accepted_candidate_ids is not None else None
+
+        def _is_selected(candidate_id: str, confidence: float) -> bool:
+            if selected is not None:
+                return candidate_id in selected
+            return confidence >= confidence_threshold
 
         # --- Classes ---
         existing_classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
@@ -88,15 +108,17 @@ class SchemaExtractionApplyService:
         # Also collect newly created classes during this apply for relationship resolution
         all_class_title_to_id: dict[str, str] = dict(existing_titles)
 
-        class_candidates = [c for c in candidates if c.get("kind") == "class"]
-        for candidate in class_candidates:
+        class_candidates = [(cid, c) for cid, c in candidates if c.get("kind") == "class"]
+        for candidate_id, candidate in class_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
-            if not label or confidence < confidence_threshold:
+            if not label or not _is_selected(candidate_id, confidence):
                 result.classes_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
             if label.lower() in existing_titles:
                 result.classes_skipped += 1
+                result.applied_candidate_ids.append(candidate_id)
                 continue
             try:
                 new_class = Class(
@@ -113,25 +135,31 @@ class SchemaExtractionApplyService:
                 all_class_title_to_id[label.lower()] = new_class.id
                 result.classes_created += 1
                 result.created_class_ids.append(new_class.id)
+                result.applied_candidate_ids.append(candidate_id)
             except Exception as e:
                 _logger.error(f"Failed to save class: {e}")
                 raise
 
         # --- Property Definitions ---
-        prop_candidates = [c for c in candidates if c.get("kind") == "property_definition"]
-        for candidate in prop_candidates:
+        prop_candidates = [
+            (cid, c) for cid, c in candidates if c.get("kind") == "property_definition"
+        ]
+        for candidate_id, candidate in prop_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
-            if not label or confidence < confidence_threshold:
+            if not label or not _is_selected(candidate_id, confidence):
                 result.properties_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
             identifier = _slugify(label)
             if not identifier:
                 result.properties_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
             existing_prop = self._repo.get_property_definition_by_identifier(identifier)
             if existing_prop is not None:
                 result.properties_skipped += 1
+                result.applied_candidate_ids.append(candidate_id)
                 continue
             try:
                 new_prop = PropertyDefinition(
@@ -145,15 +173,17 @@ class SchemaExtractionApplyService:
                 self._repo.save_property_definition(new_prop)
                 result.properties_created += 1
                 result.created_property_definition_ids.append(new_prop.id)
+                result.applied_candidate_ids.append(candidate_id)
             except Exception as e:
                 _logger.error(f"Failed to save property definition: {e}")
                 raise
 
         # --- Relationships ---
-        for connection in connections:
+        for candidate_id, connection in connections:
             confidence = connection.get("confidence", 0.0)
-            if confidence < confidence_threshold:
+            if not _is_selected(candidate_id, confidence):
                 result.relationships_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
 
             subject_ref = (connection.get("subject_ref") or "").strip().lower()
@@ -171,10 +201,12 @@ class SchemaExtractionApplyService:
 
             if not src_id or not tgt_id or not prop_def:
                 result.relationships_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
 
             if src_id == tgt_id:
                 result.relationships_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
 
             existing_rels = self._repo.list_relationships(
@@ -185,6 +217,7 @@ class SchemaExtractionApplyService:
             )
             if existing_rels:
                 result.relationships_skipped += 1
+                result.applied_candidate_ids.append(candidate_id)
                 continue
 
             try:
@@ -198,6 +231,7 @@ class SchemaExtractionApplyService:
                 self._repo.save_relationship(new_rel)
                 result.relationships_created += 1
                 result.created_relationship_ids.append(new_rel.id)
+                result.applied_candidate_ids.append(candidate_id)
             except Exception as e:
                 _logger.error(f"Failed to save relationship: {e}")
                 raise
