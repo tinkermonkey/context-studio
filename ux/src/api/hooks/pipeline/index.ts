@@ -4,6 +4,17 @@ export { usePipelineConfigurations } from "./usePipelineConfigurations";
 export { usePipelineRun, usePipelineRuns, usePipelineCandidates } from "./usePipelineRuns";
 export { useRunPipeline, useApplyRun, useRevertRun } from "./usePipelineMutations";
 export {
+  useSchemaExtractionCandidates,
+  useIndividualExtractionCandidates,
+  useRecognitionPreview,
+} from "./useExtractionCandidates";
+export { useExtractionReviewRuns } from "./useExtractionReviewRuns";
+export {
+  useApplyReviewedRun,
+  planReviewApply,
+  REVIEW_RECOGNITION_THRESHOLD,
+} from "./useApplyReviewedRun";
+export {
   useCreateConfiguration,
   useUpdateConfiguration,
   useDeleteConfiguration,

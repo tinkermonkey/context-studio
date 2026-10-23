@@ -18,6 +18,27 @@ type BatchResponse = components["schemas"]["BatchResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
 type ResumeBatchResponse = components["schemas"]["ResumeBatchResponse"];
 type ListChangeEvents = components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
+export type SourceSpan = components["schemas"]["SourceSpanSchema"];
+export type NodeReference = components["schemas"]["NodeReference"];
+export type PredicateReference = components["schemas"]["PredicateReference"];
+export type TripleCandidate = components["schemas"]["TripleCandidate"];
+export type SchemaClassCandidate = components["schemas"]["SchemaClassCandidate"];
+export type SchemaPropertyCandidate = components["schemas"]["SchemaPropertyCandidate"];
+export type SchemaConnectionCandidate = components["schemas"]["SchemaConnectionCandidate"];
+export type SchemaExtractionCandidate =
+  | SchemaClassCandidate
+  | SchemaPropertyCandidate
+  | SchemaConnectionCandidate;
+export type RecognitionPreviewRequest = components["schemas"]["RecognitionPreviewRequest"];
+export type RecognitionPreviewResponse = components["schemas"]["RecognitionPreviewResponse"];
+export type RecognitionPreviewHit = components["schemas"]["RecognitionPreviewHitSchema"];
+type TypedCandidate =
+  | SchemaExtractionCandidate
+  | TripleCandidate
+  | components["schemas"]["GroundingCandidate"]
+  | components["schemas"]["RefinementCandidate"];
+
+const SCHEMA_CANDIDATE_TYPES = new Set(["schema_class", "schema_property", "schema_connection"]);
 
 export interface RunListParams {
   limit?: number;
@@ -105,6 +126,35 @@ class PipelineService extends BaseService {
 
   async getCandidates(runId: string): Promise<CandidateResponse[]> {
     return this.get<CandidateResponse[]>(`/api/pipelines/runs/${runId}/candidates`);
+  }
+
+  /** Typed schema_extraction candidates (classes, properties, connections) with provenance. */
+  async getSchemaExtractionCandidates(runId: string): Promise<SchemaExtractionCandidate[]> {
+    const items = await this.get<TypedCandidate[]>(
+      `/api/pipelines/runs/${runId}/schema-extraction-candidates`,
+    );
+    return items.filter((c): c is SchemaExtractionCandidate =>
+      SCHEMA_CANDIDATE_TYPES.has(c.candidate_type),
+    );
+  }
+
+  /** Typed individual_extraction triple candidates with provenance. */
+  async getIndividualExtractionCandidates(runId: string): Promise<TripleCandidate[]> {
+    const items = await this.get<TypedCandidate[]>(
+      `/api/pipelines/runs/${runId}/individual-extraction-candidates`,
+    );
+    return items.filter((c): c is TripleCandidate => c.candidate_type === "triple");
+  }
+
+  /** Zero-write preview of which mentions would resolve to existing individuals on apply. */
+  async previewRecognition(
+    runId: string,
+    body: RecognitionPreviewRequest,
+  ): Promise<RecognitionPreviewResponse> {
+    return this.post<RecognitionPreviewResponse>(
+      `/api/pipelines/runs/${runId}/recognition-preview`,
+      body,
+    );
   }
 
   async getRunChangeEvents(
