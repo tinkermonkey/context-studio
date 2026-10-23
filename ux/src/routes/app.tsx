@@ -21,6 +21,12 @@ import {
   useProperties,
   useRelationships,
 } from "@/api/hooks/ontology";
+import {
+  NAV_ACTIONS,
+  SIDEBAR_PATH_MAP,
+  getActiveItemId,
+  getBreadcrumbLabels,
+} from "./-app-navigation";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
@@ -31,117 +37,6 @@ export const Route = createFileRoute("/app")({
   },
   component: AppShell,
 });
-
-const ROUTE_LABELS: Record<string, string[]> = {
-  "/app": ["Dashboard"],
-  "/app/schema/taxonomies": ["Schema", "Taxonomies"],
-  "/app/schema/schemes": ["Schema", "Concept Schemes"],
-  "/app/schema/classes": ["Schema", "Classes"],
-  "/app/schema/properties": ["Schema", "Properties"],
-  "/app/schema/relationships": ["Schema", "Relationships"],
-  "/app/data/individuals": ["Data", "Individuals"],
-  "/app/data/datasets": ["Data", "Datasets"],
-  "/app/reference/sources": ["External Reference", "Sources"],
-  "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
-  "/app/versioning": ["Versioning"],
-  "/app/settings": ["Settings"],
-  "/app/contact-sheet": ["Developer", "Contact Sheet"],
-};
-
-const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
-  { prefix: "/app/schema/taxonomies", id: "schema-taxonomies" },
-  { prefix: "/app/schema/schemes", id: "schema-schemes" },
-  { prefix: "/app/schema/classes", id: "schema-classes" },
-  { prefix: "/app/schema/properties", id: "schema-properties" },
-  { prefix: "/app/schema/relationships", id: "schema-relationships" },
-  { prefix: "/app/schema", id: "schema" },
-  { prefix: "/app/data", id: "data" },
-  { prefix: "/app/reference", id: "external-reference" },
-  { prefix: "/app/graph", id: "graph" },
-  { prefix: "/app/settings", id: "settings" },
-  { prefix: "/app", id: "dashboard" },
-];
-
-const NAV_ACTIONS = [
-  { id: "nav-dashboard", label: "Dashboard", description: "Go to dashboard", to: "/app" },
-  {
-    id: "nav-taxonomies",
-    label: "Taxonomies",
-    description: "Schema → Taxonomies",
-    to: "/app/schema/taxonomies",
-  },
-  {
-    id: "nav-schemes",
-    label: "Concept Schemes",
-    description: "Schema → Concept Schemes",
-    to: "/app/schema/schemes",
-  },
-  {
-    id: "nav-classes",
-    label: "Classes",
-    description: "Schema → Classes",
-    to: "/app/schema/classes",
-  },
-  {
-    id: "nav-properties",
-    label: "Properties",
-    description: "Schema → Properties",
-    to: "/app/schema/properties",
-  },
-  {
-    id: "nav-relationships",
-    label: "Relationships",
-    description: "Schema → Relationships",
-    to: "/app/schema/relationships",
-  },
-  {
-    id: "nav-individuals",
-    label: "Individuals",
-    description: "Data → Individuals",
-    to: "/app/data/individuals",
-  },
-  {
-    id: "nav-datasets",
-    label: "Datasets",
-    description: "Data → Datasets",
-    to: "/app/data/datasets",
-  },
-  {
-    id: "nav-reference-sources",
-    label: "Reference Sources",
-    description: "External Reference → Sources",
-    to: "/app/reference/sources",
-  },
-  {
-    id: "nav-settings",
-    label: "Configuration",
-    description: "Go to settings",
-    to: "/app/settings",
-  },
-] as const;
-
-const SIDEBAR_PATH_MAP: Record<string, string> = {
-  dashboard: "/app",
-  schema: "/app/schema/taxonomies",
-  "schema-taxonomies": "/app/schema/taxonomies",
-  "schema-schemes": "/app/schema/schemes",
-  "schema-classes": "/app/schema/classes",
-  "schema-properties": "/app/schema/properties",
-  "schema-relationships": "/app/schema/relationships",
-  data: "/app/data/individuals",
-  "external-reference": "/app/reference/sources",
-  graph: "/app/graph",
-  settings: "/app/settings",
-};
-
-function getActiveItemId(pathname: string): string {
-  for (const { prefix, id } of ROUTE_TO_SIDEBAR_ID) {
-    if (pathname === prefix || pathname.startsWith(prefix + "/")) {
-      return id;
-    }
-  }
-  return "dashboard";
-}
 
 function formatRelativeMinutes(uptimeSeconds: number): string {
   if (uptimeSeconds < 60) return "just now";
@@ -238,7 +133,7 @@ function AppShell() {
 
   const pathname = location.pathname;
   const activeItemId = getActiveItemId(pathname);
-  const crumbs = ROUTE_LABELS[pathname] ?? [pathname];
+  const crumbs = getBreadcrumbLabels(pathname);
   const breadcrumbs = [{ label: workspaceName }, ...crumbs.map((label) => ({ label }))];
 
   const isHealthy = !isError && health?.status === "healthy";
@@ -356,6 +251,15 @@ function AppShell() {
               },
               { id: "data", label: "Data", icon: "data" },
               { id: "external-reference", label: "External Reference", icon: "link" },
+              {
+                id: "pipelines",
+                label: "Pipelines",
+                icon: "pipeline",
+                children: [
+                  { id: "pipelines-types", label: "Pipeline types" },
+                  { id: "pipelines-runs", label: "Runs" },
+                ],
+              },
               { id: "graph", label: "Graph view", icon: "graph" },
               { id: "settings", label: "Configuration", icon: "settings" },
             ],
