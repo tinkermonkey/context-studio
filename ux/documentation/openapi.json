@@ -3369,7 +3369,7 @@
           "pipelines"
         ],
         "summary": "Get Pipeline Candidates Generic",
-        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nReturns results in the legacy flat CandidateResponse format for backward\ncompatibility with existing consumers. For new applications, prefer the\ntype-specific endpoints which return the discriminated union CandidateItem format.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateResponse objects (flat legacy format) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found",
+        "description": "Retrieve candidates from a completed pipeline run (generic endpoint).\n\nRoutes to the appropriate extraction logic based on pipeline type.\nReturns results as a discriminated union (CandidateItem) with full structure:\n- SchemaClassCandidate, SchemaPropertyCandidate, SchemaConnectionCandidate\n  (from schema_extraction)\n- TripleCandidate (from individual_extraction)\n- GroundingCandidate (from schema_node_grounding)\n- RefinementCandidate (from refinement pipelines)\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    List of CandidateItem objects (discriminated union) with appropriate candidates\n\nRaises:\n    HTTPException: 404 if run not found",
         "operationId": "get_pipeline_candidates_generic_api_pipelines_runs__run_id__candidates_get",
         "parameters": [
           {
@@ -3390,7 +3390,37 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CandidateResponse"
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/SchemaClassCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaPropertyCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SchemaConnectionCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/TripleCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/GroundingCandidate"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RefinementCandidate"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "candidate_type",
+                      "mapping": {
+                        "schema_class": "#/components/schemas/SchemaClassCandidate",
+                        "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
+                        "triple": "#/components/schemas/TripleCandidate",
+                        "grounding": "#/components/schemas/GroundingCandidate",
+                        "refinement": "#/components/schemas/RefinementCandidate"
+                      }
+                    }
                   },
                   "title": "Response Get Pipeline Candidates Generic Api Pipelines Runs  Run Id  Candidates Get"
                 }
@@ -3963,7 +3993,7 @@
           "pipelines"
         ],
         "summary": "Apply Pipeline Run",
-        "description": "Apply a completed pipeline run's output to the ontology.\n\nMaterializes pipeline candidates into DRAFT ontology entities:\n- schema_extraction: creates Class, PropertyDefinition, and Relationship entities\n- individual_extraction: creates Individual and Relationship entities\n- schema_node_grounding: adds ExternalReference entries to an existing Class\n- schema_node_definition_refinement: updates the description of an existing Class\n- schema_node_connection_refinement: adds or removes Relationship entities\n\nAll created entities are stamped with Status.DRAFT and source_run_id set to the run ID\nfor full traceability. The operation is idempotent \u2014 applying the same run twice\nproduces no duplicates.\n\nArgs:\n    run_id: ID of the completed pipeline run to apply\n    concept_scheme_id: Required for schema_extraction \u2014 target concept scheme\n    taxonomy_id: Required for schema_extraction \u2014 parent taxonomy\n    node_id: Required for schema_node_grounding \u2014 class to apply groundings to\n    confidence_threshold: Minimum confidence score (0.0\u20131.0) for candidates to include\n    recognition_threshold: Minimum similarity (0.0\u20131.0) for individual_extraction's\n        recognition stage; defaults to the recognizer's configured value\n\nReturns:\n    ApplyRunResponse with counts of created and skipped entities\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params",
+        "description": "Apply a completed pipeline run's output to the ontology.\n\nMaterializes pipeline candidates into DRAFT ontology entities:\n- schema_extraction: creates Class, PropertyDefinition, and Relationship entities\n- individual_extraction: creates Individual and Relationship entities\n- schema_node_grounding: adds ExternalReference entries to an existing Class\n- schema_node_definition_refinement: updates the description of an existing Class\n- schema_node_connection_refinement: adds or removes Relationship entities\n\nAll created entities are stamped with Status.DRAFT and source_run_id set to the run ID\nfor full traceability. The operation is idempotent \u2014 applying the same run twice\nproduces no duplicates.\n\nArgs:\n    run_id: ID of the completed pipeline run to apply\n    concept_scheme_id: Required for schema_extraction \u2014 target concept scheme\n    taxonomy_id: Required for schema_extraction \u2014 parent taxonomy\n    node_id: Required for schema_node_grounding \u2014 class to apply groundings to\n    confidence_threshold: Minimum confidence score (0.0\u20131.0) for candidates to include\n    recognition_threshold: Minimum similarity (0.0\u20131.0) for individual_extraction's\n        recognition stage; defaults to the recognizer's configured value\n    body: Optional explicit selections. ``accepted_candidate_ids`` (schema_extraction\n        and individual_extraction) is the full selection when present and overrides\n        confidence_threshold; ``recognition_decisions`` (individual_extraction only)\n        sets merge/separate per mention. Unknown ids, mentions, or merge targets \u2192 422.\n\nReturns:\n    ApplyRunResponse with counts of created and skipped entities\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed, 400 for missing params",
         "operationId": "apply_pipeline_run_api_pipelines_runs__run_id__apply_post",
         "parameters": [
           {
@@ -4064,6 +4094,24 @@
             "description": "Minimum similarity for individual_extraction's recognition stage to resolve a mention to an existing individual. Defaults to the recognizer's configured value when omitted."
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ApplyRunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Optional explicit reviewer selections. Omit for threshold-only apply.",
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4094,7 +4142,7 @@
           "pipelines"
         ],
         "summary": "Preview Recognition",
-        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 400 if the pipeline type does not support recognition preview\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,\n        404 if run not found, 422 if run is not completed",
+        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new. For schema_extraction runs, returns an empty\nresult (not yet implemented).\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 200 with empty results for unsupported pipeline types\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
         "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
         "parameters": [
           {
@@ -6719,6 +6767,43 @@
         "title": "AppConfigurationResponse",
         "description": "Response containing application configuration with masked API keys.\n\nUsed for both configuration retrieval and reset operations. Sensitive values\n(API keys and other credentials) are masked to prevent exposure in logs and\nAPI responses."
       },
+      "ApplyRunRequest": {
+        "properties": {
+          "accepted_candidate_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Candidate Ids",
+            "description": "candidate_ids to apply (schema_extraction and individual_extraction). When present this is the full selection: every other candidate is skipped and confidence_threshold is ignored. Unknown ids are rejected with 422."
+          },
+          "recognition_decisions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RecognitionDecisionSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recognition Decisions",
+            "description": "Per-mention merge/separate decisions (individual_extraction only; 422 for other pipeline types). Mentions without a decision use recognition as usual."
+          }
+        },
+        "type": "object",
+        "title": "ApplyRunRequest",
+        "description": "Optional explicit reviewer selections for POST /runs/{run_id}/apply.\n\nOmitting the body (or a field) keeps the threshold-only behaviour."
+      },
       "ApplyRunResponse": {
         "properties": {
           "run_id": {
@@ -6862,6 +6947,30 @@
             "type": "array",
             "title": "Recognized Individual Ids",
             "description": "IDs of individuals resolved to an existing graph node by recognition"
+          },
+          "applied_candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Applied Candidate Ids",
+            "description": "candidate_ids that were selected and materialized (created, or already present). Populated for schema_extraction and individual_extraction."
+          },
+          "skipped_candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skipped Candidate Ids",
+            "description": "candidate_ids not applied: not selected, below confidence_threshold, or unresolvable (e.g. a connection whose endpoint class does not exist)"
+          },
+          "merged_mentions": {
+            "items": {
+              "$ref": "#/components/schemas/MergedMentionSchema"
+            },
+            "type": "array",
+            "title": "Merged Mentions",
+            "description": "Extracted mentions merged into an individual that already existed (individual_extraction only; one entry per mention)"
           }
         },
         "type": "object",
@@ -7471,53 +7580,6 @@
         ],
         "title": "CancelBatchResponse",
         "description": "Response from batch cancel operation."
-      },
-      "CandidateResponse": {
-        "properties": {
-          "uri": {
-            "type": "string",
-            "title": "Uri",
-            "description": "Candidate URI or identifier"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label",
-            "description": "Human-readable candidate label"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Candidate description or definition",
-            "default": ""
-          },
-          "source": {
-            "type": "string",
-            "title": "Source",
-            "description": "Source or database where candidate originates",
-            "default": ""
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "description": "Confidence score (0.0-1.0)"
-          },
-          "provenance": {
-            "type": "string",
-            "title": "Provenance",
-            "description": "Rationale or provenance for the candidate",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "required": [
-          "uri",
-          "label",
-          "confidence"
-        ],
-        "title": "CandidateResponse",
-        "description": "Response containing a single candidate from a pipeline run.\n\nDEPRECATED: Use CandidateItem (discriminated union) for new implementations.\n\nRepresents a candidate result from pipeline execution with full provenance\nand confidence information. Structure adapts based on pipeline type but\nmaintains a consistent interface. Kept for backwards compatibility until\nall consumers migrate to discriminated union variants."
       },
       "CentralityResponse": {
         "properties": {
@@ -9261,6 +9323,11 @@
             "title": "Candidate Type",
             "default": "grounding"
           },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+          },
           "confidence": {
             "type": "number",
             "maximum": 1.0,
@@ -9301,6 +9368,7 @@
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "uri",
           "label"
@@ -10580,6 +10648,38 @@
         "title": "MergeStrategy",
         "description": "Strategy for resolving conflicts during merge."
       },
+      "MergedMentionSchema": {
+        "properties": {
+          "mention_label": {
+            "type": "string",
+            "title": "Mention Label",
+            "description": "Extracted mention surface text"
+          },
+          "individual_id": {
+            "type": "string",
+            "title": "Individual Id",
+            "description": "Pre-existing individual it was merged into"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "decision",
+              "recognition",
+              "existing_title"
+            ],
+            "title": "Source",
+            "description": "decision: reviewer chose merge; recognition: the recognizer matched it; existing_title: an individual with the same title already exists in the class"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mention_label",
+          "individual_id",
+          "source"
+        ],
+        "title": "MergedMentionSchema",
+        "description": "An extracted mention that apply merged into a pre-existing individual."
+      },
       "NeighborsResponse": {
         "properties": {
           "node_id": {
@@ -10647,6 +10747,18 @@
             ],
             "title": "Id",
             "description": "Ontology entity ID (empty/None=new, non-empty=mapped)"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Canonical title of the mapped entity when id resolves to an existing node"
           },
           "class_ids": {
             "anyOf": [
@@ -11595,6 +11707,44 @@
         "title": "PublishDiffStats",
         "description": "Response containing diff statistics for publishing."
       },
+      "RecognitionDecisionSchema": {
+        "properties": {
+          "mention_label": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Mention Label",
+            "description": "Extracted mention, matched case-insensitively after trimming \u2014 use RecognitionPreviewHitSchema.mention_label"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "merge",
+              "separate"
+            ],
+            "title": "Decision",
+            "description": "merge: adopt individual_id (an existing individual of any class) instead of creating a node; separate: skip recognition and create a new individual (an existing individual with the same title in the same class still wins)"
+          },
+          "individual_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Individual Id",
+            "description": "Merge target individual id; required when decision is merge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mention_label",
+          "decision"
+        ],
+        "title": "RecognitionDecisionSchema",
+        "description": "A reviewer's per-mention recognition decision for individual_extraction apply."
+      },
       "RecognitionPreviewHitSchema": {
         "properties": {
           "mention_label": {
@@ -12072,6 +12222,11 @@
             "title": "Candidate Type",
             "default": "refinement"
           },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+          },
           "confidence": {
             "type": "number",
             "maximum": 1.0,
@@ -12112,6 +12267,7 @@
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "uri",
           "label"
@@ -12455,6 +12611,11 @@
             "title": "Candidate Type",
             "default": "schema_class"
           },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+          },
           "confidence": {
             "type": "number",
             "maximum": 1.0,
@@ -12486,10 +12647,23 @@
             ],
             "title": "Proposed Definition",
             "description": "Proposed definition or description of the class"
+          },
+          "disambiguation_rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disambiguation Rationale",
+            "description": "Rationale for this candidate when multiple senses are disambiguated"
           }
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "label"
         ],
@@ -12503,6 +12677,11 @@
             "const": "schema_connection",
             "title": "Candidate Type",
             "default": "schema_connection"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -12537,6 +12716,7 @@
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "subject_ref",
           "predicate",
@@ -12552,6 +12732,11 @@
             "const": "schema_property",
             "title": "Candidate Type",
             "default": "schema_property"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -12612,6 +12797,7 @@
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "label"
         ],
@@ -13321,6 +13507,11 @@
             "title": "Candidate Type",
             "default": "triple"
           },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+          },
           "confidence": {
             "type": "number",
             "maximum": 1.0,
@@ -13351,6 +13542,7 @@
         },
         "type": "object",
         "required": [
+          "candidate_id",
           "confidence",
           "subject",
           "predicate",

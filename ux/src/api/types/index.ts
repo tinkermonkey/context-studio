@@ -1690,16 +1690,19 @@ export interface paths {
      * @description Retrieve candidates from a completed pipeline run (generic endpoint).
      *
      *     Routes to the appropriate extraction logic based on pipeline type.
-     *     Returns results in the legacy flat CandidateResponse format for backward
-     *     compatibility with existing consumers. For new applications, prefer the
-     *     type-specific endpoints which return the discriminated union CandidateItem format.
+     *     Returns results as a discriminated union (CandidateItem) with full structure:
+     *     - SchemaClassCandidate, SchemaPropertyCandidate, SchemaConnectionCandidate
+     *       (from schema_extraction)
+     *     - TripleCandidate (from individual_extraction)
+     *     - GroundingCandidate (from schema_node_grounding)
+     *     - RefinementCandidate (from refinement pipelines)
      *
      *     Args:
      *         run_id: The pipeline run ID
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         List of CandidateResponse objects (flat legacy format) with appropriate candidates
+     *         List of CandidateItem objects (discriminated union) with appropriate candidates
      *
      *     Raises:
      *         HTTPException: 404 if run not found
@@ -1950,6 +1953,10 @@ export interface paths {
      *         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
      *         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
      *             recognition stage; defaults to the recognizer's configured value
+     *         body: Optional explicit selections. ``accepted_candidate_ids`` (schema_extraction
+     *             and individual_extraction) is the full selection when present and overrides
+     *             confidence_threshold; ``recognition_decisions`` (individual_extraction only)
+     *             sets merge/separate per mention. Unknown ids, mentions, or merge targets → 422.
      *
      *     Returns:
      *         ApplyRunResponse with counts of created and skipped entities
@@ -1980,11 +1987,12 @@ export interface paths {
      *     Computes at request time against current ontology state, with zero writes.
      *     For an individual_extraction run, reports which extracted individual mentions
      *     would resolve to existing ontology individuals if the run were applied, and
-     *     which would be created as new.
+     *     which would be created as new. For schema_extraction runs, returns an empty
+     *     result (not yet implemented).
      *
      *     This endpoint:
      *     - Returns 404 if the run does not exist
-     *     - Returns 400 if the pipeline type does not support recognition preview
+     *     - Returns 200 with empty results for unsupported pipeline types
      *     - Produces zero writes to ontology data, pipeline run data, or change events
      *
      *     Args:
@@ -1995,8 +2003,7 @@ export interface paths {
      *         RecognitionPreviewResponse with recognition results per mention
      *
      *     Raises:
-     *         HTTPException: 400 if pipeline type is not INDIVIDUAL_EXTRACTION or SCHEMA_EXTRACTION,
-     *             404 if run not found, 422 if run is not completed
+     *         HTTPException: 404 if run not found, 422 if run is not completed
      */
     post: operations["preview_recognition_api_pipelines_runs__run_id__recognition_preview_post"];
     delete?: never;
@@ -3823,6 +3830,24 @@ export interface components {
       };
     };
     /**
+     * ApplyRunRequest
+     * @description Optional explicit reviewer selections for POST /runs/{run_id}/apply.
+     *
+     *     Omitting the body (or a field) keeps the threshold-only behaviour.
+     */
+    ApplyRunRequest: {
+      /**
+       * Accepted Candidate Ids
+       * @description candidate_ids to apply (schema_extraction and individual_extraction). When present this is the full selection: every other candidate is skipped and confidence_threshold is ignored. Unknown ids are rejected with 422.
+       */
+      accepted_candidate_ids?: string[] | null;
+      /**
+       * Recognition Decisions
+       * @description Per-mention merge/separate decisions (individual_extraction only; 422 for other pipeline types). Mentions without a decision use recognition as usual.
+       */
+      recognition_decisions?: components["schemas"]["RecognitionDecisionSchema"][] | null;
+    };
+    /**
      * ApplyRunResponse
      * @description Response from applying a pipeline run's output to the ontology.
      */
@@ -3951,6 +3976,21 @@ export interface components {
        * @description IDs of individuals resolved to an existing graph node by recognition
        */
       recognized_individual_ids?: string[];
+      /**
+       * Applied Candidate Ids
+       * @description candidate_ids that were selected and materialized (created, or already present). Populated for schema_extraction and individual_extraction.
+       */
+      applied_candidate_ids?: string[];
+      /**
+       * Skipped Candidate Ids
+       * @description candidate_ids not applied: not selected, below confidence_threshold, or unresolvable (e.g. a connection whose endpoint class does not exist)
+       */
+      skipped_candidate_ids?: string[];
+      /**
+       * Merged Mentions
+       * @description Extracted mentions merged into an individual that already existed (individual_extraction only; one entry per mention)
+       */
+      merged_mentions?: components["schemas"]["MergedMentionSchema"][];
     };
     /**
      * AttributeDefinitionCreateRequest
@@ -4302,52 +4342,6 @@ export interface components {
       status: string;
       /** @description Run counts after operation */
       run_counts: components["schemas"]["RunCountsResponse"];
-    };
-    /**
-     * CandidateResponse
-     * @description Response containing a single candidate from a pipeline run.
-     *
-     *     DEPRECATED: Use CandidateItem (discriminated union) for new implementations.
-     *
-     *     Represents a candidate result from pipeline execution with full provenance
-     *     and confidence information. Structure adapts based on pipeline type but
-     *     maintains a consistent interface. Kept for backwards compatibility until
-     *     all consumers migrate to discriminated union variants.
-     */
-    CandidateResponse: {
-      /**
-       * Uri
-       * @description Candidate URI or identifier
-       */
-      uri: string;
-      /**
-       * Label
-       * @description Human-readable candidate label
-       */
-      label: string;
-      /**
-       * Description
-       * @description Candidate description or definition
-       * @default
-       */
-      description: string;
-      /**
-       * Source
-       * @description Source or database where candidate originates
-       * @default
-       */
-      source: string;
-      /**
-       * Confidence
-       * @description Confidence score (0.0-1.0)
-       */
-      confidence: number;
-      /**
-       * Provenance
-       * @description Rationale or provenance for the candidate
-       * @default
-       */
-      provenance: string;
     };
     /**
      * CentralityResponse
@@ -5456,6 +5450,11 @@ export interface components {
        */
       candidate_type: "grounding";
       /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
+      /**
        * Confidence
        * @description Confidence score (0.0-1.0)
        */
@@ -6258,6 +6257,28 @@ export interface components {
      */
     MergeStrategy: "last_write_wins" | "base_value_wins" | "manual";
     /**
+     * MergedMentionSchema
+     * @description An extracted mention that apply merged into a pre-existing individual.
+     */
+    MergedMentionSchema: {
+      /**
+       * Mention Label
+       * @description Extracted mention surface text
+       */
+      mention_label: string;
+      /**
+       * Individual Id
+       * @description Pre-existing individual it was merged into
+       */
+      individual_id: string;
+      /**
+       * Source
+       * @description decision: reviewer chose merge; recognition: the recognizer matched it; existing_title: an individual with the same title already exists in the class
+       * @enum {string}
+       */
+      source: "decision" | "recognition" | "existing_title";
+    };
+    /**
      * NeighborsResponse
      * @description Response containing neighbor nodes.
      */
@@ -6307,6 +6328,11 @@ export interface components {
        * @description Ontology entity ID (empty/None=new, non-empty=mapped)
        */
       id?: string | null;
+      /**
+       * Title
+       * @description Canonical title of the mapped entity when id resolves to an existing node
+       */
+      title?: string | null;
       /**
        * Class Ids
        * @description Class IDs if this node is an individual instance
@@ -6888,6 +6914,28 @@ export interface components {
       removed: number;
     };
     /**
+     * RecognitionDecisionSchema
+     * @description A reviewer's per-mention recognition decision for individual_extraction apply.
+     */
+    RecognitionDecisionSchema: {
+      /**
+       * Mention Label
+       * @description Extracted mention, matched case-insensitively after trimming — use RecognitionPreviewHitSchema.mention_label
+       */
+      mention_label: string;
+      /**
+       * Decision
+       * @description merge: adopt individual_id (an existing individual of any class) instead of creating a node; separate: skip recognition and create a new individual (an existing individual with the same title in the same class still wins)
+       * @enum {string}
+       */
+      decision: "merge" | "separate";
+      /**
+       * Individual Id
+       * @description Merge target individual id; required when decision is merge
+       */
+      individual_id?: string | null;
+    };
+    /**
      * RecognitionPreviewHitSchema
      * @description Preview of recognition result for a single extracted mention.
      */
@@ -7205,6 +7253,11 @@ export interface components {
        */
       candidate_type: "refinement";
       /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
+      /**
        * Confidence
        * @description Confidence score (0.0-1.0)
        */
@@ -7492,6 +7545,11 @@ export interface components {
        */
       candidate_type: "schema_class";
       /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
+      /**
        * Confidence
        * @description Confidence score (0.0-1.0)
        */
@@ -7511,6 +7569,11 @@ export interface components {
        * @description Proposed definition or description of the class
        */
       proposed_definition?: string | null;
+      /**
+       * Disambiguation Rationale
+       * @description Rationale for this candidate when multiple senses are disambiguated
+       */
+      disambiguation_rationale?: string | null;
     };
     /**
      * SchemaConnectionCandidate
@@ -7524,6 +7587,11 @@ export interface components {
        * @enum {string}
        */
       candidate_type: "schema_connection";
+      /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
       /**
        * Confidence
        * @description Confidence score (0.0-1.0)
@@ -7562,6 +7630,11 @@ export interface components {
        * @enum {string}
        */
       candidate_type: "schema_property";
+      /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
       /**
        * Confidence
        * @description Confidence score (0.0-1.0)
@@ -7993,6 +8066,11 @@ export interface components {
        * @enum {string}
        */
       candidate_type: "triple";
+      /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
       /**
        * Confidence
        * @description Confidence score (0.0-1.0)
@@ -10283,7 +10361,14 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CandidateResponse"][];
+          "application/json": (
+            | components["schemas"]["SchemaClassCandidate"]
+            | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaConnectionCandidate"]
+            | components["schemas"]["TripleCandidate"]
+            | components["schemas"]["GroundingCandidate"]
+            | components["schemas"]["RefinementCandidate"]
+          )[];
         };
       };
       /** @description Validation Error */
@@ -10551,7 +10636,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["ApplyRunRequest"] | null;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
