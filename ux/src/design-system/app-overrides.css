@@ -47,6 +47,12 @@ body.dark-canvas {
   --graph-cluster-climate-bg: rgba(251 191 36 / 0.12);
   --graph-cluster-software-bg: rgba(129 140 248 / 0.12);
   --shell-surface-2: rgb(55 80 140);
+  /* Heimdall defines --status-warn-bg / --status-error-bg for the light canvas
+     only, so warn/error FormCallouts render pale backgrounds under light text
+     on the dark canvas. Raw RGB channels (consumed as rgb(var(--…))): a deep
+     amber / rose tint that keeps canvas-fg-1 text readable. */
+  --status-warn-bg: 58 45 18;
+  --status-error-bg: 72 24 36;
 }
 
 /* Heimdall .hierarchy-row pins the pill column at 220px, but the pill
