@@ -30,6 +30,7 @@ export const QUERY_KEYS = {
   // Graph
   graph: ["graph"] as const,
   graphMetrics: ["graph", "metrics"] as const,
+  graphView: ["graph", "view"] as const,
   graphPath: (sourceId: string, targetId: string) => ["graph", "path", sourceId, targetId] as const,
   // Extraction
   extraction: ["extraction"] as const,
