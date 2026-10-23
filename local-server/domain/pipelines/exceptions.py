@@ -24,6 +24,17 @@ class PipelineInputError(PipelineError):
     pass
 
 
+class ApplySelectionError(PipelineInputError):
+    """Raised when an apply request's explicit selections do not match the run.
+
+    For example: an accepted candidate id the run does not contain, a recognition
+    decision for a mention the run never extracted, or a merge target individual
+    that does not exist.
+    """
+
+    pass
+
+
 class PipelineExternalServiceError(PipelineError):
     """Raised when an external service fails (timeouts, connection errors)."""
 

@@ -34,7 +34,7 @@ class TestGroundingCandidateMapping:
             "provenance": [],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert result.candidate_type == "grounding"
@@ -55,7 +55,7 @@ class TestGroundingCandidateMapping:
             "provenance": [{"quote": "Alice is a person", "start": 0, "end": 17}],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert len(result.provenance) == 1
         assert result.provenance[0].quote == "Alice is a person"
@@ -70,7 +70,7 @@ class TestGroundingCandidateMapping:
             # Missing description, source
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert result.uri == "http://example.org/concept"
         assert result.label == "Concept"
@@ -91,7 +91,7 @@ class TestGroundingCandidateMapping:
             # No "provenance" key - this is what the actual orchestrator produces
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 1
@@ -106,7 +106,7 @@ class TestGroundingCandidateMapping:
             "provenance": [],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert result.confidence == 0.5  # Falls back to default
 
@@ -119,7 +119,7 @@ class TestGroundingCandidateMapping:
             "provenance": [],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
 
@@ -132,7 +132,7 @@ class TestGroundingCandidateMapping:
             "provenance": [],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
 
@@ -149,7 +149,7 @@ class TestRefinementCandidateMapping:
             "provenance": [],
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
         assert result.candidate_type == "refinement"
@@ -166,7 +166,7 @@ class TestRefinementCandidateMapping:
             "provenance": [{"quote": "improved_predicate is better", "start": 10, "end": 38}],
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert result.uri == "connection_456"
         assert result.description == "Subject -> improved_predicate -> Object"
@@ -180,7 +180,7 @@ class TestRefinementCandidateMapping:
             # Missing scope_id
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert result.description == "Refined content"
         assert result.uri == ""
@@ -198,7 +198,7 @@ class TestRefinementCandidateMapping:
             # No "content" key - this is what the definition refinement orchestrator produces
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
         assert (
@@ -219,7 +219,7 @@ class TestRefinementCandidateMapping:
             # No "content" key - this is what the connection refinement orchestrator produces
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
         assert (
@@ -237,7 +237,7 @@ class TestRefinementCandidateMapping:
             "confidence": None,  # Null confidence from orchestrator
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert result.confidence == 0.5  # Falls back to default
         assert result.uri == "class_123"
@@ -250,7 +250,7 @@ class TestRefinementCandidateMapping:
             "confidence": 0,  # Zero confidence should be preserved, not promoted
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
         assert result.uri == "class_123"
@@ -263,7 +263,7 @@ class TestRefinementCandidateMapping:
             "confidence": 0.0,  # Zero float confidence should be preserved
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
         assert result.uri == "class_123"

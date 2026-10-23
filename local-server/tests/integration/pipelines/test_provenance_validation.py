@@ -37,7 +37,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 1
@@ -59,7 +59,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 2
@@ -79,7 +79,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_schema_class_candidate(candidate_dict)
+        result = _map_schema_class_candidate("class-0", candidate_dict)
 
         assert isinstance(result, SchemaClassCandidate)
         assert len(result.provenance) == 1
@@ -100,7 +100,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         assert isinstance(result, TripleCandidate)
         assert len(result.provenance) == 2
@@ -118,7 +118,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_refinement_candidate(refinement_dict)
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
 
         assert isinstance(result, RefinementCandidate)
         assert len(result.provenance) == 1
@@ -137,7 +137,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 0
@@ -153,7 +153,7 @@ class TestProvenanceValidation:
             "provenance": [{"quote": "bad", "start": -100, "end": -50}],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert result.uri == "http://example.org/item"
@@ -181,7 +181,7 @@ class TestProvenanceValidation:
             ],
         }
 
-        result = _map_grounding_candidate(grounding_dict)
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
 
         assert isinstance(result, GroundingCandidate)
         assert len(result.provenance) == 1
@@ -201,7 +201,7 @@ class TestConfidenceEdgeCases:
             "provenance": [],
         }
 
-        result = _map_schema_class_candidate(candidate_dict)
+        result = _map_schema_class_candidate("class-0", candidate_dict)
 
         assert isinstance(result, SchemaClassCandidate)
         assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
@@ -216,7 +216,7 @@ class TestConfidenceEdgeCases:
             "provenance": [],
         }
 
-        result = _map_schema_class_candidate(candidate_dict)
+        result = _map_schema_class_candidate("class-0", candidate_dict)
 
         assert isinstance(result, SchemaClassCandidate)
         assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
@@ -231,7 +231,7 @@ class TestConfidenceEdgeCases:
             "provenance": [],
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         assert isinstance(result, TripleCandidate)
         assert result.confidence == 0.0  # Must preserve 0, not promote to 0.5
@@ -246,7 +246,7 @@ class TestConfidenceEdgeCases:
             "provenance": [],
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         assert isinstance(result, TripleCandidate)
         assert result.confidence == 0.0  # Must preserve 0.0, not promote to 0.5
