@@ -1,30 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { graphService } from "@/api/services/graph";
+import type { components } from "@/api/types";
 
-export interface GraphNode {
-  id: string;
-  label: string;
-  centrality: number;
-  kind?: string;
-  domainColor?: string;
-}
+export type GraphView = components["schemas"]["GraphViewResponse"];
+export type GraphViewNode = components["schemas"]["GraphViewNodeResponse"];
+export type GraphViewEdge = components["schemas"]["GraphViewEdgeResponse"];
+export type GraphViewLayer = components["schemas"]["GraphViewLayerResponse"];
+export type GraphViewTaxonomy = components["schemas"]["GraphViewTaxonomyResponse"];
 
-export interface GraphEdge {
-  id: string;
-  source: string;
-  target: string;
-}
-
-export interface GraphVisualizationData {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  metadata: {
-    nodeCount: number;
-    edgeCount: number;
-    timestamp: string;
-  };
-}
+/** The graph view only changes when the ontology changes; filter changes must not refetch it. */
+const GRAPH_VIEW_STALE_TIME_MS = 5 * 60 * 1000;
 
 export function useBuildGraph() {
   const queryClient = useQueryClient();
@@ -36,91 +22,18 @@ export function useBuildGraph() {
   });
 }
 
+export function useGraphView() {
+  return useQuery({
+    queryKey: QUERY_KEYS.graphView,
+    queryFn: () => graphService.getGraphView(),
+    staleTime: GRAPH_VIEW_STALE_TIME_MS,
+  });
+}
+
 export function useGraphMetrics(algorithm?: string) {
   return useQuery({
     queryKey: QUERY_KEYS.graphMetrics,
     queryFn: () => graphService.getMetrics(algorithm),
-  });
-}
-
-export function useGraphVisualization() {
-  const queryClient = useQueryClient();
-
-  const getDomainColor = (nodeId: string) => {
-    if (!nodeId) return "#818cf8";
-    const hash = nodeId.charCodeAt(0) % 3;
-    const colors = ["#34d399", "#fbbf24", "#818cf8"];
-    return colors[hash];
-  };
-
-  return useMutation({
-    mutationFn: async (): Promise<GraphVisualizationData> => {
-      try {
-        await graphService.buildGraph();
-      } catch (error) {
-        throw new Error(
-          `Failed to build graph: ${error instanceof Error ? error.message : String(error)}`,
-          { cause: error },
-        );
-      }
-
-      let metrics;
-      try {
-        metrics = await graphService.getMetrics();
-      } catch (error) {
-        throw new Error(
-          `Failed to compute metrics: ${error instanceof Error ? error.message : String(error)}`,
-          { cause: error },
-        );
-      }
-
-      const nodeIds = Object.keys(metrics.centrality);
-
-      if (nodeIds.length === 0) {
-        return {
-          nodes: [],
-          edges: [],
-          metadata: {
-            nodeCount: 0,
-            edgeCount: 0,
-            timestamp: new Date().toISOString(),
-          },
-        };
-      }
-
-      let subgraph;
-      try {
-        subgraph = await graphService.getSubgraph(nodeIds);
-      } catch (error) {
-        throw new Error(
-          `Failed to fetch subgraph: ${error instanceof Error ? error.message : String(error)}`,
-          { cause: error },
-        );
-      }
-
-      return {
-        nodes: nodeIds.map((id) => ({
-          id,
-          label: id,
-          centrality: metrics.centrality[id],
-          kind: undefined,
-          domainColor: getDomainColor(id),
-        })),
-        edges: subgraph.edges.map(([source, target]) => ({
-          id: `${source}-${target}`,
-          source,
-          target,
-        })),
-        metadata: {
-          nodeCount: subgraph.node_count,
-          edgeCount: subgraph.edge_count,
-          timestamp: metrics.computed_at,
-        },
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph });
-    },
   });
 }
 

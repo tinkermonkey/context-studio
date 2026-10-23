@@ -14,6 +14,7 @@ import {
   createSPARQLRequest,
   createSPARQLResponse,
   createSubgraphData,
+  createGraphView,
 } from "./fixtures/graph.fixtures";
 
 const server = setupServer();
@@ -45,6 +46,30 @@ describe("GraphService", () => {
       expect(result).toEqual(mockGraph);
       expect(result.node_count).toBe(150);
       expect(result.edge_count).toBe(300);
+    });
+
+    it("fetches the labelled graph view", async () => {
+      const mockView = createGraphView();
+      server.use(http.get("*/api/graph/view", () => HttpResponse.json(mockView)));
+
+      const result = await graphService.getGraphView();
+
+      expect(result.layers).toHaveLength(4);
+      expect(result.nodes.find((n) => n.id === "checkout")?.concept_scheme_id).toBe(
+        "layer-business",
+      );
+      expect(result.edges.map((e) => e.edge_type)).toContain("instance_of");
+    });
+
+    it("throws ApiError on 500 from getGraphView", async () => {
+      server.use(
+        http.get("*/api/graph/view", () => HttpResponse.json({ detail: "boom" }, { status: 500 })),
+      );
+
+      await expect(graphService.getGraphView()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 500,
+      });
     });
 
     it("throws ApiError on 500 from buildGraph", async () => {
