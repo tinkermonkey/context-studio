@@ -976,6 +976,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/graph/view": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Graph View
+     * @description Get a labelled read model of the ontology graph for visualization.
+     *
+     *     Returns every taxonomy, every concept scheme (rendered as a layer), all classes and
+     *     individuals with their layer, and typed edges (relationship, schema, instance_of,
+     *     subclass_of) with predicate labels.
+     *
+     *     Args:
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         GraphViewResponse with taxonomies, layers, nodes and edges
+     *
+     *     Raises:
+     *         HTTPException: 422 if a graph error occurs, 500 on unexpected errors
+     */
+    get: operations["get_graph_view_api_graph_view_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/graph/metrics": {
     parameters: {
       query?: never;
@@ -8166,6 +8199,163 @@ export interface components {
        */
       error_message?: string | null;
     };
+    /**
+     * GraphViewEdgeResponse
+     * @description A directed, typed edge in the graph view.
+     */
+    GraphViewEdgeResponse: {
+      /**
+       * Id
+       * @description Stable edge ID
+       */
+      id: string;
+      /**
+       * Source
+       * @description Source node ID
+       */
+      source: string;
+      /**
+       * Target
+       * @description Target node ID
+       */
+      target: string;
+      /**
+       * Edge Type
+       * @description relationship = asserted relationship; schema = property definition domain -> range; instance_of = individual -> class; subclass_of = class -> parent class
+       * @enum {string}
+       */
+      edge_type: "relationship" | "schema" | "instance_of" | "subclass_of";
+      /**
+       * Predicate Id
+       * @description Property definition ID, when any
+       */
+      predicate_id?: string | null;
+      /**
+       * Predicate
+       * @description Human-readable predicate label
+       */
+      predicate?: string | null;
+    };
+    /**
+     * GraphViewLayerResponse
+     * @description A concept scheme rendered as one layer of the graph view.
+     */
+    GraphViewLayerResponse: {
+      /**
+       * Id
+       * @description Concept scheme ID
+       */
+      id: string;
+      /**
+       * Title
+       * @description Concept scheme title
+       */
+      title: string;
+      /**
+       * Identifier
+       * @description Concept scheme identifier
+       */
+      identifier?: string | null;
+      /**
+       * Taxonomy Id
+       * @description ID of the taxonomy the concept scheme belongs to
+       */
+      taxonomy_id: string;
+    };
+    /**
+     * GraphViewNodeResponse
+     * @description A class or individual in the graph view.
+     */
+    GraphViewNodeResponse: {
+      /**
+       * Id
+       * @description Entity ID
+       */
+      id: string;
+      /**
+       * Label
+       * @description Entity title
+       */
+      label: string;
+      /**
+       * Node Type
+       * @description Entity kind
+       * @enum {string}
+       */
+      node_type: "class" | "individual";
+      /**
+       * Identifier
+       * @description Entity identifier (classes only)
+       */
+      identifier?: string | null;
+      /**
+       * Description
+       * @description Entity description
+       */
+      description?: string | null;
+      /**
+       * Concept Scheme Id
+       * @description Layer (concept scheme) of the node; individuals take it from their first class
+       */
+      concept_scheme_id?: string | null;
+      /**
+       * Taxonomy Id
+       * @description Taxonomy of the node
+       */
+      taxonomy_id?: string | null;
+      /**
+       * Class Ids
+       * @description Classes an individual belongs to (empty for classes)
+       */
+      class_ids?: string[];
+    };
+    /**
+     * GraphViewResponse
+     * @description Labelled graph read model for visualization: layers, nodes and typed edges.
+     */
+    GraphViewResponse: {
+      /**
+       * Taxonomies
+       * @description All taxonomies
+       */
+      taxonomies: components["schemas"]["GraphViewTaxonomyResponse"][];
+      /**
+       * Layers
+       * @description All concept schemes, each rendered as a layer
+       */
+      layers: components["schemas"]["GraphViewLayerResponse"][];
+      /**
+       * Nodes
+       * @description Classes and individuals
+       */
+      nodes: components["schemas"]["GraphViewNodeResponse"][];
+      /**
+       * Edges
+       * @description Edges between nodes
+       */
+      edges: components["schemas"]["GraphViewEdgeResponse"][];
+    };
+    /**
+     * GraphViewTaxonomyResponse
+     * @description A taxonomy grouping the layers of a graph view.
+     */
+    GraphViewTaxonomyResponse: {
+      /**
+       * Id
+       * @description Taxonomy ID
+       */
+      id: string;
+      /**
+       * Title
+       * @description Taxonomy title
+       */
+      title: string;
+      /**
+       * Identifier
+       * @description Taxonomy identifier
+       */
+      identifier?: string | null;
+    };
   };
   responses: never;
   parameters: never;
@@ -9568,6 +9758,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["KnowledgeGraphResponse"];
+        };
+      };
+    };
+  };
+  get_graph_view_api_graph_view_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GraphViewResponse"];
         };
       };
     };

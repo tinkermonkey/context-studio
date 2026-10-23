@@ -14,14 +14,25 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from .entities import GraphMetrics, KnowledgeGraph, PathResult, Subgraph, SubgraphResult
+from .entities import (
+    GraphMetrics,
+    GraphView,
+    GraphViewEdge,
+    GraphViewLayer,
+    GraphViewNode,
+    GraphViewTaxonomy,
+    KnowledgeGraph,
+    PathResult,
+    Subgraph,
+    SubgraphResult,
+)
 from .exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
     from ..ontology.ports import OntologyRepository
 
-from ..ontology.entities import Individual
+from ..ontology.entities import Class, ConceptScheme, Individual, PropertyDefinition, Taxonomy
 from ..ontology.events import GraphInvalidated
 
 # Map domain entity class names to node_type strings
@@ -226,6 +237,134 @@ class GraphAnalysisService:
             edge_count=self._graph_engine.edge_count(),
             is_directed=True,
             last_built=datetime.now(timezone.utc),
+        )
+
+    def get_graph_view(self) -> GraphView:
+        """
+        Build a labelled read model of the ontology graph for visualization.
+
+        Reads straight from the repository; it does not use the graph engine
+        and ignores the stale flag. Nodes are classes and individuals, layers
+        are concept schemes. Edges combine asserted relationships, schema
+        edges (property definition domain -> range), individual -> class
+        membership and class -> parent class. Edges whose endpoints are not
+        in the node set are dropped.
+
+        Returns:
+            GraphView with taxonomies, layers, nodes and edges
+        """
+        entities, relationships = self._repository.get_all_entities_and_relationships()
+
+        taxonomies = [e for e in entities if isinstance(e, Taxonomy)]
+        schemes = [e for e in entities if isinstance(e, ConceptScheme)]
+        classes = [e for e in entities if isinstance(e, Class)]
+        individuals = [e for e in entities if isinstance(e, Individual)]
+        prop_defs = [e for e in entities if isinstance(e, PropertyDefinition)]
+
+        class_by_id = {str(c.id): c for c in classes}
+        prop_title_by_id = {str(p.id): p.title for p in prop_defs}
+
+        nodes: list[GraphViewNode] = [
+            GraphViewNode(
+                id=str(c.id),
+                label=c.title,
+                node_type="class",
+                identifier=c.identifier,
+                description=c.description,
+                concept_scheme_id=str(c.concept_scheme_id),
+                taxonomy_id=str(c.taxonomy_id),
+                class_ids=[],
+            )
+            for c in classes
+        ]
+        for ind in individuals:
+            class_ids = [str(cid) for cid in ind.class_ids]
+            first_class = next((class_by_id[cid] for cid in class_ids if cid in class_by_id), None)
+            nodes.append(
+                GraphViewNode(
+                    id=str(ind.id),
+                    label=ind.title,
+                    node_type="individual",
+                    identifier=None,
+                    description=ind.description,
+                    concept_scheme_id=str(first_class.concept_scheme_id) if first_class else None,
+                    taxonomy_id=str(first_class.taxonomy_id) if first_class else None,
+                    class_ids=class_ids,
+                )
+            )
+
+        node_ids = {n.id for n in nodes}
+        edges: list[GraphViewEdge] = []
+
+        def add_edge(edge: GraphViewEdge) -> None:
+            if edge.source in node_ids and edge.target in node_ids:
+                edges.append(edge)
+
+        for rel in relationships:
+            predicate_id = str(rel.property_definition_id)
+            add_edge(
+                GraphViewEdge(
+                    id=str(rel.id),
+                    source=str(rel.source_id),
+                    target=str(rel.target_id),
+                    edge_type="relationship",
+                    predicate_id=predicate_id,
+                    predicate=prop_title_by_id.get(predicate_id),
+                )
+            )
+        for prop in prop_defs:
+            if prop.domain_class_id and prop.range_class_id:
+                add_edge(
+                    GraphViewEdge(
+                        id=str(prop.id),
+                        source=str(prop.domain_class_id),
+                        target=str(prop.range_class_id),
+                        edge_type="schema",
+                        predicate_id=str(prop.id),
+                        predicate=prop.title,
+                    )
+                )
+        for ind in individuals:
+            for cid in ind.class_ids:
+                add_edge(
+                    GraphViewEdge(
+                        id=f"{ind.id}:instance_of:{cid}",
+                        source=str(ind.id),
+                        target=str(cid),
+                        edge_type="instance_of",
+                        predicate_id=None,
+                        predicate="instance of",
+                    )
+                )
+        for cls in classes:
+            if cls.parent_class_id:
+                add_edge(
+                    GraphViewEdge(
+                        id=f"{cls.id}:subclass_of:{cls.parent_class_id}",
+                        source=str(cls.id),
+                        target=str(cls.parent_class_id),
+                        edge_type="subclass_of",
+                        predicate_id=None,
+                        predicate="subclass of",
+                    )
+                )
+
+        return GraphView(
+            taxonomies=[
+                GraphViewTaxonomy(id=str(t.id), title=t.title, identifier=t.identifier)
+                for t in taxonomies
+            ],
+            layers=[
+                GraphViewLayer(
+                    id=str(s.id),
+                    title=s.title,
+                    identifier=s.identifier,
+                    taxonomy_id=str(s.taxonomy_id),
+                )
+                for s in schemes
+            ],
+            nodes=nodes,
+            edges=edges,
         )
 
     def get_degree_distribution(self) -> dict[str, int]:
