@@ -3,16 +3,22 @@ export const COPY = {
   PAGE_TITLE: "Graph Visualization",
   PAGE_SUBTITLE: "Explore your knowledge graph",
 
-  // Build Graph button
-  BUILD_GRAPH_BUTTON: "Build Graph",
-  BUILDING_GRAPH_BUTTON: "Building...",
+  PAGE_DESCRIPTION:
+    "Layers are concept schemes. Filter by layer or class, then focus a node to explore its cross-layer neighborhood.",
+
+  // Rebuild Graph button
+  BUILD_GRAPH_BUTTON: "Rebuild Graph",
+  BUILDING_GRAPH_BUTTON: "Rebuilding...",
 
   // Error state
-  ERROR_MESSAGE: "Failed to build graph",
+  ERROR_MESSAGE: "Failed to load graph",
+  BUILD_ERROR_TITLE: "Graph rebuild failed",
 
   // Empty state
   EMPTY_STATE_TITLE: "No graph data",
-  EMPTY_STATE_DESCRIPTION: "Build a graph to visualize your knowledge base",
+  EMPTY_STATE_DESCRIPTION: "Add classes or individuals to an ontology to see them here",
+  NO_MATCHING_NODES:
+    "No nodes match the current filters. Select more layers or clear the class filter.",
 
   // Inspector tabs
   METRICS_TAB: "Metrics",
