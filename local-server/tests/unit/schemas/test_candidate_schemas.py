@@ -73,6 +73,7 @@ class TestSchemaClassCandidate:
     def test_minimal_schema_class_candidate(self):
         """SchemaClassCandidate with required fields only."""
         candidate = SchemaClassCandidate(
+            candidate_id="c-0",
             label="Example Class",
             confidence=0.95,
         )
@@ -85,6 +86,7 @@ class TestSchemaClassCandidate:
     def test_schema_class_candidate_with_provenance(self):
         """SchemaClassCandidate with provenance spans."""
         candidate = SchemaClassCandidate(
+            candidate_id="c-0",
             label="Example Class",
             proposed_definition="A test class",
             confidence=0.9,
@@ -102,6 +104,7 @@ class TestSchemaClassCandidate:
         """SchemaClassCandidate can be instantiated from dict."""
         data = {
             "candidate_type": "schema_class",
+            "candidate_id": "c-0",
             "label": "Test Class",
             "confidence": 0.85,
         }
@@ -112,6 +115,7 @@ class TestSchemaClassCandidate:
     def test_schema_class_candidate_model_dump(self):
         """SchemaClassCandidate serializes correctly."""
         candidate = SchemaClassCandidate(
+            candidate_id="c-0",
             label="Test Class",
             proposed_definition="A class for testing",
             confidence=0.95,
@@ -131,6 +135,7 @@ class TestSchemaPropertyCandidate:
     def test_schema_property_candidate(self):
         """SchemaPropertyCandidate with required fields."""
         candidate = SchemaPropertyCandidate(
+            candidate_id="c-0",
             label="has_name",
             proposed_definition="Relates an entity to its name",
             proposed_domain="Entity",
@@ -150,6 +155,7 @@ class TestSchemaConnectionCandidate:
     def test_schema_connection_candidate(self):
         """SchemaConnectionCandidate representing a proposed relationship."""
         candidate = SchemaConnectionCandidate(
+            candidate_id="c-0",
             subject_ref="Class1",
             predicate="relatedTo",
             object_ref="Class2",
@@ -183,6 +189,7 @@ class TestTripleCandidate:
     def test_minimal_triple_candidate(self):
         """TripleCandidate with required fields only."""
         candidate = TripleCandidate(
+            candidate_id="c-0",
             subject=NodeReference(label="Technology", kind="individual"),
             predicate=PredicateReference(label="is_a", kind="property"),
             object=NodeReference(label="System", kind="class"),
@@ -196,6 +203,7 @@ class TestTripleCandidate:
     def test_triple_candidate_with_provenance(self):
         """TripleCandidate with provenance spans."""
         candidate = TripleCandidate(
+            candidate_id="c-0",
             subject=NodeReference(label="Technology", kind="individual"),
             predicate=PredicateReference(label="is_a", kind="property"),
             object=NodeReference(label="System", kind="class"),
@@ -211,6 +219,7 @@ class TestTripleCandidate:
         """TripleCandidate can be instantiated from dict."""
         data = {
             "candidate_type": "triple",
+            "candidate_id": "c-0",
             "subject": {"label": "Technology", "kind": "individual"},
             "predicate": {"label": "is_a", "kind": "property"},
             "object": {"label": "System", "kind": "class"},
@@ -227,6 +236,7 @@ class TestGroundingCandidate:
     def test_grounding_candidate(self):
         """GroundingCandidate links to external knowledge."""
         candidate = GroundingCandidate(
+            candidate_id="c-0",
             uri="http://dbpedia.org/resource/Technology",
             label="Technology (DBpedia)",
             description="Wikipedia article on technology",
@@ -244,6 +254,7 @@ class TestRefinementCandidate:
     def test_refinement_candidate(self):
         """RefinementCandidate for definition refinement."""
         candidate = RefinementCandidate(
+            candidate_id="c-0",
             uri="class-123",
             label="Refined Class",
             description="A refined definition of the concept",
@@ -259,6 +270,7 @@ class TestRefinementCandidate:
     def test_refinement_candidate_minimal(self):
         """RefinementCandidate with minimal required fields."""
         candidate = RefinementCandidate(
+            candidate_id="c-0",
             uri="entity-456",
             label="Refined Definition",
             confidence=0.85,
@@ -276,6 +288,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaClassCandidate."""
         data = {
             "candidate_type": "schema_class",
+            "candidate_id": "c-0",
             "label": "Test Class",
             "proposed_definition": "A class for testing",
             "confidence": 0.95,
@@ -288,6 +301,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaPropertyCandidate."""
         data = {
             "candidate_type": "schema_property",
+            "candidate_id": "c-0",
             "label": "has_name",
             "proposed_definition": "Relates an entity to its name",
             "confidence": 0.88,
@@ -299,6 +313,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes SchemaConnectionCandidate."""
         data = {
             "candidate_type": "schema_connection",
+            "candidate_id": "c-0",
             "subject_ref": "Class1",
             "predicate": "relatedTo",
             "object_ref": "Class2",
@@ -311,6 +326,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes TripleCandidate."""
         data = {
             "candidate_type": "triple",
+            "candidate_id": "c-0",
             "subject": {"label": "Technology", "kind": "individual"},
             "predicate": {"label": "is_a", "kind": "property"},
             "object": {"label": "System", "kind": "class"},
@@ -323,6 +339,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes GroundingCandidate."""
         data = {
             "candidate_type": "grounding",
+            "candidate_id": "c-0",
             "uri": "http://dbpedia.org/resource/Technology",
             "label": "Technology",
             "confidence": 0.89,
@@ -334,6 +351,7 @@ class TestDiscriminatedUnion:
         """CandidateItem correctly deserializes RefinementCandidate."""
         data = {
             "candidate_type": "refinement",
+            "candidate_id": "c-0",
             "uri": "class-123",
             "label": "Refined Definition",
             "description": "A refined definition",
@@ -348,12 +366,14 @@ class TestDiscriminatedUnion:
         data = [
             {
                 "candidate_type": "schema_class",
+                "candidate_id": "c-0",
                 "uri": "http://example.org/Class",
                 "label": "Test Class",
                 "confidence": 0.95,
             },
             {
                 "candidate_type": "triple",
+                "candidate_id": "c-0",
                 "subject": {"label": "Technology", "kind": "individual"},
                 "predicate": {"label": "is_a", "kind": "property"},
                 "object": {"label": "System", "kind": "class"},
@@ -361,6 +381,7 @@ class TestDiscriminatedUnion:
             },
             {
                 "candidate_type": "grounding",
+                "candidate_id": "c-0",
                 "uri": "http://dbpedia.org/resource/Technology",
                 "label": "Technology",
                 "confidence": 0.89,
@@ -407,6 +428,7 @@ class TestProvenanceRoundTrip:
     def test_class_candidate_provenance_round_trip(self):
         """SchemaClassCandidate provenance survives round-trip."""
         original = SchemaClassCandidate(
+            candidate_id="c-0",
             label="Test Class",
             proposed_definition="A test class",
             confidence=0.95,
@@ -429,6 +451,7 @@ class TestProvenanceRoundTrip:
     def test_triple_candidate_provenance_round_trip(self):
         """TripleCandidate provenance survives round-trip."""
         original = TripleCandidate(
+            candidate_id="c-0",
             subject=NodeReference(label="Technology", kind="individual"),
             predicate=PredicateReference(label="is_a", kind="property"),
             object=NodeReference(label="System", kind="class"),
@@ -449,6 +472,7 @@ class TestProvenanceRoundTrip:
         """Discriminated union provenance survives round-trip."""
         data = {
             "candidate_type": "schema_class",
+            "candidate_id": "c-0",
             "uri": "http://example.org/Class",
             "label": "Test Class",
             "confidence": 0.95,
@@ -472,6 +496,7 @@ class TestFieldValidation:
         """Confidence must be between 0.0 and 1.0."""
         with pytest.raises(ValidationError):
             SchemaClassCandidate(
+                candidate_id="c-0",
                 uri="http://example.org/Class",
                 label="Test",
                 confidence=1.5,
@@ -479,6 +504,7 @@ class TestFieldValidation:
 
         with pytest.raises(ValidationError):
             SchemaClassCandidate(
+                candidate_id="c-0",
                 uri="http://example.org/Class",
                 label="Test",
                 confidence=-0.1,
@@ -499,6 +525,7 @@ class TestFieldValidation:
 
         with pytest.raises(ValidationError):
             TripleCandidate(
+                candidate_id="c-0",
                 subject=NodeReference(label="Tech", kind="individual"),
                 predicate=PredicateReference(label="is_a", kind="property"),
                 confidence=0.92,
@@ -508,6 +535,7 @@ class TestFieldValidation:
         """candidate_type field value is enforced by Literal."""
         data = {
             "candidate_type": "invalid_type",
+            "candidate_id": "c-0",
             "uri": "http://example.org/Class",
             "label": "Test",
             "confidence": 0.95,
