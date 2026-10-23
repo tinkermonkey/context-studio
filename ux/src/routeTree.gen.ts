@@ -27,6 +27,7 @@ import { Route as AppSchemaClassesRouteImport } from './routes/app/schema/classe
 import { Route as AppReferenceWorkflowsRouteImport } from './routes/app/reference/workflows'
 import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/sources'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
+import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/review'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
@@ -124,6 +125,11 @@ const AppPipelinesRunsRoute = AppPipelinesRunsRouteImport.update({
   path: '/pipelines/runs',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPipelinesReviewRoute = AppPipelinesReviewRouteImport.update({
+  id: '/pipelines/review',
+  path: '/pipelines/review',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDataIndividualsRoute = AppDataIndividualsRouteImport.update({
   id: '/data/individuals',
   path: '/data/individuals',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/reference/sources'
     | '/app/reference/workflows'
@@ -447,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesRunsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/review': {
+      id: '/app/pipelines/review'
+      path: '/pipelines/review'
+      fullPath: '/app/pipelines/review'
+      preLoaderRoute: typeof AppPipelinesReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/data/individuals': {
       id: '/app/data/individuals'
       path: '/data/individuals'
@@ -523,6 +542,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
+  AppPipelinesReviewRoute: typeof AppPipelinesReviewRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
   AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute
@@ -545,6 +565,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
+  AppPipelinesReviewRoute: AppPipelinesReviewRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppReferenceSourcesRoute: AppReferenceSourcesRoute,
   AppReferenceWorkflowsRoute: AppReferenceWorkflowsRoute,

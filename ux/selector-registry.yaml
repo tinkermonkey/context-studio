@@ -2531,3 +2531,125 @@ selectors:
   - selector: my-inspector
     component: src/components/ui/InlineInspector.tsx
     description: InlineInspector root element fixture in unit tests
+
+  # Extraction review (/app/pipelines/review, issue #1231)
+  - selector: extraction-review-page
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Extraction review page root (/app/pipelines/review)"
+  - selector: extraction-review-run-history
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Page-header button that opens pipeline run history"
+  - selector: extraction-review-input
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Source paragraph panel with scope pickers and the run action"
+  - selector: extraction-review-run
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Run extraction button that starts schema_extraction and individual_extraction"
+  - selector: extraction-review-text
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Paragraph textarea; shows a required error when empty on run"
+  - selector: extraction-review-taxonomy
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Taxonomy select for the extraction scope"
+  - selector: extraction-review-scheme
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Concept scheme select (schema apply target), filtered by taxonomy"
+  - selector: extraction-review-config
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Configuration (implementation) select shared by both runs"
+  - selector: extraction-review-config-refs
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Resolved configuration refs and versions for the two pipeline types"
+  - selector: extraction-review-stale
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Warning shown when the paragraph changed since the last run"
+  - selector: extraction-review-tabs
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Tab bar switching between schema and individual review"
+  - selector: extraction-review-schema
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema extraction review tab root"
+  - selector: extraction-review-schema-run-meta
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema run header with run id, status chip, configuration and duration"
+  - selector: extraction-review-schema-candidates
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema candidates panel with class/property/connection filter and table"
+  - selector: extraction-review-schema-decision-*
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Accept/reject pair in a schema candidate row (extraction-review-schema-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-schema-source-panel
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Source text panel on the schema tab"
+  - selector: extraction-review-schema-source
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Highlighted source paragraph on the schema tab"
+  - selector: extraction-review-schema-inspector
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Inspector for the selected schema candidate"
+  - selector: extraction-review-schema-inspector-decision
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Accept/reject pair in the schema inspector header (buttons suffixed -yes/-no)"
+  - selector: extraction-review-schema-confirm
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Body of the schema apply confirm dialog"
+  - selector: extraction-review-schema-leak-warning
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Confirm-dialog warning that rejected candidates at or above the confidence floor will be applied"
+  - selector: extraction-review-individual
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Individual extraction review tab root"
+  - selector: extraction-review-individual-run-meta
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Individual run header with run id, status chip, configuration and duration"
+  - selector: extraction-review-triples
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Extracted triples panel with mapped/new filter and table"
+  - selector: extraction-review-individual-decision-*
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Compact accept/reject pair in a triple row (extraction-review-individual-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-recognition
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Recognition / dedup hits panel"
+  - selector: extraction-review-recognition-decision-*
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Merge / keep-separate pair for a recognition hit (extraction-review-recognition-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-individual-source-panel
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Source text panel on the individual tab"
+  - selector: extraction-review-individual-source
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Highlighted source paragraph on the individual tab"
+  - selector: extraction-review-individual-inspector
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Inspector for the selected triple"
+  - selector: extraction-review-individual-inspector-decision
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Accept/reject pair in the triple inspector header (buttons suffixed -yes/-no)"
+  - selector: extraction-review-recognition-inspector
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Inspector for the selected recognition hit"
+  - selector: extraction-review-individual-confirm
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Body of the individual apply confirm dialog"
+  - selector: extraction-review-individual-leak-warning
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Confirm-dialog warning that rejected triples at or above the confidence floor will be applied"
+  - selector: extraction-review-individual-separate-warning
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Confirm-dialog warning that keep-separate choices cannot be honoured per hit"
+  - selector: extraction-review-span
+    component: src/components/pipeline/extraction-review/SourceText.tsx
+    description: "Highlighted provenance span; data-span-keys lists the linked item keys"
+  - selector: extraction-review-provenance
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Provenance (source span) list in an inspector"
+  - selector: extraction-review-unlocated
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Chip marking a provenance quote that could not be located in the text"
+  - selector: extraction-review-schema-*
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Schema tab run state and apply bar (extraction-review-schema-{idle,running,failed,empty,retry,apply-bar,apply,revert})"
+  - selector: extraction-review-individual-*
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Individual tab run state and apply bar (extraction-review-individual-{idle,running,failed,empty,retry,apply-bar,apply,revert})"

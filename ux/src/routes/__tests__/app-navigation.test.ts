@@ -51,6 +51,17 @@ describe("app navigation — pipelines", () => {
     expect(getBreadcrumbLabels(path)).toEqual(labels);
   });
 
+  it("wires the extraction review route into sidebar, palette and breadcrumbs", () => {
+    expect(SIDEBAR_PATH_MAP["pipelines-review"]).toBe("/app/pipelines/review");
+    expect(getActiveItemId("/app/pipelines/review")).toBe("pipelines-review");
+    expect(getBreadcrumbLabels("/app/pipelines/review")).toEqual([
+      "Pipelines",
+      "Extraction review",
+    ]);
+    const action = NAV_ACTIONS.find((a) => a.id === "nav-extraction-review");
+    expect(action).toMatchObject({ label: "Extraction review", to: "/app/pipelines/review" });
+  });
+
   it("decodes encoded type segments and tolerates malformed ones", () => {
     expect(getBreadcrumbLabels("/app/pipelines/types/my%20type")).toEqual([
       "Pipelines",

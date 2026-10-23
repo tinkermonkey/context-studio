@@ -27,6 +27,9 @@ export interface ExtractionReviewRequest {
   implementationId: string;
   schemaConfigRef: string;
   individualConfigRef: string;
+  /** Model from the chosen configuration; the pipelines read it from the run input. */
+  schemaModel?: string | null;
+  individualModel?: string | null;
 }
 
 const PIPELINE_TYPE: Record<ReviewKind, string> = {
@@ -43,6 +46,7 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
       concept_scheme_id: req.conceptScheme.id,
+      ...(req.schemaModel ? { model: req.schemaModel } : {}),
     } as PipelineRunRequest;
   }
   return {
@@ -51,12 +55,15 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
     text: req.text,
     ontology_id: req.taxonomy.id,
     ontology_name: req.taxonomy.label,
+    ...(req.individualModel ? { model: req.individualModel } : {}),
   } as PipelineRunRequest;
 }
 
 function slotFromRun(run: PipelineRunResponse): ReviewRunSlot {
-  if (run.status === "COMPLETED") return { status: "completed", run };
-  if (run.status === "FAILED" || run.status === "CANCELLED") {
+  // The API reports status in lower case ("completed"); compare case-insensitively.
+  const status = run.status.toUpperCase();
+  if (status === "COMPLETED") return { status: "completed", run };
+  if (status === "FAILED" || status === "CANCELLED") {
     return { status: "failed", run, error: run.failure_reason ?? `Run ${run.status}` };
   }
   return { status: "running", run };

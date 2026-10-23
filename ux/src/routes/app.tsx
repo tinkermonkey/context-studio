@@ -257,6 +257,7 @@ function AppShell() {
                 icon: "pipeline",
                 children: [
                   { id: "pipelines-types", label: "Pipeline types" },
+                  { id: "pipelines-review", label: "Extraction review" },
                   { id: "pipelines-runs", label: "Runs" },
                 ],
               },

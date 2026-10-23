@@ -544,7 +544,16 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   ),
   Panel: React.forwardRef(
     (
-      { title, subtitle, footer, children, bordered = false, className = "", ...props }: any,
+      {
+        title,
+        subtitle,
+        headerAction,
+        footer,
+        children,
+        bordered = false,
+        className = "",
+        ...props
+      }: any,
       ref: any,
     ) =>
       React.createElement(
@@ -561,6 +570,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             React.createElement("div", { className: "panel__title" }, title),
             subtitle && React.createElement("div", { className: "panel__subtitle" }, subtitle),
           ),
+        headerAction &&
+          React.createElement("div", { className: "panel__header-action" }, headerAction),
         React.createElement("div", { className: "panel__body" }, children),
         footer && React.createElement("div", { className: "panel__footer" }, footer),
       ),
