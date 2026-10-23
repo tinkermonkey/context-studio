@@ -121,6 +121,12 @@ describe("ExtractionReviewPage", () => {
     await userEvent.type(textarea, "A");
     expect(screen.queryByText("Paste a paragraph to extract from")).not.toBeInTheDocument();
     expect(textarea).not.toHaveClass("text-area--error");
+
+    // Emptying the field again and leaving it re-shows the error on blur.
+    await userEvent.clear(textarea);
+    expect(screen.queryByText("Paste a paragraph to extract from")).not.toBeInTheDocument();
+    await userEvent.tab();
+    expect(screen.getByText("Paste a paragraph to extract from")).toBeInTheDocument();
   });
 
   it("starts both runs on the same text and reviews them in place", async () => {

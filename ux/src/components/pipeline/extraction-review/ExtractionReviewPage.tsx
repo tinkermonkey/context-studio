@@ -41,6 +41,8 @@ interface FormErrors {
   config?: string;
 }
 
+const TEXT_REQUIRED = "Paste a paragraph to extract from";
+
 type ConfigLike = {
   config_ref: string;
   version: number;
@@ -70,6 +72,8 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
   const [schemeChoice, setSchemeChoice] = useState("");
   const [implChoice, setImplChoice] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  // After the first run attempt, an emptied paragraph re-shows its error on blur.
+  const [attempted, setAttempted] = useState(false);
   const [tab, setTab] = useState<ReviewKind>("schema");
   const [scope, setScope] = useState<ReviewScope | null>(null);
 
@@ -115,11 +119,12 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
 
   const run = () => {
     const next: FormErrors = {};
-    if (!text.trim()) next.text = "Paste a paragraph to extract from";
+    if (!text.trim()) next.text = TEXT_REQUIRED;
     if (!taxonomy) next.taxonomy = "Select a taxonomy";
     if (!scheme) next.scheme = "Select a concept scheme";
     if (!schemaConfig || !individualConfig) next.config = "Select a configuration";
     setErrors(next);
+    setAttempted(true);
     if (Object.keys(next).length > 0 || !taxonomy || !scheme) return;
 
     const taxonomyLabel = `${taxonomy.title} · ${taxonomy.identifier}`;
@@ -208,6 +213,11 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
               onChange={(e) => {
                 setText(e.target.value);
                 setErrors((prev) => ({ ...prev, text: undefined }));
+              }}
+              onBlur={() => {
+                if (attempted && !text.trim()) {
+                  setErrors((prev) => ({ ...prev, text: TEXT_REQUIRED }));
+                }
               }}
               data-testid="extraction-review-text"
             />
