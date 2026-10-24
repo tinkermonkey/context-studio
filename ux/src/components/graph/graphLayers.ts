@@ -75,8 +75,11 @@ export function layerIndexById(layers: GraphViewLayer[]): Map<string, number> {
 }
 
 /**
- * Default layer selection: the first DEFAULT_LAYER_COUNT layers of the
- * taxonomy with the most layers (for a DR model, the 12-layer `dr_spec`).
+ * Default layer selection, from the taxonomy with the most layers (for a DR
+ * model, `dr_spec`): its first `count` layers that contain at least one node
+ * of the default node kind, so empty layers (e.g. a spec layer the model does
+ * not use) do not crowd out populated ones. Falls back to its first `count`
+ * layers when none are populated.
  */
 export function defaultLayerIds(view: GraphView, count = DEFAULT_LAYER_COUNT): string[] {
   const layersByTaxonomy = new Map<string, GraphViewLayer[]>();
@@ -89,7 +92,14 @@ export function defaultLayerIds(view: GraphView, count = DEFAULT_LAYER_COUNT): s
   for (const group of layersByTaxonomy.values()) {
     if (group.length > largest.length) largest = group;
   }
-  return largest.slice(0, count).map((layer) => layer.id);
+  const kind = defaultNodeKind(view);
+  const populated = new Set(
+    view.nodes
+      .filter((n) => n.node_type === kind && n.concept_scheme_id)
+      .map((n) => n.concept_scheme_id as string),
+  );
+  const withNodes = largest.filter((layer) => populated.has(layer.id));
+  return (withNodes.length > 0 ? withNodes : largest).slice(0, count).map((layer) => layer.id);
 }
 
 /**

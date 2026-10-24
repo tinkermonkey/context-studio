@@ -33,9 +33,36 @@ describe("graphLayers", () => {
   });
 
   describe("defaultLayerIds", () => {
-    it("picks the first layers of the taxonomy with the most layers", () => {
-      expect(defaultLayerIds(view)).toEqual(["layer-motivation", "layer-business", "layer-api"]);
-      expect(defaultLayerIds(view, 2)).toEqual(["layer-motivation", "layer-business"]);
+    it("picks the first layers of the largest taxonomy that hold default-kind nodes", () => {
+      // Individuals exist, and only Business and API hold any: Motivation (classes only) is skipped.
+      expect(defaultLayerIds(view)).toEqual(["layer-business", "layer-api"]);
+      expect(defaultLayerIds(view, 1)).toEqual(["layer-business"]);
+    });
+
+    it("counts classes as populating a layer for a schema-only view", () => {
+      const schemaOnly = createGraphView({
+        nodes: view.nodes.filter((n) => n.node_type === "class"),
+      });
+      expect(defaultLayerIds(schemaOnly)).toEqual([
+        "layer-motivation",
+        "layer-business",
+        "layer-api",
+      ]);
+    });
+
+    it("skips a leading empty layer (e.g. a spec layer with no model elements)", () => {
+      const withEmpty = createGraphView({
+        layers: [
+          { id: "layer-product", title: "Product", identifier: "product", taxonomy_id: "tax-dr" },
+          ...view.layers,
+        ],
+      });
+      expect(defaultLayerIds(withEmpty)).toEqual(["layer-business", "layer-api"]);
+    });
+
+    it("falls back to the first layers when none hold default-kind nodes", () => {
+      const empty = createGraphView({ nodes: [], edges: [] });
+      expect(defaultLayerIds(empty)).toEqual(["layer-motivation", "layer-business", "layer-api"]);
     });
 
     it("returns an empty selection for a view without layers", () => {

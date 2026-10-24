@@ -114,10 +114,11 @@ describe("Graph Page", () => {
     expect(screen.queryByTestId("graph-canvas")).not.toBeInTheDocument();
   });
 
-  it("defaults to the first DR layers and individuals when individuals exist", () => {
+  it("defaults to the first populated DR layers and individuals when individuals exist", () => {
     mockView({ data: createGraphView() });
     renderPage();
-    expect(screen.getByTestId("graph-layer-filter")).toHaveTextContent("3 selected");
+    // Motivation holds only classes, so the individual default skips it.
+    expect(screen.getByTestId("graph-layer-filter")).toHaveTextContent("2 selected");
     expect(
       within(screen.getByTestId("graph-node-kind-filter")).getByRole("radio", {
         name: "Individuals",
