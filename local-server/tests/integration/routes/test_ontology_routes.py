@@ -1577,3 +1577,80 @@ class TestAttributeDefinitionCRUD:
             json={"title": "Updated Title"},
         )
         assert update_response.json()["version"] == initial_version + 1
+
+
+class TestListTotalsBeyondDefaultLimit:
+    """List endpoints report the true total, not the default page size."""
+
+    @pytest.fixture
+    def large_ontology(self, ontology_service):
+        """Seed more than 100 classes and individuals (the default page size)."""
+        taxonomy = ontology_service.create_taxonomy(title="Large Taxonomy")
+        scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Large Scheme")
+        classes = [
+            ontology_service.create_class(concept_scheme_id=scheme.id, title=f"Class {i}")
+            for i in range(120)
+        ]
+        for i in range(130):
+            ontology_service.create_individual(classes[0].id, title=f"Individual {i}")
+        ontology_service.create_individual(classes[1].id, title="Other Individual")
+        return {"scheme_id": scheme.id, "first_class_id": classes[0].id}
+
+    def test_classes_total_is_true_count(self, client, large_ontology):
+        """GET /api/classes total counts every class, not just the first page."""
+        response = client.get("/api/classes")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 100
+        assert data["total"] == 120
+
+    def test_classes_limit_5000_returns_all(self, client, large_ontology):
+        """GET /api/classes?limit=5000 is accepted and returns every class."""
+        response = client.get("/api/classes?limit=5000")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 120
+        assert data["total"] == 120
+        assert data["limit"] == 5000
+
+    def test_individuals_total_is_true_count(self, client, large_ontology):
+        """GET /api/individuals total counts every individual, not just the first page."""
+        response = client.get("/api/individuals")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 100
+        assert data["total"] == 131
+
+    def test_individuals_offset_pages_past_first_100(self, client, large_ontology):
+        """GET /api/individuals with offset returns rows beyond the first 100."""
+        response = client.get("/api/individuals?limit=100&offset=100")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 31
+        assert data["total"] == 131
+
+    def test_individuals_total_filtered_by_class(self, client, large_ontology):
+        """GET /api/individuals?class_id=X total counts only that class's individuals."""
+        response = client.get(
+            f"/api/individuals?class_id={large_ontology['first_class_id']}&limit=5000"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 130
+        assert data["total"] == 130
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/api/taxonomies",
+            "/api/schemes",
+            "/api/classes",
+            "/api/relationships",
+            "/api/properties",
+            "/api/individuals",
+        ],
+    )
+    def test_list_endpoints_accept_limit_5000(self, client, path):
+        """List endpoints accept limit=5000 and reject values above it."""
+        assert client.get(f"{path}?limit=5000").status_code == status.HTTP_200_OK
+        assert client.get(f"{path}?limit=5001").status_code == 422

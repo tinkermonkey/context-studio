@@ -380,6 +380,10 @@ class FakeOntologyRepository:
         end = None if limit is None else offset + limit
         return results[offset:end]
 
+    def count_individuals(self, class_id: str | None = None) -> int:
+        """Count individuals, optionally filtered by class ID."""
+        return len(self.list_individuals(class_id=class_id, limit=None))
+
     def save_individual(self, individual: Individual) -> Individual:
         """Save an individual (insert or update).
 

@@ -508,6 +508,18 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def count_individuals(self, class_id: str | None = None) -> int:
+        """
+        Count individuals, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Total count of individuals
+        """
+        ...
+
     def save_individual(self, individual: Individual) -> Individual:
         """
         Persist an individual (create or update).

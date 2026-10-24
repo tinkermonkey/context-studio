@@ -2192,8 +2192,7 @@ class OntologyService:
         Returns:
             The count of classes
         """
-        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
-        return len(classes)
+        return self._repository.count_classes(concept_scheme_id=concept_scheme_id)
 
     # Individual operations
 
@@ -2323,17 +2322,36 @@ class OntologyService:
             raise EntityNotFoundError("Individual", individual_id)
         return individual
 
-    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
+    def list_individuals(
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+    ) -> list[Individual]:
         """
-        Retrieve all individuals, optionally filtered by class.
+        Retrieve individuals with optional filtering and pagination.
+
+        Args:
+            class_id: Optional class ID to filter by
+            limit: Maximum number of results (None for unlimited)
+            offset: Number of results to skip
+
+        Returns:
+            List of individuals matching the filter
+        """
+        return self._repository.list_individuals(class_id=class_id, limit=limit, offset=offset)
+
+    def count_individuals(self, class_id: str | None = None) -> int:
+        """
+        Count individuals, optionally filtered by class.
 
         Args:
             class_id: Optional class ID to filter by
 
         Returns:
-            List of individuals matching the filter
+            The count of individuals
         """
-        return self._repository.list_individuals(class_id=class_id)
+        return self._repository.count_individuals(class_id=class_id)
 
     def update_individual(
         self,
