@@ -165,6 +165,12 @@ describe("SchemaCandidateReview — review", () => {
           relationships_created: 0,
           applied_candidate_ids: ["class-0"],
           skipped_candidate_ids: ["class-1", "class-2", "property-0", "connection-0"],
+          skip_reasons: {
+            "class-1": "not_selected",
+            "class-2": "not_selected",
+            "property-0": "not_selected",
+            "connection-0": "unresolved_endpoint",
+          },
           merged_mentions: [],
         });
       }),
@@ -194,12 +200,16 @@ describe("SchemaCandidateReview — review", () => {
     expect(screen.getByTestId("extraction-review-apply-result-created")).toHaveTextContent(
       "1 classes created",
     );
-    // Only accepted-but-skipped candidates are surfaced, not the unselected ones.
+    // Only accepted-but-skipped candidates are surfaced, with the server's reason;
+    // unselected ones (skip reason not_selected) are not.
     const skipped = screen.getByTestId("extraction-review-apply-result-skipped");
-    expect(within(skipped).getByText("Policyholder → submits → Insurance Claim")).toHaveClass(
-      "chip--amber",
-    );
-    expect(within(skipped).queryByText("Insurance Claim")).not.toBeInTheDocument();
+    expect(
+      within(skipped).getByText(
+        "Policyholder → submits → Insurance Claim — endpoint not accepted or in the graph",
+      ),
+    ).toHaveClass("chip--amber");
+    expect(within(skipped).getAllByText(/—/)).toHaveLength(1);
+    expect(within(skipped).queryByText(/not selected/)).not.toBeInTheDocument();
 
     await userEvent.click(revert);
     await waitFor(() => expect(reverted).toBe(true));

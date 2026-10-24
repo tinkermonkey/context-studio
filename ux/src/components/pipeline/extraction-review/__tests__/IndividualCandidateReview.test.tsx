@@ -153,7 +153,10 @@ describe("IndividualCandidateReview", () => {
     const sameTitle = screen.getByTestId("extraction-review-recognition-decision-hit-1-no");
     expect(sameTitle).toBeDisabled();
     expect(sameTitle).toHaveAttribute("aria-disabled", "true");
-    expect(sameTitle).toHaveAttribute("title", expect.stringMatching(/titles are unique per class/));
+    expect(sameTitle).toHaveAttribute(
+      "title",
+      expect.stringMatching(/titles are unique per class/),
+    );
     await userEvent.click(sameTitle);
     expect(sameTitle).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId("extraction-review-recognition-decision-hit-0-no")).toBeEnabled();
@@ -234,6 +237,7 @@ describe("IndividualCandidateReview", () => {
           relationships_created: 1,
           applied_candidate_ids: ["triple-1"],
           skipped_candidate_ids: ["triple-0", "triple-2"],
+          skip_reasons: { "triple-0": "not_selected", "triple-2": "not_selected" },
           merged_mentions: [
             { mention_label: "Claims Adjuster", individual_id: "ind_3a90", source: "decision" },
           ],

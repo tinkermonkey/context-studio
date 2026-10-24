@@ -558,6 +558,8 @@ test.describe("Extraction review", () => {
       relationships_created: 1,
       applied_candidate_ids: ["class-0", "class-1", "property-0", "connection-0"],
       skipped_candidate_ids: ["class-2", "connection-1"],
+      // class-2 was rejected; connection-1 was accepted but its subject was not.
+      skip_reasons: { "class-2": "not_selected", "connection-1": "unresolved_endpoint" },
     });
 
     // Result panel: only accepted-but-skipped candidates are listed as skipped.
@@ -572,7 +574,9 @@ test.describe("Extraction review", () => {
       await expect(created).toContainText(expected);
     }
     const skipped = schemaRoot.getByTestId("extraction-review-apply-result-skipped");
-    await expect(skipped).toContainText("Billing System → publishes → Event Stream");
+    await expect(skipped).toContainText(
+      "Billing System → publishes → Event Stream — endpoint not accepted or in the graph",
+    );
     await expect(skipped.getByText("Billing System", { exact: true })).toHaveCount(0);
     await expect(page.getByTestId("extraction-review-schema-revert")).toBeVisible();
     await expect(page.getByTestId("extraction-review-schema-apply")).toHaveCount(0);
@@ -777,6 +781,7 @@ test.describe("Extraction review", () => {
       relationships_created: 1,
       applied_candidate_ids: ["triple-0", "triple-1", "triple-2"],
       skipped_candidate_ids: ["triple-3"],
+      skip_reasons: { "triple-3": "not_selected" },
       merged_mentions: [
         { mention_label: "Order Service", individual_id: seed.orderService.id, source: "decision" },
         {

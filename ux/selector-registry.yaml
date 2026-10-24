@@ -2706,7 +2706,7 @@ selectors:
     description: "Post-apply list of mentions merged into existing individuals, with the merge source"
   - selector: extraction-review-apply-result-skipped
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
-    description: "Post-apply list of accepted candidates the server skipped"
+    description: "Post-apply list of accepted candidates the server skipped, each with its skip reason"
   - selector: extraction-review-provenance
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
     description: "Provenance (source span) list in an inspector"

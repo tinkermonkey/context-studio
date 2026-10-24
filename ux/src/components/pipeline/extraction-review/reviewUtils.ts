@@ -1,5 +1,39 @@
 import type { SourceSpan } from "@/api/hooks/pipeline/useExtractionCandidates";
-import type { ReviewDecisionValue } from "@/api/hooks/pipeline/useApplyReviewedRun";
+import type {
+  ApplyRunResponse,
+  ReviewDecisionValue,
+  SkipReason,
+} from "@/api/hooks/pipeline/useApplyReviewedRun";
+
+/** Human-readable text for each apply skip reason. */
+export const SKIP_REASON_LABEL: Record<SkipReason, string> = {
+  not_selected: "not selected",
+  below_threshold: "below confidence threshold",
+  invalid: "invalid candidate",
+  unresolved_endpoint: "endpoint not accepted or in the graph",
+  unresolved_predicate: "predicate not accepted or in the graph",
+  title_conflict: "title already used by another entity",
+  missing_class: "no existing class to type it",
+  self_loop: "source and target are the same",
+};
+
+/** Reasons meaning the candidate was never selected (rejected or below threshold). */
+const SELECTION_SKIP_REASONS: ReadonlySet<SkipReason> = new Set([
+  "not_selected",
+  "below_threshold",
+]);
+
+/**
+ * Candidates the server was asked to apply but could not, with the reason, in
+ * the server's order. Unselected candidates are left out.
+ */
+export function failedSkips(result: ApplyRunResponse): [string, SkipReason][] {
+  const reasons = result.skip_reasons ?? {};
+  return (result.skipped_candidate_ids ?? []).flatMap((id): [string, SkipReason][] => {
+    const reason = reasons[id];
+    return reason && !SELECTION_SKIP_REASONS.has(reason) ? [[id, reason]] : [];
+  });
+}
 
 /** A provenance span tagged with the key of the item it belongs to. */
 export interface KeyedSpan extends SourceSpan {
