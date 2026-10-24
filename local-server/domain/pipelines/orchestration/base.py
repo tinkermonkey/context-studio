@@ -11,7 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
@@ -114,6 +114,7 @@ class PipelineOrchestrator(ABC):
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
     ) -> LLMResponse:
         """
         Helper to call the LLM provider asynchronously.
@@ -124,6 +125,7 @@ class PipelineOrchestrator(ABC):
             model: Model identifier
             temperature: Sampling temperature
             max_tokens: Maximum output tokens
+            response_format: Optional output format hint ("json" requests a JSON object)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -136,4 +138,5 @@ class PipelineOrchestrator(ABC):
             model=model,
             temperature=temperature,
             max_tokens=max_tokens,
+            response_format=response_format,
         )

@@ -291,3 +291,100 @@ class TestWarningEmissions:
         confidence = orchestrator._compute_confidence("Microservice", source_text)
 
         assert 0.2 <= confidence <= 1.0
+
+
+class _FencedJsonLLM(_MockLLM):
+    """Mock LLM that wraps every JSON reply in a Markdown code fence (as Gemini does)."""
+
+    def __init__(self):
+        self.response_formats: list = []
+
+    def complete(
+        self,
+        system_prompt,
+        user_prompt,
+        model,
+        temperature=0.0,
+        max_tokens=2000,
+        response_format=None,
+        timeout=None,
+        seed=None,
+    ):
+        self.response_formats.append(response_format)
+        if "relationships and properties" in user_prompt.lower():
+            body = (
+                '{"relationships": [{"subject": "Microservice", "predicate": "calls", '
+                '"object": "Gateway", "confidence": 0.8}], '
+                '"properties": [{"name": "endpoint", "domain": "Microservice", '
+                '"range": "Gateway", "confidence": 0.7}]}'
+            )
+        else:
+            body = '["Microservice", "Gateway"]'
+        return LLMResponse(
+            content=f"```json\n{body}\n```",
+            tokens_in=10,
+            tokens_out=30,
+            duration_ms=5,
+            finish_reason="stop",
+            model=model,
+        )
+
+
+class TestFencedJsonReplies:
+    """Regression: fenced JSON replies must parse instead of triggering fallbacks."""
+
+    _TEXT = "The Microservice calls the Gateway. It exposes an endpoint."
+
+    def _state(self, **overrides):
+        fields = dict(
+            run_id="test-run",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data={"documents": [self._TEXT]},
+            source_text=self._TEXT,
+            normalized_text=self._TEXT,
+            text_chunks=[self._TEXT],
+            parse_warnings=[],
+        )
+        fields.update(overrides)
+        return SchemaExtractionState(**fields)
+
+    @pytest.mark.asyncio
+    async def test_candidate_identification_parses_fenced_array(self):
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=_FencedJsonLLM(),
+            ontology_repo=None,
+            run_id="test-run",
+            status_writer=None,
+        )
+
+        result = await orchestrator._stage_candidate_identification(self._state())
+
+        assert result.candidate_concepts == ["Microservice", "Gateway"]
+        assert not any(
+            w.get("fallback_action") == "regex extraction" for w in result.parse_warnings
+        )
+
+    @pytest.mark.asyncio
+    async def test_connection_proposal_parses_fenced_object(self):
+        from domain.pipelines.schema_extraction.orchestrator import CandidateClass
+
+        llm = _FencedJsonLLM()
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm, ontology_repo=None, run_id="test-run", status_writer=None
+        )
+        state = self._state(
+            candidate_concepts=["Microservice", "Gateway"],
+            candidate_classes=[
+                CandidateClass(label="Microservice", confidence=0.8),
+                CandidateClass(label="Gateway", confidence=0.7),
+            ],
+        )
+
+        result = await orchestrator._stage_connection_proposal(state)
+
+        assert [
+            (c.subject_ref, c.predicate, c.object_ref) for c in result.proposed_connections
+        ] == [("Microservice", "calls", "Gateway")]
+        assert [p.label for p in result.candidate_properties] == ["endpoint"]
+        assert not any("JSON parse error" in w.get("error", "") for w in result.parse_warnings)
+        assert llm.response_formats == ["json"]
