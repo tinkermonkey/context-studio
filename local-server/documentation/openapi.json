@@ -6986,6 +6986,14 @@
             "title": "Skipped Candidate Ids",
             "description": "candidate_ids not applied: not selected, below confidence_threshold, or unresolvable (e.g. a connection whose endpoint class does not exist)"
           },
+          "existing_candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Existing Candidate Ids",
+            "description": "Subset of applied_candidate_ids satisfied by an entity that already existed (class title in scheme, property identifier, or relationship triple). Nothing was created for these, so revert will not remove them. Populated by schema_extraction; individual_extraction reports these via merged_mentions."
+          },
           "merged_mentions": {
             "items": {
               "$ref": "#/components/schemas/MergedMentionSchema"

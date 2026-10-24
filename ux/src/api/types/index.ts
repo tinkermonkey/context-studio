@@ -4020,6 +4020,11 @@ export interface components {
        */
       skipped_candidate_ids?: string[];
       /**
+       * Existing Candidate Ids
+       * @description Subset of applied_candidate_ids satisfied by an entity that already existed (class title in scheme, property identifier, or relationship triple). Nothing was created for these, so revert will not remove them. Populated by schema_extraction; individual_extraction reports these via merged_mentions.
+       */
+      existing_candidate_ids?: string[];
+      /**
        * Merged Mentions
        * @description Extracted mentions merged into an individual that already existed (individual_extraction only; one entry per mention)
        */
