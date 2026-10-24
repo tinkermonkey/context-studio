@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { pipelineService, type RunListParams } from "@/api/services/pipeline";
-import type { components } from "@/api/types";
+import { pipelineService, type CandidateItem, type RunListParams } from "@/api/services/pipeline";
 
-export type CandidateResponse = components["schemas"]["CandidateResponse"];
+export type { CandidateItem } from "@/api/services/pipeline";
 
 export function usePipelineRun(runId: string, options?: { refetchInterval?: number }) {
   return useQuery({
@@ -27,7 +26,7 @@ export function usePipelineRuns(params?: RunListParams) {
 }
 
 export function usePipelineCandidates(runId: string, enabled?: boolean) {
-  return useQuery<CandidateResponse[]>({
+  return useQuery<CandidateItem[]>({
     queryKey: QUERY_KEYS.pipelineCandidates(runId),
     queryFn: () => pipelineService.getCandidates(runId),
     enabled: !!runId && enabled !== false,

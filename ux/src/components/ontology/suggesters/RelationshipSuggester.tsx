@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
+import {
+  usePipelineRun,
+  usePipelineCandidates,
+  type CandidateItem,
+} from "@/api/hooks/pipeline/usePipelineRuns";
+import { provenanceText } from "./provenanceText";
 import { useToasts } from "@/components/ui/Toast";
 import "./Suggesters.css";
 
@@ -23,7 +28,11 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
   const isCompleted = run?.status === "COMPLETED";
   const isFailed = run?.status === "FAILED";
 
-  const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+  const { data: candidateItems = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+  const allCandidates = candidateItems.filter(
+    (c): c is Extract<CandidateItem, { candidate_type: "refinement" }> =>
+      c.candidate_type === "refinement",
+  );
 
   const visibleCandidates = allCandidates
     .map((c, i) => ({ ...c, originalIdx: i }))
@@ -147,8 +156,10 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
                 {candidate.description && (
                   <p className="suggest-field-candidate-text">{candidate.description}</p>
                 )}
-                {candidate.provenance && (
-                  <p className="suggest-field-candidate-rationale">{candidate.provenance}</p>
+                {provenanceText(candidate.provenance) && (
+                  <p className="suggest-field-candidate-rationale">
+                    {provenanceText(candidate.provenance)}
+                  </p>
                 )}
                 <div className="relationship-suggestion-confidence">
                   <div

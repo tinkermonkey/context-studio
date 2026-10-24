@@ -4,10 +4,16 @@ import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMut
 import {
   usePipelineRun,
   usePipelineCandidates,
-  type CandidateResponse,
+  type CandidateItem,
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
+import { provenanceText } from "./provenanceText";
 import "./Suggesters.css";
+
+/** Suggestions come from refinement/grounding pipelines, whose candidates carry a description. */
+type SuggestCandidate = Extract<CandidateItem, { candidate_type: "refinement" | "grounding" }>;
+const isSuggestCandidate = (c: CandidateItem): c is SuggestCandidate =>
+  c.candidate_type === "refinement" || c.candidate_type === "grounding";
 
 interface SuggestFieldProps {
   entityId?: string;
@@ -40,7 +46,9 @@ export function SuggestField({
 
   const { data: allCandidatesRaw = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 
-  const allCandidates = allCandidatesRaw.map((c, i) => ({ ...c, originalIdx: i }));
+  const allCandidates = allCandidatesRaw
+    .filter(isSuggestCandidate)
+    .map((c, i) => ({ ...c, originalIdx: i }));
   const visibleCandidates = allCandidates.filter((c) => !dismissedIndices.has(c.originalIdx));
 
   const handleSuggest = async () => {
@@ -63,7 +71,7 @@ export function SuggestField({
   };
 
   const applyCandidate = async (
-    candidate: CandidateResponse & { originalIdx: number },
+    candidate: SuggestCandidate & { originalIdx: number },
   ): Promise<boolean> => {
     if (!runId) return false;
     try {
@@ -78,7 +86,7 @@ export function SuggestField({
     }
   };
 
-  const handleReplace = async (candidate: CandidateResponse & { originalIdx: number }) => {
+  const handleReplace = async (candidate: SuggestCandidate & { originalIdx: number }) => {
     if (!candidate.description) return;
     const success = await applyCandidate(candidate);
     if (success) {
@@ -87,7 +95,7 @@ export function SuggestField({
     }
   };
 
-  const handleAppend = async (candidate: CandidateResponse & { originalIdx: number }) => {
+  const handleAppend = async (candidate: SuggestCandidate & { originalIdx: number }) => {
     if (!candidate.description) return;
     const success = await applyCandidate(candidate);
     if (success) {
@@ -178,8 +186,10 @@ export function SuggestField({
               {candidate.description && (
                 <p className="suggest-field-candidate-text">{candidate.description}</p>
               )}
-              {candidate.provenance && (
-                <p className="suggest-field-candidate-rationale">{candidate.provenance}</p>
+              {provenanceText(candidate.provenance) && (
+                <p className="suggest-field-candidate-rationale">
+                  {provenanceText(candidate.provenance)}
+                </p>
               )}
               <div className="suggest-field-candidate-meta">
                 <span>{(candidate.confidence * 100).toFixed(0)}% confidence</span>
