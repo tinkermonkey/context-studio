@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 import yaml
 
+from domain.ontology.events import IndividualCreated, IndividualUpdated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
 from scripts.dr_model_loader import import_dr_model
@@ -65,11 +66,16 @@ def repo():
 
 
 @pytest.fixture
-def service(repo):
+def events():
+    return FakeEventPublisher()
+
+
+@pytest.fixture
+def service(repo, events):
     return OntologyService(
         repository=repo,
         embedding_service=FakeEmbeddingService(),
-        event_publisher=FakeEventPublisher(),
+        event_publisher=events,
     )
 
 
@@ -138,6 +144,16 @@ class TestImportCreatesIndividualsAndRelationships:
         assert individual.class_ids == [ontology["motivation.stakeholder"]]
         assert individual.external_references == [
             ExternalReference(source=DR, identifier=STAKEHOLDER["path"])
+        ]
+
+    def test_created_event_carries_path_reference(self, service, repo, ontology, events, tmp_path):
+        _write_model(tmp_path, [STAKEHOLDER], [])
+
+        import_dr_model(service, repo, tmp_path)
+
+        [created] = events.get_events_of_type(IndividualCreated)
+        assert created.external_references == [
+            {"source": DR, "identifier": STAKEHOLDER["path"], "uri": None, "metadata": None}
         ]
 
     def test_creates_relationships_typed_to_matching_property_definition(
@@ -250,12 +266,16 @@ class TestImportIdempotency:
         assert len(repo.list_individuals(limit=None)) == 1
 
     def test_adopts_same_title_individual_without_path_reference(
-        self, service, repo, ontology, tmp_path
+        self, service, repo, ontology, events, tmp_path
     ):
-        # E.g. a run interrupted between create and reference attach.
+        # E.g. a hand-created individual that already has an unrelated reference.
+        other_ref = ExternalReference(source="wikidata", identifier="Q1")
         orphan = service.create_individual(
-            ontology["motivation.stakeholder"], title="Knowledge Manager"
+            ontology["motivation.stakeholder"],
+            title="Knowledge Manager",
+            external_references=[other_ref],
         )
+        events.clear()
         _write_model(tmp_path, [STAKEHOLDER], [])
 
         summary = import_dr_model(service, repo, tmp_path)
@@ -265,4 +285,15 @@ class TestImportIdempotency:
         adopted = _individual_by_path(repo, STAKEHOLDER["path"])
         assert adopted.id == orphan.id
         assert adopted.description == "Curates"
+        path_ref = ExternalReference(source=DR, identifier=STAKEHOLDER["path"])
+        assert adopted.external_references == [other_ref, path_ref]
         assert len(repo.list_individuals(limit=None)) == 1
+        [updated] = events.get_events_of_type(IndividualUpdated)
+        assert "external_references" in updated.changed_fields
+        assert [ref["identifier"] for ref in updated.new_values["external_references"]] == [
+            "Q1",
+            STAKEHOLDER["path"],
+        ]
+
+        rerun = import_dr_model(service, repo, tmp_path)
+        assert rerun.layers["motivation"].individuals_unchanged == 1

@@ -302,12 +302,15 @@ class IndividualCreated(DomainEvent):
         individual_id: ID of the created individual
         title: Title of the individual
         class_ids: List of parent class IDs
+        external_references: JSON-compatible external references
+            (source, identifier, uri, metadata) the individual was created with
     """
 
     _aggregate_id_field: ClassVar[str] = "individual_id"
     individual_id: str = ""
     title: str = ""
     class_ids: list[str] = field(default_factory=list)
+    external_references: list[dict[str, object]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

@@ -21,6 +21,8 @@ from domain.ontology.events import (
     ClassMoved,
     ClassUpdated,
     GraphInvalidated,
+    IndividualCreated,
+    IndividualUpdated,
     PropertyDefinitionCreated,
     RelationshipCreated,
     RelationshipDeleted,
@@ -38,6 +40,7 @@ from domain.ontology.exceptions import (
     OntologyError,
 )
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import ExternalReference
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -2606,6 +2609,51 @@ class TestUpdateIndividual:
         # Updating to same title should not raise
         updated = service.update_individual(individual.id, title="Fido")
         assert updated.title == "Fido"
+
+    def test_create_individual_with_external_references(self, service):
+        """External references are persisted and carried on IndividualCreated."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        ref = ExternalReference(source="wikidata", identifier="Q144", uri="https://w/Q144")
+
+        individual = service.create_individual(cls.id, title="Fido", external_references=[ref])
+
+        assert service.get_individual(individual.id).external_references == [ref]
+        [event] = service._event_publisher.get_events_of_type(IndividualCreated)
+        assert event.external_references == [
+            {"source": "wikidata", "identifier": "Q144", "uri": "https://w/Q144", "metadata": None}
+        ]
+
+    def test_update_individual_replaces_external_references(self, service):
+        """external_references replaces the list and is reported as a changed field."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        old_ref = ExternalReference(source="wikidata", identifier="Q144")
+        new_ref = ExternalReference(source="dbpedia", identifier="Dog")
+        individual = service.create_individual(cls.id, title="Fido", external_references=[old_ref])
+
+        updated = service.update_individual(individual.id, external_references=[new_ref])
+
+        assert updated.external_references == [new_ref]
+        assert service.get_individual(individual.id).external_references == [new_ref]
+        [event] = service._event_publisher.get_events_of_type(IndividualUpdated)
+        assert event.changed_fields == ("external_references",)
+        assert event.old_values["external_references"][0]["identifier"] == "Q144"
+        assert event.new_values["external_references"][0]["identifier"] == "Dog"
+
+    def test_update_individual_same_external_references_is_noop(self, service):
+        """Passing the current references emits no IndividualUpdated event."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        ref = ExternalReference(source="wikidata", identifier="Q144")
+        individual = service.create_individual(cls.id, title="Fido", external_references=[ref])
+
+        service.update_individual(individual.id, external_references=[ref])
+
+        assert service._event_publisher.get_events_of_type(IndividualUpdated) == []
 
 
 class TestDeleteIndividual:

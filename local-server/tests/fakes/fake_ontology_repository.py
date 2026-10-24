@@ -48,6 +48,17 @@ class FakeOntologyRepository:
                 return cls
         return None
 
+    def get_entity_titles(self, ids: list[str]) -> dict[str, str]:
+        """Batch-read titles for taxonomies, schemes, classes, and individuals."""
+        stores = (self._taxonomies, self._schemes, self._classes, self._individuals)
+        titles: dict[str, str] = {}
+        for entity_id in ids:
+            for store in stores:
+                if entity_id in store:
+                    titles[entity_id] = store[entity_id].title
+                    break
+        return titles
+
     # Taxonomy operations
 
     def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
@@ -201,12 +212,15 @@ class FakeOntologyRepository:
             results = [s for s in results if query_lower in s.title.lower()]
         return len(results)
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
-        if concept_scheme_id:
-            return sum(
-                1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id
-            )
-        return len(self._classes)
+    def count_classes(
+        self, concept_scheme_id: str | None = None, parent_class_id: str | None = None
+    ) -> int:
+        results = list(self._classes.values())
+        if concept_scheme_id is not None:
+            results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
+        if parent_class_id is not None:
+            results = [c for c in results if c.parent_class_id == parent_class_id]
+        return len(results)
 
     def save_class(self, cls: Class) -> Class:
         for existing_class in self._classes.values():

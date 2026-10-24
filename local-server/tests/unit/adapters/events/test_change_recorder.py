@@ -286,6 +286,7 @@ class TestOntologyHandlers:
             individual_id="individual-1",
             title="John Doe",
             class_ids=["class-1", "class-2"],
+            external_references=[{"source": "dr", "identifier": "a.b.c", "uri": None}],
         )
 
         recorder.on_individual_created(event)
@@ -298,6 +299,9 @@ class TestOntologyHandlers:
         assert call_args.kwargs["new_state"]["individual_id"] == "individual-1"
         assert call_args.kwargs["new_state"]["title"] == "John Doe"
         assert call_args.kwargs["new_state"]["class_ids"] == ["class-1", "class-2"]
+        assert call_args.kwargs["new_state"]["external_references"] == [
+            {"source": "dr", "identifier": "a.b.c", "uri": None}
+        ]
 
     # --- UPDATE Pattern Tests ---
 
