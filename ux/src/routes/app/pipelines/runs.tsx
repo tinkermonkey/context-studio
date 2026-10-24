@@ -190,6 +190,9 @@ function RunsPageContent({
             key={run.id}
             runId={run.id}
             onClose={() => onSelectedIdChange(undefined)}
+            onOpenExtractionReview={(runId) =>
+              navigate({ to: "/app/pipelines/review", search: { runId } })
+            }
           />
         )}
       >

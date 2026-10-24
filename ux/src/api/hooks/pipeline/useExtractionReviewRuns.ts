@@ -37,6 +37,13 @@ const PIPELINE_TYPE: Record<ReviewKind, string> = {
   individual: "individual_extraction",
 };
 
+/** The review tab a run belongs to, or null for pipeline types this page does not review. */
+export function reviewKindOf(pipelineType: string): ReviewKind | null {
+  if (pipelineType === PIPELINE_TYPE.schema) return "schema";
+  if (pipelineType === PIPELINE_TYPE.individual) return "individual";
+  return null;
+}
+
 function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): PipelineRunRequest {
   if (kind === "schema") {
     return {
@@ -121,10 +128,18 @@ export function useExtractionReviewRuns() {
     [runOne],
   );
 
+  /** Shows an existing run (e.g. opened from run history) in its tab. */
+  const open = useCallback((run: PipelineRunResponse) => {
+    const kind = reviewKindOf(run.pipeline_type);
+    if (!kind) return;
+    ++generation.current[kind];
+    setSlots((s) => ({ ...s, [kind]: slotFromRun(run) }));
+  }, []);
+
   const rerun = useCallback(
     (kind: ReviewKind) => (lastRequest ? runOne(kind, lastRequest) : Promise.resolve()),
     [lastRequest, runOne],
   );
 
-  return { schema: slots.schema, individual: slots.individual, lastRequest, start, rerun };
+  return { schema: slots.schema, individual: slots.individual, lastRequest, start, rerun, open };
 }

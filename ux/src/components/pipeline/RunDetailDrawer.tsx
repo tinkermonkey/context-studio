@@ -4,18 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { InspectorPanel, KVGrid, Chip, Button } from "@tinkermonkey/heimdall-ui";
 import { usePipelineRun, usePipelineRunChangeEvents } from "@/api/hooks/pipeline/usePipelineRuns";
 import { formatDate } from "@/utils/dateFormatting";
-import {
-  SchemaExtractionReview,
-  IndividualExtractionReview,
-  GroundingReview,
-  DefinitionRefinementReview,
-  ConnectionRefinementReview,
-} from "./review";
+import { GroundingReview, DefinitionRefinementReview, ConnectionRefinementReview } from "./review";
 import { RunApplyControls } from "./RunApplyControls";
 import { RunRevertControls } from "./RunRevertControls";
 import type {
-  SchemaExtractionOutputSummary,
-  IndividualExtractionOutputSummary,
   SchemaNodeGroundingOutputSummary,
   SchemaNodeDefinitionRefinementOutputSummary,
   SchemaNodeConnectionRefinementOutputSummary,
@@ -30,23 +22,20 @@ type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 interface RunDetailDrawerProps {
   runId: string;
   onClose?: () => void;
+  /** Opens the Extraction review page for a schema/individual extraction run. */
+  onOpenExtractionReview?: (runId: string) => void;
 }
 
-export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
+/** Pipeline types reviewed and applied per candidate on the Extraction review page. */
+const EXTRACTION_REVIEW_TYPES = new Set(["schema_extraction", "individual_extraction"]);
+
+export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunDetailDrawerProps) {
   const queryClient = useQueryClient();
 
   const { data: run, isLoading, error } = usePipelineRun(runId);
   const { data: changeEventsData } = usePipelineRunChangeEvents(runId, {
     enabled: run?.status === "COMPLETED",
   });
-
-  // Selection state for SchemaExtractionReview
-  const [selectedClasses, setSelectedClasses] = useState<(string | number)[]>([]);
-  const [selectedProperties, setSelectedProperties] = useState<(string | number)[]>([]);
-  const [selectedRelationships, setSelectedRelationships] = useState<(string | number)[]>([]);
-
-  // Selection state for IndividualExtractionReview
-  const [selectedTriples, setSelectedTriples] = useState<(string | number)[]>([]);
 
   // Selection state for GroundingReview
   const [candidateStatus, setCandidateStatus] = useState<
@@ -184,30 +173,21 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
     { key: "Updated", value: formatDate(run.updated_at) },
   ];
 
+  const acceptedCount = (status: Record<string, string>) =>
+    Object.values(status).filter((s) => s === "accepted").length;
+  const selectedCount =
+    run.pipeline_type === "schema_node_grounding"
+      ? acceptedCount(candidateStatus)
+      : run.pipeline_type === "schema_node_definition_refinement"
+        ? selectedOption === "current"
+          ? 0
+          : 1
+        : acceptedCount(deltaStatus);
+
   const renderReviewComponent = (runData: PipelineRunResponse) => {
     const outputSummary = runData.output_summary;
 
     switch (runData.pipeline_type) {
-      case "schema_extraction":
-        return (
-          <SchemaExtractionReview
-            outputSummary={outputSummary as SchemaExtractionOutputSummary}
-            selectedClasses={selectedClasses}
-            onSelectClasses={setSelectedClasses}
-            selectedProperties={selectedProperties}
-            onSelectProperties={setSelectedProperties}
-            selectedRelationships={selectedRelationships}
-            onSelectRelationships={setSelectedRelationships}
-          />
-        );
-      case "individual_extraction":
-        return (
-          <IndividualExtractionReview
-            outputSummary={outputSummary as IndividualExtractionOutputSummary}
-            selectedTriples={selectedTriples}
-            onSelectTriples={setSelectedTriples}
-          />
-        );
       case "schema_node_grounding":
         return (
           <GroundingReview
@@ -265,255 +245,261 @@ export function RunDetailDrawer({ runId, onClose }: RunDetailDrawerProps) {
 
       {run.status === "COMPLETED" && (
         <>
-          <InspectorPanel.Section title="Results">
-            <div className="run-detail-results-section" data-testid="run-completed-section">
-              <div className="run-detail-results-item">
-                <strong>Review</strong>
-                <div className="run-detail-results-item-content">{renderReviewComponent(run)}</div>
+          {EXTRACTION_REVIEW_TYPES.has(run.pipeline_type) ? (
+            <InspectorPanel.Section title="Results">
+              <div className="run-detail-results-section" data-testid="run-completed-section">
+                <p className="run-detail-review-hint">
+                  Review each candidate against its source text and apply what you accept.
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => onOpenExtractionReview?.(run.id)}
+                  disabled={!onOpenExtractionReview}
+                  data-testid="run-open-extraction-review"
+                >
+                  Review in Extraction review
+                </Button>
               </div>
-
-              <div className="run-detail-results-item">
-                <strong>Apply</strong>
-                <div className="run-detail-apply-section" data-testid="run-apply-section">
-                  <div className="run-detail-apply-controls">
-                    <RunApplyControls
-                      run={run}
-                      pipelineType={run.pipeline_type}
-                      outputSummary={run.output_summary}
-                      selectedCandidates={{
-                        classes: selectedClasses,
-                        properties: selectedProperties,
-                        relationships: selectedRelationships,
-                        individuals: selectedTriples,
-                        groundingCandidates: Object.entries(candidateStatus)
-                          .filter(([, status]) => status === "accepted")
-                          .map(([key]) => key),
-                        refinementCandidates:
-                          run.pipeline_type === "schema_node_definition_refinement"
-                            ? selectedOption === "current"
-                              ? []
-                              : [`definition-${selectedOption}`]
-                            : Object.entries(deltaStatus)
-                                .filter(([, status]) => status === "accepted")
-                                .map(([key]) => key),
-                      }}
-                      isApplied={!!applyResult}
-                      targetName={
-                        run.input_summary && typeof run.input_summary === "object"
-                          ? ((run.input_summary as Record<string, unknown>).taxonomy_name as
-                              | string
-                              | undefined)
-                          : undefined
-                      }
-                      onApplySuccess={(result) => {
-                        setCachedApplyStatus({
-                          applyResult: result,
-                          revertResult: null,
-                          isReverted: false,
-                        });
-                      }}
-                    />
+            </InspectorPanel.Section>
+          ) : (
+            <InspectorPanel.Section title="Results">
+              <div className="run-detail-results-section" data-testid="run-completed-section">
+                <div className="run-detail-results-item">
+                  <strong>Review</strong>
+                  <div className="run-detail-results-item-content">
+                    {renderReviewComponent(run)}
                   </div>
+                </div>
 
-                  {applyResult && (
-                    <div className="run-detail-apply-result" data-testid="run-apply-result">
-                      <div className="apply-result-header">
-                        <span className="apply-result-status">✓ Applied</span>
-                      </div>
-
-                      <div className="apply-result-grid">
-                        {applyResult.classes_created > 0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">{applyResult.classes_created}</span>
-                            <span className="item-label">
-                              {applyResult.classes_created === 1
-                                ? "Class created"
-                                : "Classes created"}
-                            </span>
-                          </div>
-                        )}
-
-                        {applyResult.classes_updated > 0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">{applyResult.classes_updated}</span>
-                            <span className="item-label">
-                              {applyResult.classes_updated === 1
-                                ? "Class updated"
-                                : "Classes updated"}
-                            </span>
-                          </div>
-                        )}
-
-                        {applyResult.properties_created > 0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">{applyResult.properties_created}</span>
-                            <span className="item-label">
-                              {applyResult.properties_created === 1
-                                ? "Property created"
-                                : "Properties created"}
-                            </span>
-                          </div>
-                        )}
-
-                        {(applyResult.relationships_created || 0) +
-                          (applyResult.relationships_modified || 0) >
-                          0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">
-                              {(applyResult.relationships_created || 0) +
-                                (applyResult.relationships_modified || 0)}
-                            </span>
-                            <span className="item-label">Relationships affected</span>
-                          </div>
-                        )}
-
-                        {applyResult.individuals_created > 0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">{applyResult.individuals_created}</span>
-                            <span className="item-label">
-                              {applyResult.individuals_created === 1
-                                ? "Individual created"
-                                : "Individuals created"}
-                            </span>
-                          </div>
-                        )}
-
-                        {applyResult.external_references_created > 0 && (
-                          <div className="apply-result-item">
-                            <span className="item-count">
-                              {applyResult.external_references_created}
-                            </span>
-                            <span className="item-label">External references added</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {applyResult.created_class_ids &&
-                        applyResult.created_class_ids.length > 0 && (
-                          <div className="apply-result-sample-ids">
-                            <span className="sample-ids-label">Sample IDs:</span>
-                            <div className="sample-ids-list">
-                              {applyResult.created_class_ids
-                                .slice(0, 3)
-                                .map((id: string, idx: number) => (
-                                  <code key={idx} className="sample-id" title={id}>
-                                    {id}
-                                  </code>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-
-                      <div className="run-detail-revert-controls">
-                        <RunRevertControls
-                          run={run}
-                          applyResult={applyResult}
-                          isReverted={isReverted}
-                          onRevertSuccess={(result) => {
-                            setCachedApplyStatus({
-                              applyResult,
-                              revertResult: result,
-                              isReverted: true,
-                            });
-                            try {
-                              localStorage.removeItem(`pipeline-run-apply-status-${runId}`);
-                            } catch {
-                              // Ignore localStorage errors
-                            }
-                          }}
-                        />
-                      </div>
+                <div className="run-detail-results-item">
+                  <strong>Apply</strong>
+                  <div className="run-detail-apply-section" data-testid="run-apply-section">
+                    <div className="run-detail-apply-controls">
+                      <RunApplyControls
+                        run={run}
+                        selectedCount={selectedCount}
+                        isApplied={!!applyResult}
+                        targetName={
+                          run.input_summary && typeof run.input_summary === "object"
+                            ? ((run.input_summary as Record<string, unknown>).taxonomy_name as
+                                | string
+                                | undefined)
+                            : undefined
+                        }
+                        onApplySuccess={(result) => {
+                          setCachedApplyStatus({
+                            applyResult: result,
+                            revertResult: null,
+                            isReverted: false,
+                          });
+                        }}
+                      />
                     </div>
-                  )}
 
-                  {revertResult && (
-                    <div className="run-detail-revert-result" data-testid="run-revert-result">
-                      <div className="revert-result-header">
-                        <span className="revert-result-status" data-testid="run-status-reverted">
-                          ✓ Reverted
-                        </span>
-                      </div>
+                    {applyResult && (
+                      <div className="run-detail-apply-result" data-testid="run-apply-result">
+                        <div className="apply-result-header">
+                          <span className="apply-result-status">✓ Applied</span>
+                        </div>
 
-                      {revertResult.events_reverted === 0 ? (
-                        <div className="revert-result-empty-message">No changes to revert</div>
-                      ) : (
-                        <div className="revert-result-grid">
-                          {revertResult.classes_deleted > 0 && (
-                            <div className="revert-result-item">
-                              <span className="item-count">{revertResult.classes_deleted}</span>
+                        <div className="apply-result-grid">
+                          {applyResult.classes_created > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">{applyResult.classes_created}</span>
                               <span className="item-label">
-                                {revertResult.classes_deleted === 1
-                                  ? "Class removed"
-                                  : "Classes removed"}
+                                {applyResult.classes_created === 1
+                                  ? "Class created"
+                                  : "Classes created"}
                               </span>
                             </div>
                           )}
 
-                          {revertResult.individuals_deleted > 0 && (
-                            <div className="revert-result-item">
-                              <span className="item-count">{revertResult.individuals_deleted}</span>
+                          {applyResult.classes_updated > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">{applyResult.classes_updated}</span>
                               <span className="item-label">
-                                {revertResult.individuals_deleted === 1
-                                  ? "Individual removed"
-                                  : "Individuals removed"}
+                                {applyResult.classes_updated === 1
+                                  ? "Class updated"
+                                  : "Classes updated"}
                               </span>
                             </div>
                           )}
 
-                          {revertResult.relationships_deleted > 0 && (
-                            <div className="revert-result-item">
+                          {applyResult.properties_created > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">{applyResult.properties_created}</span>
+                              <span className="item-label">
+                                {applyResult.properties_created === 1
+                                  ? "Property created"
+                                  : "Properties created"}
+                              </span>
+                            </div>
+                          )}
+
+                          {(applyResult.relationships_created || 0) +
+                            (applyResult.relationships_modified || 0) >
+                            0 && (
+                            <div className="apply-result-item">
                               <span className="item-count">
-                                {revertResult.relationships_deleted}
+                                {(applyResult.relationships_created || 0) +
+                                  (applyResult.relationships_modified || 0)}
                               </span>
+                              <span className="item-label">Relationships affected</span>
+                            </div>
+                          )}
+
+                          {applyResult.individuals_created > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">{applyResult.individuals_created}</span>
                               <span className="item-label">
-                                {revertResult.relationships_deleted === 1
-                                  ? "Relationship removed"
-                                  : "Relationships removed"}
+                                {applyResult.individuals_created === 1
+                                  ? "Individual created"
+                                  : "Individuals created"}
                               </span>
                             </div>
                           )}
 
-                          {revertResult.properties_deleted > 0 && (
-                            <div className="revert-result-item">
-                              <span className="item-count">{revertResult.properties_deleted}</span>
-                              <span className="item-label">
-                                {revertResult.properties_deleted === 1
-                                  ? "Property removed"
-                                  : "Properties removed"}
+                          {applyResult.external_references_created > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">
+                                {applyResult.external_references_created}
                               </span>
+                              <span className="item-label">External references added</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {applyResult.created_class_ids &&
+                          applyResult.created_class_ids.length > 0 && (
+                            <div className="apply-result-sample-ids">
+                              <span className="sample-ids-label">Sample IDs:</span>
+                              <div className="sample-ids-list">
+                                {applyResult.created_class_ids
+                                  .slice(0, 3)
+                                  .map((id: string, idx: number) => (
+                                    <code key={idx} className="sample-id" title={id}>
+                                      {id}
+                                    </code>
+                                  ))}
+                              </div>
                             </div>
                           )}
 
-                          {revertResult.entities_restored > 0 && (
-                            <div className="revert-result-item">
-                              <span className="item-count">{revertResult.entities_restored}</span>
-                              <span className="item-label">
-                                {revertResult.entities_restored === 1
-                                  ? "Entity restored"
-                                  : "Entities restored"}
-                              </span>
-                            </div>
-                          )}
+                        <div className="run-detail-revert-controls">
+                          <RunRevertControls
+                            run={run}
+                            applyResult={applyResult}
+                            isReverted={isReverted}
+                            onRevertSuccess={(result) => {
+                              setCachedApplyStatus({
+                                applyResult,
+                                revertResult: result,
+                                isReverted: true,
+                              });
+                              try {
+                                localStorage.removeItem(`pipeline-run-apply-status-${runId}`);
+                              } catch {
+                                // Ignore localStorage errors
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
 
-                          {revertResult.events_reverted > 0 &&
-                            revertResult.classes_deleted === 0 &&
-                            revertResult.individuals_deleted === 0 &&
-                            revertResult.relationships_deleted === 0 &&
-                            revertResult.properties_deleted === 0 &&
-                            revertResult.entities_restored === 0 && (
-                              <div className="revert-result-empty-message">
-                                {revertResult.events_reverted} change event
-                                {revertResult.events_reverted === 1 ? "" : "s"} reverted
+                    {revertResult && (
+                      <div className="run-detail-revert-result" data-testid="run-revert-result">
+                        <div className="revert-result-header">
+                          <span className="revert-result-status" data-testid="run-status-reverted">
+                            ✓ Reverted
+                          </span>
+                        </div>
+
+                        {revertResult.events_reverted === 0 ? (
+                          <div className="revert-result-empty-message">No changes to revert</div>
+                        ) : (
+                          <div className="revert-result-grid">
+                            {revertResult.classes_deleted > 0 && (
+                              <div className="revert-result-item">
+                                <span className="item-count">{revertResult.classes_deleted}</span>
+                                <span className="item-label">
+                                  {revertResult.classes_deleted === 1
+                                    ? "Class removed"
+                                    : "Classes removed"}
+                                </span>
                               </div>
                             )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+                            {revertResult.individuals_deleted > 0 && (
+                              <div className="revert-result-item">
+                                <span className="item-count">
+                                  {revertResult.individuals_deleted}
+                                </span>
+                                <span className="item-label">
+                                  {revertResult.individuals_deleted === 1
+                                    ? "Individual removed"
+                                    : "Individuals removed"}
+                                </span>
+                              </div>
+                            )}
+
+                            {revertResult.relationships_deleted > 0 && (
+                              <div className="revert-result-item">
+                                <span className="item-count">
+                                  {revertResult.relationships_deleted}
+                                </span>
+                                <span className="item-label">
+                                  {revertResult.relationships_deleted === 1
+                                    ? "Relationship removed"
+                                    : "Relationships removed"}
+                                </span>
+                              </div>
+                            )}
+
+                            {revertResult.properties_deleted > 0 && (
+                              <div className="revert-result-item">
+                                <span className="item-count">
+                                  {revertResult.properties_deleted}
+                                </span>
+                                <span className="item-label">
+                                  {revertResult.properties_deleted === 1
+                                    ? "Property removed"
+                                    : "Properties removed"}
+                                </span>
+                              </div>
+                            )}
+
+                            {revertResult.entities_restored > 0 && (
+                              <div className="revert-result-item">
+                                <span className="item-count">{revertResult.entities_restored}</span>
+                                <span className="item-label">
+                                  {revertResult.entities_restored === 1
+                                    ? "Entity restored"
+                                    : "Entities restored"}
+                                </span>
+                              </div>
+                            )}
+
+                            {revertResult.events_reverted > 0 &&
+                              revertResult.classes_deleted === 0 &&
+                              revertResult.individuals_deleted === 0 &&
+                              revertResult.relationships_deleted === 0 &&
+                              revertResult.properties_deleted === 0 &&
+                              revertResult.entities_restored === 0 && (
+                                <div className="revert-result-empty-message">
+                                  {revertResult.events_reverted} change event
+                                  {revertResult.events_reverted === 1 ? "" : "s"} reverted
+                                </div>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </InspectorPanel.Section>
+            </InspectorPanel.Section>
+          )}
 
           {changeEventsData && changeEventsData.items && changeEventsData.items.length > 0 && (
             <InspectorPanel.Section title="Produced Change Events">
