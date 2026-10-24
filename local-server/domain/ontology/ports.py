@@ -57,6 +57,18 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def get_entity_titles(self, ids: list[str]) -> dict[str, str]:
+        """
+        Batch-read titles for taxonomies, concept schemes, classes, and individuals.
+
+        Args:
+            ids: Entity IDs to look up
+
+        Returns:
+            Mapping of entity ID to title; IDs that do not resolve are omitted
+        """
+        ...
+
     # Taxonomy operations
     def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
         """

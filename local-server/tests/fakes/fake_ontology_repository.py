@@ -48,6 +48,17 @@ class FakeOntologyRepository:
                 return cls
         return None
 
+    def get_entity_titles(self, ids: list[str]) -> dict[str, str]:
+        """Batch-read titles for taxonomies, schemes, classes, and individuals."""
+        stores = (self._taxonomies, self._schemes, self._classes, self._individuals)
+        titles: dict[str, str] = {}
+        for entity_id in ids:
+            for store in stores:
+                if entity_id in store:
+                    titles[entity_id] = store[entity_id].title
+                    break
+        return titles
+
     # Taxonomy operations
 
     def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:

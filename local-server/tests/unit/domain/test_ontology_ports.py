@@ -67,6 +67,7 @@ class TestOntologyRepositoryProtocol:
             "delete_individual",
             # Bulk
             "get_all_entities_and_relationships",
+            "get_entity_titles",
         ]
         repo = FakeOntologyRepository()
         for method_name in expected_methods:

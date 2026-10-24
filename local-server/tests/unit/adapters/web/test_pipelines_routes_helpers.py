@@ -1,7 +1,6 @@
 """Unit tests for pipelines route helper functions."""
 
-
-from adapters.web.pipelines_routes import _normalize_provenance
+from adapters.web.pipelines_routes import _mapped_node_titles, _normalize_provenance
 from adapters.web.schemas.extraction import SourceSpanSchema
 
 
@@ -221,3 +220,51 @@ class TestNormalizeProvenance:
         assert len(result) == 2
         assert result[0].quote == "text1"
         assert result[1].quote == "text2"
+
+
+class _TitleRepo:
+    """Records batch title reads; per-id getters must not be used."""
+
+    def __init__(self, titles):
+        self._titles = titles
+        self.calls = []
+
+    def get_entity_titles(self, ids):
+        self.calls.append(list(ids))
+        return {i: self._titles[i] for i in ids if i in self._titles}
+
+    def get_individual(self, _id):  # pragma: no cover - must not be called
+        raise AssertionError("per-id lookup used")
+
+    def get_class(self, _id):  # pragma: no cover - must not be called
+        raise AssertionError("per-id lookup used")
+
+
+class TestMappedNodeTitles:
+    """Tests for _mapped_node_titles batch enrichment."""
+
+    def test_one_batch_read_for_all_mapped_nodes(self):
+        repo = _TitleRepo({"i1": "Fido", "c1": "Dog"})
+        triples = [
+            {
+                "subject": {"kind": "individual", "id": "i1"},
+                "object": {"kind": "class", "id": "c1"},
+            },
+            {"subject": {"kind": "individual", "id": "i1"}, "object": {"kind": "literal"}},
+            {"subject": {"kind": "individual", "id": "gone"}, "object": None},
+            {"subject": {"kind": "individual", "label": "New"}, "object": {}},
+        ]
+
+        titles = _mapped_node_titles(triples, repo)
+
+        assert titles == {"i1": "Fido", "c1": "Dog"}
+        assert len(repo.calls) == 1
+        assert sorted(repo.calls[0]) == ["c1", "gone", "i1"]
+
+    def test_no_mapped_nodes_skips_repo(self):
+        repo = _TitleRepo({})
+        assert _mapped_node_titles([{"subject": {"label": "x"}}], repo) == {}
+        assert repo.calls == []
+
+    def test_no_repo_returns_empty(self):
+        assert _mapped_node_titles([{"subject": {"kind": "class", "id": "c1"}}], None) == {}

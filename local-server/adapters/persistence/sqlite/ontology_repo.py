@@ -1149,6 +1149,26 @@ class SQLiteOntologyRepository:
                 map_orm_to_domain(orm_entity),
             )
 
+    def get_entity_titles(self, ids: list[str]) -> dict[str, str]:
+        """
+        Batch-read titles for ontology entities with a single ``IN`` query.
+
+        Args:
+            ids: Entity IDs to look up
+
+        Returns:
+            Mapping of entity ID to title; IDs that do not resolve are omitted
+        """
+        if not ids:
+            return {}
+        with self.session_factory() as session:
+            rows = (
+                session.query(OntologyEntity.id, OntologyEntity.title)
+                .filter(OntologyEntity.id.in_({str(entity_id) for entity_id in ids}))
+                .all()
+            )
+            return {str(entity_id): title for entity_id, title in rows}
+
     def get_property_definition_by_identifier(
         self, identifier: str
     ) -> Optional[PropertyDefinition]:
