@@ -236,6 +236,9 @@ export function applyResultRows(
   const skippedIds = new Set(result.skipped_candidate_ids ?? []);
   const skipped = accepted.filter((id) => skippedIds.has(id));
   const merged = result.merged_mentions ?? [];
+  // Accepted items satisfied by an entity already in the graph: nothing was
+  // created for them, so revert leaves them in place.
+  const existing = result.existing_candidate_ids ?? [];
   return [
     {
       key: "result",
@@ -252,6 +255,11 @@ export function applyResultRows(
                 {n} {kind} created
               </Chip>
             ))
+          )}
+          {existing.length > 0 && (
+            <Chip variant="neutral" title={existing.map(labelFor).join(", ")}>
+              {existing.length} already existed (revert will not remove)
+            </Chip>
           )}
         </span>
       ),

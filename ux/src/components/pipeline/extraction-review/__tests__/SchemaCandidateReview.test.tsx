@@ -207,6 +207,57 @@ describe("SchemaCandidateReview — review", () => {
     expect(screen.queryByTestId("extraction-review-apply-result-created")).not.toBeInTheDocument();
   });
 
+  it("reports accepted candidates that already existed and will survive revert", async () => {
+    server.use(
+      http.post("*/api/pipelines/runs/run-s/apply", () =>
+        HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 0,
+          properties_created: 0,
+          individuals_created: 0,
+          relationships_created: 0,
+          applied_candidate_ids: ["class-0"],
+          skipped_candidate_ids: [],
+          existing_candidate_ids: ["class-0"],
+          merged_mentions: [],
+        }),
+      ),
+    );
+    await renderReady();
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    const created = await screen.findByTestId("extraction-review-apply-result-created");
+    const chip = within(created).getByText("1 already existed (revert will not remove)");
+    expect(chip).toHaveClass("chip--neutral");
+  });
+
+  it("omits the already-existed note when nothing pre-existed", async () => {
+    server.use(
+      http.post("*/api/pipelines/runs/run-s/apply", () =>
+        HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 1,
+          properties_created: 0,
+          individuals_created: 0,
+          relationships_created: 0,
+          applied_candidate_ids: ["class-0"],
+          skipped_candidate_ids: [],
+          existing_candidate_ids: [],
+          merged_mentions: [],
+        }),
+      ),
+    );
+    await renderReady();
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    const created = await screen.findByTestId("extraction-review-apply-result-created");
+    expect(within(created).queryByText(/already existed/)).not.toBeInTheDocument();
+  });
+
   it("warns when revert finds no recorded changes to undo", async () => {
     server.use(
       http.post("*/api/pipelines/runs/run-s/apply", () =>
