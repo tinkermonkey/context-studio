@@ -14,6 +14,7 @@ import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 
@@ -90,11 +91,16 @@ export function TaxonomiesPage() {
   const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
 
-  const { data: listResponse, isLoading, error, refetch } = useTaxonomies();
-  const { data: schemesData } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
+  const {
+    data: listResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: schemesData } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: propsData } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
 
   const deleteMutation = useDeleteTaxonomy();
 
@@ -115,7 +121,7 @@ export function TaxonomiesPage() {
     {
       id: "relationships",
       label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
+      count: relsData?.total,
     },
   ];
 

@@ -11,6 +11,7 @@ import { useIndividuals, useDeleteIndividual } from "@/api/hooks/ontology/useInd
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { individualsCopy } from "./individuals/-copy";
 import type { components } from "@/api/types";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 
@@ -19,8 +20,17 @@ export function IndividualsPage() {
   const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
 
-  const { data: listResponse, isLoading, error, refetch } = useIndividuals();
-  const { data: classesResponse, error: classesError, refetch: refetchClasses } = useClasses();
+  const {
+    data: listResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useIndividuals({ limit: LIST_FETCH_ALL_LIMIT });
+  const {
+    data: classesResponse,
+    error: classesError,
+    refetch: refetchClasses,
+  } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
 
   const deleteMutation = useDeleteIndividual();
 

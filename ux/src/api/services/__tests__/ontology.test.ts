@@ -70,6 +70,20 @@ describe("OntologyService - Taxonomies", () => {
       expect(result.items[0].title).toBe("Biology");
     });
 
+    it("sends limit when page params are given", async () => {
+      let limit: string | null = null;
+      server.use(
+        http.get("*/api/taxonomies", ({ request }) => {
+          limit = new URL(request.url).searchParams.get("limit");
+          return HttpResponse.json(createListTaxonomies([]));
+        }),
+      );
+
+      await ontologyService.listTaxonomies({ limit: 5000 });
+
+      expect(limit).toBe("5000");
+    });
+
     it("throws ApiError on 500 from listTaxonomies", async () => {
       server.use(
         http.get("*/api/taxonomies", () =>
@@ -391,6 +405,21 @@ describe("OntologyService - Concept Schemes", () => {
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].taxonomy_id).toBe("tax-123");
+    });
+
+    it("sends limit alongside taxonomy_id when page params are given", async () => {
+      let params: URLSearchParams | undefined;
+      server.use(
+        http.get("*/api/schemes", ({ request }) => {
+          params = new URL(request.url).searchParams;
+          return HttpResponse.json(createListSchemes([]));
+        }),
+      );
+
+      await ontologyService.listSchemes("tax-123", { limit: 5000 });
+
+      expect(params?.get("taxonomy_id")).toBe("tax-123");
+      expect(params?.get("limit")).toBe("5000");
     });
 
     it("throws ApiError on 500 from listSchemes", async () => {
@@ -1193,6 +1222,21 @@ describe("OntologyService - Property Definitions", () => {
       const result = await ontologyService.listProperties(true);
 
       expect(result.items).toHaveLength(1);
+    });
+
+    it("sends limit when page params are given", async () => {
+      let params: URLSearchParams | undefined;
+      server.use(
+        http.get("*/api/properties", ({ request }) => {
+          params = new URL(request.url).searchParams;
+          return HttpResponse.json(createListProperties([]));
+        }),
+      );
+
+      await ontologyService.listProperties(undefined, { limit: 5000 });
+
+      expect(params?.get("limit")).toBe("5000");
+      expect(params?.has("is_relevant")).toBe(false);
     });
 
     it("throws ApiError on 500 from listProperties", async () => {

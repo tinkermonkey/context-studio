@@ -1,18 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
-import { ontologyService } from "@/api/services/ontology";
+import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
 type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 
-export function useProperties(isRelevant?: boolean) {
+export function useProperties(isRelevant?: boolean, params?: ListPageParams) {
   return useQuery({
-    // Include isRelevant in the key so relevance-filtered and unfiltered
+    // Include isRelevant and params in the key so filtered, paged and unfiltered
     // queries do not collide on one cache entry. Mutations invalidate the
-    // ["properties"] prefix, which still matches both.
-    queryKey: [...QUERY_KEYS.properties, isRelevant ?? null],
-    queryFn: () => ontologyService.listProperties(isRelevant),
+    // ["properties"] prefix, which still matches all of them.
+    queryKey: [...QUERY_KEYS.properties, isRelevant ?? null, params ?? null],
+    queryFn: () => ontologyService.listProperties(isRelevant, params),
   });
 }
 
