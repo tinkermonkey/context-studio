@@ -3,7 +3,6 @@ import {
   Button,
   Chip,
   ConfirmDialog,
-  FormCallout,
   InspectorPanel,
   KVGrid,
   Panel,
@@ -27,7 +26,6 @@ import {
 } from "@/api/hooks/pipeline/useExtractionCandidates";
 import type { ReviewRunSlot } from "@/api/hooks/pipeline/useExtractionReviewRuns";
 import {
-  planReviewApply,
   REVIEW_RECOGNITION_THRESHOLD,
   type ReviewDecisionValue,
 } from "@/api/hooks/pipeline/useApplyReviewedRun";
@@ -35,6 +33,7 @@ import { SourceText } from "./SourceText";
 import { ReviewDecision } from "./ReviewDecision";
 import {
   ApplyBar,
+  applyResultRows,
   ClassLabel,
   NodeRefCell,
   ProvenanceList,
@@ -160,8 +159,8 @@ export function IndividualCandidateReviewBody({
 }) {
   const triples = useMemo<TripleRow[]>(
     () =>
-      rawTriples.map((t, i) => ({
-        id: `t-${i}`,
+      rawTriples.map((t) => ({
+        id: t.candidate_id,
         subject: t.subject,
         predicate: t.predicate,
         object: t.object,
@@ -229,11 +228,15 @@ export function IndividualCandidateReviewBody({
     runId,
     kind: "individual" as const,
     scope: { taxonomy_id: scope.taxonomyId },
-    items: triples.map((t) => ({ key: t.id, confidence: t.confidence })),
     decisions,
-    merges: Object.fromEntries(matchedHits.map((h) => [h.id, merges[h.id] ?? "pending"])),
+    mentions: matchedHits.map((h) => ({
+      mention_label: h.mention_label,
+      individual_id: h.resolved_individual_id ?? "",
+      decision: merges[h.id] ?? "pending",
+    })),
   };
-  const plan = planReviewApply(applyInput);
+  const accepted = triples.filter((t) => decisions[t.id] === "yes").map((t) => t.id);
+  const undecidedMatches = mergeCounts.pending;
 
   const nodeKV = (node: NodeReference) => {
     if (node.kind === "literal")
@@ -256,7 +259,10 @@ export function IndividualCandidateReviewBody({
         ),
       },
       ...(node.id
-        ? [{ key: "individual_id", value: <span className="xr-mono-muted">{node.id}</span> }]
+        ? [
+            ...(node.title ? [{ key: "existing_title", value: node.title }] : []),
+            { key: "individual_id", value: <span className="xr-mono-muted">{node.id}</span> },
+          ]
         : []),
       { key: "class", value: cls ? <ClassLabel id={cls} /> : "—" },
       ...(layer ? [{ key: "dr_layer", value: `L${layer.num} · ${layer.layer}` }] : []),
@@ -293,7 +299,7 @@ export function IndividualCandidateReviewBody({
           <InspectorPanel
             eyebrow="TRIPLE CANDIDATE"
             title={tripleLabel(t)}
-            id={`${runId} · #${t.id.split("-")[1]} · ${pct(t.confidence)}`}
+            id={`${runId} · ${t.id} · ${pct(t.confidence)}`}
             actions={
               <ReviewDecision
                 value={decisions[t.id] ?? "pending"}
@@ -608,6 +614,19 @@ export function IndividualCandidateReviewBody({
         onApply={flow.openConfirm}
         onRevert={() => flow.revertRun(runId)}
         extra={[
+          ...(flow.result
+            ? applyResultRows(
+                flow.result,
+                accepted,
+                (id) =>
+                  triples.find((t) => t.id === id)
+                    ? tripleLabel(triples.find((t) => t.id === id)!)
+                    : id,
+                (id) =>
+                  hits.find((h) => h.resolved_individual_id === id)?.resolved_individual_title ??
+                  id,
+              )
+            : []),
           {
             key: "recognition",
             value: (
@@ -633,27 +652,20 @@ export function IndividualCandidateReviewBody({
         message={
           <div className="xr-stack-sm" data-testid="extraction-review-individual-confirm">
             <span>
-              Creates draft individuals and relationships from {counts.yes} accepted triples.{" "}
-              {mergeCounts.yes} mentions merge into existing individuals;{" "}
-              {nodes.filter((n) => !n.id).length} new individuals are created.
+              Creates draft individuals and relationships from {counts.yes} accepted triples;
+              rejected and pending triples are skipped.
             </span>
-            {plan.leakedKeys.length > 0 && (
-              <FormCallout
-                variant="warn"
-                icon="alert"
-                data-testid="extraction-review-individual-leak-warning"
-              >
-                {`Apply filters by confidence ≥ ${pct(plan.minConfidence)}, so ${plan.leakedKeys.length} rejected triple${plan.leakedKeys.length > 1 ? "s" : ""} at or above that score will also be applied.`}
-              </FormCallout>
-            )}
-            {plan.ignoredSeparateCount > 0 && (
-              <FormCallout
-                variant="warn"
-                icon="alert"
-                data-testid="extraction-review-individual-separate-warning"
-              >
-                {`${plan.ignoredSeparateCount} "keep separate" choice${plan.ignoredSeparateCount > 1 ? "s" : ""} can't be applied per hit. Apply uses one recognition threshold for every mention.`}
-              </FormCallout>
+            <span className="xr-chip-row">
+              <Chip variant="emerald">{mergeCounts.yes} merge into existing</Chip>
+              <Chip variant="neutral">{mergeCounts.no} kept separate</Chip>
+              {undecidedMatches > 0 && (
+                <Chip variant="cyan">{undecidedMatches} left to recognition</Chip>
+              )}
+            </span>
+            {undecidedMatches > 0 && (
+              <span className="xr-mono-muted">
+                {`Undecided mentions merge automatically when recognition scores ≥ ${pct(REVIEW_RECOGNITION_THRESHOLD)}.`}
+              </span>
             )}
           </div>
         }

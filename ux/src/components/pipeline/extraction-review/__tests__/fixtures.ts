@@ -16,6 +16,7 @@ export function span(quote: string) {
 export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
   {
     candidate_type: "schema_class",
+    candidate_id: "class-0",
     label: "Policyholder",
     confidence: 0.91,
     proposed_definition: "A person holding an insurance policy.",
@@ -23,6 +24,7 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
   },
   {
     candidate_type: "schema_class",
+    candidate_id: "class-1",
     label: "Insurance Claim",
     confidence: 0.88,
     proposed_definition: "A request for compensation.",
@@ -30,6 +32,7 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
   },
   {
     candidate_type: "schema_class",
+    candidate_id: "class-2",
     label: "Turnaround SLA",
     confidence: 0.38,
     proposed_definition: null,
@@ -37,6 +40,7 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
   },
   {
     candidate_type: "schema_property",
+    candidate_id: "property-0",
     label: "submits",
     confidence: 0.86,
     proposed_definition: "The actor initiates a business object.",
@@ -46,6 +50,7 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
   },
   {
     candidate_type: "schema_connection",
+    candidate_id: "connection-0",
     subject_ref: "Policyholder",
     predicate: "submits",
     object_ref: "Insurance Claim",
@@ -57,10 +62,12 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
 export const TRIPLES: TripleCandidate[] = [
   {
     candidate_type: "triple",
+    candidate_id: "triple-0",
     subject: {
       kind: "individual",
       label: "Customer Portal",
       id: "ind_7c21",
+      title: "Customer Self-Service Portal",
       class_ids: ["application.application-component"],
     },
     predicate: { kind: "property", label: "serves", property_definition_id: "pd_serves" },
@@ -75,6 +82,7 @@ export const TRIPLES: TripleCandidate[] = [
   },
   {
     candidate_type: "triple",
+    candidate_id: "triple-1",
     subject: {
       kind: "individual",
       label: "Claims Adjuster",
@@ -93,6 +101,7 @@ export const TRIPLES: TripleCandidate[] = [
   },
   {
     candidate_type: "triple",
+    candidate_id: "triple-2",
     subject: {
       kind: "individual",
       label: "Claims Review Service",

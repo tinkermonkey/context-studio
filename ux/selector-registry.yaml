@@ -2650,9 +2650,9 @@ selectors:
   - selector: extraction-review-schema-confirm
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
     description: "Body of the schema apply confirm dialog"
-  - selector: extraction-review-schema-leak-warning
+  - selector: extraction-review-schema-orphan-warning
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
-    description: "Confirm-dialog warning that rejected candidates at or above the confidence floor will be applied"
+    description: "Confirm-dialog warning that an accepted connection points at a proposed class that was not accepted"
   - selector: extraction-review-individual
     component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
     description: "Individual extraction review tab root"
@@ -2689,15 +2689,21 @@ selectors:
   - selector: extraction-review-individual-confirm
     component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
     description: "Body of the individual apply confirm dialog"
-  - selector: extraction-review-individual-leak-warning
-    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
-    description: "Confirm-dialog warning that rejected triples at or above the confidence floor will be applied"
-  - selector: extraction-review-individual-separate-warning
-    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
-    description: "Confirm-dialog warning that keep-separate choices cannot be honoured per hit"
   - selector: extraction-review-span
     component: src/components/pipeline/extraction-review/SourceText.tsx
     description: "Highlighted provenance span; data-span-keys lists the linked item keys"
+  - selector: extraction-review-node-title
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Canonical title of the existing node a mapped NodeReference resolves to"
+  - selector: extraction-review-apply-result-created
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply summary of entities created (and accepted items already in the graph)"
+  - selector: extraction-review-apply-result-merged
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply list of mentions merged into existing individuals, with the merge source"
+  - selector: extraction-review-apply-result-skipped
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply list of accepted candidates the server skipped"
   - selector: extraction-review-provenance
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
     description: "Provenance (source span) list in an inspector"

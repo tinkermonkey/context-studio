@@ -33,7 +33,7 @@ async function renderReady() {
     <IndividualCandidateReview slot={slot} text={XR_TEXT} scope={SCOPE} onRetry={() => {}} />,
   );
   await screen.findByTestId("extraction-review-triples");
-  await screen.findByText("Customer Self-Service Portal");
+  await screen.findByText("no match · created as new");
 }
 
 describe("IndividualCandidateReview", () => {
@@ -97,39 +97,74 @@ describe("IndividualCandidateReview", () => {
     );
   });
 
-  it("accepts a triple from the compact row control and warns about keep-separate on apply", async () => {
+  it("shows the canonical title of a mapped node next to its extracted label", async () => {
     await renderReady();
-    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-t-0-yes"));
-    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-t-2-no"));
+    const triples = screen.getByTestId("extraction-review-triples");
+    expect(within(triples).getByTestId("extraction-review-node-title")).toHaveTextContent(
+      "→ Customer Self-Service Portal",
+    );
+  });
+
+  it("summarises merge / separate / recognition choices in the confirm dialog", async () => {
+    await renderReady();
+    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-triple-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-triple-2-no"));
     await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-0-no"));
     expect(screen.getByTestId("extraction-review-individual-apply-bar")).toHaveTextContent(
       "1 accepted",
     );
     await userEvent.click(screen.getByTestId("extraction-review-individual-apply"));
-    expect(screen.getByTestId("extraction-review-individual-confirm")).toBeInTheDocument();
-    expect(screen.getByTestId("extraction-review-individual-separate-warning")).toHaveTextContent(
-      '1 "keep separate" choice',
-    );
-    // t-2 (0.75) is rejected below the 0.90 floor, so nothing leaks.
-    expect(
-      screen.queryByTestId("extraction-review-individual-leak-warning"),
-    ).not.toBeInTheDocument();
+    const confirm = screen.getByTestId("extraction-review-individual-confirm");
+    expect(within(confirm).getByText("1 kept separate")).toHaveClass("chip--neutral");
+    expect(within(confirm).getByText("1 left to recognition")).toHaveClass("chip--cyan");
+    expect(within(confirm).queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("applies with the recognition threshold", async () => {
+  it("applies accepted triples with per-mention decisions and shows what merged", async () => {
     let applyUrl: URL | null = null;
+    let applyBody: unknown = null;
     await renderReady();
     server.use(
-      http.post("*/api/pipelines/runs/run-i/apply", ({ request }) => {
+      http.post("*/api/pipelines/runs/run-i/apply", async ({ request }) => {
         applyUrl = new URL(request.url);
-        return HttpResponse.json({ run_id: "run-i", pipeline_type: "individual_extraction" });
+        applyBody = await request.json();
+        return HttpResponse.json({
+          run_id: "run-i",
+          pipeline_type: "individual_extraction",
+          classes_created: 0,
+          properties_created: 0,
+          individuals_created: 1,
+          relationships_created: 1,
+          applied_candidate_ids: ["triple-1"],
+          skipped_candidate_ids: ["triple-0", "triple-2"],
+          merged_mentions: [
+            { mention_label: "Claims Adjuster", individual_id: "ind_3a90", source: "decision" },
+          ],
+        });
       }),
     );
-    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-t-1-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-triple-1-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-1-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-0-no"));
     await userEvent.click(screen.getByTestId("extraction-review-individual-apply"));
     await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
     expect(await screen.findByTestId("extraction-review-individual-revert")).toBeInTheDocument();
-    expect(applyUrl!.searchParams.get("confidence_threshold")).toBe("0.69");
+
+    expect(applyUrl!.searchParams.get("confidence_threshold")).toBeNull();
     expect(applyUrl!.searchParams.get("recognition_threshold")).toBe("0.9");
+    expect(applyBody).toEqual({
+      accepted_candidate_ids: ["triple-1"],
+      recognition_decisions: [
+        { mention_label: "Customer Portal", decision: "separate" },
+        { mention_label: "Claims Adjuster", decision: "merge", individual_id: "ind_3a90" },
+      ],
+    });
+    const merged = screen.getByTestId("extraction-review-apply-result-merged");
+    expect(merged).toHaveTextContent("Claims Adjuster → Claims Adjuster");
+    expect(within(merged).getByText("your merge")).toHaveClass("chip--cyan");
+    expect(screen.getByTestId("extraction-review-apply-result-created")).toHaveTextContent(
+      "1 individuals created",
+    );
+    expect(screen.queryByTestId("extraction-review-apply-result-skipped")).not.toBeInTheDocument();
   });
 });

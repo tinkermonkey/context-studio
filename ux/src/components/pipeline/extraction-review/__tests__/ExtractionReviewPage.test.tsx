@@ -154,7 +154,7 @@ describe("ExtractionReviewPage", () => {
       model: "gemini-flash",
     });
 
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
     await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
     expect(await screen.findByTestId("extraction-review-triples")).toBeInTheDocument();
     expect(screen.getByRole("tabpanel", { name: "Individual extraction" })).toBeVisible();
@@ -164,7 +164,7 @@ describe("ExtractionReviewPage", () => {
 
     // Decisions survive switching tabs.
     await userEvent.click(screen.getByRole("tab", { name: "Schema extraction" }));
-    expect(screen.getByTestId("extraction-review-schema-decision-sc-0-yes")).toHaveAttribute(
+    expect(screen.getByTestId("extraction-review-schema-decision-class-0-yes")).toHaveAttribute(
       "aria-pressed",
       "true",
     );

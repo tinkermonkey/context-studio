@@ -7,7 +7,10 @@ import type {
   ReviewRunSlot,
   PipelineRunResponse,
 } from "@/api/hooks/pipeline/useExtractionReviewRuns";
-import type { ReviewDecisionValue } from "@/api/hooks/pipeline/useApplyReviewedRun";
+import type {
+  ApplyRunResponse,
+  ReviewDecisionValue,
+} from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { drLayerOf, isLocated } from "./reviewUtils";
 import "./ExtractionReview.css";
 
@@ -66,6 +69,11 @@ export function NodeRefCell({ node }: { node: NodeReference }) {
         <span className="xr-strong">{node.label}</span>
         <Chip variant={mapped ? "emerald" : "amber"}>{mapped ? "mapped" : "new"}</Chip>
       </div>
+      {mapped && node.title && node.title !== node.label && (
+        <span className="xr-muted" data-testid="extraction-review-node-title">
+          → {node.title}
+        </span>
+      )}
       {cls && (
         <span className="xr-mono-muted">
           {layer ? `L${layer.num} · ` : ""}
@@ -179,6 +187,97 @@ export function RunStateBody({
       </div>
     </Panel>
   );
+}
+
+// ---- Post-apply summary rows: what was created, merged and skipped --------
+const MERGE_SOURCE_LABEL: Record<string, string> = {
+  decision: "your merge",
+  recognition: "recognition",
+  existing_title: "same title",
+};
+
+export function applyResultRows(
+  result: ApplyRunResponse,
+  accepted: string[],
+  labelFor: (candidateId: string) => string,
+  titleFor: (individualId: string) => string = (id) => id,
+): { key: string; value: ReactNode }[] {
+  const created: [string, number][] = (
+    [
+      ["classes", result.classes_created],
+      ["properties", result.properties_created],
+      ["individuals", result.individuals_created],
+      ["relationships", result.relationships_created],
+    ] as [string, number][]
+  ).filter(([, n]) => n > 0);
+  // skipped_candidate_ids also lists everything not selected: surface only the
+  // accepted candidates the server could not write.
+  const appliedCount = (result.applied_candidate_ids ?? []).length;
+  const skippedIds = new Set(result.skipped_candidate_ids ?? []);
+  const skipped = accepted.filter((id) => skippedIds.has(id));
+  const merged = result.merged_mentions ?? [];
+  return [
+    {
+      key: "result",
+      value: (
+        <span className="xr-chip-row" data-testid="extraction-review-apply-result-created">
+          <Chip variant="emerald">
+            {appliedCount} of {accepted.length} accepted applied
+          </Chip>
+          {created.length === 0 ? (
+            <span className="xr-mono-muted">no new entities (existing ones reused)</span>
+          ) : (
+            created.map(([kind, n]) => (
+              <Chip key={kind} variant="neutral">
+                {n} {kind} created
+              </Chip>
+            ))
+          )}
+        </span>
+      ),
+    },
+    ...(merged.length > 0
+      ? [
+          {
+            key: "merged",
+            value: (
+              <div className="xr-stack-sm" data-testid="extraction-review-apply-result-merged">
+                {merged.map((m) => (
+                  <span key={`${m.mention_label}-${m.individual_id}`} className="xr-chip-row">
+                    <span>
+                      {m.mention_label} → {titleFor(m.individual_id)}
+                    </span>
+                    <Chip variant="cyan">{MERGE_SOURCE_LABEL[m.source] ?? m.source}</Chip>
+                  </span>
+                ))}
+              </div>
+            ),
+          },
+        ]
+      : []),
+    ...(skipped.length > 0
+      ? [
+          {
+            key: "skipped",
+            value: (
+              <div className="xr-stack-sm" data-testid="extraction-review-apply-result-skipped">
+                <span className="xr-chip-row">
+                  {skipped.map((id) => (
+                    <Chip key={id} variant="amber">
+                      {labelFor(id)}
+                    </Chip>
+                  ))}
+                </span>
+                <span className="xr-mono-muted">
+                  Accepted but not written, e.g. a relationship whose predicate or endpoint class
+                  was neither accepted nor already in the graph.
+                </span>
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ];
 }
 
 // ---- Apply bar (same shape on both tabs) ---------------------------------

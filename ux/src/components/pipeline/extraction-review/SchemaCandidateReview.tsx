@@ -18,13 +18,10 @@ import {
   type SchemaExtractionCandidate,
 } from "@/api/hooks/pipeline/useExtractionCandidates";
 import type { ReviewRunSlot } from "@/api/hooks/pipeline/useExtractionReviewRuns";
-import {
-  planReviewApply,
-  type ReviewDecisionValue,
-} from "@/api/hooks/pipeline/useApplyReviewedRun";
+import type { ReviewDecisionValue } from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { SourceText } from "./SourceText";
 import { ReviewDecision } from "./ReviewDecision";
-import { ApplyBar, ProvenanceList, RunMeta, RunStateBody } from "./ReviewParts";
+import { ApplyBar, ProvenanceList, RunMeta, RunStateBody, applyResultRows } from "./ReviewParts";
 import { countDecisions, pct } from "./reviewUtils";
 import { useReviewApplyFlow } from "./useReviewApplyFlow";
 import type { ReviewScope } from "./ExtractionReviewPage";
@@ -47,9 +44,9 @@ export interface SchemaRow {
   provenance: NonNullable<SchemaExtractionCandidate["provenance"]>;
 }
 
-function toRow(c: SchemaExtractionCandidate, i: number): SchemaRow {
+function toRow(c: SchemaExtractionCandidate): SchemaRow {
   const base = {
-    id: `sc-${i}`,
+    id: c.candidate_id,
     candidate_type: c.candidate_type,
     confidence: c.confidence,
     provenance: c.provenance ?? [],
@@ -177,11 +174,23 @@ export function SchemaCandidateReviewBody({
     runId,
     kind: "schema" as const,
     scope: { taxonomy_id: scope.taxonomyId, concept_scheme_id: scope.conceptSchemeId },
-    items: rows.map((r) => ({ key: r.id, confidence: r.confidence })),
     decisions,
   };
-  const plan = planReviewApply(applyInput);
-  const leaked = rows.filter((r) => plan.leakedKeys.includes(r.id));
+  const accepted = rows.filter((r) => decisions[r.id] === "yes");
+  // A connection whose endpoint is a proposed class that is not accepted is skipped on apply.
+  const unacceptedClassLabels = new Set(
+    rows
+      .filter((r) => r.candidate_type === "schema_class" && decisions[r.id] !== "yes")
+      .map((r) => r.label.toLowerCase()),
+  );
+  const orphaned = accepted.filter(
+    (r) =>
+      r.candidate_type === "schema_connection" &&
+      [r.subject_ref, r.object_ref].some((ref) =>
+        unacceptedClassLabels.has(ref?.toLowerCase() ?? ""),
+      ),
+  );
+  const labelFor = (id: string) => rows.find((r) => r.id === id)?.label ?? id;
 
   const decisionCol = {
     key: "id" as const,
@@ -342,7 +351,7 @@ export function SchemaCandidateReviewBody({
             <InspectorPanel
               eyebrow={`${r.candidate_type.replace("_", " ").toUpperCase()} CANDIDATE`}
               title={r.label}
-              id={`${runId} · #${r.id.split("-")[1]}`}
+              id={`${runId} · ${r.id}`}
               actions={
                 <ReviewDecision
                   value={decisions[r.id] ?? "pending"}
@@ -397,6 +406,15 @@ export function SchemaCandidateReviewBody({
         busy={flow.busy}
         onApply={flow.openConfirm}
         onRevert={() => flow.revertRun(runId)}
+        extra={
+          flow.result
+            ? applyResultRows(
+                flow.result,
+                accepted.map((r) => r.id),
+                labelFor,
+              )
+            : undefined
+        }
       />
       <ConfirmDialog
         isOpen={flow.confirmOpen}
@@ -410,15 +428,16 @@ export function SchemaCandidateReviewBody({
           <div className="xr-stack-sm" data-testid="extraction-review-schema-confirm">
             <span>
               Creates draft classes, property definitions and relationships from the {counts.yes}{" "}
-              accepted candidates. Entities that already exist with the same label are skipped.
+              accepted candidates. Rejected and pending candidates are skipped; entities that
+              already exist with the same label are reused.
             </span>
-            {leaked.length > 0 && (
+            {orphaned.length > 0 && (
               <FormCallout
                 variant="warn"
                 icon="alert"
-                data-testid="extraction-review-schema-leak-warning"
+                data-testid="extraction-review-schema-orphan-warning"
               >
-                {`Apply filters by confidence ≥ ${pct(plan.minConfidence)} (the lowest accepted score), so ${leaked.length} rejected candidate${leaked.length > 1 ? "s" : ""} at or above that score will also be applied: ${leaked.map((r) => r.label).join(", ")}.`}
+                {`${orphaned.length} accepted connection${orphaned.length > 1 ? "s" : ""} point${orphaned.length > 1 ? "" : "s"} at a proposed class you did not accept and will be skipped unless that class already exists: ${orphaned.map((r) => r.label).join(", ")}.`}
               </FormCallout>
             )}
           </div>

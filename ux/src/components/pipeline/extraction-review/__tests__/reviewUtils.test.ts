@@ -56,42 +56,64 @@ describe("helpers", () => {
   });
 });
 
-describe("planReviewApply (threshold-based apply)", () => {
-  const items = [
-    { key: "a", confidence: 0.9 },
-    { key: "b", confidence: 0.7 },
-    { key: "c", confidence: 0.8 },
-    { key: "d", confidence: 0.5 },
-  ];
-
-  it("uses the lowest accepted confidence and reports rejected items at or above it", () => {
+describe("planReviewApply (explicit selections)", () => {
+  it("sends accepted candidate ids as the full selection, with schema scope", () => {
     const plan = planReviewApply({
       runId: "r",
       kind: "schema",
       scope: { taxonomy_id: "t", concept_scheme_id: "s" },
-      items,
-      decisions: { a: "yes", b: "yes", c: "no", d: "no" },
+      decisions: {
+        "class-0": "yes",
+        "class-1": "no",
+        "connection-0": "yes",
+        "property-0": "pending",
+      },
     });
-    expect(plan.minConfidence).toBe(0.7);
-    expect(plan.leakedKeys).toEqual(["c"]);
-    expect(plan.params).toEqual({
-      confidence_threshold: 0.7,
-      taxonomy_id: "t",
-      concept_scheme_id: "s",
-    });
+    expect(plan.params).toEqual({ taxonomy_id: "t", concept_scheme_id: "s" });
+    expect(plan.body).toEqual({ accepted_candidate_ids: ["class-0", "connection-0"] });
   });
 
-  it("sends the recognition threshold and counts keep-separate choices for individuals", () => {
+  it("sends an empty selection when nothing is accepted", () => {
+    const plan = planReviewApply({
+      runId: "r",
+      kind: "schema",
+      scope: { taxonomy_id: "t", concept_scheme_id: "s" },
+      decisions: { "class-0": "no" },
+    });
+    expect(plan.body.accepted_candidate_ids).toEqual([]);
+  });
+
+  it("maps merge / keep-separate to recognition decisions and leaves pending to recognition", () => {
     const plan = planReviewApply({
       runId: "r",
       kind: "individual",
       scope: { taxonomy_id: "t" },
-      items,
-      decisions: { a: "yes" },
-      merges: { h1: "no", h2: "yes", h3: "no" },
+      decisions: { "triple-0": "yes" },
+      mentions: [
+        { mention_label: "Portal", individual_id: "ind-1", decision: "yes" },
+        { mention_label: "Adjuster", individual_id: "ind-2", decision: "no" },
+        { mention_label: "Service", individual_id: "ind-3", decision: "pending" },
+        { mention_label: " portal ", individual_id: "ind-9", decision: "no" },
+      ],
     });
-    expect(plan.params).toMatchObject({ confidence_threshold: 0.9, recognition_threshold: 0.9 });
-    expect(plan.params.concept_scheme_id).toBeUndefined();
-    expect(plan.ignoredSeparateCount).toBe(2);
+    expect(plan.params).toEqual({ taxonomy_id: "t", recognition_threshold: 0.9 });
+    expect(plan.body).toEqual({
+      accepted_candidate_ids: ["triple-0"],
+      recognition_decisions: [
+        { mention_label: "Portal", decision: "merge", individual_id: "ind-1" },
+        { mention_label: "Adjuster", decision: "separate" },
+      ],
+    });
+  });
+
+  it("omits recognition_decisions when every mention is undecided", () => {
+    const plan = planReviewApply({
+      runId: "r",
+      kind: "individual",
+      scope: { taxonomy_id: "t" },
+      decisions: {},
+      mentions: [{ mention_label: "Portal", individual_id: "ind-1", decision: "pending" }],
+    });
+    expect(plan.body).toEqual({ accepted_candidate_ids: [] });
   });
 });

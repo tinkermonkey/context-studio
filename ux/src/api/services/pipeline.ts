@@ -11,8 +11,10 @@ type PipelineConfigurationUpdateRequest =
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 type ListPipelineRuns = components["schemas"]["ListResponse_PipelineRunResponse_"];
-type CandidateResponse = components["schemas"]["CandidateResponse"];
-type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+export type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+export type ApplyRunRequest = components["schemas"]["ApplyRunRequest"];
+export type RecognitionDecision = components["schemas"]["RecognitionDecisionSchema"];
+export type MergedMention = components["schemas"]["MergedMentionSchema"];
 type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 type BatchResponse = components["schemas"]["BatchResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
@@ -32,7 +34,8 @@ export type SchemaExtractionCandidate =
 export type RecognitionPreviewRequest = components["schemas"]["RecognitionPreviewRequest"];
 export type RecognitionPreviewResponse = components["schemas"]["RecognitionPreviewResponse"];
 export type RecognitionPreviewHit = components["schemas"]["RecognitionPreviewHitSchema"];
-type TypedCandidate =
+/** Discriminated union returned by every /runs/{id}/*candidates endpoint. */
+export type CandidateItem =
   | SchemaExtractionCandidate
   | TripleCandidate
   | components["schemas"]["GroundingCandidate"]
@@ -52,7 +55,8 @@ export interface RunListParams {
 }
 
 export interface ApplyParams {
-  confidence_threshold: number;
+  /** Ignored by the server when the body carries accepted_candidate_ids. */
+  confidence_threshold?: number;
   concept_scheme_id?: string;
   taxonomy_id?: string;
   node_id?: string;
@@ -124,13 +128,13 @@ class PipelineService extends BaseService {
     );
   }
 
-  async getCandidates(runId: string): Promise<CandidateResponse[]> {
-    return this.get<CandidateResponse[]>(`/api/pipelines/runs/${runId}/candidates`);
+  async getCandidates(runId: string): Promise<CandidateItem[]> {
+    return this.get<CandidateItem[]>(`/api/pipelines/runs/${runId}/candidates`);
   }
 
   /** Typed schema_extraction candidates (classes, properties, connections) with provenance. */
   async getSchemaExtractionCandidates(runId: string): Promise<SchemaExtractionCandidate[]> {
-    const items = await this.get<TypedCandidate[]>(
+    const items = await this.get<CandidateItem[]>(
       `/api/pipelines/runs/${runId}/schema-extraction-candidates`,
     );
     return items.filter((c): c is SchemaExtractionCandidate =>
@@ -140,7 +144,7 @@ class PipelineService extends BaseService {
 
   /** Typed individual_extraction triple candidates with provenance. */
   async getIndividualExtractionCandidates(runId: string): Promise<TripleCandidate[]> {
-    const items = await this.get<TypedCandidate[]>(
+    const items = await this.get<CandidateItem[]>(
       `/api/pipelines/runs/${runId}/individual-extraction-candidates`,
     );
     return items.filter((c): c is TripleCandidate => c.candidate_type === "triple");
@@ -169,10 +173,18 @@ class PipelineService extends BaseService {
   }
 
   // Materialization
-  async applyRun(runId: string, params: ApplyParams): Promise<ApplyRunResponse> {
+  /**
+   * Apply a run. Query params carry scope/thresholds; the optional body carries
+   * explicit selections (accepted candidate ids, per-mention recognition decisions).
+   */
+  async applyRun(
+    runId: string,
+    params: ApplyParams,
+    body?: ApplyRunRequest,
+  ): Promise<ApplyRunResponse> {
     return this.post<ApplyRunResponse>(
       `/api/pipelines/runs/${runId}/apply`,
-      undefined,
+      body,
       params as unknown as Record<string, unknown>,
     );
   }

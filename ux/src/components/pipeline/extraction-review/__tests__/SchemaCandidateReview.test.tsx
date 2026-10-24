@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
+import type { ReactNode } from "react";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -6,6 +7,12 @@ import { setupServer } from "msw/node";
 import { renderWithProviders } from "@/test/test-utils";
 import { SchemaCandidateReview } from "../SchemaCandidateReview";
 import { SCHEMA_CANDIDATES, SCOPE, XR_TEXT, makeRun } from "./fixtures";
+
+const { toastSpy } = vi.hoisted(() => ({ toastSpy: vi.fn() }));
+vi.mock("@/components/ui/Toast", () => ({
+  ToastProvider: ({ children }: { children: ReactNode }) => children,
+  useToasts: () => ({ toast: toastSpy, toasts: [], dismiss: vi.fn() }),
+}));
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -98,7 +105,7 @@ describe("SchemaCandidateReview — review", () => {
     const panel = await renderReady();
     const submitSpan = screen
       .getAllByTestId("extraction-review-span")
-      .find((m) => m.getAttribute("data-span-keys")?.split(" ").includes("sc-3"));
+      .find((m) => m.getAttribute("data-span-keys")?.split(" ").includes("property-0"));
     expect(submitSpan).toBeDefined();
     await userEvent.click(submitSpan!);
     expect(screen.getByTestId("extraction-review-schema-inspector")).toHaveTextContent("submits");
@@ -117,37 +124,49 @@ describe("SchemaCandidateReview — review", () => {
     await renderReady();
     const apply = screen.getByTestId("extraction-review-schema-apply");
     expect(apply).toBeDisabled();
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-0-yes"));
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-1-no"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-no"));
     const bar = screen.getByTestId("extraction-review-schema-apply-bar");
     expect(bar).toHaveTextContent("1 accepted");
     expect(bar).toHaveTextContent("1 rejected");
     expect(bar).toHaveTextContent("3 pending");
-    expect(screen.getByTestId("extraction-review-schema-decision-sc-0-yes")).toHaveAttribute(
+    expect(screen.getByTestId("extraction-review-schema-decision-class-0-yes")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
     expect(apply).toBeEnabled();
   });
 
-  it("warns in the confirm dialog when a rejected candidate is at or above the floor", async () => {
+  it("warns when an accepted connection points at a proposed class that is not accepted", async () => {
     await renderReady();
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-1-yes")); // 0.88
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-0-no")); // 0.91
+    const panel = screen.getByTestId("extraction-review-schema-candidates");
+    await userEvent.click(within(panel).getByRole("radio", { name: /Connections/ }));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-connection-0-yes"));
     await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
-    const warning = screen.getByTestId("extraction-review-schema-leak-warning");
+    const warning = screen.getByTestId("extraction-review-schema-orphan-warning");
     expect(warning).toHaveClass("form-callout--warn");
-    expect(warning).toHaveTextContent("confidence ≥ 88%");
-    expect(warning).toHaveTextContent("Policyholder");
+    expect(warning).toHaveTextContent("Policyholder → submits → Insurance Claim");
   });
 
-  it("applies with the threshold request, then reverts", async () => {
+  it("applies the explicit selection, shows what was created and skipped, then reverts", async () => {
     let applyUrl: URL | null = null;
+    let applyBody: unknown = null;
     let reverted = false;
     server.use(
-      http.post("*/api/pipelines/runs/run-s/apply", ({ request }) => {
+      http.post("*/api/pipelines/runs/run-s/apply", async ({ request }) => {
         applyUrl = new URL(request.url);
-        return HttpResponse.json({ run_id: "run-s", pipeline_type: "schema_extraction" });
+        applyBody = await request.json();
+        return HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 1,
+          properties_created: 0,
+          individuals_created: 0,
+          relationships_created: 0,
+          applied_candidate_ids: ["class-0"],
+          skipped_candidate_ids: ["class-1", "class-2", "property-0", "connection-0"],
+          merged_mentions: [],
+        });
       }),
       http.post("*/api/pipelines/runs/run-s/revert", () => {
         reverted = true;
@@ -155,19 +174,72 @@ describe("SchemaCandidateReview — review", () => {
       }),
     );
     await renderReady();
-    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-sc-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-no"));
+    const panel = screen.getByTestId("extraction-review-schema-candidates");
+    await userEvent.click(within(panel).getByRole("radio", { name: /Connections/ }));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-connection-0-yes"));
     await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
-    expect(screen.getByTestId("extraction-review-schema-confirm")).toBeInTheDocument();
-    expect(screen.queryByTestId("extraction-review-schema-leak-warning")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    expect(screen.getByTestId("extraction-review-schema-confirm")).toHaveTextContent(
+      "Rejected and pending candidates are skipped",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Apply 2 accepted" }));
 
     const revert = await screen.findByTestId("extraction-review-schema-revert");
-    expect(applyUrl!.searchParams.get("confidence_threshold")).toBe("0.91");
+    expect(applyBody).toEqual({ accepted_candidate_ids: ["class-0", "connection-0"] });
+    expect(applyUrl!.searchParams.get("confidence_threshold")).toBeNull();
     expect(applyUrl!.searchParams.get("taxonomy_id")).toBe("tax-dr");
     expect(applyUrl!.searchParams.get("concept_scheme_id")).toBe("scheme-app");
+
+    expect(screen.getByTestId("extraction-review-apply-result-created")).toHaveTextContent(
+      "1 classes created",
+    );
+    // Only accepted-but-skipped candidates are surfaced, not the unselected ones.
+    const skipped = screen.getByTestId("extraction-review-apply-result-skipped");
+    expect(within(skipped).getByText("Policyholder → submits → Insurance Claim")).toHaveClass(
+      "chip--amber",
+    );
+    expect(within(skipped).queryByText("Insurance Claim")).not.toBeInTheDocument();
 
     await userEvent.click(revert);
     await waitFor(() => expect(reverted).toBe(true));
     expect(await screen.findByTestId("extraction-review-schema-apply")).toBeInTheDocument();
+    expect(screen.queryByTestId("extraction-review-apply-result-created")).not.toBeInTheDocument();
+  });
+
+  it("warns when revert finds no recorded changes to undo", async () => {
+    server.use(
+      http.post("*/api/pipelines/runs/run-s/apply", () =>
+        HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 0,
+          properties_created: 0,
+          individuals_created: 0,
+          relationships_created: 0,
+          applied_candidate_ids: ["class-0"],
+          skipped_candidate_ids: [],
+          merged_mentions: [],
+        }),
+      ),
+      http.post("*/api/pipelines/runs/run-s/revert", () =>
+        HttpResponse.json({ run_id: "run-s", events_reverted: 0 }),
+      ),
+    );
+    await renderReady();
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    expect(await screen.findByTestId("extraction-review-apply-result-created")).toHaveTextContent(
+      "1 of 1 accepted applied",
+    );
+    await userEvent.click(screen.getByTestId("extraction-review-schema-revert"));
+    await waitFor(() =>
+      expect(toastSpy).toHaveBeenLastCalledWith(
+        "warning",
+        "Nothing to revert",
+        expect.stringContaining("run-s"),
+      ),
+    );
   });
 });

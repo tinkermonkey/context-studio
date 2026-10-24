@@ -3,6 +3,7 @@ import { useToasts } from "@/components/ui/Toast";
 import { useRevertRun } from "@/api/hooks/pipeline/usePipelineMutations";
 import {
   useApplyReviewedRun,
+  type ApplyRunResponse,
   type ReviewApplyInput,
 } from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { ApiError } from "@/api/client/interceptors";
@@ -19,14 +20,23 @@ export function useReviewApplyFlow(labels: { applied: string; reverted: string }
   const { applyReviewed, isPending: applying } = useApplyReviewedRun();
   const revert = useRevertRun();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [applied, setApplied] = useState(false);
+  const [result, setResult] = useState<ApplyRunResponse | null>(null);
 
   const confirm = async (input: ReviewApplyInput) => {
     setConfirmOpen(false);
     try {
-      await applyReviewed(input);
-      setApplied(true);
-      toast("success", labels.applied, input.runId);
+      const response = await applyReviewed(input);
+      setResult(response);
+      // skipped_candidate_ids also lists unselected candidates; count only accepted ones.
+      const skippedIds = new Set(response.skipped_candidate_ids ?? []);
+      const acceptedSkipped = Object.entries(input.decisions).filter(
+        ([id, v]) => v === "yes" && skippedIds.has(id),
+      ).length;
+      toast(
+        acceptedSkipped > 0 ? "warning" : "success",
+        labels.applied,
+        `${response.applied_candidate_ids?.length ?? 0} applied · ${acceptedSkipped} accepted skipped`,
+      );
     } catch (err) {
       toast("error", "Apply failed", reason(err));
     }
@@ -34,9 +44,13 @@ export function useReviewApplyFlow(labels: { applied: string; reverted: string }
 
   const revertRun = async (runId: string) => {
     try {
-      await revert.mutateAsync(runId);
-      setApplied(false);
-      toast("info", "Run reverted", `${runId} · ${labels.reverted}`);
+      const response = await revert.mutateAsync(runId);
+      setResult(null);
+      if (response.events_reverted === 0) {
+        toast("warning", "Nothing to revert", `${runId} recorded no changes to undo`);
+      } else {
+        toast("info", "Run reverted", `${runId} · ${labels.reverted}`);
+      }
     } catch (err) {
       toast("error", "Revert failed", reason(err));
     }
@@ -46,7 +60,9 @@ export function useReviewApplyFlow(labels: { applied: string; reverted: string }
     confirmOpen,
     openConfirm: () => setConfirmOpen(true),
     closeConfirm: () => setConfirmOpen(false),
-    applied,
+    applied: result !== null,
+    /** What the server applied, skipped and merged; null until applied. */
+    result,
     busy: applying || revert.isPending,
     confirm,
     revertRun,

@@ -1,74 +1,83 @@
 import { useCallback } from "react";
 import { useApplyRun } from "./usePipelineMutations";
-import type { ApplyParams } from "@/api/services/pipeline";
+import type { ApplyParams, ApplyRunRequest, RecognitionDecision } from "@/api/services/pipeline";
 import type { ReviewKind } from "./useExtractionReviewRuns";
+
+export type { ApplyRunResponse, MergedMention } from "@/api/services/pipeline";
 
 /** A review decision. "yes" = accept / merge, "no" = reject / keep separate. */
 export type ReviewDecisionValue = "yes" | "no" | "pending";
 
-export interface ReviewedItem {
-  key: string;
-  confidence: number;
+/** A recognition hit the reviewer can merge into an existing individual or keep separate. */
+export interface ReviewedMention {
+  mention_label: string;
+  /** Existing individual the preview resolved the mention to (the merge target). */
+  individual_id: string;
+  decision: ReviewDecisionValue;
 }
 
 export interface ReviewApplyInput {
   runId: string;
   kind: ReviewKind;
   scope: { taxonomy_id: string; concept_scheme_id?: string };
-  items: ReviewedItem[];
+  /** Decisions keyed by the API's candidate_id. */
   decisions: Record<string, ReviewDecisionValue>;
-  /** Per-mention merge decisions (individual extraction only). */
-  merges?: Record<string, ReviewDecisionValue>;
+  /** Per-mention merge / keep-separate choices (individual extraction only). */
+  mentions?: ReviewedMention[];
 }
 
 export interface ReviewApplyPlan {
   params: ApplyParams;
-  /** Lowest accepted confidence — the effective filter under threshold-based apply. */
-  minConfidence: number | null;
-  /** Rejected items that the threshold would still apply. */
-  leakedKeys: string[];
-  /** "Keep separate" choices the threshold contract cannot honour per mention. */
-  ignoredSeparateCount: number;
+  body: ApplyRunRequest;
 }
 
-/** Recognition threshold used for both the preview and apply, so they agree. */
+/** Recognition threshold for the preview and for mentions the reviewer left undecided. */
 export const REVIEW_RECOGNITION_THRESHOLD = 0.9;
 
 /**
- * Translate review decisions into an apply request. This is the ONLY place that
- * knows the apply contract: today apply takes a confidence threshold, so the
- * plan uses the lowest accepted confidence and reports rejected items that
- * would leak through. Switch this function when explicit selections land.
+ * Translate review decisions into an apply request. This is the only place that
+ * knows the apply contract: accepted candidate ids are the full selection
+ * (everything else is skipped), and decided mentions are sent as explicit
+ * merge / separate decisions. Undecided mentions go through recognition.
  */
 export function planReviewApply(input: ReviewApplyInput): ReviewApplyPlan {
-  const accepted = input.items.filter((it) => input.decisions[it.key] === "yes");
-  const minConfidence = accepted.length ? Math.min(...accepted.map((it) => it.confidence)) : null;
-  const leakedKeys =
-    minConfidence === null
-      ? []
-      : input.items
-          .filter((it) => input.decisions[it.key] === "no" && it.confidence >= minConfidence)
-          .map((it) => it.key);
-  const ignoredSeparateCount = Object.values(input.merges ?? {}).filter((v) => v === "no").length;
+  const accepted = Object.entries(input.decisions)
+    .filter(([, v]) => v === "yes")
+    .map(([id]) => id);
+  const params: ApplyParams = { taxonomy_id: input.scope.taxonomy_id };
+  const body: ApplyRunRequest = { accepted_candidate_ids: accepted };
 
-  const params: ApplyParams = {
-    confidence_threshold: minConfidence ?? 1,
-    taxonomy_id: input.scope.taxonomy_id,
-  };
   if (input.kind === "schema") {
     params.concept_scheme_id = input.scope.concept_scheme_id;
   } else {
     params.recognition_threshold = REVIEW_RECOGNITION_THRESHOLD;
+    // The server matches labels case-insensitively and rejects duplicates: keep the first.
+    const seen = new Set<string>();
+    const decisions: RecognitionDecision[] = (input.mentions ?? [])
+      .filter((m) => {
+        const label = m.mention_label.trim().toLowerCase();
+        if (m.decision === "pending" || seen.has(label)) return false;
+        seen.add(label);
+        return true;
+      })
+      .map((m) =>
+        m.decision === "yes"
+          ? { mention_label: m.mention_label, decision: "merge", individual_id: m.individual_id }
+          : { mention_label: m.mention_label, decision: "separate" },
+      );
+    if (decisions.length > 0) body.recognition_decisions = decisions;
   }
-  return { params, minConfidence, leakedKeys, ignoredSeparateCount };
+  return { params, body };
 }
 
 export function useApplyReviewedRun() {
   const mutation = useApplyRun();
   const { mutateAsync } = mutation;
   const applyReviewed = useCallback(
-    (input: ReviewApplyInput) =>
-      mutateAsync({ runId: input.runId, params: planReviewApply(input).params }),
+    (input: ReviewApplyInput) => {
+      const { params, body } = planReviewApply(input);
+      return mutateAsync({ runId: input.runId, params, body });
+    },
     [mutateAsync],
   );
   return { applyReviewed, isPending: mutation.isPending };
