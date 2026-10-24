@@ -264,12 +264,15 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
+    def count_classes(
+        self, concept_scheme_id: str | None = None, parent_class_id: str | None = None
+    ) -> int:
         """
-        Count classes, optionally filtered by scheme.
+        Count classes, optionally filtered by scheme and/or parent class.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to count classes within
+            parent_class_id: Optional parent class ID to count direct subclasses of
 
         Returns:
             Total count of classes

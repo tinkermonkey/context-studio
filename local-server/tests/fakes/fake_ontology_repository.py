@@ -212,12 +212,15 @@ class FakeOntologyRepository:
             results = [s for s in results if query_lower in s.title.lower()]
         return len(results)
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
-        if concept_scheme_id:
-            return sum(
-                1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id
-            )
-        return len(self._classes)
+    def count_classes(
+        self, concept_scheme_id: str | None = None, parent_class_id: str | None = None
+    ) -> int:
+        results = list(self._classes.values())
+        if concept_scheme_id is not None:
+            results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
+        if parent_class_id is not None:
+            results = [c for c in results if c.parent_class_id == parent_class_id]
+        return len(results)
 
     def save_class(self, cls: Class) -> Class:
         for existing_class in self._classes.values():

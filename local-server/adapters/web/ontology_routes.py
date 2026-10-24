@@ -572,7 +572,9 @@ async def list_classes(
             limit=limit,
             offset=offset,
         )
-        total = service.count_classes(concept_scheme_id=concept_scheme_id)
+        total = service.count_classes(
+            concept_scheme_id=concept_scheme_id, parent_class_id=parent_class_id
+        )
         return ListResponse(
             items=[ClassResponse.model_validate(c) for c in classes],
             total=total,
@@ -1278,9 +1280,7 @@ async def list_individuals(
         ListResponse containing matching individuals
     """
     try:
-        individuals = await run_sync_in_executor(
-            service.list_individuals, class_id, limit, offset
-        )
+        individuals = await run_sync_in_executor(service.list_individuals, class_id, limit, offset)
         total = await run_sync_in_executor(service.count_individuals, class_id)
         return ListResponse(
             items=[IndividualResponse.model_validate(i) for i in individuals],

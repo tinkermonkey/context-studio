@@ -2195,17 +2195,22 @@ class OntologyService:
 
         return scheme
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
+    def count_classes(
+        self, concept_scheme_id: str | None = None, parent_class_id: str | None = None
+    ) -> int:
         """
-        Count the number of classes, optionally filtered by concept scheme.
+        Count the number of classes, optionally filtered by concept scheme and/or parent.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by (direct subclasses)
 
         Returns:
             The count of classes
         """
-        return self._repository.count_classes(concept_scheme_id=concept_scheme_id)
+        return self._repository.count_classes(
+            concept_scheme_id=concept_scheme_id, parent_class_id=parent_class_id
+        )
 
     # Individual operations
 

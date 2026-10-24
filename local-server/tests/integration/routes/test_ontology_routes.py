@@ -1613,6 +1613,24 @@ class TestListTotalsBeyondDefaultLimit:
         assert data["total"] == 120
         assert data["limit"] == 5000
 
+    def test_classes_total_filtered_by_parent_class(self, client, ontology_service):
+        """GET /api/classes?parent_class_id=X total counts only that parent's subclasses."""
+        taxonomy = ontology_service.create_taxonomy(title="Parent Filter Taxonomy")
+        scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Parent Scheme")
+        parent = ontology_service.create_class(concept_scheme_id=scheme.id, title="Parent")
+        for i in range(3):
+            ontology_service.create_class(
+                concept_scheme_id=scheme.id, title=f"Child {i}", parent_class_id=parent.id
+            )
+        ontology_service.create_class(concept_scheme_id=scheme.id, title="Unrelated")
+
+        response = client.get(f"/api/classes?parent_class_id={parent.id}&limit=2")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["total"] == 3
+
     def test_individuals_total_is_true_count(self, client, large_ontology):
         """GET /api/individuals total counts every individual, not just the first page."""
         response = client.get("/api/individuals")
