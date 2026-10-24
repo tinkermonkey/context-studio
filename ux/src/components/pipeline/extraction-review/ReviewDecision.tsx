@@ -12,6 +12,8 @@ export interface ReviewDecisionProps {
   no?: string;
   /** Icon-only square buttons for dense tables. */
   compact?: boolean;
+  /** When set, the "no" choice is disabled and this explains why (shown as its tooltip). */
+  noDisabledReason?: string;
   "data-testid"?: string;
 }
 
@@ -26,6 +28,7 @@ export function ReviewDecision({
   yes = "Accept",
   no = "Reject",
   compact = false,
+  noDisabledReason,
   "data-testid": testId,
 }: ReviewDecisionProps) {
   const pick = (v: "yes" | "no") => (e: MouseEvent) => {
@@ -52,7 +55,9 @@ export function ReviewDecision({
         variant={value === "no" ? "danger" : "ghost"}
         aria-pressed={value === "no"}
         aria-label={no}
-        title={no}
+        title={noDisabledReason ?? no}
+        disabled={!!noDisabledReason}
+        aria-disabled={noDisabledReason ? true : undefined}
         onClick={pick("no")}
         data-testid={testId ? `${testId}-no` : undefined}
       >

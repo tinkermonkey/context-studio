@@ -74,6 +74,16 @@ export interface HitRow extends RecognitionPreviewHit {
 const tripleLabel = (t: TripleRow) =>
   `${t.subject.label} → ${t.predicate.label} → ${t.object.label}`;
 const isNewNode = (n: NodeReference) => n.kind !== "literal" && !n.id;
+/**
+ * An exact title match within the mention's class cannot be kept separate:
+ * individual titles are unique per class, so apply resolves the mention to the
+ * existing individual whatever the reviewer decides.
+ */
+const isSameTitleHit = (h: RecognitionPreviewHit) =>
+  h.match_method === "exact" && (h.candidate_class_ids ?? []).length > 0;
+const SAME_TITLE_REASON =
+  "Same title in the same class: titles are unique per class, so this mention always merges.";
+
 const usesMention = (t: TripleRow, m: string) =>
   mentionKey(t.subject.label) === mentionKey(m) || mentionKey(t.object.label) === mentionKey(m);
 
@@ -287,7 +297,11 @@ export function IndividualCandidateReviewBody({
     })),
   };
   const accepted = triples.filter((t) => decisions[t.id] === "yes").map((t) => t.id);
-  const undecidedMatches = mergeCounts.pending;
+  // Undecided same-title hits merge regardless; only the rest go to recognition.
+  const sameTitlePending = matchedHits.filter(
+    (h) => isSameTitleHit(h) && (merges[h.id] ?? "pending") === "pending",
+  ).length;
+  const undecidedMatches = mergeCounts.pending - sameTitlePending;
 
   const renderInspector = (item: { id: string }) => {
     const t = triples.find((x) => x.id === item.id);
@@ -595,6 +609,7 @@ export function IndividualCandidateReviewBody({
                           onChange={(v) => setMerges((m) => ({ ...m, [String(k)]: v }))}
                           yes="Merge"
                           no="Keep separate"
+                          noDisabledReason={isSameTitleHit(h) ? SAME_TITLE_REASON : undefined}
                           data-testid={`extraction-review-recognition-decision-${k}`}
                         />
                       ) : (
@@ -670,6 +685,11 @@ export function IndividualCandidateReviewBody({
             <span className="xr-chip-row">
               <Chip variant="emerald">{mergeCounts.yes} merge into existing</Chip>
               <Chip variant="neutral">{mergeCounts.no} kept separate</Chip>
+              {sameTitlePending > 0 && (
+                <Chip variant="emerald" title={SAME_TITLE_REASON}>
+                  {sameTitlePending} same title · merges automatically
+                </Chip>
+              )}
               {undecidedMatches > 0 && (
                 <Chip variant="cyan">{undecidedMatches} left to recognition</Chip>
               )}

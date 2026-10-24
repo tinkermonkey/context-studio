@@ -31,13 +31,9 @@ import {
  * revert and change events all hit the real isolated backend.
  *
  * Provenance shapes differ by pipeline: schema candidates carry a LIST of spans,
- * individual-extraction triples carry a SINGLE {quote,start,end} object
- * (spanIn(...), not [spanIn(...)] — a list 500s apply, defect D3).
- *
- * The two revert tests assert the correct behaviour and are expected to fail
- * until backend defects D1 (schema apply records no change events, so revert is
- * a no-op) and D2 (individual revert leaves apply-created relationships) are
- * fixed. Defect-specific checks use expect.soft so a run reports every symptom.
+ * individual-extraction triples carry a SINGLE {quote,start,end} object as the
+ * production pipelines store it. triple-0 deliberately uses a LIST so apply's
+ * recognition context covers that shape too (it used to 500 apply).
  */
 
 const TEXT =
@@ -175,8 +171,9 @@ function schemaOutput(): Record<string, unknown> {
 
 /**
  * Individual output summary. Triple provenance is a SINGLE span object, as the
- * production pipelines store it. Order matters: triple-0 mints "Checkout API"
- * so triple-1 can resolve it as its object.
+ * production pipelines store it, except triple-0 which uses a LIST of spans
+ * (also accepted). Order matters: triple-0 mints "Checkout API" so triple-1 can
+ * resolve it as its object.
  */
 function individualOutput(seed: DrSeed): Record<string, unknown> {
   const { interfaceClass, serviceClass, componentClass, exposes } = seed;
@@ -193,7 +190,7 @@ function individualOutput(seed: DrSeed): Record<string, unknown> {
         predicate: { property_definition_id: null, label: "is_a" },
         object: { kind: "class", id: interfaceClass.id, label: "Application Interface" },
         confidence: 0.9,
-        provenance: spanIn(TEXT, "Checkout API"),
+        provenance: [spanIn(TEXT, "Checkout API")],
       }, // triple-0
       {
         subject: {
@@ -601,8 +598,6 @@ test.describe("Extraction review", () => {
     expect(rels[0].target_id).toBe(eventStream!.id);
   });
 
-  // Expected to FAIL until backend defect D1 is fixed: schema apply records no
-  // change events, so revert reverts nothing.
   test("schema tab: revert removes what the run created", async ({ page }) => {
     const seed = await seedDrScope(page);
     const intercepted = await routeRunsToSeededOutput(page, {
@@ -634,18 +629,18 @@ test.describe("Extraction review", () => {
     expect(publishes).toHaveLength(1);
     const publishesId = publishes[0].id;
 
-    // D1: the run's class, property definition and relationship creates are recorded.
-    expect.soft((await changeEvents(page, runId)).length).toBeGreaterThanOrEqual(3);
+    // The run's class, property definition and relationship creates are recorded.
+    expect((await changeEvents(page, runId)).length).toBeGreaterThanOrEqual(3);
 
     const [, revertResponse] = waitForRunCall(page, runId, "revert");
     await page.getByTestId("extraction-review-schema-revert").click();
     const revert = await (await revertResponse).json();
-    expect.soft(revert).toMatchObject({
+    expect(revert).toMatchObject({
       classes_deleted: 1,
       properties_deleted: 1,
       relationships_deleted: 1,
     });
-    expect.soft(revert.events_reverted).toBeGreaterThanOrEqual(3);
+    expect(revert.events_reverted).toBeGreaterThanOrEqual(3);
 
     // UI.
     await expect(toast(page, "Run reverted")).toBeVisible();
@@ -669,7 +664,7 @@ test.describe("Extraction review", () => {
     expect(await propertiesWithIdentifier(page, "exposes")).toHaveLength(1);
   });
 
-  test("individual tab: triples, recognition merge and keep separate, span to inspector, apply and persist", async ({
+  test("individual tab: triples, recognition merge and same-title lock, span to inspector, apply and persist", async ({
     page,
   }) => {
     const seed = await seedDrScope(page);
@@ -718,13 +713,16 @@ test.describe("Extraction review", () => {
     }
     await expect(inspector).toHaveCount(0);
 
-    // Decisions: accept three triples, reject one; merge hit-1, keep hit-2 separate.
+    // Decisions: accept three triples, reject one; merge hit-1. hit-2 is an exact
+    // title match in its class, so "Keep separate" is disabled (it would merge anyway).
     await decide(page, "extraction-review-individual-decision-triple-0-yes");
     await decide(page, "extraction-review-individual-decision-triple-1-yes");
     await decide(page, "extraction-review-individual-decision-triple-2-yes");
     await decide(page, "extraction-review-individual-decision-triple-3-no");
     await decide(page, "extraction-review-recognition-decision-hit-1-yes");
-    await decide(page, "extraction-review-recognition-decision-hit-2-no");
+    const keepSeparate = page.getByTestId("extraction-review-recognition-decision-hit-2-no");
+    await expect(keepSeparate).toBeDisabled();
+    await expect(keepSeparate).toHaveAttribute("title", /titles are unique per class/);
 
     const applyBar = page.getByTestId("extraction-review-individual-apply-bar");
     for (const expected of [
@@ -732,7 +730,7 @@ test.describe("Extraction review", () => {
       "1 rejected",
       "0 pending",
       "1 merge",
-      "1 keep separate",
+      "0 keep separate",
       "threshold 0.90",
     ]) {
       await expect(applyBar).toContainText(expected);
@@ -743,7 +741,12 @@ test.describe("Extraction review", () => {
 
     await page.getByTestId("extraction-review-individual-apply").click();
     const confirm = page.getByTestId("extraction-review-individual-confirm");
-    for (const expected of ["3 accepted triples", "1 merge into existing", "1 kept separate"]) {
+    for (const expected of [
+      "3 accepted triples",
+      "1 merge into existing",
+      "0 kept separate",
+      "1 same title · merges automatically",
+    ]) {
       await expect(confirm).toContainText(expected);
     }
     await expect(confirm).not.toContainText("left to recognition");
@@ -764,11 +767,10 @@ test.describe("Extraction review", () => {
     ]);
     expect(body.recognition_decisions).toEqual([
       { mention_label: "Order Service", decision: "merge", individual_id: seed.orderService.id },
-      { mention_label: "Storefront Web App", decision: "separate" },
     ]);
 
-    // "Keep separate" on an exact-title hit cannot mint a duplicate (titles are
-    // unique per class): the server reports it as merged via existing_title.
+    // The undecided exact-title hit resolves to the existing individual (titles
+    // are unique per class): the server reports it as merged via existing_title.
     expect(response.status()).toBe(200);
     expect(await response.json()).toMatchObject({
       individuals_created: 1,
@@ -833,8 +835,6 @@ test.describe("Extraction review", () => {
     );
   });
 
-  // Relationship part expected to FAIL until backend defect D2 is fixed:
-  // individual revert leaves the apply-created relationship dangling.
   test("individual tab: revert removes the minted individual and its relationship", async ({
     page,
   }) => {
@@ -855,9 +855,9 @@ test.describe("Extraction review", () => {
     await decide(page, "extraction-review-recognition-decision-hit-1-yes");
 
     await page.getByTestId("extraction-review-individual-apply").click();
-    await expect(page.getByTestId("extraction-review-individual-confirm")).toContainText(
-      "1 left to recognition",
-    );
+    const confirm = page.getByTestId("extraction-review-individual-confirm");
+    await expect(confirm).toContainText("1 same title · merges automatically");
+    await expect(confirm).not.toContainText("left to recognition");
     const [applyRequest, applyResponse] = waitForRunCall(page, runId, "apply");
     await confirmButton(page, "individual", "Apply 2 accepted").click();
     const body = (await applyRequest).postDataJSON() as Record<string, unknown>;
@@ -882,8 +882,8 @@ test.describe("Extraction review", () => {
     await page.getByTestId("extraction-review-individual-revert").click();
     const revert = await (await revertResponse).json();
     expect(revert.individuals_deleted).toBe(1);
-    // D2: the relationship minted by apply is reverted too.
-    expect.soft(revert.relationships_deleted).toBe(1);
+    // The relationship minted by apply is reverted too.
+    expect(revert.relationships_deleted).toBe(1);
 
     // UI.
     await expect(toast(page, "Run reverted")).toBeVisible();
@@ -901,7 +901,7 @@ test.describe("Extraction review", () => {
     const target = await apiRequest<Individual>(page, `/api/individuals/${seed.orderService.id}`);
     expect(target.id).toBe(seed.orderService.id);
     expect(target.title).toBe("Order Service");
-    // D2: fails today, a relationship to the deleted checkoutId survives.
+    // No relationship to the deleted checkoutId survives.
     expect(await relationships(page, seed.orderService.id, seed.exposes.id)).toHaveLength(0);
   });
 

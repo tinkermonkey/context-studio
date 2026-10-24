@@ -126,14 +126,37 @@ describe("IndividualCandidateReview", () => {
     ).not.toBeInTheDocument();
     expect(within(rec).getByText("no match · created as new")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-0-yes"));
-    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-1-no"));
+    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-1-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-recognition-decision-hit-0-no"));
     expect(within(rec).getByText("1 merge")).toBeInTheDocument();
     expect(within(rec).getByText("1 separate")).toBeInTheDocument();
-    expect(screen.getByTestId("extraction-review-recognition-decision-hit-1-no")).toHaveAttribute(
+    expect(screen.getByTestId("extraction-review-recognition-decision-hit-0-no")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
+  });
+
+  it("disables keep separate for an exact same-class title match and explains why", async () => {
+    await renderReady();
+    // hit-1 (Claims Adjuster) is an exact match in its class; hit-0 is a vector match.
+    const sameTitle = screen.getByTestId("extraction-review-recognition-decision-hit-1-no");
+    expect(sameTitle).toBeDisabled();
+    expect(sameTitle).toHaveAttribute("aria-disabled", "true");
+    expect(sameTitle).toHaveAttribute("title", expect.stringMatching(/titles are unique per class/));
+    await userEvent.click(sameTitle);
+    expect(sameTitle).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("extraction-review-recognition-decision-hit-0-no")).toBeEnabled();
+    expect(screen.getByTestId("extraction-review-recognition-decision-hit-1-yes")).toBeEnabled();
+
+    // Undecided, it counts as merging automatically; the undecided vector hit
+    // is the only one left to recognition.
+    await userEvent.click(screen.getByTestId("extraction-review-individual-decision-triple-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-individual-apply"));
+    const confirm = screen.getByTestId("extraction-review-individual-confirm");
+    expect(within(confirm).getByText("1 same title · merges automatically")).toHaveClass(
+      "chip--emerald",
+    );
+    expect(within(confirm).getByText("1 left to recognition")).toHaveClass("chip--cyan");
   });
 
   it("opens the recognition inspector from a mention highlight and links to its triples", async () => {
@@ -175,7 +198,11 @@ describe("IndividualCandidateReview", () => {
     await userEvent.click(screen.getByTestId("extraction-review-individual-apply"));
     const confirm = screen.getByTestId("extraction-review-individual-confirm");
     expect(within(confirm).getByText("1 kept separate")).toHaveClass("chip--neutral");
-    expect(within(confirm).getByText("1 left to recognition")).toHaveClass("chip--cyan");
+    // hit-1 is an undecided exact same-class match: it merges, not left to recognition.
+    expect(within(confirm).getByText("1 same title · merges automatically")).toHaveClass(
+      "chip--emerald",
+    );
+    expect(within(confirm).queryByText(/left to recognition/)).not.toBeInTheDocument();
     expect(within(confirm).queryByRole("alert")).not.toBeInTheDocument();
   });
 

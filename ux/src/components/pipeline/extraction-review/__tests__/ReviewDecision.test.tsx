@@ -75,4 +75,24 @@ describe("ReviewDecision", () => {
     await userEvent.click(screen.getByRole("button", { name: "Accept" }));
     expect(onRow).not.toHaveBeenCalled();
   });
+
+  it("disables only the no choice when a reason is given, and shows the reason", async () => {
+    const onChange = vi.fn();
+    render(
+      <ReviewDecision
+        value="pending"
+        onChange={onChange}
+        yes="Merge"
+        no="Keep separate"
+        noDisabledReason="Same title in the same class"
+      />,
+    );
+    const no = screen.getByRole("button", { name: "Keep separate" });
+    expect(no).toBeDisabled();
+    expect(no).toHaveAttribute("aria-disabled", "true");
+    expect(no).toHaveAttribute("title", "Same title in the same class");
+    await userEvent.click(no);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Merge" })).toBeEnabled();
+  });
 });
