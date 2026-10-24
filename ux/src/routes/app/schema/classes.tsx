@@ -10,6 +10,7 @@ import {
   Icon,
   VersionPill,
   SegmentedControl,
+  Select,
 } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -30,6 +31,9 @@ import type { components } from "@/api/types";
 import { SMALL_SET_LIMIT } from "@/api/config";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
+
+/** Most concept schemes the domain filter shows as a segmented control. */
+const MAX_SEGMENTED_DOMAINS = 4;
 
 interface ClassesSearchParams {
   createForScheme?: string;
@@ -276,12 +280,28 @@ export function ClassesPage() {
             showingCount={total ?? 0}
             totalCount={counts.classes ?? total ?? 0}
           >
-            {schemes.length > 0 && (
+            {/* A segmented control only fits a few schemes; past that it crowds out
+                the search input, so the domain filter becomes a dropdown. */}
+            {schemes.length > 0 && schemes.length <= MAX_SEGMENTED_DOMAINS && (
               <SegmentedControl
                 value={domainFilter}
                 onChange={(v) => setDomainFilter(v as string)}
                 options={domainOptions}
               />
+            )}
+            {schemes.length > MAX_SEGMENTED_DOMAINS && (
+              <Select
+                value={domainFilter}
+                onChange={setDomainFilter}
+                ariaLabel="Filter by domain"
+                data-testid="class-domain-filter"
+              >
+                {domainOptions.map((o) => (
+                  <Select.Item key={o.value} value={o.value}>
+                    {o.label}
+                  </Select.Item>
+                ))}
+              </Select>
             )}
           </FilterBar>
 

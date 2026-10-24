@@ -2117,6 +2117,9 @@ selectors:
   - selector: selectable-table-next
     component: src/components/crud/SelectableTable.tsx
     description: Next-page button in the SelectableTable pagination footer
+  - selector: class-domain-filter
+    component: src/routes/app/schema/classes.tsx
+    description: Domain (concept scheme) filter dropdown on the Classes page, shown instead of the segmented control when there are more than 4 schemes
   - selector: list-pager
     component: src/components/crud/ListPager.tsx
     description: Server-side pagination footer (role=navigation) under a paged SelectableTable on the schema/data list pages

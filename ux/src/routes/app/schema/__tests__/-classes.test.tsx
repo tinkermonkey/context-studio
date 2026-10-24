@@ -283,6 +283,36 @@ describe("Classes Schema Page", () => {
     });
   });
 
+  describe("domain filter with many schemes", () => {
+    it("uses a dropdown so the search input keeps its width, and filters server-side", async () => {
+      const requests: URLSearchParams[] = [];
+      const schemes = Array.from({ length: 6 }, (_, i) =>
+        createConceptScheme({ id: `scheme-${i}`, title: `Domain ${i}` }),
+      );
+      server.use(
+        serverSideClasses(
+          [
+            createClass({ id: "class-1", title: "Person", concept_scheme_id: "scheme-1" }),
+            createClass({ id: "class-2", title: "Rock", concept_scheme_id: "scheme-5" }),
+          ],
+          requests,
+        ),
+        http.get("*/api/schemes", () => HttpResponse.json(createListSchemes(schemes))),
+      );
+
+      render(<ClassesPage />);
+
+      const select = await screen.findByTestId("class-domain-filter");
+      expect(screen.queryByRole("radio", { name: "Domain 5" })).not.toBeInTheDocument();
+      await userEvent.selectOptions(select, "scheme-5");
+
+      await waitFor(() => {
+        expect(screen.queryByText("Person")).not.toBeInTheDocument();
+      });
+      expect(pageRequests(requests).at(-1)!.get("concept_scheme_id")).toBe("scheme-5");
+    });
+  });
+
   // ========================================================================
   // Server-side pagination
   // ========================================================================
