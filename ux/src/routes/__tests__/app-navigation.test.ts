@@ -62,6 +62,11 @@ describe("app navigation — pipelines", () => {
     expect(action).toMatchObject({ label: "Extraction review", to: "/app/pipelines/review" });
   });
 
+  it("labels the graph view breadcrumb", () => {
+    expect(getActiveItemId("/app/graph")).toBe("graph");
+    expect(getBreadcrumbLabels("/app/graph")).toEqual(["Graph view"]);
+  });
+
   it("decodes encoded type segments and tolerates malformed ones", () => {
     expect(getBreadcrumbLabels("/app/pipelines/types/my%20type")).toEqual([
       "Pipelines",

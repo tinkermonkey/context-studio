@@ -107,6 +107,17 @@ describe("IndividualCandidateReview", () => {
     expect(inspector).toHaveTextContent("Customer Self-Service Portal (vector 92%)");
   });
 
+  it("renders the triple table and inspector inside the schema page layout", async () => {
+    await renderReady();
+    const layout = document.querySelector('[data-testid="schema-page-layout"]');
+    expect(layout).toBeInTheDocument();
+    expect(layout).toContainElement(screen.getByTestId("extraction-review-triples"));
+    expect(layout).toContainElement(screen.getByTestId("schema-inspector-container"));
+    expect(screen.getByTestId("schema-inspector-container")).toContainElement(
+      screen.getByTestId("extraction-review-individual-inspector"),
+    );
+  });
+
   it("filters triples to those with a new node", async () => {
     await renderReady();
     const triples = screen.getByTestId("extraction-review-triples");

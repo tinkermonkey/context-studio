@@ -13,6 +13,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
   "/app/schema/relationships": ["Schema", "Relationships"],
   "/app/data/individuals": ["Data", "Individuals"],
   "/app/data/datasets": ["Data", "Datasets"],
+  "/app/graph": ["Graph view"],
   "/app/reference/sources": ["External Reference", "Sources"],
   "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
   "/app/pipelines": ["Pipelines", "Pipeline Types"],
