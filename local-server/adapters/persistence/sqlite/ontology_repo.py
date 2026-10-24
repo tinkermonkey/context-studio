@@ -61,6 +61,49 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _text_match(query: str) -> Any:
+    """
+    Build a case-insensitive "title or identifier contains" filter clause.
+
+    LIKE wildcards in the query are escaped so ``%`` and ``_`` match literally.
+
+    Args:
+        query: Text to search for
+
+    Returns:
+        SQLAlchemy boolean clause
+    """
+    return or_(
+        OntologyEntity.title.icontains(query, autoescape=True),
+        OntologyEntity.identifier.icontains(query, autoescape=True),
+    )
+
+
+def _apply_entity_sort(q: Any, sort_by: Optional[str], sort_order: str) -> Any:
+    """
+    Order an ontology entity query by title, created_at or last_modified (default created_at).
+
+    The entity id is a tiebreaker so offset pagination is stable across equal sort values.
+
+    Args:
+        q: SQLAlchemy query over OntologyEntity
+        sort_by: Field to sort by; None for created_at
+        sort_order: Sort direction (asc or desc)
+
+    Returns:
+        The ordered query
+    """
+    if sort_by == "title":
+        col: Any = OntologyEntity.title
+    elif sort_by == "last_modified":
+        col = OntologyEntity.last_modified
+    else:
+        col = OntologyEntity.created_at
+    if sort_order.lower() == "desc":
+        return q.order_by(col.desc(), OntologyEntity.id.desc())
+    return q.order_by(col.asc(), OntologyEntity.id.asc())
+
+
 def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str | None:
     """
     Extract the constraint name from an SQLAlchemy IntegrityError.
@@ -169,7 +212,7 @@ class SQLiteOntologyRepository:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Sequence of Taxonomy entities
@@ -178,21 +221,9 @@ class SQLiteOntologyRepository:
             q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.TAXONOMY)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
 
-            if sort_by == "title":
-                col: Any = OntologyEntity.title
-            elif sort_by == "created_at":
-                col = OntologyEntity.created_at
-            elif sort_by == "last_modified":
-                col = OntologyEntity.last_modified
-            else:
-                col = OntologyEntity.created_at
-
-            if sort_order.lower() == "desc":
-                q = q.order_by(col.desc())
-            else:
-                q = q.order_by(col.asc())
+            q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
                 q = q.limit(limit)
@@ -204,7 +235,7 @@ class SQLiteOntologyRepository:
         Count taxonomies, optionally filtered by text search.
 
         Args:
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Total count of taxonomies
@@ -213,7 +244,7 @@ class SQLiteOntologyRepository:
             q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.TAXONOMY)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
 
             return q.count()
 
@@ -350,7 +381,7 @@ class SQLiteOntologyRepository:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Sequence of ConceptScheme entities
@@ -364,21 +395,9 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.taxonomy_id == taxonomy_id)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
 
-            if sort_by == "title":
-                col: Any = OntologyEntity.title
-            elif sort_by == "created_at":
-                col = OntologyEntity.created_at
-            elif sort_by == "last_modified":
-                col = OntologyEntity.last_modified
-            else:
-                col = OntologyEntity.created_at
-
-            if sort_order.lower() == "desc":
-                q = q.order_by(col.desc())
-            else:
-                q = q.order_by(col.asc())
+            q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
                 q = q.limit(limit)
@@ -393,7 +412,7 @@ class SQLiteOntologyRepository:
 
         Args:
             taxonomy_id: Optional taxonomy ID to filter by
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Total count of concept schemes
@@ -407,7 +426,7 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.taxonomy_id == taxonomy_id)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
 
             return q.count()
 
@@ -530,43 +549,67 @@ class SQLiteOntologyRepository:
             if close_session:
                 session.close()
 
+    def _class_query(
+        self,
+        session: Session,
+        concept_scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
+    ) -> Any:
+        """Build the filtered class query shared by list_classes and count_classes."""
+        q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
+        if concept_scheme_id is not None:
+            q = q.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
+        if parent_class_id is not None:
+            q = q.filter(OntologyEntity.parent_class_id == parent_class_id)
+        if query:
+            q = q.filter(_text_match(query))
+        if ids is not None:
+            q = q.filter(OntologyEntity.id.in_(set(ids)))
+        return q
+
     def list_classes(
         self,
         concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
         limit: int | None = 100,
         offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
     ) -> list[Class]:
         """
-        List classes, optionally filtered by concept scheme or parent class.
+        List classes, optionally filtered by concept scheme, parent class, text or ids.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by
             limit: Maximum number of results to return (default 100)
             offset: Number of results to skip (default 0)
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of class IDs to restrict results to
 
         Returns:
             Sequence of Class entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
-
-            if concept_scheme_id is not None:
-                query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
-
-            if parent_class_id is not None:
-                query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
-
+            q = self._class_query(session, concept_scheme_id, parent_class_id, query, ids)
+            q = _apply_entity_sort(q, sort_by, sort_order)
             if limit is not None:
-                query = query.limit(limit)
-            orm_entities = query.offset(offset).all()
+                q = q.limit(limit)
+            orm_entities = q.offset(offset).all()
             return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
 
     def count_classes(
         self,
         concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
     ) -> int:
         """
         Count classes matching optional filters.
@@ -574,20 +617,15 @@ class SQLiteOntologyRepository:
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of class IDs to restrict the count to
 
         Returns:
             Number of matching Class entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.CLASS)
-
-            if concept_scheme_id is not None:
-                query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
-
-            if parent_class_id is not None:
-                query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
-
-            return query.count()
+            q = self._class_query(session, concept_scheme_id, parent_class_id, query, ids)
+            return int(q.count())
 
     def save_class(self, cls: Class) -> Class:
         """
@@ -795,42 +833,61 @@ class SQLiteOntologyRepository:
             if close_session:
                 session.close()
 
+    def _individual_query(
+        self,
+        session: Session,
+        class_id: Optional[str] = None,
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
+    ) -> Any:
+        """Build the filtered individual query shared by list_individuals and count_individuals."""
+        q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.INDIVIDUAL)
+        if class_id is not None:
+            # Individuals that have this class as a parent
+            subquery = (
+                session.query(IndividualClass.individual_id)
+                .filter(IndividualClass.class_id == class_id)
+                .distinct()
+            )
+            q = q.filter(OntologyEntity.id.in_(subquery))
+        if query:
+            q = q.filter(_text_match(query))
+        if ids is not None:
+            q = q.filter(OntologyEntity.id.in_(set(ids)))
+        return q
+
     def list_individuals(
         self,
         class_id: Optional[str] = None,
         limit: int | None = 100,
         offset: int = 0,
+        sort_by: Optional[str] = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
     ) -> list[Individual]:
         """
-        List individuals, optionally filtered by class.
+        List individuals, optionally filtered by class, text or ids.
 
         Args:
             class_id: Optional class ID to filter by (rdf:type) - matches any parent class
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of individual IDs to restrict results to
 
         Returns:
             Sequence of Individual entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(
-                OntologyEntity.node_type == NodeType.INDIVIDUAL
-            )
-
-            if class_id is not None:
-                # Filter to individuals that have this class as a parent
-                subquery = (
-                    session.query(IndividualClass.individual_id)
-                    .filter(IndividualClass.class_id == class_id)
-                    .distinct()
-                )
-                query = query.filter(OntologyEntity.id.in_(subquery))
-
-            query = query.offset(offset)
+            q = self._individual_query(session, class_id, query, ids)
+            q = _apply_entity_sort(q, sort_by, sort_order).offset(offset)
             if limit is not None:
-                query = query.limit(limit)
+                q = q.limit(limit)
 
-            orm_entities = query.all()
+            orm_entities = q.all()
 
             # Build individuals from ORM entities using helper
             individuals = [
@@ -839,30 +896,25 @@ class SQLiteOntologyRepository:
 
             return individuals
 
-    def count_individuals(self, class_id: Optional[str] = None) -> int:
+    def count_individuals(
+        self,
+        class_id: Optional[str] = None,
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
+    ) -> int:
         """
-        Count individuals, optionally filtered by class.
+        Count individuals, optionally filtered by class, text or ids.
 
         Args:
             class_id: Optional class ID to filter by (rdf:type) - matches any parent class
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of individual IDs to restrict the count to
 
         Returns:
             Number of matching Individual entities
         """
         with self.session_factory() as session:
-            query = session.query(OntologyEntity).filter(
-                OntologyEntity.node_type == NodeType.INDIVIDUAL
-            )
-
-            if class_id is not None:
-                subquery = (
-                    session.query(IndividualClass.individual_id)
-                    .filter(IndividualClass.class_id == class_id)
-                    .distinct()
-                )
-                query = query.filter(OntologyEntity.id.in_(subquery))
-
-            return query.count()
+            return int(self._individual_query(session, class_id, query, ids).count())
 
     def save_individual(self, individual: Individual) -> Individual:
         """
@@ -1023,6 +1075,7 @@ class SQLiteOntologyRepository:
         sort_by: Optional[str] = None,
         sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1033,7 +1086,8 @@ class SQLiteOntologyRepository:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of property definition IDs to restrict results to
 
         Returns:
             Sequence of PropertyDefinition entities
@@ -1047,21 +1101,12 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.is_relevant == is_relevant)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
 
-            if sort_by == "title":
-                col: Any = OntologyEntity.title
-            elif sort_by == "created_at":
-                col = OntologyEntity.created_at
-            elif sort_by == "last_modified":
-                col = OntologyEntity.last_modified
-            else:
-                col = OntologyEntity.created_at
+            if ids is not None:
+                q = q.filter(OntologyEntity.id.in_(set(ids)))
 
-            if sort_order.lower() == "desc":
-                q = q.order_by(col.desc())
-            else:
-                q = q.order_by(col.asc())
+            q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
                 q = q.limit(limit)
@@ -1069,14 +1114,18 @@ class SQLiteOntologyRepository:
             return [cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities]
 
     def count_property_definitions(
-        self, is_relevant: Optional[bool] = None, query: Optional[str] = None
+        self,
+        is_relevant: Optional[bool] = None,
+        query: Optional[str] = None,
+        ids: Optional[list[str]] = None,
     ) -> int:
         """
-        Count property definitions, optionally filtered by relevance and text search.
+        Count property definitions, optionally filtered by relevance, text search or ids.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of property definition IDs to restrict the count to
 
         Returns:
             Total count of property definitions
@@ -1090,7 +1139,10 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.is_relevant == is_relevant)
 
             if query:
-                q = q.filter(OntologyEntity.title.like(f"%{query}%"))
+                q = q.filter(_text_match(query))
+
+            if ids is not None:
+                q = q.filter(OntologyEntity.id.in_(set(ids)))
 
             return q.count()
 
@@ -1383,68 +1435,77 @@ class SQLiteOntologyRepository:
             offset: Number of results to skip
             sort_by: Field to sort by (created_at); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query (not used for relationships)
+            query: Case-insensitive text matched against the source title, target title,
+                or property definition title/identifier
 
         Returns:
             Sequence of Relationship entities
         """
         with self.session_factory() as session:
-            q = session.query(RelationshipORM)
+            q = self._relationship_query(session, source_id, target_id, property_id, query)
 
-            if source_id is not None:
-                q = q.filter(RelationshipORM.source_id == source_id)
-
-            if target_id is not None:
-                q = q.filter(RelationshipORM.target_id == target_id)
-
-            if property_id is not None:
-                q = q.filter(RelationshipORM.property_definition_id == property_id)
-
-            if sort_by == "created_at":
-                col = RelationshipORM.created_at
-            else:
-                col = RelationshipORM.created_at
-
+            # Only created_at is sortable; id keeps offset pagination stable.
             if sort_order.lower() == "desc":
-                q = q.order_by(col.desc())
+                q = q.order_by(RelationshipORM.created_at.desc(), RelationshipORM.id.desc())
             else:
-                q = q.order_by(col.asc())
+                q = q.order_by(RelationshipORM.created_at.asc(), RelationshipORM.id.asc())
 
             if limit is not None:
                 q = q.limit(limit)
             orm_rels = q.offset(offset).all()
             return [map_relationship_orm_to_domain(r) for r in orm_rels]
 
+    def _relationship_query(
+        self,
+        session: Session,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+        query: Optional[str] = None,
+    ) -> Any:
+        """Build the filtered relationship query shared by list and count."""
+        q = session.query(RelationshipORM)
+        if source_id is not None:
+            q = q.filter(RelationshipORM.source_id == source_id)
+        if target_id is not None:
+            q = q.filter(RelationshipORM.target_id == target_id)
+        if property_id is not None:
+            q = q.filter(RelationshipORM.property_definition_id == property_id)
+        if query:
+            # Subqueries (not joins) so each relationship appears at most once.
+            matching_ids = session.query(OntologyEntity.id).filter(_text_match(query))
+            q = q.filter(
+                or_(
+                    RelationshipORM.source_id.in_(matching_ids),
+                    RelationshipORM.target_id.in_(matching_ids),
+                    RelationshipORM.property_definition_id.in_(matching_ids),
+                )
+            )
+        return q
+
     def count_relationships(
         self,
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
         property_id: Optional[str] = None,
+        query: Optional[str] = None,
     ) -> int:
         """
-        Count relationships, optionally filtered by source, target, or property.
+        Count relationships, optionally filtered by source, target, property, or text.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by (relationship type)
+            query: Case-insensitive text matched against the source title, target title,
+                or property definition title/identifier
 
         Returns:
             Total count of relationships
         """
         with self.session_factory() as session:
-            q = session.query(RelationshipORM)
-
-            if source_id is not None:
-                q = q.filter(RelationshipORM.source_id == source_id)
-
-            if target_id is not None:
-                q = q.filter(RelationshipORM.target_id == target_id)
-
-            if property_id is not None:
-                q = q.filter(RelationshipORM.property_definition_id == property_id)
-
-            return q.count()
+            q = self._relationship_query(session, source_id, target_id, property_id, query)
+            return int(q.count())
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """

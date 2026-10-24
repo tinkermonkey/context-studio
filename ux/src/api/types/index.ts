@@ -325,17 +325,21 @@ export interface paths {
     };
     /**
      * List Classes
-     * @description Retrieve classes with optional filtering and pagination.
+     * @description Retrieve classes with optional filtering, sorting, text search and pagination.
      *
      *     Args:
      *         concept_scheme_id: Optional concept scheme ID to filter by
      *         parent_class_id: Optional parent class ID to filter by
      *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these class IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         ListResponse containing matching classes
+     *         ListResponse containing matching classes; total counts every match
      */
     get: operations["list_classes_api_classes_get"];
     put?: never;
@@ -452,6 +456,7 @@ export interface paths {
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (created_at)
      *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Text search on source/target title or property title/identifier
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -538,7 +543,8 @@ export interface paths {
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
      *         sort_order: Sort direction (asc or desc, default asc)
-     *         q: Text query for LIKE search on title
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these property definition IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -737,16 +743,20 @@ export interface paths {
     };
     /**
      * List Individuals
-     * @description Retrieve individuals with optional filtering and pagination.
+     * @description Retrieve individuals with optional filtering, sorting, text search and pagination.
      *
      *     Args:
      *         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
      *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these individual IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         ListResponse containing matching individuals
+     *         ListResponse containing matching individuals; total counts every match
      */
     get: operations["list_individuals_api_individuals_get"];
     put?: never;
@@ -8900,6 +8910,14 @@ export interface operations {
         limit?: number;
         /** @description Number of results to skip */
         offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Case-insensitive text search on title or identifier */
+        q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;
@@ -9074,6 +9092,8 @@ export interface operations {
         sort_by?: string | null;
         /** @description Sort direction */
         sort_order?: string;
+        /** @description Case-insensitive text search on the source title, target title, or property definition title/identifier */
+        q?: string | null;
       };
       header?: never;
       path?: never;
@@ -9207,8 +9227,10 @@ export interface operations {
         sort_by?: string | null;
         /** @description Sort direction */
         sort_order?: string;
-        /** @description Text search query on title */
+        /** @description Case-insensitive text search on title or identifier */
         q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;
@@ -9539,6 +9561,14 @@ export interface operations {
         limit?: number;
         /** @description Number of results to skip */
         offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Case-insensitive text search on title or identifier */
+        q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;

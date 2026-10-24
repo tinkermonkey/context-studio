@@ -21,6 +21,24 @@ from domain.ontology.exceptions import DuplicateEntityError
 from domain.ontology.value_objects import SearchCriteria
 
 
+def _text_matches(entity: Any, query: str | None) -> bool:
+    """Mirror the SQLite adapter's case-insensitive "title or identifier contains" filter."""
+    if not query:
+        return True
+    q = query.lower()
+    identifier = getattr(entity, "identifier", None) or ""
+    return q in entity.title.lower() or q in identifier.lower()
+
+
+def _sorted(results: list[Any], sort_by: str | None, sort_order: str) -> list[Any]:
+    """Sort entities by title/created_at/last_modified like the SQLite adapter."""
+    if sort_by in ("title", "created_at", "last_modified"):
+        return sorted(
+            results, key=lambda r: getattr(r, sort_by, "") or "", reverse=(sort_order == "desc")
+        )
+    return results
+
+
 class FakeOntologyRepository:
     """In-memory implementation of OntologyRepository for unit testing."""
 
@@ -65,7 +83,7 @@ class FakeOntologyRepository:
 
         if query:
             query_lower = query.lower()
-            results = [t for t in results if query_lower in t.title.lower()]
+            results = [t for t in results if _text_matches(t, query_lower)]
 
         if sort_by == "title":
             results.sort(key=lambda t: t.title, reverse=(sort_order == "desc"))
@@ -111,7 +129,7 @@ class FakeOntologyRepository:
 
         if query:
             query_lower = query.lower()
-            results = [s for s in results if query_lower in s.title.lower()]
+            results = [s for s in results if _text_matches(s, query_lower)]
 
         if sort_by == "title":
             results.sort(key=lambda s: s.title, reverse=(sort_order == "desc"))
@@ -154,12 +172,20 @@ class FakeOntologyRepository:
         parent_class_id: str | None = None,
         limit: int | None = 100,
         offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[Class]:
         results = list(self._classes.values())
         if concept_scheme_id is not None:
             results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
         if parent_class_id is not None:
             results = [c for c in results if c.parent_class_id == parent_class_id]
+        results = [c for c in results if _text_matches(c, query)]
+        if ids is not None:
+            results = [c for c in results if c.id in ids]
+        results = _sorted(results, sort_by, sort_order)
         end = None if limit is None else offset + limit
         return results[offset:end]
 
@@ -187,7 +213,7 @@ class FakeOntologyRepository:
         results = list(self._taxonomies.values())
         if query:
             query_lower = query.lower()
-            results = [t for t in results if query_lower in t.title.lower()]
+            results = [t for t in results if _text_matches(t, query_lower)]
         return len(results)
 
     def count_concept_schemes(
@@ -198,15 +224,20 @@ class FakeOntologyRepository:
             results = [s for s in results if s.taxonomy_id == taxonomy_id]
         if query:
             query_lower = query.lower()
-            results = [s for s in results if query_lower in s.title.lower()]
+            results = [s for s in results if _text_matches(s, query_lower)]
         return len(results)
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
-        if concept_scheme_id:
-            return sum(
-                1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id
+    def count_classes(
+        self,
+        concept_scheme_id: str | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
+    ) -> int:
+        return len(
+            self.list_classes(
+                concept_scheme_id=concept_scheme_id, limit=None, query=query, ids=ids
             )
-        return len(self._classes)
+        )
 
     def save_class(self, cls: Class) -> Class:
         for existing_class in self._classes.values():
@@ -250,6 +281,8 @@ class FakeOntologyRepository:
             results = [r for r in results if r.target_id == target_id]
         if property_id is not None:
             results = [r for r in results if r.property_definition_id == property_id]
+        if query:
+            results = [r for r in results if self._relationship_matches(r, query)]
 
         if sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
@@ -270,20 +303,34 @@ class FakeOntologyRepository:
             return True
         return False
 
+    def _relationship_matches(self, rel: Relationship, query: str) -> bool:
+        """True when the source, target or property definition matches the text query."""
+        for entity_id in (rel.source_id, rel.target_id, rel.property_definition_id):
+            entity = (
+                self._classes.get(entity_id)
+                or self._individuals.get(entity_id)
+                or self._property_definitions.get(entity_id)
+            )
+            if entity is not None and _text_matches(entity, query):
+                return True
+        return False
+
     def count_relationships(
         self,
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        query: str | None = None,
     ) -> int:
-        results = list(self._relationships.values())
-        if source_id is not None:
-            results = [r for r in results if r.source_id == source_id]
-        if target_id is not None:
-            results = [r for r in results if r.target_id == target_id]
-        if property_id is not None:
-            results = [r for r in results if r.property_definition_id == property_id]
-        return len(results)
+        return len(
+            self.list_relationships(
+                source_id=source_id,
+                target_id=target_id,
+                property_id=property_id,
+                limit=None,
+                query=query,
+            )
+        )
 
     # PropertyDefinition operations
 
@@ -304,14 +351,15 @@ class FakeOntologyRepository:
         sort_by: str | None = None,
         sort_order: str = "asc",
         query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[PropertyDefinition]:
         results = list(self._property_definitions.values())
         if is_relevant is not None:
             results = [p for p in results if p.is_relevant == is_relevant]
 
-        if query:
-            query_lower = query.lower()
-            results = [p for p in results if query_lower in p.title.lower()]
+        results = [p for p in results if _text_matches(p, query)]
+        if ids is not None:
+            results = [p for p in results if p.id in ids]
 
         if sort_by == "title":
             results.sort(key=lambda p: p.title, reverse=(sort_order == "desc"))
@@ -335,15 +383,16 @@ class FakeOntologyRepository:
         return False
 
     def count_property_definitions(
-        self, is_relevant: bool | None = None, query: str | None = None
+        self,
+        is_relevant: bool | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> int:
-        results = list(self._property_definitions.values())
-        if is_relevant is not None:
-            results = [p for p in results if p.is_relevant == is_relevant]
-        if query:
-            query_lower = query.lower()
-            results = [p for p in results if query_lower in p.title.lower()]
-        return len(results)
+        return len(
+            self.list_property_definitions(
+                is_relevant=is_relevant, limit=None, query=query, ids=ids
+            )
+        )
 
     def count_property_definitions_referencing_class(self, class_id: str) -> int:
         return sum(
@@ -362,7 +411,14 @@ class FakeOntologyRepository:
         return self._individuals.get(individual_id)
 
     def list_individuals(
-        self, class_id: str | None = None, limit: int | None = 100, offset: int = 0
+        self,
+        class_id: str | None = None,
+        limit: int | None = 100,
+        offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[Individual]:
         """Retrieve all individuals, optionally filtered by class ID.
 
@@ -377,12 +433,21 @@ class FakeOntologyRepository:
         results = list(self._individuals.values())
         if class_id is not None:
             results = [ind for ind in results if class_id in ind.class_ids]
+        results = [ind for ind in results if _text_matches(ind, query)]
+        if ids is not None:
+            results = [ind for ind in results if ind.id in ids]
+        results = _sorted(results, sort_by, sort_order)
         end = None if limit is None else offset + limit
         return results[offset:end]
 
-    def count_individuals(self, class_id: str | None = None) -> int:
-        """Count individuals, optionally filtered by class ID."""
-        return len(self.list_individuals(class_id=class_id, limit=None))
+    def count_individuals(
+        self,
+        class_id: str | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
+    ) -> int:
+        """Count individuals, optionally filtered by class ID, text or ids."""
+        return len(self.list_individuals(class_id=class_id, limit=None, query=query, ids=ids))
 
     def save_individual(self, individual: Individual) -> Individual:
         """Save an individual (insert or update).

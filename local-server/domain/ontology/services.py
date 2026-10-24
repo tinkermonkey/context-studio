@@ -264,7 +264,7 @@ class OntologyService:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             List of Taxonomy entities
@@ -282,7 +282,7 @@ class OntologyService:
         Count taxonomies, optionally filtered by text search.
 
         Args:
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Total count of taxonomies
@@ -697,7 +697,7 @@ class OntologyService:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             List of ConceptScheme entities
@@ -719,7 +719,7 @@ class OntologyService:
 
         Args:
             taxonomy_id: Optional taxonomy ID to filter by
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
 
         Returns:
             Total count of concept schemes
@@ -970,15 +970,23 @@ class OntologyService:
         parent_class_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[Class]:
         """
-        Retrieve classes with optional filtering and pagination.
+        Retrieve classes with optional filtering, sorting, text search and pagination.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
             limit: Maximum number of results to return
             offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of class IDs to restrict results to
 
         Returns:
             List of Class entities
@@ -988,6 +996,10 @@ class OntologyService:
             parent_class_id=parent_class_id,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+            ids=ids,
         )
 
     def update_class(
@@ -1570,7 +1582,8 @@ class OntologyService:
             offset: Number of results to skip
             sort_by: Field to sort by (created_at); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query (not used for relationships)
+            query: Case-insensitive text matched against the source title, target title,
+                or property definition title/identifier
 
         Returns:
             List of Relationship entities
@@ -1591,20 +1604,23 @@ class OntologyService:
         source_id: str | None = None,
         target_id: str | None = None,
         property_id: str | None = None,
+        query: str | None = None,
     ) -> int:
         """
-        Count relationships, optionally filtered by source, target, or property.
+        Count relationships, optionally filtered by source, target, property, or text.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
             property_id: Optional property definition ID to filter by (relationship type)
+            query: Case-insensitive text matched against the source title, target title,
+                or property definition title/identifier
 
         Returns:
             Total count of relationships
         """
         return self._repository.count_relationships(
-            source_id=source_id, target_id=target_id, property_id=property_id
+            source_id=source_id, target_id=target_id, property_id=property_id, query=query
         )
 
     def delete_relationship(self, relationship_id: str) -> None:
@@ -1882,6 +1898,7 @@ class OntologyService:
         sort_by: str | None = None,
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1892,7 +1909,8 @@ class OntologyService:
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
-            query: Text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of property definition IDs to restrict results to
 
         Returns:
             List of PropertyDefinition entities
@@ -1904,22 +1922,29 @@ class OntologyService:
             sort_by=sort_by,
             sort_order=sort_order,
             query=query,
+            ids=ids,
         )
 
     def count_property_definitions(
-        self, is_relevant: bool | None = None, query: str | None = None
+        self,
+        is_relevant: bool | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> int:
         """
-        Count property definitions, optionally filtered by relevance and text search.
+        Count property definitions, optionally filtered by relevance, text search or ids.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
-            query: Optional text query for LIKE search on title
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of property definition IDs to restrict the count to
 
         Returns:
             Total count of property definitions
         """
-        return self._repository.count_property_definitions(is_relevant=is_relevant, query=query)
+        return self._repository.count_property_definitions(
+            is_relevant=is_relevant, query=query, ids=ids
+        )
 
     def update_property_definition(
         self,
@@ -2182,17 +2207,26 @@ class OntologyService:
 
         return scheme
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
+    def count_classes(
+        self,
+        concept_scheme_id: str | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
+    ) -> int:
         """
-        Count the number of classes, optionally filtered by concept scheme.
+        Count the number of classes, optionally filtered by concept scheme, text or ids.
 
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of class IDs to restrict the count to
 
         Returns:
             The count of classes
         """
-        return self._repository.count_classes(concept_scheme_id=concept_scheme_id)
+        return self._repository.count_classes(
+            concept_scheme_id=concept_scheme_id, query=query, ids=ids
+        )
 
     # Individual operations
 
@@ -2327,31 +2361,54 @@ class OntologyService:
         class_id: str | None = None,
         limit: int | None = 100,
         offset: int = 0,
+        sort_by: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        query: str | None = None,
+        ids: list[str] | None = None,
     ) -> list[Individual]:
         """
-        Retrieve individuals with optional filtering and pagination.
+        Retrieve individuals with optional filtering, sorting, text search and pagination.
 
         Args:
             class_id: Optional class ID to filter by
             limit: Maximum number of results (None for unlimited)
             offset: Number of results to skip
+            sort_by: Field to sort by (title, created_at, last_modified); None for default
+            sort_order: Sort direction (asc or desc)
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of individual IDs to restrict results to
 
         Returns:
             List of individuals matching the filter
         """
-        return self._repository.list_individuals(class_id=class_id, limit=limit, offset=offset)
+        return self._repository.list_individuals(
+            class_id=class_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=query,
+            ids=ids,
+        )
 
-    def count_individuals(self, class_id: str | None = None) -> int:
+    def count_individuals(
+        self,
+        class_id: str | None = None,
+        query: str | None = None,
+        ids: list[str] | None = None,
+    ) -> int:
         """
-        Count individuals, optionally filtered by class.
+        Count individuals, optionally filtered by class, text search or ids.
 
         Args:
             class_id: Optional class ID to filter by
+            query: Case-insensitive "title or identifier contains" text filter
+            ids: Optional list of individual IDs to restrict the count to
 
         Returns:
             The count of individuals
         """
-        return self._repository.count_individuals(class_id=class_id)
+        return self._repository.count_individuals(class_id=class_id, query=query, ids=ids)
 
     def update_individual(
         self,

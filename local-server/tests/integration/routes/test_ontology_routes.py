@@ -1654,3 +1654,259 @@ class TestListTotalsBeyondDefaultLimit:
         """List endpoints accept limit=5000 and reject values above it."""
         assert client.get(f"{path}?limit=5000").status_code == status.HTTP_200_OK
         assert client.get(f"{path}?limit=5001").status_code == 422
+
+
+def _create_scheme(client, title="Scheme"):
+    """Create a taxonomy and a concept scheme in it; return the scheme id."""
+    tax = client.post("/api/taxonomies", json={"title": f"Tax {uuid4().hex[:6]}"}).json()
+    scheme = client.post(f"/api/taxonomies/{tax['id']}/schemes", json={"title": title}).json()
+    return scheme["id"]
+
+
+def _create_class(client, scheme_id, title, identifier=None):
+    body = {"title": title}
+    if identifier:
+        body["identifier"] = identifier
+    response = client.post(f"/api/schemes/{scheme_id}/classes", json=body)
+    assert response.status_code == status.HTTP_201_CREATED, response.text
+    return response.json()
+
+
+class TestClassListQueryParams:
+    """GET /api/classes q / ids / sort_by filters, with total honoring every filter."""
+
+    @pytest.fixture
+    def classes(self, client):
+        scheme_id = _create_scheme(client)
+        other_scheme_id = _create_scheme(client, "Other")
+        created = {
+            "alpha": _create_class(client, scheme_id, "Alpha Widget", "alpha_widget"),
+            "beta": _create_class(client, scheme_id, "Beta Widget", "beta_widget"),
+            "gamma": _create_class(client, scheme_id, "Gamma 100%", "gizmo"),
+            "delta": _create_class(client, other_scheme_id, "Delta Widget", "delta_widget"),
+        }
+        return scheme_id, created
+
+    def test_q_matches_title_case_insensitively_and_total_counts_all_matches(
+        self, client, classes
+    ):
+        response = client.get("/api/classes", params={"q": "WIDGET", "limit": 2})
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert len(body["items"]) == 2
+        assert body["total"] == 3
+
+    def test_q_matches_identifier(self, client, classes):
+        body = client.get("/api/classes", params={"q": "gizmo"}).json()
+        assert [c["title"] for c in body["items"]] == ["Gamma 100%"]
+        assert body["total"] == 1
+
+    def test_q_wildcards_match_literally(self, client, classes):
+        assert client.get("/api/classes", params={"q": "100%"}).json()["total"] == 1
+        assert client.get("/api/classes", params={"q": "_"}).json()["total"] == 3
+        assert client.get("/api/classes", params={"q": "%"}).json()["total"] == 1
+
+    def test_empty_q_is_no_filter(self, client, classes):
+        assert client.get("/api/classes", params={"q": ""}).json()["total"] == 4
+
+    def test_q_combined_with_scheme_filter(self, client, classes):
+        scheme_id, _ = classes
+        body = client.get(
+            "/api/classes", params={"q": "widget", "concept_scheme_id": scheme_id}
+        ).json()
+        assert body["total"] == 2
+        assert {c["title"] for c in body["items"]} == {"Alpha Widget", "Beta Widget"}
+
+    def test_ids_restricts_results_and_total(self, client, classes):
+        _, created = classes
+        ids = [created["alpha"]["id"], created["delta"]["id"]]
+        body = client.get("/api/classes", params={"ids": ids}).json()
+        assert {c["id"] for c in body["items"]} == set(ids)
+        assert body["total"] == 2
+
+    def test_ids_combined_with_q(self, client, classes):
+        _, created = classes
+        ids = [created["alpha"]["id"], created["gamma"]["id"]]
+        body = client.get("/api/classes", params={"ids": ids, "q": "widget"}).json()
+        assert [c["id"] for c in body["items"]] == [created["alpha"]["id"]]
+        assert body["total"] == 1
+
+    def test_too_many_ids_is_rejected(self, client, classes):
+        response = client.get("/api/classes", params={"ids": [str(uuid4()) for _ in range(501)]})
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_sort_by_title_both_directions(self, client, classes):
+        asc = client.get("/api/classes", params={"sort_by": "title"}).json()["items"]
+        desc = client.get(
+            "/api/classes", params={"sort_by": "title", "sort_order": "desc"}
+        ).json()["items"]
+        titles = ["Alpha Widget", "Beta Widget", "Delta Widget", "Gamma 100%"]
+        assert [c["title"] for c in asc] == titles
+        assert [c["title"] for c in desc] == list(reversed(titles))
+
+    def test_offset_pages_through_sorted_results(self, client, classes):
+        page = client.get(
+            "/api/classes", params={"sort_by": "title", "limit": 2, "offset": 2}
+        ).json()
+        assert [c["title"] for c in page["items"]] == ["Delta Widget", "Gamma 100%"]
+        assert page["total"] == 4
+
+    def test_invalid_sort_by_is_rejected(self, client, classes):
+        response = client.get("/api/classes", params={"sort_by": "description"})
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+class TestIndividualListQueryParams:
+    """GET /api/individuals q / ids / sort_by filters, with total honoring every filter."""
+
+    @pytest.fixture
+    def individuals(self, client):
+        scheme_id = _create_scheme(client)
+        person = _create_class(client, scheme_id, "Person")
+        place = _create_class(client, scheme_id, "Place")
+        created = {}
+        for title, cls in [
+            ("Ada Lovelace", person),
+            ("Alan Turing", person),
+            ("London", place),
+        ]:
+            response = client.post(
+                "/api/individuals", json={"title": title, "class_ids": [cls["id"]]}
+            )
+            assert response.status_code == status.HTTP_201_CREATED, response.text
+            created[title] = response.json()
+        return person, created
+
+    def test_q_filters_and_total_counts_all_matches(self, client, individuals):
+        body = client.get("/api/individuals", params={"q": "a", "limit": 1}).json()
+        assert body["total"] == 2
+        assert len(body["items"]) == 1
+
+    def test_q_is_case_insensitive_with_null_identifier(self, client, individuals):
+        body = client.get("/api/individuals", params={"q": "LONDON"}).json()
+        assert [i["title"] for i in body["items"]] == ["London"]
+        assert body["total"] == 1
+
+    def test_q_combined_with_class_filter(self, client, individuals):
+        person, _ = individuals
+        body = client.get("/api/individuals", params={"q": "tur", "class_id": person["id"]}).json()
+        assert [i["title"] for i in body["items"]] == ["Alan Turing"]
+        assert body["total"] == 1
+
+    def test_ids_restricts_results_and_total(self, client, individuals):
+        _, created = individuals
+        ids = [created["London"]["id"]]
+        body = client.get("/api/individuals", params={"ids": ids}).json()
+        assert [i["id"] for i in body["items"]] == ids
+        assert body["total"] == 1
+
+    def test_sort_by_title_desc(self, client, individuals):
+        body = client.get(
+            "/api/individuals", params={"sort_by": "title", "sort_order": "desc"}
+        ).json()
+        assert [i["title"] for i in body["items"]] == ["London", "Alan Turing", "Ada Lovelace"]
+
+    def test_invalid_sort_order_is_rejected(self, client, individuals):
+        response = client.get("/api/individuals", params={"sort_order": "sideways"})
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+class TestPropertyListQueryParams:
+    """GET /api/properties q (title or identifier) and ids filters."""
+
+    @pytest.fixture
+    def properties(self, client):
+        created = {}
+        for identifier, title in [
+            ("works_for", "Works For"),
+            ("lives_in", "Lives In"),
+            ("knows", "Knows"),
+        ]:
+            response = client.post(
+                "/api/properties", json={"identifier": identifier, "title": title}
+            )
+            assert response.status_code == status.HTTP_201_CREATED, response.text
+            created[identifier] = response.json()
+        return created
+
+    def test_q_matches_identifier_and_total(self, client, properties):
+        body = client.get("/api/properties", params={"q": "_for"}).json()
+        assert [p["identifier"] for p in body["items"]] == ["works_for"]
+        assert body["total"] == 1
+
+    def test_ids_restricts_results_and_total(self, client, properties):
+        ids = [properties["knows"]["id"], properties["lives_in"]["id"]]
+        body = client.get("/api/properties", params={"ids": ids, "limit": 1}).json()
+        assert len(body["items"]) == 1
+        assert body["total"] == 2
+
+
+class TestRelationshipListQueryParams:
+    """GET /api/relationships q matches source title, target title, or predicate."""
+
+    @pytest.fixture
+    def relationships(self, client):
+        scheme_id = _create_scheme(client)
+        car = _create_class(client, scheme_id, "Car")
+        wheel = _create_class(client, scheme_id, "Wheel")
+        road = _create_class(client, scheme_id, "Road")
+        created = []
+        for source, target, rel_type in [
+            (car, wheel, "has_part"),
+            (car, road, "drives_on"),
+            (wheel, road, "touches"),
+        ]:
+            response = client.post(
+                "/api/relationships",
+                json={
+                    "source_id": source["id"],
+                    "target_id": target["id"],
+                    "relationship_type": rel_type,
+                },
+            )
+            assert response.status_code == status.HTTP_201_CREATED, response.text
+            created.append(response.json())
+        return created
+
+    def test_q_matches_source_title(self, client, relationships):
+        body = client.get("/api/relationships", params={"q": "car"}).json()
+        assert body["total"] == 2
+
+    def test_q_matches_target_title_without_duplicates(self, client, relationships):
+        # "Road" is the target of two relationships; "Wheel" is both a source and a target.
+        assert client.get("/api/relationships", params={"q": "road"}).json()["total"] == 2
+        body = client.get("/api/relationships", params={"q": "wheel"}).json()
+        assert body["total"] == 2
+        assert len({r["id"] for r in body["items"]}) == 2
+
+    def test_q_matches_property_identifier_and_title(self, client, relationships):
+        assert client.get("/api/relationships", params={"q": "has_part"}).json()["total"] == 1
+        assert client.get("/api/relationships", params={"q": "Drives On"}).json()["total"] == 1
+
+    def test_total_under_q_with_small_limit(self, client, relationships):
+        body = client.get("/api/relationships", params={"q": "a", "limit": 1}).json()
+        # "Car" matches two; "Road" (target of the third) matches too.
+        assert body["total"] == 3
+        assert len(body["items"]) == 1
+
+
+class TestTaxonomyAndSchemeQueryMatchesIdentifier:
+    """GET /api/taxonomies and /api/schemes q also match the identifier."""
+
+    def test_taxonomy_q_matches_identifier(self, client):
+        client.post("/api/taxonomies", json={"title": "Vehicles", "identifier": "tx_auto"})
+        client.post("/api/taxonomies", json={"title": "Plants"})
+        body = client.get("/api/taxonomies", params={"q": "TX_AUTO"}).json()
+        assert [t["title"] for t in body["items"]] == ["Vehicles"]
+        assert body["total"] == 1
+
+    def test_scheme_q_matches_identifier(self, client):
+        tax = client.post("/api/taxonomies", json={"title": "T"}).json()
+        client.post(
+            f"/api/taxonomies/{tax['id']}/schemes",
+            json={"title": "Engines", "identifier": "sc_motor"},
+        )
+        client.post(f"/api/taxonomies/{tax['id']}/schemes", json={"title": "Tyres"})
+        body = client.get("/api/schemes", params={"q": "motor"}).json()
+        assert [s["title"] for s in body["items"]] == ["Engines"]
+        assert body["total"] == 1
