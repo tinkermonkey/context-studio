@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { EntityPicker, Button } from "@tinkermonkey/heimdall-ui";
-import { useEntityTypeQuery } from "@/api/hooks/ontology/useEntityTypeQuery";
+import { useEntitiesById, useEntityTypeQuery } from "@/api/hooks/ontology/useEntityTypeQuery";
 import "./EntitySearchPicker.css";
 
 export interface Entity {
@@ -41,48 +41,46 @@ export function EntitySearchPicker({
   "aria-describedby": ariaDescribedBy,
 }: EntitySearchPickerProps) {
   const [query, setQuery] = useState("");
-  const currentQuery = useEntityTypeQuery(entityType);
+  // Matches are searched on the server; the selection is resolved by id so its
+  // label shows even when it is not among the current matches.
+  const currentQuery = useEntityTypeQuery(entityType, query);
+  const wantedIds = multiSelect ? selectedIds : selectedId ? [selectedId] : [];
+  const selectionQuery = useEntitiesById(entityType, wantedIds);
 
-  const errorMessage = currentQuery.isError
-    ? currentQuery.error instanceof Error
-      ? currentQuery.error.message
+  const failed = currentQuery.isError ? currentQuery : selectionQuery.isError ? selectionQuery : null;
+  const errorMessage = failed
+    ? failed.error instanceof Error
+      ? failed.error.message
       : `Failed to load ${entityType.toLowerCase()}s`
     : undefined;
 
-  const entities = useMemo<ApiEntity[]>(
-    () => currentQuery.data?.items || [],
-    [currentQuery.data?.items],
-  );
-
   const results = useMemo(() => {
     if (!query.trim()) return [];
-
-    const filtered = entities.filter(
-      (e: ApiEntity) =>
-        e.title?.toLowerCase().includes(query.toLowerCase()) ||
-        e.id?.toLowerCase().includes(query.toLowerCase()),
-    );
-
-    return filtered.slice(0, 50).map((e: ApiEntity) => ({
+    return (currentQuery.data?.items ?? []).map((e: ApiEntity) => ({
       id: e.id,
       label: e.title || e.id,
     }));
-  }, [entities, query]);
+  }, [currentQuery.data?.items, query]);
+
+  const selectedPool = useMemo<ApiEntity[]>(
+    () => selectionQuery.data?.items ?? [],
+    [selectionQuery.data?.items],
+  );
 
   const selectedEntity = useMemo(
-    () => entities.find((e: ApiEntity) => e.id === selectedId),
-    [entities, selectedId],
+    () => selectedPool.find((e: ApiEntity) => e.id === selectedId),
+    [selectedPool, selectedId],
   );
 
   const selectedEntities = useMemo(
     () =>
-      entities
+      selectedPool
         .filter((e: ApiEntity) => selectedIds.includes(e.id))
         .map((e: ApiEntity) => ({
           id: e.id,
           label: e.title || e.id,
         })),
-    [entities, selectedIds],
+    [selectedPool, selectedIds],
   );
 
   const handleSelect = (result: Entity) => {
@@ -135,7 +133,7 @@ export function EntitySearchPicker({
                     variant="secondary"
                     size="sm"
                     onClick={() => handleRemoveEntity(entity.id)}
-                    disabled={disabled || currentQuery.isLoading}
+                    disabled={disabled}
                     aria-label={`Remove ${entity.label}`}
                     data-testid={testId ? `${testId}-remove-${entity.id}` : undefined}
                   >
@@ -152,9 +150,9 @@ export function EntitySearchPicker({
             onSelect={handleSelect}
             onClear={handleClear}
             placeholder={placeholder}
-            disabled={disabled || currentQuery.isLoading || currentQuery.isError}
+            disabled={disabled || !!failed}
             data-testid={testId ? `${testId}-input` : undefined}
-            aria-invalid={ariaInvalid || currentQuery.isError}
+            aria-invalid={ariaInvalid || !!failed}
             aria-describedby={ariaDescribedBy}
           />
         </>
@@ -165,7 +163,7 @@ export function EntitySearchPicker({
             variant="secondary"
             size="sm"
             onClick={handleClear}
-            disabled={disabled || currentQuery.isLoading}
+            disabled={disabled}
             aria-label={`Clear ${entityType} selection`}
             data-testid={testId ? `${testId}-clear` : undefined}
           >
@@ -180,9 +178,9 @@ export function EntitySearchPicker({
           onSelect={handleSelect}
           onClear={handleClear}
           placeholder={placeholder}
-          disabled={disabled || currentQuery.isLoading || currentQuery.isError}
+          disabled={disabled || !!failed}
           data-testid={testId ? `${testId}-input` : undefined}
-          aria-invalid={ariaInvalid || currentQuery.isError}
+          aria-invalid={ariaInvalid || !!failed}
           aria-describedby={ariaDescribedBy}
         />
       )}

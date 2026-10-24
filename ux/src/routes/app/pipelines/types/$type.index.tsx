@@ -6,7 +6,7 @@ export interface PipelineTypeSearchParams {
   config?: string;
 }
 
-export const Route = createFileRoute("/app/pipelines/types/$type")({
+export const Route = createFileRoute("/app/pipelines/types/$type/")({
   component: PipelineTypeDetailPage,
   validateSearch: (search: Record<string, unknown>): PipelineTypeSearchParams => {
     return {
