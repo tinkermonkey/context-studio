@@ -127,7 +127,7 @@ class TestSchemaExtractionStructural:
     def test_apply_service_handles_parse_failures(self):
         """ApplyService should handle malformed LLM output gracefully."""
         # Service should not throw on malformed input
-        apply_service = SchemaExtractionApplyService(ontology_repo=None)
+        apply_service = SchemaExtractionApplyService(ontology_service=None, ontology_repo=None)
         assert apply_service is not None
 
     def test_apply_service_tracks_created_entities(self, ontology_service):

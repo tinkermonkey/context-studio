@@ -2,9 +2,8 @@
 Apply service for individual extraction pipeline.
 
 Converts RDF triple output from a completed individual extraction run into DRAFT
-Individual entities via OntologyService (so they get validation, events, and
-vector-index sync) and Relationship entities persisted via the OntologyRepository
-port.
+Individual and Relationship entities via OntologyService (so they get validation,
+events — and thus revertable ChangeEvents — and vector-index sync).
 
 This is the shared materialization funnel for every individual-extraction
 orchestrator (``default`` and ``open_v1``): both emit the same
@@ -24,10 +23,8 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
-from domain.ontology.entities import Relationship
-from domain.ontology.exceptions import DuplicateEntityError
+from domain.ontology.exceptions import DuplicateEntityError, EntityNotFoundError
 from domain.pipelines.apply_result import ApplyResult, MergedMention
 from domain.pipelines.apply_selection import (
     MERGE,
@@ -53,8 +50,9 @@ class IndividualExtractionApplyService:
     Materializes individual extraction pipeline output into ontology entities.
 
     Creates Individual entities via OntologyService.create_individual (DRAFT
-    status, indexed for search) and Relationship entities directly via the
-    repository, both tagged with source_run_id from the originating pipeline run.
+    status, indexed for search) and Relationship entities via
+    OntologyService.create_relationship, both tagged with source_run_id from the
+    originating pipeline run.
 
     An optional IndividualRecognizer runs the recognition stage: for each
     individual not already resolved by the in-pass cache, an explicit ID, or an
@@ -528,17 +526,24 @@ class IndividualExtractionApplyService:
             result.relationships_skipped += 1
             return
 
+        # Created via OntologyService so a RelationshipCreated event (and thus a
+        # ChangeEvent tagged with the run's batch) is recorded and revert can undo it.
         try:
-            new_rel = Relationship(
-                id=str(uuid4()),
+            new_rel = self._ontology_service.create_relationship(
                 source_id=source_id,
                 target_id=target_id,
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-            self._repo.save_relationship(new_rel)
-            result.relationships_created += 1
-            result.created_relationship_ids.append(new_rel.id)
-        except Exception as e:
-            _logger.error(f"Failed to save relationship: {e}")
-            raise
+        except EntityNotFoundError:
+            # The extracted predicate or object refers to an entity that does not exist.
+            _logger.warning(
+                "Skipping relationship %s -[%s]-> %s: endpoint or property not found",
+                source_id,
+                property_definition_id,
+                target_id,
+            )
+            result.relationships_skipped += 1
+            return
+        result.relationships_created += 1
+        result.created_relationship_ids.append(new_rel.id)

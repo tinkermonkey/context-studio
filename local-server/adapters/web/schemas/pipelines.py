@@ -309,6 +309,16 @@ class ApplyRunResponse(BaseModel):
             "unresolvable (e.g. a connection whose endpoint class does not exist)"
         ),
     )
+    existing_candidate_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Subset of applied_candidate_ids satisfied by an entity that already "
+            "existed (class title in scheme, property identifier, or relationship "
+            "triple). Nothing was created for these, so revert will not remove them. "
+            "Populated by schema_extraction; individual_extraction reports these via "
+            "merged_mentions."
+        ),
+    )
     merged_mentions: list["MergedMentionSchema"] = Field(
         default_factory=list,
         description=(

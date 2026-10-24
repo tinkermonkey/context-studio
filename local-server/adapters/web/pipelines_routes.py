@@ -1810,6 +1810,7 @@ async def apply_pipeline_run(
         recognized_individual_ids=apply_result.recognized_individual_ids,
         applied_candidate_ids=apply_result.applied_candidate_ids,
         skipped_candidate_ids=apply_result.skipped_candidate_ids,
+        existing_candidate_ids=apply_result.existing_candidate_ids,
         merged_mentions=[
             MergedMentionSchema(
                 mention_label=m.mention_label,

@@ -16,11 +16,15 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
+from domain.ontology.events import ClassCreated, PropertyDefinitionCreated, RelationshipCreated
+from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import Status
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 # ---------------------------------------------------------------------------
@@ -47,8 +51,18 @@ def repo():
 
 
 @pytest.fixture()
-def svc(repo):
-    return SchemaExtractionApplyService(repo)
+def event_publisher():
+    return FakeEventPublisher()
+
+
+@pytest.fixture()
+def svc(repo, event_publisher):
+    ontology_service = OntologyService(
+        repository=repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=event_publisher,
+    )
+    return SchemaExtractionApplyService(ontology_service, repo)
 
 
 def _make_run(candidates=None, connections=None, run_id="run-abc"):
@@ -376,6 +390,15 @@ class TestValidation:
         with pytest.raises(ValueError, match="taxonomy_id"):
             svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id="")
 
+    def test_raises_when_taxonomy_does_not_own_scheme(self, svc, repo):
+        repo.save_taxonomy(Taxonomy(id="tx-other", identifier="other_tax", title="Other"))
+        with pytest.raises(ValueError, match="does not belong"):
+            svc.apply(_make_run(), concept_scheme_id=SCHEME_ID, taxonomy_id="tx-other")
+
+    def test_raises_when_scheme_missing(self, svc):
+        with pytest.raises(ValueError, match="not found"):
+            svc.apply(_make_run(), concept_scheme_id="missing", taxonomy_id=TAXONOMY_ID)
+
     def test_returns_accurate_counts(self, svc, repo):
         run = _make_run(
             candidates=[
@@ -395,3 +418,74 @@ class TestValidation:
         assert result.properties_created == 1
         assert result.properties_skipped == 0
         assert result.relationships_created == 0
+
+
+# ---------------------------------------------------------------------------
+# Change tracking (revert depends on these events) and already-present reporting
+# ---------------------------------------------------------------------------
+
+
+def _curation_run(run_id="run-abc"):
+    return _make_run(
+        candidates=[
+            {"kind": "class", "label": "Curator", "confidence": 0.9},
+            {"kind": "class", "label": "Model", "confidence": 0.9},
+            {"kind": "property_definition", "label": "curates", "confidence": 0.9},
+        ],
+        connections=[
+            {
+                "subject_ref": "Curator",
+                "predicate": "curates",
+                "object_ref": "Model",
+                "confidence": 0.9,
+            }
+        ],
+        run_id=run_id,
+    )
+
+
+class TestChangeTracking:
+    def test_publishes_created_events_for_every_created_entity(self, svc, event_publisher):
+        result = svc.apply(_curation_run(), concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+
+        class_events = event_publisher.get_events_of_type(ClassCreated)
+        prop_events = event_publisher.get_events_of_type(PropertyDefinitionCreated)
+        rel_events = event_publisher.get_events_of_type(RelationshipCreated)
+        assert [e.class_id for e in class_events] == result.created_class_ids
+        assert [e.property_id for e in prop_events] == result.created_property_definition_ids
+        assert [e.relationship_id for e in rel_events] == result.created_relationship_ids
+        assert len(result.created_relationship_ids) == 1
+
+    def test_created_entities_carry_source_run_id(self, svc, repo):
+        result = svc.apply(
+            _curation_run(run_id="run-xyz"), concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID
+        )
+        assert repo.get_class(result.created_class_ids[0]).source_run_id == "run-xyz"
+        prop = repo.get_property_definition(result.created_property_definition_ids[0])
+        assert prop.source_run_id == "run-xyz"
+        rel = repo.get_relationship(result.created_relationship_ids[0])
+        assert rel.source_run_id == "run-xyz"
+
+    def test_already_present_candidates_are_reported_as_existing(self, svc, event_publisher):
+        run = _curation_run()
+        first = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+        assert first.existing_candidate_ids == []
+        published = len(event_publisher.get_events())
+
+        second = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+        expected = ["class-0", "class-1", "property-0", "connection-0"]
+        assert sorted(second.existing_candidate_ids) == sorted(expected)
+        assert sorted(second.applied_candidate_ids) == sorted(expected)
+        assert second.skipped_candidate_ids == []
+        assert len(event_publisher.get_events()) == published  # nothing new created
+
+    def test_property_title_conflict_is_skipped(self, svc, repo):
+        repo.save_property_definition(
+            PropertyDefinition(id="p-x", identifier="curation_of", title="curates")
+        )
+        run = _make_run(
+            candidates=[{"kind": "property_definition", "label": "curates", "confidence": 0.9}]
+        )
+        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+        assert result.properties_created == 0
+        assert result.skipped_candidate_ids == ["property-0"]

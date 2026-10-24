@@ -90,7 +90,12 @@ def svc(repo, recognizer):
 
 @pytest.fixture()
 def schema_svc(repo):
-    return SchemaExtractionApplyService(repo)
+    ontology_service = OntologyService(
+        repository=repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=FakeEventPublisher(),
+    )
+    return SchemaExtractionApplyService(ontology_service, repo)
 
 
 def _run(output_summary, pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION):

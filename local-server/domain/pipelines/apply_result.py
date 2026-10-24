@@ -53,6 +53,9 @@ class ApplyResult:
     # not selected, below threshold, or could not be materialized.
     applied_candidate_ids: list[str] = field(default_factory=list)
     skipped_candidate_ids: list[str] = field(default_factory=list)
+    # Subset of applied_candidate_ids satisfied by an entity that already existed
+    # (nothing was created for them, so revert will not remove them).
+    existing_candidate_ids: list[str] = field(default_factory=list)
     merged_mentions: list[MergedMention] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -95,6 +98,11 @@ class ApplyResult:
         both = set(self.applied_candidate_ids) & set(self.skipped_candidate_ids)
         if both:
             raise ValueError(f"candidates cannot be both applied and skipped: {sorted(both)}")
+        not_applied = set(self.existing_candidate_ids) - set(self.applied_candidate_ids)
+        if not_applied:
+            raise ValueError(
+                f"existing candidates must also be applied: {sorted(not_applied)}"
+            )
         if self.external_references_created != len(self.created_external_reference_ids):
             raise ValueError(
                 f"external_references_created "

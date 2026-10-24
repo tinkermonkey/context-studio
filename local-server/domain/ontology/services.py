@@ -843,6 +843,7 @@ class OntologyService:
         color: str | None = None,
         parent_class_id: str | None = None,
         identifier: str | None = None,
+        source_run_id: str | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -862,6 +863,8 @@ class OntologyService:
             parent_class_id: Optional ID of the parent class for hierarchy
             identifier: (Optional) globally-unique slug identifier;
                 auto-generated from title if not provided
+            source_run_id: Optional ID of the pipeline run that produced this
+                class, for provenance tracking
 
         Returns:
             The created Class with generated embedding
@@ -919,6 +922,7 @@ class OntologyService:
             embedding=embedding,
             created_at=now,
             last_modified=now,
+            source_run_id=source_run_id,
         )
         cls = self._repository.save_class(cls)
         self._sync_vector_index(cls.id, cls.title, cls.description)
@@ -1411,6 +1415,7 @@ class OntologyService:
         source_id: str,
         target_id: str,
         property_definition_id: str,
+        source_run_id: str | None = None,
     ) -> Relationship:
         """
         Create a new typed relationship between two entities (Classes or Individuals).
@@ -1425,6 +1430,8 @@ class OntologyService:
             source_id: ID of the source entity (Class or Individual)
             target_id: ID of the target entity (Class or Individual)
             property_definition_id: ID of the property definition (relationship type)
+            source_run_id: Optional ID of the pipeline run that produced this
+                relationship, for provenance tracking
 
         Returns:
             The created Relationship
@@ -1484,6 +1491,7 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
+            source_run_id=source_run_id,
         )
         relationship = self._repository.save_relationship(relationship)
 
@@ -1698,6 +1706,7 @@ class OntologyService:
         domain_class_id: str | None = None,
         range_class_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
+        source_run_id: str | None = None,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
@@ -1719,6 +1728,8 @@ class OntologyService:
             range_class_id: Optional ID of the Class this property's target must
                 belong to (rdfs:range)
             external_references: Optional list of references to external knowledge bases
+            source_run_id: Optional ID of the pipeline run that produced this
+                property definition, for provenance tracking
 
         Returns:
             The created PropertyDefinition
@@ -1761,6 +1772,7 @@ class OntologyService:
             external_references=external_references or [],
             created_at=now,
             last_modified=now,
+            source_run_id=source_run_id,
         )
         prop_def = self._repository.save_property_definition(prop_def)
         self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)

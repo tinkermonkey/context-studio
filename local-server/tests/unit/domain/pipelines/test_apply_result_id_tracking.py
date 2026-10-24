@@ -175,9 +175,9 @@ def test_individual_extraction_tracks_created_relationship_ids(repo, ontology_se
 # ============================================================================
 
 
-def test_schema_extraction_tracks_created_class_ids(repo):
+def test_schema_extraction_tracks_created_class_ids(repo, ontology_service):
     """Class creation populates created_class_ids list."""
-    svc = SchemaExtractionApplyService(repo)
+    svc = SchemaExtractionApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_EXTRACTION
@@ -199,9 +199,9 @@ def test_schema_extraction_tracks_created_class_ids(repo):
         assert cls is not None
 
 
-def test_schema_extraction_tracks_created_property_definition_ids(repo):
+def test_schema_extraction_tracks_created_property_definition_ids(repo, ontology_service):
     """PropertyDefinition creation populates created_property_definition_ids list."""
-    svc = SchemaExtractionApplyService(repo)
+    svc = SchemaExtractionApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_EXTRACTION

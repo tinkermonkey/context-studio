@@ -31,8 +31,23 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.pipelines_routes import router
-from domain.ontology.entities import Class, ConceptScheme, Individual, Taxonomy
-from domain.ontology.events import IndividualCreated, IndividualDeleted
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Taxonomy,
+)
+from domain.ontology.events import (
+    ClassCreated,
+    ClassDeleted,
+    IndividualCreated,
+    IndividualDeleted,
+    PropertyDefinitionCreated,
+    PropertyDefinitionDeleted,
+    RelationshipCreated,
+    RelationshipDeleted,
+)
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
@@ -94,6 +109,12 @@ def client(session_factory, pipeline_repo, ontology_repo, change_repo):
     recorder = ChangeEventRecorder(change_repo)
     publisher.subscribe(IndividualCreated, recorder.on_individual_created)
     publisher.subscribe(IndividualDeleted, recorder.on_individual_deleted)
+    publisher.subscribe(ClassCreated, recorder.on_class_created)
+    publisher.subscribe(ClassDeleted, recorder.on_class_deleted)
+    publisher.subscribe(PropertyDefinitionCreated, recorder.on_property_definition_created)
+    publisher.subscribe(PropertyDefinitionDeleted, recorder.on_property_definition_deleted)
+    publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
+    publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
     ontology_service = OntologyService(
         repository=ontology_repo,
         embedding_service=FakeEmbeddingService(),
@@ -111,7 +132,9 @@ def client(session_factory, pipeline_repo, ontology_repo, change_repo):
     app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
         ontology_service, ontology_repo
     )
-    app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
+    app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(
+        ontology_service, ontology_repo
+    )
     app.state.revert_service = RevertService(change_repo=change_repo, ontology_repo=ontology_repo)
     app.state.versioning_service = VersioningService(
         change_repo=change_repo, sync_target=MagicMock(), event_publisher=MagicMock()
@@ -314,6 +337,48 @@ class TestIndividualSelectionApply:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    def test_relationship_between_existing_individuals_is_reverted(
+        self, client, pipeline_repo, ontology_repo
+    ):
+        ontology_repo.save_individual(
+            Individual(id="ind-globex", class_ids=[CLASS_ID], title="Globex")
+        )
+        ontology_repo.save_property_definition(
+            PropertyDefinition(id="prop-partner", identifier="partners_with", title="partners with")
+        )
+        run_id = _completed_run(
+            pipeline_repo,
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            {
+                "triples": [
+                    {
+                        "subject": {
+                            "kind": "individual",
+                            "id": EXISTING_ID,
+                            "label": "Acme Corp",
+                            "class_ids": [CLASS_ID],
+                        },
+                        "predicate": {
+                            "property_definition_id": "prop-partner",
+                            "label": "partners with",
+                        },
+                        "object": {"kind": "individual", "id": "ind-globex", "label": "Globex"},
+                        "confidence": 0.9,
+                    }
+                ]
+            },
+        )
+        body = _apply(client, run_id).json()
+        assert body["individuals_created"] == 0
+        assert body["relationships_created"] == 1
+
+        revert = client.post(f"/api/pipelines/runs/{run_id}/revert")
+        assert revert.status_code == status.HTTP_200_OK, revert.text
+        assert revert.json()["relationships_deleted"] == 1
+        assert ontology_repo.get_relationship(body["created_relationship_ids"][0]) is None
+        assert ontology_repo.get_individual(EXISTING_ID) is not None
+        assert ontology_repo.get_individual("ind-globex") is not None
+
 
 class TestSchemaSelectionApply:
     def test_accepted_ids_override_threshold(self, client, pipeline_repo, ontology_repo):
@@ -358,3 +423,84 @@ class TestSchemaSelectionApply:
             taxonomy_id=TAXONOMY_ID,
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_applied_schema_entities_record_change_events_and_revert(
+        self, client, pipeline_repo, ontology_repo
+    ):
+        run_id = _completed_run(
+            pipeline_repo,
+            PipelineType.SCHEMA_EXTRACTION,
+            {
+                "candidates": [
+                    {"kind": "class", "label": "Knowledge Curator", "confidence": 0.9},
+                    {"kind": "class", "label": "Hosted Model", "confidence": 0.9},
+                    {"kind": "property_definition", "label": "curates", "confidence": 0.9},
+                ],
+                "connections": [
+                    {
+                        "subject_ref": "Knowledge Curator",
+                        "predicate": "curates",
+                        "object_ref": "Hosted Model",
+                        "confidence": 0.9,
+                    }
+                ],
+            },
+        )
+        body = _apply(client, run_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID).json()
+        assert body["classes_created"] == 2
+        assert body["properties_created"] == 1
+        assert body["relationships_created"] == 1
+        created_ids = (
+            set(body["created_class_ids"])
+            | set(body["created_property_definition_ids"])
+            | set(body["created_relationship_ids"])
+        )
+
+        events = client.get(f"/api/pipelines/runs/{run_id}/change-events").json()["items"]
+        assert created_ids <= {e["entity_id"] for e in events}
+
+        revert = client.post(f"/api/pipelines/runs/{run_id}/revert")
+        assert revert.status_code == status.HTTP_200_OK, revert.text
+        reverted = revert.json()
+        assert reverted["classes_deleted"] == 2
+        assert reverted["properties_deleted"] == 1
+        assert reverted["relationships_deleted"] == 1
+        titles = {
+            c.title for c in ontology_repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)
+        }
+        assert titles == {"Organization"}
+        assert ontology_repo.get_property_definition_by_identifier("curates") is None
+
+        again = client.post(f"/api/pipelines/runs/{run_id}/revert").json()
+        assert again["events_reverted"] == 0
+
+    def test_existing_class_title_is_reported_as_existing_not_created(
+        self, client, pipeline_repo
+    ):
+        run_id = _completed_run(
+            pipeline_repo,
+            PipelineType.SCHEMA_EXTRACTION,
+            {
+                "candidates": [
+                    {"kind": "class", "label": "organization", "confidence": 0.9},
+                    {"kind": "class", "label": "Hosted Model", "confidence": 0.9},
+                ],
+                "connections": [],
+            },
+        )
+        body = _apply(client, run_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID).json()
+        assert body["classes_created"] == 1
+        assert body["applied_candidate_ids"] == ["class-0", "class-1"]
+        assert body["existing_candidate_ids"] == ["class-0"]
+        assert body["skipped_candidate_ids"] == []
+
+        # Revert removes only what this run created; the pre-existing class stays.
+        revert = client.post(f"/api/pipelines/runs/{run_id}/revert").json()
+        assert revert["classes_deleted"] == 1
+
+    def test_taxonomy_not_owning_scheme_returns_400(self, client, pipeline_repo):
+        run_id = _completed_run(
+            pipeline_repo, PipelineType.SCHEMA_EXTRACTION, {"candidates": [], "connections": []}
+        )
+        response = _apply(client, run_id, concept_scheme_id=SCHEME_ID, taxonomy_id="tx-other")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
