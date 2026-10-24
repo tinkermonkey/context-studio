@@ -30,8 +30,8 @@ import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/r
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
-import { Route as AppPipelinesTypesTypeRouteImport } from './routes/app/pipelines/types/$type'
 import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
+import { Route as AppPipelinesTypesTypeIndexRouteImport } from './routes/app/pipelines/types/$type.index'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -139,22 +139,23 @@ const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSchemaSchemesRoute,
 } as any)
-const AppPipelinesTypesTypeRoute = AppPipelinesTypesTypeRouteImport.update({
-  id: '/pipelines/types/$type',
-  path: '/pipelines/types/$type',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPipelinesBatchesBatchIdRoute =
   AppPipelinesBatchesBatchIdRouteImport.update({
     id: '/pipelines/batches/$batchId',
     path: '/pipelines/batches/$batchId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppPipelinesTypesTypeIndexRoute =
+  AppPipelinesTypesTypeIndexRouteImport.update({
+    id: '/pipelines/types/$type/',
+    path: '/pipelines/types/$type/',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPipelinesTypesTypeRunRoute =
   AppPipelinesTypesTypeRunRouteImport.update({
-    id: '/run',
-    path: '/run',
-    getParentRoute: () => AppPipelinesTypesTypeRoute,
+    id: '/pipelines/types/$type/run',
+    path: '/pipelines/types/$type/run',
+    getParentRoute: () => AppRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -179,9 +180,9 @@ export interface FileRoutesByFullPath {
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
-  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -203,9 +204,9 @@ export interface FileRoutesByTo {
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
-  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -230,9 +231,9 @@ export interface FileRoutesById {
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
-  '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeRouteWithChildren
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
+  '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -258,9 +259,9 @@ export interface FileRouteTypes {
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/pipelines/batches/$batchId'
-    | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
+    | '/app/pipelines/types/$type/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -282,9 +283,9 @@ export interface FileRouteTypes {
     | '/app/graph'
     | '/app/pipelines'
     | '/app/pipelines/batches/$batchId'
-    | '/app/pipelines/types/$type'
     | '/app/schema/schemes'
     | '/app/pipelines/types/$type/run'
+    | '/app/pipelines/types/$type'
   id:
     | '__root__'
     | '/'
@@ -308,9 +309,9 @@ export interface FileRouteTypes {
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/pipelines/batches/$batchId'
-    | '/app/pipelines/types/$type'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
+    | '/app/pipelines/types/$type/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -468,13 +469,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSchemaSchemesIndexRouteImport
       parentRoute: typeof AppSchemaSchemesRoute
     }
-    '/app/pipelines/types/$type': {
-      id: '/app/pipelines/types/$type'
-      path: '/pipelines/types/$type'
-      fullPath: '/app/pipelines/types/$type'
-      preLoaderRoute: typeof AppPipelinesTypesTypeRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/pipelines/batches/$batchId': {
       id: '/app/pipelines/batches/$batchId'
       path: '/pipelines/batches/$batchId'
@@ -482,12 +476,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesBatchesBatchIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pipelines/types/$type/': {
+      id: '/app/pipelines/types/$type/'
+      path: '/pipelines/types/$type'
+      fullPath: '/app/pipelines/types/$type/'
+      preLoaderRoute: typeof AppPipelinesTypesTypeIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/types/$type/run': {
       id: '/app/pipelines/types/$type/run'
-      path: '/run'
+      path: '/pipelines/types/$type/run'
       fullPath: '/app/pipelines/types/$type/run'
       preLoaderRoute: typeof AppPipelinesTypesTypeRunRouteImport
-      parentRoute: typeof AppPipelinesTypesTypeRoute
+      parentRoute: typeof AppRoute
     }
   }
 }
@@ -502,19 +503,6 @@ const AppSchemaSchemesRouteChildren: AppSchemaSchemesRouteChildren = {
 
 const AppSchemaSchemesRouteWithChildren =
   AppSchemaSchemesRoute._addFileChildren(AppSchemaSchemesRouteChildren)
-
-interface AppPipelinesTypesTypeRouteChildren {
-  AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
-}
-
-const AppPipelinesTypesTypeRouteChildren: AppPipelinesTypesTypeRouteChildren = {
-  AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
-}
-
-const AppPipelinesTypesTypeRouteWithChildren =
-  AppPipelinesTypesTypeRoute._addFileChildren(
-    AppPipelinesTypesTypeRouteChildren,
-  )
 
 interface AppRouteChildren {
   AppContactSheetRoute: typeof AppContactSheetRoute
@@ -535,7 +523,8 @@ interface AppRouteChildren {
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
   AppPipelinesBatchesBatchIdRoute: typeof AppPipelinesBatchesBatchIdRoute
-  AppPipelinesTypesTypeRoute: typeof AppPipelinesTypesTypeRouteWithChildren
+  AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
+  AppPipelinesTypesTypeIndexRoute: typeof AppPipelinesTypesTypeIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -557,7 +546,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
   AppPipelinesBatchesBatchIdRoute: AppPipelinesBatchesBatchIdRoute,
-  AppPipelinesTypesTypeRoute: AppPipelinesTypesTypeRouteWithChildren,
+  AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
+  AppPipelinesTypesTypeIndexRoute: AppPipelinesTypesTypeIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

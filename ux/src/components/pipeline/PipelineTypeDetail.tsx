@@ -15,7 +15,7 @@ type PipelineConfigurationResponse = components["schemas"]["PipelineConfiguratio
 type EditorMode = "view" | "edit" | "create";
 
 export function PipelineTypeDetail() {
-  const { type } = useParams({ from: "/app/pipelines/types/$type" as any });
+  const { type } = useParams({ from: "/app/pipelines/types/$type/" as any });
 
   const [selectedImplId, setSelectedImplId] = useState<string | undefined>();
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
