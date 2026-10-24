@@ -2,14 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
+import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
 
 type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
 type TaxonomyUpdateRequest = components["schemas"]["TaxonomyUpdateRequest"];
 
-export function useTaxonomies(params?: ListPageParams) {
+export function useTaxonomies(params?: ListPageParams, options?: ListQueryOptions) {
   return useQuery({
     queryKey: params ? [...QUERY_KEYS.taxonomies, params] : QUERY_KEYS.taxonomies,
     queryFn: () => ontologyService.listTaxonomies(params),
+    ...listQueryOptions(options),
   });
 }
 

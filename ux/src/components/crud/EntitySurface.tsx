@@ -2,6 +2,7 @@ import { useState, useRef, useImperativeHandle, forwardRef, type ReactNode } fro
 import { Button, Icon, Modal, SegmentedControl, Select } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
 import { SelectableTable } from "./SelectableTable";
+import type { ListPagerProps } from "./ListPager";
 import type { RowMenuAction } from "./SelectableTable";
 import { CreateDrawer } from "./CreateDrawer";
 import type { EntityType, FormValues } from "./CreateDrawer";
@@ -56,6 +57,10 @@ interface EntitySurfaceProps<T extends { id: string }> {
   emptyStateDescription?: string;
   emptyStateShowAction?: boolean;
   emptyStateActionLabel?: string;
+  /** Server-side paging: `data` is one page and a ListPager footer is shown. */
+  pagination?: ListPagerProps;
+  /** Column sort callback, for server-side sorting. */
+  onSort?: (key: string, direction: "asc" | "desc" | null) => void;
 }
 
 function defaultDuplicateContext<T extends { id: string }>(entity: T): Partial<FormValues> {
@@ -97,6 +102,8 @@ function EntitySurfaceBase<T extends { id: string }>(
     emptyStateDescription,
     emptyStateShowAction = true,
     emptyStateActionLabel,
+    pagination,
+    onSort,
   }: EntitySurfaceProps<T>,
   ref: React.ForwardedRef<EntitySurfaceHandle>,
 ) {
@@ -130,6 +137,10 @@ function EntitySurfaceBase<T extends { id: string }>(
 
   // Track last deleted to deselect after confirm
   const pendingDeleteIdsRef = useRef<string[]>([]);
+
+  // Last row shown in the inspector, so it stays open when a server-paged
+  // table moves to a page (or search result) that no longer contains it.
+  const lastInspectorEntityRef = useRef<T | undefined>(undefined);
 
   // Imperative handle
   useImperativeHandle(ref, () => ({
@@ -264,7 +275,13 @@ function EntitySurfaceBase<T extends { id: string }>(
 
   // ── Derived values ─────────────────────────────────────────────────────────
 
-  const inspectorEntity = inspectorId ? data.find((d) => d.id === inspectorId) : undefined;
+  const inspectorInData = inspectorId ? data.find((d) => d.id === inspectorId) : undefined;
+  if (inspectorInData) lastInspectorEntityRef.current = inspectorInData;
+  const inspectorEntity =
+    inspectorInData ??
+    (inspectorId && lastInspectorEntityRef.current?.id === inspectorId
+      ? lastInspectorEntityRef.current
+      : undefined);
   const showRight = mode === "create" || !!inspectorEntity;
 
   // ── Empty state ────────────────────────────────────────────────────────────
@@ -317,12 +334,15 @@ function EntitySurfaceBase<T extends { id: string }>(
             selectedRows={selectedRows}
             onSelectRows={setSelectedRows}
             onRowClick={(row) => {
+              lastInspectorEntityRef.current = row;
               setInspectorId(row.id);
               if (mode === "create") setMode("view");
             }}
             rowMenuActions={rowMenuActions}
             onRowMenuAction={handleRowMenuAction}
             rowMenuTestIdPrefix={`${entityType}-row-actions`}
+            pagination={pagination}
+            onSort={onSort}
           />
         </div>
 

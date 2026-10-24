@@ -202,3 +202,49 @@ describe("SelectableTable", () => {
     });
   });
 });
+
+describe("SelectableTable server-side pagination", () => {
+  const pagination = {
+    total: 120,
+    limit: 50,
+    offset: 50,
+    pageSizes: [50, 100, 250] as const,
+    onPageChange: vi.fn(),
+    onPageSizeChange: vi.fn(),
+  };
+
+  it("renders every row it is given and the ListPager instead of slicing", () => {
+    render(<SelectableTable columns={columns} data={makeRows(20)} pagination={pagination} />);
+    expect(screen.getByText("Item 20")).toBeInTheDocument();
+    expect(screen.getByTestId("list-pager")).toBeInTheDocument();
+    expect(screen.getByTestId("list-pager-range")).toHaveTextContent("51–100 of 120");
+    expect(screen.queryByTestId("selectable-table-next")).not.toBeInTheDocument();
+  });
+
+  it("reports page changes through the pagination callbacks", async () => {
+    const onPageChange = vi.fn();
+    render(
+      <SelectableTable
+        columns={columns}
+        data={makeRows(5)}
+        pagination={{ ...pagination, onPageChange }}
+      />,
+    );
+    await userEvent.click(screen.getByTestId("list-pager-next"));
+    expect(onPageChange).toHaveBeenCalledWith(100);
+  });
+
+  it("reports column sorts through onSort", async () => {
+    const onSort = vi.fn();
+    render(
+      <SelectableTable
+        columns={[{ key: "name", label: "Name", sortable: true }]}
+        data={makeRows(3)}
+        pagination={pagination}
+        onSort={onSort}
+      />,
+    );
+    await userEvent.click(screen.getByRole("columnheader", { name: "Name" }));
+    expect(onSort).toHaveBeenCalledWith("name", "asc");
+  });
+});

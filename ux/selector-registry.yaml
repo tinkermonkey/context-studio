@@ -2117,6 +2117,24 @@ selectors:
   - selector: selectable-table-next
     component: src/components/crud/SelectableTable.tsx
     description: Next-page button in the SelectableTable pagination footer
+  - selector: list-pager
+    component: src/components/crud/ListPager.tsx
+    description: Server-side pagination footer (role=navigation) under a paged SelectableTable on the schema/data list pages
+  - selector: list-pager-range
+    component: src/components/crud/ListPager.tsx
+    description: Row range and server total text in the ListPager, e.g. "1–50 of 208"
+  - selector: list-pager-page
+    component: src/components/crud/ListPager.tsx
+    description: Current page position text in the ListPager, e.g. "Page 1 of 5"
+  - selector: list-pager-size
+    component: src/components/crud/ListPager.tsx
+    description: Rows-per-page radio group (50/100/250) in the ListPager
+  - selector: list-pager-prev
+    component: src/components/crud/ListPager.tsx
+    description: Previous-page button in the ListPager (requests the previous server offset)
+  - selector: list-pager-next
+    component: src/components/crud/ListPager.tsx
+    description: Next-page button in the ListPager (requests the next server offset)
   - selector: my-table
     component: src/components/crud/SelectableTable.tsx
     description: Root wrapper of SelectableTable when rendered with a custom testId prop
@@ -2185,9 +2203,12 @@ selectors:
   - selector: create-drawer-classes-field
     component: src/components/crud/CreateDrawer.tsx
     description: Field wrapper for the class multi-select in the IndividualBody form (carries label and validation error)
+  - selector: create-drawer-classes-search
+    component: src/components/crud/CreateDrawer.tsx
+    description: Search input that filters the individual create form's class list server-side (debounced q)
   - selector: create-drawer-classes-list
     component: src/components/crud/CreateDrawer.tsx
-    description: Scrollable checkbox list for selecting one or more classes when creating an individual
+    description: Scrollable checkbox list of the selected classes plus server search matches when creating an individual
   - selector: create-drawer-relationship-builder
     component: src/components/crud/CreateDrawer.tsx
     description: RelationshipBuilder widget for selecting source, predicate, and target when creating a relationship

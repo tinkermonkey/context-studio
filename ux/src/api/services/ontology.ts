@@ -33,30 +33,38 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
 
-export interface ClassListParams {
-  concept_scheme_id?: string;
-  parent_class_id?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface IndividualListParams {
-  class_id?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface RelationshipListParams {
-  source_id?: string;
-  target_id?: string;
-  property_id?: string;
-  limit?: number;
-  offset?: number;
-}
-
+/** Paging, text search and sort params shared by the list endpoints. */
 export interface ListPageParams {
   limit?: number;
   offset?: number;
+  /** Case-insensitive "title or identifier contains" search. */
+  q?: string;
+  sort_by?: "title" | "created_at" | "last_modified";
+  sort_order?: "asc" | "desc";
+}
+
+/** Restrict a list to these ids (sent as repeated `ids=` params; backend cap 500). */
+export interface IdsFilterParams {
+  ids?: string[];
+}
+
+export interface ClassListParams extends ListPageParams, IdsFilterParams {
+  concept_scheme_id?: string;
+  parent_class_id?: string;
+}
+
+export interface IndividualListParams extends ListPageParams, IdsFilterParams {
+  class_id?: string;
+}
+
+export interface PropertyListParams extends ListPageParams, IdsFilterParams {}
+
+export interface RelationshipListParams extends Omit<ListPageParams, "sort_by"> {
+  source_id?: string;
+  target_id?: string;
+  property_id?: string;
+  /** Relationships only sort by creation time. */
+  sort_by?: "created_at";
 }
 
 class OntologyService extends BaseService {
@@ -191,7 +199,7 @@ class OntologyService extends BaseService {
   }
 
   // Property Definitions
-  async listProperties(isRelevant?: boolean, params?: ListPageParams): Promise<ListProperties> {
+  async listProperties(isRelevant?: boolean, params?: PropertyListParams): Promise<ListProperties> {
     const query = { ...(isRelevant !== undefined ? { is_relevant: isRelevant } : {}), ...params };
     return this.get<ListProperties>(
       "/api/properties",

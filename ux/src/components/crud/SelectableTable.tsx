@@ -8,6 +8,8 @@ import {
   type RowMenuAction,
 } from "@tinkermonkey/heimdall-ui";
 
+import { ListPager, type ListPagerProps } from "./ListPager";
+
 export type { RowMenuAction } from "@tinkermonkey/heimdall-ui";
 
 interface SelectableTableProps<T extends { id: string }> {
@@ -21,6 +23,13 @@ interface SelectableTableProps<T extends { id: string }> {
   onRowMenuAction?: (actionId: string, row: T) => void;
   rowMenuTestIdPrefix?: string;
   testId?: string;
+  /**
+   * Server-side paging: `data` is already one page, so the table renders it
+   * whole and shows a ListPager footer instead of slicing client-side.
+   */
+  pagination?: ListPagerProps;
+  /** Column sort callback (Heimdall Table reports sorts; it never reorders data). */
+  onSort?: (key: string, direction: "asc" | "desc" | null) => void;
 }
 
 const PAGE_SIZE = 9;
@@ -36,19 +45,21 @@ export function SelectableTable<T extends { id: string }>({
   onRowMenuAction,
   rowMenuTestIdPrefix,
   testId = "selectable-table",
+  pagination,
+  onSort,
 }: SelectableTableProps<T>) {
   const [pageIndex, setPageIndex] = useState(0);
 
-  const pageCount = Math.ceil(data.length / PAGE_SIZE);
+  const pageCount = pagination ? 1 : Math.ceil(data.length / PAGE_SIZE);
 
   useEffect(() => {
     const maxPage = Math.max(0, pageCount - 1);
     if (pageIndex > maxPage) setPageIndex(maxPage);
   }, [data.length, pageCount, pageIndex]);
 
-  const startIndex = pageIndex * PAGE_SIZE;
-  const endIndex = Math.min(startIndex + PAGE_SIZE, data.length);
-  const pagedData = data.slice(startIndex, endIndex);
+  const startIndex = pagination ? 0 : pageIndex * PAGE_SIZE;
+  const endIndex = pagination ? data.length : Math.min(startIndex + PAGE_SIZE, data.length);
+  const pagedData = pagination ? data : data.slice(startIndex, endIndex);
 
   // Heimdall computes select-all against the rows it renders (the current page
   // slice) and REPLACES the whole selection with the page's ids. Merge the
@@ -124,7 +135,10 @@ export function SelectableTable<T extends { id: string }>({
         selectedRows={selectedRows}
         onSelectRows={handleSelectRows}
         onRowClick={onRowClick}
+        onSort={onSort}
       />
+
+      {pagination && <ListPager {...pagination} />}
 
       {pageCount > 1 && (
         <div className="schema-table-footer" role="navigation" aria-label="Pagination">

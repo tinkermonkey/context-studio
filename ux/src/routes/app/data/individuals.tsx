@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import { Button, PageHeader, FilterBar, Icon, Chip, VersionPill } from "@tinkermonkey/heimdall-ui";
@@ -8,43 +8,46 @@ import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/Entit
 import { deleteFailureMessage } from "@/api/mutationErrors";
 import { IndividualDrawer } from "@/components/ontology/IndividualDrawer";
 import { useIndividuals, useDeleteIndividual } from "@/api/hooks/ontology/useIndividuals";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useListPaging } from "@/hooks/useListPaging";
 import { individualsCopy } from "./individuals/-copy";
 import type { components } from "@/api/types";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 
 export function IndividualsPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
   const { toast } = useToasts();
-  const [searchFilter, setSearchFilter] = useState("");
+  const paging = useListPaging();
+  // Unfiltered total for "showing X of Y" (a limit=1 request).
+  const { data: unfilteredCount } = useIndividuals({ limit: 1 });
+  const allCount = unfilteredCount?.total;
 
   const {
     data: listResponse,
     isLoading,
     error,
     refetch,
-  } = useIndividuals({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useIndividuals(paging.params, { keepPrevious: true });
+
+  const total = listResponse?.total;
+  const { clampToTotal } = paging;
+  useEffect(() => clampToTotal(total), [total, clampToTotal]);
+  const pageData = listResponse?.items ?? [];
+
+  // Class chip titles for the individuals on this page only.
   const {
     data: classesResponse,
     error: classesError,
     refetch: refetchClasses,
-  } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useClassesByIds(pageData.flatMap((i) => i.class_ids));
 
   const deleteMutation = useDeleteIndividual();
 
   const classes = classesResponse?.items ?? [];
   const classMap = new Map(classes.map((c) => [c.id, c.title]));
 
-  const allData = listResponse?.items ?? [];
-  const hasFilter = !!searchFilter;
-  const filteredData = allData.filter(
-    (individual: IndividualResponse) =>
-      individual.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (individual.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
-      individual.id.toLowerCase().includes(searchFilter.toLowerCase()),
-  );
+  const hasFilter = paging.hasSearch;
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
@@ -123,7 +126,7 @@ export function IndividualsPage() {
 
   const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
-  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const filteredEmpty = hasFilter && total === 0 && (allCount ?? 0) > 0;
   const emptyStateTitle = filteredEmpty
     ? individualsCopy.filteredEmpty.title
     : individualsCopy.emptyState.title;
@@ -168,18 +171,21 @@ export function IndividualsPage() {
 
           <FilterBar
             data-testid="schema-filter-bar"
-            onSearchChange={setSearchFilter}
-            searchPlaceholder="Search by title or description…"
-            showingCount={filteredData.length}
-            totalCount={allData.length}
+            onSearchChange={paging.setSearch}
+            searchPlaceholder="Search by title or identifier…"
+            showingCount={total ?? 0}
+            totalCount={allCount ?? total ?? 0}
           />
 
           <EntitySurface
             ref={surfaceRef}
             entityType="individual"
-            data={filteredData}
+            data={pageData}
             isLoading={isLoading}
             columns={individualColumns}
+            pagination={paging.pagination(total)}
+            onSort={paging.onSort}
+            onCreateSuccess={paging.resetPage}
             renderInspector={(entity, { selectEntity }) => (
               <IndividualDrawer
                 key={entity.id}
