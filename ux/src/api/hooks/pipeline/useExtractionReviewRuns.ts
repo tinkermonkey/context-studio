@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRunPipeline } from "./usePipelineMutations";
+import { usePipelineRun } from "./usePipelineRuns";
 import { ApiError } from "@/api/client/interceptors";
 import { hasRunStatus } from "./runStatus";
 import type { components } from "@/api/types";
@@ -83,17 +84,53 @@ function errorMessage(err: unknown): string {
 
 const IDLE: ReviewRunSlot = { status: "idle" };
 
+/** Run id to poll: only a slot whose run was returned but has not finished yet. */
+const pollId = (slot: ReviewRunSlot) => (slot.status === "running" ? (slot.run?.id ?? "") : "");
+
+export interface ExtractionReviewRunsOptions {
+  /** How often a pending/running run is re-fetched until it finishes. */
+  pollIntervalMs?: number;
+}
+
 /**
  * Starts schema_extraction and individual_extraction on the same paragraph and
  * tracks each run independently: one tab failing never blocks the other.
  * Unlike useRunWizard, this never navigates away — results are reviewed in place.
  */
-export function useExtractionReviewRuns() {
+export function useExtractionReviewRuns({
+  pollIntervalMs = 2000,
+}: ExtractionReviewRunsOptions = {}) {
   const { mutateAsync: runPipeline } = useRunPipeline();
   const [slots, setSlots] = useState<Record<ReviewKind, ReviewRunSlot>>({
     schema: IDLE,
     individual: IDLE,
   });
+
+  // A run can come back pending/running (or be opened while still running):
+  // poll it until it finishes, then move its slot to completed/failed.
+  const { data: schemaPolled } = usePipelineRun(pollId(slots.schema), {
+    refetchInterval: pollIntervalMs,
+  });
+  const { data: individualPolled } = usePipelineRun(pollId(slots.individual), {
+    refetchInterval: pollIntervalMs,
+  });
+  useEffect(() => {
+    const polled: Record<ReviewKind, PipelineRunResponse | undefined> = {
+      schema: schemaPolled,
+      individual: individualPolled,
+    };
+    setSlots((s) => {
+      let next = s;
+      for (const kind of ["schema", "individual"] as const) {
+        const run = polled[kind];
+        const slot = s[kind];
+        if (!run || slot.status !== "running" || slot.run?.id !== run.id) continue;
+        if (hasRunStatus(run.status, "pending", "running")) continue;
+        next = { ...next, [kind]: slotFromRun(run) };
+      }
+      return next;
+    });
+  }, [schemaPolled, individualPolled]);
   const [lastRequest, setLastRequest] = useState<ExtractionReviewRequest | null>(null);
   // Per-kind generation counters so a superseded run's late result is dropped.
   const generation = useRef<Record<ReviewKind, number>>({ schema: 0, individual: 0 });
