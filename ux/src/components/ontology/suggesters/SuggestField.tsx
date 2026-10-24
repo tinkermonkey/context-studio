@@ -8,6 +8,7 @@ import {
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
 import { provenanceText } from "./provenanceText";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
 
 /** Suggestions come from refinement/grounding pipelines, whose candidates carry a description. */
@@ -40,9 +41,9 @@ export function SuggestField({
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
-  const isCompleted = run?.status === "COMPLETED";
-  const isFailed = run?.status === "FAILED";
+  const isRunning = runMutation.isPending || hasRunStatus(run?.status, "pending", "running");
+  const isCompleted = hasRunStatus(run?.status, "completed");
+  const isFailed = hasRunStatus(run?.status, "failed");
 
   const { data: allCandidatesRaw = [] } = usePipelineCandidates(runId ?? "", isCompleted);
 

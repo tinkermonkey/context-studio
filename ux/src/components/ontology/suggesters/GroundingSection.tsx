@@ -9,6 +9,7 @@ import {
 import { useToasts } from "@/components/ui/Toast";
 import { provenanceText } from "./provenanceText";
 import type { components } from "@/api/types";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
 
 type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
@@ -35,9 +36,9 @@ export function GroundingSection({
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
-  const isCompleted = run?.status === "COMPLETED";
-  const isFailed = run?.status === "FAILED";
+  const isRunning = runMutation.isPending || hasRunStatus(run?.status, "pending", "running");
+  const isCompleted = hasRunStatus(run?.status, "completed");
+  const isFailed = hasRunStatus(run?.status, "failed");
 
   const { data: candidateItems = [] } = usePipelineCandidates(runId ?? "", isCompleted);
   const allCandidates = candidateItems.filter(

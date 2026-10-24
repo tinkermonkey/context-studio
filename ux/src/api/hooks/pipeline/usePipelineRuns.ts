@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { pipelineService, type CandidateItem, type RunListParams } from "@/api/services/pipeline";
+import { hasRunStatus } from "./runStatus";
 
 export type { CandidateItem } from "@/api/services/pipeline";
 
@@ -12,8 +13,7 @@ export function usePipelineRun(runId: string, options?: { refetchInterval?: numb
     refetchInterval:
       options?.refetchInterval ??
       ((query) => {
-        const status = query.state.data?.status;
-        return status === "PENDING" || status === "RUNNING" ? 2000 : false;
+        return hasRunStatus(query.state.data?.status, "pending", "running") ? 2000 : false;
       }),
   });
 }

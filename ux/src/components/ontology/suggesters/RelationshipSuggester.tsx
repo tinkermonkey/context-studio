@@ -8,6 +8,7 @@ import {
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { provenanceText } from "./provenanceText";
 import { useToasts } from "@/components/ui/Toast";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
 
 interface RelationshipSuggesterProps {
@@ -24,9 +25,9 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
-  const isCompleted = run?.status === "COMPLETED";
-  const isFailed = run?.status === "FAILED";
+  const isRunning = runMutation.isPending || hasRunStatus(run?.status, "pending", "running");
+  const isCompleted = hasRunStatus(run?.status, "completed");
+  const isFailed = hasRunStatus(run?.status, "failed");
 
   const { data: candidateItems = [] } = usePipelineCandidates(runId ?? "", isCompleted);
   const allCandidates = candidateItems.filter(
