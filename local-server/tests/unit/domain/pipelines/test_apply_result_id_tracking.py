@@ -228,9 +228,9 @@ def test_schema_extraction_tracks_created_property_definition_ids(repo, ontology
 # ============================================================================
 
 
-def test_schema_grounding_tracks_external_reference_ids(repo):
+def test_schema_grounding_tracks_external_reference_ids(repo, ontology_service):
     """External reference creation populates created_external_reference_ids list."""
-    svc = SchemaGroundingApplyService(repo)
+    svc = SchemaGroundingApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_NODE_GROUNDING
@@ -267,9 +267,11 @@ def test_schema_grounding_tracks_external_reference_ids(repo):
 # ============================================================================
 
 
-def test_schema_definition_refinement_increments_classes_updated_not_created(repo):
+def test_schema_definition_refinement_increments_classes_updated_not_created(
+    repo, ontology_service
+):
     """Updating a class increments classes_updated, not classes_created."""
-    svc = SchemaDefinitionRefinementApplyService(repo)
+    svc = SchemaDefinitionRefinementApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
@@ -289,7 +291,7 @@ def test_schema_definition_refinement_increments_classes_updated_not_created(rep
     assert cls.description == "A human being"
 
 
-def test_schema_connection_refinement_separates_operations(repo):
+def test_schema_connection_refinement_separates_operations(repo, ontology_service):
     """Connection refinement separates add/remove/modify into distinct fields."""
     # Create classes and property for testing
     cls1 = Class(
@@ -329,7 +331,7 @@ def test_schema_connection_refinement_separates_operations(repo):
     repo.save_relationship(rel_is)
     repo.save_relationship(rel_likes)
 
-    svc = SchemaConnectionRefinementApplyService(repo)
+    svc = SchemaConnectionRefinementApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT
@@ -369,9 +371,9 @@ def test_schema_connection_refinement_separates_operations(repo):
     assert result.relationships_skipped == 1
 
 
-def test_schema_grounding_uses_external_references_created(repo):
+def test_schema_grounding_uses_external_references_created(repo, ontology_service):
     """Grounding uses external_references_created, not relationships_created."""
-    svc = SchemaGroundingApplyService(repo)
+    svc = SchemaGroundingApplyService(ontology_service, repo)
     run = MagicMock()
     run.id = "run-1"
     run.pipeline_type = PipelineType.SCHEMA_NODE_GROUNDING

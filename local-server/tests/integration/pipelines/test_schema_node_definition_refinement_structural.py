@@ -119,7 +119,9 @@ class TestSchemaNodeDefinitionRefinementStructural:
 
     def test_apply_service_updates_not_creates(self):
         """Refinement should UPDATE existing classes, not CREATE new ones."""
-        apply_service = SchemaDefinitionRefinementApplyService(ontology_repo=None)
+        apply_service = SchemaDefinitionRefinementApplyService(
+            ontology_service=None, ontology_repo=None
+        )
         assert apply_service is not None
 
     def test_apply_service_is_idempotent(self):

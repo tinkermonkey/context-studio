@@ -23,6 +23,12 @@ def mock_ontology_repo():
 
 
 @pytest.fixture
+def mock_ontology_service():
+    """Create a mock OntologyService (the write path for apply)."""
+    return Mock()
+
+
+@pytest.fixture
 def sample_class():
     """Create a sample Class entity for testing."""
     return Class(
@@ -68,11 +74,15 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
     """Basic functionality tests for definition refinement apply service."""
 
     def test_apply_selects_highest_confidence_candidate(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run_with_candidates
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_class,
+        sample_pipeline_run_with_candidates,
     ):
         """Apply selects and applies the highest-confidence candidate."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run_with_candidates)
 
@@ -80,15 +90,19 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
         assert result.classes_skipped == 0
 
         # Verify the class was updated with the highest-confidence definition
-        saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        assert saved_class.description == "A high-confidence refined definition"
+        saved = mock_ontology_service.update_class.call_args
+        assert saved.kwargs["description"] == "A high-confidence refined definition"
 
     def test_confidence_threshold_filtering(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run_with_candidates
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_class,
+        sample_pipeline_run_with_candidates,
     ):
         """Candidates below confidence threshold are filtered out."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run_with_candidates, confidence_threshold=0.9)
 
@@ -96,23 +110,27 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
         assert result.classes_skipped == 0
 
         # Should use the 0.95 candidate, not 0.8
-        saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        assert saved_class.description == "A high-confidence refined definition"
+        saved = mock_ontology_service.update_class.call_args
+        assert saved.kwargs["description"] == "A high-confidence refined definition"
 
     def test_all_candidates_below_threshold(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run_with_candidates
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_class,
+        sample_pipeline_run_with_candidates,
     ):
         """No candidates above threshold results in skip."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run_with_candidates, confidence_threshold=0.99)
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
-        mock_ontology_repo.save_class.assert_not_called()
+        mock_ontology_service.update_class.assert_not_called()
 
-    def test_missing_node_id_raises_error(self, mock_ontology_repo):
+    def test_missing_node_id_raises_error(self, mock_ontology_repo, mock_ontology_service):
         """Missing node_id in output_summary raises ValueError."""
         run = PipelineRun(
             id="run-no-node",
@@ -128,12 +146,12 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         with pytest.raises(ValueError, match="node_id missing from output_summary"):
             service.apply(run)
 
-    def test_class_not_found_raises_error(self, mock_ontology_repo):
+    def test_class_not_found_raises_error(self, mock_ontology_repo, mock_ontology_service):
         """Non-existent class raises ValueError."""
         mock_ontology_repo.get_class.return_value = None
         run = PipelineRun(
@@ -151,12 +169,12 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         with pytest.raises(ValueError, match="not found"):
             service.apply(run)
 
-    def test_empty_candidates_list(self, mock_ontology_repo, sample_class):
+    def test_empty_candidates_list(self, mock_ontology_repo, mock_ontology_service, sample_class):
         """Empty candidates list results in skip."""
         run = PipelineRun(
             id="run-empty-cand",
@@ -172,19 +190,21 @@ class TestSchemaDefinitionRefinementApplyServiceBasic:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run)
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
-        mock_ontology_repo.save_class.assert_not_called()
+        mock_ontology_service.update_class.assert_not_called()
 
 
 class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
     """Edge case tests for definition refinement apply service."""
 
-    def test_whitespace_only_definition_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_whitespace_only_definition_is_skipped(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Definitions with only whitespace are treated as empty."""
         run = PipelineRun(
             id="run-ws-def",
@@ -205,14 +225,16 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run)
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_missing_definition_field_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_missing_definition_field_is_skipped(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Candidates without definition field are skipped."""
         run = PipelineRun(
             id="run-no-def-field",
@@ -233,14 +255,16 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run)
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_missing_confidence_field_defaults_to_zero(self, mock_ontology_repo, sample_class):
+    def test_missing_confidence_field_defaults_to_zero(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Missing confidence field defaults to 0.0."""
         run = PipelineRun(
             id="run-no-conf",
@@ -261,14 +285,16 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, confidence_threshold=0.1)
 
         assert result.classes_updated == 0
         assert result.classes_skipped == 1
 
-    def test_multiple_qualifying_candidates_uses_highest(self, mock_ontology_repo, sample_class):
+    def test_multiple_qualifying_candidates_uses_highest(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """When multiple candidates qualify, highest confidence wins."""
         run = PipelineRun(
             id="run-multi-qual",
@@ -288,16 +314,18 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, confidence_threshold=0.85)
 
         assert result.classes_updated == 1
 
-        saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        assert saved_class.description == "Definition B"
+        saved = mock_ontology_service.update_class.call_args
+        assert saved.kwargs["description"] == "Definition B"
 
-    def test_exact_threshold_boundary(self, mock_ontology_repo, sample_class):
+    def test_exact_threshold_boundary(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Threshold exact boundary: >= threshold included, < threshold excluded."""
         run = PipelineRun(
             id="run-boundary",
@@ -316,15 +344,15 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, confidence_threshold=0.85)
 
         assert result.classes_updated == 1
-        saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        assert saved_class.description == "Definition B"
+        saved = mock_ontology_service.update_class.call_args
+        assert saved.kwargs["description"] == "Definition B"
 
-    def test_idempotent_apply(self, mock_ontology_repo, sample_class):
+    def test_idempotent_apply(self, mock_ontology_repo, mock_ontology_service, sample_class):
         """Re-applying the same run overwrites with the same value (idempotent)."""
         run = PipelineRun(
             id="run-idem",
@@ -342,7 +370,7 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         # First apply
         result1 = service.apply(run)
@@ -353,7 +381,7 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         assert result2.classes_updated == 1
 
     def test_zero_confidence_accepted_with_default_threshold(
-        self, mock_ontology_repo, sample_class
+        self, mock_ontology_repo, mock_ontology_service, sample_class
     ):
         """Zero confidence is accepted when threshold is 0.0."""
         run = PipelineRun(
@@ -372,7 +400,7 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaDefinitionRefinementApplyService(mock_ontology_repo)
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, confidence_threshold=0.0)
 

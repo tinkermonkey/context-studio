@@ -543,7 +543,7 @@ class TestQualityE2EChain:
         )
 
         # ===== STAGE 6: Apply Schema Node Grounding =====
-        grounding_apply = SchemaGroundingApplyService(ontology_repo)
+        grounding_apply = SchemaGroundingApplyService(ontology_service, ontology_repo)
         # Apply grounding to all classes
         for class_id in class_ids:
             grounding_apply.apply(grounding_run, class_id)
@@ -581,7 +581,7 @@ class TestQualityE2EChain:
         )
 
         # ===== STAGE 8: Apply Definition Refinement =====
-        def_refine_apply = SchemaDefinitionRefinementApplyService(ontology_repo)
+        def_refine_apply = SchemaDefinitionRefinementApplyService(ontology_service, ontology_repo)
         def_refine_apply.apply(def_refine_run)
 
         # ===== STAGE 9: Connection Refinement =====
@@ -617,7 +617,7 @@ class TestQualityE2EChain:
         )
 
         # ===== STAGE 10: Apply Connection Refinement =====
-        conn_refine_apply = SchemaConnectionRefinementApplyService(ontology_repo)
+        conn_refine_apply = SchemaConnectionRefinementApplyService(ontology_service, ontology_repo)
         conn_refine_apply.apply(conn_refine_run)
 
         # Close HTTP client and flush all recording providers

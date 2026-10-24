@@ -7,6 +7,9 @@ Applies connection delta proposals from a completed connection refinement run:
 - "modify" deltas track the operation in relationships_modified counter (accounting only;
   actual relationship mutation is deferred until delta structure includes modification payload)
 
+Writes go through OntologyService, so each add/remove publishes its domain event and
+is recorded as a ChangeEvent that the run's revert can undo.
+
 Idempotent: adding an already-existing relationship is skipped; removing a
 non-existent relationship is skipped.
 """
@@ -16,15 +19,14 @@ from __future__ import annotations
 import logging
 import re
 from typing import TYPE_CHECKING
-from uuid import uuid4
-
-from domain.ontology.entities import Relationship
+from domain.ontology.exceptions import EntityNotFoundError
 from domain.pipelines.apply_result import ApplyResult
 
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
+    from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
 
 
@@ -36,9 +38,14 @@ def _slugify(text: str) -> str:
 class SchemaConnectionRefinementApplyService:
     """
     Applies connection delta proposals from a connection refinement run to the ontology.
+
+    Writes go through OntologyService; reads go through the OntologyRepository port.
     """
 
-    def __init__(self, ontology_repo: "OntologyRepository") -> None:
+    def __init__(
+        self, ontology_service: "OntologyService", ontology_repo: "OntologyRepository"
+    ) -> None:
+        self._ontology_service = ontology_service
         self._repo = ontology_repo
 
     def apply(
@@ -129,31 +136,26 @@ class SchemaConnectionRefinementApplyService:
                 if existing:
                     result.relationships_skipped += 1
                     continue
-                try:
-                    new_rel = Relationship(
-                        id=str(uuid4()),
-                        source_id=src_id,
-                        target_id=tgt_id,
-                        property_definition_id=prop_def.id,
-                        source_run_id=run.id,
-                    )
-                    self._repo.save_relationship(new_rel)
-                    result.relationships_created += 1
-                    result.created_relationship_ids.append(new_rel.id)
-                except Exception as e:
-                    _logger.error(f"Failed to save relationship: {e}")
-                    raise
+                new_rel = self._ontology_service.create_relationship(
+                    source_id=src_id,
+                    target_id=tgt_id,
+                    property_definition_id=prop_def.id,
+                    source_run_id=run.id,
+                )
+                result.relationships_created += 1
+                result.created_relationship_ids.append(new_rel.id)
 
             elif operation == "remove":
                 if not existing:
                     result.relationships_skipped += 1
                     continue
                 try:
-                    self._repo.delete_relationship(existing[0].id)
-                    result.relationships_removed += 1
-                except Exception as e:
-                    _logger.error(f"Failed to delete relationship: {e}")
-                    raise
+                    self._ontology_service.delete_relationship(existing[0].id)
+                except EntityNotFoundError:
+                    # Removed concurrently since the lookup above; nothing to do.
+                    result.relationships_skipped += 1
+                    continue
+                result.relationships_removed += 1
 
             elif operation == "modify":
                 if not existing:

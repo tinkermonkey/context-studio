@@ -2,8 +2,10 @@
 Apply service for schema node grounding pipeline.
 
 Applies grounding candidates from a completed grounding run to an existing ontology
-Class by appending ExternalReference entries. Idempotent: groundings already present
-(matched by URI) are skipped.
+Class by appending ExternalReference entries. The write goes through
+OntologyService.update_class, so a ClassUpdated event (and thus a ChangeEvent with the
+previous references) is recorded and reverting the run restores the prior list.
+Idempotent: groundings already present (matched by URI) are skipped.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
+    from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
 
 
@@ -25,10 +28,14 @@ class SchemaGroundingApplyService:
     """
     Applies schema node grounding results to an existing Class entity.
 
-    Adds ExternalReference entries sourced from the grounding run output.
+    Adds ExternalReference entries sourced from the grounding run output via
+    OntologyService; reads go through the OntologyRepository port.
     """
 
-    def __init__(self, ontology_repo: "OntologyRepository") -> None:
+    def __init__(
+        self, ontology_service: "OntologyService", ontology_repo: "OntologyRepository"
+    ) -> None:
+        self._ontology_service = ontology_service
         self._repo = ontology_repo
 
     def apply(
@@ -61,6 +68,7 @@ class SchemaGroundingApplyService:
         result = ApplyResult()
         groundings = run.output_summary.get("groundings", [])
         existing_uris = {ref.identifier for ref in cls.external_references}
+        new_references: list[ExternalReference] = []
 
         for grounding in groundings:
             uri = (grounding.get("uri") or "").strip()
@@ -76,13 +84,15 @@ class SchemaGroundingApplyService:
                 identifier=uri,
                 uri=uri,
             )
-            cls.external_references.append(ref)
+            new_references.append(ref)
             existing_uris.add(uri)
             result.external_references_created += 1
             result.created_external_reference_ids.append(uri)
 
-        if result.external_references_created > 0:
-            self._repo.save_class(cls)
+        if new_references:
+            self._ontology_service.update_class(
+                node_id, external_references=[*cls.external_references, *new_references]
+            )
 
         result.validate()
         return result

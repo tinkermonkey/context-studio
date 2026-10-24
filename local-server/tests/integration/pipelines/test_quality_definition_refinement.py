@@ -47,6 +47,9 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
 from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
 from tests.integration.pipelines._harness.metrics import cosine_similarity
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
+from domain.ontology.services import OntologyService
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 _logger = logging.getLogger(__name__)
 
@@ -397,7 +400,10 @@ class TestQualityDefinitionRefinement:
         )
         ontology_repo.save_class(test_cls)
 
-        apply_service = SchemaDefinitionRefinementApplyService(ontology_repo)
+        apply_service = SchemaDefinitionRefinementApplyService(
+            OntologyService(ontology_repo, FakeEmbeddingService(), FakeEventPublisher()),
+            ontology_repo,
+        )
 
         # First execution: run -> apply -> snapshot
         run_id = str(uuid4())
