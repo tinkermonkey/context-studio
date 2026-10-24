@@ -348,6 +348,23 @@ SCENARIO_ONTOLOGY.update(
     {scenario: OntologyContext.DR_SPEC for scenario in WAVE4_INFORMAL_SCENARIOS}
 )
 
+# Every corpus scenario a cassette-replayed tournament variant (`default`,
+# `grounded_v1`) is run against: the scored dev/holdout split plus the
+# always-reported Wave 1 bootstrap, Wave 4 informal and relabeled-arxiv
+# diagnostic groups. The single source of truth for the cassette recorders
+# (`scripts/record_*_cassettes.py`) and the tournament's replay guards
+# (`scripts/quality_tournament.py`) -- add a new replayed group HERE so the
+# recorders and the guard cannot drift apart (issue #1259). Ordered and
+# de-duplicated (the groups are disjoint today).
+REPLAY_SCENARIOS: list[str] = list(
+    dict.fromkeys(
+        INDIVIDUAL_EXTRACTION_SCENARIOS
+        + DR_BOOTSTRAP_SCENARIOS
+        + WAVE4_INFORMAL_SCENARIOS
+        + RELABELED_ARXIV_SCENARIOS
+    )
+)
+
 # Recognition episodes (issue #1142): multi-document episodes for measuring
 # cross-document entity recognition (dedup), fixtures under
 # tests/integration/fixtures/pipelines/individual_recognition/<episode>/ (ordered
