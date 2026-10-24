@@ -3,7 +3,9 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useProposalConflicts, useResolveConflicts } from "@/api/hooks/versioning";
-import { useIndividuals, useTaxonomies, useClasses } from "@/api/hooks/ontology";
+import { useIndividuals, useTaxonomies } from "@/api/hooks/ontology";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import { useToasts } from "@/components/ui/Toast";
 import { COPY } from "@/routes/app/versioning/copy";
 import type { components } from "@/api/types";
@@ -337,17 +339,27 @@ export function ConflictResolver({ proposalId, onResolved }: ConflictResolverPro
     return [...new Set(conflicts.map((c) => c.entity_id))];
   }, [conflicts]);
 
+  // Resolve names for exactly the conflicting entities (ids filter, capped by
+  // the backend's 500-id limit); taxonomies are a small set fetched whole.
+  const lookupIds = uniqueEntityIds.slice(0, SMALL_SET_LIMIT);
   const {
     data: individuals = [],
     error: individualsError,
     refetch: refetchIndividuals,
-  } = useIndividuals();
+  } = useIndividuals(
+    { ids: lookupIds, limit: Math.max(lookupIds.length, 1) },
+    { enabled: lookupIds.length > 0 },
+  );
   const {
     data: taxonomyResp,
     error: taxonomiesError,
     refetch: refetchTaxonomies,
-  } = useTaxonomies();
-  const { data: classesResp, error: classesError, refetch: refetchClasses } = useClasses();
+  } = useTaxonomies({ limit: SMALL_SET_LIMIT });
+  const {
+    data: classesResp,
+    error: classesError,
+    refetch: refetchClasses,
+  } = useClassesByIds(lookupIds);
 
   const entityMap = useMemo(() => {
     const map = new Map<string, string>();

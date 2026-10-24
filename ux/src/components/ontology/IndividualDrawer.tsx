@@ -14,7 +14,7 @@ import { InlineInspector } from "@/components/ui/InlineInspector";
 import { EditableField } from "@/components/ui/EditableField";
 import { useToasts } from "@/components/ui/Toast";
 import {
-  useIndividuals,
+  useIndividualsInClasses,
   useIndividual,
   useUpdateIndividual,
   useDeleteIndividual,
@@ -24,15 +24,20 @@ import {
   useReorderIndividualClasses,
   useCreateIndividual,
 } from "@/api/hooks/ontology/useIndividuals";
-import { useClasses } from "@/api/hooks/ontology";
-import { useRelationships } from "@/api/hooks/ontology/useRelationships";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
+import { useRelationshipsTouching } from "@/api/hooks/ontology/useRelationships";
+import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { ApiError } from "@/api/client/interceptors";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 type DataPropertyValueResponse = components["schemas"]["DataPropertyValueResponse"];
+
+/** Related individuals and relationships each show at most this many entries. */
+const RELATED_LIMIT = 10;
+const RELATIONSHIPS_SHOWN = 10;
 
 interface IndividualDrawerProps {
   individualId: string | null;
@@ -122,27 +127,46 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     error: individualError,
     refetch: refetchIndividual,
   } = useIndividual(individualId || "");
-  const { data: individualsResponse } = useIndividuals();
+  const individualClassIdList = individual?.class_ids ?? [];
+  // Up to RELATED_LIMIT other individuals sharing a class (fetch one extra to
+  // allow for this individual itself).
+  const sameClassIndividuals = useIndividualsInClasses(individualClassIdList, RELATED_LIMIT + 1);
+  // Relationships of this individual's classes, newest first.
+  const { items: relevantRelationships, total: relevantRelationshipTotal } =
+    useRelationshipsTouching(individualClassIdList, RELATIONSHIPS_SHOWN);
 
+  const relatedIndividuals = sameClassIndividuals
+    .filter((ind) => ind.id !== individualId)
+    .slice(0, RELATED_LIMIT);
+
+  // Titles for every class this drawer shows: own classes, relationship ends,
+  // and related individuals' classes.
   const {
     data: classesResponse,
     isError: classesError,
     error: classesErrorObj,
     refetch: refetchClasses,
-  } = useClasses();
-  const classes = useMemo(() => classesResponse?.items || [], [classesResponse]);
+  } = useClassesByIds([
+    ...individualClassIdList,
+    ...relevantRelationships.flatMap((rel) => [rel.source_id, rel.target_id]),
+    ...relatedIndividuals.flatMap((ind) => ind.class_ids),
+  ]);
   const classMap = useMemo(
-    () => new Map(classes.map((c: ClassResponse) => [c.id, c.title])),
-    [classes],
+    () => new Map((classesResponse?.items ?? []).map((c: ClassResponse) => [c.id, c.title])),
+    [classesResponse],
   );
-
-  const { data: relationshipsResponse } = useRelationships();
-  const allRelationships = relationshipsResponse?.items || [];
-  const { data: propertiesResponse } = useProperties();
+  const { data: propertiesResponse } = usePropertiesByIds(
+    relevantRelationships.map((rel) => rel.property_definition_id),
+  );
   const propertyMap = useMemo(
     () => new Map((propertiesResponse?.items || []).map((p) => [p.id, p.identifier])),
     [propertiesResponse],
   );
+
+  // "Add class" picker: server-side search as the user types.
+  const { data: classSearchResponse } = useClassSearch(searchQuery, undefined, {
+    enabled: showClassOptions,
+  });
 
   const {
     data: inheritedPropertiesResponse,
@@ -152,15 +176,6 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     refetch: refetchInheritedProperties,
   } = useIndividualInheritedProperties(individualId || "");
   const inheritedProperties = inheritedPropertiesResponse?.items || [];
-
-  const relatedIndividuals =
-    individualsResponse?.items
-      ?.filter(
-        (ind) =>
-          ind.id !== individualId &&
-          ind.class_ids.some((classId) => individual?.class_ids.includes(classId)),
-      )
-      .slice(0, 10) || [];
 
   useEffect(() => {
     if (individual?.id) {
@@ -326,20 +341,12 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
     }
   };
 
-  const availableClasses = classes.filter(
-    (cls) =>
-      !individual.class_ids.includes(cls.id) &&
-      (cls.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cls.id.toLowerCase().includes(searchQuery.toLowerCase())),
+  const availableClasses = (classSearchResponse?.items ?? []).filter(
+    (cls) => !individual.class_ids.includes(cls.id),
   );
 
   const primaryClassName =
     individual.class_ids.length > 0 ? (classMap.get(individual.class_ids[0]) ?? "—") : "—";
-
-  const individualClassIds = new Set(individual.class_ids);
-  const relevantRelationships = allRelationships.filter(
-    (rel: any) => individualClassIds.has(rel.source_id) || individualClassIds.has(rel.target_id),
-  );
 
   return (
     <>
@@ -378,7 +385,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                 </p>
               ) : (
                 <div className="stack" data-testid="individual-relationships-list">
-                  {relevantRelationships.slice(0, 10).map((rel: any) => (
+                  {relevantRelationships.map((rel) => (
                     <div
                       key={rel.id}
                       className="drawer-triple"
@@ -395,8 +402,10 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                       </span>
                     </div>
                   ))}
-                  {relevantRelationships.length > 10 && (
-                    <p className="drawer-empty-note">+{relevantRelationships.length - 10} more</p>
+                  {relevantRelationshipTotal > relevantRelationships.length && (
+                    <p className="drawer-empty-note">
+                      +{relevantRelationshipTotal - relevantRelationships.length} more
+                    </p>
                   )}
                 </div>
               )}
@@ -632,7 +641,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
                         </div>
                       );
                     })}
-                    {relatedIndividuals.length === 10 && (
+                    {relatedIndividuals.length === RELATED_LIMIT && (
                       <div className="related-show-more-note">
                         {individualsCopy.drawer.showingResults}
                       </div>
