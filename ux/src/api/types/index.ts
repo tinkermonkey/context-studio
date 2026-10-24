@@ -16,7 +16,7 @@ export interface paths {
      * @description Retrieve taxonomies with optional pagination, sorting, and text search.
      *
      *     Args:
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
      *         sort_order: Sort direction (asc or desc, default asc)
@@ -210,7 +210,7 @@ export interface paths {
      *
      *     Args:
      *         taxonomy_id: Optional taxonomy ID to filter by
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
      *         sort_order: Sort direction (asc or desc, default asc)
@@ -330,7 +330,7 @@ export interface paths {
      *     Args:
      *         concept_scheme_id: Optional concept scheme ID to filter by
      *         parent_class_id: Optional parent class ID to filter by
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         service: OntologyService from dependency injection
      *
@@ -448,7 +448,7 @@ export interface paths {
      *         source_id: Optional source entity ID to filter by
      *         target_id: Optional target entity ID to filter by
      *         property_id: Optional property definition ID to filter by
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (created_at)
      *         sort_order: Sort direction (asc or desc, default asc)
@@ -534,7 +534,7 @@ export interface paths {
      *
      *     Args:
      *         is_relevant: Optional filter for relevant properties
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
      *         sort_order: Sort direction (asc or desc, default asc)
@@ -638,7 +638,7 @@ export interface paths {
      *
      *     Args:
      *         class_id: The ID of the class
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         service: OntologyService from dependency injection
      *
@@ -741,7 +741,7 @@ export interface paths {
      *
      *     Args:
      *         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
-     *         limit: Maximum number of results (1-1000, default 100)
+     *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         service: OntologyService from dependency injection
      *
