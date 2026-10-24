@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Field,
@@ -25,6 +25,13 @@ import {
 import { SchemaCandidateReview } from "./SchemaCandidateReview";
 import { IndividualCandidateReview } from "./IndividualCandidateReview";
 import "./ExtractionReview.css";
+
+const REVIEW_TABS: Array<{ id: ReviewKind; label: string }> = [
+  { id: "schema", label: "Schema extraction" },
+  { id: "individual", label: "Individual extraction" },
+];
+const tabId = (kind: ReviewKind) => `extraction-review-tab-${kind}`;
+const tabPanelId = (kind: ReviewKind) => `extraction-review-tabpanel-${kind}`;
 
 /** Scope a run was started with; apply reads it, so it is fixed per run. */
 export interface ReviewScope {
@@ -75,6 +82,17 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
   // After the first run attempt, an emptied paragraph re-shows its error on blur.
   const [attempted, setAttempted] = useState(false);
   const [tab, setTab] = useState<ReviewKind>("schema");
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  // Heimdall's TabBar renders no ids on its tab buttons, so wire the
+  // tab ↔ tabpanel association (id / aria-controls) onto them here.
+  useEffect(() => {
+    tabBarRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]').forEach((btn, i) => {
+      const kind = REVIEW_TABS[i]?.id;
+      if (!kind) return;
+      btn.id = tabId(kind);
+      btn.setAttribute("aria-controls", tabPanelId(kind));
+    });
+  });
   const [scope, setScope] = useState<ReviewScope | null>(null);
 
   const { data: taxonomyList } = useTaxonomies();
@@ -301,17 +319,23 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
 
       <div className="xr-gap" />
       <TabBar
-        tabs={[
-          { id: "schema", label: "Schema extraction", count: schemaCount },
-          { id: "individual", label: "Individual extraction", count: individualCount },
-        ]}
+        ref={tabBarRef}
+        tabs={REVIEW_TABS.map((t) => ({
+          ...t,
+          count: t.id === "schema" ? schemaCount : individualCount,
+        }))}
         activeTabId={tab}
         onSelectTab={(id) => setTab(id as ReviewKind)}
         data-testid="extraction-review-tabs"
       />
       <div className="xr-gap-sm" />
       {/* Both tabs stay mounted so review decisions survive switching tabs. */}
-      <div role="tabpanel" aria-label="Schema extraction" hidden={tab !== "schema"}>
+      <div
+        role="tabpanel"
+        id={tabPanelId("schema")}
+        aria-labelledby={tabId("schema")}
+        hidden={tab !== "schema"}
+      >
         <SchemaCandidateReview
           slot={runs.schema}
           text={runText}
@@ -319,7 +343,12 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
           onRetry={() => void runs.rerun("schema")}
         />
       </div>
-      <div role="tabpanel" aria-label="Individual extraction" hidden={tab !== "individual"}>
+      <div
+        role="tabpanel"
+        id={tabPanelId("individual")}
+        aria-labelledby={tabId("individual")}
+        hidden={tab !== "individual"}
+      >
         <IndividualCandidateReview
           slot={runs.individual}
           text={runText}

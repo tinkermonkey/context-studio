@@ -158,6 +158,18 @@ describe("ExtractionReviewPage", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
     expect(await screen.findByTestId("extraction-review-triples")).toBeInTheDocument();
     expect(screen.getByRole("tabpanel", { name: "Individual extraction" })).toBeVisible();
+    const individualTab = screen.getByRole("tab", { name: "Individual extraction" });
+    const individualPanel = screen.getByRole("tabpanel", { name: "Individual extraction" });
+    expect(individualTab).toHaveAttribute("aria-controls", individualPanel.id);
+    expect(individualPanel).toHaveAttribute("aria-labelledby", individualTab.id);
+    expect(individualTab).toHaveAttribute("aria-selected", "true");
+    const schemaTab = screen.getByRole("tab", { name: "Schema extraction" });
+    const schemaPanel = screen
+      .getByTestId("extraction-review-schema")
+      .closest("[role=tabpanel]") as HTMLElement;
+    expect(schemaTab).toHaveAttribute("aria-controls", schemaPanel.id);
+    expect(schemaPanel).toHaveAttribute("aria-labelledby", schemaTab.id);
+    expect(schemaPanel.id).not.toBe(individualPanel.id);
     expect(
       screen.getByTestId("extraction-review-schema").closest("[role=tabpanel]"),
     ).toHaveAttribute("hidden");
