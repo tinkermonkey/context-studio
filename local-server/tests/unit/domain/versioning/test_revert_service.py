@@ -174,6 +174,31 @@ def test_revert_class_update(ontology_repo, change_repo, revert_svc):
     assert ontology_repo.get_class("cls-1").description == "An organism"
 
 
+def test_revert_chained_updates_restores_oldest_state(ontology_repo, change_repo, revert_svc):
+    """Two updates in one run revert newest first, ending at the original state."""
+    cls = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Animal",
+        description="C",
+    )
+    ontology_repo.save_class(cls)
+    for previous, new in (("A", "B"), ("B", "C")):
+        change_repo.record_change(
+            entity_id="cls-1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"description": previous},
+            new_state={"description": new},
+            batch_run_id="run-1",
+        )
+
+    assert revert_svc.revert("run-1") == 2
+
+    assert ontology_repo.get_class("cls-1").description == "A"
+
+
 # ============================================================================
 # Idempotence Tests
 # ============================================================================

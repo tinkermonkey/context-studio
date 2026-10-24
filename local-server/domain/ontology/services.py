@@ -53,6 +53,7 @@ from .events import (
 from .exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
+    EntityInUseError,
     EntityNotFoundError,
     IdentifierConflictError,
     OntologyError,
@@ -2108,7 +2109,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the property does not exist
-            OntologyError: If the property is in use by relationships
+            EntityInUseError: If the property is in use by relationships
         """
         prop_def = self._repository.get_property_definition(property_id)
         if prop_def is None:
@@ -2117,7 +2118,7 @@ class OntologyService:
         # Check if property is in use
         relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
-            raise OntologyError(
+            raise EntityInUseError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
                 " relationship(s)"
             )

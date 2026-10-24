@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from tests.utils.parent_rows import create_batch_row
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ class TestWaveARegression:
         # Create an IndividualExtractionRun (this is the migrated Wave A ExtractionRun)
         batch_run_id = str(uuid4())
         run = pipeline_repo.create(
-            batch_run_id=batch_run_id,
+            batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_run_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="extraction-v1",

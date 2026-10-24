@@ -34,6 +34,7 @@ from tests.integration.fixtures.pipelines.harness import (
     compare_output,
     run_pipeline_against_fixture,
 )
+from tests.utils.parent_rows import create_batch_run_row
 
 
 @pytest.fixture
@@ -172,7 +173,8 @@ class TestNoOpChangeEvents:
         self, noop_orchestrator, ontology_service, change_repo, session_factory
     ):
         """NoOp apply should emit at least one sentinel change_event."""
-        run_id = str(uuid4())
+        # Change events reference batch_runs, so the run needs its row first.
+        run_id = create_batch_run_row(session_factory)
 
         # Set batch run context so change events are correlated with this run
         set_batch_run_context(run_id)
@@ -242,7 +244,8 @@ class TestNoOpRevert:
         session_factory,
     ):
         """NoOp apply changes should be fully revertable via RevertService."""
-        run_id = str(uuid4())
+        # Change events reference batch_runs, so the run needs its row first.
+        run_id = create_batch_run_row(session_factory)
 
         # Set batch run context
         set_batch_run_context(run_id)
@@ -371,7 +374,8 @@ class TestNoOpStructuralComplete:
         session_factory,
     ):
         """Single NoOp run exercises _call_llm, produces change_event, and is revertable."""
-        run_id = str(uuid4())
+        # Change events reference batch_runs, so the run needs its row first.
+        run_id = create_batch_run_row(session_factory)
 
         # Set batch run context
         set_batch_run_context(run_id)

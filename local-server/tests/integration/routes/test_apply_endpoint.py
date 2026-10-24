@@ -46,6 +46,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.utils.parent_rows import create_batch_row
 
 TAXONOMY_ID = "tx-apply-test"
 SCHEME_ID = "cs-apply-test"
@@ -130,7 +131,7 @@ def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=
     """Create a completed schema extraction run with the given output."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -153,7 +154,7 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
     """Create a completed individual extraction run."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -369,7 +370,7 @@ class TestApplyEndpointErrors:
     def test_non_completed_run_returns_422(self, client, pipeline_repo):
         batch_id = str(uuid4())
         run = pipeline_repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default",
@@ -404,7 +405,7 @@ class TestApplyEndpointErrors:
     def test_grounding_missing_node_id_returns_400(self, client, pipeline_repo):
         batch_id = str(uuid4())
         run = pipeline_repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="default",
             configuration_ref="grounding-default",

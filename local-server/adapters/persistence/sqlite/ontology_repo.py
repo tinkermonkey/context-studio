@@ -52,6 +52,7 @@ from domain.ontology.entities import (
 )
 from domain.ontology.exceptions import (
     DuplicateEntityError,
+    EntityInUseError,
     IdentifierConflictError,
 )
 from domain.ontology.value_objects import DataType, NodeType, SearchCriteria, Status
@@ -1380,14 +1381,17 @@ class SQLiteOntologyRepository:
         """
         Delete a property definition.
 
-        Note: Relationships using this property cannot be created/updated after deletion
-        due to foreign key constraint.
+        Relationships reference the property with ON DELETE RESTRICT, so a
+        property that is still in use cannot be deleted.
 
         Args:
             property_id: UUID of the property definition
 
         Returns:
             True if deleted, False if not found
+
+        Raises:
+            EntityInUseError: If relationships still reference the property
         """
         with self.session_factory() as session:
             orm_entity = (
@@ -1408,7 +1412,14 @@ class SQLiteOntologyRepository:
             ).delete()
 
             session.delete(orm_entity)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as exc:
+                # relationships.property_definition_id is ON DELETE RESTRICT
+                session.rollback()
+                raise EntityInUseError(
+                    f"PropertyDefinition '{property_id}' is in use by relationships"
+                ) from exc
             return True
 
     # ==================== Relationship CRUD ====================

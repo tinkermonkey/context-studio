@@ -99,7 +99,10 @@ class RevertService:
             "entities_restored": 0,
         }
 
-        for event in reversed(events):
+        # get_changes returns newest first, which is the order to undo in: a
+        # relationship is removed before the property it uses, and chained
+        # updates unwind back to the oldest previous state.
+        for event in events:
             if self._should_skip_revert(event, events):
                 continue
 

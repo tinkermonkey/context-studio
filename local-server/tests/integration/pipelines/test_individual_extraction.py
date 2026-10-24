@@ -55,6 +55,7 @@ from tests.utils.canon_assertions import (
     load_canon,
     score_triples,
 )
+from tests.utils.parent_rows import create_batch_row
 
 # Fixture loading utilities
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_extraction"
@@ -609,7 +610,7 @@ class TestIndividualExtractionRunPersistence:
 
         # Create a run through the repository
         run = pipeline_run_repo.create(
-            batch_run_id=batch_run_id,
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, batch_run_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-default:1",
@@ -638,7 +639,7 @@ class TestIndividualExtractionRunPersistence:
 
         # Create and persist a run
         run = pipeline_run_repo.create(
-            batch_run_id=batch_run_id,
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, batch_run_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="default",
             configuration_ref="extraction-openrouter-default:1",
@@ -676,7 +677,7 @@ class TestIndividualExtractionRunPersistence:
             batch_run_id = str(uuid4())
             text_hash = hashlib.sha256(text.encode()).hexdigest()
             run = pipeline_run_repo.create(
-                batch_run_id=batch_run_id,
+                batch_run_id=create_batch_row(pipeline_run_repo._session_factory, batch_run_id),
                 pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
                 implementation_id="default",
                 configuration_ref="extraction-default:1",
