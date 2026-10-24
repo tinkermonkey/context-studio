@@ -312,7 +312,8 @@ class TestConfidenceThreshold:
         result = svc.apply(run, confidence_threshold=0.5)
 
         assert result.individuals_created == 1
-        assert result.individuals_skipped == 1
+        assert result.individuals_skipped == 0
+        assert result.skip_reasons == {"triple-1": "below_threshold"}
         individuals = repo.list_individuals(class_id=CLASS_ID, limit=None)
         assert individuals[0].title == "Alice"
 

@@ -3957,7 +3957,7 @@ export interface components {
       individuals_created: number;
       /**
        * Individuals Skipped
-       * @description Individual candidates skipped (already exist)
+       * @description Selected triples that could not be applied (invalid subject, missing class). Unselected or below-threshold triples are not counted; they appear in skip_reasons as not_selected / below_threshold.
        * @default 0
        */
       individuals_skipped: number;
@@ -4019,6 +4019,21 @@ export interface components {
        * @description candidate_ids not applied: not selected, below confidence_threshold, or unresolvable (e.g. a connection whose endpoint class does not exist)
        */
       skipped_candidate_ids?: string[];
+      /**
+       * Skip Reasons
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity). Populated for schema_extraction and individual_extraction.
+       */
+      skip_reasons?: {
+        [key: string]:
+          | "not_selected"
+          | "below_threshold"
+          | "invalid"
+          | "unresolved_endpoint"
+          | "unresolved_predicate"
+          | "title_conflict"
+          | "missing_class"
+          | "self_loop";
+      };
       /**
        * Existing Candidate Ids
        * @description Subset of applied_candidate_ids satisfied by an entity that already existed (class title in scheme, property identifier, or relationship triple). Nothing was created for these, so revert will not remove them. Populated by schema_extraction; individual_extraction reports these via merged_mentions.
