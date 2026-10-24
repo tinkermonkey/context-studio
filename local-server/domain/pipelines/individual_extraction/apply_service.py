@@ -45,6 +45,30 @@ if TYPE_CHECKING:
     from domain.pipelines.entities import PipelineRun
 
 
+def _provenance_quote(provenance: object) -> str:
+    """
+    Extract the quoted source text from a triple's provenance.
+
+    Provenance arrives in several shapes (a single span dict, a list of span
+    dicts, or a bare string); quotes from every span are joined so the
+    recognizer sees all the supporting text.
+    """
+    if isinstance(provenance, str):
+        return provenance.strip()
+    spans = provenance if isinstance(provenance, list) else [provenance]
+    quotes = []
+    for span in spans:
+        if isinstance(span, dict):
+            quote = span.get("quote") or span.get("raw")
+        elif isinstance(span, str):
+            quote = span
+        else:
+            quote = None
+        if quote and str(quote).strip():
+            quotes.append(str(quote).strip())
+    return " ... ".join(quotes)
+
+
 class IndividualExtractionApplyService:
     """
     Materializes individual extraction pipeline output into ontology entities.
@@ -399,10 +423,9 @@ class IndividualExtractionApplyService:
     @staticmethod
     def _triple_context(triple: dict) -> str:
         """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
-        provenance = triple.get("provenance") or {}
-        quote = provenance.get("quote") or provenance.get("raw")
+        quote = _provenance_quote(triple.get("provenance"))
         if quote:
-            return str(quote)
+            return quote
         subject_label = triple.get("subject", {}).get("label", "")
         predicate_label = triple.get("predicate", {}).get("label", "")
         object_label = triple.get("object", {}).get("label", "")
