@@ -119,11 +119,6 @@ def _resolve_class(
     return cache[spec_node_id]
 
 
-def _attach_path_reference(repo: OntologyRepository, individual: Individual, path: str) -> None:
-    individual.external_references.append(ExternalReference(source=DR_SOURCE, identifier=path))
-    repo.save_individual(individual)
-
-
 def _upsert_individuals(
     service: OntologyService,
     repo: OntologyRepository,
@@ -170,8 +165,8 @@ def _upsert_individuals(
         adopted = False
         if existing is None:
             # Adopt an individual of this class with the same title that carries no
-            # DR path yet (a hand-created one, or a run interrupted between create
-            # and reference attach) instead of failing on the title-uniqueness rule.
+            # DR path yet (e.g. a hand-created one) instead of failing on the
+            # title-uniqueness rule.
             existing = next(
                 (
                     individual
@@ -185,21 +180,33 @@ def _upsert_individuals(
             adopted = existing is not None
 
         try:
+            path_reference = ExternalReference(source=DR_SOURCE, identifier=path)
             if existing is None:
-                individual = service.create_individual(cls.id, title=title, description=description)
-                _attach_path_reference(repo, individual, path)
+                individual = service.create_individual(
+                    cls.id,
+                    title=title,
+                    description=description,
+                    external_references=[path_reference],
+                )
                 counts.individuals_created += 1
             else:
                 changed = existing.title != title or (
                     description is not None and existing.description != description
                 )
+                # update_individual replaces the reference list, so an adopted
+                # individual keeps its existing references plus the DR path.
                 individual = (
-                    service.update_individual(existing.id, title=title, description=description)
-                    if changed
+                    service.update_individual(
+                        existing.id,
+                        title=title,
+                        description=description,
+                        external_references=(
+                            [*existing.external_references, path_reference] if adopted else None
+                        ),
+                    )
+                    if changed or adopted
                     else existing
                 )
-                if adopted:
-                    _attach_path_reference(repo, individual, path)
                 if changed or adopted:
                     counts.individuals_updated += 1
                 else:
