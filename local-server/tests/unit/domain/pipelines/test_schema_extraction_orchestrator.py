@@ -65,18 +65,13 @@ class _MockLLM:
             content = '["Microservice", "UnknownTerm"]'
         elif "Return a JSON object mapping" in system_prompt:
             # Definition synthesis
-            content = (
-                '{"Microservice": "A small service", '
-                '"UnknownTerm": "An unknown concept"}'
-            )
+            content = '{"Microservice": "A small service", ' '"UnknownTerm": "An unknown concept"}'
         elif "disambiguation" in system_prompt.lower():
             content = '{"ambiguous_terms": []}'
         elif "relationships and properties" in user_prompt.lower():
-            content = (
-                '{"relationships": [], "properties": []}'
-            )
+            content = '{"relationships": [], "properties": []}'
         else:
-            content = '[]'
+            content = "[]"
 
         return LLMResponse(
             content=content,
@@ -125,7 +120,8 @@ class TestWarningEmissions:
 
         # Filter warnings for definition_synthesis stage
         def_syn_warnings = [
-            w for w in result_state.parse_warnings
+            w
+            for w in result_state.parse_warnings
             if w.get("stage") == "definition_synthesis" and "provenance" in w.get("error", "")
         ]
 
@@ -159,11 +155,11 @@ class TestWarningEmissions:
                         '{"relationships": ['
                         '{"subject": "UnknownA", "predicate": "calls", '
                         '"object": "UnknownB", "confidence": 0.8}'
-                        '], '
+                        "], "
                         '"properties": ['
                         '{"name": "UnknownProperty", "domain": "Unknown", '
                         '"range": "Unknown", "confidence": 0.7}'
-                        ']}'
+                        "]}"
                     )
                 else:
                     return super().complete(
@@ -213,8 +209,7 @@ class TestWarningEmissions:
 
         # Filter warnings for connection_proposal stage
         conn_warnings = [
-            w for w in result_state.parse_warnings
-            if w.get("stage") == "connection_proposal"
+            w for w in result_state.parse_warnings if w.get("stage") == "connection_proposal"
         ]
 
         # Both the unknown relationship and unknown property should
@@ -276,9 +271,7 @@ class TestWarningEmissions:
         provenance = [SourceSpan(quote="Microservice", start=0, end=12)]
 
         # Call with pre-computed provenance
-        confidence = orchestrator._compute_confidence(
-            "Microservice", source_text, provenance
-        )
+        confidence = orchestrator._compute_confidence("Microservice", source_text, provenance)
 
         # Confidence should be boosted by provenance presence and term frequency
         assert 0.2 <= confidence <= 1.0
@@ -388,3 +381,102 @@ class TestFencedJsonReplies:
         assert [p.label for p in result.candidate_properties] == ["endpoint"]
         assert not any("JSON parse error" in w.get("error", "") for w in result.parse_warnings)
         assert llm.response_formats == ["json"]
+
+
+class _DisambiguationLLM:
+    """Returns a fixed disambiguation reply; only the disambiguation stage is called."""
+
+    def __init__(self, content: str):
+        self.content = content
+
+    async def complete_async(self, system_prompt, user_prompt, model, **kwargs) -> LLMResponse:
+        return LLMResponse(
+            content=self.content,
+            tokens_in=1,
+            tokens_out=1,
+            duration_ms=1,
+            finish_reason="stop",
+            model=model,
+        )
+
+
+def _state_with(*labels: str) -> SchemaExtractionState:
+    from domain.pipelines.schema_extraction.orchestrator import CandidateClass
+
+    return SchemaExtractionState(
+        run_id="run",
+        pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+        input_data={},
+        normalized_text="Python coroutines run on the event loop.",
+        candidate_classes=[
+            CandidateClass(label=label, proposed_definition=f"{label} definition", confidence=0.9)
+            for label in labels
+        ],
+    )
+
+
+async def _disambiguate(content: str, *labels: str):
+    orchestrator = SchemaExtractionOrchestrator(
+        llm_provider=_DisambiguationLLM(content), ontology_repo=None
+    )
+    result = await orchestrator._stage_disambiguation(_state_with(*labels))
+    return result.candidate_classes
+
+
+class TestDisambiguation:
+    """Disambiguation splits only on in-text senses and never puts definitions in labels."""
+
+    @pytest.mark.asyncio
+    async def test_off_domain_senses_are_dropped_and_term_left_unsplit(self):
+        reply = (
+            '```json\n{"ambiguous_terms": [{"term": "Python", "rationale": "r", "senses": ['
+            '{"qualifier": "language", "definition": "The programming language", '
+            '"used_in_text": true},'
+            '{"qualifier": "snake", "definition": "A large snake", "used_in_text": false}'
+            "]}]}\n```"
+        )
+        classes = await _disambiguate(reply, "Python", "Coroutine")
+
+        assert [c.label for c in classes] == ["Python", "Coroutine"]
+        assert classes[0].proposed_definition == "Python definition"
+        assert classes[0].disambiguation_rationale is None
+
+    @pytest.mark.asyncio
+    async def test_in_text_senses_split_with_short_labels_and_sense_definitions(self):
+        reply = (
+            '{"ambiguous_terms": [{"term": "event loop", "rationale": "two uses", "senses": ['
+            '{"qualifier": "asyncio", "definition": "The asyncio scheduler that runs '
+            'coroutines", "used_in_text": true},'
+            '{"qualifier": "GUI", "definition": "A UI framework loop dispatching events", '
+            '"used_in_text": true},'
+            '{"qualifier": "snake", "definition": "Off topic", "used_in_text": false}'
+            "]}]}"
+        )
+        classes = await _disambiguate(reply, "Event Loop")
+
+        assert [c.label for c in classes] == ["Event Loop (asyncio)", "Event Loop (GUI)"]
+        assert [c.proposed_definition for c in classes] == [
+            "The asyncio scheduler that runs coroutines",
+            "A UI framework loop dispatching events",
+        ]
+        assert all(c.disambiguation_rationale.endswith("two uses") for c in classes)
+
+    @pytest.mark.asyncio
+    async def test_long_qualifier_never_becomes_a_label(self):
+        reply = (
+            '{"ambiguous_terms": [{"term": "Task", "rationale": "r", "senses": ['
+            '{"qualifier": "An asyncio Task object that wraps a coroutine", '
+            '"definition": "Wraps a coroutine", "used_in_text": true},'
+            '{"qualifier": "unit of work", "definition": "Work to do", "used_in_text": true}'
+            "]}]}"
+        )
+        classes = await _disambiguate(reply, "Task")
+
+        assert [c.label for c in classes] == ["Task (sense 1)", "Task (unit of work)"]
+        assert classes[0].proposed_definition == "Wraps a coroutine"
+
+    @pytest.mark.asyncio
+    async def test_no_ambiguous_terms_leaves_candidates_unchanged(self):
+        classes = await _disambiguate('{"ambiguous_terms": []}', "Coroutine", "Task")
+
+        assert [c.label for c in classes] == ["Coroutine", "Task"]
