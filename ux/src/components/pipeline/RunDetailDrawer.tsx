@@ -3,6 +3,7 @@ import { Loader, AlertCircle, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InspectorPanel, KVGrid, Chip, Button } from "@tinkermonkey/heimdall-ui";
 import { usePipelineRun, usePipelineRunChangeEvents } from "@/api/hooks/pipeline/usePipelineRuns";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { formatDate } from "@/utils/dateFormatting";
 import { GroundingReview, DefinitionRefinementReview, ConnectionRefinementReview } from "./review";
 import { RunApplyControls } from "./RunApplyControls";
@@ -34,7 +35,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
 
   const { data: run, isLoading, error } = usePipelineRun(runId);
   const { data: changeEventsData } = usePipelineRunChangeEvents(runId, {
-    enabled: run?.status === "COMPLETED",
+    enabled: hasRunStatus(run?.status, "completed"),
   });
 
   // Selection state for GroundingReview
@@ -154,10 +155,10 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
     string,
     "emerald" | "amber" | "rose" | "cyan" | "violet" | "neutral"
   > = {
-    PENDING: "amber",
-    RUNNING: "cyan",
-    COMPLETED: "emerald",
-    FAILED: "rose",
+    pending: "amber",
+    running: "cyan",
+    completed: "emerald",
+    failed: "rose",
   };
 
   const metadataRows = [
@@ -167,7 +168,9 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
     { key: "Configuration", value: `${run.configuration_ref} (v${run.configuration_version})` },
     {
       key: "Status",
-      value: <Chip variant={statusColorMap[run.status] || "neutral"}>{run.status}</Chip>,
+      value: (
+        <Chip variant={statusColorMap[run.status.toLowerCase()] || "neutral"}>{run.status}</Chip>
+      ),
     },
     { key: "Started", value: formatDate(run.started_at) },
     { key: "Updated", value: formatDate(run.updated_at) },
@@ -235,7 +238,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
         <KVGrid rows={metadataRows} />
       </InspectorPanel.Section>
 
-      {run.status === "FAILED" && run.failure_reason && (
+      {hasRunStatus(run.status, "failed") && run.failure_reason && (
         <InspectorPanel.Section title="Error">
           <div className="run-detail-failure-reason" data-testid="run-failure-reason">
             {run.failure_reason}
@@ -243,7 +246,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
         </InspectorPanel.Section>
       )}
 
-      {run.status === "COMPLETED" && (
+      {hasRunStatus(run.status, "completed") && (
         <>
           {EXTRACTION_REVIEW_TYPES.has(run.pipeline_type) ? (
             <InspectorPanel.Section title="Results">
@@ -531,7 +534,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
         </>
       )}
 
-      {run.status === "PENDING" && (
+      {hasRunStatus(run.status, "pending") && (
         <InspectorPanel.Section title="Status">
           <div className="run-detail-pending-placeholder" data-testid="run-pending-placeholder">
             This run is pending execution
@@ -539,7 +542,7 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
         </InspectorPanel.Section>
       )}
 
-      {run.status === "RUNNING" && (
+      {hasRunStatus(run.status, "running") && (
         <InspectorPanel.Section title="Status">
           <div className="run-detail-running-placeholder" data-testid="run-running-placeholder">
             <Loader size={14} className="spin" />

@@ -14,6 +14,7 @@ import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RunDetailDrawer } from "@/components/pipeline/RunDetailDrawer";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
 import { usePipelineRuns } from "@/api/hooks/pipeline/usePipelineRuns";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 import { formatDate } from "@/utils/dateFormatting";
 import type { RunListParams } from "@/api/services/pipeline";
@@ -34,10 +35,11 @@ interface FilterState {
 
 const PAGE_SIZE = 20;
 const PIPELINE_STATUS_OPTIONS = [
-  { value: "PENDING", label: "Pending" },
-  { value: "RUNNING", label: "Running" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "FAILED", label: "Failed" },
+  // The API filters on lower-case run status and rejects other spellings.
+  { value: "pending", label: "Pending" },
+  { value: "running", label: "Running" },
+  { value: "completed", label: "Completed" },
+  { value: "failed", label: "Failed" },
 ];
 
 function RunsPageContent({
@@ -226,13 +228,13 @@ function RunsPageContent({
                 <div className="runs-table-cell">
                   <StatusBadge
                     color={
-                      run.status === "PENDING"
+                      hasRunStatus(run.status, "pending")
                         ? "amber"
-                        : run.status === "RUNNING"
+                        : hasRunStatus(run.status, "running")
                           ? "cyan"
-                          : run.status === "COMPLETED"
+                          : hasRunStatus(run.status, "completed")
                             ? "emerald"
-                            : run.status === "FAILED"
+                            : hasRunStatus(run.status, "failed")
                               ? "rose"
                               : "neutral"
                     }

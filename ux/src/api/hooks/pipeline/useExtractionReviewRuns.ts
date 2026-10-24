@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRunPipeline } from "./usePipelineMutations";
 import { ApiError } from "@/api/client/interceptors";
+import { hasRunStatus } from "./runStatus";
 import type { components } from "@/api/types";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
@@ -67,10 +68,8 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
 }
 
 function slotFromRun(run: PipelineRunResponse): ReviewRunSlot {
-  // The API reports status in lower case ("completed"); compare case-insensitively.
-  const status = run.status.toUpperCase();
-  if (status === "COMPLETED") return { status: "completed", run };
-  if (status === "FAILED" || status === "CANCELLED") {
+  if (hasRunStatus(run.status, "completed")) return { status: "completed", run };
+  if (hasRunStatus(run.status, "failed", "cancelled")) {
     return { status: "failed", run, error: run.failure_reason ?? `Run ${run.status}` };
   }
   return { status: "running", run };
