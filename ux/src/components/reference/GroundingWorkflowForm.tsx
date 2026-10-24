@@ -1,7 +1,9 @@
 import { TextInput as Input, Field, Button, Chip } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef, useEffect } from "react";
 
-import { useReferenceStatus, useClasses } from "@/api/hooks";
+import { useReferenceStatus } from "@/api/hooks";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
 import type { GroundingWorkflowCreate } from "@/api/types/manual/grounding";
 
 interface GroundingWorkflowFormProps {
@@ -25,14 +27,17 @@ export function GroundingWorkflowForm({ onSubmit, isLoading }: GroundingWorkflow
   const { data: statusResponse } = useReferenceStatus();
   const sources = statusResponse?.sources || [];
 
-  const { data: classesResponse } = useClasses();
-  const allClasses = classesResponse?.items || [];
+  // Selected scope chips resolve by id; the option list is a server-side search.
+  const { data: selectedResponse } = useClassesByIds(selectedClassIds);
+  const { data: searchResponse } = useClassSearch(searchQuery, undefined, {
+    enabled: showClassOptions,
+  });
 
-  const selectedClasses = allClasses.filter((cls) => selectedClassIds.includes(cls.id));
-  const filteredClasses = allClasses.filter(
-    (cls) =>
-      !selectedClassIds.includes(cls.id) &&
-      cls.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  const selectedClasses = (selectedResponse?.items ?? []).filter((cls) =>
+    selectedClassIds.includes(cls.id),
+  );
+  const filteredClasses = (searchResponse?.items ?? []).filter(
+    (cls) => !selectedClassIds.includes(cls.id),
   );
 
   useEffect(() => {

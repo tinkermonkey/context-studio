@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
   Button,
@@ -20,13 +20,10 @@ import {
   useDeleteProperty,
   useSetPropertyRelevance,
 } from "@/api/hooks/ontology/useProperties";
-import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useListPaging } from "@/hooks/useListPaging";
 import { propertiesCopy } from "./properties/-copy";
+import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
 
@@ -38,55 +35,25 @@ function relevanceChip(isRelevant: boolean | null | undefined) {
 
 export function PropertiesPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
-  const navigate = useNavigate();
   const { toast } = useToasts();
-  const [searchFilter, setSearchFilter] = useState("");
+  const paging = useListPaging();
+  const { tabs: schemaTabs, onSelectTab: handleTabNavigate, counts } = useSchemaTabs();
 
   const {
     data: listResponse,
     isLoading,
     error,
     refetch,
-  } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: taxData } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: schemesData } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useProperties(undefined, paging.params, { keepPrevious: true });
 
   const deleteMutation = useDeleteProperty();
   const relevanceMutation = useSetPropertyRelevance();
 
-  const allData = listResponse?.items ?? [];
-  const hasFilter = !!searchFilter;
-  const filteredData = allData.filter(
-    (prop: PropertyDefinitionResponse) =>
-      prop.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (prop.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
-      prop.identifier.toLowerCase().includes(searchFilter.toLowerCase()),
-  );
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: listResponse?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.total,
-    },
-  ];
-
-  function handleTabNavigate(tabId: string) {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  }
+  const total = listResponse?.total;
+  const { clampToTotal } = paging;
+  useEffect(() => clampToTotal(total), [total, clampToTotal]);
+  const pageData = listResponse?.items ?? [];
+  const hasFilter = paging.hasSearch;
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
@@ -182,7 +149,7 @@ export function PropertiesPage() {
     },
   ];
 
-  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const filteredEmpty = hasFilter && total === 0 && (counts.properties ?? 0) > 0;
   const emptyStateTitle = filteredEmpty
     ? propertiesCopy.filteredEmpty.title
     : propertiesCopy.emptyState.title;
@@ -221,18 +188,21 @@ export function PropertiesPage() {
         <>
           <FilterBar
             data-testid="schema-filter-bar"
-            onSearchChange={setSearchFilter}
-            searchPlaceholder="Search by identifier, title, or description…"
-            showingCount={filteredData.length}
-            totalCount={allData.length}
+            onSearchChange={paging.setSearch}
+            searchPlaceholder="Search by identifier or title…"
+            showingCount={total ?? 0}
+            totalCount={counts.properties ?? total ?? 0}
           />
 
           <EntitySurface
             ref={surfaceRef}
             entityType="property"
-            data={filteredData}
+            data={pageData}
             isLoading={isLoading}
             columns={propertyColumns}
+            pagination={paging.pagination(total)}
+            onSort={paging.onSort}
+            onCreateSuccess={paging.resetPage}
             renderInspector={(entity) => <PropertyDrawer key={entity.id} property={entity} />}
             rowMenuActions={rowMenuActions}
             onDeleteEntity={handleDelete}

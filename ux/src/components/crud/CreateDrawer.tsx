@@ -12,7 +12,9 @@ import {
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { useCreateTaxonomy, useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useCreateScheme, useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useCreateClass, useClasses } from "@/api/hooks/ontology/useClasses";
+import { useCreateClass, useClasses, useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
+import { PREDICATE_CHOICES_LIMIT, SMALL_SET_LIMIT } from "@/api/config";
 import { useCreateProperty, useProperties } from "@/api/hooks/ontology/useProperties";
 import { useCreateIndividual } from "@/api/hooks/ontology/useIndividuals";
 import { useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
@@ -223,6 +225,8 @@ export function CreateDrawer({
   });
   const [sourceQuery, setSourceQuery] = useState("");
   const [targetQuery, setTargetQuery] = useState("");
+  // Individual class picker search text
+  const [classQuery, setClassQuery] = useState("");
 
   const titleRef = useRef<HTMLInputElement>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -240,20 +244,45 @@ export function CreateDrawer({
   const createIndividual = useCreateIndividual();
   const createRelationship = useCreateRelationship();
 
-  // Data for dropdowns
-  const { data: taxonomiesData } = useTaxonomies();
-  const { data: schemesData } = useSchemes(values.taxonomyId || undefined);
+  // Data for dropdowns. Taxonomies, a taxonomy's schemes and a scheme's
+  // classes (parent-class select) are small sets: bounded scoped fetches.
+  const isRelationship = entityType === "relationship";
+  const isIndividual = entityType === "individual";
+  const { data: taxonomiesData } = useTaxonomies({ limit: SMALL_SET_LIMIT });
+  const { data: schemesData } = useSchemes(values.taxonomyId || undefined, {
+    limit: SMALL_SET_LIMIT,
+  });
   const { data: classesData } = useClasses(
-    values.schemeId ? { concept_scheme_id: values.schemeId } : undefined,
+    { concept_scheme_id: values.schemeId, limit: SMALL_SET_LIMIT, sort_by: "title" },
+    { enabled: entityType === "class" && !!values.schemeId },
   );
-  const { data: allClassesData } = useClasses();
-  const { data: propertiesData } = useProperties();
+  // "Find any class" pickers search the server as the user types.
+  const { data: sourceSearch } = useClassSearch(sourceQuery, undefined, {
+    enabled: isOpen && isRelationship,
+  });
+  const { data: targetSearch } = useClassSearch(targetQuery, undefined, {
+    enabled: isOpen && isRelationship,
+  });
+  const { data: classSearch } = useClassSearch(classQuery, undefined, {
+    enabled: isOpen && isIndividual,
+  });
+  const { data: selectedClassesData } = useClassesByIds(isIndividual ? values.classIds : []);
+  // RelationshipBuilder lists predicates with no search: a bounded, title-sorted set.
+  const { data: propertiesData } = useProperties(
+    undefined,
+    { limit: PREDICATE_CHOICES_LIMIT, sort_by: "title" },
+    { enabled: isOpen && isRelationship },
+  );
 
   const taxonomies = taxonomiesData?.items ?? [];
   const schemes = schemesData?.items ?? [];
   const classes = classesData?.items ?? [];
-  const allClasses = allClassesData?.items ?? [];
   const properties = propertiesData?.items ?? [];
+  // Individual class options: the selected classes first, then search matches.
+  const individualClassOptions = [
+    ...(selectedClassesData?.items ?? []),
+    ...(classSearch?.items ?? []).filter((c) => !values.classIds.includes(c.id)),
+  ];
 
   // Reset on open
   useEffect(() => {
@@ -269,6 +298,7 @@ export function CreateDrawer({
       setRelValue({ predicate: "" });
       setSourceQuery("");
       setTargetQuery("");
+      setClassQuery("");
       // Focus title after render
       const timer = setTimeout(() => titleRef.current?.focus(), 50);
       return () => clearTimeout(timer);
@@ -443,7 +473,6 @@ export function CreateDrawer({
   }, []);
 
   // Progress calculation
-  const isRelationship = entityType === "relationship";
   const requiredFields = config.requiredFields;
   const filledCount = isRelationship
     ? [relValue.source?.id, relValue.target?.id, relValue.predicate].filter(Boolean).length
@@ -472,15 +501,11 @@ export function CreateDrawer({
     : {};
 
   // Entity picker results for RelationshipBuilder
-  const classPickerResults = allClasses
-    .filter((c) => c.title.toLowerCase().includes(sourceQuery.toLowerCase()))
-    .slice(0, 20)
-    .map((c) => ({ id: c.id, label: c.title }));
-
-  const targetPickerResults = allClasses
-    .filter((c) => c.title.toLowerCase().includes(targetQuery.toLowerCase()))
-    .slice(0, 20)
-    .map((c) => ({ id: c.id, label: c.title }));
+  const classPickerResults = (sourceSearch?.items ?? []).map((c) => ({ id: c.id, label: c.title }));
+  const targetPickerResults = (targetSearch?.items ?? []).map((c) => ({
+    id: c.id,
+    label: c.title,
+  }));
 
   const predicates =
     properties.length > 0
@@ -659,7 +684,9 @@ export function CreateDrawer({
               touch={touch}
               showError={showError}
               fieldError={fieldError}
-              allClasses={allClasses}
+              classOptions={individualClassOptions}
+              classQuery={classQuery}
+              setClassQuery={setClassQuery}
             />
           )}
 
@@ -940,8 +967,14 @@ function IndividualBody({
   touch,
   showError: _showError,
   fieldError,
-  allClasses,
-}: WithValidation & { allClasses: Array<{ id: string; title: string }> }) {
+  classOptions,
+  classQuery,
+  setClassQuery,
+}: WithValidation & {
+  classOptions: Array<{ id: string; title: string }>;
+  classQuery: string;
+  setClassQuery: (query: string) => void;
+}) {
   const toggleClass = (classId: string) => {
     setValues((v) => ({
       ...v,
@@ -960,16 +993,24 @@ function IndividualBody({
         error={fieldError("classIds")}
         data-testid="create-drawer-classes-field"
       >
+        <TextInput
+          type="search"
+          value={classQuery}
+          onChange={(e) => setClassQuery(e.target.value)}
+          placeholder="Search classes…"
+          aria-label="Search classes"
+          data-testid="create-drawer-classes-search"
+        />
         <div
           className={`class-multi-select ${fieldError("classIds") ? "error" : ""}`}
           role="group"
           aria-label="Select classes"
           data-testid="create-drawer-classes-list"
         >
-          {allClasses.length === 0 && (
+          {classOptions.length === 0 && (
             <div className="class-option-empty">No classes available</div>
           )}
-          {allClasses.map((c) => (
+          {classOptions.map((c) => (
             <label key={c.id} className="class-option">
               <input
                 type="checkbox"

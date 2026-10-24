@@ -12,6 +12,7 @@ import {
   createListClasses,
   createListRelationships,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { PropertiesPage } from "../properties";
 
 const server = setupServer(
@@ -80,7 +81,11 @@ describe("Properties Schema Page", () => {
       let callCount = 0;
 
       server.use(
-        http.get("*/api/properties", () => {
+        http.get("*/api/properties", ({ request }) => {
+          // The limit=1 tab-count request is not the page's list request.
+          if (new URL(request.url).searchParams.get("limit") === "1") {
+            return HttpResponse.json(createListProperties([]));
+          }
           callCount++;
           if (callCount === 1) {
             return HttpResponse.json({ detail: "Server error" }, { status: 500 });
@@ -235,7 +240,8 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
+      const requests: URLSearchParams[] = [];
+      server.use(serverSideList("/api/properties", mockProperties.items, requests));
 
       render(<PropertiesPage />);
 
@@ -248,8 +254,10 @@ describe("Properties Schema Page", () => {
       const searchInput = screen.getByPlaceholderText(/search/i);
       await userEvent.type(searchInput, "Color");
 
-      expect(screen.getByText("Color")).toBeInTheDocument();
-      expect(screen.queryByText("Shape")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Shape")).not.toBeInTheDocument();
+      });
+      expect(pageRequests(requests).at(-1)!.get("q")).toBe("Color");
       expect(screen.queryByText("Size")).not.toBeInTheDocument();
     });
 
@@ -267,7 +275,8 @@ describe("Properties Schema Page", () => {
         }),
       ]);
 
-      server.use(http.get("*/api/properties", () => HttpResponse.json(mockProperties)));
+      const requests: URLSearchParams[] = [];
+      server.use(serverSideList("/api/properties", mockProperties.items, requests));
 
       render(<PropertiesPage />);
 
@@ -278,12 +287,17 @@ describe("Properties Schema Page", () => {
       const searchInput = screen.getByPlaceholderText(/search/i) as HTMLInputElement;
       await userEvent.type(searchInput, "Color");
 
-      expect(screen.queryByText("Shape")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Shape")).not.toBeInTheDocument();
+      });
+      expect(pageRequests(requests).at(-1)!.get("q")).toBe("Color");
 
       await userEvent.clear(searchInput);
 
-      expect(screen.getByText("Color")).toBeInTheDocument();
-      expect(screen.getByText("Shape")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("Color")).toBeInTheDocument();
+        expect(screen.getByText("Shape")).toBeInTheDocument();
+      });
     });
   });
 });

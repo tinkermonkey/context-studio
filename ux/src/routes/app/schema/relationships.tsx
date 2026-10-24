@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
@@ -8,40 +8,48 @@ import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/Entit
 import { deleteFailureMessage } from "@/api/mutationErrors";
 import { RelationshipDrawer } from "@/components/ontology/RelationshipDrawer";
 import { useRelationships, useDeleteRelationship } from "@/api/hooks/ontology/useRelationships";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
-import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
+import { useListPaging } from "@/hooks/useListPaging";
 import { relationshipsCopy } from "./relationships/-copy";
+import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
 export function RelationshipsPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
-  const navigate = useNavigate();
   const { toast } = useToasts();
-  const [searchFilter, setSearchFilter] = useState("");
+  const paging = useListPaging();
+  const { tabs: schemaTabs, onSelectTab: handleTabNavigate, counts } = useSchemaTabs();
 
   const {
     data: listResponse,
     isLoading,
     error,
     refetch,
-  } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useRelationships(
+    // Relationships only sort by created_at (newest first); no column sort is offered.
+    { ...paging.params, sort_by: "created_at" },
+    { keepPrevious: true },
+  );
+
+  const total = listResponse?.total;
+  const { clampToTotal } = paging;
+  useEffect(() => clampToTotal(total), [total, clampToTotal]);
+  const pageData = listResponse?.items ?? [];
+
+  // Resolve source/target/predicate names for this page's rows only.
   const {
     data: classesResponse,
     error: classesError,
     refetch: refetchClasses,
-  } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useClassesByIds(pageData.flatMap((r) => [r.source_id, r.target_id]));
   const {
     data: propertiesResponse,
     error: propertiesError,
     refetch: refetchProperties,
-  } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: taxData } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: schemesData } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  } = usePropertiesByIds(pageData.map((r) => r.property_definition_id));
 
   const deleteMutation = useDeleteRelationship();
 
@@ -52,43 +60,7 @@ export function RelationshipsPage() {
     properties.map((p) => [p.id, { title: p.title, identifier: p.identifier }]),
   );
 
-  const allData = listResponse?.items ?? [];
-  const hasFilter = !!searchFilter;
-  const filteredData = allData.filter((rel: RelationshipResponse) => {
-    const sourceClassName = classesById.get(rel.source_id)?.toLowerCase() ?? "";
-    const targetClassName = classesById.get(rel.target_id)?.toLowerCase() ?? "";
-    const prop = propertiesById.get(rel.property_definition_id);
-    const propertyName = (prop?.title ?? "").toLowerCase();
-    const search = searchFilter.toLowerCase();
-    return (
-      sourceClassName.includes(search) ||
-      targetClassName.includes(search) ||
-      propertyName.includes(search)
-    );
-  });
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxData?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesResponse?.total },
-    { id: "properties", label: "Properties", count: propertiesResponse?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: listResponse?.total,
-    },
-  ];
-
-  function handleTabNavigate(tabId: string) {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  }
+  const hasFilter = paging.hasSearch;
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
@@ -169,7 +141,7 @@ export function RelationshipsPage() {
 
   const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
-  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const filteredEmpty = hasFilter && total === 0 && (counts.relationships ?? 0) > 0;
   const emptyStateTitle = filteredEmpty
     ? relationshipsCopy.filteredEmpty.title
     : relationshipsCopy.emptyState.title;
@@ -229,18 +201,20 @@ export function RelationshipsPage() {
 
           <FilterBar
             data-testid="schema-filter-bar"
-            onSearchChange={setSearchFilter}
+            onSearchChange={paging.setSearch}
             searchPlaceholder="Search by source, predicate, or target…"
-            showingCount={filteredData.length}
-            totalCount={allData.length}
+            showingCount={total ?? 0}
+            totalCount={counts.relationships ?? total ?? 0}
           />
 
           <EntitySurface
             ref={surfaceRef}
             entityType="relationship"
-            data={filteredData}
+            data={pageData}
             isLoading={isLoading}
             columns={relationshipColumns}
+            pagination={paging.pagination(total)}
+            onCreateSuccess={paging.resetPage}
             renderInspector={(entity) => (
               <RelationshipDrawer
                 key={entity.id}

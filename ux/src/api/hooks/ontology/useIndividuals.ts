@@ -1,18 +1,42 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type IndividualListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
+import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
 type IndividualClassRequest = components["schemas"]["IndividualClassRequest"];
 type IndividualClassListRequest = components["schemas"]["IndividualClassListRequest"];
 
-export function useIndividuals(params?: IndividualListParams) {
+export function useIndividuals(params?: IndividualListParams, options?: ListQueryOptions) {
   return useQuery({
     queryKey: QUERY_KEYS.individuals(params),
     queryFn: () => ontologyService.listIndividuals(params),
+    ...listQueryOptions(options),
   });
+}
+
+/**
+ * Individuals that belong to any of `classIds` (one request per class, each
+ * capped at `limit`), merged and de-duplicated in request order.
+ */
+export function useIndividualsInClasses(classIds: string[], limit: number) {
+  const ids = [...new Set(classIds)];
+  const results = useQueries({
+    queries: ids.map((classId) => {
+      const params: IndividualListParams = { class_id: classId, limit, sort_by: "title" };
+      return {
+        queryKey: QUERY_KEYS.individuals(params),
+        queryFn: () => ontologyService.listIndividuals(params),
+      };
+    }),
+  });
+  const byId = new Map<string, NonNullable<(typeof results)[number]["data"]>["items"][number]>();
+  for (const result of results) {
+    for (const ind of result.data?.items ?? []) if (!byId.has(ind.id)) byId.set(ind.id, ind);
+  }
+  return [...byId.values()];
 }
 
 export function useIndividual(id: string) {

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
+import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
 
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 type ConceptSchemeUpdateRequest = components["schemas"]["ConceptSchemeUpdateRequest"];
@@ -10,10 +11,15 @@ interface SchemeMoveRequest {
   target_taxonomy_id: string;
 }
 
-export function useSchemes(taxonomyId?: string, params?: ListPageParams) {
+export function useSchemes(
+  taxonomyId?: string,
+  params?: ListPageParams,
+  options?: ListQueryOptions,
+) {
   return useQuery({
     queryKey: params ? [...QUERY_KEYS.schemes(taxonomyId), params] : QUERY_KEYS.schemes(taxonomyId),
     queryFn: () => ontologyService.listSchemes(taxonomyId, params),
+    ...listQueryOptions(options),
   });
 }
 

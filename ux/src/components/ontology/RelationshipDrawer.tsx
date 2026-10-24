@@ -12,12 +12,13 @@ import {
   useDeleteRelationship,
   useCreateRelationship,
 } from "@/api/hooks/ontology/useRelationships";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { useProperties, usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
 import { useToasts } from "@/components/ui/Toast";
 import { ApiError } from "@/api/client/interceptors";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
+import { PREDICATE_CHOICES_LIMIT } from "@/api/config";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
@@ -44,36 +45,46 @@ export function RelationshipDrawer({
   const { toast } = useToasts();
   const deleteMutation = useDeleteRelationship();
   const createMutation = useCreateRelationship();
-  const { data: classesResponse } = useClasses();
-  const { data: propertiesResponse } = useProperties();
+  const isEditing = mode === "edit";
+  // Source/target pickers search classes server-side as the user types.
+  const { data: sourceSearch } = useClassSearch(sourceQuery, undefined, { enabled: isEditing });
+  const { data: targetSearch } = useClassSearch(targetQuery, undefined, { enabled: isEditing });
+  const { data: currentPropertyResponse } = usePropertiesByIds([
+    relationship?.property_definition_id,
+  ]);
+  const { data: predicateChoicesResponse } = useProperties(
+    undefined,
+    { limit: PREDICATE_CHOICES_LIMIT, sort_by: "title" },
+    { enabled: isEditing },
+  );
 
-  const allClasses = classesResponse?.items || [];
-  const properties = propertiesResponse?.items || [];
-
+  const currentProperty = currentPropertyResponse?.items?.[0];
+  const predicateChoices = predicateChoicesResponse?.items ?? [];
   const predicates =
-    properties.length > 0
-      ? properties.map((p) => p.identifier)
+    predicateChoices.length > 0
+      ? [
+          ...new Set([
+            ...(currentProperty ? [currentProperty.identifier] : []),
+            ...predicateChoices.map((p) => p.identifier),
+          ]),
+        ]
       : ["related_to", "contains", "depends_on", "is_used_by"];
 
-  const sourcePickerResults = allClasses
-    .filter((c) => !sourceQuery || c.title.toLowerCase().includes(sourceQuery.toLowerCase()))
-    .slice(0, 20)
-    .map((c) => ({ id: c.id, label: c.title }));
-
-  const targetPickerResults = allClasses
-    .filter((c) => !targetQuery || c.title.toLowerCase().includes(targetQuery.toLowerCase()))
-    .slice(0, 20)
-    .map((c) => ({ id: c.id, label: c.title }));
+  const sourcePickerResults = (sourceSearch?.items ?? []).map((c) => ({
+    id: c.id,
+    label: c.title,
+  }));
+  const targetPickerResults = (targetSearch?.items ?? []).map((c) => ({
+    id: c.id,
+    label: c.title,
+  }));
 
   const handleEditStart = () => {
     if (!relationship) return;
-    const sourceClass = allClasses.find((c) => c.id === relationship.source_id);
-    const targetClass = allClasses.find((c) => c.id === relationship.target_id);
-    const prop = properties.find((p) => p.id === relationship.property_definition_id);
     setEditValue({
-      source: sourceClass ? { id: sourceClass.id, label: sourceClass.title } : undefined,
-      target: targetClass ? { id: targetClass.id, label: targetClass.title } : undefined,
-      predicate: prop?.identifier ?? "",
+      source: { id: relationship.source_id, label: sourceName },
+      target: { id: relationship.target_id, label: targetName },
+      predicate: currentProperty?.identifier ?? "",
     });
     setSourceQuery("");
     setTargetQuery("");
@@ -87,11 +98,10 @@ export function RelationshipDrawer({
       return;
     }
 
-    const prop = properties.find((p) => p.id === relationship.property_definition_id);
     const unchanged =
       editValue.source.id === relationship.source_id &&
       editValue.target.id === relationship.target_id &&
-      editValue.predicate === (prop?.identifier ?? "");
+      editValue.predicate === (currentProperty?.identifier ?? "");
 
     if (unchanged) {
       setMode("view");

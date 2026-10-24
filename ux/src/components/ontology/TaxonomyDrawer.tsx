@@ -16,7 +16,8 @@ import {
   useCreateTaxonomy,
 } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClassCountsByScheme } from "@/api/hooks/ontology/useClasses";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { taxonomiesCopy } from "@/routes/app/schema/taxonomies/-copy";
@@ -41,17 +42,11 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const deleteMutation = useDeleteTaxonomy();
   const createMutation = useCreateTaxonomy();
 
-  const { data: schemesResponse } = useSchemes(taxonomy?.id);
+  // A taxonomy's schemes are a small set; class counts come from per-scheme totals.
+  const { data: schemesResponse } = useSchemes(taxonomy?.id, { limit: SMALL_SET_LIMIT });
   const schemes = schemesResponse?.items || [];
-  const { data: allClassesResponse } = useClasses();
-  const allClasses = allClassesResponse?.items || [];
-
-  const classCountByScheme = Object.fromEntries(
-    schemes.map((s) => [s.id, allClasses.filter((c) => c.concept_scheme_id === s.id).length]),
-  );
-  const totalClassCount = allClasses.filter((c) =>
-    schemes.some((s) => s.id === c.concept_scheme_id),
-  ).length;
+  const classCountByScheme = useClassCountsByScheme(schemes.map((s) => s.id));
+  const totalClassCount = Object.values(classCountByScheme).reduce((sum, n) => sum + n, 0);
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),

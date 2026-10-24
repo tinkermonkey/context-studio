@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import { Button, PageHeader, FilterBar, TabBar, Icon } from "@tinkermonkey/heimdall-ui";
@@ -8,13 +8,10 @@ import { EntitySurface, type EntitySurfaceHandle } from "@/components/crud/Entit
 import { deleteFailureMessage } from "@/api/mutationErrors";
 import { TaxonomyDrawer } from "@/components/ontology/TaxonomyDrawer";
 import { useTaxonomies, useDeleteTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
-import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
-import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
+import { useListPaging } from "@/hooks/useListPaging";
+import { useSchemaTabs } from "./-useSchemaTabs";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 
@@ -89,52 +86,23 @@ export function TaxonomiesPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
   const navigate = useNavigate();
   const { toast } = useToasts();
-  const [searchFilter, setSearchFilter] = useState("");
+  const paging = useListPaging();
+  const { tabs: schemaTabs, onSelectTab: handleTabNavigate, counts } = useSchemaTabs();
 
   const {
     data: listResponse,
     isLoading,
     error,
     refetch,
-  } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: schemesData } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: propsData } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useTaxonomies(paging.params, { keepPrevious: true });
 
   const deleteMutation = useDeleteTaxonomy();
 
-  const allData = listResponse?.items ?? [];
-  const hasFilter = !!searchFilter;
-  const filteredData = allData.filter(
-    (tax: TaxonomyResponse) =>
-      tax.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (tax.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
-      tax.id.toLowerCase().includes(searchFilter.toLowerCase()),
-  );
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: listResponse?.total },
-    { id: "schemes", label: "Schemes", count: schemesData?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.total,
-    },
-  ];
-
-  function handleTabNavigate(tabId: string) {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  }
+  const total = listResponse?.total;
+  const { clampToTotal } = paging;
+  useEffect(() => clampToTotal(total), [total, clampToTotal]);
+  const pageData = listResponse?.items ?? [];
+  const hasFilter = paging.hasSearch;
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
@@ -164,7 +132,7 @@ export function TaxonomiesPage() {
 
   const bulkActions = [{ id: "delete", label: "Delete", variant: "danger" as const }];
 
-  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const filteredEmpty = hasFilter && total === 0 && (counts.taxonomies ?? 0) > 0;
   const emptyStateTitle = filteredEmpty
     ? taxonomiesCopy.filteredEmpty.title
     : taxonomiesCopy.emptyState.title;
@@ -203,18 +171,21 @@ export function TaxonomiesPage() {
         <>
           <FilterBar
             data-testid="schema-filter-bar"
-            onSearchChange={setSearchFilter}
-            searchPlaceholder="Search by title or description…"
-            showingCount={filteredData.length}
-            totalCount={allData.length}
+            onSearchChange={paging.setSearch}
+            searchPlaceholder="Search by title or identifier…"
+            showingCount={total ?? 0}
+            totalCount={counts.taxonomies ?? total ?? 0}
           />
 
           <EntitySurface
             ref={surfaceRef}
             entityType="taxonomy"
-            data={filteredData}
+            data={pageData}
             isLoading={isLoading}
             columns={taxonomyColumns}
+            pagination={paging.pagination(total)}
+            onSort={paging.onSort}
+            onCreateSuccess={paging.resetPage}
             renderInspector={(entity) => <TaxonomyDrawer key={entity.id} taxonomy={entity} />}
             rowMenuActions={rowMenuActions}
             onRowMenuAction={handleRowMenuAction}

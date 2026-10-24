@@ -133,6 +133,24 @@ body.dark-canvas {
   gap: 6px;
 }
 
+/* Server-side list pager (ListPager) — extends .schema-table-footer */
+.list-pager {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.list-pager__range {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.list-pager__actions {
+  align-items: center;
+  gap: 10px;
+}
+.list-pager__page {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Sidebar user identity footer (Heimdall Sidebar `footer` slot) */
 .sidebar-user-footer {
   display: flex;

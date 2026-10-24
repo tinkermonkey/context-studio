@@ -1,74 +1,84 @@
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useCommandPaletteStore, type PaletteAction } from "@/stores/commandPalette";
-import { useTaxonomies } from "@/api/hooks/ontology";
-import { useClasses } from "@/api/hooks/ontology";
-import { useIndividuals } from "@/api/hooks/ontology";
-import { useSchemes } from "@/api/hooks/ontology";
+import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
+import { useClassSearch, useIndividualSearch } from "@/api/hooks/ontology/useEntitySearch";
+import { useDebounce } from "@/hooks/useDebounce";
 
+/** Entity "Go to" actions offered per entity type. */
+const ACTIONS_PER_TYPE = 5;
+const SEARCH_DEBOUNCE_MS = 250;
+
+/** Palette descriptions are matched by the palette's own filter, so include the identifier. */
+function describe(identifier: string | null | undefined, text: string): string {
+  return identifier ? `${identifier} · ${text}` : text;
+}
+
+/**
+ * Register "Go to …" palette actions for taxonomies, schemes, classes and
+ * individuals that match what the user has typed. Matching runs server-side
+ * (debounced `q`, title or identifier) only while the palette is open.
+ */
 export function useCommandPaletteActions() {
   const navigate = useNavigate();
-  const { registerActions, unregisterActions } = useCommandPaletteStore();
+  const { open, query, registerActions, unregisterActions } = useCommandPaletteStore();
 
-  const { data: taxonomies } = useTaxonomies();
-  const { data: classes } = useClasses();
-  const { data: individuals } = useIndividuals();
-  const { data: schemes } = useSchemes();
+  const q = useDebounce(query.trim(), SEARCH_DEBOUNCE_MS) || undefined;
+  const page = { q, limit: ACTIONS_PER_TYPE, sort_by: "title" as const };
+  const enabled = { enabled: open, keepPrevious: true };
+
+  const { data: taxonomies } = useTaxonomies(page, enabled);
+  const { data: schemes } = useSchemes(undefined, page, enabled);
+  const { data: classes } = useClassSearch(query, undefined, { enabled: open });
+  const { data: individuals } = useIndividualSearch(query, undefined, { enabled: open });
 
   useEffect(() => {
     const dynamicActions: PaletteAction[] = [];
 
-    if (taxonomies && taxonomies.items && taxonomies.items.length > 0) {
-      taxonomies.items.slice(0, 5).forEach((taxonomy) => {
-        dynamicActions.push({
-          id: `taxonomy-${taxonomy.id}`,
-          label: `Go to taxonomy · ${taxonomy.title}`,
-          description: "Taxonomy",
-          onSelect: () => {
-            navigate({ to: `/app/schema/taxonomies/${taxonomy.id}` }).catch(() => {});
-          },
-        });
+    (taxonomies?.items ?? []).slice(0, ACTIONS_PER_TYPE).forEach((taxonomy) => {
+      dynamicActions.push({
+        id: `taxonomy-${taxonomy.id}`,
+        label: `Go to taxonomy · ${taxonomy.title}`,
+        description: describe(taxonomy.identifier, "Taxonomy"),
+        onSelect: () => {
+          navigate({ to: `/app/schema/taxonomies/${taxonomy.id}` }).catch(() => {});
+        },
       });
-    }
+    });
 
-    if (classes && classes.items && classes.items.length > 0) {
-      classes.items.slice(0, 5).forEach((classItem) => {
-        dynamicActions.push({
-          id: `class-${classItem.id}`,
-          label: `Go to class · ${classItem.title}`,
-          description: classItem.description || "Class",
-          onSelect: () => {
-            navigate({ to: `/app/schema/classes/${classItem.id}` }).catch(() => {});
-          },
-        });
+    (classes?.items ?? []).slice(0, ACTIONS_PER_TYPE).forEach((classItem) => {
+      dynamicActions.push({
+        id: `class-${classItem.id}`,
+        label: `Go to class · ${classItem.title}`,
+        description: describe(classItem.identifier, classItem.description || "Class"),
+        onSelect: () => {
+          navigate({ to: `/app/schema/classes/${classItem.id}` }).catch(() => {});
+        },
       });
-    }
+    });
 
-    if (individuals && individuals.items && individuals.items.length > 0) {
-      individuals.items.slice(0, 5).forEach((individual) => {
-        dynamicActions.push({
-          id: `individual-${individual.id}`,
-          label: `Go to individual · ${individual.title}`,
-          description: individual.description || "Individual",
-          onSelect: () => {
-            navigate({ to: `/app/data/individuals/${individual.id}` }).catch(() => {});
-          },
-        });
+    (individuals?.items ?? []).slice(0, ACTIONS_PER_TYPE).forEach((individual) => {
+      dynamicActions.push({
+        id: `individual-${individual.id}`,
+        label: `Go to individual · ${individual.title}`,
+        description: individual.description || "Individual",
+        onSelect: () => {
+          navigate({ to: `/app/data/individuals/${individual.id}` }).catch(() => {});
+        },
       });
-    }
+    });
 
-    if (schemes && schemes.items && schemes.items.length > 0) {
-      schemes.items.slice(0, 5).forEach((scheme) => {
-        dynamicActions.push({
-          id: `scheme-${scheme.id}`,
-          label: `Go to scheme · ${scheme.title}`,
-          description: scheme.description || "Scheme",
-          onSelect: () => {
-            navigate({ to: `/app/schema/schemes/${scheme.id}` }).catch(() => {});
-          },
-        });
+    (schemes?.items ?? []).slice(0, ACTIONS_PER_TYPE).forEach((scheme) => {
+      dynamicActions.push({
+        id: `scheme-${scheme.id}`,
+        label: `Go to scheme · ${scheme.title}`,
+        description: describe(scheme.identifier, scheme.description || "Scheme"),
+        onSelect: () => {
+          navigate({ to: `/app/schema/schemes/${scheme.id}` }).catch(() => {});
+        },
       });
-    }
+    });
 
     if (dynamicActions.length > 0) {
       registerActions(dynamicActions);

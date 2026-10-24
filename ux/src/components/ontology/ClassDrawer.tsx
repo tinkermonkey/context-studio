@@ -20,17 +20,23 @@ import {
   useCreateClass,
 } from "@/api/hooks/ontology/useClasses";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClass, useClasses, useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { useIndividuals } from "@/api/hooks/ontology/useIndividuals";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
+import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import { ApiError } from "@/api/client/interceptors";
 import { classesCopy } from "@/routes/app/schema/classes/-copy";
 import type { components } from "@/api/types";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
+/** Subclasses, individuals and relationships each show at most this many entries. */
+const CHILDREN_LIMIT = 50;
+const SAMPLE_INDIVIDUALS = 5;
+const RELATIONSHIPS_SHOWN = 10;
+
 type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
 
 interface ClassDrawerProps {
@@ -49,23 +55,38 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   const deleteMutation = useDeleteClass();
   const moveMutation = useMoveClass();
   const createMutation = useCreateClass();
-  const { data: schemesResponse } = useSchemes();
+  // Schemes are a small set: the domain select needs all of them.
+  const { data: schemesResponse } = useSchemes(undefined, { limit: SMALL_SET_LIMIT });
   const schemes = schemesResponse?.items || [];
-  const { data: classesResponse } = useClasses();
-  const { data: propertiesResponse } = useProperties();
+  const classId = classData?.id ?? "";
+  const { data: parentClass } = useClass(classData?.parent_class_id ?? "");
+  const { data: childrenResponse } = useClasses(
+    { parent_class_id: classId, limit: CHILDREN_LIMIT, sort_by: "title" },
+    { enabled: !!classId },
+  );
   const {
     data: individualsResponse,
     error: individualsError,
     refetch: refetchIndividuals,
-  } = useIndividuals({
-    class_id: classData?.id,
-  });
+  } = useIndividuals({ class_id: classId, limit: SAMPLE_INDIVIDUALS }, { enabled: !!classId });
 
+  // Relationships touching this class: the newest as source and as target.
+  const relationshipPage = { limit: RELATIONSHIPS_SHOWN, sort_order: "desc" as const };
   const {
-    data: relationshipsResponse,
-    error: relationshipsError,
-    refetch: refetchRelationships,
-  } = useRelationships();
+    data: outgoingResponse,
+    error: outgoingError,
+    refetch: refetchOutgoing,
+  } = useRelationships({ ...relationshipPage, source_id: classId }, { enabled: !!classId });
+  const {
+    data: incomingResponse,
+    error: incomingError,
+    refetch: refetchIncoming,
+  } = useRelationships({ ...relationshipPage, target_id: classId }, { enabled: !!classId });
+  const relationshipsError = outgoingError ?? incomingError;
+  const refetchRelationships = () => {
+    void refetchOutgoing();
+    void refetchIncoming();
+  };
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
@@ -108,12 +129,26 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     });
   };
 
-  const allClasses = useMemo(() => classesResponse?.items || [], [classesResponse]);
-  const properties = useMemo(() => propertiesResponse?.items || [], [propertiesResponse]);
-  const classMap = useMemo(() => new Map(allClasses.map((c) => [c.id, c.title])), [allClasses]);
+  const classRelationships = useMemo(
+    () =>
+      [...(outgoingResponse?.items ?? []), ...(incomingResponse?.items ?? [])]
+        .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+        .slice(0, RELATIONSHIPS_SHOWN),
+    [outgoingResponse, incomingResponse],
+  );
+  const { data: endpointClasses } = useClassesByIds(
+    classRelationships.flatMap((rel) => [rel.source_id, rel.target_id]),
+  );
+  const { data: predicateProperties } = usePropertiesByIds(
+    classRelationships.map((rel) => rel.property_definition_id),
+  );
+  const classMap = useMemo(
+    () => new Map((endpointClasses?.items ?? []).map((c) => [c.id, c.title])),
+    [endpointClasses],
+  );
   const propertyMap = useMemo(
-    () => new Map(properties.map((p) => [p.id, p.identifier])),
-    [properties],
+    () => new Map((predicateProperties?.items ?? []).map((p) => [p.id, p.identifier])),
+    [predicateProperties],
   );
 
   if (!classData) return null;
@@ -146,17 +181,12 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
   };
 
   const selectedScheme = schemes.find((s) => s.id === domainId);
-  const parentClassId = classData.parent_class_id ?? "";
-  const selectedParent = allClasses.find((c) => c.id === parentClassId);
+  const selectedParent = classData.parent_class_id ? parentClass : undefined;
   const propertyCount = classData.data_properties?.length ?? 0;
   const individualCount = individualsResponse?.total ?? 0;
-  const allRelationships = relationshipsResponse?.items || [];
-  const classRelationships = allRelationships.filter(
-    (rel: any) => rel.source_id === classData.id || rel.target_id === classData.id,
-  );
-  const relationshipCount = classRelationships.length;
-  const childClasses = allClasses.filter((c) => c.parent_class_id === classData.id);
-  const sampleIndividuals = (individualsResponse?.items ?? []).slice(0, 5);
+  const relationshipCount = (outgoingResponse?.total ?? 0) + (incomingResponse?.total ?? 0);
+  const childClasses = childrenResponse?.items ?? [];
+  const sampleIndividuals = individualsResponse?.items ?? [];
   const externalRefs: ExternalReferenceResponse[] = classData.external_references ?? [];
 
   return (
@@ -230,7 +260,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                       {ind.title}
                     </div>
                   ))}
-                  {individualCount > 5 && (
+                  {individualCount > SAMPLE_INDIVIDUALS && (
                     <button
                       type="button"
                       className="drawer-show-all-link"
@@ -250,7 +280,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                 </p>
               ) : (
                 <div className="stack" data-testid="class-relationships-list">
-                  {classRelationships.slice(0, 10).map((rel: any) => (
+                  {classRelationships.map((rel) => (
                     <div
                       key={rel.id}
                       className="drawer-triple"
@@ -267,8 +297,10 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                       </span>
                     </div>
                   ))}
-                  {classRelationships.length > 10 && (
-                    <p className="drawer-empty-note">+{classRelationships.length - 10} more</p>
+                  {relationshipCount > classRelationships.length && (
+                    <p className="drawer-empty-note">
+                      +{relationshipCount - classRelationships.length} more
+                    </p>
                   )}
                 </div>
               )}

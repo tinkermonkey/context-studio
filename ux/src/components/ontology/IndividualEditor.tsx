@@ -1,7 +1,8 @@
 import { TextInput as Input, TextArea as Textarea, Button } from "@tinkermonkey/heimdall-ui";
 import { useState, useRef } from "react";
 
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
 import { individualsCopy } from "@/routes/app/data/individuals/-copy";
 import type { components } from "@/api/types";
 
@@ -46,15 +47,15 @@ export function IndividualEditor({
   const [classError, setClassError] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: classesResponse } = useClasses();
-  const classes = classesResponse?.items || [];
+  // Selected chips resolve by id; the option list is a server-side search.
+  const { data: selectedResponse } = useClassesByIds(selectedClassIds);
+  const { data: searchResponse } = useClassSearch(searchQuery);
 
-  const selectedClasses = classes.filter((cls) => selectedClassIds.includes(cls.id));
-  const filteredClasses = classes.filter(
-    (cls) =>
-      !selectedClassIds.includes(cls.id) &&
-      (cls.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cls.id.toLowerCase().includes(searchQuery.toLowerCase())),
+  const selectedClasses = (selectedResponse?.items ?? []).filter((cls) =>
+    selectedClassIds.includes(cls.id),
+  );
+  const filteredClasses = (searchResponse?.items ?? []).filter(
+    (cls) => !selectedClassIds.includes(cls.id),
   );
 
   const validateTitle = (value: string): boolean => {

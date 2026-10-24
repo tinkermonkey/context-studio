@@ -587,6 +587,35 @@ describe("OntologyService - Concept Schemes", () => {
 
 describe("OntologyService - Classes", () => {
   describe("listClasses", () => {
+    it("sends ids as repeated params with search, sort and paging", async () => {
+      let params: URLSearchParams | null = null;
+      server.use(
+        http.get("*/api/classes", ({ request }) => {
+          params = new URL(request.url).searchParams;
+          return HttpResponse.json(createListClasses([]));
+        }),
+      );
+
+      await ontologyService.listClasses({
+        ids: ["a", "b"],
+        q: "dog",
+        sort_by: "title",
+        sort_order: "desc",
+        limit: 50,
+        offset: 100,
+      });
+
+      const sent = params as unknown as URLSearchParams;
+      // FastAPI list params need `ids=a&ids=b`, not axios' default `ids[]=a`.
+      expect(sent.getAll("ids")).toEqual(["a", "b"]);
+      expect(sent.has("ids[]")).toBe(false);
+      expect(sent.get("q")).toBe("dog");
+      expect(sent.get("sort_by")).toBe("title");
+      expect(sent.get("sort_order")).toBe("desc");
+      expect(sent.get("limit")).toBe("50");
+      expect(sent.get("offset")).toBe("100");
+    });
+
     it("returns all classes from GET /api/classes", async () => {
       const mockClasses = createListClasses([
         createClass({ id: "class-1", title: "Dog" }),

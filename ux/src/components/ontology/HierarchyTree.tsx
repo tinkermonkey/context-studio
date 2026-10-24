@@ -2,6 +2,8 @@ import { Fragment, useMemo, useState } from "react";
 import { HierarchyTree as HeimdallHierarchyTree, HierarchyRow } from "@tinkermonkey/heimdall-ui";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DemoDatasetPicker } from "@/components/demo/DemoDatasetPicker";
+import { useClasses, useClassCountsByScheme } from "@/api/hooks/ontology/useClasses";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -11,6 +13,10 @@ type ClassResponse = components["schemas"]["ClassResponse"];
 export interface HierarchyTreeProps {
   taxonomies?: TaxonomyResponse[];
   schemes?: ConceptSchemeResponse[];
+  /**
+   * Classes to place under their schemes. Omit it to load lazily instead: each
+   * scheme shows a server count and fetches its own classes when expanded.
+   */
   classes?: ClassResponse[];
   loading?: boolean;
   error?: Error | null;
@@ -19,6 +25,45 @@ export interface HierarchyTreeProps {
 
 function countLabel(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`;
+}
+
+interface ClassRowsProps {
+  classes: ClassResponse[];
+  selectedClassId?: string;
+  onSelect: (classId: string) => void;
+}
+
+function ClassRows({ classes, selectedClassId, onSelect }: ClassRowsProps) {
+  return (
+    <>
+      {classes.map((cls) => (
+        <HierarchyRow
+          key={cls.id}
+          depth={2}
+          domain="default"
+          kind="class"
+          label={cls.title}
+          description={cls.description ?? ""}
+          selected={selectedClassId === cls.id}
+          onSelect={() => onSelect(cls.id)}
+          data-testid={`hierarchy-node-${cls.id}`}
+        />
+      ))}
+    </>
+  );
+}
+
+/** An expanded scheme's classes, fetched for that scheme only (bounded, by title). */
+function LazySchemeClasses({
+  schemeId,
+  ...rest
+}: Omit<ClassRowsProps, "classes"> & { schemeId: string }) {
+  const { data } = useClasses({
+    concept_scheme_id: schemeId,
+    limit: SMALL_SET_LIMIT,
+    sort_by: "title",
+  });
+  return <ClassRows classes={data?.items ?? []} {...rest} />;
 }
 
 export function HierarchyTree({
@@ -43,6 +88,9 @@ export function HierarchyTree({
     map.forEach((list) => list.sort((a, b) => a.title.localeCompare(b.title)));
     return map;
   }, [schemes]);
+  const lazy = classes === undefined;
+  const schemeIds = useMemo(() => (schemes ?? []).map((s) => s.id), [schemes]);
+  const lazyClassCounts = useClassCountsByScheme(lazy ? schemeIds : []);
   const classesByScheme = useMemo(() => {
     const map = new Map<string, ClassResponse[]>();
     (classes ?? []).forEach((cls) => {
@@ -148,6 +196,7 @@ export function HierarchyTree({
             {taxonomyOpen &&
               taxonomySchemes.map((scheme) => {
                 const schemeClasses = classesByScheme.get(scheme.id) ?? [];
+                const classCount = lazy ? (lazyClassCounts[scheme.id] ?? 0) : schemeClasses.length;
                 const schemeOpen = expandedIds.has(scheme.id);
                 return (
                   <Fragment key={scheme.id}>
@@ -156,23 +205,23 @@ export function HierarchyTree({
                       domain="default"
                       kind="scheme"
                       label={scheme.title}
-                      meta={countLabel(schemeClasses.length, "class", "classes")}
+                      meta={countLabel(classCount, "class", "classes")}
                       description={scheme.description ?? ""}
                       onSelect={() => toggle(scheme.id)}
                       data-testid={`hierarchy-node-${scheme.id}`}
                     />
                     {schemeOpen &&
-                      schemeClasses.map((cls) => (
-                        <HierarchyRow
-                          key={cls.id}
-                          depth={2}
-                          domain="default"
-                          kind="class"
-                          label={cls.title}
-                          description={cls.description ?? ""}
-                          selected={selectedClassId === cls.id}
-                          onSelect={() => handleSelectClass(cls.id)}
-                          data-testid={`hierarchy-node-${cls.id}`}
+                      (lazy ? (
+                        <LazySchemeClasses
+                          schemeId={scheme.id}
+                          selectedClassId={selectedClassId}
+                          onSelect={handleSelectClass}
+                        />
+                      ) : (
+                        <ClassRows
+                          classes={schemeClasses}
+                          selectedClassId={selectedClassId}
+                          onSelect={handleSelectClass}
                         />
                       ))}
                   </Fragment>

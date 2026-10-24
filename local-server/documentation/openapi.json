@@ -749,7 +749,7 @@
           "ontology"
         ],
         "summary": "List Classes",
-        "description": "Retrieve classes with optional filtering and pagination.\n\nArgs:\n    concept_scheme_id: Optional concept scheme ID to filter by\n    parent_class_id: Optional parent class ID to filter by\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching classes",
+        "description": "Retrieve classes with optional filtering, sorting, text search and pagination.\n\nArgs:\n    concept_scheme_id: Optional concept scheme ID to filter by\n    parent_class_id: Optional parent class ID to filter by\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Case-insensitive text search on title or identifier\n    ids: Restrict results to these class IDs\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching classes; total counts every match",
         "operationId": "list_classes_api_classes_get",
         "parameters": [
           {
@@ -814,6 +814,79 @@
               "title": "Offset"
             },
             "description": "Number of results to skip"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(title|created_at|last_modified)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Field to sort by (title, created_at, last_modified)",
+              "title": "Sort By"
+            },
+            "description": "Field to sort by (title, created_at, last_modified)"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "description": "Sort direction",
+              "default": "asc",
+              "title": "Sort Order"
+            },
+            "description": "Sort direction"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive text search on title or identifier",
+              "title": "Q"
+            },
+            "description": "Case-insensitive text search on title or identifier"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 500
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict results to these IDs (repeat the parameter; at most 500)",
+              "title": "Ids"
+            },
+            "description": "Restrict results to these IDs (repeat the parameter; at most 500)"
           }
         ],
         "responses": {
@@ -1067,7 +1140,7 @@
           "ontology"
         ],
         "summary": "List Relationships",
-        "description": "Retrieve relationships with optional filtering, pagination, and sorting.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (created_at)\n    sort_order: Sort direction (asc or desc, default asc)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
+        "description": "Retrieve relationships with optional filtering, pagination, and sorting.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (created_at)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text search on source/target title or property title/identifier\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
         "operationId": "list_relationships_api_relationships_get",
         "parameters": [
           {
@@ -1182,6 +1255,25 @@
               "title": "Sort Order"
             },
             "description": "Sort direction"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive text search on the source title, target title, or property definition title/identifier",
+              "title": "Q"
+            },
+            "description": "Case-insensitive text search on the source title, target title, or property definition title/identifier"
           }
         ],
         "responses": {
@@ -1331,7 +1423,7 @@
           "ontology"
         ],
         "summary": "List Property Definitions",
-        "description": "Retrieve property definitions with optional filtering, pagination, sorting, and text search.\n\nArgs:\n    is_relevant: Optional filter for relevant properties\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Text query for LIKE search on title\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing property definitions",
+        "description": "Retrieve property definitions with optional filtering, pagination, sorting, and text search.\n\nArgs:\n    is_relevant: Optional filter for relevant properties\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Case-insensitive text search on title or identifier\n    ids: Restrict results to these property definition IDs\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing property definitions",
         "operationId": "list_property_definitions_api_properties_get",
         "parameters": [
           {
@@ -1418,16 +1510,39 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 200
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Text search query on title",
+              "description": "Case-insensitive text search on title or identifier",
               "title": "Q"
             },
-            "description": "Text search query on title"
+            "description": "Case-insensitive text search on title or identifier"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 500
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict results to these IDs (repeat the parameter; at most 500)",
+              "title": "Ids"
+            },
+            "description": "Restrict results to these IDs (repeat the parameter; at most 500)"
           }
         ],
         "responses": {
@@ -1877,7 +1992,7 @@
           "ontology"
         ],
         "summary": "List Individuals",
-        "description": "Retrieve individuals with optional filtering and pagination.\n\nArgs:\n    class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching individuals",
+        "description": "Retrieve individuals with optional filtering, sorting, text search and pagination.\n\nArgs:\n    class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)\n    limit: Maximum number of results (1-5000, default 100)\n    offset: Number of results to skip (default 0)\n    sort_by: Field to sort by (title, created_at, last_modified)\n    sort_order: Sort direction (asc or desc, default asc)\n    q: Case-insensitive text search on title or identifier\n    ids: Restrict results to these individual IDs\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching individuals; total counts every match",
         "operationId": "list_individuals_api_individuals_get",
         "parameters": [
           {
@@ -1924,6 +2039,79 @@
               "title": "Offset"
             },
             "description": "Number of results to skip"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(title|created_at|last_modified)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Field to sort by (title, created_at, last_modified)",
+              "title": "Sort By"
+            },
+            "description": "Field to sort by (title, created_at, last_modified)"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "description": "Sort direction",
+              "default": "asc",
+              "title": "Sort Order"
+            },
+            "description": "Sort direction"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive text search on title or identifier",
+              "title": "Q"
+            },
+            "description": "Case-insensitive text search on title or identifier"
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 500
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict results to these IDs (repeat the parameter; at most 500)",
+              "title": "Ids"
+            },
+            "description": "Restrict results to these IDs (repeat the parameter; at most 500)"
           }
         ],
         "responses": {

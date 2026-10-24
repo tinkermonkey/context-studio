@@ -638,12 +638,26 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         selectedRows = [],
         onSelectRows,
         onRowClick,
-        _onSort,
+        onSort,
         className = "",
         ...props
       }: any,
       ref: any,
     ) => {
+      // Mirror Heimdall's header sort cycle (asc → desc → none); it reports
+      // sorts through onSort and never reorders `data` itself.
+      const [sortState, setSortState] = React.useState<{ key: string | null; dir: string }>({
+        key: null,
+        dir: "asc",
+      });
+      const handleSort = (key: string) => {
+        let next: { key: string | null; dir: string };
+        if (sortState.key !== key) next = { key, dir: "asc" };
+        else if (sortState.dir === "asc") next = { key, dir: "desc" };
+        else next = { key: null, dir: "asc" };
+        setSortState(next);
+        onSort?.(key, next.key === null ? null : next.dir);
+      };
       const getRowKey = (row: any, index: number) => {
         if (typeof rowKey === "function") {
           return rowKey(row, index);
@@ -695,6 +709,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                   key: String(column.key),
                   className: `table__header ${column.sortable ? "table__header--sortable" : ""}`,
                   style: { width: column.width },
+                  onClick: column.sortable ? () => handleSort(String(column.key)) : undefined,
                 },
                 column.label,
               ),

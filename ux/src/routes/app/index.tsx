@@ -17,6 +17,7 @@ import { HierarchyTree } from "@/components/ontology/HierarchyTree";
 import { useHealth, useStatsTrends } from "@/api/hooks/admin";
 import { useTaxonomies, useSchemes, useClasses, useIndividuals } from "@/api/hooks/ontology";
 import { useChanges } from "@/api/hooks/versioning";
+import { SMALL_SET_LIMIT } from "@/api/config";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
@@ -87,15 +88,19 @@ export function Dashboard() {
     isLoading: taxonomiesLoading,
     error: taxonomiesError,
     refetch: refetchTaxonomies,
-  } = useTaxonomies();
-  const { data: schemes, isLoading: schemesLoading } = useSchemes();
+  } = useTaxonomies({ limit: SMALL_SET_LIMIT });
+  // Taxonomies and schemes are small sets the hierarchy shows in full; classes
+  // load per expanded scheme inside HierarchyTree, so only their count is read here.
+  const { data: schemes, isLoading: schemesLoading } = useSchemes(undefined, {
+    limit: SMALL_SET_LIMIT,
+  });
   const {
     data: classes,
     isLoading: classesLoading,
     error: classesError,
     refetch: refetchClasses,
-  } = useClasses();
-  const { data: individuals, isLoading: individualsLoading } = useIndividuals();
+  } = useClasses({ limit: 1 });
+  const { data: individuals, isLoading: individualsLoading } = useIndividuals({ limit: 1 });
   const {
     data: changesData,
     isLoading: changesLoading,
@@ -247,8 +252,7 @@ export function Dashboard() {
               <HierarchyTree
                 taxonomies={taxonomies?.items}
                 schemes={schemes?.items}
-                classes={classes?.items}
-                loading={taxonomiesLoading || schemesLoading || classesLoading}
+                loading={taxonomiesLoading || schemesLoading}
                 error={classesError}
               />
             )}

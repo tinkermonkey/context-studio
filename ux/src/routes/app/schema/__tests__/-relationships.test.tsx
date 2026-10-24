@@ -14,7 +14,7 @@ import {
   createListTaxonomies,
   createListSchemes,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
+import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { RelationshipsPage } from "../relationships";
 
 // The Predicate column renders the property *identifier* wrapped in mono
@@ -221,36 +221,45 @@ describe("Relationships Schema Page", () => {
   // Filtered State
   // ========================================================================
   describe("filtered state", () => {
-    it("filters relationships by search term", async () => {
-      const mockClasses = createListClasses([
-        createClass({ id: "class-1", title: "Person" }),
-        createClass({ id: "class-2", title: "Company" }),
-      ]);
+    const classes = [
+      createClass({ id: "class-1", title: "Person" }),
+      createClass({ id: "class-2", title: "Company" }),
+    ];
+    const properties = [
+      createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
+      createPropertyDefinition({ id: "prop-2", title: "manages", identifier: "manages" }),
+    ];
+    const names = new Map(
+      [...classes, ...properties].map((e) => [e.id, `${e.title} ${e.identifier ?? ""}`]),
+    );
+    const relationships = [
+      createRelationship({
+        id: "rel-1",
+        source_id: "class-1",
+        target_id: "class-2",
+        property_definition_id: "prop-1",
+      }),
+      createRelationship({
+        id: "rel-2",
+        source_id: "class-1",
+        target_id: "class-2",
+        property_definition_id: "prop-2",
+      }),
+    ];
+    // Like the backend: q matches the source title, target title or predicate.
+    const relationshipText = (rel: (typeof relationships)[number]) =>
+      [rel.source_id, rel.target_id, rel.property_definition_id]
+        .map((id) => names.get(id) ?? "")
+        .join(" ");
 
-      const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
-        createPropertyDefinition({ id: "prop-2", title: "manages", identifier: "manages" }),
-      ]);
-
-      const mockRelationships = createListRelationships([
-        createRelationship({
-          id: "rel-1",
-          source_id: "class-1",
-          target_id: "class-2",
-          property_definition_id: "prop-1",
-        }),
-        createRelationship({
-          id: "rel-2",
-          source_id: "class-1",
-          target_id: "class-2",
-          property_definition_id: "prop-2",
-        }),
-      ]);
-
+    it("sends the search text to the server as q and shows only the matches", async () => {
+      const requests: URLSearchParams[] = [];
       server.use(
-        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
-        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
+        serverSideList("/api/relationships", relationships, requests, {
+          matchText: relationshipText,
+        }),
+        serverSideList("/api/classes", classes),
+        serverSideList("/api/properties", properties),
       );
 
       render(<RelationshipsPage />);
@@ -261,34 +270,20 @@ describe("Relationships Schema Page", () => {
         expect(screen.getByText(predicateMatcher("manages"))).toBeInTheDocument();
       });
 
-      // Search filters on property title; "manages" row should be removed.
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      await userEvent.type(searchInput, "works_for");
+      await userEvent.type(screen.getByPlaceholderText(/search/i), "works_for");
 
+      await waitFor(() => {
+        expect(screen.queryByText(predicateMatcher("manages"))).not.toBeInTheDocument();
+      });
       expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
-      expect(screen.queryByText(predicateMatcher("manages"))).not.toBeInTheDocument();
+      expect(pageRequests(requests).at(-1)!.get("q")).toBe("works_for");
     });
 
     it("shows filtered empty state when filters match no results", async () => {
-      const mockClasses = createListClasses([createClass({ id: "class-1", title: "Person" })]);
-
-      const mockProperties = createListProperties([
-        createPropertyDefinition({ id: "prop-1", title: "works_for", identifier: "works_for" }),
-      ]);
-
-      const mockRelationships = createListRelationships([
-        createRelationship({
-          id: "rel-1",
-          source_id: "class-1",
-          target_id: "class-1",
-          property_definition_id: "prop-1",
-        }),
-      ]);
-
       server.use(
-        http.get("*/api/relationships", () => HttpResponse.json(mockRelationships)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
-        http.get("*/api/properties", () => HttpResponse.json(mockProperties)),
+        serverSideList("/api/relationships", relationships, [], { matchText: relationshipText }),
+        serverSideList("/api/classes", classes),
+        serverSideList("/api/properties", properties),
       );
 
       render(<RelationshipsPage />);
@@ -297,8 +292,7 @@ describe("Relationships Schema Page", () => {
         expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      await userEvent.type(searchInput, "nonexistent");
+      await userEvent.type(screen.getByPlaceholderText(/search/i), "nonexistent");
 
       await waitFor(() => {
         expect(screen.getByText("No matching relationships")).toBeInTheDocument();
@@ -310,40 +304,43 @@ describe("Relationships Schema Page", () => {
   });
 
   // ========================================================================
-  // Fetch-all limit and counts
+  // Server-side paging, title lookups and counts
   // ========================================================================
-  describe("full data set", () => {
-    it("requests the fetch-all limit and shows the backend total as the tab count", async () => {
-      const requestedLimits: Record<string, string | null> = {};
-      const recordLimit = (name: string, request: Request) => {
-        requestedLimits[name] = new URL(request.url).searchParams.get("limit");
-      };
+  describe("server-side paging", () => {
+    it("requests one page, resolves names by id, and reads tab counts from limit=1 totals", async () => {
+      const relationshipRequests: URLSearchParams[] = [];
+      const classRequests: URLSearchParams[] = [];
+      const propertyRequests: URLSearchParams[] = [];
       const relationships = {
-        ...createListRelationships([createRelationship({ id: "rel-1" })]),
+        ...createListRelationships([
+          createRelationship({
+            id: "rel-1",
+            source_id: "class-1",
+            target_id: "class-2",
+            property_definition_id: "prop-1",
+          }),
+        ]),
         total: 595,
       };
 
       server.use(
         http.get("*/api/relationships", ({ request }) => {
-          recordLimit("relationships", request);
+          relationshipRequests.push(new URL(request.url).searchParams);
           return HttpResponse.json(relationships);
         }),
-        http.get("*/api/classes", ({ request }) => {
-          recordLimit("classes", request);
-          return HttpResponse.json(createListClasses([]));
-        }),
-        http.get("*/api/properties", ({ request }) => {
-          recordLimit("properties", request);
-          return HttpResponse.json(createListProperties([]));
-        }),
-        http.get("*/api/taxonomies", ({ request }) => {
-          recordLimit("taxonomies", request);
-          return HttpResponse.json(createListTaxonomies([]));
-        }),
-        http.get("*/api/schemes", ({ request }) => {
-          recordLimit("schemes", request);
-          return HttpResponse.json(createListSchemes([]));
-        }),
+        serverSideList(
+          "/api/classes",
+          [
+            createClass({ id: "class-1", title: "Person" }),
+            createClass({ id: "class-2", title: "Company" }),
+          ],
+          classRequests,
+        ),
+        serverSideList(
+          "/api/properties",
+          [createPropertyDefinition({ id: "prop-1", identifier: "works_for" })],
+          propertyRequests,
+        ),
       );
 
       render(<RelationshipsPage />);
@@ -355,14 +352,31 @@ describe("Relationships Schema Page", () => {
           "595",
         );
       });
-      const expected = String(LIST_FETCH_ALL_LIMIT);
-      expect(requestedLimits).toEqual({
-        relationships: expected,
-        classes: expected,
-        properties: expected,
-        taxonomies: expected,
-        schemes: expected,
+      await waitFor(() => {
+        expect(screen.getByText("Company")).toBeInTheDocument();
       });
+      expect(screen.getByText(predicateMatcher("works_for"))).toBeInTheDocument();
+
+      const page = pageRequests(relationshipRequests)[0];
+      expect(page.get("limit")).toBe("50");
+      expect(page.get("offset")).toBe("0");
+      expect(page.get("sort_by")).toBe("created_at");
+      expect(page.get("sort_order")).toBe("desc");
+      expect(relationshipRequests.some((r) => r.get("limit") === "1")).toBe(true);
+      // Names resolve with ids lookups for this page's rows; counts use limit=1.
+      expect(classRequests.find((r) => r.getAll("ids").length)!.getAll("ids")).toEqual([
+        "class-1",
+        "class-2",
+      ]);
+      expect(propertyRequests.find((r) => r.getAll("ids").length)!.getAll("ids")).toEqual([
+        "prop-1",
+      ]);
+      expect(
+        [...classRequests, ...propertyRequests].every(
+          (r) => r.getAll("ids").length > 0 || r.get("limit") === "1",
+        ),
+      ).toBe(true);
+      expect(screen.getByTestId("list-pager-range")).toHaveTextContent("1–50 of 595");
     });
   });
 });
