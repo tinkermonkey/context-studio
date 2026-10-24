@@ -53,7 +53,7 @@ class TestTripleCandidateMapping:
             "provenance": []
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Verify result is TripleCandidate
         assert isinstance(result, TripleCandidate)
@@ -99,7 +99,7 @@ class TestTripleCandidateMapping:
             "provenance": []
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Verify subject (new)
         assert result.subject.kind == "individual"
@@ -136,7 +136,7 @@ class TestTripleCandidateMapping:
             "provenance": []
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Verify object is literal
         assert result.object.kind == "literal"
@@ -172,7 +172,7 @@ class TestTripleCandidateMapping:
             ]
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Verify provenance is normalized
         assert len(result.provenance) == 1
@@ -194,7 +194,7 @@ class TestTripleCandidateMapping:
             ]
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         assert len(result.provenance) == 2
         assert result.provenance[0].quote == "first occurrence"
@@ -212,7 +212,7 @@ class TestTripleCandidateMapping:
             "provenance": []
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
         assert isinstance(result.confidence, float)
         assert 0.0 <= result.confidence <= 1.0
 
@@ -229,7 +229,7 @@ class TestTripleCandidateMapping:
         # Pydantic's ge=0.0, le=1.0 constraint rejects out-of-bounds values
         from pydantic import ValidationError
         with pytest.raises(ValidationError):
-            _map_triple_candidate(triple_dict)
+            _map_triple_candidate("triple-0", triple_dict)
 
     def test_map_triple_candidate_with_missing_fields(self):
         """Missing optional fields default gracefully."""
@@ -241,7 +241,7 @@ class TestTripleCandidateMapping:
             # No confidence, provenance
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Should default confidence to 0.5
         assert result.confidence == 0.5
@@ -264,7 +264,7 @@ class TestTripleCandidateMapping:
             "provenance": None  # None provenance
         }
 
-        result = _map_triple_candidate(triple_dict)
+        result = _map_triple_candidate("triple-0", triple_dict)
 
         # Should handle gracefully
         assert result.subject.label == ""  # Default from missing label

@@ -11,13 +11,37 @@ type PipelineConfigurationUpdateRequest =
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 type ListPipelineRuns = components["schemas"]["ListResponse_PipelineRunResponse_"];
-type CandidateResponse = components["schemas"]["CandidateResponse"];
-type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+export type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+export type ApplyRunRequest = components["schemas"]["ApplyRunRequest"];
+export type RecognitionDecision = components["schemas"]["RecognitionDecisionSchema"];
+export type MergedMention = components["schemas"]["MergedMentionSchema"];
 type RevertRunResponse = components["schemas"]["RevertRunResponse"];
 type BatchResponse = components["schemas"]["BatchResponse"];
 type CancelBatchResponse = components["schemas"]["CancelBatchResponse"];
 type ResumeBatchResponse = components["schemas"]["ResumeBatchResponse"];
 type ListChangeEvents = components["schemas"]["ListResponse_VersioningChangeEventResponse_"];
+export type SourceSpan = components["schemas"]["SourceSpanSchema"];
+export type NodeReference = components["schemas"]["NodeReference"];
+export type PredicateReference = components["schemas"]["PredicateReference"];
+export type TripleCandidate = components["schemas"]["TripleCandidate"];
+export type SchemaClassCandidate = components["schemas"]["SchemaClassCandidate"];
+export type SchemaPropertyCandidate = components["schemas"]["SchemaPropertyCandidate"];
+export type SchemaConnectionCandidate = components["schemas"]["SchemaConnectionCandidate"];
+export type SchemaExtractionCandidate =
+  | SchemaClassCandidate
+  | SchemaPropertyCandidate
+  | SchemaConnectionCandidate;
+export type RecognitionPreviewRequest = components["schemas"]["RecognitionPreviewRequest"];
+export type RecognitionPreviewResponse = components["schemas"]["RecognitionPreviewResponse"];
+export type RecognitionPreviewHit = components["schemas"]["RecognitionPreviewHitSchema"];
+/** Discriminated union returned by every /runs/{id}/*candidates endpoint. */
+export type CandidateItem =
+  | SchemaExtractionCandidate
+  | TripleCandidate
+  | components["schemas"]["GroundingCandidate"]
+  | components["schemas"]["RefinementCandidate"];
+
+const SCHEMA_CANDIDATE_TYPES = new Set(["schema_class", "schema_property", "schema_connection"]);
 
 export interface RunListParams {
   limit?: number;
@@ -31,7 +55,8 @@ export interface RunListParams {
 }
 
 export interface ApplyParams {
-  confidence_threshold: number;
+  /** Ignored by the server when the body carries accepted_candidate_ids. */
+  confidence_threshold?: number;
   concept_scheme_id?: string;
   taxonomy_id?: string;
   node_id?: string;
@@ -103,8 +128,37 @@ class PipelineService extends BaseService {
     );
   }
 
-  async getCandidates(runId: string): Promise<CandidateResponse[]> {
-    return this.get<CandidateResponse[]>(`/api/pipelines/runs/${runId}/candidates`);
+  async getCandidates(runId: string): Promise<CandidateItem[]> {
+    return this.get<CandidateItem[]>(`/api/pipelines/runs/${runId}/candidates`);
+  }
+
+  /** Typed schema_extraction candidates (classes, properties, connections) with provenance. */
+  async getSchemaExtractionCandidates(runId: string): Promise<SchemaExtractionCandidate[]> {
+    const items = await this.get<CandidateItem[]>(
+      `/api/pipelines/runs/${runId}/schema-extraction-candidates`,
+    );
+    return items.filter((c): c is SchemaExtractionCandidate =>
+      SCHEMA_CANDIDATE_TYPES.has(c.candidate_type),
+    );
+  }
+
+  /** Typed individual_extraction triple candidates with provenance. */
+  async getIndividualExtractionCandidates(runId: string): Promise<TripleCandidate[]> {
+    const items = await this.get<CandidateItem[]>(
+      `/api/pipelines/runs/${runId}/individual-extraction-candidates`,
+    );
+    return items.filter((c): c is TripleCandidate => c.candidate_type === "triple");
+  }
+
+  /** Zero-write preview of which mentions would resolve to existing individuals on apply. */
+  async previewRecognition(
+    runId: string,
+    body: RecognitionPreviewRequest,
+  ): Promise<RecognitionPreviewResponse> {
+    return this.post<RecognitionPreviewResponse>(
+      `/api/pipelines/runs/${runId}/recognition-preview`,
+      body,
+    );
   }
 
   async getRunChangeEvents(
@@ -119,10 +173,18 @@ class PipelineService extends BaseService {
   }
 
   // Materialization
-  async applyRun(runId: string, params: ApplyParams): Promise<ApplyRunResponse> {
+  /**
+   * Apply a run. Query params carry scope/thresholds; the optional body carries
+   * explicit selections (accepted candidate ids, per-mention recognition decisions).
+   */
+  async applyRun(
+    runId: string,
+    params: ApplyParams,
+    body?: ApplyRunRequest,
+  ): Promise<ApplyRunResponse> {
     return this.post<ApplyRunResponse>(
       `/api/pipelines/runs/${runId}/apply`,
-      undefined,
+      body,
       params as unknown as Record<string, unknown>,
     );
   }

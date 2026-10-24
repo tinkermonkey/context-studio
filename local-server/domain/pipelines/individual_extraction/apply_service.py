@@ -2,9 +2,8 @@
 Apply service for individual extraction pipeline.
 
 Converts RDF triple output from a completed individual extraction run into DRAFT
-Individual entities via OntologyService (so they get validation, events, and
-vector-index sync) and Relationship entities persisted via the OntologyRepository
-port.
+Individual and Relationship entities via OntologyService (so they get validation,
+events — and thus revertable ChangeEvents — and vector-index sync).
 
 This is the shared materialization funnel for every individual-extraction
 orchestrator (``default`` and ``open_v1``): both emit the same
@@ -24,11 +23,17 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
-from domain.ontology.entities import Relationship
-from domain.ontology.exceptions import DuplicateEntityError
-from domain.pipelines.apply_result import ApplyResult
+from domain.ontology.exceptions import DuplicateEntityError, EntityNotFoundError
+from domain.pipelines.apply_result import ApplyResult, MergedMention
+from domain.pipelines.apply_selection import (
+    MERGE,
+    SEPARATE,
+    RecognitionDecision,
+    check_accepted_ids,
+)
+from domain.pipelines.candidate_ids import enumerate_triples, mention_key
+from domain.pipelines.exceptions import ApplySelectionError
 
 _logger = logging.getLogger(__name__)
 
@@ -40,13 +45,38 @@ if TYPE_CHECKING:
     from domain.pipelines.entities import PipelineRun
 
 
+def _provenance_quote(provenance: object) -> str:
+    """
+    Extract the quoted source text from a triple's provenance.
+
+    Provenance arrives in several shapes (a single span dict, a list of span
+    dicts, or a bare string); quotes from every span are joined so the
+    recognizer sees all the supporting text.
+    """
+    if isinstance(provenance, str):
+        return provenance.strip()
+    spans = provenance if isinstance(provenance, list) else [provenance]
+    quotes = []
+    for span in spans:
+        if isinstance(span, dict):
+            quote = span.get("quote") or span.get("raw")
+        elif isinstance(span, str):
+            quote = span
+        else:
+            quote = None
+        if quote and str(quote).strip():
+            quotes.append(str(quote).strip())
+    return " ... ".join(quotes)
+
+
 class IndividualExtractionApplyService:
     """
     Materializes individual extraction pipeline output into ontology entities.
 
     Creates Individual entities via OntologyService.create_individual (DRAFT
-    status, indexed for search) and Relationship entities directly via the
-    repository, both tagged with source_run_id from the originating pipeline run.
+    status, indexed for search) and Relationship entities via
+    OntologyService.create_relationship, both tagged with source_run_id from the
+    originating pipeline run.
 
     An optional IndividualRecognizer runs the recognition stage: for each
     individual not already resolved by the in-pass cache, an explicit ID, or an
@@ -73,22 +103,43 @@ class IndividualExtractionApplyService:
         run: "PipelineRun",
         confidence_threshold: float = 0.0,
         recognition_threshold: float | None = None,
+        accepted_candidate_ids: "set[str] | list[str] | None" = None,
+        recognition_decisions: "list[RecognitionDecision] | None" = None,
     ) -> ApplyResult:
         """
         Apply individual extraction results to the ontology.
 
         Args:
             run: Completed PipelineRun with output_summary containing triples
-            confidence_threshold: Minimum confidence to include a triple (0.0–1.0)
+            confidence_threshold: Minimum confidence to include a triple (0.0–1.0).
+                Ignored when ``accepted_candidate_ids`` is given.
             recognition_threshold: Minimum similarity (0.0-1.0) the recognizer
                 requires to resolve a mention to an existing individual.
                 Defaults to the recognizer's own configured value when omitted.
+            accepted_candidate_ids: Explicit reviewer selection of triple ids
+                (``triple-{i}``); when given it is the full selection — every
+                other triple is skipped regardless of confidence.
+            recognition_decisions: Per-mention reviewer decisions. ``merge``
+                adopts the given pre-existing individual without consulting the
+                recognizer; ``separate`` skips the recognizer so the mention is
+                minted new (an existing same-title individual in the class still
+                wins, since titles are unique per class). Mentions without a
+                decision go through recognition as usual.
 
         Returns:
             ApplyResult with counts of created and skipped entities
+
+        Raises:
+            ApplySelectionError: If an accepted id or decision does not match the
+                run, or a merge target does not exist. Raised before any write.
         """
         result = ApplyResult()
-        triples = run.output_summary.get("triples", [])
+        enumerated = enumerate_triples(run.output_summary)
+        check_accepted_ids(accepted_candidate_ids, {cid for cid, _ in enumerated})
+        decisions = self._index_decisions([t for _, t in enumerated], recognition_decisions or [])
+        selected = set(accepted_candidate_ids) if accepted_candidate_ids is not None else None
+        # Mentions already reported in merged_mentions, so each appears once.
+        reported_mentions: set[str] = set()
 
         _logger.info(
             "individual extraction apply run=%s: recognition stage %s",
@@ -107,33 +158,60 @@ class IndividualExtractionApplyService:
         # extracted in the same pass.
         created_this_run: set[str] = set()
 
-        for triple in triples:
+        for candidate_id, triple in enumerated:
             subject = triple.get("subject", {})
             predicate = triple.get("predicate", {})
             obj = triple.get("object", {})
             confidence = triple.get("confidence", 0.0)
 
-            if confidence < confidence_threshold:
+            if selected is not None:
+                if candidate_id not in selected:
+                    result.individuals_skipped += 1
+                    result.skipped_candidate_ids.append(candidate_id)
+                    continue
+            elif confidence < confidence_threshold:
                 result.individuals_skipped += 1
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
 
             if subject.get("kind") != "individual":
+                result.skipped_candidate_ids.append(candidate_id)
                 continue
 
             subject_label = (subject.get("label") or "").strip()
             subject_id = subject.get("id", "")
+            subject_key = mention_key(subject_label)
+            decision = decisions.get(subject_key)
 
             # Resolve class IDs for this individual from the triple object or subject context
             class_ids: list[str] = subject.get("class_ids") or []
 
-            # Attempt to resolve subject individual: prefer explicit ID, then label+class lookup
-            resolved_id = self._resolve_individual_id(
-                subject_id, subject_label, class_ids, individual_key_to_id
-            )
+            # Resolve the subject: in-pass cache first, then a reviewer merge
+            # decision, then an explicit ID, then an exact label+class lookup.
+            resolved_id = self._cached_individual_id(subject_label, class_ids, individual_key_to_id)
+            if resolved_id is None and decision is not None and decision.decision == MERGE:
+                resolved_id = decision.individual_id
+                result.individuals_recognized += 1
+                result.recognized_individual_ids.append(resolved_id)
+                self._report_merge(
+                    result, reported_mentions, subject_label, resolved_id, "decision"
+                )
+                self._cache_individual(individual_key_to_id, subject_label, class_ids, resolved_id)
+            if resolved_id is None and subject_id:
+                existing = self._repo.get_individual(subject_id)
+                if existing:
+                    resolved_id = existing.id
+            if resolved_id is None:
+                resolved_id = self._find_individual_by_label(subject_label, class_ids)
+                if resolved_id is not None:
+                    self._report_merge(
+                        result, reported_mentions, subject_label, resolved_id, "existing_title"
+                    )
 
             if resolved_id is None:
                 if not subject_label:
                     result.individuals_skipped += 1
+                    result.skipped_candidate_ids.append(candidate_id)
                     continue
 
                 # Verify all class_ids exist; class_ids may legitimately be empty
@@ -144,20 +222,24 @@ class IndividualExtractionApplyService:
                 ]
                 if class_ids and not valid_classes:
                     result.individuals_skipped += 1
+                    result.skipped_candidate_ids.append(candidate_id)
                     continue
                 valid_class_ids = [cls.id for cls in valid_classes]
                 taxonomy_id = valid_classes[0].taxonomy_id if valid_classes else None
 
                 # Recognition stage: resolve the mention to an existing graph node
                 # before treating it as new. Runs for every orchestrator's output —
-                # this apply() is the single funnel both share.
-                match = self._recognize_individual(
-                    subject_label,
-                    valid_class_ids,
-                    taxonomy_id,
-                    triple,
-                    recognition_threshold,
-                )
+                # this apply() is the single funnel both share. A reviewer's
+                # "separate" decision skips it.
+                match = None
+                if decision is None or decision.decision != SEPARATE:
+                    match = self._recognize_individual(
+                        subject_label,
+                        valid_class_ids,
+                        taxonomy_id,
+                        triple,
+                        recognition_threshold,
+                    )
 
                 if match is not None and match.individual_id in created_this_run:
                     _logger.info(
@@ -172,9 +254,13 @@ class IndividualExtractionApplyService:
                     resolved_id = match.individual_id
                     result.individuals_recognized += 1
                     result.recognized_individual_ids.append(resolved_id)
+                    self._report_merge(
+                        result, reported_mentions, subject_label, resolved_id, "recognition"
+                    )
                 elif not valid_class_ids:
                     # No recognizable match and nothing to type it as — nothing to do.
                     result.individuals_skipped += 1
+                    result.skipped_candidate_ids.append(candidate_id)
                     continue
                 else:
                     try:
@@ -214,21 +300,19 @@ class IndividualExtractionApplyService:
                             raise
                         result.individuals_recognized += 1
                         result.recognized_individual_ids.append(resolved_id)
+                        self._report_merge(
+                            result, reported_mentions, subject_label, resolved_id, "existing_title"
+                        )
                     except Exception as e:
                         _logger.error(f"Failed to save individual: {e}")
                         raise
 
-                # Cache for dedup within this apply pass. Classless individuals (no
-                # valid_class_ids, e.g. open_v1 relation triples) have nothing to key
-                # per-class, so fall back to a label-only sentinel key.
-                if valid_class_ids:
-                    for cid in valid_class_ids:
-                        key = (subject_label.lower(), cid)
-                        individual_key_to_id[key] = resolved_id
-                    # Also store label-only entry for lookup by label alone
-                    individual_key_to_id[(subject_label.lower(), "")] = resolved_id
-                else:
-                    individual_key_to_id[(subject_label.lower(), "")] = resolved_id
+                # Cache for dedup within this apply pass.
+                self._cache_individual(
+                    individual_key_to_id, subject_label, valid_class_ids, resolved_id
+                )
+
+            result.applied_candidate_ids.append(candidate_id)
 
             # Create relationship if predicate + object are present
             property_definition_id = predicate.get("property_definition_id", "")
@@ -339,10 +423,9 @@ class IndividualExtractionApplyService:
     @staticmethod
     def _triple_context(triple: dict) -> str:
         """Best-effort surrounding text for the recognizer's LLM tiebreak tier."""
-        provenance = triple.get("provenance") or {}
-        quote = provenance.get("quote") or provenance.get("raw")
+        quote = _provenance_quote(triple.get("provenance"))
         if quote:
-            return str(quote)
+            return quote
         subject_label = triple.get("subject", {}).get("label", "")
         predicate_label = triple.get("predicate", {}).get("label", "")
         object_label = triple.get("object", {}).get("label", "")
@@ -350,15 +433,60 @@ class IndividualExtractionApplyService:
             return f"{subject_label} {predicate_label} {object_label}".strip()
         return str(subject_label)
 
-    def _resolve_individual_id(
-        self,
-        subject_id: str,
+    def _index_decisions(
+        self, triples: list[dict], decisions: list["RecognitionDecision"]
+    ) -> dict[str, "RecognitionDecision"]:
+        """
+        Validate reviewer recognition decisions and index them by mention key.
+
+        A decision must name a subject individual mention the run extracted (the
+        same mentions recognition preview reports), at most once, and a merge must
+        target an individual that already exists. All problems are collected into
+        a single ApplySelectionError so nothing is written for a bad request.
+        """
+        if not decisions:
+            return {}
+        known = {
+            mention_key(t.get("subject", {}).get("label"))
+            for t in triples
+            if t.get("subject", {}).get("kind") == "individual"
+        }
+        known.discard("")
+        indexed: dict[str, "RecognitionDecision"] = {}
+        problems: list[str] = []
+        for d in decisions:
+            key = mention_key(d.mention_label)
+            if key not in known:
+                problems.append(f"no extracted mention '{d.mention_label}'")
+                continue
+            if key in indexed:
+                problems.append(f"more than one decision for mention '{d.mention_label}'")
+                continue
+            if d.decision == MERGE:
+                if not d.individual_id:
+                    problems.append(f"merge for '{d.mention_label}' has no individual_id")
+                    continue
+                if self._repo.get_individual(d.individual_id) is None:
+                    problems.append(
+                        f"merge target individual '{d.individual_id}' for "
+                        f"'{d.mention_label}' does not exist"
+                    )
+                    continue
+            elif d.decision != SEPARATE:
+                problems.append(f"unknown decision '{d.decision}' for '{d.mention_label}'")
+                continue
+            indexed[key] = d
+        if problems:
+            raise ApplySelectionError("Invalid recognition decisions: " + "; ".join(problems))
+        return indexed
+
+    @staticmethod
+    def _cached_individual_id(
         subject_label: str,
         class_ids: list[str],
         local_cache: dict[tuple[str, str], str],
     ) -> str | None:
-        """Return existing individual ID if found, else None."""
-        # Check local cache first (individuals created earlier in this apply pass).
+        """Return an individual resolved earlier in this apply pass, else None."""
         # Classless mentions (e.g. open_v1 relation triples with no class_ids) were
         # cached under a label-only sentinel key, since there's no class to key on.
         if class_ids:
@@ -366,19 +494,37 @@ class IndividualExtractionApplyService:
                 cached = local_cache.get((subject_label.lower(), cid))
                 if cached:
                     return cached
-        else:
-            cached = local_cache.get((subject_label.lower(), ""))
-            if cached:
-                return cached
+            return None
+        return local_cache.get((subject_label.lower(), ""))
 
-        # Try lookup by explicit ID
-        if subject_id:
-            existing = self._repo.get_individual(subject_id)
-            if existing:
-                return existing.id
+    @staticmethod
+    def _cache_individual(
+        local_cache: dict[tuple[str, str], str],
+        subject_label: str,
+        class_ids: list[str],
+        individual_id: str,
+    ) -> None:
+        """Remember a resolved mention per class plus a label-only entry for objects."""
+        for cid in class_ids:
+            local_cache[(subject_label.lower(), cid)] = individual_id
+        local_cache[(subject_label.lower(), "")] = individual_id
 
-        # Try lookup by label within each class
-        return self._find_individual_by_label(subject_label, class_ids)
+    @staticmethod
+    def _report_merge(
+        result: ApplyResult,
+        reported: set[str],
+        mention_label: str,
+        individual_id: str,
+        source: str,
+    ) -> None:
+        """Record a mention merged into a pre-existing individual, once per mention."""
+        key = mention_key(mention_label)
+        if key in reported:
+            return
+        reported.add(key)
+        result.merged_mentions.append(
+            MergedMention(mention_label=mention_label, individual_id=individual_id, source=source)
+        )
 
     def _apply_relationship(
         self,
@@ -403,17 +549,24 @@ class IndividualExtractionApplyService:
             result.relationships_skipped += 1
             return
 
+        # Created via OntologyService so a RelationshipCreated event (and thus a
+        # ChangeEvent tagged with the run's batch) is recorded and revert can undo it.
         try:
-            new_rel = Relationship(
-                id=str(uuid4()),
+            new_rel = self._ontology_service.create_relationship(
                 source_id=source_id,
                 target_id=target_id,
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-            self._repo.save_relationship(new_rel)
-            result.relationships_created += 1
-            result.created_relationship_ids.append(new_rel.id)
-        except Exception as e:
-            _logger.error(f"Failed to save relationship: {e}")
-            raise
+        except EntityNotFoundError:
+            # The extracted predicate or object refers to an entity that does not exist.
+            _logger.warning(
+                "Skipping relationship %s -[%s]-> %s: endpoint or property not found",
+                source_id,
+                property_definition_id,
+                target_id,
+            )
+            result.relationships_skipped += 1
+            return
+        result.relationships_created += 1
+        result.created_relationship_ids.append(new_rel.id)

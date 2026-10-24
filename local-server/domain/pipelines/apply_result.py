@@ -1,6 +1,26 @@
 """Shared result type returned by all pipeline apply services."""
 
 from dataclasses import dataclass, field
+from typing import Literal
+
+
+@dataclass(frozen=True)
+class MergedMention:
+    """
+    An extracted mention that apply resolved to an individual that already existed.
+
+    Attributes:
+        mention_label: The mention's surface text as extracted
+        individual_id: The pre-existing individual it was merged into
+        source: Why it merged — ``"decision"`` (reviewer chose merge),
+            ``"recognition"`` (the recognizer matched it), or ``"existing_title"``
+            (an individual with the same title already exists in the class; title
+            uniqueness per class means a ``"separate"`` decision also lands here)
+    """
+
+    mention_label: str
+    individual_id: str
+    source: Literal["decision", "recognition", "existing_title"]
 
 
 @dataclass
@@ -28,6 +48,15 @@ class ApplyResult:
     created_external_reference_ids: list[str] = field(default_factory=list)
     created_taxonomy_ids: list[str] = field(default_factory=list)
     recognized_individual_ids: list[str] = field(default_factory=list)
+    # Per-candidate outcomes (ids from domain.pipelines.candidate_ids). Applied: the
+    # candidate was selected and materialized (created, or already present). Skipped:
+    # not selected, below threshold, or could not be materialized.
+    applied_candidate_ids: list[str] = field(default_factory=list)
+    skipped_candidate_ids: list[str] = field(default_factory=list)
+    # Subset of applied_candidate_ids satisfied by an entity that already existed
+    # (nothing was created for them, so revert will not remove them).
+    existing_candidate_ids: list[str] = field(default_factory=list)
+    merged_mentions: list[MergedMention] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.validate()
@@ -65,6 +94,14 @@ class ApplyResult:
                 f"created_property_definition_ids "
                 f"({len(self.created_property_definition_ids)} items) must be "
                 "consistent"
+            )
+        both = set(self.applied_candidate_ids) & set(self.skipped_candidate_ids)
+        if both:
+            raise ValueError(f"candidates cannot be both applied and skipped: {sorted(both)}")
+        not_applied = set(self.existing_candidate_ids) - set(self.applied_candidate_ids)
+        if not_applied:
+            raise ValueError(
+                f"existing candidates must also be applied: {sorted(not_applied)}"
             )
         if self.external_references_created != len(self.created_external_reference_ids):
             raise ValueError(

@@ -40,7 +40,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 from datetime import datetime
 from typing import Annotated, Any, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, model_validator
 
 from adapters.web.schemas.extraction import SourceSpanSchema
 
@@ -295,6 +295,106 @@ class ApplyRunResponse(BaseModel):
         default_factory=list,
         description="IDs of individuals resolved to an existing graph node by recognition",
     )
+    applied_candidate_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "candidate_ids that were selected and materialized (created, or already "
+            "present). Populated for schema_extraction and individual_extraction."
+        ),
+    )
+    skipped_candidate_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "candidate_ids not applied: not selected, below confidence_threshold, or "
+            "unresolvable (e.g. a connection whose endpoint class does not exist)"
+        ),
+    )
+    existing_candidate_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Subset of applied_candidate_ids satisfied by an entity that already "
+            "existed (class title in scheme, property identifier, or relationship "
+            "triple). Nothing was created for these, so revert will not remove them. "
+            "Populated by schema_extraction; individual_extraction reports these via "
+            "merged_mentions."
+        ),
+    )
+    merged_mentions: list["MergedMentionSchema"] = Field(
+        default_factory=list,
+        description=(
+            "Extracted mentions merged into an individual that already existed "
+            "(individual_extraction only; one entry per mention)"
+        ),
+    )
+
+
+class RecognitionDecisionSchema(BaseModel):
+    """A reviewer's per-mention recognition decision for individual_extraction apply."""
+
+    mention_label: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Extracted mention, matched case-insensitively after trimming — use "
+            "RecognitionPreviewHitSchema.mention_label"
+        ),
+    )
+    decision: Literal["merge", "separate"] = Field(
+        ...,
+        description=(
+            "merge: adopt individual_id (an existing individual of any class) instead of "
+            "creating a node; separate: skip recognition and create a new individual "
+            "(an existing individual with the same title in the same class still wins)"
+        ),
+    )
+    individual_id: Optional[str] = Field(
+        None, description="Merge target individual id; required when decision is merge"
+    )
+
+    @model_validator(mode="after")
+    def _merge_needs_target(self) -> "RecognitionDecisionSchema":
+        if self.decision == "merge" and not self.individual_id:
+            raise ValueError("individual_id is required when decision is 'merge'")
+        return self
+
+
+class ApplyRunRequest(BaseModel):
+    """Optional explicit reviewer selections for POST /runs/{run_id}/apply.
+
+    Omitting the body (or a field) keeps the threshold-only behaviour.
+    """
+
+    accepted_candidate_ids: Optional[list[str]] = Field(
+        None,
+        description=(
+            "candidate_ids to apply (schema_extraction and individual_extraction). When "
+            "present this is the full selection: every other candidate is skipped and "
+            "confidence_threshold is ignored. Unknown ids are rejected with 422."
+        ),
+    )
+    recognition_decisions: Optional[list[RecognitionDecisionSchema]] = Field(
+        None,
+        description=(
+            "Per-mention merge/separate decisions (individual_extraction only; 422 for "
+            "other pipeline types). Mentions without a decision use recognition as usual."
+        ),
+    )
+
+
+class MergedMentionSchema(BaseModel):
+    """An extracted mention that apply merged into a pre-existing individual."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    mention_label: str = Field(..., description="Extracted mention surface text")
+    individual_id: str = Field(..., description="Pre-existing individual it was merged into")
+    source: Literal["decision", "recognition", "existing_title"] = Field(
+        ...,
+        description=(
+            "decision: reviewer chose merge; recognition: the recognizer matched it; "
+            "existing_title: an individual with the same title already exists in the class"
+        ),
+    )
 
 
 class RevertRunResponse(BaseModel):
@@ -333,6 +433,13 @@ class CandidateBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     candidate_type: str = Field(..., description="Discriminator: identifies the candidate variant")
+    candidate_id: str = Field(
+        ...,
+        description=(
+            "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, "
+            "grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+        ),
+    )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
     provenance: list[SourceSpanSchema] = Field(
         default_factory=list, description="List of source spans with provenance information"
@@ -400,6 +507,10 @@ class NodeReference(BaseModel):
     id: Optional[str] = Field(
         None,
         description="Ontology entity ID (empty/None=new, non-empty=mapped)",
+    )
+    title: Optional[str] = Field(
+        None,
+        description="Canonical title of the mapped entity when id resolves to an existing node",
     )
     class_ids: Optional[list[str]] = Field(
         None, description="Class IDs if this node is an individual instance"

@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { useRunPipeline, useApplyRun } from "@/api/hooks/pipeline/usePipelineMutations";
-import { usePipelineRun, usePipelineCandidates } from "@/api/hooks/pipeline/usePipelineRuns";
+import {
+  usePipelineRun,
+  usePipelineCandidates,
+  type CandidateItem,
+} from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
+import { provenanceText } from "./provenanceText";
 import type { components } from "@/api/types";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
 
 type ExternalReferenceResponse = components["schemas"]["ExternalReferenceResponse"];
@@ -30,11 +36,15 @@ export function GroundingSection({
   const applyMutation = useApplyRun();
   const { data: run } = usePipelineRun(runId ?? "");
 
-  const isRunning = runMutation.isPending || run?.status === "PENDING" || run?.status === "RUNNING";
-  const isCompleted = run?.status === "COMPLETED";
-  const isFailed = run?.status === "FAILED";
+  const isRunning = runMutation.isPending || hasRunStatus(run?.status, "pending", "running");
+  const isCompleted = hasRunStatus(run?.status, "completed");
+  const isFailed = hasRunStatus(run?.status, "failed");
 
-  const { data: allCandidates = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+  const { data: candidateItems = [] } = usePipelineCandidates(runId ?? "", isCompleted);
+  const allCandidates = candidateItems.filter(
+    (c): c is Extract<CandidateItem, { candidate_type: "grounding" }> =>
+      c.candidate_type === "grounding",
+  );
 
   const visibleCandidates = allCandidates
     .map((c, i) => ({ ...c, originalIdx: i }))
@@ -204,8 +214,10 @@ export function GroundingSection({
                 {candidate.description && (
                   <p className="suggest-field-candidate-text">{candidate.description}</p>
                 )}
-                {candidate.provenance && (
-                  <p className="grounding-proposal-rationale">{candidate.provenance}</p>
+                {provenanceText(candidate.provenance) && (
+                  <p className="grounding-proposal-rationale">
+                    {provenanceText(candidate.provenance)}
+                  </p>
                 )}
                 <div className="grounding-proposal-confidence">
                   <div

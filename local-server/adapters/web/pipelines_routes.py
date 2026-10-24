@@ -48,6 +48,7 @@ from adapters.web.schemas.extraction import (
 )
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.pipelines import (
+    ApplyRunRequest,
     ApplyRunResponse,
     BatchResponse,
     CancelBatchResponse,
@@ -56,6 +57,7 @@ from adapters.web.schemas.pipelines import (
     EnqueueBatchRunsResponse,
     GroundingCandidate,
     ImplementationResponse,
+    MergedMentionSchema,
     NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
@@ -75,12 +77,20 @@ from adapters.web.schemas.pipelines import (
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
+from domain.pipelines.apply_selection import RecognitionDecision
+from domain.pipelines.candidate_ids import (
+    enumerate_items,
+    enumerate_schema_candidates,
+    enumerate_schema_connections,
+    enumerate_triples,
+)
 from domain.pipelines.entities import (
     PipelineRun,
     PipelineRunStatus,
     PipelineType,
 )
 from domain.pipelines.exceptions import (
+    ApplySelectionError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -210,7 +220,9 @@ def _safe_confidence(value: Any) -> float:
         return 0.5
 
 
-def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCandidate:
+def _map_schema_class_candidate(
+    candidate_id: str, candidate_dict: dict[str, Any]
+) -> SchemaClassCandidate:
     """
     Map an orchestrator class candidate to SchemaClassCandidate response.
 
@@ -223,6 +235,7 @@ def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCa
     provenance = _normalize_provenance(candidate_dict.get("provenance", []))
 
     return SchemaClassCandidate(
+        candidate_id=candidate_id,
         label=candidate_dict.get("label", ""),
         proposed_definition=candidate_dict.get("proposed_definition"),
         disambiguation_rationale=candidate_dict.get("disambiguation_rationale"),
@@ -232,6 +245,7 @@ def _map_schema_class_candidate(candidate_dict: dict[str, Any]) -> SchemaClassCa
 
 
 def _map_schema_property_candidate(
+    candidate_id: str,
     candidate_dict: dict[str, Any],
 ) -> SchemaPropertyCandidate:
     """
@@ -246,6 +260,7 @@ def _map_schema_property_candidate(
     provenance = _normalize_provenance(candidate_dict.get("provenance", []))
 
     return SchemaPropertyCandidate(
+        candidate_id=candidate_id,
         label=candidate_dict.get("label", ""),
         proposed_definition=candidate_dict.get("proposed_definition"),
         proposed_domain=candidate_dict.get("proposed_domain"),
@@ -256,6 +271,7 @@ def _map_schema_property_candidate(
 
 
 def _map_schema_connection_candidate(
+    candidate_id: str,
     connection_dict: dict[str, Any],
 ) -> SchemaConnectionCandidate:
     """
@@ -270,6 +286,7 @@ def _map_schema_connection_candidate(
     provenance = _normalize_provenance(connection_dict.get("provenance", []))
 
     return SchemaConnectionCandidate(
+        candidate_id=candidate_id,
         subject_ref=connection_dict.get("subject_ref", ""),
         predicate=connection_dict.get("predicate", ""),
         object_ref=connection_dict.get("object_ref", ""),
@@ -278,7 +295,11 @@ def _map_schema_connection_candidate(
     )
 
 
-def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
+def _map_triple_candidate(
+    candidate_id: str,
+    triple_dict: dict[str, Any],
+    titles: dict[str, str] | None = None,
+) -> TripleCandidate:
     """
     Map an orchestrator triple to TripleCandidate response.
 
@@ -296,10 +317,12 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
         """Map subject or object node to NodeReference."""
         if not node_data:
             node_data = {}
+        node_id = node_data.get("id")
         return NodeReference(
             kind=node_data.get("kind", "individual"),
             label=node_data.get("label", ""),
-            id=node_data.get("id"),
+            id=node_id,
+            title=(titles or {}).get(node_id) if node_id else None,
             class_ids=node_data.get("class_ids"),
             value=node_data.get("value"),
             datatype=node_data.get("datatype"),
@@ -322,6 +345,7 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
     provenance = _normalize_provenance(triple_dict.get("provenance", []))
 
     return TripleCandidate(
+        candidate_id=candidate_id,
         subject=_map_node_ref(subject_data),
         predicate=_map_predicate_ref(predicate_data),
         object=_map_node_ref(object_data),
@@ -330,7 +354,9 @@ def _map_triple_candidate(triple_dict: dict[str, Any]) -> TripleCandidate:
     )
 
 
-def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandidate:
+def _map_grounding_candidate(
+    candidate_id: str, grounding_dict: dict[str, Any]
+) -> GroundingCandidate:
     """
     Map an orchestrator grounding to GroundingCandidate response.
 
@@ -344,6 +370,7 @@ def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandida
     provenance = _normalize_provenance(provenance_data or [])
 
     return GroundingCandidate(
+        candidate_id=candidate_id,
         uri=grounding_dict.get("uri", ""),
         label=grounding_dict.get("label", ""),
         description=grounding_dict.get("description", ""),
@@ -353,7 +380,9 @@ def _map_grounding_candidate(grounding_dict: dict[str, Any]) -> GroundingCandida
     )
 
 
-def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCandidate:
+def _map_refinement_candidate(
+    candidate_id: str, refinement_dict: dict[str, Any]
+) -> RefinementCandidate:
     """
     Map an orchestrator refinement to RefinementCandidate response.
 
@@ -378,6 +407,7 @@ def _map_refinement_candidate(refinement_dict: dict[str, Any]) -> RefinementCand
     provenance = _normalize_provenance(refinement_dict.get("provenance", []))
 
     return RefinementCandidate(
+        candidate_id=candidate_id,
         uri=scope_id,
         label=refined_text[:100] if refined_text else "",
         description=refined_text,
@@ -403,6 +433,9 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
             http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             "Failed to persist pipeline state",
         )
+    elif isinstance(exc, ApplySelectionError):
+        _logger.warning(f"Apply selection error: {exc}")
+        return (http_status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     elif isinstance(exc, PipelineInputError):
         _logger.warning(f"Pipeline input error: {exc}")
         return (http_status.HTTP_400_BAD_REQUEST, str(exc))
@@ -1086,44 +1119,75 @@ async def get_pipeline_run(
 
 def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
     """Extract schema extraction candidates from an already-fetched run."""
-    output_summary = run.output_summary or {}
     result: list[CandidateItem] = []
+    output_summary = run.output_summary or {}
 
-    candidates_data = output_summary.get("candidates", [])
-    connections_data = output_summary.get("connections", [])
-
-    # Map class and property candidates
-    for candidate_dict in candidates_data:
-        kind = candidate_dict.get("kind")
-        if kind == "class":
-            result.append(_map_schema_class_candidate(candidate_dict))
-        elif kind == "property_definition":
-            result.append(_map_schema_property_candidate(candidate_dict))
-        else:
+    for candidate_dict in output_summary.get("candidates", []) or []:
+        if candidate_dict.get("kind") not in ("class", "property_definition"):
             _logger.warning(
-                f"Skipping candidate with unrecognized kind: {kind}. "
+                f"Skipping candidate with unrecognized kind: {candidate_dict.get('kind')}. "
                 f"Expected 'class' or 'property_definition'."
             )
 
-    # Map connections
-    for connection_dict in connections_data:
-        result.append(_map_schema_connection_candidate(connection_dict))
+    for candidate_id, candidate_dict in enumerate_schema_candidates(output_summary):
+        if candidate_dict.get("kind") == "class":
+            result.append(_map_schema_class_candidate(candidate_id, candidate_dict))
+        else:
+            result.append(_map_schema_property_candidate(candidate_id, candidate_dict))
+
+    for candidate_id, connection_dict in enumerate_schema_connections(output_summary):
+        result.append(_map_schema_connection_candidate(candidate_id, connection_dict))
 
     return result
 
 
-def _extract_individual_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
+def _mapped_node_titles(triples: list[dict[str, Any]], ontology_repo: Any) -> dict[str, str]:
+    """
+    Look up canonical titles for triple subjects/objects mapped to existing nodes.
+
+    Read-only display enrichment: each distinct id is fetched once; ids that do
+    not resolve (or no repo configured) are simply omitted.
+    """
+    if ontology_repo is None:
+        return {}
+    wanted: dict[str, str] = {}
+    for triple in triples:
+        for role in ("subject", "object"):
+            node = triple.get(role) or {}
+            node_id = node.get("id")
+            if node_id and node.get("kind") in ("individual", "class"):
+                wanted.setdefault(str(node_id), node["kind"])
+    titles: dict[str, str] = {}
+    for node_id, kind in wanted.items():
+        entity = (
+            ontology_repo.get_individual(node_id)
+            if kind == "individual"
+            else ontology_repo.get_class(node_id)
+        )
+        if entity is not None and getattr(entity, "title", None):
+            titles[node_id] = entity.title
+    return titles
+
+
+def _extract_individual_extraction_candidates(
+    run: PipelineRun, ontology_repo: Any = None
+) -> list[CandidateItem]:
     """Extract individual extraction candidates from an already-fetched run."""
-    output_summary = run.output_summary or {}
-    triples_data = output_summary.get("triples", [])
-    return [_map_triple_candidate(triple_dict) for triple_dict in triples_data]
+    enumerated = enumerate_triples(run.output_summary)
+    titles = _mapped_node_titles([t for _, t in enumerated], ontology_repo)
+    return [
+        _map_triple_candidate(candidate_id, triple_dict, titles)
+        for candidate_id, triple_dict in enumerated
+    ]
 
 
 def _extract_grounding_candidates(run: PipelineRun) -> list[CandidateItem]:
     """Extract grounding candidates from an already-fetched run."""
-    output_summary = run.output_summary or {}
-    groundings_data = output_summary.get("groundings", [])
-    return [_map_grounding_candidate(grounding_dict) for grounding_dict in groundings_data]
+    groundings_data = (run.output_summary or {}).get("groundings", [])
+    return [
+        _map_grounding_candidate(candidate_id, grounding_dict)
+        for candidate_id, grounding_dict in enumerate_items(groundings_data, "grounding")
+    ]
 
 
 def _extract_refinement_candidates(run: PipelineRun) -> list[CandidateItem]:
@@ -1137,7 +1201,10 @@ def _extract_refinement_candidates(run: PipelineRun) -> list[CandidateItem]:
     else:
         refinement_data = output_summary.get("deltas", [])
 
-    return [_map_refinement_candidate(ref_dict) for ref_dict in refinement_data]
+    return [
+        _map_refinement_candidate(candidate_id, ref_dict)
+        for candidate_id, ref_dict in enumerate_items(refinement_data, "refinement")
+    ]
 
 
 @router.get(
@@ -1183,7 +1250,9 @@ async def get_pipeline_candidates_generic(
     if run.pipeline_type == PipelineType.SCHEMA_EXTRACTION:
         candidates = _extract_schema_extraction_candidates(run)
     elif run.pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
-        candidates = _extract_individual_extraction_candidates(run)
+        candidates = _extract_individual_extraction_candidates(
+            run, getattr(request.app.state, "ontology_repo", None)
+        )
     elif run.pipeline_type == PipelineType.SCHEMA_NODE_GROUNDING:
         candidates = _extract_grounding_candidates(run)
     elif run.pipeline_type in (
@@ -1260,7 +1329,9 @@ async def get_individual_extraction_candidates(
         PipelineType.INDIVIDUAL_EXTRACTION,
         f"Run {run_id} is not of type individual_extraction",
     )
-    return _extract_individual_extraction_candidates(run)
+    return _extract_individual_extraction_candidates(
+        run, getattr(request.app.state, "ontology_repo", None)
+    )
 
 
 @router.get(
@@ -1531,6 +1602,10 @@ async def apply_pipeline_run(
             "recognizer's configured value when omitted."
         ),
     ),
+    body: Optional[ApplyRunRequest] = Body(
+        None,
+        description=("Optional explicit reviewer selections. Omit for threshold-only apply."),
+    ),
 ) -> ApplyRunResponse:
     """
     Apply a completed pipeline run's output to the ontology.
@@ -1554,6 +1629,10 @@ async def apply_pipeline_run(
         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
             recognition stage; defaults to the recognizer's configured value
+        body: Optional explicit selections. ``accepted_candidate_ids`` (schema_extraction
+            and individual_extraction) is the full selection when present and overrides
+            confidence_threshold; ``recognition_decisions`` (individual_extraction only)
+            sets merge/separate per mention. Unknown ids, mentions, or merge targets → 422.
 
     Returns:
         ApplyRunResponse with counts of created and skipped entities
@@ -1577,6 +1656,33 @@ async def apply_pipeline_run(
 
     ptype = run.pipeline_type
 
+    accepted_candidate_ids = body.accepted_candidate_ids if body else None
+    recognition_decisions = (
+        [
+            RecognitionDecision(
+                mention_label=d.mention_label,
+                decision=d.decision,
+                individual_id=d.individual_id,
+            )
+            for d in body.recognition_decisions
+        ]
+        if body and body.recognition_decisions is not None
+        else None
+    )
+    if accepted_candidate_ids is not None and ptype not in (
+        PipelineType.SCHEMA_EXTRACTION,
+        PipelineType.INDIVIDUAL_EXTRACTION,
+    ):
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"accepted_candidate_ids is not supported for {ptype.value} apply",
+        )
+    if recognition_decisions is not None and ptype != PipelineType.INDIVIDUAL_EXTRACTION:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="recognition_decisions are only supported for individual_extraction apply",
+        )
+
     set_batch_run_context(run.batch_run_id)
     try:
         try:
@@ -1597,6 +1703,7 @@ async def apply_pipeline_run(
                     concept_scheme_id=concept_scheme_id,
                     taxonomy_id=taxonomy_id,
                     confidence_threshold=confidence_threshold,
+                    accepted_candidate_ids=accepted_candidate_ids,
                 )
 
             elif ptype == PipelineType.INDIVIDUAL_EXTRACTION:
@@ -1605,6 +1712,8 @@ async def apply_pipeline_run(
                     run=run,
                     confidence_threshold=confidence_threshold,
                     recognition_threshold=recognition_threshold,
+                    accepted_candidate_ids=accepted_candidate_ids,
+                    recognition_decisions=recognition_decisions,
                 )
                 # Recognition sync (#1142): apply writes individuals directly via
                 # the repo (bypassing OntologyService), so index the newly created
@@ -1653,6 +1762,9 @@ async def apply_pipeline_run(
 
                 apply_result = ApplyResult()
 
+        except ApplySelectionError as exc:
+            status_code, message = _handle_domain_error(exc)
+            raise HTTPException(status_code=status_code, detail=message) from exc
         except ValueError as exc:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -1696,6 +1808,17 @@ async def apply_pipeline_run(
         created_property_definition_ids=apply_result.created_property_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
         recognized_individual_ids=apply_result.recognized_individual_ids,
+        applied_candidate_ids=apply_result.applied_candidate_ids,
+        skipped_candidate_ids=apply_result.skipped_candidate_ids,
+        existing_candidate_ids=apply_result.existing_candidate_ids,
+        merged_mentions=[
+            MergedMentionSchema(
+                mention_label=m.mention_label,
+                individual_id=m.individual_id,
+                source=m.source,
+            )
+            for m in apply_result.merged_mentions
+        ],
     )
 
 

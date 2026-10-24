@@ -38,6 +38,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from config import get_settings
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -52,6 +53,7 @@ from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
@@ -449,7 +451,14 @@ class TestQualitySchemaExtraction:
             ontology_repo=None,
         )
 
-        apply_service = SchemaExtractionApplyService(ontology_repo)
+        apply_service = SchemaExtractionApplyService(
+            OntologyService(
+                repository=ontology_repo,
+                embedding_service=FakeEmbeddingService(),
+                event_publisher=FakeEventPublisher(),
+            ),
+            ontology_repo,
+        )
 
         # Use a simple fixture for round-trip testing
         fixture_input = load_fixture("schema_extraction", "async_patterns")

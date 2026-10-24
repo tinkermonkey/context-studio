@@ -1,364 +1,172 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
 import { render } from "@/test/test-utils";
-import { validateEdgeEndpoints, GraphCanvasComponent } from "../GraphCanvas";
-import type { GraphNode, GraphEdge } from "@/api/hooks/graph";
+import type { GraphNodeData, GraphEdgeData } from "@tinkermonkey/heimdall-ui";
+import { createGraphView } from "@/api/services/__tests__/fixtures/graph.fixtures";
+import { GraphCanvasComponent, truncateLabel } from "../GraphCanvas";
+import { LAYER_HEADER_PREFIX } from "../graphLayers";
 
-const { mockToastFn, mockGraphCanvas } = vi.hoisted(() => ({
-  mockToastFn: vi.fn(),
-  mockGraphCanvas: vi.fn(() => null),
-}));
+interface CapturedProps {
+  nodes: GraphNodeData[];
+  edges: GraphEdgeData[];
+  layout: string;
+  selectedNodeId?: string;
+  renderNode: (node: GraphNodeData, selected: boolean) => React.ReactNode;
+}
 
-vi.mock("@/components/ui/Toast", async () => {
-  const actual = await vi.importActual("@/components/ui/Toast");
+const { captured } = vi.hoisted(() => ({ captured: { props: null as unknown } }));
+
+// Replace the canvas (it needs layout measurement) with a stub that renders
+// every node through the component's renderNode, keeping the real GraphNode.
+vi.mock("@tinkermonkey/heimdall-ui", async () => {
+  const actual = await vi.importActual<typeof import("@tinkermonkey/heimdall-ui")>(
+    "@tinkermonkey/heimdall-ui",
+  );
   return {
     ...actual,
-    useToasts: () => ({
-      toast: mockToastFn,
-      toasts: [],
-      dismiss: vi.fn(),
-    }),
+    GraphCanvas: (props: CapturedProps) => {
+      captured.props = props;
+      return (
+        <div className="heimdall-graph-canvas-stub">
+          {props.nodes.map((node) => (
+            <div key={node.id}>{props.renderNode(node, node.id === props.selectedNodeId)}</div>
+          ))}
+        </div>
+      );
+    },
   };
 });
 
-vi.mock("@tinkermonkey/heimdall-ui", () => ({
-  GraphCanvas: mockGraphCanvas,
-}));
+const lastProps = () => captured.props as CapturedProps;
 
-beforeEach(() => {
-  mockToastFn.mockClear();
-  mockGraphCanvas.mockClear();
-});
+describe("GraphCanvasComponent", () => {
+  const view = createGraphView();
+  const businessAndApi = view.nodes.filter(
+    (n) => n.concept_scheme_id === "layer-business" || n.concept_scheme_id === "layer-api",
+  );
+  const businessAndApiIds = new Set(businessAndApi.map((n) => n.id));
+  const edges = view.edges.filter(
+    (e) => businessAndApiIds.has(e.source) && businessAndApiIds.has(e.target),
+  );
 
-describe("GraphCanvas", () => {
-  describe("validateEdgeEndpoints", () => {
-    it("should return valid status when all edges reference existing nodes", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-        { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
-        { id: "node-3", label: "Node 3", centrality: 0.4, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [
-        { id: "edge-1", source: "node-1", target: "node-2" },
-        { id: "edge-2", source: "node-2", target: "node-3" },
-      ];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should detect missing source node", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-        { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-missing", target: "node-2" }];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("source node");
-      expect(result.errors[0]).toContain("node-missing");
-    });
-
-    it("should detect missing target node", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-        { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-missing" }];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("target node");
-      expect(result.errors[0]).toContain("node-missing");
-    });
-
-    it("should detect both missing source and target nodes", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [
-        {
-          id: "edge-1",
-          source: "node-missing-1",
-          target: "node-missing-2",
-        },
-      ];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(2);
-      expect(result.errors.some((e) => e.includes("source"))).toBe(true);
-      expect(result.errors.some((e) => e.includes("target"))).toBe(true);
-    });
-
-    it("should handle empty edges array", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should handle empty nodes array", () => {
-      const nodes: GraphNode[] = [];
-
-      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-2" }];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(2);
-    });
-
-    it("should handle multiple edges with mixed valid and invalid references", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-        { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [
-        { id: "edge-1", source: "node-1", target: "node-2" },
-        { id: "edge-2", source: "node-2", target: "node-3" },
-        { id: "edge-3", source: "node-4", target: "node-1" },
-      ];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors).toHaveLength(2);
-      expect(result.errors.some((e) => e.includes("edge-2"))).toBe(true);
-      expect(result.errors.some((e) => e.includes("edge-3"))).toBe(true);
-    });
-
-    it("should include edge ID and node ID in error messages", () => {
-      const nodes: GraphNode[] = [
-        { id: "node-a", label: "Node A", centrality: 0.5, kind: "class" },
-      ];
-
-      const edges: GraphEdge[] = [{ id: "edge-xy", source: "node-missing-x", target: "node-a" }];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(false);
-      expect(result.errors[0]).toContain("edge-xy");
-      expect(result.errors[0]).toContain("node-missing-x");
-    });
-
-    it("should pass when nodes and edges are both empty", () => {
-      const nodes: GraphNode[] = [];
-      const edges: GraphEdge[] = [];
-
-      const result = validateEdgeEndpoints(nodes, edges);
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
+  beforeEach(() => {
+    captured.props = null;
   });
 
-  describe("GraphCanvasComponent render", () => {
-    const mockNodes: GraphNode[] = [
-      { id: "node-1", label: "Node 1", centrality: 0.5, kind: "class" },
-      { id: "node-2", label: "Node 2", centrality: 0.6, kind: "class" },
-    ];
+  const renderCanvas = (overrides: Partial<Parameters<typeof GraphCanvasComponent>[0]> = {}) =>
+    render(
+      <GraphCanvasComponent
+        nodes={businessAndApi}
+        edges={edges}
+        layers={view.layers}
+        layout="layered"
+        onNodeSelect={vi.fn()}
+        {...overrides}
+      />,
+    );
 
-    const mockEdges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-2" }];
+  it("renders the canvas region with data-testid and ARIA label", () => {
+    renderCanvas();
+    const canvas = screen.getByTestId("graph-canvas");
+    expect(canvas).toHaveAttribute("role", "region");
+    expect(canvas).toHaveAttribute("aria-label", "Graph visualization canvas");
+    expect(canvas).toHaveClass("graph-canvas", "graph-canvas-shell");
+    expect(canvas).toHaveAttribute("data-layout", "layered");
+  });
 
-    it("should render graph canvas container with valid data", () => {
-      render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-      const canvases = screen.getAllByTestId("graph-canvas");
-      expect(canvases.length).toBeGreaterThan(0);
-    });
+  it("pins every node and adds one layer header per band in layered mode", () => {
+    renderCanvas();
+    const props = lastProps();
+    expect(props.layout).toBe("manual");
+    expect(props.nodes.every((n) => typeof n.x === "number" && typeof n.y === "number")).toBe(true);
+    const headers = props.nodes.filter((n) => n.id.startsWith(LAYER_HEADER_PREFIX));
+    expect(headers.map((h) => h.label)).toEqual(["Business Layer", "API Layer"]);
+    expect(screen.getByTestId("graph-layer-header-layer-business")).toHaveClass(
+      "graph-layer-header",
+    );
+  });
 
-    it("should have proper accessibility attributes", () => {
-      render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-      const canvases = screen.getAllByTestId("graph-canvas");
-      const outerCanvas = canvases[0];
-      expect(outerCanvas).toHaveAttribute("role", "region");
-      expect(outerCanvas).toHaveAttribute("aria-label", "Graph visualization canvas");
-    });
+  it("uses Heimdall force layout without pinned coordinates or headers in force mode", () => {
+    renderCanvas({ layout: "force" });
+    const props = lastProps();
+    expect(props.layout).toBe("force");
+    expect(props.nodes.some((n) => n.x !== undefined)).toBe(false);
+    expect(props.nodes.some((n) => n.id.startsWith(LAYER_HEADER_PREFIX))).toBe(false);
+    expect(screen.getByTestId("graph-canvas")).toHaveAttribute("data-layout", "force");
+  });
 
-    it("should render error state when validation fails", () => {
-      const invalidEdges: GraphEdge[] = [
-        { id: "edge-1", source: "node-missing", target: "node-2" },
-      ];
+  it("colors nodes by layer index and badges classes vs individuals", () => {
+    renderCanvas();
+    const byId = new Map(lastProps().nodes.map((n) => [n.id, n]));
+    // layer-business is index 1, layer-api index 2 in view.layers
+    expect(byId.get("svc")?.domainColor).toBe("layer-1");
+    expect(byId.get("op")?.domainColor).toBe("layer-2");
+    expect(byId.get("svc")?.kind).toBe("C");
+    expect(byId.get("checkout")?.kind).toBe("I");
+  });
 
-      render(<GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />);
+  it("renders individuals and classes with distinct CSS classes and button roles", () => {
+    renderCanvas({ focusNodeId: "svc" });
+    const individual = screen.getByRole("button", { name: "Checkout (individual)" });
+    expect(individual).toHaveClass("graph-node", "graph-node--individual");
+    expect(individual).toHaveAttribute("data-domain", "layer-1");
+    const focused = screen.getByRole("button", { name: "Business Service (class)" });
+    expect(focused).toHaveClass("graph-node--class", "graph-node--focus");
+    expect(focused).toHaveAttribute("aria-pressed", "false");
+  });
 
-      const canvases = screen.getAllByTestId("graph-canvas");
-      expect(canvases.length).toBeGreaterThan(0);
-      expect(
-        screen.getByText("Graph data validation failed. Check console for details."),
-      ).toBeInTheDocument();
-    });
+  it("marks the selected node as pressed", () => {
+    renderCanvas({ selectedNodeId: "checkout" });
+    expect(screen.getByRole("button", { name: "Checkout (individual)" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
 
-    it("should show error container with correct class in error state", () => {
-      const invalidEdges: GraphEdge[] = [
-        { id: "edge-1", source: "node-missing", target: "node-2" },
-      ];
+  it("draws cross-layer edges hot and same-layer edges default", () => {
+    renderCanvas();
+    const variants = new Map(lastProps().edges.map((e) => [e.id, e.variant]));
+    expect(variants.get("e-svc-op")).toBe("hot");
+    expect(variants.get("e-checkout-post")).toBe("hot");
+    expect(variants.get("checkout:instance_of:svc")).toBe("default");
+  });
 
-      render(<GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />);
+  it("labels only edges incident to the selected node, truncating long predicates", () => {
+    renderCanvas({ selectedNodeId: "svc" });
+    const labels = new Map(lastProps().edges.map((e) => [e.id, e.label]));
+    expect(labels.get("e-svc-op")).toBe(
+      truncateLabel("business.service realized-by api.operation"),
+    );
+    expect(labels.get("e-svc-op")?.endsWith("…")).toBe(true);
+    expect(labels.get("checkout:instance_of:svc")).toBe("instance of");
+    expect(labels.get("e-checkout-post")).toBeUndefined();
+  });
 
-      const errorContainer = screen.getByText(
-        "Graph data validation failed. Check console for details.",
-      ).parentElement;
-      expect(errorContainer).toHaveClass("graph-canvas__error");
-    });
+  it("renders a legend with the visible layers and the cross-layer edge count", () => {
+    renderCanvas();
+    const legend = screen.getByTestId("graph-layer-legend");
+    expect(legend).toHaveAttribute("role", "group");
+    expect(legend).toHaveClass("graph-legend-bar");
+    const layers = screen.getAllByTestId("graph-legend-layer");
+    expect(layers.map((l) => l.textContent)).toEqual(["Business Layer2", "API Layer2"]);
+    expect(screen.getByTestId("graph-legend-cross-layer-count")).toHaveTextContent("2");
+  });
 
-    it("should remap edge props from source/target to sourceId/targetId", () => {
-      const edges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "node-2" }];
+  it("shows an empty status instead of the canvas when no nodes match", () => {
+    const { container } = renderCanvas({ nodes: [], edges: [], emptyText: "Nothing here" });
+    const empty = screen.getByTestId("graph-canvas-empty");
+    expect(empty).toHaveAttribute("role", "status");
+    expect(empty).toHaveClass("graph-canvas__empty");
+    expect(empty).toHaveTextContent("Nothing here");
+    expect(container.querySelector(".heimdall-graph-canvas-stub")).not.toBeInTheDocument();
+    expect(captured.props).toBeNull();
+  });
+});
 
-      render(<GraphCanvasComponent nodes={mockNodes} edges={edges} />);
-
-      expect(mockGraphCanvas).toHaveBeenCalled();
-
-      const callArgs = (mockGraphCanvas as any).mock.calls[0][0];
-      expect(callArgs.edges).toEqual([
-        {
-          id: "edge-1",
-          sourceId: "node-1",
-          targetId: "node-2",
-        },
-      ]);
-    });
-
-    it("should call toast on validation error", () => {
-      const invalidEdges: GraphEdge[] = [
-        { id: "edge-1", source: "node-missing", target: "node-2" },
-      ];
-
-      render(<GraphCanvasComponent nodes={mockNodes} edges={invalidEdges} />);
-
-      expect(mockToastFn).toHaveBeenCalledWith(
-        "error",
-        "Graph validation error",
-        expect.stringContaining("source node"),
-      );
-    });
-
-    it("should apply graph-canvas class to container", () => {
-      render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-
-      const canvases = screen.getAllByTestId("graph-canvas");
-      expect(canvases[0]).toHaveClass("graph-canvas");
-    });
-
-    it("should not render error state with valid edges", () => {
-      render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-
-      expect(
-        screen.queryByText("Graph data validation failed. Check console for details."),
-      ).not.toBeInTheDocument();
-    });
-
-    it("should pass onNodeSelect callback to underlying GraphCanvas", () => {
-      const onNodeSelect = vi.fn();
-
-      render(
-        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} onNodeSelect={onNodeSelect} />,
-      );
-
-      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
-    });
-
-    it("should pass selectedNodeId to underlying GraphCanvas", () => {
-      render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} selectedNodeId="node-1" />);
-
-      expect(screen.getAllByTestId("graph-canvas").length).toBeGreaterThan(0);
-    });
-
-    it("should memoize validation result and recompute only when dependencies change", () => {
-      mockToastFn.mockClear();
-
-      const { rerender } = render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-
-      expect(mockToastFn).not.toHaveBeenCalled();
-
-      const sameNodes = mockNodes;
-      const sameEdges = mockEdges;
-      mockToastFn.mockClear();
-
-      rerender(<GraphCanvasComponent nodes={sameNodes} edges={sameEdges} />);
-
-      expect(mockToastFn).not.toHaveBeenCalled();
-
-      const newInvalidNodes: GraphNode[] = [
-        { id: "different-node", label: "Different", centrality: 0.5, kind: "class" },
-      ];
-      mockToastFn.mockClear();
-
-      rerender(<GraphCanvasComponent nodes={newInvalidNodes} edges={mockEdges} />);
-
-      expect(mockToastFn).toHaveBeenCalled();
-    });
-
-    it("should revalidate when nodes change", () => {
-      const { rerender } = render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-
-      expect(
-        screen.queryByText("Graph data validation failed. Check console for details."),
-      ).not.toBeInTheDocument();
-
-      const newNodes: GraphNode[] = [
-        { id: "different-node", label: "Different", centrality: 0.5, kind: "class" },
-      ];
-
-      rerender(<GraphCanvasComponent nodes={newNodes} edges={mockEdges} />);
-
-      expect(
-        screen.getByText("Graph data validation failed. Check console for details."),
-      ).toBeInTheDocument();
-    });
-
-    it("should revalidate when edges change", () => {
-      const { rerender } = render(<GraphCanvasComponent nodes={mockNodes} edges={mockEdges} />);
-
-      expect(
-        screen.queryByText("Graph data validation failed. Check console for details."),
-      ).not.toBeInTheDocument();
-
-      const newEdges: GraphEdge[] = [{ id: "edge-1", source: "node-1", target: "invalid-node" }];
-
-      rerender(<GraphCanvasComponent nodes={mockNodes} edges={newEdges} />);
-
-      expect(
-        screen.getByText("Graph data validation failed. Check console for details."),
-      ).toBeInTheDocument();
-    });
-
-    it("should not trigger validation on selectedNodeId change", () => {
-      const { rerender } = render(
-        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} selectedNodeId="node-1" />,
-      );
-
-      const initialError = screen.queryByText(
-        "Graph data validation failed. Check console for details.",
-      );
-
-      rerender(
-        <GraphCanvasComponent nodes={mockNodes} edges={mockEdges} selectedNodeId="node-2" />,
-      );
-
-      const finalError = screen.queryByText(
-        "Graph data validation failed. Check console for details.",
-      );
-      expect(initialError).toBe(finalError);
-    });
+describe("truncateLabel", () => {
+  it("keeps short labels and drops empty ones", () => {
+    expect(truncateLabel("causes")).toBe("causes");
+    expect(truncateLabel(null)).toBeUndefined();
+    expect(truncateLabel("")).toBeUndefined();
   });
 });

@@ -131,3 +131,71 @@ class SubgraphResult:
     edge_count: int
     depth: int
     extracted_at: datetime
+
+
+@dataclass
+class GraphViewTaxonomy:
+    """A taxonomy that groups the layers of a graph view."""
+
+    id: str
+    title: str
+    identifier: str | None
+
+
+@dataclass
+class GraphViewLayer:
+    """A concept scheme rendered as one layer of a graph view."""
+
+    id: str
+    title: str
+    identifier: str | None
+    taxonomy_id: str
+
+
+@dataclass
+class GraphViewNode:
+    """
+    A class or individual in a graph view, labelled and assigned to a layer.
+
+    Individuals inherit concept_scheme_id and taxonomy_id from their first
+    class that resolves to a known class.
+    """
+
+    id: str
+    label: str
+    node_type: str  # "class" | "individual"
+    identifier: str | None
+    description: str | None
+    concept_scheme_id: str | None
+    taxonomy_id: str | None
+    class_ids: list[str]
+
+
+@dataclass
+class GraphViewEdge:
+    """
+    A directed, typed edge between two graph view nodes.
+
+    edge_type is one of:
+        relationship — an asserted Relationship (predicate = property definition title)
+        schema       — a property definition's domain class -> range class
+        instance_of  — individual -> class membership
+        subclass_of  — class -> parent class
+    """
+
+    id: str
+    source: str
+    target: str
+    edge_type: str
+    predicate_id: str | None
+    predicate: str | None
+
+
+@dataclass
+class GraphView:
+    """Labelled read model of the ontology graph for visualization."""
+
+    taxonomies: list[GraphViewTaxonomy]
+    layers: list[GraphViewLayer]
+    nodes: list[GraphViewNode]
+    edges: list[GraphViewEdge]

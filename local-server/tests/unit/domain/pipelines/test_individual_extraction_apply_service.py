@@ -1044,3 +1044,46 @@ class TestTripleContextBackwardCompatibility:
         }
         context = IndividualExtractionApplyService._triple_context(triple)
         assert context == "Alice knows Bob"
+
+
+# ---------------------------------------------------------------------------
+# Provenance shapes feeding the recognizer context
+# ---------------------------------------------------------------------------
+
+
+class TestRecognitionContextProvenanceShapes:
+    def _apply_with_provenance(self, svc_with_recognizer, recognizer, provenance):
+        triple = _make_triple("Alice")
+        triple["provenance"] = provenance
+        result = svc_with_recognizer.apply(_make_run(triples=[triple]))
+        assert result.individuals_created == 1
+        return recognizer.calls[0]["context"]
+
+    def test_dict_provenance_quote_is_context(self, svc_with_recognizer, recognizer):
+        context = self._apply_with_provenance(
+            svc_with_recognizer, recognizer, {"quote": "Alice leads the team", "start": 0}
+        )
+        assert context == "Alice leads the team"
+
+    def test_list_provenance_quotes_are_joined(self, svc_with_recognizer, recognizer):
+        context = self._apply_with_provenance(
+            svc_with_recognizer,
+            recognizer,
+            [
+                {"quote": "Alice leads the team", "start": 0, "end": 20},
+                {"raw": "Alice approved it", "text_offset_start": 30},
+            ],
+        )
+        assert context == "Alice leads the team ... Alice approved it"
+
+    def test_string_provenance_is_context(self, svc_with_recognizer, recognizer):
+        context = self._apply_with_provenance(
+            svc_with_recognizer, recognizer, "  Alice leads the team  "
+        )
+        assert context == "Alice leads the team"
+
+    def test_empty_list_provenance_falls_back_to_subject_label(
+        self, svc_with_recognizer, recognizer
+    ):
+        context = self._apply_with_provenance(svc_with_recognizer, recognizer, [])
+        assert context == "Alice"

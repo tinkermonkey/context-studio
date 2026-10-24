@@ -3,6 +3,7 @@ FastAPI routes for the Graph Analysis bounded context.
 
 This module implements all HTTP endpoints for graph analysis operations:
 - POST /build - Explicitly build the graph from current ontology
+- GET /view - Labelled graph read model (layers, nodes, typed edges) for visualization
 - GET /metrics - Graph-level structural metrics
 - GET /degree-distribution - Node degree distribution
 - GET /paths/shortest - Shortest path between two nodes
@@ -39,6 +40,7 @@ from adapters.web.schemas.graph import (
     CycleCheckResponse,
     DegreeDistributionResponse,
     GraphMetricsResponse,
+    GraphViewResponse,
     KnowledgeGraphResponse,
     NeighborsResponse,
     PathResultResponse,
@@ -58,6 +60,7 @@ from domain.graph.exceptions import (
     SPARQLValidationError,
 )
 from domain.graph.services import GraphAnalysisService
+from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
@@ -122,6 +125,37 @@ async def build_graph(
         graph_dict = asdict(graph)
         graph_dict["timestamp"] = graph_dict.pop("last_built")
         return KnowledgeGraphResponse.model_validate(graph_dict)
+    except Exception as exc:
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Graph View Endpoint ====================
+
+
+@router.get("/view", response_model=GraphViewResponse)
+async def get_graph_view(
+    service: GraphAnalysisService = Depends(get_graph_service),
+) -> GraphViewResponse:
+    """
+    Get a labelled read model of the ontology graph for visualization.
+
+    Returns every taxonomy, every concept scheme (rendered as a layer), all classes and
+    individuals with their layer, and typed edges (relationship, schema, instance_of,
+    subclass_of) with predicate labels.
+
+    Args:
+        service: GraphAnalysisService from dependency injection
+
+    Returns:
+        GraphViewResponse with taxonomies, layers, nodes and edges
+
+    Raises:
+        HTTPException: 422 if a graph error occurs, 500 on unexpected errors
+    """
+    try:
+        view = await run_sync_in_executor(service.get_graph_view)
+        return GraphViewResponse.model_validate(view)
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -81,3 +81,156 @@ export function createSubgraphData(
     ...overrides,
   };
 }
+
+/**
+ * A two-taxonomy graph view: DR (`tax-dr`) with three layers and a
+ * one-layer side taxonomy. `svc` (business) has a cross-layer schema edge to
+ * `op` (api); `checkout` / `post-order` are individuals with a cross-layer
+ * relationship; `goal` (motivation) is only linked within its layer.
+ */
+export function createGraphView(
+  overrides?: Partial<components["schemas"]["GraphViewResponse"]>,
+): components["schemas"]["GraphViewResponse"] {
+  return {
+    taxonomies: [
+      { id: "tax-dr", title: "Documentation Robotics", identifier: "dr_spec" },
+      { id: "tax-side", title: "Side Taxonomy", identifier: "side" },
+    ],
+    layers: [
+      {
+        id: "layer-motivation",
+        title: "Motivation Layer",
+        identifier: "motivation",
+        taxonomy_id: "tax-dr",
+      },
+      {
+        id: "layer-business",
+        title: "Business Layer",
+        identifier: "business",
+        taxonomy_id: "tax-dr",
+      },
+      { id: "layer-api", title: "API Layer", identifier: "api", taxonomy_id: "tax-dr" },
+      {
+        id: "layer-side",
+        title: "Side Scheme",
+        identifier: "side_scheme",
+        taxonomy_id: "tax-side",
+      },
+    ],
+    nodes: [
+      {
+        id: "goal",
+        label: "Goal",
+        node_type: "class",
+        identifier: "motivation_goal",
+        description: "A desired outcome",
+        concept_scheme_id: "layer-motivation",
+        taxonomy_id: "tax-dr",
+        class_ids: [],
+      },
+      {
+        id: "outcome",
+        label: "Outcome",
+        node_type: "class",
+        identifier: "motivation_outcome",
+        description: null,
+        concept_scheme_id: "layer-motivation",
+        taxonomy_id: "tax-dr",
+        class_ids: [],
+      },
+      {
+        id: "svc",
+        label: "Business Service",
+        node_type: "class",
+        identifier: "business_service",
+        description: "A service offered",
+        concept_scheme_id: "layer-business",
+        taxonomy_id: "tax-dr",
+        class_ids: [],
+      },
+      {
+        id: "op",
+        label: "Operation",
+        node_type: "class",
+        identifier: "api_operation",
+        description: null,
+        concept_scheme_id: "layer-api",
+        taxonomy_id: "tax-dr",
+        class_ids: [],
+      },
+      {
+        id: "checkout",
+        label: "Checkout",
+        node_type: "individual",
+        identifier: null,
+        description: "Checkout service",
+        concept_scheme_id: "layer-business",
+        taxonomy_id: "tax-dr",
+        class_ids: ["svc"],
+      },
+      {
+        id: "post-order",
+        label: "POST /orders",
+        node_type: "individual",
+        identifier: null,
+        description: null,
+        concept_scheme_id: "layer-api",
+        taxonomy_id: "tax-dr",
+        class_ids: ["op"],
+      },
+      {
+        id: "side-class",
+        label: "Side Class",
+        node_type: "class",
+        identifier: "side_class",
+        description: null,
+        concept_scheme_id: "layer-side",
+        taxonomy_id: "tax-side",
+        class_ids: [],
+      },
+    ],
+    edges: [
+      {
+        id: "e-goal-outcome",
+        source: "goal",
+        target: "outcome",
+        edge_type: "schema",
+        predicate_id: "p1",
+        predicate: "realized by",
+      },
+      {
+        id: "e-svc-op",
+        source: "svc",
+        target: "op",
+        edge_type: "schema",
+        predicate_id: "p2",
+        predicate: "business.service realized-by api.operation",
+      },
+      {
+        id: "e-checkout-post",
+        source: "checkout",
+        target: "post-order",
+        edge_type: "relationship",
+        predicate_id: "p2",
+        predicate: "realized by",
+      },
+      {
+        id: "checkout:instance_of:svc",
+        source: "checkout",
+        target: "svc",
+        edge_type: "instance_of",
+        predicate_id: null,
+        predicate: "instance of",
+      },
+      {
+        id: "post-order:instance_of:op",
+        source: "post-order",
+        target: "op",
+        edge_type: "instance_of",
+        predicate_id: null,
+        predicate: "instance of",
+      },
+    ],
+    ...overrides,
+  };
+}

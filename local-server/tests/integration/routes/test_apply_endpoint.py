@@ -107,7 +107,9 @@ def client(pipeline_repo, batch_repo, ontology_repo, ontology_service):
     app.state.llm_router = MagicMock()
     app.state.ontology_repo = ontology_repo
 
-    app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(ontology_repo)
+    app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(
+        ontology_service, ontology_repo
+    )
     app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
         ontology_service, ontology_repo
     )

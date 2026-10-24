@@ -404,7 +404,14 @@ class TestQualityE2EChain:
         )
 
         # ===== STAGE 2: Apply Schema Extraction =====
-        schema_ext_apply = SchemaExtractionApplyService(ontology_repo)
+        schema_ext_apply = SchemaExtractionApplyService(
+            OntologyService(
+                repository=ontology_repo,
+                embedding_service=embedding_service,
+                event_publisher=FakeEventPublisher(),
+            ),
+            ontology_repo,
+        )
         schema_ext_apply.apply(schema_ext_run, concept_scheme_id, taxonomy_id)
 
         # ===== STAGE 3: Individual Extraction =====
@@ -823,7 +830,14 @@ class TestQualityE2EChain:
             input_data=fixture_input.get("schema_extraction_input", {}),
         )
         se_result = await se_orchestrator.execute(se_state)
-        se_apply_service = SchemaExtractionApplyService(ontology_repo)
+        se_apply_service = SchemaExtractionApplyService(
+            OntologyService(
+                repository=ontology_repo,
+                embedding_service=embedding_service,
+                event_publisher=FakeEventPublisher(),
+            ),
+            ontology_repo,
+        )
         se_run = PipelineRun(
             id=se_state.run_id,
             batch_run_id="test-batch",

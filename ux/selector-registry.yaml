@@ -801,7 +801,64 @@ selectors:
     description: Graph visualization page container
   - selector: graph-canvas
     component: components/graph/GraphCanvas.tsx
-    description: Interactive graph visualization canvas powered by reagraph
+    description: Layer-aware graph canvas region (Heimdall GraphCanvas); data-layout is "layered" or "force"
+  - selector: graph-canvas-empty
+    component: components/graph/GraphCanvas.tsx
+    description: Status message shown inside the canvas when no nodes match the current filters
+  - selector: graph-layer-legend
+    component: components/graph/GraphCanvas.tsx
+    description: Legend strip above the canvas listing visible layers, edge kinds and node kinds
+  - selector: graph-legend-layer
+    component: components/graph/GraphCanvas.tsx
+    description: One visible layer (concept scheme) in the legend, with its color dot and node count
+  - selector: graph-legend-cross-layer-count
+    component: components/graph/GraphCanvas.tsx
+    description: Number of visible cross-layer (highlighted) edges
+  - selector: graph-layer-header-*
+    component: components/graph/GraphCanvas.tsx
+    description: Layer band header in layered layout (pattern matches graph-layer-header-{conceptSchemeId})
+  - selector: graph-layer-toolbar
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Graph filter toolbar (layers, classes, node kind, layout, focus controls)
+  - selector: graph-layer-filter
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Layer (concept scheme) multi-select filter trigger
+  - selector: graph-layer-filter-panel
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Layer filter dropdown panel, one section per taxonomy
+  - selector: graph-class-filter
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Optional class multi-select filter trigger (classes of the selected layers)
+  - selector: graph-class-filter-panel
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Class filter dropdown panel, one section per selected layer
+  - selector: graph-node-kind-filter
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Segmented control choosing all nodes, classes only, or individuals only
+  - selector: graph-layout-toggle
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Segmented control switching between layered and force layout
+  - selector: graph-visible-counts
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Count of rendered nodes and edges
+  - selector: graph-focus-bar
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Focus-mode bar shown instead of the layer filters while a node is focused
+  - selector: graph-focus-label
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Title of the focused node
+  - selector: graph-focus-depth
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Segmented control for focus neighborhood depth (1-3 hops)
+  - selector: graph-focus-exit
+    component: components/graph/GraphLayerToolbar.tsx
+    description: Button that exits focus mode and restores the layer filter view
+  - selector: node-inspector-relationship-count
+    component: components/graph/GraphNodeInspector.tsx
+    description: Count of the selected node's relationships
+  - selector: node-inspector-focus-button
+    component: components/graph/GraphNodeInspector.tsx
+    description: Button that focuses the graph on the selected node's neighborhood
   - selector: graph-metrics-panel
     component: components/graph/MetricsPanel.tsx
     description: Graph metrics panel showing analytics and statistics
@@ -1373,8 +1430,8 @@ selectors:
     component: routes/app/graph/index.tsx
     description: Button to build or rebuild the knowledge graph visualization
   - selector: node-inspector
-    component: routes/app/graph/index.tsx
-    description: Node detail panel shown in the graph inspector when the node tab is active
+    component: components/graph/GraphNodeInspector.tsx
+    description: Node detail panel (class, layer, taxonomy, description, relationships) in the graph inspector node tab
 
   # Heimdall unit test fixtures (test-only components rendered directly in tests)
   - selector: test-button
@@ -2531,3 +2588,134 @@ selectors:
   - selector: my-inspector
     component: src/components/ui/InlineInspector.tsx
     description: InlineInspector root element fixture in unit tests
+
+  # Extraction review (/app/pipelines/review, issue #1231)
+  - selector: extraction-review-page
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Extraction review page root (/app/pipelines/review)"
+  - selector: extraction-review-run-history
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Page-header button that opens pipeline run history"
+  - selector: extraction-review-input
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Source paragraph panel with scope pickers and the run action"
+  - selector: extraction-review-run
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Run extraction button that starts schema_extraction and individual_extraction"
+  - selector: extraction-review-text
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Paragraph textarea; shows a required error when empty on run"
+  - selector: extraction-review-taxonomy
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Taxonomy select for the extraction scope"
+  - selector: extraction-review-scheme
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Concept scheme select (schema apply target), filtered by taxonomy"
+  - selector: extraction-review-config
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Configuration (implementation) select shared by both runs"
+  - selector: extraction-review-config-refs
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Resolved configuration refs and versions for the two pipeline types"
+  - selector: extraction-review-stale
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Warning shown when the paragraph changed since the last run"
+  - selector: extraction-review-tabs
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Tab bar switching between schema and individual review"
+  - selector: extraction-review-schema
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema extraction review tab root"
+  - selector: extraction-review-schema-run-meta
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema run header with run id, status chip, configuration and duration"
+  - selector: extraction-review-schema-candidates
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Schema candidates panel with class/property/connection filter and table"
+  - selector: extraction-review-schema-decision-*
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Accept/reject pair in a schema candidate row (extraction-review-schema-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-schema-source-panel
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Source text panel on the schema tab"
+  - selector: extraction-review-schema-source
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Highlighted source paragraph on the schema tab"
+  - selector: extraction-review-schema-inspector
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Inspector for the selected schema candidate"
+  - selector: extraction-review-schema-inspector-decision
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Accept/reject pair in the schema inspector header (buttons suffixed -yes/-no)"
+  - selector: extraction-review-schema-confirm
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Body of the schema apply confirm dialog"
+  - selector: extraction-review-schema-orphan-warning
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Confirm-dialog warning that an accepted connection points at a proposed class that was not accepted"
+  - selector: extraction-review-individual
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Individual extraction review tab root"
+  - selector: extraction-review-individual-run-meta
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Individual run header with run id, status chip, configuration and duration"
+  - selector: extraction-review-triples
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Extracted triples panel with mapped/new filter and table"
+  - selector: extraction-review-individual-decision-*
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Compact accept/reject pair in a triple row (extraction-review-individual-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-recognition
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Recognition / dedup hits panel"
+  - selector: extraction-review-recognition-decision-*
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Merge / keep-separate pair for a recognition hit (extraction-review-recognition-decision-{key}, buttons suffixed -yes/-no)"
+  - selector: extraction-review-individual-source-panel
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Source text panel on the individual tab"
+  - selector: extraction-review-individual-source
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Highlighted source paragraph on the individual tab"
+  - selector: extraction-review-individual-inspector
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Inspector for the selected triple"
+  - selector: extraction-review-individual-inspector-decision
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Accept/reject pair in the triple inspector header (buttons suffixed -yes/-no)"
+  - selector: extraction-review-recognition-inspector
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Inspector for the selected recognition hit"
+  - selector: extraction-review-individual-confirm
+    component: src/components/pipeline/extraction-review/IndividualCandidateReview.tsx
+    description: "Body of the individual apply confirm dialog"
+  - selector: extraction-review-span
+    component: src/components/pipeline/extraction-review/SourceText.tsx
+    description: "Highlighted provenance span; data-span-keys lists the linked item keys"
+  - selector: extraction-review-node-title
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Canonical title of the existing node a mapped NodeReference resolves to"
+  - selector: extraction-review-node-class
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Class line of a NodeReference: \"L<nn> · \" DR layer prefix (when the class is a DR layer class) plus the class title"
+  - selector: extraction-review-apply-result-created
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply summary of entities created (and accepted items already in the graph)"
+  - selector: extraction-review-apply-result-merged
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply list of mentions merged into existing individuals, with the merge source"
+  - selector: extraction-review-apply-result-skipped
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Post-apply list of accepted candidates the server skipped"
+  - selector: extraction-review-provenance
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Provenance (source span) list in an inspector"
+  - selector: extraction-review-unlocated
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Chip marking a provenance quote that could not be located in the text"
+  - selector: extraction-review-schema-*
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Schema tab run state and apply bar (extraction-review-schema-{idle,running,failed,empty,retry,apply-bar,apply,revert})"
+  - selector: extraction-review-individual-*
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Individual tab run state and apply bar (extraction-review-individual-{idle,running,failed,empty,retry,apply-bar,apply,revert})"

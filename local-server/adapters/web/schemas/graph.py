@@ -22,7 +22,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -209,3 +209,76 @@ class SubgraphResultResponse(BaseModel):
         ..., description="The extracted subgraph containing nodes and edges"
     )
     depth: int = Field(..., description="Maximum traversal depth from center node")
+
+
+class GraphViewTaxonomyResponse(BaseModel):
+    """A taxonomy grouping the layers of a graph view."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Taxonomy ID")
+    title: str = Field(..., description="Taxonomy title")
+    identifier: Optional[str] = Field(None, description="Taxonomy identifier")
+
+
+class GraphViewLayerResponse(BaseModel):
+    """A concept scheme rendered as one layer of the graph view."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Concept scheme ID")
+    title: str = Field(..., description="Concept scheme title")
+    identifier: Optional[str] = Field(None, description="Concept scheme identifier")
+    taxonomy_id: str = Field(..., description="ID of the taxonomy the concept scheme belongs to")
+
+
+class GraphViewNodeResponse(BaseModel):
+    """A class or individual in the graph view."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Entity ID")
+    label: str = Field(..., description="Entity title")
+    node_type: Literal["class", "individual"] = Field(..., description="Entity kind")
+    identifier: Optional[str] = Field(None, description="Entity identifier (classes only)")
+    description: Optional[str] = Field(None, description="Entity description")
+    concept_scheme_id: Optional[str] = Field(
+        None,
+        description="Layer (concept scheme) of the node; individuals take it from their first class",
+    )
+    taxonomy_id: Optional[str] = Field(None, description="Taxonomy of the node")
+    class_ids: list[str] = Field(
+        default_factory=list, description="Classes an individual belongs to (empty for classes)"
+    )
+
+
+class GraphViewEdgeResponse(BaseModel):
+    """A directed, typed edge in the graph view."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Stable edge ID")
+    source: str = Field(..., description="Source node ID")
+    target: str = Field(..., description="Target node ID")
+    edge_type: Literal["relationship", "schema", "instance_of", "subclass_of"] = Field(
+        ...,
+        description=(
+            "relationship = asserted relationship; schema = property definition domain -> range; "
+            "instance_of = individual -> class; subclass_of = class -> parent class"
+        ),
+    )
+    predicate_id: Optional[str] = Field(None, description="Property definition ID, when any")
+    predicate: Optional[str] = Field(None, description="Human-readable predicate label")
+
+
+class GraphViewResponse(BaseModel):
+    """Labelled graph read model for visualization: layers, nodes and typed edges."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    taxonomies: list[GraphViewTaxonomyResponse] = Field(..., description="All taxonomies")
+    layers: list[GraphViewLayerResponse] = Field(
+        ..., description="All concept schemes, each rendered as a layer"
+    )
+    nodes: list[GraphViewNodeResponse] = Field(..., description="Classes and individuals")
+    edges: list[GraphViewEdgeResponse] = Field(..., description="Edges between nodes")

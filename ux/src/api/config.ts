@@ -30,6 +30,7 @@ export const QUERY_KEYS = {
   // Graph
   graph: ["graph"] as const,
   graphMetrics: ["graph", "metrics"] as const,
+  graphView: ["graph", "view"] as const,
   graphPath: (sourceId: string, targetId: string) => ["graph", "path", sourceId, targetId] as const,
   // Extraction
   extraction: ["extraction"] as const,
@@ -55,6 +56,12 @@ export const QUERY_KEYS = {
   pipelineRuns: (params?: object) => ["pipeline-runs", params] as const,
   pipelineRun: (runId: string) => ["pipeline-runs", runId] as const,
   pipelineCandidates: (runId: string) => ["pipeline-runs", runId, "candidates"] as const,
+  pipelineSchemaExtractionCandidates: (runId: string) =>
+    ["pipeline-runs", runId, "schema-extraction-candidates"] as const,
+  pipelineIndividualExtractionCandidates: (runId: string) =>
+    ["pipeline-runs", runId, "individual-extraction-candidates"] as const,
+  pipelineRecognitionPreview: (runId: string, thresholds?: object) =>
+    ["pipeline-runs", runId, "recognition-preview", thresholds] as const,
   pipelineRunChangeEvents: (runId: string, options?: object) =>
     ["pipeline-runs", runId, "change-events", options] as const,
   pipelineBatches: ["pipeline-batches"] as const,

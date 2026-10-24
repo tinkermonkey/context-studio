@@ -7,10 +7,15 @@ type PathResultResponse = components["schemas"]["PathResultResponse"];
 type SPARQLRequest = components["schemas"]["SPARQLRequest"];
 type SPARQLResponse = components["schemas"]["SPARQLResponse"];
 type SubgraphDataResponse = components["schemas"]["SubgraphDataResponse"];
+type GraphViewResponse = components["schemas"]["GraphViewResponse"];
 
 class GraphService extends BaseService {
   async buildGraph(): Promise<KnowledgeGraphResponse> {
     return this.post<KnowledgeGraphResponse>("/api/graph/build");
+  }
+
+  async getGraphView(): Promise<GraphViewResponse> {
+    return this.get<GraphViewResponse>("/api/graph/view");
   }
 
   async getMetrics(algorithm?: string): Promise<GraphMetricsResponse> {

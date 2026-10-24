@@ -1,0 +1,172 @@
+/* Extraction review (/app/pipelines/review). Ported from the reference
+   prototype (ux/design/cs/app.css, "Extraction review" block). Heimdall has no
+   highlighted-text primitive, so .xr-span is the one new visual. */
+
+.xr-gap {
+  height: 16px;
+}
+
+.xr-gap-sm {
+  height: 10px;
+}
+
+.xr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.xr-stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.xr-chip-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.xr-actions-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* paragraph + scope pickers */
+.xr-input-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.xr-run-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.xr-apply-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.xr-apply-bar__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.xr-decision {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.xr-node-ref {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.xr-node-ref__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.xr-strong {
+  font-weight: 500;
+}
+
+.xr-muted {
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12.5px;
+}
+
+.xr-mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.xr-mono-muted {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgb(var(--canvas-fg-3));
+  overflow-wrap: anywhere;
+}
+
+.xr-quote {
+  font-size: 12.5px;
+  color: rgb(var(--canvas-fg-2));
+  font-style: italic;
+}
+
+.xr-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.xr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  text-align: center;
+  color: rgb(var(--canvas-fg-3));
+  font-size: 13px;
+}
+
+/* source paragraph with provenance highlights */
+.xr-source-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: rgb(var(--canvas-fg-1));
+  white-space: pre-wrap;
+}
+
+.xr-span {
+  color: inherit;
+  background: rgb(var(--status-cyan) / 0.14);
+  border-bottom: 1px solid rgb(var(--status-cyan) / 0.55);
+  border-radius: 2px;
+  padding: 1px 0;
+  cursor: pointer;
+}
+
+.xr-span--overlap {
+  background: rgb(var(--status-cyan) / 0.26);
+}
+
+.xr-span--active {
+  background: rgb(var(--accent-primary) / 0.32);
+  border-bottom: 2px solid rgb(var(--accent-primary));
+}
+
+.xr-span:focus-visible {
+  outline: 2px solid rgb(var(--accent-primary));
+  outline-offset: 1px;
+}
+
+/* link buttons listing triples in the narrow inspector column */
+.xr-link-wrap {
+  height: auto;
+  min-height: 0;
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+}
