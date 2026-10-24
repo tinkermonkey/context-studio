@@ -36,6 +36,8 @@ export function useApplyRun() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      // Graph views cache for minutes; applied/reverted individuals must show up now.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph });
     },
   });
 }
@@ -51,6 +53,8 @@ export function useRevertRun() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationships() });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individuals() });
+      // Graph views cache for minutes; applied/reverted individuals must show up now.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph });
     },
   });
 }
