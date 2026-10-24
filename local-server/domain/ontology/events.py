@@ -8,7 +8,7 @@ notifications, and trigger-based workflows. All events are frozen dataclasses.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from domain.events import DomainEvent
 
@@ -72,15 +72,16 @@ class ClassUpdated(DomainEvent):
     Attributes:
         class_id: ID of the updated class
         changed_fields: Tuple of field names that changed
-        old_values: Dictionary of field names to their previous values
-        new_values: Dictionary of field names to their new values
+        old_values: Dictionary of field names to their previous values (JSON-safe;
+            ``external_references`` is a list of reference dicts)
+        new_values: Dictionary of field names to their new values (JSON-safe)
     """
 
     _aggregate_id_field: ClassVar[str] = "class_id"
     class_id: str = ""
     changed_fields: tuple[str, ...] = field(default_factory=tuple)
-    old_values: dict[str, str | None] = field(default_factory=dict)
-    new_values: dict[str, str | None] = field(default_factory=dict)
+    old_values: dict[str, Any] = field(default_factory=dict)
+    new_values: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

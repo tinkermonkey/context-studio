@@ -266,6 +266,7 @@ class TestIndividualSelectionApply:
         assert body["individuals_created"] == 1
         assert body["applied_candidate_ids"] == ["triple-1", "triple-2", "triple-3"]
         assert body["skipped_candidate_ids"] == ["triple-0"]
+        assert body["skip_reasons"] == {"triple-0": "not_selected"}
         assert body["merged_mentions"] == [
             {
                 "mention_label": "ACME Corporation",
@@ -296,8 +297,10 @@ class TestIndividualSelectionApply:
         body = _apply(client, individual_run, confidence_threshold=0.5).json()
         # Globex + ACME Corporation created; Initech below threshold; Acme Corp mapped.
         assert body["individuals_created"] == 2
-        assert body["individuals_skipped"] == 1
+        # Below-threshold triples are reported in skip_reasons, not individuals_skipped.
+        assert body["individuals_skipped"] == 0
         assert body["skipped_candidate_ids"] == ["triple-1"]
+        assert body["skip_reasons"] == {"triple-1": "below_threshold"}
         assert body["merged_mentions"] == []
 
     def test_unknown_candidate_id_returns_422_and_writes_nothing(
@@ -406,6 +409,7 @@ class TestSchemaSelectionApply:
         assert body["classes_created"] == 1
         assert body["applied_candidate_ids"] == ["class-1"]
         assert body["skipped_candidate_ids"] == ["class-0"]
+        assert body["skip_reasons"] == {"class-0": "not_selected"}
         titles = {
             c.title for c in ontology_repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)
         }
@@ -474,9 +478,7 @@ class TestSchemaSelectionApply:
         again = client.post(f"/api/pipelines/runs/{run_id}/revert").json()
         assert again["events_reverted"] == 0
 
-    def test_existing_class_title_is_reported_as_existing_not_created(
-        self, client, pipeline_repo
-    ):
+    def test_existing_class_title_is_reported_as_existing_not_created(self, client, pipeline_repo):
         run_id = _completed_run(
             pipeline_repo,
             PipelineType.SCHEMA_EXTRACTION,

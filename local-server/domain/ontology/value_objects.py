@@ -134,6 +134,26 @@ class ExternalReference:
     uri: str | None = None
     metadata: MappingProxyType[str, Any] | None = None
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-safe dict (used in domain event payloads and change events)."""
+        return {
+            "source": self.source,
+            "identifier": self.identifier,
+            "uri": self.uri,
+            "metadata": dict(self.metadata) if self.metadata else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ExternalReference":
+        """Rebuild a reference from a dict produced by ``to_dict``."""
+        metadata = data.get("metadata")
+        return cls(
+            source=data["source"],
+            identifier=data["identifier"],
+            uri=data.get("uri"),
+            metadata=MappingProxyType(dict(metadata)) if metadata else None,
+        )
+
 
 @dataclass(frozen=True)
 class LexicalSense:

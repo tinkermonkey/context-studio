@@ -149,13 +149,13 @@ class TestSchemaNodeGroundingStructural:
 
     def test_apply_service_tracks_external_reference_ids(self):
         """ApplyService must track created external references."""
-        apply_service = SchemaGroundingApplyService(ontology_repo=None)
+        apply_service = SchemaGroundingApplyService(ontology_service=None, ontology_repo=None)
         assert apply_service is not None
 
     def test_apply_service_per_source_contract(self):
         """ApplyService should support multiple grounding sources."""
         # Service should handle different source types
-        SchemaGroundingApplyService(ontology_repo=None)
+        SchemaGroundingApplyService(ontology_service=None, ontology_repo=None)
         result = ApplyResult()
 
         # Should be able to track references from different sources
@@ -168,7 +168,7 @@ class TestSchemaNodeGroundingStructural:
     def test_apply_service_unknown_source_handling(self):
         """ApplyService should validate source type."""
         # This ensures per-source adapter contract is enforced
-        apply_service = SchemaGroundingApplyService(ontology_repo=None)
+        apply_service = SchemaGroundingApplyService(ontology_service=None, ontology_repo=None)
         assert apply_service is not None
 
 

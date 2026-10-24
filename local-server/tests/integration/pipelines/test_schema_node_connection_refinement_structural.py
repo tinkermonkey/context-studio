@@ -142,7 +142,9 @@ class TestSchemaNodeConnectionRefinementStructural:
 
     def test_apply_service_distinguishes_modify_operation(self):
         """Modify must be a real operation, not just add+remove."""
-        apply_service = SchemaConnectionRefinementApplyService(ontology_repo=None)
+        apply_service = SchemaConnectionRefinementApplyService(
+            ontology_service=None, ontology_repo=None
+        )
         assert apply_service is not None
 
         # Verify the service structure exists
@@ -218,7 +220,7 @@ class TestSchemaNodeConnectionRefinementViaHarness:
                 },
             )
 
-            apply_service = SchemaConnectionRefinementApplyService(ontology_repo)
+            apply_service = SchemaConnectionRefinementApplyService(ontology_service, ontology_repo)
             apply_result = apply_service.apply(run)
 
             # Verify all fields are available and distinct

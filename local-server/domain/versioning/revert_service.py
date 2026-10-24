@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from domain.ontology.value_objects import ExternalReference
 from domain.versioning.value_objects import ChangeOperation
 
 if TYPE_CHECKING:
@@ -170,7 +171,9 @@ class RevertService:
                     entity_id, entity_type, event.previous_state
                 )
             elif operation == ChangeOperation.DELETE:
-                operation_applied = self._inverse_delete(entity_id, entity_type, event.new_state)
+                operation_applied = self._inverse_delete(
+                    entity_id, entity_type, self._deleted_state(event)
+                )
 
             if operation_applied:
                 self._change_repo.record_change(
@@ -178,7 +181,11 @@ class RevertService:
                     entity_type=event.entity_type,
                     operation=self._inverse_operation(operation),
                     new_state={},
-                    previous_state=event.new_state,
+                    previous_state=(
+                        self._deleted_state(event)
+                        if operation == ChangeOperation.DELETE
+                        else event.new_state
+                    ),
                     change_reason=f"_reverted_from_{batch_run_id}",
                     batch_run_id=batch_run_id,
                 )
@@ -189,6 +196,18 @@ class RevertService:
                 exc_info=exc,
             )
             raise
+
+    @staticmethod
+    def _deleted_state(event) -> dict:
+        """
+        Return the snapshot of a deleted entity.
+
+        The ChangeEventRecorder stores a deletion's snapshot in ``previous_state``
+        (``new_state`` is empty); older or hand-recorded events carry it in
+        ``new_state``. Note the recorder's snapshots are minimal (e.g. a relationship
+        keeps only its id, endpoints and property definition), so restores are lossy.
+        """
+        return event.new_state or event.previous_state or {}
 
     def _inverse_create(self, entity_id: str, entity_type: str) -> bool:
         """
@@ -377,6 +396,9 @@ class RevertService:
         for key, value in state.items():
             if not hasattr(entity, key):
                 raise ValueError(f"Entity {type(entity).__name__} has no field {key}")
+            if key == "external_references":
+                # Change events carry references as JSON dicts (see ClassUpdated).
+                value = [ExternalReference.from_dict(ref) for ref in value or []]
             try:
                 setattr(entity, key, value)
             except Exception as exc:

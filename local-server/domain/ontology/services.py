@@ -1009,9 +1009,10 @@ class OntologyService:
         title: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> Class:
         """
-        Update a class's title, description, and/or color.
+        Update a class's title, description, color, and/or external references.
 
         Identifier is immutable post-create and cannot be updated.
 
@@ -1027,6 +1028,8 @@ class OntologyService:
             title: New title (optional)
             description: New description (optional)
             color: New hex color string (optional)
+            external_references: New list of external references, replacing the
+                existing list (optional)
 
         Returns:
             The updated Class
@@ -1044,6 +1047,7 @@ class OntologyService:
         old_title = cls.title
         old_description = cls.description
         old_color = cls.color
+        old_references = list(cls.external_references)
 
         title_changed = title is not None and title != cls.title
         desc_changed = description is not None and description != cls.description
@@ -1071,6 +1075,12 @@ class OntologyService:
 
         color_changed = color is not None and cls.color != old_color
 
+        refs_changed = external_references is not None and list(external_references) != list(
+            old_references
+        )
+        if refs_changed:
+            cls.external_references = list(external_references)
+
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
@@ -1078,7 +1088,7 @@ class OntologyService:
             cls.embedding = embedding
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed or color_changed):
+        if not (title_changed or desc_changed or color_changed or refs_changed):
             return cls
 
         cls.last_modified = datetime.now(timezone.utc)
@@ -1091,18 +1101,22 @@ class OntologyService:
             for f, was_changed in [
                 ("title", title_changed),
                 ("description", desc_changed),
+                ("external_references", refs_changed),
             ]
             if was_changed
         )
 
-        old_values: dict[str, str | None] = {}
-        new_values: dict[str, str | None] = {}
+        old_values: dict[str, object] = {}
+        new_values: dict[str, object] = {}
         if title_changed:
             old_values["title"] = old_title
             new_values["title"] = cls.title
         if desc_changed:
             old_values["description"] = old_description
             new_values["description"] = cls.description
+        if refs_changed:
+            old_values["external_references"] = [ref.to_dict() for ref in old_references]
+            new_values["external_references"] = [ref.to_dict() for ref in cls.external_references]
 
         failures = self._event_publisher.publish(
             ClassUpdated(
