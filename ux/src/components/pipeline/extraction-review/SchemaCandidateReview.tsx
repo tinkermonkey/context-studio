@@ -132,7 +132,7 @@ const TYPE_LABEL: Record<CandidateType, string> = {
   schema_connection: "Connections",
 };
 
-export function SchemaCandidateReviewBody({
+function SchemaCandidateReviewBody({
   runId,
   rows,
   text,

@@ -13,7 +13,7 @@ type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
  * accept explicit candidate ids on apply, so apply is threshold-based: only
  * candidates at or above this confidence are written.
  */
-export const NODE_APPLY_CONFIDENCE_THRESHOLD = 0.95;
+const NODE_APPLY_CONFIDENCE_THRESHOLD = 0.95;
 
 interface RunApplyControlsProps {
   run: PipelineRunResponse;

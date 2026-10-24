@@ -202,7 +202,7 @@ export function IndividualCandidateReview({
   );
 }
 
-export function IndividualCandidateReviewBody({
+function IndividualCandidateReviewBody({
   runId,
   triples: rawTriples,
   recognition,
