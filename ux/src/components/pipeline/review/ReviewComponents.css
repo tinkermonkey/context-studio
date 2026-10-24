@@ -253,48 +253,6 @@
     color: rgb(var(--canvas-fg-2));
   }
 
-  /* Schema Extraction Review */
-  .schema-extraction-review {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .schema-table-container {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .schema-select-all-footer {
-    padding: 8px;
-    border-top: 1px solid rgb(var(--canvas-border));
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-  }
-
-  .schema-select-all-checkbox {
-    margin-right: 8px;
-    cursor: pointer;
-  }
-
-  .table-cell-label {
-    font-weight: 500;
-  }
-
-  .table-cell-description {
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .table-cell-confidence {
-    text-align: center;
-  }
-
-  .table-cell-mono {
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-
   /* Definition Refinement Review */
   .definition-refinement-review {
     display: flex;
@@ -399,38 +357,5 @@
     padding-top: 8px;
     border-top: 1px solid rgb(var(--canvas-border));
     margin-top: 8px;
-  }
-
-  /* Individual Extraction Review */
-  .individual-extraction-review {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .individual-select-all-footer {
-    padding: 8px;
-    border-top: 1px solid rgb(var(--canvas-border));
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-  }
-
-  .individual-select-all-checkbox {
-    margin-right: 8px;
-    cursor: pointer;
-  }
-
-  .individual-table-cell-label {
-    font-weight: 500;
-  }
-
-  .individual-table-cell-mono {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgb(var(--canvas-fg-3));
-  }
-
-  .individual-table-cell-confidence {
-    text-align: center;
   }
 }

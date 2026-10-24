@@ -1,19 +1,13 @@
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import {
-  Button,
-  PageHeader,
-  Icon,
-  Chip,
-  StatusBadge,
-  FilterDropdown,
-} from "@tinkermonkey/heimdall-ui";
+import { Button, PageHeader, Icon, Chip, FilterDropdown } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import { RunDetailDrawer } from "@/components/pipeline/RunDetailDrawer";
 import { usePipelineTypes } from "@/api/hooks/pipeline/usePipelineTypes";
 import { usePipelineRuns } from "@/api/hooks/pipeline/usePipelineRuns";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 import { formatDate } from "@/utils/dateFormatting";
 import type { RunListParams } from "@/api/services/pipeline";
@@ -34,10 +28,11 @@ interface FilterState {
 
 const PAGE_SIZE = 20;
 const PIPELINE_STATUS_OPTIONS = [
-  { value: "PENDING", label: "Pending" },
-  { value: "RUNNING", label: "Running" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "FAILED", label: "Failed" },
+  // The API filters on lower-case run status and rejects other spellings.
+  { value: "pending", label: "Pending" },
+  { value: "running", label: "Running" },
+  { value: "completed", label: "Completed" },
+  { value: "failed", label: "Failed" },
 ];
 
 function RunsPageContent({
@@ -190,6 +185,9 @@ function RunsPageContent({
             key={run.id}
             runId={run.id}
             onClose={() => onSelectedIdChange(undefined)}
+            onOpenExtractionReview={(runId) =>
+              navigate({ to: "/app/pipelines/review", search: { runId } })
+            }
           />
         )}
       >
@@ -221,21 +219,21 @@ function RunsPageContent({
                 </div>
                 <div className="runs-table-cell">{run.configuration_slug || "—"}</div>
                 <div className="runs-table-cell">
-                  <StatusBadge
-                    color={
-                      run.status === "PENDING"
+                  <Chip
+                    variant={
+                      hasRunStatus(run.status, "pending")
                         ? "amber"
-                        : run.status === "RUNNING"
+                        : hasRunStatus(run.status, "running")
                           ? "cyan"
-                          : run.status === "COMPLETED"
+                          : hasRunStatus(run.status, "completed")
                             ? "emerald"
-                            : run.status === "FAILED"
+                            : hasRunStatus(run.status, "failed")
                               ? "rose"
                               : "neutral"
                     }
                   >
                     {run.status}
-                  </StatusBadge>
+                  </Chip>
                 </div>
                 <div className="runs-table-cell runs-table-cell--date">
                   {formatDate(run.started_at)}

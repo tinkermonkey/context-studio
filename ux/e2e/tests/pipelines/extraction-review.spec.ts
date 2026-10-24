@@ -17,9 +17,9 @@ import {
 import {
   routeRunToFailure,
   routeRunsToSeededOutput,
-  spanIn,
   type ExtractionPipelineType,
 } from "../../fixtures/pipeline-runs";
+import { locateMention } from "../../../src/components/pipeline/extraction-review/reviewUtils";
 
 /**
  * Extraction review (/app/pipelines/review): paste → run → review → apply → revert.
@@ -124,21 +124,21 @@ function schemaOutput(): Record<string, unknown> {
         label: "Application Interface",
         confidence: 0.9,
         proposed_definition: "An access point where application services are made available.",
-        provenance: [spanIn(TEXT, "Checkout API")],
+        provenance: [locateMention(TEXT, "Checkout API")],
       }, // class-0 (exists → reused)
       {
         kind: "class",
         label: "Event Stream",
         confidence: 0.82,
         proposed_definition: "An ordered channel of published domain events.",
-        provenance: [spanIn(TEXT, "order events")],
+        provenance: [locateMention(TEXT, "order events")],
       }, // class-1
       {
         kind: "class",
         label: "Billing System",
         confidence: 0.41,
         proposed_definition: null,
-        provenance: [spanIn(TEXT, "Billing Engine")],
+        provenance: [locateMention(TEXT, "Billing Engine")],
       }, // class-2
       {
         kind: "property_definition",
@@ -147,7 +147,7 @@ function schemaOutput(): Record<string, unknown> {
         proposed_definition: "The subject emits events onto the object.",
         proposed_domain: "Application Service",
         proposed_range: "Event Stream",
-        provenance: [spanIn(TEXT, "publishes")],
+        provenance: [locateMention(TEXT, "publishes")],
       }, // property-0
     ],
     connections: [
@@ -156,14 +156,14 @@ function schemaOutput(): Record<string, unknown> {
         predicate: "publishes",
         object_ref: "Event Stream",
         confidence: 0.8,
-        provenance: [spanIn(TEXT, "Order Service publishes order events")],
+        provenance: [locateMention(TEXT, "Order Service publishes order events")],
       }, // connection-0
       {
         subject_ref: "Billing System",
         predicate: "publishes",
         object_ref: "Event Stream",
         confidence: 0.52,
-        provenance: [spanIn(TEXT, "to the Billing Engine")],
+        provenance: [locateMention(TEXT, "to the Billing Engine")],
       }, // connection-1
     ],
   };
@@ -190,7 +190,7 @@ function individualOutput(seed: DrSeed): Record<string, unknown> {
         predicate: { property_definition_id: null, label: "is_a" },
         object: { kind: "class", id: interfaceClass.id, label: "Application Interface" },
         confidence: 0.9,
-        provenance: [spanIn(TEXT, "Checkout API")],
+        provenance: [locateMention(TEXT, "Checkout API")],
       }, // triple-0
       {
         subject: {
@@ -202,7 +202,7 @@ function individualOutput(seed: DrSeed): Record<string, unknown> {
         predicate: { property_definition_id: exposes.id, label: "exposes" },
         object: checkoutApi,
         confidence: 0.92,
-        provenance: spanIn(TEXT, "Order Service exposes the Checkout API"),
+        provenance: locateMention(TEXT, "Order Service exposes the Checkout API"),
       }, // triple-1
       {
         subject: {
@@ -214,7 +214,7 @@ function individualOutput(seed: DrSeed): Record<string, unknown> {
         predicate: { property_definition_id: null, label: "calls" },
         object: checkoutApi,
         confidence: 0.85,
-        provenance: spanIn(TEXT, "the Storefront Web App calls"),
+        provenance: locateMention(TEXT, "the Storefront Web App calls"),
       }, // triple-2
       {
         subject: {
@@ -226,7 +226,7 @@ function individualOutput(seed: DrSeed): Record<string, unknown> {
         predicate: { property_definition_id: null, label: "receives" },
         object: { kind: "literal", id: "", label: "order events" },
         confidence: 0.6,
-        provenance: spanIn(TEXT, "order events to the Billing Engine"),
+        provenance: locateMention(TEXT, "order events to the Billing Engine"),
       }, // triple-3
     ],
   };
@@ -485,7 +485,7 @@ test.describe("Extraction review", () => {
       page.getByTestId("extraction-review-schema-source"),
       "property-0 connection-0",
     );
-    const publishesAt = spanIn(TEXT, "publishes");
+    const publishesAt = locateMention(TEXT, "publishes");
     await publishesSpan.click();
     await expect(candidates.getByRole("radio", { name: /Properties/ })).toBeChecked();
     await expect(inspector).toContainText("SCHEMA PROPERTY CANDIDATE");

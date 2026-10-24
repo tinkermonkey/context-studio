@@ -18,7 +18,6 @@ import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
 import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
-import { Route as AppExtractionIndexRouteImport } from './routes/app/extraction/index'
 import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
 import { Route as AppSchemaSchemesRouteImport } from './routes/app/schema/schemes'
 import { Route as AppSchemaRelationshipsRouteImport } from './routes/app/schema/relationships'
@@ -78,11 +77,6 @@ const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
 const AppGraphIndexRoute = AppGraphIndexRouteImport.update({
   id: '/graph/',
   path: '/graph/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppExtractionIndexRoute = AppExtractionIndexRouteImport.update({
-  id: '/extraction/',
-  path: '/extraction/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSchemaTaxonomiesRoute = AppSchemaTaxonomiesRouteImport.update({
@@ -182,7 +176,6 @@ export interface FileRoutesByFullPath {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
-  '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
@@ -207,7 +200,6 @@ export interface FileRoutesByTo {
   '/app/schema/properties': typeof AppSchemaPropertiesRoute
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
-  '/app/extraction': typeof AppExtractionIndexRoute
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
@@ -235,7 +227,6 @@ export interface FileRoutesById {
   '/app/schema/relationships': typeof AppSchemaRelationshipsRoute
   '/app/schema/schemes': typeof AppSchemaSchemesRouteWithChildren
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
-  '/app/extraction/': typeof AppExtractionIndexRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
@@ -264,7 +255,6 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
-    | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/pipelines/batches/$batchId'
@@ -289,7 +279,6 @@ export interface FileRouteTypes {
     | '/app/schema/properties'
     | '/app/schema/relationships'
     | '/app/schema/taxonomies'
-    | '/app/extraction'
     | '/app/graph'
     | '/app/pipelines'
     | '/app/pipelines/batches/$batchId'
@@ -316,7 +305,6 @@ export interface FileRouteTypes {
     | '/app/schema/relationships'
     | '/app/schema/schemes'
     | '/app/schema/taxonomies'
-    | '/app/extraction/'
     | '/app/graph/'
     | '/app/pipelines/'
     | '/app/pipelines/batches/$batchId'
@@ -394,13 +382,6 @@ declare module '@tanstack/react-router' {
       path: '/graph'
       fullPath: '/app/graph/'
       preLoaderRoute: typeof AppGraphIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/extraction/': {
-      id: '/app/extraction/'
-      path: '/extraction'
-      fullPath: '/app/extraction/'
-      preLoaderRoute: typeof AppExtractionIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/schema/taxonomies': {
@@ -551,7 +532,6 @@ interface AppRouteChildren {
   AppSchemaRelationshipsRoute: typeof AppSchemaRelationshipsRoute
   AppSchemaSchemesRoute: typeof AppSchemaSchemesRouteWithChildren
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
-  AppExtractionIndexRoute: typeof AppExtractionIndexRoute
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
   AppPipelinesBatchesBatchIdRoute: typeof AppPipelinesBatchesBatchIdRoute
@@ -574,7 +554,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaRelationshipsRoute: AppSchemaRelationshipsRoute,
   AppSchemaSchemesRoute: AppSchemaSchemesRouteWithChildren,
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
-  AppExtractionIndexRoute: AppExtractionIndexRoute,
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
   AppPipelinesBatchesBatchIdRoute: AppPipelinesBatchesBatchIdRoute,
