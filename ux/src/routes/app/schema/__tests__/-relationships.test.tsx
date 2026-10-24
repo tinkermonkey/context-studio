@@ -14,6 +14,7 @@ import {
   createListTaxonomies,
   createListSchemes,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 import { RelationshipsPage } from "../relationships";
 
 // The Predicate column renders the property *identifier* wrapped in mono
@@ -304,6 +305,63 @@ describe("Relationships Schema Page", () => {
         expect(
           screen.getByText("Try adjusting your search or filters to find relationships."),
         ).toBeInTheDocument();
+      });
+    });
+  });
+
+  // ========================================================================
+  // Fetch-all limit and counts
+  // ========================================================================
+  describe("full data set", () => {
+    it("requests the fetch-all limit and shows the backend total as the tab count", async () => {
+      const requestedLimits: Record<string, string | null> = {};
+      const recordLimit = (name: string, request: Request) => {
+        requestedLimits[name] = new URL(request.url).searchParams.get("limit");
+      };
+      const relationships = {
+        ...createListRelationships([createRelationship({ id: "rel-1" })]),
+        total: 595,
+      };
+
+      server.use(
+        http.get("*/api/relationships", ({ request }) => {
+          recordLimit("relationships", request);
+          return HttpResponse.json(relationships);
+        }),
+        http.get("*/api/classes", ({ request }) => {
+          recordLimit("classes", request);
+          return HttpResponse.json(createListClasses([]));
+        }),
+        http.get("*/api/properties", ({ request }) => {
+          recordLimit("properties", request);
+          return HttpResponse.json(createListProperties([]));
+        }),
+        http.get("*/api/taxonomies", ({ request }) => {
+          recordLimit("taxonomies", request);
+          return HttpResponse.json(createListTaxonomies([]));
+        }),
+        http.get("*/api/schemes", ({ request }) => {
+          recordLimit("schemes", request);
+          return HttpResponse.json(createListSchemes([]));
+        }),
+      );
+
+      render(<RelationshipsPage />);
+
+      // The relationships tab count is the backend total, not the loaded row count.
+      await waitFor(() => {
+        expect(screen.getByRole("tab", { name: "Relationships" })).toHaveAttribute(
+          "data-count",
+          "595",
+        );
+      });
+      const expected = String(LIST_FETCH_ALL_LIMIT);
+      expect(requestedLimits).toEqual({
+        relationships: expected,
+        classes: expected,
+        properties: expected,
+        taxonomies: expected,
+        schemes: expected,
       });
     });
   });

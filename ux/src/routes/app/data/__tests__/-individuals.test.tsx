@@ -10,6 +10,7 @@ import {
   createListClasses,
   createClass,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 import { IndividualsPage } from "../individuals";
 
 const server = setupServer();
@@ -170,6 +171,32 @@ describe("Individuals Data Page", () => {
       await waitFor(() => {
         expect(screen.getByText("John Doe")).toBeInTheDocument();
         expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+      });
+    });
+
+    it("requests individuals and classes with the fetch-all limit", async () => {
+      const requestedLimits: Record<string, string | null> = {};
+      server.use(
+        http.get("*/api/individuals", ({ request }) => {
+          requestedLimits.individuals = new URL(request.url).searchParams.get("limit");
+          return HttpResponse.json(
+            createListIndividuals([createIndividual({ id: "ind-1", title: "John Doe" })]),
+          );
+        }),
+        http.get("*/api/classes", ({ request }) => {
+          requestedLimits.classes = new URL(request.url).searchParams.get("limit");
+          return HttpResponse.json(createListClasses([]));
+        }),
+      );
+
+      render(<IndividualsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+      });
+      expect(requestedLimits).toEqual({
+        individuals: String(LIST_FETCH_ALL_LIMIT),
+        classes: String(LIST_FETCH_ALL_LIMIT),
       });
     });
 

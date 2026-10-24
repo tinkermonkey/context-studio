@@ -27,6 +27,7 @@ import {
   getActiveItemId,
   getBreadcrumbLabels,
 } from "./-app-navigation";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
@@ -84,19 +85,19 @@ function AppShell() {
 
   const { data: health, isError } = useHealth();
   const { data: config } = useConfig();
-  const { data: classes } = useClasses();
-  const { data: individuals } = useIndividuals();
-  const { data: taxonomies } = useTaxonomies();
-  const { data: schemes } = useSchemes();
-  const { data: properties } = useProperties();
-  const { data: relationships } = useRelationships();
+  const { data: classes } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: individuals } = useIndividuals({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: taxonomies } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: schemes } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: properties } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: relationships } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
 
   const classCount = classes?.total ?? 0;
   const individualCount = individuals?.total ?? 0;
   const taxonomyCount = taxonomies?.total ?? 0;
   const schemeCount = schemes?.total ?? 0;
   const propertyCount = properties?.total ?? 0;
-  const relationshipCount = relationships?.items?.length ?? relationships?.total ?? 0;
+  const relationshipCount = relationships?.total ?? 0;
 
   const workspaceName = (() => {
     const displayName = config?.sections?.workspace?.display_name;

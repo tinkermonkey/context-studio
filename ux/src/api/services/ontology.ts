@@ -50,12 +50,19 @@ export interface RelationshipListParams {
   source_id?: string;
   target_id?: string;
   property_id?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ListPageParams {
+  limit?: number;
+  offset?: number;
 }
 
 class OntologyService extends BaseService {
   // Taxonomies
-  async listTaxonomies(): Promise<ListTaxonomies> {
-    return this.get<ListTaxonomies>("/api/taxonomies");
+  async listTaxonomies(params?: ListPageParams): Promise<ListTaxonomies> {
+    return this.get<ListTaxonomies>("/api/taxonomies", params as Record<string, unknown>);
   }
 
   async getTaxonomy(id: string): Promise<TaxonomyResponse> {
@@ -87,11 +94,9 @@ class OntologyService extends BaseService {
   }
 
   // Concept Schemes
-  async listSchemes(taxonomyId?: string): Promise<ListSchemes> {
-    return this.get<ListSchemes>(
-      "/api/schemes",
-      taxonomyId ? { taxonomy_id: taxonomyId } : undefined,
-    );
+  async listSchemes(taxonomyId?: string, params?: ListPageParams): Promise<ListSchemes> {
+    const query = { ...(taxonomyId ? { taxonomy_id: taxonomyId } : {}), ...params };
+    return this.get<ListSchemes>("/api/schemes", Object.keys(query).length ? query : undefined);
   }
 
   async getScheme(id: string): Promise<ConceptSchemeResponse> {
@@ -186,10 +191,11 @@ class OntologyService extends BaseService {
   }
 
   // Property Definitions
-  async listProperties(isRelevant?: boolean): Promise<ListProperties> {
+  async listProperties(isRelevant?: boolean, params?: ListPageParams): Promise<ListProperties> {
+    const query = { ...(isRelevant !== undefined ? { is_relevant: isRelevant } : {}), ...params };
     return this.get<ListProperties>(
       "/api/properties",
-      isRelevant !== undefined ? { is_relevant: isRelevant } : undefined,
+      Object.keys(query).length ? query : undefined,
     );
   }
 

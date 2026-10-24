@@ -839,6 +839,31 @@ class SQLiteOntologyRepository:
 
             return individuals
 
+    def count_individuals(self, class_id: Optional[str] = None) -> int:
+        """
+        Count individuals, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by (rdf:type) - matches any parent class
+
+        Returns:
+            Number of matching Individual entities
+        """
+        with self.session_factory() as session:
+            query = session.query(OntologyEntity).filter(
+                OntologyEntity.node_type == NodeType.INDIVIDUAL
+            )
+
+            if class_id is not None:
+                subquery = (
+                    session.query(IndividualClass.individual_id)
+                    .filter(IndividualClass.class_id == class_id)
+                    .distinct()
+                )
+                query = query.filter(OntologyEntity.id.in_(subquery))
+
+            return query.count()
+
     def save_individual(self, individual: Individual) -> Individual:
         """
         Create or update an individual.

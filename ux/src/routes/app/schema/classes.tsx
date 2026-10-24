@@ -23,6 +23,7 @@ import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { classesCopy } from "./classes/-copy";
 import type { components } from "@/api/types";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
@@ -40,11 +41,20 @@ export function ClassesPage() {
   const searchParams = useSearch({ from: "/app/schema/classes" });
   const createForScheme = searchParams.createForScheme;
 
-  const { data: listResponse, isLoading, error, refetch } = useClasses();
-  const { data: schemesResponse, error: schemesError, refetch: refetchSchemes } = useSchemes();
-  const { data: taxData } = useTaxonomies();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
+  const {
+    data: listResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  const {
+    data: schemesResponse,
+    error: schemesError,
+    refetch: refetchSchemes,
+  } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: taxData } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: propsData } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
 
   const deleteMutation = useDeleteClass();
   const moveMutation = useMoveClass();
@@ -87,7 +97,7 @@ export function ClassesPage() {
     {
       id: "relationships",
       label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
+      count: relsData?.total,
     },
   ];
 

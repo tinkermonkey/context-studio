@@ -621,6 +621,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
               onClick: () => onSelectTab(tab.id),
               role: "tab",
               "aria-selected": activeTabId === tab.id,
+              "data-count": tab.count,
             },
             tab.label,
           ),

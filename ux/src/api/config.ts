@@ -1,3 +1,10 @@
+/**
+ * Page size the schema/data list pages and the app shell request so they
+ * receive the whole data set (matches the backend's maximum `limit`).
+ * Stopgap: server-side pagination is the long-term replacement.
+ */
+export const LIST_FETCH_ALL_LIMIT = 5000;
+
 export const QUERY_KEYS = {
   // Admin
   health: ["health"] as const,

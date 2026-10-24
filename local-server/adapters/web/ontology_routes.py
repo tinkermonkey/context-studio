@@ -137,7 +137,7 @@ async def create_taxonomy(
 
 @router.get("/taxonomies", response_model=ListResponse[TaxonomyResponse])
 async def list_taxonomies(
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
         None,
@@ -152,7 +152,7 @@ async def list_taxonomies(
     Retrieve taxonomies with optional pagination, sorting, and text search.
 
     Args:
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (title, created_at, last_modified)
         sort_order: Sort direction (asc or desc, default asc)
@@ -366,7 +366,7 @@ async def create_concept_scheme(
 @router.get("/schemes", response_model=ListResponse[ConceptSchemeResponse])
 async def list_concept_schemes(
     taxonomy_id: Optional[str] = Query(None, description="Optional taxonomy ID to filter by"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
         None,
@@ -382,7 +382,7 @@ async def list_concept_schemes(
 
     Args:
         taxonomy_id: Optional taxonomy ID to filter by
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (title, created_at, last_modified)
         sort_order: Sort direction (asc or desc, default asc)
@@ -548,7 +548,7 @@ async def list_classes(
     parent_class_id: Optional[str] = Query(
         None, description="Optional parent class ID to filter by"
     ),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[ClassResponse]:
@@ -558,7 +558,7 @@ async def list_classes(
     Args:
         concept_scheme_id: Optional concept scheme ID to filter by
         parent_class_id: Optional parent class ID to filter by
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         service: OntologyService from dependency injection
 
@@ -748,7 +748,7 @@ async def list_relationships(
     property_id: Optional[str] = Query(
         None, description="Optional property definition ID to filter by"
     ),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
         None, pattern="^created_at$", description="Field to sort by (created_at)"
@@ -763,7 +763,7 @@ async def list_relationships(
         source_id: Optional source entity ID to filter by
         target_id: Optional target entity ID to filter by
         property_id: Optional property definition ID to filter by
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (created_at)
         sort_order: Sort direction (asc or desc, default asc)
@@ -892,7 +892,7 @@ async def list_property_definitions(
     is_relevant: Optional[bool] = Query(
         None, description="Optional filter for relevant properties"
     ),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     sort_by: Optional[str] = Query(
         None,
@@ -908,7 +908,7 @@ async def list_property_definitions(
 
     Args:
         is_relevant: Optional filter for relevant properties
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (title, created_at, last_modified)
         sort_order: Sort direction (asc or desc, default asc)
@@ -1081,7 +1081,7 @@ async def create_attribute_definition(
 )
 async def list_class_attribute_definitions(
     class_id: str,
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[AttributeDefinitionResponse]:
@@ -1090,7 +1090,7 @@ async def list_class_attribute_definitions(
 
     Args:
         class_id: The ID of the class
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         service: OntologyService from dependency injection
 
@@ -1261,7 +1261,7 @@ async def create_individual(
 @router.get("/individuals", response_model=ListResponse[IndividualResponse])
 async def list_individuals(
     class_id: Optional[str] = Query(None, description="Optional class ID to filter by"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
+    limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[IndividualResponse]:
@@ -1270,7 +1270,7 @@ async def list_individuals(
 
     Args:
         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
-        limit: Maximum number of results (1-1000, default 100)
+        limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         service: OntologyService from dependency injection
 
@@ -1278,13 +1278,12 @@ async def list_individuals(
         ListResponse containing matching individuals
     """
     try:
-        # For now, we get all individuals and apply pagination in memory
-        # In the future, the repository should support limit/offset directly
-        all_individuals = await run_sync_in_executor(service.list_individuals, class_id)
-        total = len(all_individuals)
-        paginated = all_individuals[offset : offset + limit]
+        individuals = await run_sync_in_executor(
+            service.list_individuals, class_id, limit, offset
+        )
+        total = await run_sync_in_executor(service.count_individuals, class_id)
         return ListResponse(
-            items=[IndividualResponse.model_validate(i) for i in paginated],
+            items=[IndividualResponse.model_validate(i) for i in individuals],
             total=total,
             limit=limit,
             offset=offset,

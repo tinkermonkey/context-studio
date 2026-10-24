@@ -22,6 +22,7 @@ import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { schemesCopy } from "./schemes/-copy";
 import type { components } from "@/api/types";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 
@@ -42,14 +43,19 @@ export function SchemesIndexPage() {
     data: taxonomiesResponse,
     error: taxonomiesError,
     refetch: refetchTaxonomies,
-  } = useTaxonomies();
+  } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
   const taxonomies = taxonomiesResponse?.items ?? [];
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
 
-  const { data: listResponse, isLoading, error, refetch } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: propsData } = useProperties();
-  const { data: relsData } = useRelationships();
+  const {
+    data: listResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: propsData } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
 
   const deleteMutation = useDeleteScheme();
   const moveMutation = useMoveScheme();
@@ -80,7 +86,7 @@ export function SchemesIndexPage() {
     {
       id: "relationships",
       label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
+      count: relsData?.total,
     },
   ];
 

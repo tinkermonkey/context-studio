@@ -26,6 +26,7 @@ import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { propertiesCopy } from "./properties/-copy";
 import type { components } from "@/api/types";
+import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
 
@@ -41,11 +42,16 @@ export function PropertiesPage() {
   const { toast } = useToasts();
   const [searchFilter, setSearchFilter] = useState("");
 
-  const { data: listResponse, isLoading, error, refetch } = useProperties();
-  const { data: taxData } = useTaxonomies();
-  const { data: schemesData } = useSchemes();
-  const { data: classesData } = useClasses();
-  const { data: relsData } = useRelationships();
+  const {
+    data: listResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: taxData } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: schemesData } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
+  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
+  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
 
   const deleteMutation = useDeleteProperty();
   const relevanceMutation = useSetPropertyRelevance();
@@ -67,7 +73,7 @@ export function PropertiesPage() {
     {
       id: "relationships",
       label: "Relationships",
-      count: relsData?.items?.length ?? relsData?.total,
+      count: relsData?.total,
     },
   ];
 

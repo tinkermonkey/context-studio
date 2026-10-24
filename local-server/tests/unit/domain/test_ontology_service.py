@@ -2485,6 +2485,53 @@ class TestListIndividuals:
         assert ind1 in dog_individuals
         assert ind2 in dog_individuals
 
+    def test_list_individuals_passes_limit_and_offset(self, service):
+        """List individuals pages through results with limit and offset."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        for i in range(5):
+            service.create_individual(cls.id, title=f"Dog {i}")
+
+        assert len(service.list_individuals(limit=2)) == 2
+        assert len(service.list_individuals(limit=2, offset=4)) == 1
+        assert len(service.list_individuals(limit=None)) == 5
+
+
+class TestCountClassesAndIndividuals:
+    """Tests for count_classes and count_individuals beyond the default page size."""
+
+    def test_count_classes_exceeds_default_page_size(self, service):
+        """count_classes returns the true count when more than 100 classes exist."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        other = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+        for i in range(105):
+            service.create_class(concept_scheme_id=scheme.id, title=f"Animal {i}")
+        service.create_class(concept_scheme_id=other.id, title="Fern")
+
+        assert service.count_classes() == 106
+        assert service.count_classes(concept_scheme_id=scheme.id) == 105
+        assert service.count_classes(concept_scheme_id=other.id) == 1
+
+    def test_count_individuals_exceeds_default_page_size(self, service):
+        """count_individuals returns the true count when more than 100 individuals exist."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        cat = service.create_class(concept_scheme_id=scheme.id, title="Cat")
+        for i in range(105):
+            service.create_individual(dog.id, title=f"Dog {i}")
+        service.create_individual(cat.id, title="Whiskers")
+
+        assert service.count_individuals() == 106
+        assert service.count_individuals(class_id=dog.id) == 105
+        assert service.count_individuals(class_id=cat.id) == 1
+
+    def test_count_individuals_empty(self, service):
+        """count_individuals returns zero when none exist."""
+        assert service.count_individuals() == 0
+
 
 class TestUpdateIndividual:
     """Tests for update_individual."""

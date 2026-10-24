@@ -26,6 +26,7 @@ from domain.extraction.span_resolution import find_all_spans
 from domain.extraction.value_objects import SourceSpan
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.llm_json import extract_json
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
@@ -385,6 +386,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 'Example: ["Microservice", "Message Queue", "API Gateway"]'
             )
 
+            # No response_format="json" here: providers map it to JSON-object mode,
+            # which forbids the top-level array this stage asks for.
             response = await self._call_llm(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
@@ -394,7 +397,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
             chunk_candidates: list[str] = []
             try:
-                parsed = json.loads(response.content)
+                parsed = extract_json(response.content)
                 if isinstance(parsed, list):
                     chunk_candidates = [s for c in parsed if (s := str(c).strip())]
             except json.JSONDecodeError as e:
@@ -477,12 +480,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=1000,
+            max_tokens=3000,
+            response_format="json",
         )
 
         definitions_dict: dict[str, str] = {}
         try:
-            parsed = json.loads(response.content)
+            parsed = extract_json(response.content)
             if isinstance(parsed, dict):
                 definitions_dict = {k: str(v) for k, v in parsed.items()}
             else:
@@ -587,11 +591,20 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=500,
+            max_tokens=4000,
+            response_format="json",
         )
+        if response.finish_reason == "length":
+            warning = {
+                "stage": "connection_proposal",
+                "error": "LLM reply was cut off at max_tokens",
+                "response_preview": response.content[-200:],
+                "fallback_action": "connections and properties may be incomplete",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
         try:
-            parsed = json.loads(response.content)
+            parsed = extract_json(response.content)
             if isinstance(parsed, dict):
                 for rel in parsed.get("relationships", []):
                     subject = rel.get("subject", "")
@@ -702,12 +715,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=500,
+            max_tokens=2000,
+            response_format="json",
         )
 
         disambiguated = list(state.candidate_classes)
         try:
-            parsed = json.loads(response.content)
+            parsed = extract_json(response.content)
             if isinstance(parsed, dict):
                 for ambig in parsed.get("ambiguous_terms", []):
                     term = ambig.get("term", "")
