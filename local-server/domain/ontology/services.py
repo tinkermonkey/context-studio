@@ -575,7 +575,7 @@ class OntologyService:
 
         # For a draft taxonomy, count all classes as "added" (they will be published)
         # In a full version history system, we would compare with the last published version
-        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
         total_classes = 0
         for scheme in schemes:
             total_classes += self.count_classes(concept_scheme_id=scheme.id)

@@ -165,7 +165,7 @@ class GraphAnalysisService:
         entities, relationships = self._repository.get_all_entities_and_relationships()
 
         # Fetch property definitions separately
-        property_definitions = self._repository.list_property_definitions()
+        property_definitions = self._repository.list_property_definitions(limit=None)
 
         # Convert entities to node dicts
         nodes = []
@@ -480,7 +480,7 @@ class GraphAnalysisService:
             return None
 
         # Build property definition map once for efficient lookup
-        property_defs = self._repository.list_property_definitions()
+        property_defs = self._repository.list_property_definitions(limit=None)
         prop_def_map = {prop.id: prop.title for prop in property_defs}
 
         # Retrieve relationship labels for edges in the path
@@ -517,7 +517,7 @@ class GraphAnalysisService:
         paths = self._graph_engine.all_paths(source_id, target_id, max_depth)
 
         # Build property definition map once for efficient lookup across all paths
-        property_defs = self._repository.list_property_definitions()
+        property_defs = self._repository.list_property_definitions(limit=None)
         prop_def_map = {prop.id: prop.title for prop in property_defs}
 
         results = []
