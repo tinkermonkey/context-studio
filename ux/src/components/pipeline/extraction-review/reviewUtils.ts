@@ -65,7 +65,7 @@ export function countDecisions(
   return c;
 }
 
-/** "motivation.stakeholder" → { layer: "motivation", num: "01" } for DR spec class ids. */
+/** DR spec layers (spec 0.9.x). Unknown layers (e.g. a newer spec's 13th) map to null. */
 const DR_LAYERS: Record<string, string> = {
   motivation: "01",
   business: "02",
@@ -81,9 +81,24 @@ const DR_LAYERS: Record<string, string> = {
   testing: "12",
 };
 
-export function drLayerOf(classId?: string | null): { layer: string; num: string } | null {
-  if (!classId || !classId.includes(".")) return null;
-  const layer = classId.split(".")[0];
-  const num = DR_LAYERS[layer];
-  return num ? { layer, num } : null;
+/** Layer keys as they appear in imported Class identifiers ("data-model" → "data_model"), longest first. */
+const DR_LAYER_SLUGS = Object.keys(DR_LAYERS)
+  .map((layer) => ({ layer, slug: layer.replace(/-/g, "_") }))
+  .sort((a, b) => b.slug.length - a.slug.length);
+
+/**
+ * Map a DR class key to its layer. Accepts the dotted spec node id
+ * ("motivation.stakeholder") and the imported Class identifier slug
+ * ("motivation_stakeholder", "data_model_entity").
+ */
+export function drLayerOf(classKey?: string | null): { layer: string; num: string } | null {
+  if (!classKey) return null;
+  const key = classKey.toLowerCase();
+  if (key.includes(".")) {
+    const layer = key.split(".")[0];
+    const num = DR_LAYERS[layer];
+    return num ? { layer, num } : null;
+  }
+  const hit = DR_LAYER_SLUGS.find(({ slug }) => key.startsWith(`${slug}_`));
+  return hit ? { layer: hit.layer, num: DR_LAYERS[hit.layer] } : null;
 }

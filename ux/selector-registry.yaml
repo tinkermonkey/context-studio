@@ -2695,6 +2695,9 @@ selectors:
   - selector: extraction-review-node-title
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
     description: "Canonical title of the existing node a mapped NodeReference resolves to"
+  - selector: extraction-review-node-class
+    component: src/components/pipeline/extraction-review/ReviewParts.tsx
+    description: "Class line of a NodeReference: \"L<nn> · \" DR layer prefix (when the class is a DR layer class) plus the class title"
   - selector: extraction-review-apply-result-created
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
     description: "Post-apply summary of entities created (and accepted items already in the graph)"

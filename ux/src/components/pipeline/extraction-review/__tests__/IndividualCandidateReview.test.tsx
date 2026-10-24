@@ -7,6 +7,8 @@ import { renderWithProviders } from "@/test/test-utils";
 import { IndividualCandidateReview } from "../IndividualCandidateReview";
 import { RECOGNITION, SCOPE, TRIPLES, XR_TEXT, makeRun } from "./fixtures";
 
+const DR_CLASS_UUID = "6313b6e5-26a1-4c3e-9f1a-0b2c3d4e5f60";
+
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
@@ -19,10 +21,10 @@ const slot = {
 
 let previewBody: unknown = null;
 
-async function renderReady() {
+async function renderReady(triples = TRIPLES) {
   server.use(
     http.get("*/api/pipelines/runs/run-i/individual-extraction-candidates", () =>
-      HttpResponse.json(TRIPLES),
+      HttpResponse.json(triples),
     ),
     http.post("*/api/pipelines/runs/run-i/recognition-preview", async ({ request }) => {
       previewBody = await request.json();
@@ -46,6 +48,50 @@ describe("IndividualCandidateReview", () => {
     expect(within(triples).getAllByText("new property")[0]).toHaveClass("chip--amber");
     expect(previewBody).toEqual({ confidence_threshold: 0, recognition_threshold: 0.9 });
     expect(screen.getByText("RECOGNITION").closest(".stat-tile")).toHaveTextContent("2 / 3");
+  });
+
+  it("shows the DR layer and class title for a class referenced by UUID", async () => {
+    server.use(
+      http.get(`*/api/classes/${DR_CLASS_UUID}`, () =>
+        HttpResponse.json({
+          id: DR_CLASS_UUID,
+          concept_scheme_id: "cs-motivation",
+          taxonomy_id: "tx-dr",
+          identifier: "motivation_stakeholder",
+          title: "Stakeholder",
+        }),
+      ),
+    );
+    const triples = TRIPLES.map((t, i) =>
+      i === 1 ? { ...t, subject: { ...t.subject, class_ids: [DR_CLASS_UUID] } } : t,
+    );
+    await renderReady(triples);
+    const table = screen.getByTestId("extraction-review-triples");
+    const classLines = await within(table).findAllByText("L01 · Stakeholder");
+    expect(classLines[0]).toHaveAttribute("data-testid", "extraction-review-node-class");
+    expect(classLines[0]).toHaveClass("xr-mono-muted");
+  });
+
+  it("renders no layer prefix for a class outside the known DR layers", async () => {
+    server.use(
+      http.get(`*/api/classes/${DR_CLASS_UUID}`, () =>
+        HttpResponse.json({
+          id: DR_CLASS_UUID,
+          concept_scheme_id: "cs-product",
+          taxonomy_id: "tx-dr",
+          identifier: "product_feature",
+          title: "Feature",
+        }),
+      ),
+    );
+    const triples = TRIPLES.map((t, i) =>
+      i === 1 ? { ...t, subject: { ...t.subject, class_ids: [DR_CLASS_UUID] } } : t,
+    );
+    await renderReady(triples);
+    const table = screen.getByTestId("extraction-review-triples");
+    const line = await within(table).findByText("Feature");
+    expect(line).toHaveAttribute("data-testid", "extraction-review-node-class");
+    expect(line.textContent).toBe("Feature");
   });
 
   it("filters triples to those with a new node", async () => {

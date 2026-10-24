@@ -42,13 +42,35 @@ export function ProvenanceList({ provenance }: { provenance: SourceSpan[] }) {
 // ---- Class id → title (class ids are UUIDs in the graph) ----------------
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const DR_SOURCE = "documentation_robotics";
+
+/**
+ * Resolve a node's class id (a UUID in real runs, a spec id in fixtures) to its
+ * display title and DR layer. The layer comes from the class's DR external
+ * reference (dotted spec id) or, failing that, its identifier slug.
+ */
+export function useClassMeta(id?: string | null): {
+  title: string;
+  layer: { layer: string; num: string } | null;
+} {
+  const raw = id ?? "";
+  const { data } = useClass(UUID_RE.test(raw) ? raw : "");
+  const drRef = data?.external_references?.find((r) => r.source === DR_SOURCE)?.identifier;
+  return {
+    title: data?.title ?? raw,
+    layer: drLayerOf(drRef ?? data?.identifier ?? raw),
+  };
+}
+
 export function ClassLabel({ id }: { id: string }) {
-  const { data } = useClass(UUID_RE.test(id) ? id : "");
-  return <>{data?.title ?? id}</>;
+  const { title } = useClassMeta(id);
+  return <>{title}</>;
 }
 
 // ---- NodeReference cell: label + mapped/new + DR layer · class ----------
 export function NodeRefCell({ node }: { node: NodeReference }) {
+  const cls = node.kind === "literal" ? undefined : node.class_ids?.[0];
+  const { title: clsTitle, layer } = useClassMeta(cls);
   if (node.kind === "literal") {
     return (
       <div className="xr-node-ref">
@@ -61,8 +83,6 @@ export function NodeRefCell({ node }: { node: NodeReference }) {
     );
   }
   const mapped = !!node.id;
-  const cls = node.class_ids?.[0];
-  const layer = drLayerOf(cls);
   return (
     <div className="xr-node-ref">
       <div className="xr-node-ref__head">
@@ -75,9 +95,9 @@ export function NodeRefCell({ node }: { node: NodeReference }) {
         </span>
       )}
       {cls && (
-        <span className="xr-mono-muted">
+        <span className="xr-mono-muted" data-testid="extraction-review-node-class">
           {layer ? `L${layer.num} · ` : ""}
-          <ClassLabel id={cls} />
+          {clsTitle}
         </span>
       )}
     </div>

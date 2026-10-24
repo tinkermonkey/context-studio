@@ -39,8 +39,9 @@ import {
   ProvenanceList,
   RunMeta,
   RunStateBody,
+  useClassMeta,
 } from "./ReviewParts";
-import { countDecisions, drLayerOf, locateMention, pct } from "./reviewUtils";
+import { countDecisions, locateMention, pct } from "./reviewUtils";
 import { useReviewApplyFlow } from "./useReviewApplyFlow";
 import type { ReviewScope } from "./ExtractionReviewPage";
 import "./ExtractionReview.css";
@@ -74,6 +75,54 @@ const tripleLabel = (t: TripleRow) =>
   `${t.subject.label} → ${t.predicate.label} → ${t.object.label}`;
 const isNewNode = (n: NodeReference) => n.kind !== "literal" && !n.id;
 const usesMention = (t: TripleRow, m: string) => t.subject.label === m || t.object.label === m;
+
+/** Inspector key/value grid for one triple endpoint (subject or object). */
+function NodeKV({ node, hit }: { node: NodeReference; hit?: HitRow }) {
+  const cls = node.kind === "literal" ? undefined : node.class_ids?.[0];
+  const { title: clsTitle, layer } = useClassMeta(cls);
+  if (node.kind === "literal") {
+    return (
+      <KVGrid
+        rows={[
+          { key: "kind", value: "literal" },
+          { key: "value", value: <span className="xr-mono">{node.value ?? node.label}</span> },
+          { key: "datatype", value: <span className="xr-mono">{node.datatype ?? "—"}</span> },
+        ]}
+      />
+    );
+  }
+  return (
+    <KVGrid
+      rows={[
+        { key: "label", value: node.label },
+        {
+          key: "status",
+          value: node.id ? (
+            <Chip variant="emerald">mapped</Chip>
+          ) : (
+            <Chip variant="amber">new individual</Chip>
+          ),
+        },
+        ...(node.id
+          ? [
+              ...(node.title ? [{ key: "existing_title", value: node.title }] : []),
+              { key: "individual_id", value: <span className="xr-mono-muted">{node.id}</span> },
+            ]
+          : []),
+        { key: "class", value: cls ? clsTitle : "—" },
+        ...(layer ? [{ key: "dr_layer", value: `L${layer.num} · ${layer.layer}` }] : []),
+        ...(hit && hit.will_match_existing
+          ? [
+              {
+                key: "recognized_as",
+                value: `${hit.resolved_individual_title} (${hit.match_method ?? "?"} ${pct(hit.match_score)})`,
+              },
+            ]
+          : []),
+      ]}
+    />
+  );
+}
 
 export interface IndividualCandidateReviewProps {
   slot: ReviewRunSlot;
@@ -238,45 +287,6 @@ export function IndividualCandidateReviewBody({
   const accepted = triples.filter((t) => decisions[t.id] === "yes").map((t) => t.id);
   const undecidedMatches = mergeCounts.pending;
 
-  const nodeKV = (node: NodeReference) => {
-    if (node.kind === "literal")
-      return [
-        { key: "kind", value: "literal" },
-        { key: "value", value: <span className="xr-mono">{node.value ?? node.label}</span> },
-        { key: "datatype", value: <span className="xr-mono">{node.datatype ?? "—"}</span> },
-      ];
-    const cls = node.class_ids?.[0];
-    const layer = drLayerOf(cls);
-    const h = hitFor(node);
-    return [
-      { key: "label", value: node.label },
-      {
-        key: "status",
-        value: node.id ? (
-          <Chip variant="emerald">mapped</Chip>
-        ) : (
-          <Chip variant="amber">new individual</Chip>
-        ),
-      },
-      ...(node.id
-        ? [
-            ...(node.title ? [{ key: "existing_title", value: node.title }] : []),
-            { key: "individual_id", value: <span className="xr-mono-muted">{node.id}</span> },
-          ]
-        : []),
-      { key: "class", value: cls ? <ClassLabel id={cls} /> : "—" },
-      ...(layer ? [{ key: "dr_layer", value: `L${layer.num} · ${layer.layer}` }] : []),
-      ...(h && h.will_match_existing
-        ? [
-            {
-              key: "recognized_as",
-              value: `${h.resolved_individual_title} (${h.match_method ?? "?"} ${pct(h.match_score)})`,
-            },
-          ]
-        : []),
-    ];
-  };
-
   const renderInspector = (item: { id: string }) => {
     const t = triples.find((x) => x.id === item.id);
     const h = hits.find((x) => x.id === item.id);
@@ -310,7 +320,7 @@ export function IndividualCandidateReviewBody({
             data-testid="extraction-review-individual-inspector"
           >
             <InspectorPanel.Section title="Subject">
-              <KVGrid rows={nodeKV(t.subject)} />
+              <NodeKV node={t.subject} hit={hitFor(t.subject)} />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Predicate">
               <KVGrid
@@ -328,7 +338,7 @@ export function IndividualCandidateReviewBody({
               />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Object">
-              <KVGrid rows={nodeKV(t.object)} />
+              <NodeKV node={t.object} hit={hitFor(t.object)} />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Provenance" count={t.provenance.length}>
               <ProvenanceList provenance={t.provenance} />

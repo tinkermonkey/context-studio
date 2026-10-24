@@ -54,6 +54,18 @@ describe("helpers", () => {
     expect(drLayerOf("6313b6e5-26a1")).toBeNull();
     expect(drLayerOf(undefined)).toBeNull();
   });
+
+  it("maps imported DR class identifier slugs to layers", () => {
+    expect(drLayerOf("motivation_stakeholder")).toEqual({ layer: "motivation", num: "01" });
+    expect(drLayerOf("data_model_entity")).toEqual({ layer: "data-model", num: "07" });
+    expect(drLayerOf("data-store.database")).toEqual({ layer: "data-store", num: "08" });
+  });
+
+  it("returns null for layers outside the known set", () => {
+    expect(drLayerOf("product.feature")).toBeNull();
+    expect(drLayerOf("product_feature")).toBeNull();
+    expect(drLayerOf("cls_person")).toBeNull();
+  });
 });
 
 describe("planReviewApply (explicit selections)", () => {
