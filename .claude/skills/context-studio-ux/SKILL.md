@@ -17,7 +17,7 @@ The design team rebuilt the Context Studio prototype using **real `@tinkermonkey
 
 | File | What it is |
 |---|---|
-| `ux/design/Context Studio.html` | Open in a browser — no build step. Boots Heimdall then renders all pages. |
+| `ux/design/Context Studio.html` | Serve `ux/design/` with any static server (e.g. `cd ux/design && python3 -m http.server 3200`) and open `http://localhost:3200/Context%20Studio.html` — no build step. Boots Heimdall (fetches the `.tsx` sources and transpiles them in-browser with Babel standalone) then renders all pages. Does not work from `file://`. |
 | `ux/design/cs/app.jsx` | Shell, routing, overlays (CommandPalette, Modal, Toast, Statusbar) |
 | `ux/design/cs/pages.jsx` | All 9 page components using real Heimdall imports |
 | `ux/design/HEIMDALL_REBUILD.md` | 8 known findings: icon remaps, sidebar quirks, Toast positioning, CommandPalette grouping — read before filing bugs or building workarounds |
@@ -25,7 +25,7 @@ The design team rebuilt the Context Studio prototype using **real `@tinkermonkey
 
 ### How to use it
 
-1. Open `ux/design/Context Studio.html` in a browser (or take a screenshot with MCP tools)
+1. Serve `ux/design/` with a static server (`cd ux/design && python3 -m http.server 3200`) and open `http://localhost:3200/Context%20Studio.html` in a browser (or take a screenshot with MCP tools)
 2. Navigate to the relevant page
 3. Find the corresponding component in `cs/pages.jsx` or `cs/app.jsx`
 4. Copy the JSX
@@ -267,7 +267,7 @@ Read the relevant skill file before implementing any component. Each file has pr
 
 Follow these steps in order for any new page, section, or component:
 
-1. **Open the reference design** — `ux/design/Context Studio.html` in a browser. Navigate to the relevant page.
+1. **Open the reference design** — serve `ux/design/` (`python3 -m http.server 3200`) and open `Context Studio.html` in a browser. Navigate to the relevant page.
 2. **Find the prototype source** — locate the page component in `cs/pages.jsx` or shell code in `cs/app.jsx`.
 3. **Identify every Heimdall component used** — list them before writing any code.
 4. **Read the relevant skill files** from the index above for any component you haven't used before.
