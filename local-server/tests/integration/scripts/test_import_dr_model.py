@@ -18,16 +18,12 @@ import yaml
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from adapters.events.change_recorder import ChangeEventRecorder
-from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
 from adapters.persistence.sqlite.models import Base, ChangeEvent, OntologyEntity
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.events import IndividualCreated, IndividualUpdated, RelationshipCreated
-from domain.ontology.services import OntologyService
 from scripts.dr_model_loader import import_dr_model
 from scripts.dr_ontology_loader import import_dr_ontology
+from scripts.import_dr_model import build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.scripts.test_import_dr_ontology import spec_dir  # noqa: F401  (fixture)
 
@@ -112,16 +108,8 @@ def repo(session_factory):
 
 @pytest.fixture
 def ontology_service(repo, session_factory, spec_dir):  # noqa: F811
-    publisher = InProcessEventPublisher()
-    recorder = ChangeEventRecorder(SQLiteChangeRepository(session_factory))
-    publisher.subscribe(IndividualCreated, recorder.on_individual_created)
-    publisher.subscribe(IndividualUpdated, recorder.on_individual_updated)
-    publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
-    service = OntologyService(
-        repository=repo,
-        embedding_service=FakeEmbeddingService(),
-        event_publisher=publisher,
-    )
+    # The same wiring the import scripts use (import_dr_model.py, seed_dr_poc.py).
+    service = build_import_service(session_factory, FakeEmbeddingService())
     import_dr_ontology(service, repo, spec_dir)
     return service
 

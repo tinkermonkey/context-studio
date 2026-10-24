@@ -39,19 +39,14 @@ from typing import cast
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
-from adapters.events.change_recorder import ChangeEventRecorder
-from adapters.events.in_process import InProcessEventPublisher
-from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
-from domain.ontology.events import IndividualCreated, IndividualUpdated, RelationshipCreated
 from domain.ontology.ports import OntologyRepository
-from domain.ontology.services import OntologyService
 from scripts.dr_model_loader import import_dr_model
 from scripts.dr_ontology_loader import import_dr_ontology
-from scripts.import_dr_model import DEFAULT_VIEWER_DIR, print_summary
+from scripts.import_dr_model import DEFAULT_VIEWER_DIR, build_import_service, print_summary
 from scripts.import_dr_ontology import DEFAULT_SPEC_DIR, DR_ONTOLOGY_CONTEXT
 from scripts.run_migrations import run_migrations
 
@@ -130,20 +125,8 @@ def main() -> int:
     repo = cast(OntologyRepository, ontology_repo)
     embedding_service = SentenceTransformerEmbedding(model_name=EMBEDDING_MODEL)
 
-    # Same wiring as import_dr_model.py: change events recorded for individuals
-    # and relationships; per-entity indexing off, rebuilt in batch below.
-    event_publisher = InProcessEventPublisher()
-    change_recorder = ChangeEventRecorder(SQLiteChangeRepository(session_factory))
-    event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
-    event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
-    event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
-    ontology_service = OntologyService(
-        repository=repo,
-        embedding_service=embedding_service,
-        event_publisher=event_publisher,
-        schema_index=None,
-        individual_index=None,
-    )
+    # Per-entity indexing off; the indexes are rebuilt in batch below.
+    ontology_service = build_import_service(session_factory, embedding_service)
 
     print(f"Importing DR ontology spec from {spec_dir} ...")
     ontology = import_dr_ontology(ontology_service, repo, spec_dir)

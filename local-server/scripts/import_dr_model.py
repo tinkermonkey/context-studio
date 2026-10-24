@@ -28,6 +28,8 @@ from collections import Counter
 from pathlib import Path
 from typing import cast
 
+from sqlalchemy.orm import sessionmaker
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -40,13 +42,37 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
 from domain.ontology.events import IndividualCreated, IndividualUpdated, RelationshipCreated
-from domain.ontology.ports import OntologyRepository
+from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from scripts.dr_model_loader import ModelImportSummary, import_dr_model
 
 # local-server/scripts/../.. == the context-studio repo root, which holds
 # documentation-robotics/model/.
 DEFAULT_VIEWER_DIR = Path(__file__).resolve().parents[2]
+
+
+def build_import_service(
+    session_factory: sessionmaker, embedding_service: EmbeddingService
+) -> OntologyService:
+    """
+    OntologyService wired for a bulk DR import.
+
+    Individual and relationship changes are recorded as change events.
+    Per-entity vector indexing is off (both indexes None); callers rebuild the
+    indexes once, in batch, after the import.
+    """
+    event_publisher = InProcessEventPublisher()
+    change_recorder = ChangeEventRecorder(SQLiteChangeRepository(session_factory))
+    event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
+    event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
+    event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
+    return OntologyService(
+        repository=cast(OntologyRepository, SQLiteOntologyRepository(session_factory)),
+        embedding_service=embedding_service,
+        event_publisher=event_publisher,
+        schema_index=None,
+        individual_index=None,
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,22 +138,7 @@ def main() -> int:
 
     ontology_repo = SQLiteOntologyRepository(session_factory)
     embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
-
-    event_publisher = InProcessEventPublisher()
-    change_recorder = ChangeEventRecorder(SQLiteChangeRepository(session_factory))
-    event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
-    event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
-    event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
-
-    # Both indexes None suppresses per-entity embedding during the import;
-    # they are rebuilt once, in batch, below.
-    ontology_service = OntologyService(
-        repository=cast(OntologyRepository, ontology_repo),
-        embedding_service=embedding_service,
-        event_publisher=event_publisher,
-        schema_index=None,
-        individual_index=None,
-    )
+    ontology_service = build_import_service(session_factory, embedding_service)
 
     print(f"Importing DR model from {viewer_dir} ...")
     try:
