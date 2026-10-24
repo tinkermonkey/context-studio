@@ -480,7 +480,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=1000,
+            max_tokens=3000,
             response_format="json",
         )
 
@@ -591,9 +591,17 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=500,
+            max_tokens=4000,
             response_format="json",
         )
+        if response.finish_reason == "length":
+            warning = {
+                "stage": "connection_proposal",
+                "error": "LLM reply was cut off at max_tokens",
+                "response_preview": response.content[-200:],
+                "fallback_action": "connections and properties may be incomplete",
+            }
+            state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
         try:
             parsed = extract_json(response.content)
@@ -707,7 +715,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             user_prompt=user_prompt,
             model=state.input_data.get("model", "google/gemini-3-flash-preview"),
             temperature=0.0,
-            max_tokens=500,
+            max_tokens=2000,
             response_format="json",
         )
 

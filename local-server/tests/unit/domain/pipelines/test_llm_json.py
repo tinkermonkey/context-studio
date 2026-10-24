@@ -49,6 +49,13 @@ class TestExtractJson:
         text = 'See [note] below: ["Real", "Answer"]'
         assert extract_json(text) == ["Real", "Answer"]
 
+    def test_truncated_object_is_not_mistaken_for_inner_fragment(self):
+        # A reply cut off by max_tokens: the outer object never closes, but an
+        # inner relationship object does. It must raise, not return the fragment.
+        text = '{"relationships": [{"subject": "A", "predicate": "p", "object": "B"}, {"subj'
+        with pytest.raises(json.JSONDecodeError):
+            extract_json(text)
+
     @pytest.mark.parametrize("text", ["", "   ", "not json at all", "{unclosed", "```json\n```"])
     def test_raises_when_nothing_parseable(self, text):
         with pytest.raises(json.JSONDecodeError):

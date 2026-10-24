@@ -54,7 +54,10 @@ def extract_json(text: str) -> Any:
 
     Tries, in order: the stripped text, the text with a surrounding Markdown code
     fence removed, then each balanced ``[...]`` / ``{...}`` span starting at an
-    opening bracket (earliest first), respecting JSON string literals.
+    opening bracket (earliest first), respecting JSON string literals. An
+    opening bracket that is never closed is treated as a truncated reply and
+    raises, so a cut-off payload can never be mistaken for one of its inner
+    fragments.
 
     Raises:
         json.JSONDecodeError: if no parseable JSON value is found.
@@ -70,7 +73,12 @@ def extract_json(text: str) -> Any:
             continue
         end = _matching_close(candidate, start)
         if end == -1:
-            continue
+            # An opening bracket with no partner means the reply was cut off
+            # (max_tokens) or malformed. Refuse rather than fall through to a
+            # smaller inner fragment, which would parse but mean something else.
+            raise json.JSONDecodeError(
+                "Unbalanced JSON bracket (reply truncated?)", candidate, start
+            )
         try:
             return json.loads(candidate[start : end + 1])
         except json.JSONDecodeError:
