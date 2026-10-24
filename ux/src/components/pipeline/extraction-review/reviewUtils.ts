@@ -48,12 +48,21 @@ export function segmentText(text: string, spans: KeyedSpan[]): TextSegment[] {
   return segments;
 }
 
-/** Locate a mention label in the run text (recognition hits carry no spans). */
+/** Mention identity as the backend keys it (domain/pipelines/candidate_ids.py::mention_key). */
+export const mentionKey = (label: string | null | undefined): string =>
+  (label ?? "").trim().toLowerCase();
+
+/**
+ * Locate a mention label in the run text (recognition hits carry no spans).
+ * Matching is case-insensitive and ignores surrounding whitespace in the label;
+ * offsets point into the original text.
+ */
 export function locateMention(text: string, label: string): SourceSpan {
-  const at = label ? text.indexOf(label) : -1;
+  const needle = mentionKey(label);
+  const at = needle ? text.toLowerCase().indexOf(needle) : -1;
   return at < 0
     ? { quote: label, start: null, end: null }
-    : { quote: label, start: at, end: at + label.length };
+    : { quote: text.slice(at, at + needle.length), start: at, end: at + needle.length };
 }
 
 export function countDecisions(

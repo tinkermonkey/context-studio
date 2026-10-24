@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { countDecisions, drLayerOf, locateMention, pct, segmentText } from "../reviewUtils";
+import {
+  countDecisions,
+  drLayerOf,
+  locateMention,
+  mentionKey,
+  pct,
+  segmentText,
+} from "../reviewUtils";
 import { planReviewApply } from "@/api/hooks/pipeline/useApplyReviewedRun";
 
 describe("segmentText", () => {
@@ -39,6 +46,24 @@ describe("helpers", () => {
   it("locates mentions or marks them unlocated", () => {
     expect(locateMention("hello world", "world")).toEqual({ quote: "world", start: 6, end: 11 });
     expect(locateMention("hello", "nope")).toEqual({ quote: "nope", start: null, end: null });
+  });
+
+  it("locates mentions case-insensitively with offsets into the original text", () => {
+    expect(locateMention("The Claims Adjuster", "claims adjuster")).toEqual({
+      quote: "Claims Adjuster",
+      start: 4,
+      end: 19,
+    });
+    expect(locateMention("The Claims Adjuster", "  CLAIMS ")).toEqual({
+      quote: "Claims",
+      start: 4,
+      end: 10,
+    });
+  });
+
+  it("keys mentions by trimmed lower-case label", () => {
+    expect(mentionKey("  Customer Portal ")).toBe("customer portal");
+    expect(mentionKey(null)).toBe("");
   });
 
   it("counts decisions, defaulting to pending", () => {

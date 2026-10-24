@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useApplyRun } from "./usePipelineMutations";
 import type { ApplyParams, ApplyRunRequest, RecognitionDecision } from "@/api/services/pipeline";
 import type { ReviewKind } from "./useExtractionReviewRuns";
+import { mentionKey } from "@/components/pipeline/extraction-review/reviewUtils";
 
 export type { ApplyRunResponse, MergedMention } from "@/api/services/pipeline";
 
@@ -55,7 +56,7 @@ export function planReviewApply(input: ReviewApplyInput): ReviewApplyPlan {
     const seen = new Set<string>();
     const decisions: RecognitionDecision[] = (input.mentions ?? [])
       .filter((m) => {
-        const label = m.mention_label.trim().toLowerCase();
+        const label = mentionKey(m.mention_label);
         if (m.decision === "pending" || seen.has(label)) return false;
         seen.add(label);
         return true;

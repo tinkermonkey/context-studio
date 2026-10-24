@@ -41,7 +41,7 @@ import {
   RunStateBody,
   useClassMeta,
 } from "./ReviewParts";
-import { countDecisions, locateMention, pct } from "./reviewUtils";
+import { countDecisions, locateMention, mentionKey, pct } from "./reviewUtils";
 import { useReviewApplyFlow } from "./useReviewApplyFlow";
 import type { ReviewScope } from "./ExtractionReviewPage";
 import "./ExtractionReview.css";
@@ -74,7 +74,8 @@ export interface HitRow extends RecognitionPreviewHit {
 const tripleLabel = (t: TripleRow) =>
   `${t.subject.label} → ${t.predicate.label} → ${t.object.label}`;
 const isNewNode = (n: NodeReference) => n.kind !== "literal" && !n.id;
-const usesMention = (t: TripleRow, m: string) => t.subject.label === m || t.object.label === m;
+const usesMention = (t: TripleRow, m: string) =>
+  mentionKey(t.subject.label) === mentionKey(m) || mentionKey(t.object.label) === mentionKey(m);
 
 /** Inspector key/value grid for one triple endpoint (subject or object). */
 function NodeKV({ node, hit }: { node: NodeReference; hit?: HitRow }) {
@@ -262,7 +263,8 @@ export function IndividualCandidateReviewBody({
   );
   const selectedId =
     allItems.find((it) => it.id === selectedKey)?.id ?? filtered[0]?.id ?? triples[0]?.id;
-  const hitFor = (node: NodeReference) => hits.find((h) => h.mention_label === node.label);
+  const hitFor = (node: NodeReference) =>
+    hits.find((h) => mentionKey(h.mention_label) === mentionKey(node.label));
   const spans = useMemo(
     () => [
       ...triples.flatMap((t) => t.provenance.map((s) => ({ ...s, key: t.id }))),

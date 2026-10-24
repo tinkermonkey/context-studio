@@ -21,14 +21,14 @@ const slot = {
 
 let previewBody: unknown = null;
 
-async function renderReady(triples = TRIPLES) {
+async function renderReady(triples = TRIPLES, recognition = RECOGNITION) {
   server.use(
     http.get("*/api/pipelines/runs/run-i/individual-extraction-candidates", () =>
       HttpResponse.json(triples),
     ),
     http.post("*/api/pipelines/runs/run-i/recognition-preview", async ({ request }) => {
       previewBody = await request.json();
-      return HttpResponse.json(RECOGNITION);
+      return HttpResponse.json(recognition);
     }),
   );
   renderWithProviders(
@@ -92,6 +92,19 @@ describe("IndividualCandidateReview", () => {
     const line = await within(table).findByText("Feature");
     expect(line).toHaveAttribute("data-testid", "extraction-review-node-class");
     expect(line.textContent).toBe("Feature");
+  });
+
+  it("links a node to its recognition hit regardless of label case and whitespace", async () => {
+    const recognition = {
+      ...RECOGNITION,
+      hits: (RECOGNITION.hits ?? []).map((h, i) =>
+        i === 0 ? { ...h, mention_label: "  customer PORTAL " } : h,
+      ),
+    };
+    await renderReady(TRIPLES, recognition);
+    const inspector = screen.getByTestId("extraction-review-individual-inspector");
+    expect(inspector).toHaveTextContent("recognized_as");
+    expect(inspector).toHaveTextContent("Customer Self-Service Portal (vector 92%)");
   });
 
   it("filters triples to those with a new node", async () => {
