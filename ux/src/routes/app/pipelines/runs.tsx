@@ -1,13 +1,6 @@
 import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import {
-  Button,
-  PageHeader,
-  Icon,
-  Chip,
-  StatusBadge,
-  FilterDropdown,
-} from "@tinkermonkey/heimdall-ui";
+import { Button, PageHeader, Icon, Chip, FilterDropdown } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
@@ -226,8 +219,8 @@ function RunsPageContent({
                 </div>
                 <div className="runs-table-cell">{run.configuration_slug || "—"}</div>
                 <div className="runs-table-cell">
-                  <StatusBadge
-                    color={
+                  <Chip
+                    variant={
                       hasRunStatus(run.status, "pending")
                         ? "amber"
                         : hasRunStatus(run.status, "running")
@@ -240,7 +233,7 @@ function RunsPageContent({
                     }
                   >
                     {run.status}
-                  </StatusBadge>
+                  </Chip>
                 </div>
                 <div className="runs-table-cell runs-table-cell--date">
                   {formatDate(run.started_at)}
