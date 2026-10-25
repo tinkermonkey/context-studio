@@ -62,11 +62,8 @@ from domain.pipelines.ports import LLMResponse
 from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER, import_dr_ontology
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
+from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
 
-_DR_SPEC_DIR_CANDIDATES = [
-    Path(__file__).resolve().parents[2] / "documentation_robotics" / "spec",
-    Path("/reference/documentation_robotics/spec"),
-]
 _EPISODES_DIR = (
     Path(__file__).parent.parent
     / "tests"
@@ -75,10 +72,6 @@ _EPISODES_DIR = (
     / "pipelines"
     / "individual_recognition"
 )
-
-
-def _find_dr_spec_dir() -> Path | None:
-    return next((p for p in _DR_SPEC_DIR_CANDIDATES if p.is_dir()), None)
 
 
 def _typing_triple(surface: str, class_ref: str) -> dict:
@@ -323,13 +316,9 @@ async def _record_document(
 
 
 async def _record_all() -> int:
-    dr_ontology_dir = _find_dr_spec_dir()
-    if dr_ontology_dir is None:
-        print(
-            "ERROR: documentation_robotics/spec checkout not found (checked "
-            f"{[str(p) for p in _DR_SPEC_DIR_CANDIDATES]})."
-        )
-        return 1
+    # The pinned snapshot the replay tests build against (never the live
+    # sibling checkout), so the recorded prompt hashes match at replay time.
+    dr_ontology_dir = pinned_dr_spec_dir()
 
     total = 0
     for episode, docs in _DOCUMENTS.items():
