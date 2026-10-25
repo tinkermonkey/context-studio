@@ -8,6 +8,7 @@ Tests verify:
 - Union of available models from all providers
 - Initialization errors are logged and tolerated if at least one provider succeeds
 - ValueError is raised when all configured providers fail to initialize
+- An auth failure (401/403) falls through to the next provider that supports the model
 """
 
 from unittest.mock import Mock, patch
@@ -155,9 +156,9 @@ class TestLLMProviderRouter:
         openai_provider = MockLLMProvider(["gpt-4o", "gpt-3.5-turbo"])
         router._providers["openai"] = openai_provider
 
-        provider = router._route_to_provider("gpt-4o")
+        candidates = router._providers_for("gpt-4o")
 
-        assert provider is openai_provider
+        assert candidates == [("openai", openai_provider)]
 
     def test_router_routes_to_anthropic_provider(self):
         """Router routes Anthropic models to Anthropic provider."""
@@ -165,9 +166,9 @@ class TestLLMProviderRouter:
         anthropic_provider = MockLLMProvider(["claude-opus-4-6"])
         router._providers["anthropic"] = anthropic_provider
 
-        provider = router._route_to_provider("claude-opus-4-6")
+        candidates = router._providers_for("claude-opus-4-6")
 
-        assert provider is anthropic_provider
+        assert candidates == [("anthropic", anthropic_provider)]
 
     def test_router_raises_for_unavailable_model(self):
         """Router raises ValueError when model is not available from any provider."""
@@ -176,7 +177,7 @@ class TestLLMProviderRouter:
         router._providers["openai"] = openai_provider
 
         with pytest.raises(ValueError) as exc_info:
-            router._route_to_provider("claude-opus-4-6")
+            router._providers_for("claude-opus-4-6")
 
         assert "No provider available for model: claude-opus-4-6" in str(exc_info.value)
 
@@ -353,3 +354,118 @@ class TestLLMProviderRouter:
         assert "openai" in router._providers
         assert "anthropic" not in router._providers
         assert router._providers["openai"] is mock_openai_provider
+
+
+class FakeAuthError(Exception):
+    """Stands in for the SDKs' AuthenticationError / PermissionDeniedError."""
+
+    def __init__(self, status_code: int = 401):
+        super().__init__(f"HTTP {status_code}: invalid x-api-key")
+        self.status_code = status_code
+
+
+class FailingLLMProvider(MockLLMProvider):
+    """Provider whose calls always raise the given error, counting attempts."""
+
+    def __init__(self, available_models: list[str], error: Exception):
+        super().__init__(available_models)
+        self._error = error
+        self.calls = 0
+
+    def complete(self, *args, **kwargs):
+        self.calls += 1
+        raise self._error
+
+
+@pytest.mark.llm
+class TestLLMProviderRouterAuthFallback:
+    """An auth failure on one provider falls through to the next supporting provider."""
+
+    @staticmethod
+    def create_router(**providers):
+        router = LLMProviderRouter(openai_api_key="dummy-key")
+        router._providers.clear()
+        router._providers.update(providers)
+        return router
+
+    @staticmethod
+    async def call(router, model, use_async):
+        if use_async:
+            return await router.complete_async(system_prompt="s", user_prompt="u", model=model)
+        return router.complete(system_prompt="s", user_prompt="u", model=model)
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    @pytest.mark.parametrize("status_code", [401, 403])
+    async def test_auth_failure_falls_through_to_next_provider(self, use_async, status_code):
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError(status_code))
+        openrouter = MockLLMProvider(["claude-opus-4-7"])
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        response = await self.call(router, "claude-opus-4-7", use_async)
+
+        assert response.content == "mock response"
+        assert anthropic.calls == 1
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_rejected_provider_is_skipped_on_later_calls(self, use_async):
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        openrouter = MockLLMProvider(["claude-opus-4-7"])
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        await self.call(router, "claude-opus-4-7", use_async)
+        await self.call(router, "claude-opus-4-7", use_async)
+
+        assert anthropic.calls == 1
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    @pytest.mark.parametrize(
+        "error",
+        [
+            FakeAuthError(429),
+            FakeAuthError(400),
+            RuntimeError("boom"),
+        ],
+        ids=["rate-limit", "bad-request", "other"],
+    )
+    async def test_non_auth_errors_are_not_swallowed(self, use_async, error):
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        openrouter = FailingLLMProvider(["claude-opus-4-7"], RuntimeError("must not be called"))
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        with pytest.raises(type(error)) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert exc_info.value is error
+        assert openrouter.calls == 0
+        assert router._rejected_providers == set()
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_all_supporting_providers_rejecting_raises_auth_error(self, use_async):
+        last_error = FakeAuthError()
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        openrouter = FailingLLMProvider(["claude-opus-4-7"], last_error)
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        with pytest.raises(FakeAuthError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+        assert exc_info.value is last_error
+
+        # Later calls fail fast with a clear message naming the rejecting providers
+        with pytest.raises(ValueError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+        message = str(exc_info.value)
+        assert "No provider available for model: claude-opus-4-7" in message
+        assert "rejected their API key: anthropic, openrouter" in message
+        assert anthropic.calls == 1
+        assert openrouter.calls == 1
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_providers_not_supporting_model_are_not_tried(self, use_async):
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        openai = FailingLLMProvider(["gpt-4o"], RuntimeError("must not be called"))
+        router = self.create_router(openai=openai, anthropic=anthropic)
+
+        with pytest.raises(FakeAuthError):
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert openai.calls == 0
