@@ -35,6 +35,7 @@ from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrch
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
 )
+from tests.utils.parent_rows import create_batch_row
 
 # Constant for mocking the orchestrator creation function
 ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
@@ -522,7 +523,6 @@ class TestPipelineRunEndpoints:
             },
         )
         run1_id = response1.json()["id"]
-        run1_batch_id = response1.json()["batch_run_id"]
 
         response2 = client.post(
             "/api/pipelines/schema_extraction/run",
@@ -533,7 +533,6 @@ class TestPipelineRunEndpoints:
             },
         )
         run2_id = response2.json()["id"]
-        response2.json()["batch_run_id"]
 
         # Create a change repository using the same database as the test
         engine = create_engine(temp_local_db)
@@ -546,7 +545,7 @@ class TestPipelineRunEndpoints:
             entity_type="Class",
             operation=ChangeOperation.CREATE,
             new_state={"title": "New Class"},
-            batch_run_id=run1_batch_id,
+            batch_run_id=run1_id,
         )
 
         # Filter by applied=applied should return only run1
@@ -1328,7 +1327,7 @@ class TestRevertEndpoint:
 
         # Create a pipeline run with no associated change events
         run = pipeline_run_repo.create(
-            batch_run_id="batch-1",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-1"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1372,7 +1371,7 @@ class TestRevertEndpoint:
 
         # Create the pipeline run first to get its ID
         run = pipeline_run_repo.create(
-            batch_run_id="batch-2",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-2"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1386,7 +1385,7 @@ class TestRevertEndpoint:
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"id": "cls-1", "title": "Animal"},
-            batch_run_id=run.batch_run_id,
+            batch_run_id=run.id,
         )
 
         # Verify class exists
@@ -1424,7 +1423,7 @@ class TestRevertEndpoint:
 
         # Create the pipeline run first to get its ID
         run = pipeline_run_repo.create(
-            batch_run_id="batch-3",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-3"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1439,7 +1438,7 @@ class TestRevertEndpoint:
             operation=ChangeOperation.UPDATE,
             new_state={"title": "Updated"},
             previous_state=None,  # Missing - this will cause an error
-            batch_run_id=run.batch_run_id,
+            batch_run_id=run.id,
         )
 
         # Try to revert - should get 500 with generic error message
@@ -1455,16 +1454,67 @@ class TestRevertEndpoint:
         assert "Traceback" not in detail
         assert ".py" not in detail
 
-    def test_revert_multi_run_batch_returns_422(self, revert_client, pipeline_run_repo, batch_repo):
-        """POST /api/pipelines/runs/{run_id}/revert for run in multi-run batch returns 422."""
+    def test_revert_run_in_multi_run_batch_reverts_only_that_run(
+        self, revert_client, pipeline_run_repo, batch_repo, change_repo, ontology_repo
+    ):
+        """POST /api/pipelines/runs/{run_id}/revert in a multi-run batch reverts only that run.
+
+        Change events are tagged with the run's own id, so sibling runs in the
+        same batch keep their changes.
+        """
+        from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+        from domain.pipelines.entities import PipelineType
+        from domain.versioning.value_objects import ChangeOperation
+
+        ontology_repo.save_taxonomy(Taxonomy(id="tx-1", identifier="test_tax", title="Tax"))
+        ontology_repo.save_concept_scheme(
+            ConceptScheme(id="scheme-1", taxonomy_id="tx-1", identifier="scheme", title="Scheme")
+        )
+
+        batch = batch_repo.create()
+        runs = [
+            pipeline_run_repo.create(
+                batch_run_id=batch.id,
+                pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+                implementation_id="default",
+                configuration_ref="default",
+                configuration_slug="default",
+                configuration_version=1,
+            )
+            for _ in range(2)
+        ]
+        for run, class_id in zip(runs, ["cls-1", "cls-2"]):
+            ontology_repo.save_class(
+                Class(id=class_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=class_id)
+            )
+            change_repo.record_change(
+                entity_id=class_id,
+                entity_type="class",
+                operation=ChangeOperation.CREATE,
+                new_state={"id": class_id, "title": class_id},
+                batch_run_id=run.id,
+            )
+
+        response = revert_client.post(f"/api/pipelines/runs/{runs[0].id}/revert")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["events_reverted"] == 1
+        assert ontology_repo.get_class("cls-1") is None
+        assert ontology_repo.get_class("cls-2") is not None
+
+    def _seed_scheme(self, ontology_repo):
+        from domain.ontology.entities import ConceptScheme, Taxonomy
+
+        ontology_repo.save_taxonomy(Taxonomy(id="tx-1", identifier="test_tax", title="Tax"))
+        ontology_repo.save_concept_scheme(
+            ConceptScheme(id="scheme-1", taxonomy_id="tx-1", identifier="scheme", title="Scheme")
+        )
+
+    def _new_run(self, pipeline_run_repo):
         from domain.pipelines.entities import PipelineType
 
-        # Create a batch with multiple runs
-        batch_id = "batch-multi-1"
-
-        # Create first run in the batch
-        run1 = pipeline_run_repo.create(
-            batch_run_id=batch_id,
+        return pipeline_run_repo.create(
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1472,30 +1522,110 @@ class TestRevertEndpoint:
             configuration_version=1,
         )
 
-        # Create second run in the same batch
-        pipeline_run_repo.create(
-            batch_run_id=batch_id,
-            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-            implementation_id="default",
-            configuration_ref="default",
-            configuration_slug="default",
-            configuration_version=1,
+    def _record_create(self, change_repo, run, entity_id, entity_type):
+        from domain.versioning.value_objects import ChangeOperation
+
+        change_repo.record_change(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            operation=ChangeOperation.CREATE,
+            new_state={"id": entity_id},
+            batch_run_id=run.id,
         )
 
-        # Verify both runs are in the same batch
-        batch_runs = pipeline_run_repo.list()
-        batch_run_ids = [r.batch_run_id for r in batch_runs]
-        assert batch_id in batch_run_ids
-        assert len([r for r in batch_runs if r.batch_run_id == batch_id]) == 2
+    def test_revert_refused_when_another_run_typed_individuals_into_its_class(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Reverting a schema run whose class now holds another run's individuals is a 409.
 
-        # Try to revert the first run - should fail with 422 because batch has multiple runs
-        response = revert_client.post(f"/api/pipelines/runs/{run1.id}/revert")
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        body = response.json()
+        With foreign keys on, deleting the class would CASCADE-delete the
+        individuals' class memberships, so the revert must change nothing.
+        """
+        from domain.ontology.entities import Class, Individual
 
-        # Verify error message is clear
-        assert "detail" in body
-        assert "multi" in body["detail"].lower() or "multiple" in body["detail"].lower()
+        self._seed_scheme(ontology_repo)
+        schema_run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_class(
+            Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+        )
+        self._record_create(change_repo, schema_run, "cls-1", "class")
+        individual_run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        self._record_create(change_repo, individual_run, "ind-1", "individual")
+        events_before = change_repo.get_changes(limit=None).total
+
+        response = revert_client.post(f"/api/pipelines/runs/{schema_run.id}/revert")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "individual ind-1 -> cls-1" in response.json()["detail"]
+        assert ontology_repo.get_class("cls-1") is not None
+        assert ontology_repo.get_individual("ind-1").class_ids == ["cls-1"]
+        assert change_repo.get_changes(limit=None).total == events_before
+
+    def test_revert_refused_when_its_property_is_used_by_other_relationships(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Reverting a run whose property definition is used outside the run is a 409."""
+        from domain.ontology.entities import Class, PropertyDefinition, Relationship
+
+        self._seed_scheme(ontology_repo)
+        for class_id in ("cls-1", "cls-2"):
+            ontology_repo.save_class(
+                Class(id=class_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=class_id)
+            )
+        run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_property_definition(
+            PropertyDefinition(id="prop-1", identifier="calls", title="calls")
+        )
+        self._record_create(change_repo, run, "prop-1", "property_definition")
+        ontology_repo.save_relationship(
+            Relationship(
+                id="rel-1", source_id="cls-1", target_id="cls-2", property_definition_id="prop-1"
+            )
+        )
+
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "relationship rel-1 -> prop-1" in response.json()["detail"]
+        assert ontology_repo.get_property_definition("prop-1") is not None
+        assert ontology_repo.get_relationship("rel-1") is not None
+
+    def test_revert_succeeds_when_dependents_were_created_by_the_same_run(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Dependents the run created itself do not block its revert."""
+        from domain.ontology.entities import Class, Individual, PropertyDefinition, Relationship
+
+        self._seed_scheme(ontology_repo)
+        run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_class(
+            Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+        )
+        self._record_create(change_repo, run, "cls-1", "class")
+        ontology_repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-1", identifier="calls", title="calls", domain_class_id="cls-1"
+            )
+        )
+        self._record_create(change_repo, run, "prop-1", "property_definition")
+        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        self._record_create(change_repo, run, "ind-1", "individual")
+        ontology_repo.save_relationship(
+            Relationship(
+                id="rel-1", source_id="ind-1", target_id="cls-1", property_definition_id="prop-1"
+            )
+        )
+        self._record_create(change_repo, run, "rel-1", "relationship")
+
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
+
+        assert response.status_code == status.HTTP_200_OK, response.text
+        assert response.json()["events_reverted"] == 4
+        assert ontology_repo.get_class("cls-1") is None
+        assert ontology_repo.get_property_definition("prop-1") is None
+        assert ontology_repo.get_individual("ind-1") is None
+        assert ontology_repo.get_relationship("rel-1") is None
 
     def test_revert_single_run_batch_succeeds(self, revert_client, pipeline_run_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in single-run batch succeeds."""
@@ -1505,7 +1635,7 @@ class TestRevertEndpoint:
         batch_id = "batch-single-1"
 
         run = pipeline_run_repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1538,7 +1668,7 @@ class TestRevertEndpoint:
         from domain.pipelines.entities import PipelineType
 
         run = pipeline_run_repo.create(
-            batch_run_id="batch-no-events",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-no-events"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1561,7 +1691,7 @@ class TestRevertEndpoint:
         from domain.versioning.value_objects import ChangeOperation
 
         run = pipeline_run_repo.create(
-            batch_run_id="batch-with-events",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-with-events"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1575,7 +1705,7 @@ class TestRevertEndpoint:
             entity_type="Class",
             operation=ChangeOperation.CREATE,
             new_state={"title": "New Class"},
-            batch_run_id=run.batch_run_id,
+            batch_run_id=run.id,
         )
         change_repo.record_change(
             entity_id=str(uuid4()),
@@ -1583,7 +1713,7 @@ class TestRevertEndpoint:
             operation=ChangeOperation.UPDATE,
             new_state={"description": "Updated"},
             previous_state={"description": "Old"},
-            batch_run_id=run.batch_run_id,
+            batch_run_id=run.id,
         )
 
         response = revert_client.get(f"/api/pipelines/runs/{run.id}/change-events")
@@ -1604,7 +1734,7 @@ class TestRevertEndpoint:
         from domain.versioning.value_objects import ChangeOperation
 
         run = pipeline_run_repo.create(
-            batch_run_id="batch-pagination",
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-pagination"),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="default",
             configuration_ref="default",
@@ -1619,7 +1749,7 @@ class TestRevertEndpoint:
                 entity_type="Class",
                 operation=ChangeOperation.CREATE,
                 new_state={"id": f"class-{i}", "title": f"Class {i}"},
-                batch_run_id=run.batch_run_id,
+                batch_run_id=run.id,
             )
 
         response = revert_client.get(f"/api/pipelines/runs/{run.id}/change-events?offset=1&limit=2")

@@ -23,6 +23,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.exceptions import EntityInUseError
 from domain.ontology.value_objects import (
     DataPropertyValue,
     ExternalReference,
@@ -599,6 +600,31 @@ class TestPropertyDefinitionCRUD:
         """Test deleting a property definition."""
         deleted = repo.delete_property_definition(sample_property_definition.id)
         assert deleted is True
+
+    def test_delete_property_definition_in_use_raises_entity_in_use(
+        self, repo, sample_class, sample_property_definition
+    ):
+        """Deleting a property that a relationship uses hits the RESTRICT FK."""
+        class2 = Class(
+            id="class-2",
+            concept_scheme_id=sample_class.concept_scheme_id,
+            taxonomy_id=sample_class.taxonomy_id,
+            title="Class 2",
+        )
+        repo.save_class(class2)
+        repo.save_relationship(
+            Relationship(
+                id="rel-1",
+                source_id=sample_class.id,
+                target_id=class2.id,
+                property_definition_id=sample_property_definition.id,
+            )
+        )
+
+        with pytest.raises(EntityInUseError):
+            repo.delete_property_definition(sample_property_definition.id)
+
+        assert repo.get_property_definition(sample_property_definition.id) is not None
 
     def test_count_property_definitions_referencing_class(self, repo, sample_class):
         """Test counting property definitions that reference a class as domain or range."""

@@ -32,6 +32,7 @@ from .exceptions import (
     ChangesetStateError,
     ConflictResolutionError,
     SyncError,
+    UnknownChangeEventError,
     VersionNotFoundError,
 )
 from .ports import ChangeRepository, SyncTarget
@@ -200,7 +201,12 @@ class VersioningService:
 
         Returns:
             The persisted Changeset entity in WORKING state
+
+        Raises:
+            UnknownChangeEventError: If any event id does not exist
         """
+        if event_ids:
+            self._require_events_exist(event_ids)
         now = datetime.now(timezone.utc)
         changeset = Changeset(
             id=str(uuid.uuid4()),
@@ -219,6 +225,13 @@ class VersioningService:
             persisted.state,
         )
         return persisted
+
+    def _require_events_exist(self, event_ids: list[str]) -> None:
+        """Raise UnknownChangeEventError unless every event id exists."""
+        found = {event.id for event in self._repo.get_changes_by_ids(event_ids)}
+        missing = sorted(set(event_ids) - found)
+        if missing:
+            raise UnknownChangeEventError(missing)
 
     def stage_changeset(self, changeset_id: str) -> Changeset:
         """

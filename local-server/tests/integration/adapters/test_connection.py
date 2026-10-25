@@ -5,7 +5,9 @@ These pin two design decisions that a naive revert would break:
   - in-memory SQLite must use StaticPool (so every connection sees the same
     database), and the bare "sqlite://" empty-path form counts as in-memory;
   - file-based SQLite must apply WAL journaling + a busy_timeout per connection
-    so concurrent read/write from the server's thread pool does not deadlock.
+    so concurrent read/write from the server's thread pool does not deadlock;
+  - both kinds must enforce foreign keys, so ON DELETE CASCADE runs and
+    orphan rows are rejected.
 """
 
 import os
@@ -15,7 +17,9 @@ import threading
 from pathlib import Path
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import event, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.exc import IntegrityError
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -26,6 +30,38 @@ from adapters.persistence.sqlite.connection import (
     create_local_db_engine,
     create_session_factory,
 )
+from adapters.persistence.sqlite.models import Base, GroundingWorkflow, WorkflowRun
+
+TESTS_CONFTEST = Path(__file__).resolve().parents[2] / "conftest.py"
+
+
+@pytest.fixture
+def without_test_fk_hook():
+    """Remove the test-suite hook that enables foreign keys on every engine.
+
+    tests/conftest.py enables foreign keys globally, which would hide a
+    regression in connection.py. Remove it so these tests see only what
+    connection.py configures, then put it back.
+    """
+    conftest = next(
+        module
+        for module in list(sys.modules.values())
+        if getattr(module, "__file__", None) == str(TESTS_CONFTEST)
+    )
+    hook = conftest._enforce_sqlite_foreign_keys
+    event.remove(Engine, "connect", hook)
+    yield
+    event.listen(Engine, "connect", hook)
+
+
+@pytest.fixture(params=["file", "memory"])
+def fk_engine(request, tmp_path, without_test_fk_hook):
+    """A local.db engine (file-backed or in-memory) with the full schema."""
+    url = f"sqlite:///{tmp_path / 'fk.db'}" if request.param == "file" else "sqlite://"
+    engine = create_local_db_engine(url)
+    Base.metadata.create_all(engine)
+    yield engine
+    engine.dispose()
 
 
 @pytest.mark.parametrize(
@@ -127,3 +163,32 @@ def test_file_engine_handles_concurrent_writes_without_locking():
                 assert count == successful_writes
         finally:
             engine.dispose()
+
+
+def test_engines_enforce_foreign_keys(fk_engine):
+    with fk_engine.connect() as conn:
+        assert conn.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1
+
+
+def test_cascade_delete_removes_child_rows(fk_engine):
+    # Deleting a workflow must delete its runs (ON DELETE CASCADE). Without
+    # enforced foreign keys this left an orphaned workflow_runs row behind.
+    factory = create_session_factory(fk_engine)
+    with factory() as session:
+        session.add(GroundingWorkflow(id="wf-1", title="WF", source="wikidata", class_scope=[]))
+        session.add(WorkflowRun(id="run-1", workflow_id="wf-1"))
+        session.commit()
+
+        session.delete(session.get(GroundingWorkflow, "wf-1"))
+        session.commit()
+
+    with factory() as session:
+        assert session.get(WorkflowRun, "run-1") is None
+
+
+def test_orphan_insert_is_rejected(fk_engine):
+    factory = create_session_factory(fk_engine)
+    with factory() as session:
+        session.add(WorkflowRun(id="run-1", workflow_id="no-such-workflow"))
+        with pytest.raises(IntegrityError, match="FOREIGN KEY constraint failed"):
+            session.commit()

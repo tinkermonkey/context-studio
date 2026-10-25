@@ -96,6 +96,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        # Migrations rebuild tables (DROP + RENAME), which would cascade-delete
+        # child rows with foreign keys on. Turn them off explicitly, outside any
+        # transaction (the pragma is a no-op inside one).
+        connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        connection.commit()  # end SQLAlchemy's autobegun transaction before Alembic's
         context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():

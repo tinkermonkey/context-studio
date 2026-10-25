@@ -32,6 +32,7 @@ from domain.versioning.value_objects import (
     EntityVersionState,
     ProposalState,
 )
+from tests.utils.parent_rows import create_batch_run_row
 
 
 @pytest.fixture
@@ -600,8 +601,34 @@ class TestSQLiteChangeRepository:
         with pytest.raises(VersionNotFoundError):
             change_repo.atomic_update_changeset_and_proposal(domain_changeset, domain_proposal)
 
-    def test_get_changes_filters_by_batch_run_id(self, change_repo):
+    def test_get_changes_breaks_timestamp_ties_newest_inserted_first(
+        self, change_repo, session_factory
+    ):
+        """Events with the same timestamp come back in reverse insertion order."""
+        same_time = datetime.now(timezone.utc)
+        with session_factory() as session:
+            for event_id in ("zzz-first", "aaa-second"):  # ids sort opposite to insertion
+                session.add(
+                    ChangeEvent(
+                        id=event_id,
+                        entity_id="entity-1",
+                        entity_type="class",
+                        operation="update",
+                        new_state={},
+                        timestamp=same_time,
+                    )
+                )
+                session.flush()
+            session.commit()
+
+        result = change_repo.get_changes(entity_id="entity-1", limit=None)
+
+        assert [e.id for e in result.events] == ["aaa-second", "zzz-first"]
+
+    def test_get_changes_filters_by_batch_run_id(self, change_repo, session_factory):
         """Test that get_changes correctly filters by batch_run_id."""
+        for run_id in ("batch-1", "batch-2"):
+            create_batch_run_row(session_factory, run_id)
         # Record changes for different batch runs
         change_repo.record_change(
             entity_id="entity-1",
@@ -642,8 +669,10 @@ class TestSQLiteChangeRepository:
         result = change_repo.get_changes(batch_run_id="batch-nonexistent", limit=None)
         assert len(result.events) == 0
 
-    def test_get_changes_combines_multiple_filters(self, change_repo):
+    def test_get_changes_combines_multiple_filters(self, change_repo, session_factory):
         """Test that get_changes correctly applies multiple filters together."""
+        for run_id in ("batch-1", "batch-2"):
+            create_batch_run_row(session_factory, run_id)
         # Record changes with different combinations of attributes
         change_repo.record_change(
             entity_id="entity-1",

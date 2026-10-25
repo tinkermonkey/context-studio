@@ -394,6 +394,13 @@ def two_taxonomy_index():
         with factory() as session:
             session.add_all(
                 [
+                    OntologyEntity(id=TAXONOMY_A, node_type="taxonomy", title="Taxonomy A"),
+                    OntologyEntity(id=TAXONOMY_B, node_type="taxonomy", title="Taxonomy B"),
+                ]
+            )
+            session.flush()
+            session.add_all(
+                [
                     OntologyEntity(
                         id=CLASS_A,
                         node_type="class",

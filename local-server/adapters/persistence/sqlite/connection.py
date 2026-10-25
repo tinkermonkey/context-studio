@@ -14,6 +14,10 @@ Key design decisions:
 - In-memory SQLite (":memory:" / "mode=memory") uses StaticPool, which is
   required so every connection sees the same in-memory database instead of a
   fresh empty one. WAL is invalid for in-memory databases and is not applied.
+- Foreign keys are enforced (PRAGMA foreign_keys=ON) on every connection of
+  both kinds. SQLite leaves them off by default, which makes ON DELETE CASCADE
+  and every FK decorative. Alembic migrations use their own connection and
+  turn them off (see env.py).
 - check_same_thread=False for multi-threaded server environments
 - expire_on_commit=False to reduce unnecessary re-queries
 - Separate engines for local.db and operations.db to support independent lifecycle
@@ -56,6 +60,8 @@ def _create_sqlite_engine(database_url: str) -> Engine:
     In-memory databases use StaticPool so all connections share the same
     underlying database; WAL is not applied (it is invalid for :memory:).
 
+    Both kinds enforce foreign keys on every connection.
+
     Args:
         database_url: SQLite connection string.
 
@@ -63,26 +69,32 @@ def _create_sqlite_engine(database_url: str) -> Engine:
         A configured SQLAlchemy Engine.
     """
     if _is_memory_url(database_url):
-        return create_engine(
+        engine = create_engine(
             database_url,
             poolclass=StaticPool,
             connect_args={"check_same_thread": False},
             echo=False,  # Set to True for SQL debugging
         )
-
-    engine = create_engine(
-        database_url,
-        connect_args={"check_same_thread": False},
-        echo=False,  # Set to True for SQL debugging
-    )
+        pragmas = ["PRAGMA foreign_keys=ON"]
+    else:
+        engine = create_engine(
+            database_url,
+            connect_args={"check_same_thread": False},
+            echo=False,  # Set to True for SQL debugging
+        )
+        pragmas = [
+            "PRAGMA journal_mode=WAL",
+            "PRAGMA busy_timeout=5000",
+            "PRAGMA foreign_keys=ON",
+        ]
 
     @event.listens_for(engine, "connect")
-    def _configure_file_connection(dbapi_connection: Any, connection_record: Any) -> None:
-        """Enable WAL journaling and a busy_timeout on every new connection."""
+    def _configure_connection(dbapi_connection: Any, connection_record: Any) -> None:
+        """Apply the per-connection pragmas to every new connection."""
         cursor = dbapi_connection.cursor()
         try:
-            cursor.execute("PRAGMA journal_mode=WAL")
-            cursor.execute("PRAGMA busy_timeout=5000")
+            for pragma in pragmas:
+                cursor.execute(pragma)
         finally:
             cursor.close()
 

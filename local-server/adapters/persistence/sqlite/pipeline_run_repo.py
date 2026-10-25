@@ -394,7 +394,7 @@ class PipelineRepository:
             if applied is not None:
                 subquery = (
                     session.query(ChangeEvent)
-                    .filter(ChangeEvent.batch_run_id == PipelineRun.batch_id)
+                    .filter(ChangeEvent.batch_run_id == PipelineRun.id)
                     .exists()
                 )
                 if applied:

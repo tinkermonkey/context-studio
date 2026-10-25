@@ -68,6 +68,7 @@ class TestOntologyRepositoryProtocol:
             # Bulk
             "get_all_entities_and_relationships",
             "get_entity_titles",
+            "find_references",
         ]
         repo = FakeOntologyRepository()
         for method_name in expected_methods:

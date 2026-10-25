@@ -19,6 +19,7 @@ from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineStorageError
+from tests.utils.parent_rows import create_batch_row
 
 
 @pytest.fixture
@@ -41,7 +42,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
@@ -66,7 +67,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-default",
@@ -83,7 +84,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-default",
@@ -100,7 +101,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-default",
@@ -117,7 +118,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-default",
@@ -134,7 +135,7 @@ class TestPipelineRepositoryCreate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-default",
@@ -155,7 +156,7 @@ class TestPipelineRepositoryQuery:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="extraction-default",
@@ -174,7 +175,7 @@ class TestPipelineRepositoryQuery:
         repo = PipelineRepository(db_session)
 
         run1 = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
@@ -184,7 +185,7 @@ class TestPipelineRepositoryQuery:
         )
 
         run2 = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
@@ -204,7 +205,7 @@ class TestPipelineRepositoryQuery:
         repo = PipelineRepository(db_session)
 
         extraction_run = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="config-extraction",
@@ -214,7 +215,7 @@ class TestPipelineRepositoryQuery:
         )
 
         schema_run = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="config-schema",
@@ -237,7 +238,7 @@ class TestPipelineRepositoryQuery:
         repo = PipelineRepository(db_session)
 
         run1 = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-1",
             configuration_ref="config-1",
@@ -247,7 +248,7 @@ class TestPipelineRepositoryQuery:
         )
 
         run2 = repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(repo._session_factory),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-2",
             configuration_ref="config-2",
@@ -272,7 +273,7 @@ class TestPipelineRepositoryUpdate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -293,7 +294,7 @@ class TestPipelineRepositoryUpdate:
         batch_id = str(uuid4())
 
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -334,7 +335,7 @@ class TestPipelineRepositoryChangeEvents:
 
         # Create a pipeline run
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -384,7 +385,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.NO_OP,
             implementation_id="impl-noop",
             configuration_ref="noop-config",
@@ -405,7 +406,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-extraction",
             configuration_ref="extraction-config",
@@ -430,7 +431,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
             implementation_id="impl-schema",
             configuration_ref="schema-config",
@@ -450,7 +451,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
             implementation_id="impl-grounding",
             configuration_ref="grounding-config",
@@ -470,7 +471,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             implementation_id="impl-def-refinement",
             configuration_ref="def-refinement-config",
@@ -490,7 +491,7 @@ class TestPipelineRepositoryOrmTodomainMapping:
         batch_id = str(uuid4())
 
         created = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             implementation_id="impl-conn-refinement",
             configuration_ref="conn-refinement-config",
@@ -571,7 +572,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Create a run first
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -593,7 +594,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Create a run first
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -619,7 +620,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Create a run first
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",
@@ -641,7 +642,7 @@ class TestPipelineRepositoryErrorHandling:
 
         # Create a run first
         run = repo.create(
-            batch_run_id=batch_id,
+            batch_run_id=create_batch_row(repo._session_factory, batch_id),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             implementation_id="impl-default",
             configuration_ref="config-default",

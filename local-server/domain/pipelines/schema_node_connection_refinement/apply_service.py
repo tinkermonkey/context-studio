@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import re
 from typing import TYPE_CHECKING
+
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.pipelines.apply_result import ApplyResult
 

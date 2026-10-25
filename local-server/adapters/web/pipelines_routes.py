@@ -77,6 +77,7 @@ from adapters.web.schemas.pipelines import (
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
+from domain.ontology.exceptions import EntityInUseError
 from domain.pipelines.apply_selection import RecognitionDecision
 from domain.pipelines.candidate_ids import (
     enumerate_items,
@@ -101,6 +102,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.services import VersioningService
 from utils.logger import get_logger
 
@@ -1437,8 +1439,8 @@ async def get_pipeline_run_change_events(
             detail=f"Pipeline run not found: {run_id}",
         )
 
-    # Get change events for this run's batch_run_id (fetch all for in-memory pagination)
-    result = versioning_service.get_change_history(batch_run_id=run.batch_run_id, limit=None)
+    # Applied change events are tagged with the run's own id (fetch all for in-memory pagination)
+    result = versioning_service.get_change_history(batch_run_id=run.id, limit=None)
 
     # Apply pagination
     paginated_events = result.events[offset : offset + limit]
@@ -1677,7 +1679,8 @@ async def apply_pipeline_run(
             detail="recognition_decisions are only supported for individual_extraction apply",
         )
 
-    set_batch_run_context(run.batch_run_id)
+    # Tag change events with this run's id (a batch_runs row), not its batch's id.
+    set_batch_run_context(run.id)
     try:
         try:
             if ptype == PipelineType.SCHEMA_EXTRACTION:
@@ -1933,9 +1936,6 @@ async def revert_pipeline_run(
     The operation is idempotent — calling revert twice produces the same state
     without error.
 
-    This endpoint only supports reverting runs from single-run batches. For multi-run
-    batches, use the batch revert endpoint instead.
-
     Args:
         run_id: ID of the pipeline run to revert
 
@@ -1943,7 +1943,8 @@ async def revert_pipeline_run(
         RevertRunResponse with count of events reverted
 
     Raises:
-        HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
+        HTTPException: 404 if run not found, 409 if entities outside the run depend on
+            entities it created (nothing is reverted), 500 for errors
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -1953,18 +1954,11 @@ async def revert_pipeline_run(
             detail=f"Pipeline run {run_id} not found",
         )
 
-    batch_runs = repo.list_by_batch_id(run.batch_run_id)
-    if len(batch_runs) > 1:
-        raise HTTPException(
-            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Cannot revert single run from multi-run batch. "
-            f"Batch {run.batch_run_id} contains {len(batch_runs)} runs. "
-            f"Use batch revert endpoint instead.",
-        )
-
     revert_svc = request.app.state.revert_service
     try:
-        revert_result = revert_svc.revert_with_summary(run.batch_run_id)
+        revert_result = revert_svc.revert_with_summary(run.id)
+    except (RevertConflictError, EntityInUseError) as exc:
+        raise HTTPException(status_code=http_status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except (PipelineStorageError, IntegrityError, OperationalError) as exc:
         _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
         status_code, message = _handle_domain_error(

@@ -122,7 +122,7 @@ class TestPreexistingTables:
         return db_path
 
     def test_upgrade_preserves_rows(self, preexisting_db):
-        upgrade(_alembic_config(preexisting_db), "head")
+        upgrade(_alembic_config(preexisting_db), REVISION)
 
         with sqlite3.connect(preexisting_db) as conn:
             assert conn.execute("SELECT version_num FROM alembic_version").fetchone()[0] == (

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from domain.ontology.value_objects import ExternalReference
+from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
 
 if TYPE_CHECKING:
@@ -76,6 +77,8 @@ class RevertService:
 
         Raises:
             ValueError: If batch_run_id is empty
+            RevertConflictError: If entities outside the run depend on entities it
+                created; nothing is changed
         """
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
@@ -88,6 +91,9 @@ class RevertService:
             _logger.info(f"No events found for batch run {batch_run_id}")
             return RevertResult(run_id=batch_run_id, events_reverted=0)
 
+        pending = [event for event in events if not self._should_skip_revert(event, events)]
+        self._check_no_outside_dependents(batch_run_id, pending)
+
         reverted_count = 0
         summary = {
             "classes_deleted": 0,
@@ -99,10 +105,10 @@ class RevertService:
             "entities_restored": 0,
         }
 
-        for event in reversed(events):
-            if self._should_skip_revert(event, events):
-                continue
-
+        # get_changes returns newest first, which is the order to undo in: a
+        # relationship is removed before the property it uses, and chained
+        # updates unwind back to the oldest previous state.
+        for event in pending:
             try:
                 if self._apply_inverse(event, batch_run_id):
                     reverted_count += 1
@@ -162,6 +168,32 @@ class RevertService:
                 return True
 
         return False
+
+    def _check_no_outside_dependents(self, batch_run_id: str, pending: list) -> None:
+        """
+        Refuse the revert if it would delete entities that others depend on.
+
+        Undoing a CREATE deletes the entity, and the database's foreign keys then
+        CASCADE, SET NULL or RESTRICT every row that references it. Rows created by
+        this same run are fine (the revert removes them too). Anything else, such as
+        individuals another run typed into a class this run created, would be
+        silently deleted or detached, so nothing is changed and the conflict is raised.
+
+        Raises:
+            RevertConflictError: listing each dependent outside the run
+        """
+        deleted_ids = {
+            event.entity_id for event in pending if event.operation == ChangeOperation.CREATE
+        }
+        if not deleted_ids:
+            return
+        blocking = [
+            (ref.dependent_kind, ref.dependent_id, ref.referenced_id)
+            for ref in self._ontology_repo.find_references(sorted(deleted_ids))
+            if ref.dependent_id not in deleted_ids
+        ]
+        if blocking:
+            raise RevertConflictError(batch_run_id, blocking)
 
     _REVERT_MARKER = "_reverted_"
 

@@ -91,7 +91,9 @@ class FakeChangeRepository:
             events = [e for e in events if e.batch_run_id == batch_run_id]
 
         total_count = len(events)
-        events.sort(key=lambda e: e.timestamp, reverse=True)
+        # Insertion order breaks timestamp ties, like rowid in the SQLite repository.
+        position = {event_id: i for i, event_id in enumerate(self._change_events)}
+        events.sort(key=lambda e: (e.timestamp, position[e.id]), reverse=True)
         return ChangeHistoryResult(events=tuple(events[:limit]), total=total_count)
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:

@@ -34,6 +34,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.utils.parent_rows import create_batch_row
 
 TAXONOMY_ID = "tx-preview-test"
 SCHEME_ID = "cs-preview-test"
@@ -121,7 +122,7 @@ def _create_and_complete_individual_run(pipeline_repo, triples=None):
     batch_id = str(uuid4())
     text_hash = hashlib.sha256(b"test text").hexdigest()
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -184,7 +185,7 @@ def test_recognition_preview_returns_422_for_incomplete_run(client, pipeline_rep
     batch_id = str(uuid4())
     text_hash = hashlib.sha256(b"test text").hexdigest()
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -332,7 +333,7 @@ def test_recognition_preview_empty_result_for_non_individual_pipeline(client, pi
     """Empty result returned for non-individual pipeline types (FR3.6/FR3.7)."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
         configuration_ref="extraction-default",
@@ -418,7 +419,7 @@ def test_recognition_preview_returns_empty_result_for_unsupported_pipeline_type(
     """200 with empty results returned for unsupported pipeline types."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
-        batch_run_id=batch_id,
+        batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.NO_OP,
         implementation_id="default",
         configuration_ref="noop-default",
