@@ -255,6 +255,34 @@ class TestDefinitionRefinementApplyRevert:
         assert reverted["events_reverted"] == 1
         assert ontology_repo.get_class(SERVICE_ID).description == ORIGINAL_DEFINITION
 
+    def test_reapply_after_revert_then_revert_again_restores_definition(
+        self, client, pipeline_repo, ontology_repo
+    ):
+        # Regression: a revert used to treat any earlier revert of the same entity
+        # as covering the new apply's UPDATE, so the second revert did nothing.
+        run_id = _completed_run(
+            pipeline_repo,
+            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            {
+                "node_id": SERVICE_ID,
+                "candidates": [{"definition": "A refined definition.", "confidence": 0.9}],
+            },
+        )
+
+        assert client.post(f"/api/pipelines/runs/{run_id}/apply").status_code == 200
+        assert _revert(client, run_id)["events_reverted"] == 1
+        assert ontology_repo.get_class(SERVICE_ID).description == ORIGINAL_DEFINITION
+
+        assert client.post(f"/api/pipelines/runs/{run_id}/apply").status_code == 200
+        assert ontology_repo.get_class(SERVICE_ID).description == "A refined definition."
+
+        second = _revert(client, run_id)
+        assert second["events_reverted"] == 1
+        assert ontology_repo.get_class(SERVICE_ID).description == ORIGINAL_DEFINITION
+
+        # Nothing left to undo.
+        assert _revert(client, run_id)["events_reverted"] == 0
+
 
 class TestConnectionRefinementApplyRevert:
     def test_apply_records_change_events_and_revert_restores_relationships(

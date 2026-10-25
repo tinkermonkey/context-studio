@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { EntityPicker, Button } from "@tinkermonkey/heimdall-ui";
 import { useEntitiesById, useEntityTypeQuery } from "@/api/hooks/ontology/useEntityTypeQuery";
 import "./EntitySearchPicker.css";
@@ -72,18 +72,23 @@ export function EntitySearchPicker({
     [selectedPool, selectedId],
   );
 
-  const selectedEntities = useMemo(
-    () =>
-      selectedPool
-        .filter((e: ApiEntity) => selectedIds.includes(e.id))
-        .map((e: ApiEntity) => ({
-          id: e.id,
-          label: e.title || e.id,
-        })),
-    [selectedPool, selectedIds],
-  );
+  // Labels seen for picked entities, so a pick made before its id lookup
+  // returns still shows (and is emitted with) its label.
+  const pickedLabels = useRef(new Map<string, string>());
+
+  // The selection is the caller's selectedIds; resolved entities only supply
+  // labels. Building it from the async lookup instead would drop a pick made
+  // while the lookup was still loading, or an id that never resolves.
+  const selectedEntities = useMemo<Entity[]>(() => {
+    const titles = new Map(selectedPool.map((e: ApiEntity) => [e.id, e.title || e.id]));
+    return selectedIds.map((id) => ({
+      id,
+      label: titles.get(id) ?? pickedLabels.current.get(id) ?? id,
+    }));
+  }, [selectedPool, selectedIds]);
 
   const handleSelect = (result: Entity) => {
+    pickedLabels.current.set(result.id, result.label);
     if (multiSelect && onSelectMultiple) {
       if (selectedIds.includes(result.id)) {
         onSelectMultiple(selectedEntities.filter((e) => e.id !== result.id));
