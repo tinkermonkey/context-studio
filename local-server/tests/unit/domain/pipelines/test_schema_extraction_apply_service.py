@@ -158,6 +158,26 @@ class TestIdempotency:
         assert result2.classes_created == 0
         assert len(repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)) == 1
 
+    def test_dedup_ignores_spacing_hyphens_and_underscores(self, svc, repo):
+        """A spaced label resolves to an existing CamelCase class (DR spec titles)."""
+        existing = _make_run(candidates=[{"kind": "class", "label": "DataObject"}])
+        svc.apply(existing, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Data Object", "confidence": 0.9},
+                {"kind": "class", "label": "data-object", "confidence": 0.9},
+                {"kind": "class", "label": "Data_Object", "confidence": 0.9},
+            ]
+        )
+
+        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+
+        assert result.classes_created == 0
+        assert result.existing_candidate_ids == ["class-0", "class-1", "class-2"]
+        assert [c.title for c in repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)] == [
+            "DataObject"
+        ]
+
 
 # ---------------------------------------------------------------------------
 # Confidence threshold

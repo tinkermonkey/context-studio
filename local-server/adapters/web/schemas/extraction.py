@@ -12,7 +12,7 @@ Text analysis & enrichment:
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -130,6 +130,12 @@ class RecognitionPreviewRequest(BaseModel):
         description="Minimum confidence threshold for individual recognition matches (0.0–1.0). "
         "Matches below this threshold are not reported.",
     )
+    concept_scheme_id: Optional[str] = Field(
+        None,
+        description="Concept scheme the run would be applied to. Required for "
+        "schema_extraction runs, whose candidates are matched against its classes; "
+        "ignored for individual_extraction runs.",
+    )
 
 
 class RecognitionPreviewHitSchema(BaseModel):
@@ -167,6 +173,43 @@ class RecognitionPreviewHitSchema(BaseModel):
     )
 
 
+class SchemaRecognitionHitSchema(BaseModel):
+    """Whether one schema extraction candidate matches an existing schema entity."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    candidate_id: str = Field(
+        ..., description="Candidate id (class-{i}, property-{i}, connection-{i})"
+    )
+    candidate_type: Literal["schema_class", "schema_property", "schema_connection"] = Field(
+        ..., description="Kind of schema candidate"
+    )
+    label: str = Field(
+        ..., description="Candidate label; 'subject → predicate → object' for connections"
+    )
+    will_match_existing: bool = Field(
+        ...,
+        description="True if apply reuses the existing entity instead of creating one "
+        "(exact matches only)",
+    )
+    existing_entity_id: Optional[str] = Field(
+        None,
+        description="ID of the matched class, property definition or relationship, or None",
+    )
+    existing_entity_title: Optional[str] = Field(
+        None, description="Title of the matched entity, or None"
+    )
+    match_method: Optional[Literal["exact", "vector"]] = Field(
+        None,
+        description='"exact": same rule apply uses to deduplicate; "vector" (classes '
+        "only): advisory — the label is close to an existing class title, but apply "
+        "still creates a new class",
+    )
+    match_score: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="Similarity of the match (1.0 for exact), or None"
+    )
+
+
 class RecognitionPreviewResponse(BaseModel):
     """Response from recognition preview endpoint."""
 
@@ -174,22 +217,28 @@ class RecognitionPreviewResponse(BaseModel):
 
     hits: list[RecognitionPreviewHitSchema] = Field(
         default_factory=list,
-        description="Preview results for each distinct extracted individual mention",
+        description="Preview results for each distinct extracted individual mention "
+        "(individual_extraction runs)",
+    )
+    schema_hits: list[SchemaRecognitionHitSchema] = Field(
+        default_factory=list,
+        description="Preview results for each class, property and connection candidate "
+        "(schema_extraction runs)",
     )
     total_mentions: int = Field(
         ...,
         ge=0,
-        description="Total number of distinct individual mentions previewed",
+        description="Total number of individual mentions or schema candidates previewed",
     )
     matched_count: int = Field(
         ...,
         ge=0,
-        description="Number of mentions that would match an existing individual",
+        description="Number of mentions or candidates that would match an existing entity",
     )
     unmatched_count: int = Field(
         ...,
         ge=0,
-        description="Number of mentions that would be created as new",
+        description="Number of mentions or candidates that would be created as new",
     )
     skipped_count: int = Field(
         ...,

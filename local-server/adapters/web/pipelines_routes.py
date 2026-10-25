@@ -44,6 +44,7 @@ from adapters.web.schemas.extraction import (
     RecognitionPreviewHitSchema,
     RecognitionPreviewRequest,
     RecognitionPreviewResponse,
+    SchemaRecognitionHitSchema,
     SourceSpanSchema,
 )
 from adapters.web.schemas.ontology import ListResponse
@@ -1834,16 +1835,19 @@ async def preview_recognition(
     request_body: RecognitionPreviewRequest = Body(default=RecognitionPreviewRequest()),
 ) -> RecognitionPreviewResponse:
     """
-    Preview which extracted individuals would match existing graph nodes.
+    Preview which extracted candidates would match existing ontology entities.
 
     Computes at request time against current ontology state, with zero writes.
-    For an individual_extraction run, reports which extracted individual mentions
-    would resolve to existing ontology individuals if the run were applied, and
-    which would be created as new. For schema_extraction runs, returns an empty
-    result (not yet implemented).
+    For an individual_extraction run, reports (in ``hits``) which extracted
+    individual mentions would resolve to existing ontology individuals if the run
+    were applied, and which would be created as new. For a schema_extraction run,
+    reports (in ``schema_hits``) which class, property and connection candidates
+    already exist in ``concept_scheme_id`` — exact matches are reused by apply;
+    vector matches (classes only) are advisory "similar to" hints.
 
     This endpoint:
     - Returns 404 if the run does not exist
+    - Returns 400 for a schema_extraction run without a valid concept_scheme_id
     - Returns 200 with empty results for unsupported pipeline types
     - Produces zero writes to ontology data, pipeline run data, or change events
 
@@ -1876,6 +1880,7 @@ async def preview_recognition(
     triples = (run.output_summary or {}).get("triples", [])
 
     hits = []
+    schema_hits = []
     skipped_count = 0
     matched_count = 0
     unmatched_count = 0
@@ -1896,7 +1901,16 @@ async def preview_recognition(
             status_code, message = _handle_domain_error(exc)
             raise HTTPException(status_code=status_code, detail=message) from exc
     elif ptype == PipelineType.SCHEMA_EXTRACTION:
-        pass
+        svc = request.app.state.schema_recognition_preview_svc
+        try:
+            schema_hits = svc.preview(
+                run.output_summary, concept_scheme_id=request_body.concept_scheme_id or ""
+            )
+        except Exception as exc:
+            status_code, message = _handle_domain_error(exc)
+            raise HTTPException(status_code=status_code, detail=message) from exc
+        matched_count = sum(1 for hit in schema_hits if hit.will_match_existing)
+        unmatched_count = len(schema_hits) - matched_count
 
     hit_schemas = [
         RecognitionPreviewHitSchema(
@@ -1913,7 +1927,8 @@ async def preview_recognition(
 
     return RecognitionPreviewResponse(
         hits=hit_schemas,
-        total_mentions=len(hits),
+        schema_hits=[SchemaRecognitionHitSchema.model_validate(h) for h in schema_hits],
+        total_mentions=len(hits) + len(schema_hits),
         matched_count=matched_count,
         unmatched_count=unmatched_count,
         skipped_count=skipped_count,

@@ -36,6 +36,7 @@ export type SchemaExtractionCandidate =
 export type RecognitionPreviewRequest = components["schemas"]["RecognitionPreviewRequest"];
 export type RecognitionPreviewResponse = components["schemas"]["RecognitionPreviewResponse"];
 export type RecognitionPreviewHit = components["schemas"]["RecognitionPreviewHitSchema"];
+export type SchemaRecognitionHit = components["schemas"]["SchemaRecognitionHitSchema"];
 /** Discriminated union returned by every /runs/{id}/*candidates endpoint. */
 export type CandidateItem =
   | SchemaExtractionCandidate
@@ -152,10 +153,14 @@ class PipelineService extends BaseService {
     return items.filter((c): c is TripleCandidate => c.candidate_type === "triple");
   }
 
-  /** Zero-write preview of which mentions would resolve to existing individuals on apply. */
+  /**
+   * Zero-write preview of which candidates already exist: individual mentions that
+   * resolve to existing individuals (`hits`), or schema candidates that match
+   * existing classes / properties / relationships in `concept_scheme_id` (`schema_hits`).
+   */
   async previewRecognition(
     runId: string,
-    body: RecognitionPreviewRequest,
+    body: Partial<RecognitionPreviewRequest>,
   ): Promise<RecognitionPreviewResponse> {
     return this.post<RecognitionPreviewResponse>(
       `/api/pipelines/runs/${runId}/recognition-preview`,

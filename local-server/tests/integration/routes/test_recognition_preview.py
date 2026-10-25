@@ -29,11 +29,16 @@ from adapters.web.pipelines_routes import router
 from domain.extraction.ports import RecognitionMatch
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.ports import SchemaMatch
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.schema_extraction.recognition_preview import (
+    SchemaRecognitionPreviewService,
+)
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_individual_recognizer import FakeIndividualRecognizer
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
 from tests.utils.parent_rows import create_batch_row
 
 TAXONOMY_ID = "tx-preview-test"
@@ -106,13 +111,21 @@ def extraction_service(ontology_repo, recognizer):
 
 
 @pytest.fixture()
-def client(pipeline_repo, batch_repo, ontology_repo, extraction_service):
+def schema_index():
+    return FakeSchemaVectorIndex()
+
+
+@pytest.fixture()
+def client(pipeline_repo, batch_repo, ontology_repo, extraction_service, schema_index):
     app = FastAPI()
     app.include_router(router)
 
     app.state.pipeline_run_repo = pipeline_repo
     app.state.batch_repo = batch_repo
     app.state.extraction_service = extraction_service
+    app.state.schema_recognition_preview_svc = SchemaRecognitionPreviewService(
+        ontology_repo, schema_index=schema_index, embedding_service=FakeEmbeddingService()
+    )
 
     return TestClient(app)
 
@@ -329,32 +342,106 @@ def test_recognition_preview_no_writes_to_ontology(
     assert individuals_before == individuals_after
 
 
-def test_recognition_preview_empty_result_for_non_individual_pipeline(client, pipeline_repo):
-    """Empty result returned for non-individual pipeline types (FR3.6/FR3.7)."""
+def _create_and_complete_schema_run(pipeline_repo, candidates=None, connections=None):
+    """Create a completed schema extraction run."""
     batch_id = str(uuid4())
     run = pipeline_repo.create(
         batch_run_id=create_batch_row(pipeline_repo._session_factory, batch_id),
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         implementation_id="default",
-        configuration_ref="extraction-default",
-        configuration_slug="extraction-default",
+        configuration_ref="schema-default",
+        configuration_slug="schema-default",
         configuration_version=1,
     )
-    run_id = run.id
-    pipeline_repo.update_status(run_id, PipelineRunStatus.COMPLETED)
+    pipeline_repo.update_status(run.id, PipelineRunStatus.COMPLETED)
     pipeline_repo.update_summaries(
-        run_id,
-        output_summary={"triples": [_make_triple("SomeClass")]},
+        run.id,
+        output_summary={"candidates": candidates or [], "connections": connections or []},
+    )
+    return run.id
+
+
+def test_schema_recognition_preview_reports_existing_classes(
+    client, pipeline_repo, ontology_repo, schema_index
+):
+    """Schema runs report exact and advisory vector matches per candidate."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-org",
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="cls_org",
+            title="Organization",
+        )
+    )
+    schema_index.set_search_results(
+        [
+            SchemaMatch(
+                entity_id="cls-org",
+                kind="class",
+                label="Organization",
+                score=0.95,
+                matched_field="title",
+            )
+        ],
+        {"cls-org": TAXONOMY_ID},
+    )
+    run_id = _create_and_complete_schema_run(
+        pipeline_repo,
+        candidates=[
+            {"kind": "class", "label": "person", "confidence": 0.9},
+            {"kind": "class", "label": "Company", "confidence": 0.9},
+            {"kind": "property_definition", "label": "employs", "confidence": 0.8},
+        ],
+        connections=[{"subject_ref": "Company", "predicate": "employs", "object_ref": "Person"}],
+    )
+    classes_before = len(ontology_repo.list_classes(limit=None))
+
+    response = client.post(
+        f"/api/pipelines/runs/{run_id}/recognition-preview",
+        json={"concept_scheme_id": SCHEME_ID},
     )
 
-    response = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["total_mentions"] == 0
-    assert data["matched_count"] == 0
-    assert data["unmatched_count"] == 0
-    assert data["skipped_count"] == 0
-    assert len(data["hits"]) == 0
+    assert data["hits"] == []
+    assert data["total_mentions"] == 4
+    assert data["matched_count"] == 1
+    assert data["unmatched_count"] == 3
+    by_id = {h["candidate_id"]: h for h in data["schema_hits"]}
+    assert by_id["class-0"] == {
+        "candidate_id": "class-0",
+        "candidate_type": "schema_class",
+        "label": "person",
+        "will_match_existing": True,
+        "existing_entity_id": CLASS_ID,
+        "existing_entity_title": "Person",
+        "match_method": "exact",
+        "match_score": 1.0,
+    }
+    assert by_id["class-1"]["match_method"] == "vector"
+    assert by_id["class-1"]["existing_entity_title"] == "Organization"
+    assert by_id["class-1"]["will_match_existing"] is False
+    assert by_id["property-0"]["will_match_existing"] is False
+    assert by_id["connection-0"]["candidate_type"] == "schema_connection"
+    assert by_id["connection-0"]["will_match_existing"] is False
+    assert len(ontology_repo.list_classes(limit=None)) == classes_before
+
+
+def test_schema_recognition_preview_requires_concept_scheme(client, pipeline_repo):
+    """A schema run cannot be previewed without a target concept scheme."""
+    run_id = _create_and_complete_schema_run(
+        pipeline_repo, candidates=[{"kind": "class", "label": "Person", "confidence": 0.9}]
+    )
+
+    missing = client.post(f"/api/pipelines/runs/{run_id}/recognition-preview")
+    unknown = client.post(
+        f"/api/pipelines/runs/{run_id}/recognition-preview",
+        json={"concept_scheme_id": "cs-does-not-exist"},
+    )
+
+    assert missing.status_code == status.HTTP_400_BAD_REQUEST
+    assert unknown.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_recognition_preview_filters_by_confidence_threshold(client, pipeline_repo, recognizer):

@@ -129,6 +129,9 @@ from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
 from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
+from domain.pipelines.schema_extraction.recognition_preview import (
+    SchemaRecognitionPreviewService,
+)
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
 )
@@ -708,6 +711,9 @@ async def lifespan(app: FastAPI):
         # Pipeline apply services — materialize pipeline output into ontology entities
         app.state.schema_extraction_apply_svc = SchemaExtractionApplyService(
             ontology_service, ontology_repo
+        )
+        app.state.schema_recognition_preview_svc = SchemaRecognitionPreviewService(
+            ontology_repo, schema_index=schema_vector_index, embedding_service=embedding_service
         )
         app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
             ontology_service, ontology_repo, individual_recognizer=individual_recognizer

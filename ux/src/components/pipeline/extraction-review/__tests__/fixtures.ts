@@ -168,6 +168,55 @@ export function makeRun(overrides: Partial<PipelineRunResponse> = {}): PipelineR
   };
 }
 
+/** Policyholder already exists; Insurance Claim is close to the existing "Claim" class. */
+export const SCHEMA_RECOGNITION: RecognitionPreviewResponse = {
+  total_mentions: 5,
+  matched_count: 1,
+  unmatched_count: 4,
+  skipped_count: 0,
+  hits: [],
+  schema_hits: [
+    {
+      candidate_id: "class-0",
+      candidate_type: "schema_class",
+      label: "Policyholder",
+      will_match_existing: true,
+      existing_entity_id: "cls_policyholder",
+      existing_entity_title: "Policyholder",
+      match_method: "exact",
+      match_score: 1,
+    },
+    {
+      candidate_id: "class-1",
+      candidate_type: "schema_class",
+      label: "Insurance Claim",
+      will_match_existing: false,
+      existing_entity_id: "cls_claim",
+      existing_entity_title: "Claim",
+      match_method: "vector",
+      match_score: 0.93,
+    },
+    {
+      candidate_id: "class-2",
+      candidate_type: "schema_class",
+      label: "Turnaround SLA",
+      will_match_existing: false,
+    },
+    {
+      candidate_id: "property-0",
+      candidate_type: "schema_property",
+      label: "submits",
+      will_match_existing: false,
+    },
+    {
+      candidate_id: "connection-0",
+      candidate_type: "schema_connection",
+      label: "Policyholder → submits → Insurance Claim",
+      will_match_existing: false,
+    },
+  ],
+};
+
 export const SCOPE = {
   taxonomyId: "tax-dr",
   taxonomyLabel: "Documentation Robotics · dr_spec",

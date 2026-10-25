@@ -7,8 +7,8 @@ created via OntologyService, so each creation publishes its domain event and is
 recorded as a ChangeEvent that the run's revert can undo.
 
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
-content-based (title within concept scheme; identifier for property definitions;
-source+target+property triple for relationships).
+content-based (class title within concept scheme, compared by ``class_title_key``;
+identifier for property definitions; source+target+property triple for relationships).
 """
 
 from __future__ import annotations
@@ -33,9 +33,20 @@ if TYPE_CHECKING:
     from domain.pipelines.entities import PipelineRun
 
 
-def _slugify(text: str) -> str:
+def slugify(text: str) -> str:
     """Convert a label to a snake_case identifier."""
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
+
+
+def class_title_key(title: str | None) -> str:
+    """
+    Dedup key for a class title within a concept scheme.
+
+    Case, whitespace, hyphens and underscores are ignored, so a proposed
+    "Data Object" resolves to an existing "DataObject" (the DR spec's CamelCase
+    titles) instead of creating a near-duplicate class.
+    """
+    return re.sub(r"[\s_-]+", "", (title or "").lower())
 
 
 class SchemaExtractionApplyService:
@@ -128,7 +139,9 @@ class SchemaExtractionApplyService:
         existing_classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
         # Lower-cased title -> id, for existing and newly created classes alike
         # (used for dedup and for resolving connection endpoints).
-        class_title_to_id: dict[str, str] = {c.title.lower(): c.id for c in existing_classes}
+        class_title_to_id: dict[str, str] = {
+            class_title_key(c.title): c.id for c in existing_classes
+        }
 
         class_candidates = [(cid, c) for cid, c in candidates if c.get("kind") == "class"]
         for candidate_id, candidate in class_candidates:
@@ -142,7 +155,7 @@ class SchemaExtractionApplyService:
                 result.classes_skipped += 1
                 result.skip(candidate_id, "invalid")
                 continue
-            if label.lower() in class_title_to_id:
+            if class_title_key(label) in class_title_to_id:
                 result.classes_skipped += 1
                 _already_present(candidate_id)
                 continue
@@ -152,7 +165,7 @@ class SchemaExtractionApplyService:
                 description=candidate.get("proposed_definition"),
                 source_run_id=run.id,
             )
-            class_title_to_id[label.lower()] = new_class.id
+            class_title_to_id[class_title_key(label)] = new_class.id
             result.classes_created += 1
             result.created_class_ids.append(new_class.id)
             result.applied_candidate_ids.append(candidate_id)
@@ -164,7 +177,7 @@ class SchemaExtractionApplyService:
         for candidate_id, candidate in prop_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
-            identifier = _slugify(label)
+            identifier = slugify(label)
             if not _is_selected(candidate_id, confidence):
                 result.properties_skipped += 1
                 result.skip(candidate_id, unselected_reason)
@@ -207,13 +220,13 @@ class SchemaExtractionApplyService:
                 result.skip(candidate_id, unselected_reason)
                 continue
 
-            subject_ref = (connection.get("subject_ref") or "").strip().lower()
-            object_ref = (connection.get("object_ref") or "").strip().lower()
+            subject_ref = class_title_key(connection.get("subject_ref"))
+            object_ref = class_title_key(connection.get("object_ref"))
             predicate = (connection.get("predicate") or "").strip()
 
             src_id = class_title_to_id.get(subject_ref)
             tgt_id = class_title_to_id.get(object_ref)
-            prop_identifier = _slugify(predicate)
+            prop_identifier = slugify(predicate)
             prop_def = (
                 self._repo.get_property_definition_by_identifier(prop_identifier)
                 if prop_identifier
