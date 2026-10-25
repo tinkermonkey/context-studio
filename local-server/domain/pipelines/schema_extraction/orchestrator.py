@@ -107,6 +107,18 @@ def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
     return pairs
 
 
+def join_documents(documents: Any) -> str:
+    """
+    Concatenate schema-extraction input documents into the single source text.
+
+    Provenance span offsets index into this text, so it is also the text
+    persisted on the run for reopened reviews.
+    """
+    if not isinstance(documents, list):
+        return ""
+    return " ".join(doc for doc in documents if isinstance(doc, str))
+
+
 @dataclass
 class CandidateClass:
     """A candidate class extracted from text."""
@@ -247,8 +259,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
-        # Concatenate documents into single source text for processing
-        source_text = " ".join(doc for doc in documents if isinstance(doc, str))
+        source_text = join_documents(documents)
 
         schema_state = replace(
             schema_state,

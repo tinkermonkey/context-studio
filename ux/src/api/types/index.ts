@@ -6899,6 +6899,11 @@ export interface components {
        * @description Failure reason if status=FAILED
        */
       failure_reason?: string | null;
+      /**
+       * Source Text
+       * @description Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists.
+       */
+      source_text?: string | null;
     };
     /**
      * PipelineTypeResponse
