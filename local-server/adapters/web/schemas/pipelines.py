@@ -244,6 +244,13 @@ class PipelineRunResponse(BaseModel):
         None, description="Timestamp when run transitioned to RUNNING"
     )
     failure_reason: Optional[str] = Field(None, description="Failure reason if status=FAILED")
+    source_text: Optional[str] = Field(
+        None,
+        description=(
+            "Input text the run extracted from; provenance span offsets index into it. "
+            "Returned by run detail and run execution; omitted (null) in run lists."
+        ),
+    )
 
 
 class ApplyRunResponse(BaseModel):

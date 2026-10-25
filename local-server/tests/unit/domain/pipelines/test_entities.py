@@ -57,6 +57,18 @@ class TestPipelineRun:
         with pytest.raises(AttributeError):
             run.status = PipelineRunStatus.RUNNING
 
+    def test_source_text_defaults_to_none(self):
+        """Pipeline types without a text input carry no source text."""
+        run = PipelineRun(batch_run_id="batch-456")
+
+        assert run.source_text is None
+
+    def test_source_text_is_carried(self):
+        """A run keeps the input text its provenance spans index into."""
+        run = IndividualExtractionRun(batch_run_id="batch-456", source_text="Ada wrote code.")
+
+        assert run.source_text == "Ada wrote code."
+
 
 class TestIndividualExtractionRun:
     """Tests for IndividualExtractionRun entity."""

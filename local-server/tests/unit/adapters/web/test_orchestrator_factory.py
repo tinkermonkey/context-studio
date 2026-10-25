@@ -10,6 +10,7 @@ from unittest.mock import Mock
 import pytest
 
 from adapters.factories.orchestrator_factory import (
+    build_run_specific_data,
     create_orchestrator,
     create_pipeline_state,
 )
@@ -912,3 +913,27 @@ class TestCreatePipelineStateCommonBehavior:
 
         assert state.input_data is input_data
         assert state.input_data == {"key": "value", "nested": {"data": 123}}
+
+
+class TestBuildRunSpecificDataSourceText:
+    """Text-input runs store the text their provenance spans index into."""
+
+    def test_individual_extraction_stores_text_and_hash(self):
+        data = build_run_specific_data(
+            PipelineType.INDIVIDUAL_EXTRACTION, {"text": "Ada wrote code."}
+        )
+
+        assert data["source_text"] == "Ada wrote code."
+        assert len(data["source_text_hash"]) == 64
+
+    def test_schema_extraction_stores_joined_documents(self):
+        data = build_run_specific_data(
+            PipelineType.SCHEMA_EXTRACTION, {"documents": ["First.", "Second."]}
+        )
+
+        assert data["source_text"] == "First. Second."
+
+    def test_other_types_store_no_source_text(self):
+        data = build_run_specific_data(PipelineType.NO_OP, {"text": "ignored"})
+
+        assert "source_text" not in data

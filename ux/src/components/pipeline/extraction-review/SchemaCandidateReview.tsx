@@ -14,14 +14,23 @@ import {
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import {
+  useRecognitionPreview,
   useSchemaExtractionCandidates,
   type SchemaExtractionCandidate,
+  type SchemaRecognitionHit,
 } from "@/api/hooks/pipeline/useExtractionCandidates";
 import type { ReviewRunSlot } from "@/api/hooks/pipeline/useExtractionReviewRuns";
 import type { ReviewDecisionValue } from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { SourceText } from "./SourceText";
 import { ReviewDecision } from "./ReviewDecision";
-import { ApplyBar, ProvenanceList, RunMeta, RunStateBody, applyResultRows } from "./ReviewParts";
+import {
+  ApplyBar,
+  MATCH_METHOD_VARIANT,
+  ProvenanceList,
+  RunMeta,
+  RunStateBody,
+  applyResultRows,
+} from "./ReviewParts";
 import { countDecisions, pct } from "./reviewUtils";
 import { useReviewApplyFlow } from "./useReviewApplyFlow";
 import type { ReviewScope } from "./ExtractionReviewPage";
@@ -71,6 +80,49 @@ function toRow(c: SchemaExtractionCandidate): SchemaRow {
 
 const PIPELINE_TYPE = "schema_extraction";
 
+/**
+ * Whether a candidate already exists in the target concept scheme. Exact matches
+ * are reused on apply; vector matches (classes only) are a "similar to" hint and
+ * the candidate is still created as new if accepted.
+ */
+function ExistingMatchCell({
+  hit,
+  loaded,
+  "data-testid": testId,
+}: {
+  hit?: SchemaRecognitionHit;
+  loaded: boolean;
+  "data-testid"?: string;
+}) {
+  if (!hit?.match_method) {
+    return (
+      <span data-testid={testId}>
+        {loaded ? <Chip variant="amber">new</Chip> : <span className="xr-mono-muted">—</span>}
+      </span>
+    );
+  }
+  const exists = hit.will_match_existing;
+  return (
+    <div className="xr-node-ref" data-testid={testId}>
+      <div className="xr-node-ref__head">
+        <span>{hit.existing_entity_title}</span>
+        <Chip variant={MATCH_METHOD_VARIANT[hit.match_method] ?? "neutral"}>
+          {exists ? "exists" : "similar"}
+        </Chip>
+      </div>
+      <span className="xr-mono-muted">
+        {exists ? "reused on apply" : `${pct(hit.match_score)} · created as new`}
+      </span>
+    </div>
+  );
+}
+
+const matchSummary = (hits: SchemaRecognitionHit[]) => {
+  const exist = hits.filter((h) => h.will_match_existing).length;
+  const similar = hits.filter((h) => h.match_method === "vector").length;
+  return similar > 0 ? `${exist} exist · ${similar} similar` : `${exist} already exist`;
+};
+
 export interface SchemaCandidateReviewProps {
   slot: ReviewRunSlot;
   text: string;
@@ -82,6 +134,11 @@ export function SchemaCandidateReview({ slot, text, scope, onRetry }: SchemaCand
   const runId = slot.run?.id ?? "";
   const completed = slot.status === "completed";
   const { data, isLoading, error, refetch } = useSchemaExtractionCandidates(runId, completed);
+  const previewQuery = useRecognitionPreview(
+    runId,
+    { confidence_threshold: 0, concept_scheme_id: scope.conceptSchemeId },
+    completed && !!scope.conceptSchemeId,
+  );
 
   let body;
   if (slot.status !== "completed") {
@@ -108,6 +165,8 @@ export function SchemaCandidateReview({ slot, text, scope, onRetry }: SchemaCand
         key={runId}
         runId={runId}
         rows={data.map(toRow)}
+        recognitionHits={previewQuery.data?.schema_hits}
+        recognitionError={previewQuery.error}
         text={text}
         scope={scope}
       />
@@ -135,14 +194,24 @@ const TYPE_LABEL: Record<CandidateType, string> = {
 function SchemaCandidateReviewBody({
   runId,
   rows,
+  recognitionHits,
+  recognitionError,
   text,
   scope,
 }: {
   runId: string;
   rows: SchemaRow[];
+  recognitionHits?: SchemaRecognitionHit[];
+  recognitionError?: Error | null;
   text: string;
   scope: ReviewScope;
 }) {
+  const hitById = useMemo(
+    () => new Map((recognitionHits ?? []).map((h) => [h.candidate_id, h])),
+    [recognitionHits],
+  );
+  const hitsOf = (t: CandidateType) =>
+    (recognitionHits ?? []).filter((h) => h.candidate_type === t);
   const countOf = (t: CandidateType) => rows.filter((r) => r.candidate_type === t).length;
   const [kind, setKind] = useState<CandidateType>(
     () =>
@@ -177,12 +246,19 @@ function SchemaCandidateReviewBody({
     decisions,
   };
   const accepted = rows.filter((r) => decisions[r.id] === "yes");
-  // A connection whose endpoint is a proposed class that is not accepted is skipped on apply.
+  // A connection whose endpoint is a proposed class that is not accepted (and does
+  // not already exist) is skipped on apply.
   const unacceptedClassLabels = new Set(
     rows
-      .filter((r) => r.candidate_type === "schema_class" && decisions[r.id] !== "yes")
+      .filter(
+        (r) =>
+          r.candidate_type === "schema_class" &&
+          decisions[r.id] !== "yes" &&
+          !hitById.get(r.id)?.will_match_existing,
+      )
       .map((r) => r.label.toLowerCase()),
   );
+  const reusedCount = accepted.filter((r) => hitById.get(r.id)?.will_match_existing).length;
   const orphaned = accepted.filter(
     (r) =>
       r.candidate_type === "schema_connection" &&
@@ -201,6 +277,18 @@ function SchemaCandidateReviewBody({
         value={decisions[String(k)] ?? "pending"}
         onChange={(v) => setDecision(String(k), v)}
         data-testid={`extraction-review-schema-decision-${k}`}
+      />
+    ),
+  };
+  const existingCol = {
+    key: "id" as const,
+    label: "Existing",
+    width: "180px",
+    render: (k: unknown) => (
+      <ExistingMatchCell
+        hit={hitById.get(String(k))}
+        loaded={recognitionHits !== undefined}
+        data-testid={`extraction-review-schema-existing-${k}`}
       />
     ),
   };
@@ -228,6 +316,7 @@ function SchemaCandidateReviewBody({
             <span className="xr-mono-muted">no definition</span>
           ),
       },
+      existingCol,
       confCol,
       decisionCol,
     ],
@@ -247,6 +336,7 @@ function SchemaCandidateReviewBody({
           </span>
         ),
       },
+      existingCol,
       confCol,
       decisionCol,
     ],
@@ -267,6 +357,7 @@ function SchemaCandidateReviewBody({
         label: "Object",
         render: (v: unknown) => <span className="xr-mono">{String(v)}</span>,
       },
+      existingCol,
       confCol,
       decisionCol,
     ],
@@ -293,6 +384,39 @@ function SchemaCandidateReviewBody({
       : []),
   ];
 
+  const matchRows = (r: SchemaRow) => {
+    const h = hitById.get(r.id);
+    if (!h) return [{ key: "status", value: recognitionHits ? "—" : "loading preview" }];
+    return [
+      {
+        key: "status",
+        value: h.will_match_existing
+          ? "exists · reused on apply"
+          : h.match_method
+            ? "similar existing class · created as new"
+            : "created as new",
+      },
+      ...(h.match_method
+        ? [
+            { key: "existing_title", value: h.existing_entity_title || "—" },
+            {
+              key: "existing_id",
+              value: <span className="xr-mono-muted">{h.existing_entity_id}</span>,
+            },
+            {
+              key: "method",
+              value: (
+                <Chip variant={MATCH_METHOD_VARIANT[h.match_method] ?? "neutral"}>
+                  {h.match_method}
+                </Chip>
+              ),
+            },
+            { key: "score", value: <span className="xr-mono">{pct(h.match_score)}</span> },
+          ]
+        : []),
+    ];
+  };
+
   return (
     <>
       <StatGrid columns={4}>
@@ -301,21 +425,21 @@ function SchemaCandidateReviewBody({
           value={countOf("schema_class")}
           color="violet"
           icon="schema"
-          meta="proposed classes"
+          meta={recognitionHits ? matchSummary(hitsOf("schema_class")) : "proposed classes"}
         />
         <StatTile
           label="PROPERTIES"
           value={countOf("schema_property")}
           color="cyan"
           icon="component"
-          meta="proposed properties"
+          meta={recognitionHits ? matchSummary(hitsOf("schema_property")) : "proposed properties"}
         />
         <StatTile
           label="CONNECTIONS"
           value={countOf("schema_connection")}
           color="amber"
           icon="link"
-          meta="class-to-class"
+          meta={recognitionHits ? matchSummary(hitsOf("schema_connection")) : "class-to-class"}
         />
         <StatTile
           label="ACCEPTED"
@@ -364,6 +488,11 @@ function SchemaCandidateReviewBody({
               <InspectorPanel.Section title="Proposal">
                 <KVGrid rows={proposalRows(r)} />
               </InspectorPanel.Section>
+              <InspectorPanel.Section title="Existing match">
+                <div data-testid="extraction-review-schema-inspector-match">
+                  <KVGrid rows={matchRows(r)} />
+                </div>
+              </InspectorPanel.Section>
               <InspectorPanel.Section title="Provenance" count={r.provenance.length}>
                 <ProvenanceList provenance={r.provenance} />
               </InspectorPanel.Section>
@@ -374,7 +503,7 @@ function SchemaCandidateReviewBody({
         <Panel
           noPadding
           title="Candidates"
-          subtitle="Accept or reject each proposal. Select a row to see its source spans."
+          subtitle={`Accept or reject each proposal. Existing: "exists" is reused on apply, "similar" is close to a class already in ${scope.conceptSchemeLabel}.`}
           headerAction={
             <SegmentedControl
               value={kind}
@@ -387,6 +516,9 @@ function SchemaCandidateReviewBody({
           }
           data-testid="extraction-review-schema-candidates"
         >
+          {recognitionError && (
+            <ErrorBanner error={recognitionError} compact message="Existing-match preview failed" />
+          )}
           <Table<SchemaRow>
             columns={columns[kind]}
             data={visible}
@@ -429,8 +561,13 @@ function SchemaCandidateReviewBody({
             <span>
               Creates draft classes, property definitions and relationships from the {counts.yes}{" "}
               accepted candidates. Rejected and pending candidates are skipped; entities that
-              already exist with the same label are reused.
+              already exist with the same name (ignoring case and spacing) are reused.
             </span>
+            {reusedCount > 0 && (
+              <span className="xr-chip-row">
+                <Chip variant="emerald">{reusedCount} reuse existing</Chip>
+              </span>
+            )}
             {orphaned.length > 0 && (
               <FormCallout
                 variant="warn"

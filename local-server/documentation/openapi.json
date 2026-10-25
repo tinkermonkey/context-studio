@@ -4352,7 +4352,7 @@
           "pipelines"
         ],
         "summary": "Preview Recognition",
-        "description": "Preview which extracted individuals would match existing graph nodes.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports which extracted individual mentions\nwould resolve to existing ontology individuals if the run were applied, and\nwhich would be created as new. For schema_extraction runs, returns an empty\nresult (not yet implemented).\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 200 with empty results for unsupported pipeline types\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
+        "description": "Preview which extracted candidates would match existing ontology entities.\n\nComputes at request time against current ontology state, with zero writes.\nFor an individual_extraction run, reports (in ``hits``) which extracted\nindividual mentions would resolve to existing ontology individuals if the run\nwere applied, and which would be created as new. For a schema_extraction run,\nreports (in ``schema_hits``) which class, property and connection candidates\nalready exist in ``concept_scheme_id`` \u2014 exact matches are reused by apply;\nvector matches (classes only) are advisory \"similar to\" hints.\n\nThis endpoint:\n- Returns 404 if the run does not exist\n- Returns 400 for a schema_extraction run without a valid concept_scheme_id\n- Returns 200 with empty results for unsupported pipeline types\n- Produces zero writes to ontology data, pipeline run data, or change events\n\nArgs:\n    run_id: ID of the completed pipeline run to preview\n    request_body: Preview parameters including confidence thresholds\n\nReturns:\n    RecognitionPreviewResponse with recognition results per mention\n\nRaises:\n    HTTPException: 404 if run not found, 422 if run is not completed",
         "operationId": "preview_recognition_api_pipelines_runs__run_id__recognition_preview_post",
         "parameters": [
           {
@@ -11814,6 +11814,18 @@
             ],
             "title": "Failure Reason",
             "description": "Failure reason if status=FAILED"
+          },
+          "source_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Text",
+            "description": "Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists."
           }
         },
         "type": "object",
@@ -12344,6 +12356,18 @@
             "title": "Recognition Threshold",
             "description": "Minimum confidence threshold for individual recognition matches (0.0\u20131.0). Matches below this threshold are not reported.",
             "default": 0.9
+          },
+          "concept_scheme_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept Scheme Id",
+            "description": "Concept scheme the run would be applied to. Required for schema_extraction runs, whose candidates are matched against its classes; ignored for individual_extraction runs."
           }
         },
         "type": "object",
@@ -12358,25 +12382,33 @@
             },
             "type": "array",
             "title": "Hits",
-            "description": "Preview results for each distinct extracted individual mention"
+            "description": "Preview results for each distinct extracted individual mention (individual_extraction runs)"
+          },
+          "schema_hits": {
+            "items": {
+              "$ref": "#/components/schemas/SchemaRecognitionHitSchema"
+            },
+            "type": "array",
+            "title": "Schema Hits",
+            "description": "Preview results for each class, property and connection candidate (schema_extraction runs)"
           },
           "total_mentions": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Total Mentions",
-            "description": "Total number of distinct individual mentions previewed"
+            "description": "Total number of individual mentions or schema candidates previewed"
           },
           "matched_count": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Matched Count",
-            "description": "Number of mentions that would match an existing individual"
+            "description": "Number of mentions or candidates that would match an existing entity"
           },
           "unmatched_count": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Unmatched Count",
-            "description": "Number of mentions that would be created as new"
+            "description": "Number of mentions or candidates that would be created as new"
           },
           "skipped_count": {
             "type": "integer",
@@ -13306,6 +13338,98 @@
         ],
         "title": "SchemaPropertyCandidate",
         "description": "Candidate property definition from schema extraction.\n\nRepresents a proposed property/relationship type."
+      },
+      "SchemaRecognitionHitSchema": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Candidate id (class-{i}, property-{i}, connection-{i})"
+          },
+          "candidate_type": {
+            "type": "string",
+            "enum": [
+              "schema_class",
+              "schema_property",
+              "schema_connection"
+            ],
+            "title": "Candidate Type",
+            "description": "Kind of schema candidate"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Candidate label; 'subject \u2192 predicate \u2192 object' for connections"
+          },
+          "will_match_existing": {
+            "type": "boolean",
+            "title": "Will Match Existing",
+            "description": "True if apply reuses the existing entity instead of creating one (exact matches only)"
+          },
+          "existing_entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Entity Id",
+            "description": "ID of the matched class, property definition or relationship, or None"
+          },
+          "existing_entity_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Entity Title",
+            "description": "Title of the matched entity, or None"
+          },
+          "match_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "exact",
+                  "vector"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Method",
+            "description": "\"exact\": same rule apply uses to deduplicate; \"vector\" (classes only): advisory \u2014 the label is close to an existing class title, but apply still creates a new class"
+          },
+          "match_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Score",
+            "description": "Similarity of the match (1.0 for exact), or None"
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "candidate_type",
+          "label",
+          "will_match_existing"
+        ],
+        "title": "SchemaRecognitionHitSchema",
+        "description": "Whether one schema extraction candidate matches an existing schema entity."
       },
       "SerializationScopeRequest": {
         "properties": {

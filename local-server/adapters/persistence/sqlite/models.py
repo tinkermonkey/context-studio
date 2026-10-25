@@ -1203,6 +1203,7 @@ class PipelineRun(BatchRun):
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
+        source_text: Input text the run extracted from (text-input pipeline types only)
     """
 
     __tablename__ = "pipeline_runs"
@@ -1266,6 +1267,11 @@ class PipelineRun(BatchRun):
         Text,
         nullable=True,
         doc="String description of failure reason if status=FAILED",
+    )
+    source_text = Column(
+        Text,
+        nullable=True,
+        doc="Input text the run extracted from; provenance span offsets index into it",
     )
 
     __mapper_args__: Dict[str, Any] = {

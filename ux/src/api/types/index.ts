@@ -2025,16 +2025,19 @@ export interface paths {
     put?: never;
     /**
      * Preview Recognition
-     * @description Preview which extracted individuals would match existing graph nodes.
+     * @description Preview which extracted candidates would match existing ontology entities.
      *
      *     Computes at request time against current ontology state, with zero writes.
-     *     For an individual_extraction run, reports which extracted individual mentions
-     *     would resolve to existing ontology individuals if the run were applied, and
-     *     which would be created as new. For schema_extraction runs, returns an empty
-     *     result (not yet implemented).
+     *     For an individual_extraction run, reports (in ``hits``) which extracted
+     *     individual mentions would resolve to existing ontology individuals if the run
+     *     were applied, and which would be created as new. For a schema_extraction run,
+     *     reports (in ``schema_hits``) which class, property and connection candidates
+     *     already exist in ``concept_scheme_id`` — exact matches are reused by apply;
+     *     vector matches (classes only) are advisory "similar to" hints.
      *
      *     This endpoint:
      *     - Returns 404 if the run does not exist
+     *     - Returns 400 for a schema_extraction run without a valid concept_scheme_id
      *     - Returns 200 with empty results for unsupported pipeline types
      *     - Produces zero writes to ontology data, pipeline run data, or change events
      *
@@ -6899,6 +6902,11 @@ export interface components {
        * @description Failure reason if status=FAILED
        */
       failure_reason?: string | null;
+      /**
+       * Source Text
+       * @description Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists.
+       */
+      source_text?: string | null;
     };
     /**
      * PipelineTypeResponse
@@ -7211,6 +7219,11 @@ export interface components {
        * @default 0.9
        */
       recognition_threshold: number;
+      /**
+       * Concept Scheme Id
+       * @description Concept scheme the run would be applied to. Required for schema_extraction runs, whose candidates are matched against its classes; ignored for individual_extraction runs.
+       */
+      concept_scheme_id?: string | null;
     };
     /**
      * RecognitionPreviewResponse
@@ -7219,22 +7232,27 @@ export interface components {
     RecognitionPreviewResponse: {
       /**
        * Hits
-       * @description Preview results for each distinct extracted individual mention
+       * @description Preview results for each distinct extracted individual mention (individual_extraction runs)
        */
       hits?: components["schemas"]["RecognitionPreviewHitSchema"][];
       /**
+       * Schema Hits
+       * @description Preview results for each class, property and connection candidate (schema_extraction runs)
+       */
+      schema_hits?: components["schemas"]["SchemaRecognitionHitSchema"][];
+      /**
        * Total Mentions
-       * @description Total number of distinct individual mentions previewed
+       * @description Total number of individual mentions or schema candidates previewed
        */
       total_mentions: number;
       /**
        * Matched Count
-       * @description Number of mentions that would match an existing individual
+       * @description Number of mentions or candidates that would match an existing entity
        */
       matched_count: number;
       /**
        * Unmatched Count
-       * @description Number of mentions that would be created as new
+       * @description Number of mentions or candidates that would be created as new
        */
       unmatched_count: number;
       /**
@@ -7883,6 +7901,53 @@ export interface components {
        * @description Proposed range (object class) for this property
        */
       proposed_range?: string | null;
+    };
+    /**
+     * SchemaRecognitionHitSchema
+     * @description Whether one schema extraction candidate matches an existing schema entity.
+     */
+    SchemaRecognitionHitSchema: {
+      /**
+       * Candidate Id
+       * @description Candidate id (class-{i}, property-{i}, connection-{i})
+       */
+      candidate_id: string;
+      /**
+       * Candidate Type
+       * @description Kind of schema candidate
+       * @enum {string}
+       */
+      candidate_type: "schema_class" | "schema_property" | "schema_connection";
+      /**
+       * Label
+       * @description Candidate label; 'subject → predicate → object' for connections
+       */
+      label: string;
+      /**
+       * Will Match Existing
+       * @description True if apply reuses the existing entity instead of creating one (exact matches only)
+       */
+      will_match_existing: boolean;
+      /**
+       * Existing Entity Id
+       * @description ID of the matched class, property definition or relationship, or None
+       */
+      existing_entity_id?: string | null;
+      /**
+       * Existing Entity Title
+       * @description Title of the matched entity, or None
+       */
+      existing_entity_title?: string | null;
+      /**
+       * Match Method
+       * @description "exact": same rule apply uses to deduplicate; "vector" (classes only): advisory — the label is close to an existing class title, but apply still creates a new class
+       */
+      match_method?: ("exact" | "vector") | null;
+      /**
+       * Match Score
+       * @description Similarity of the match (1.0 for exact), or None
+       */
+      match_score?: number | null;
     };
     /**
      * SerializationScopeRequest

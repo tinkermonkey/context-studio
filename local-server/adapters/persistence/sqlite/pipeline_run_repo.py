@@ -759,6 +759,7 @@ class PipelineRepository:
             "created_at": orm_obj.created_at,
             "started_at": orm_obj.started_at,
             "failure_reason": orm_obj.failure_reason,
+            "source_text": orm_obj.source_text,
         }
 
         # Dispatch based on ORM type
