@@ -12,6 +12,7 @@ import tempfile
 from adapters.config.json_store import JSONFileConfigStore
 from config import ConfigurationManager
 from domain.admin.entities import AppConfiguration
+from domain.admin.services import AdminService
 
 
 def test_load_configuration():
@@ -429,3 +430,32 @@ def test_update_config_silently_skips_unknown_section():
         # Verify only the valid update persisted
         assert reloaded_config.server["port"] == 9000
         assert not hasattr(reloaded_config, "unknown_section")
+
+
+def test_chat_section_defaults_updates_and_resets():
+    """The chat section loads with defaults, updates through the admin service, and resets."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "config.json")
+        with open(config_file, "w") as f:
+            json.dump({"server": {"port": 8000}}, f)
+
+        store = JSONFileConfigStore(ConfigurationManager(config_file=config_file))
+        assert store.load().sections["chat"] == {
+            "model": "claude-sonnet-5-5",
+            "max_tool_rounds": 8,
+        }
+
+        service = AdminService(metrics_collector=None, config_store=store)
+        updated = service.update_configuration("chat", {"model": "anthropic/claude-opus-4-7"})
+        assert updated.sections["chat"]["model"] == "anthropic/claude-opus-4-7"
+
+        with open(config_file) as f:
+            assert json.load(f)["chat"] == {
+                "model": "anthropic/claude-opus-4-7",
+                "max_tool_rounds": 8,
+            }
+        reloaded = JSONFileConfigStore(ConfigurationManager(config_file=config_file)).load()
+        assert reloaded.sections["chat"]["model"] == "anthropic/claude-opus-4-7"
+
+        reset = store.reset_to_defaults()
+        assert reset.sections["chat"]["model"] == "claude-sonnet-5-5"

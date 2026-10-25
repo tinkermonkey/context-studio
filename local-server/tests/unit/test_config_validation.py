@@ -12,9 +12,11 @@ import pytest
 from pydantic import ValidationError
 
 from config import (
+    ChatConfig,
     DuckDBConfig,
     RecognitionConfig,
     S3Config,
+    Settings,
     SyncAdapterType,
     SyncConfig,
 )
@@ -243,3 +245,30 @@ class TestRecognitionConfigValidation:
         """Test that individual_match_threshold must be within [0, 1]."""
         with pytest.raises(ValidationError):
             RecognitionConfig(individual_match_threshold=invalid_threshold)
+
+
+class TestChatConfigValidation:
+    """Test ChatConfig defaults and validation."""
+
+    def test_defaults(self) -> None:
+        """Chat defaults to Claude Sonnet 5.5 with 8 tool rounds."""
+        config = ChatConfig()
+        assert config.model == "claude-sonnet-5-5"
+        assert config.max_tool_rounds == 8
+
+    def test_settings_include_chat_section(self) -> None:
+        """Settings parses a chat section from config.json data."""
+        settings = Settings(chat={"model": "anthropic/claude-opus-4-7", "max_tool_rounds": 4})
+        assert settings.chat.model == "anthropic/claude-opus-4-7"
+        assert settings.chat.max_tool_rounds == 4
+
+    @pytest.mark.parametrize("invalid_rounds", [0, 51])
+    def test_max_tool_rounds_out_of_range_rejected(self, invalid_rounds) -> None:
+        """max_tool_rounds must be within [1, 50]."""
+        with pytest.raises(ValidationError):
+            ChatConfig(max_tool_rounds=invalid_rounds)
+
+    def test_empty_model_rejected(self) -> None:
+        """The chat model id cannot be empty."""
+        with pytest.raises(ValidationError):
+            ChatConfig(model="")

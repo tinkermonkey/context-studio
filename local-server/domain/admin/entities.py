@@ -151,6 +151,7 @@ class AppConfiguration:
         reference_sources: External reference sources configuration (enabled sources, rate limits)
         sync: Optional S3/remote sync settings
         logging: Logging configuration (level, handlers, etc.)
+        chat: Chat assistant configuration (model, max tool rounds)
     """
 
     server: dict[str, Any]
@@ -161,6 +162,7 @@ class AppConfiguration:
     reference_sources: dict[str, Any]
     logging: dict[str, Any] = field(default_factory=lambda: {"level": "INFO"})
     sync: Optional[dict[str, Any]] = None
+    chat: dict[str, Any] = field(default_factory=dict)
 
     @property
     def sections(self) -> dict[str, dict[str, Any]]:
@@ -178,6 +180,7 @@ class AppConfiguration:
             "embedding": self.embedding,
             "reference_sources": self.reference_sources,
             "logging": self.logging,
+            "chat": self.chat,
         }
         if self.sync is not None:
             result["sync"] = self.sync

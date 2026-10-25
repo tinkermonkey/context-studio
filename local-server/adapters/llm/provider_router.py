@@ -11,11 +11,16 @@ This adapter implements the LLMProvider port and is used by the Knowledge Extrac
 and LLM Pipeline services.
 """
 
-from typing import Literal
+from typing import AsyncIterator, Literal, Sequence
 
+from adapters.llm.anthropic_chat import AnthropicChatModel
 from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.openai_provider import OpenAIProvider
+from adapters.llm.openrouter_chat import OpenRouterChatModel
 from adapters.llm.openrouter_provider import OpenRouterProvider
+from domain.chat.entities import ChatMessage
+from domain.chat.ports import ChatModel
+from domain.chat.value_objects import ModelEvent, ToolSpec
 from domain.pipelines.ports import LLMProvider, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
@@ -46,6 +51,10 @@ class LLMProviderRouter:
     provider rejects its API key, the router logs a warning, stops using that
     provider, and tries the next provider that supports the model. Other errors are
     raised unchanged.
+
+    `stream_chat` implements the ChatModel port for tool-calling chat with the same
+    provider order and auth fallback, over the providers that have a streaming chat
+    adapter (Anthropic and OpenRouter).
     """
 
     def __init__(
@@ -66,6 +75,9 @@ class LLMProviderRouter:
             ValueError: If no API keys are provided or all configured providers fail to initialize
         """
         self._providers: dict[str, LLMProvider] = {}
+        # Streaming tool-calling chat models, keyed by the same provider names.
+        # OpenAI has none, so chat routes to Anthropic or OpenRouter only.
+        self._chat_models: dict[str, ChatModel] = {}
         self._rejected_providers: set[str] = set()
         init_errors: dict[str, Exception] = {}
 
@@ -89,6 +101,7 @@ class LLMProviderRouter:
         if anthropic_api_key:
             try:
                 self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
+                self._chat_models["anthropic"] = AnthropicChatModel(anthropic_api_key)
                 logger.info("Anthropic provider initialized")
             except Exception as e:
                 init_errors["anthropic"] = e
@@ -100,6 +113,7 @@ class LLMProviderRouter:
         if openrouter_api_key:
             try:
                 self._providers["openrouter"] = OpenRouterProvider(openrouter_api_key)
+                self._chat_models["openrouter"] = OpenRouterChatModel(openrouter_api_key)
                 logger.info("OpenRouter provider initialized")
             except Exception as e:
                 init_errors["openrouter"] = e
@@ -163,6 +177,62 @@ class LLMProviderRouter:
                 )
             except Exception as e:
                 if not _is_auth_failure(e):
+                    raise
+                self._reject_provider(name, e)
+                auth_error = e
+        # Every supporting provider rejected its API key
+        assert auth_error is not None
+        raise auth_error
+
+    async def stream_chat(
+        self,
+        *,
+        system: str,
+        messages: Sequence[ChatMessage],
+        tools: Sequence[ToolSpec],
+        model: str,
+        max_tokens: int = 16000,
+    ) -> AsyncIterator[ModelEvent]:
+        """
+        Stream one tool-calling chat turn from the first provider that supports the model.
+
+        Implements the ChatModel port. Providers are tried in the same order as
+        `complete`, and a provider that rejects its API key falls through to the
+        next one, but only before the first event is yielded: once output has
+        streamed, a retry elsewhere would duplicate it, so later errors propagate.
+
+        Raises:
+            ValueError: If no chat-capable provider supports the model
+            Exception: The provider's own error for non-auth failures or failures
+                after streaming started, or the last auth error if every supporting
+                provider rejected its key
+        """
+        auth_error: Exception | None = None
+        candidates = [
+            (name, self._chat_models[name])
+            for name, _ in self._providers_for(model)
+            if name in self._chat_models
+        ]
+        if not candidates:
+            raise ValueError(
+                f"No chat-capable provider available for model: {model}"
+                " (chat runs through Anthropic or OpenRouter)"
+            )
+        for name, chat_model in candidates:
+            started = False
+            try:
+                async for event in chat_model.stream_chat(
+                    system=system,
+                    messages=messages,
+                    tools=tools,
+                    model=model,
+                    max_tokens=max_tokens,
+                ):
+                    started = True
+                    yield event
+                return
+            except Exception as e:
+                if started or not _is_auth_failure(e):
                     raise
                 self._reject_provider(name, e)
                 auth_error = e

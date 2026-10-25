@@ -53,9 +53,7 @@ class TestAnthropicProviderRequest:
     )
     async def test_temperature_sent_via_extra_body(self, model, use_async):
         provider, messages = _provider_with_fake_client()
-        kwargs = dict(
-            system_prompt="sys", user_prompt="hi", model=model, temperature=0.2, seed=7
-        )
+        kwargs = dict(system_prompt="sys", user_prompt="hi", model=model, temperature=0.2, seed=7)
 
         if use_async:
             response = await provider.complete_async(**kwargs)
@@ -72,11 +70,10 @@ class TestAnthropicProviderRequest:
         assert sent["messages"] == [{"role": "user", "content": "hi"}]
 
     @pytest.mark.parametrize("use_async", [False, True])
-    async def test_no_temperature_for_models_that_reject_it(self, use_async):
+    @pytest.mark.parametrize("model", ["claude-opus-4-7", "claude-sonnet-5-5"])
+    async def test_no_temperature_for_models_that_reject_it(self, model, use_async):
         provider, messages = _provider_with_fake_client()
-        kwargs = dict(
-            system_prompt="sys", user_prompt="hi", model="claude-opus-4-7", temperature=0.2
-        )
+        kwargs = dict(system_prompt="sys", user_prompt="hi", model=model, temperature=0.2)
 
         if use_async:
             await provider.complete_async(**kwargs)
@@ -89,7 +86,7 @@ class TestAnthropicProviderRequest:
 
     @pytest.mark.parametrize(
         "model, expected_temperature",
-        [("claude-sonnet-4-6", 0.0), ("claude-opus-4-7", None)],
+        [("claude-sonnet-4-6", 0.0), ("claude-opus-4-7", None), ("claude-sonnet-5-5", None)],
     )
     def test_installed_sdk_accepts_request(self, model, expected_temperature):
         """The real SDK builds the request without a TypeError; check its JSON body."""
